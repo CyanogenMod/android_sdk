@@ -772,7 +772,7 @@ public final class ProjectHelper {
      */
     public static IFile getApplicationPackage(IProject project) {
         // get the output folder
-        IFolder outputLocation = BaseProjectHelper.getOutputFolder(project);
+        IFolder outputLocation = BaseProjectHelper.getAndroidOutputFolder(project);
 
         if (outputLocation == null) {
             AdtPlugin.printErrorToConsole(project,
