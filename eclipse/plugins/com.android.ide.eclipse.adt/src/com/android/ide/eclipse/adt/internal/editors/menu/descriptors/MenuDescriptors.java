@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -122,7 +122,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
                 new ElementDescriptor[] { top_item }, // childrenElements,
                 false /* mandatory */);
 
-        XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(ANDROID_NS_PREFIX,
+        XmlnsAttributeDescriptor xmlns = new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
                 SdkConstants.NS_RESOURCES);
 
         updateElement(mDescriptor, styleMap, "Menu", xmlns); //$NON-NLS-1$

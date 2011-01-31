@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
-import static com.android.ide.common.api.IViewMetadata.FillPreference.NONE;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
@@ -25,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -41,12 +41,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -149,9 +149,7 @@ public class ViewMetadataRepository {
         // Therefore, we instead use the convention that the id is the fully qualified
         // class name, with .'s replaced with _'s.
 
-
         // Special case: for tab host we aren't allowed to mess with the id
-
         String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
 
         if ("@android:id/tabhost".equals(id)) {
@@ -220,29 +218,11 @@ public class ViewMetadataRepository {
                                 Node childNode = children.item(j);
                                 if (childNode.getNodeType() == Node.ELEMENT_NODE) {
                                     Element child = (Element) childNode;
-                                    String fqcn = child.getAttribute("class"); //$NON-NLS-1$
-                                    String fill = child.getAttribute("fill"); //$NON-NLS-1$
-                                    FillPreference fillPreference = null;
-                                    if (fill.length() > 0) {
-                                        fillPreference = fillTypes.get(fill);
-                                    }
-                                    if (fillPreference == null) {
-                                        fillPreference = NONE;
-                                    }
-                                    String skip = child.getAttribute("skip"); //$NON-NLS-1$
-                                    RenderMode mode = RenderMode.NORMAL;
-                                    String render = child.getAttribute("render"); //$NON-NLS-1$
-                                    if (render.length() > 0) {
-                                        mode = RenderMode.get(render);
-                                    }
-                                    String relatedTo = child.getAttribute("relatedTo"); //$NON-NLS-1$
-                                    ViewData view = new ViewData(category, fqcn, fillPreference,
-                                            skip.length() == 0 ? false : Boolean.valueOf(skip),
-                                            mode, relatedTo);
+                                    ViewData view = createViewData(fillTypes, child,
+                                            null, FillPreference.NONE, RenderMode.NORMAL);
                                     category.addView(view);
                                 }
                             }
-
                             mCategories.add(category);
                         }
                     }
@@ -253,6 +233,62 @@ public class ViewMetadataRepository {
         }
 
         return mCategories;
+    }
+
+    private ViewData createViewData(Map<String, FillPreference> fillTypes,
+            Element child, String defaultFqcn, FillPreference defaultFill,
+            RenderMode defaultRender) {
+        String fqcn = child.getAttribute("class"); //$NON-NLS-1$
+        if (fqcn.length() == 0) {
+            fqcn = defaultFqcn;
+        }
+        String fill = child.getAttribute("fill"); //$NON-NLS-1$
+        FillPreference fillPreference = null;
+        if (fill.length() > 0) {
+            fillPreference = fillTypes.get(fill);
+        }
+        if (fillPreference == null) {
+            fillPreference = defaultFill;
+        }
+        String skip = child.getAttribute("skip"); //$NON-NLS-1$
+        RenderMode renderMode = defaultRender;
+        String render = child.getAttribute("render"); //$NON-NLS-1$
+        if (render.length() > 0) {
+            renderMode = RenderMode.get(render);
+        }
+        String displayName = child.getAttribute("name"); //$NON-NLS-1$
+        if (displayName.length() == 0) {
+            displayName = null;
+        }
+        String relatedTo = child.getAttribute("relatedTo"); //$NON-NLS-1$
+        ViewData view = new ViewData(fqcn, displayName, fillPreference,
+                skip.length() == 0 ? false : Boolean.valueOf(skip),
+                renderMode, relatedTo);
+
+        String init = child.getAttribute("init"); //$NON-NLS-1$
+        String icon = child.getAttribute("icon"); //$NON-NLS-1$
+
+        view.setInitString(init);
+        if (icon.length() > 0) {
+            view.setIconName(icon);
+        }
+
+        // Nested variations?
+        if (child.hasChildNodes()) {
+            // Palette variations
+            NodeList childNodes = child.getChildNodes();
+            for (int k = 0, kl = childNodes.getLength(); k < kl; k++) {
+                Node variationNode = childNodes.item(k);
+                if (variationNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element variation = (Element) variationNode;
+                    ViewData variationView = createViewData(fillTypes, variation,
+                            fqcn, fillPreference, renderMode);
+                    view.addVariation(variationView);
+                }
+            }
+        }
+
+        return view;
     }
 
     /**
@@ -270,103 +306,87 @@ public class ViewMetadataRepository {
         List<Pair<String, List<ViewElementDescriptor>>> result =
             new ArrayList<Pair<String, List<ViewElementDescriptor>>>();
 
-        final Map<String, ViewData> viewMap = getClassToView();
-        Map<CategoryData, List<ViewElementDescriptor>> categories =
-            new TreeMap<CategoryData, List<ViewElementDescriptor>>();
-
-        // Locate the "Other" category
-        CategoryData other = null;
-        for (CategoryData category : getCategories()) {
-            if (category.getViewCount() == 0) {
-                other = category;
-                break;
-            }
-        }
-
         List<List<ViewElementDescriptor>> lists = new ArrayList<List<ViewElementDescriptor>>(2);
         LayoutDescriptors layoutDescriptors = targetData.getLayoutDescriptors();
         lists.add(layoutDescriptors.getViewDescriptors());
         lists.add(layoutDescriptors.getLayoutDescriptors());
 
+        // First record map of FQCN to ViewElementDescriptor such that we can quickly
+        // determine if a particular palette entry is available
+        Map<String, ViewElementDescriptor> fqcnToDescriptor =
+            new HashMap<String, ViewElementDescriptor>();
         for (List<ViewElementDescriptor> list : lists) {
             for (ViewElementDescriptor view : list) {
-                ViewData viewData = getClassToView().get(view.getFullClassName());
-                CategoryData category = other;
-                if (viewData != null) {
-                    if (viewData.getSkip()) {
-                        continue;
+                String fqcn = view.getFullClassName();
+                if (fqcn == null) {
+                    // <view> and <merge> tags etc
+                    fqcn = view.getUiName();
+                }
+                fqcnToDescriptor.put(fqcn, view);
+            }
+        }
+
+        Set<ViewElementDescriptor> remaining = new HashSet<ViewElementDescriptor>(
+                layoutDescriptors.getViewDescriptors().size()
+                + layoutDescriptors.getLayoutDescriptors().size());
+        remaining.addAll(layoutDescriptors.getViewDescriptors());
+        remaining.addAll(layoutDescriptors.getLayoutDescriptors());
+
+        // Now iterate in palette metadata order over the items in the palette and include
+        // any that also appear as a descriptor
+        List<ViewElementDescriptor> categoryItems = new ArrayList<ViewElementDescriptor>();
+        for (CategoryData category : getCategories()) {
+            if (createCategories) {
+                categoryItems = new ArrayList<ViewElementDescriptor>();
+            }
+            for (ViewData view : category) {
+                String fqcn = view.getFcqn();
+                ViewElementDescriptor descriptor = fqcnToDescriptor.get(fqcn);
+                if (descriptor != null) {
+                    if (view.getDisplayName() != null || view.getInitString().length() > 0) {
+                        categoryItems.add(new PaletteMetadataDescriptor(descriptor,
+                                view.getDisplayName(), view.getInitString(), view.getIconName()));
+                    } else {
+                        categoryItems.add(descriptor);
                     }
-                    category = viewData.getCategory();
-                }
+                    remaining.remove(descriptor);
 
-                List<ViewElementDescriptor> viewList = categories.get(category);
-                if (viewList == null) {
-                    viewList = new ArrayList<ViewElementDescriptor>();
-                    categories.put(category, viewList);
+                    if (view.hasVariations()) {
+                        for (ViewData variation : view.getVariations()) {
+                            String init = variation.getInitString();
+                            String icon = variation.getIconName();
+                            ViewElementDescriptor desc = new PaletteMetadataDescriptor(descriptor,
+                                    variation.getDisplayName(), init, icon);
+                            categoryItems.add(desc);
+                        }
+                    }
                 }
-                viewList.add(view);
+            }
 
+            if (createCategories && categoryItems.size() > 0) {
+                if (alphabetical) {
+                    Collections.sort(categoryItems);
+                }
+                result.add(Pair.of(category.getName(), categoryItems));
+            }
+        }
+
+        if (remaining.size() > 0) {
+            List<ViewElementDescriptor> otherItems = new ArrayList<ViewElementDescriptor>(remaining);
+            // Always sorted, we don't have a natural order for these unknowns
+            Collections.sort(otherItems);
+            if (createCategories) {
+                result.add(Pair.of("Other", otherItems));
+            } else {
+                categoryItems.addAll(otherItems);
             }
         }
 
         if (!createCategories) {
-            // Squash all categories into a single one, "Views"
-            Map<CategoryData, List<ViewElementDescriptor>> singleCategory =
-                new HashMap<CategoryData, List<ViewElementDescriptor>>();
-            List<ViewElementDescriptor> items = new ArrayList<ViewElementDescriptor>(100);
-            for (Map.Entry<CategoryData, List<ViewElementDescriptor>> entry : categories.entrySet()) {
-                items.addAll(entry.getValue());
-            }
-            singleCategory.put(new CategoryData("Views"), items);
-            categories = singleCategory;
-        }
-
-        for (Map.Entry<CategoryData, List<ViewElementDescriptor>> entry : categories.entrySet()) {
-            String name = entry.getKey().getName();
-            List<ViewElementDescriptor> items = entry.getValue();
-            if (items == null) {
-                continue; // empty category
-            }
-
-            // Natural sort of the descriptors
             if (alphabetical) {
-                Collections.sort(items);
-            } else {
-                Collections.sort(items, new Comparator<ViewElementDescriptor>() {
-                    public int compare(ViewElementDescriptor v1, ViewElementDescriptor v2) {
-                        String fqcn1 = v1.getFullClassName();
-                        String fqcn2 = v2.getFullClassName();
-                        if (fqcn1 == null) {
-                            // <view> and <merge> tags etc
-                            fqcn1 = v1.getUiName();
-                        }
-                        if (fqcn2 == null) {
-                            fqcn2 = v2.getUiName();
-                        }
-                        ViewData d1 = viewMap.get(fqcn1);
-                        ViewData d2 = viewMap.get(fqcn2);
-
-                        // Use natural sorting order of the view data
-                        // Sort unknown views to the end (and alphabetically among themselves)
-                        if (d1 != null) {
-                            if (d2 != null) {
-                                return d1.getOrdinal() - d2.getOrdinal();
-                            } else {
-                                return 1;
-                            }
-                        } else {
-                            if (d2 == null) {
-                                return v1.getUiName().compareTo(v2.getUiName());
-                            } else {
-                                return -1;
-                            }
-                        }
-                    }
-                });
+                Collections.sort(categoryItems);
             }
-
-
-            result.add(Pair.of(name, items));
+            result.add(Pair.of("Views", categoryItems));
         }
 
         return result;
@@ -404,10 +424,6 @@ public class ViewMetadataRepository {
             return mName;
         }
 
-        public int getViewCount() {
-            return mViews.size();
-        }
-
         // Implements Iterable<ViewData> such that we can use for-each on the category to
         // enumerate its views
         public Iterator<ViewData> iterator() {
@@ -426,8 +442,6 @@ public class ViewMetadataRepository {
         private final String mFqcn;
         /** Fill preference of the view */
         private final FillPreference mFillPreference;
-        /** The category that the view belongs to */
-        private final CategoryData mCategory;
         /** Skip this item in the palette? */
         private final boolean mSkip;
         /** Must this item be rendered alone? skipped? etc */
@@ -436,23 +450,29 @@ public class ViewMetadataRepository {
         private final String mRelatedTo;
         /** The relative rank of the view for natural ordering */
         private final int mOrdinal = sNextOrdinal++;
+        /** List of optional variations */
+        private List<ViewData> mVariations;
+        /** Display name. Can be null. */
+        private String mDisplayName;
+        /**
+         * Optional initialization string - a comma separate set of name/value pairs to
+         * initialize the element with
+         */
+        private String mInitString;
+        /** The name of an icon (known to the {@link IconFactory} to show for this view */
+        private String mIconName;
 
         /** Constructs a new view data for the given class */
-        private ViewData(CategoryData category, String fqcn,
+        private ViewData(String fqcn, String displayName,
                 FillPreference fillPreference, boolean skip, RenderMode renderMode,
                 String relatedTo) {
             super();
-            mCategory = category;
             mFqcn = fqcn;
+            mDisplayName = displayName;
             mFillPreference = fillPreference;
             mSkip = skip;
             mRenderMode = renderMode;
             mRelatedTo = relatedTo;
-        }
-
-        /** Returns the category for views of this type */
-        private CategoryData getCategory() {
-            return mCategory;
         }
 
         /** Returns the {@link FillPreference} for views of this type */
@@ -465,9 +485,8 @@ public class ViewMetadataRepository {
             return mFqcn;
         }
 
-        /** Relative rank of this view type */
-        private int getOrdinal() {
-            return mOrdinal;
+        private String getDisplayName() {
+            return mDisplayName;
         }
 
         // Implements Comparable<ViewData> such that views can be sorted naturally
@@ -509,6 +528,37 @@ public class ViewMetadataRepository {
                 return result;
             }
         }
+
+        void addVariation(ViewData variation) {
+            if (mVariations == null) {
+                mVariations = new ArrayList<ViewData>(4);
+            }
+            mVariations.add(variation);
+        }
+
+        List<ViewData> getVariations() {
+            return mVariations;
+        }
+
+        boolean hasVariations() {
+            return mVariations != null && mVariations.size() > 0;
+        }
+
+        private void setInitString(String initString) {
+            this.mInitString = initString;
+        }
+
+        private String getInitString() {
+            return mInitString;
+        }
+
+        private void setIconName(String iconName) {
+            this.mIconName = iconName;
+        }
+
+        private String getIconName() {
+            return mIconName;
+        }
     }
 
     /**
@@ -540,7 +590,7 @@ public class ViewMetadataRepository {
             return view.getRenderMode();
         }
 
-        return RenderMode.ALONE;
+        return RenderMode.NORMAL;
     }
 
     /**

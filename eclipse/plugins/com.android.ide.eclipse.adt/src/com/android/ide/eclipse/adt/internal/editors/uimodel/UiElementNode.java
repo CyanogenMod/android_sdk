@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
@@ -1592,7 +1592,7 @@ public class UiElementNode implements IPropertySource {
         // We need to make sure the prefix is not one that was declared in the scope
         // visited above. Use a default namespace prefix "android" for the Android resource
         // NS and use "ns" for all other custom namespaces.
-        String prefix = NS_RESOURCES.equals(nsUri) ? ANDROID_NS_PREFIX : "ns"; //$NON-NLS-1$
+        String prefix = NS_RESOURCES.equals(nsUri) ? ANDROID_NS_NAME : "ns"; //$NON-NLS-1$
         String base = prefix;
         for (int i = 1; visited.contains(prefix); i++) {
             prefix = base + Integer.toString(i);

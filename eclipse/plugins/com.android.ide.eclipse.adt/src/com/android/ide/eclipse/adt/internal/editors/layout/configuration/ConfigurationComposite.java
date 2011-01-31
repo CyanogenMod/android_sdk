@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.sdk.LoadStatus;
@@ -1964,9 +1966,9 @@ public class ConfigurationComposite extends Composite {
                 }
 
                 // check for framework identifier.
-                if (parentStyle.startsWith("android:")) {
+                if (parentStyle.startsWith(ANDROID_NS_NAME_PREFIX)) {
                     frameworkStyle = true;
-                    parentStyle = parentStyle.substring("android:".length());
+                    parentStyle = parentStyle.substring(ANDROID_NS_NAME_PREFIX.length());
                 }
 
                 // at this point we could have the format style/<name>. we want only the name

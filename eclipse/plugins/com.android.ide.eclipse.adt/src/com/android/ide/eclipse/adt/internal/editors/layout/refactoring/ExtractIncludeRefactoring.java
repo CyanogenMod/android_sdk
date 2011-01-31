@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -350,7 +350,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         namespaceDeclarations = sb.toString();
 
         if (androidNsPrefix == null) {
-            androidNsPrefix = ANDROID_NS_PREFIX;
+            androidNsPrefix = ANDROID_NS_NAME;
         }
 
         if (namespaceDeclarations.length() == 0) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Default configuration for various views to be rendered 
+    Default configuration for various views to be rendered
     TODO: Remove views that don't have custom configuration
     TODO: Parameterize the custom width (200dip) in the below?
 -->
@@ -57,6 +57,110 @@
         android:text="EditText"
         android:layout_width="200dip">
     </EditText>
+
+    <EditText
+        android:id="@+id/PlainText"
+        android:text="abc"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Password"
+        android:inputType="textPassword"
+        android:text="••••••••"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <!-- android:inputType="numberPassword" not used here to allow digits in preview only -->
+    <EditText
+        android:id="@+id/PasswordNumeric"
+        android:text="1•••2•••3"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/PersonName"
+        android:inputType="textPersonName"
+        android:text="Firstname Lastname"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Phone"
+        android:inputType="phone"
+        android:text="(555) 0100"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/PostalAddress"
+        android:inputType="textPostalAddress"
+        android:text="Address"
+        android:layout_width="200dip"
+        android:layout_height="100dip">
+    </EditText>
+
+    <EditText
+        android:id="@+id/MultilineText"
+        android:inputType="textMultiLine"
+        android:text="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
+        android:layout_width="200dip"
+        android:layout_height="100dip">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Date"
+        android:inputType="date"
+        android:text="1/1/2011"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Time"
+        android:inputType="time"
+        android:text="12:00am"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Email"
+        android:inputType="textEmailAddress"
+        android:text="user@domain"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/Number"
+        android:inputType="number"
+        android:text="42"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/NumberSigned"
+        android:inputType="numberSigned"
+        android:text="-42"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
+    <EditText
+        android:id="@+id/NumberDecimal"
+        android:inputType="numberDecimal"
+        android:text="42.0"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content">
+    </EditText>
+
     <ImageButton
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
@@ -76,9 +180,28 @@
         android:id="@+id/android_widget_MultiAutoCompleteTextView">
     </MultiAutoCompleteTextView>
     <ProgressBar
-        android:id="@+id/android_widget_ProgressBar"
+        android:id="@+id/android_widget_ProgressBarNormal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+    </ProgressBar>
+    <ProgressBar
+        android:id="@+id/android_widget_ProgressBarHorizontal"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content"
+        android:progress="30"
+        style="?android:attr/progressBarStyleHorizontal">
+    </ProgressBar>
+    <ProgressBar
+        android:id="@+id/android_widget_ProgressBarLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleLarge">
+    </ProgressBar>
+    <ProgressBar
+        android:id="@+id/android_widget_ProgressBarSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleSmall">
     </ProgressBar>
     <QuickContactBadge
         android:layout_height="wrap_content"

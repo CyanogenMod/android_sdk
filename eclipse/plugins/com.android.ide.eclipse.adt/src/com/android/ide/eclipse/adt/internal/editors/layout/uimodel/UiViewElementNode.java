@@ -112,7 +112,7 @@ public class UiViewElementNode extends UiElementNode {
                 layout_attrs.length);
         if (need_xmlns) {
             AttributeDescriptor desc = new XmlnsAttributeDescriptor(
-                    LayoutConstants.ANDROID_NS_PREFIX,
+                    LayoutConstants.ANDROID_NS_NAME,
                     SdkConstants.NS_RESOURCES);
             mCachedAttributeDescriptors[direct_attrs.length + layout_attrs.length] = desc;
         }

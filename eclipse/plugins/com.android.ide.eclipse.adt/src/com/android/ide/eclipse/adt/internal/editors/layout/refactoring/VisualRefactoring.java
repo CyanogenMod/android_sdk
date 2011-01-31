@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
@@ -521,7 +521,7 @@ public abstract class VisualRefactoring extends Refactoring {
             }
 
             if (mAndroidNamespacePrefix == null) {
-                mAndroidNamespacePrefix = ANDROID_NS_PREFIX;
+                mAndroidNamespacePrefix = ANDROID_NS_NAME;
             }
         }
 

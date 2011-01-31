@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -210,7 +212,7 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
      */
     public final String getNamespace() {
         // For now we hard-code the prefix as being "android"
-        if (mXmlName.startsWith("android:")) { //$NON-NLs-1$
+        if (mXmlName.startsWith(ANDROID_NS_NAME_PREFIX)) {
             return SdkConstants.NS_RESOURCES;
         }
 
