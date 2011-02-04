@@ -103,6 +103,9 @@ final class AvdCreationDialog extends GridDialog {
     private Text mAvdName;
     private Combo mTargetCombo;
 
+    private Combo mAbiTypeCombo;
+    private String mAbiType;
+
     private Button mSdCardSizeRadio;
     private Text mSdCardSize;
     private Combo mSdCardSizeCombo;
@@ -286,9 +289,28 @@ final class AvdCreationDialog extends GridDialog {
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
                 reloadSkinCombo();
+                reloadAbiTypeCombo();
                 validatePage();
             }
         });
+
+        //ABI group
+        label = new Label(parent, SWT.NONE);
+        label.setText("ABI:");
+        tooltip = "The ABI to use in the virtual device";
+        label.setToolTipText(tooltip);
+
+         mAbiTypeCombo = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
+         mAbiTypeCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+         mAbiTypeCombo.setToolTipText(tooltip);
+         mAbiTypeCombo.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e) {
+                     super.widgetSelected(e);
+                     validatePage();
+                 }
+         });
+         mAbiTypeCombo.setEnabled(false);
 
         // --- sd card group
         label = new Label(parent, SWT.NONE);
@@ -670,6 +692,21 @@ final class AvdCreationDialog extends GridDialog {
             for (int i = 0;i < n; i++) {
                 if (target.equals(mCurrentTargets.get(mTargetCombo.getItem(i)))) {
                     mTargetCombo.select(i);
+                    reloadAbiTypeCombo();
+                    reloadSkinCombo();
+                    break;
+                }
+            }
+        }
+
+        // select the abi type
+        if (target.getAbiList().length > 0) {
+            mAbiTypeCombo.setEnabled(target.getAbiList().length > 1);
+            String abiType = AvdInfo.getPrettyAbiType(mEditAvdInfo.getAbiType());
+            int n = mAbiTypeCombo.getItemCount();
+            for (int i = 0; i < n; i++) {
+                if (abiType.equals(mAbiTypeCombo.getItem(i))) {
+                    mAbiTypeCombo.select(i);
                     reloadSkinCombo();
                     break;
                 }
@@ -744,6 +781,7 @@ final class AvdCreationDialog extends GridDialog {
         mProperties.putAll(props);
 
         // Cleanup known non-hardware properties
+        mProperties.remove(AvdManager.AVD_INI_ABI_TYPE);
         mProperties.remove(AvdManager.AVD_INI_SKIN_PATH);
         mProperties.remove(AvdManager.AVD_INI_SKIN_NAME);
         mProperties.remove(AvdManager.AVD_INI_SDCARD_SIZE);
@@ -884,6 +922,49 @@ final class AvdCreationDialog extends GridDialog {
     }
 
     /**
+    * Reload all the abi types in the selection list
+    */
+    private void reloadAbiTypeCombo() {
+       String selected = null;
+       boolean found = false;
+
+       int index = mTargetCombo.getSelectionIndex();
+       if (index >= 0) {
+           String targetName = mTargetCombo.getItem(index);
+           IAndroidTarget target = mCurrentTargets.get(targetName);
+           String[] arches = target.getAbiList();
+
+           mAbiTypeCombo.setEnabled(arches.length > 1);
+
+           // If user explicitly selected an ABI before, preserve that option
+           // If user did not explicitly select before (only one option before)
+           // force them to select
+           index = mAbiTypeCombo.getSelectionIndex();
+           if (index >= 0 && mAbiTypeCombo.getItemCount() > 1) {
+               selected = mAbiTypeCombo.getItem(index);
+           }
+
+           mAbiTypeCombo.removeAll();
+
+           int i;
+           for ( i = 0; i < arches.length ; i++ ) {
+               String prettyAbiType = AvdInfo.getPrettyAbiType(arches[i]);
+               mAbiTypeCombo.add(prettyAbiType);
+               if (!found) {
+                   found = prettyAbiType.equals(selected);
+                   if (found) {
+                       mAbiTypeCombo.select(i);
+                   }
+               }
+           }
+
+           if (arches.length == 1) {
+               mAbiTypeCombo.select(0);
+           }
+       }
+    }
+
+    /**
      * Validates the fields, displays errors and warnings.
      * Enables the finish button if there are no errors.
      */
@@ -905,6 +986,16 @@ final class AvdCreationDialog extends GridDialog {
         // Validate target
         if (hasAvdName && error == null && mTargetCombo.getSelectionIndex() < 0) {
             error = "A target must be selected in order to create an AVD.";
+        }
+
+        // validate abi type if the selected target supports multi archs.
+        if (hasAvdName && error == null && mTargetCombo.getSelectionIndex() > 0) {
+            int index = mTargetCombo.getSelectionIndex();
+            String targetName = mTargetCombo.getItem(index);
+            IAndroidTarget target = mCurrentTargets.get(targetName);
+            if (target.getAbiList().length > 1 && mAbiTypeCombo.getSelectionIndex() < 0) {
+               error = "An abi type must be selected in order to create an AVD.";
+            }
         }
 
         // Validate SDCard path or value
@@ -1122,6 +1213,19 @@ final class AvdCreationDialog extends GridDialog {
             return false;
         }
 
+        // get the abi type
+        mAbiType = SdkConstants.ABI_ARMEABI;
+        if (target.getAbiList().length > 0) {
+            int abiIndex = mAbiTypeCombo.getSelectionIndex();
+            if (abiIndex >= 0) {
+                String prettyname = mAbiTypeCombo.getItem(abiIndex);
+                //Extract the abi type
+                int firstIndex = prettyname.indexOf("(");
+                int lastIndex = prettyname.indexOf(")");
+                mAbiType = prettyname.substring(firstIndex+1, lastIndex);
+            }
+        }
+
         // get the SD card data from the UI.
         String sdName = null;
         if (mSdCardSizeRadio.getSelection()) {
@@ -1190,6 +1294,7 @@ final class AvdCreationDialog extends GridDialog {
                 avdFolder,
                 avdName,
                 target,
+                mAbiType,
                 skinName,
                 sdName,
                 mProperties,

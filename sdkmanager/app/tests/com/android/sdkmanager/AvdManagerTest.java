@@ -24,6 +24,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.mock.MockLog;
+import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.util.Map;
@@ -58,9 +59,9 @@ public class AvdManagerTest extends TestCase {
 
     public void testCreateAvdWithoutSnapshot() {
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, null, null, null, false, false, mLog);
-
-        assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0\n]",
+                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
+                null, null, null, false, false, mLog);
+        assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
                 mLog.toString());
         assertTrue("Expected config.ini in " + mAvdFolder,
                 new File(mAvdFolder, "config.ini").exists());
@@ -78,9 +79,10 @@ public class AvdManagerTest extends TestCase {
 
     public void testCreateAvdWithSnapshot() {
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, null, null, null, false, true, mLog);
+                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
+                null, null, null, false, true, mLog);
 
-        assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0\n]",
+        assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
                 mLog.toString());
         assertTrue("Expected snapshots.img in " + mAvdFolder,
                 new File(mAvdFolder, "snapshots.img").exists());

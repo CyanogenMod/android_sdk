@@ -372,8 +372,10 @@ public final class AvdSelector {
         column2.setText("Platform");
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
+        final TableColumn column4 = new TableColumn(mTable, SWT.NONE);
+        column4.setText("ABI");
 
-        adjustColumnsWidth(mTable, column0, column1, column2, column3);
+        adjustColumnsWidth(mTable, column0, column1, column2, column3, column4);
         setupSelectionListener(mTable);
         fillTable(mTable);
         setEnabled(true);
@@ -633,16 +635,18 @@ public final class AvdSelector {
             final TableColumn column0,
             final TableColumn column1,
             final TableColumn column2,
-            final TableColumn column3) {
+            final TableColumn column3,
+            final TableColumn column4) {
         // Add a listener to resize the column to the full width of the table
         table.addControlListener(new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 25 / 100); // 25%
-                column1.setWidth(r.width * 45 / 100); // 45%
+                column0.setWidth(r.width * 20 / 100); // 20%
+                column1.setWidth(r.width * 30 / 100); // 30%
                 column2.setWidth(r.width * 15 / 100); // 15%
                 column3.setWidth(r.width * 15 / 100); // 15%
+                column4.setWidth(r.width * 20 / 100); // 22%
             }
         });
     }
@@ -777,10 +781,12 @@ public final class AvdSelector {
                         item.setText(1, target.getFullName());
                         item.setText(2, target.getVersionName());
                         item.setText(3, target.getVersion().getApiString());
+                        item.setText(4, AvdInfo.getPrettyAbiType(avd.getAbiType()));
                     } else {
                         item.setText(1, "?");
                         item.setText(2, "?");
                         item.setText(3, "?");
+                        item.setText(4, "?");
                     }
                 }
             }
@@ -1025,10 +1031,7 @@ public final class AvdSelector {
         AvdStartDialog dialog = new AvdStartDialog(mTable.getShell(), avdInfo, mOsSdkPath,
                 mController);
         if (dialog.open() == Window.OK) {
-            String path = mOsSdkPath +
-                File.separator +
-                SdkConstants.OS_SDK_TOOLS_FOLDER +
-                SdkConstants.FN_EMULATOR;
+            String path = avdInfo.getEmulatorPath(mOsSdkPath + File.separator);
 
             final String avdName = avdInfo.getName();
 

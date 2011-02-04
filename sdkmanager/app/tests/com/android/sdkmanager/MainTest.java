@@ -23,6 +23,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.mock.MockLog;
+import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 
@@ -68,7 +69,8 @@ public class MainTest extends TestCase {
         Main main = new Main();
         main.setLogger(mLog);
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, null, null, null, false, false, mLog);
+                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
+                null, null, null, false, false, mLog);
         mLog.clear();
         main.displayAvdList(mAvdManager);
         assertEquals(
@@ -85,7 +87,8 @@ public class MainTest extends TestCase {
         Main main = new Main();
         main.setLogger(mLog);
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, null, null, null, false, true, mLog);
+                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
+                null, null, null, false, true, mLog);
         mLog.clear();
         main.displayAvdList(mAvdManager);
         assertEquals(

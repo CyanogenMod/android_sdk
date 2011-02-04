@@ -980,16 +980,20 @@ public class Main {
                 oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
 
+            // NOTE: need to update with command line processor selectivity
+
+            String preferredAbi = SdkConstants.ABI_ARMEABI;
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
-                    avdName,
-                    target,
-                    skin,
-                    mSdkCommandLine.getParamSdCard(),
-                    hardwareConfig,
-                    removePrevious,
-                    mSdkCommandLine.getFlagSnapshot(),
-                    mSdkLog);
+                        avdName,
+                        target,
+                        preferredAbi,
+                        skin,
+                        mSdkCommandLine.getParamSdCard(),
+                        hardwareConfig,
+                        removePrevious,
+                        mSdkCommandLine.getFlagSnapshot(),
+                        mSdkLog);
 
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());

@@ -14,16 +14,15 @@
 
 LOCAL_PATH := $(call my-dir)
 
+
 include $(CLEAR_VARS)
 
 # Only compile source java files in this lib.
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
-LOCAL_JAVA_RESOURCE_DIRS := .
-
-LOCAL_MODULE := sdklib-tests
+LOCAL_MODULE := app-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := sdklib junit
+LOCAL_JAVA_LIBRARIES := sdkmanager sdklib-tests junit
 
 include $(BUILD_HOST_JAVA_LIBRARY)

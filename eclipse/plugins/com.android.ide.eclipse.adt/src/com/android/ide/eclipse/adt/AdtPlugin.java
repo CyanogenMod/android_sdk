@@ -1148,7 +1148,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // not meant to be exhaustive.
         String[] filesToCheck = new String[] {
                 osSdkLocation + getOsRelativeAdb(),
-                osSdkLocation + getOsRelativeEmulator()
+                osSdkLocation + getOsRelativeEmulator() + SdkConstants.FN_EMULATOR_EXTENSION
         };
         for (String file : filesToCheck) {
             if (checkFile(file) == false) {

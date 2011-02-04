@@ -44,6 +44,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.NullSdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.xml.ManifestData;
@@ -1187,7 +1188,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         // build the command line based on the available parameters.
         ArrayList<String> list = new ArrayList<String>();
 
-        list.add(AdtPlugin.getOsAbsoluteEmulator());
+        String path = avdToLaunch.getEmulatorPath(AdtPlugin.getOsSdkFolder());
+
+        list.add(path);
+
         list.add(FLAG_AVD);
         list.add(avdToLaunch.getName());
 
@@ -1661,4 +1665,3 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         }
     }
 }
-

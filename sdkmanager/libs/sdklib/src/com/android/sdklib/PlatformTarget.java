@@ -21,6 +21,7 @@ import com.android.sdklib.util.SparseArray;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Represents a platform target in the SDK.
@@ -43,21 +44,25 @@ final class PlatformTarget implements IAndroidTarget {
     private final Map<String, String> mProperties;
     private final SparseArray<String> mPaths = new SparseArray<String>();
     private String[] mSkins;
+    private String[] mAbis;
+    private boolean mAbiCompatibilityMode;
 
 
     /**
      * Creates a Platform target.
      * @param sdkOsPath the root folder of the SDK
      * @param platformOSPath the root folder of the platform component
-     * @param properties the platform properties
      * @param apiLevel the API Level
      * @param codeName the codename. can be null.
      * @param versionName the version name of the platform.
      * @param revision the revision of the platform component.
+     * @param abis the list of supported abis
+     * @param properties the platform properties
      */
     @SuppressWarnings("deprecation")
-    PlatformTarget(String sdkOsPath, String platformOSPath, Map<String, String> properties,
-            int apiLevel, String codeName, String versionName, int revision) {
+    PlatformTarget(String sdkOsPath, String platformOSPath, int apiLevel,
+            String codeName, String versionName, int revision, String[] abis,
+            Map<String, String> properties) {
         if (platformOSPath.endsWith(File.separator) == false) {
             platformOSPath = platformOSPath + File.separator;
         }
@@ -79,7 +84,6 @@ final class PlatformTarget implements IAndroidTarget {
         mPaths.put(ANDROID_AIDL, mRootFolderOsPath + SdkConstants.FN_FRAMEWORK_AIDL);
         mPaths.put(ANDROID_RS, mRootFolderOsPath + SdkConstants.OS_FRAMEWORK_RS);
         mPaths.put(ANDROID_RS_CLANG, mRootFolderOsPath + SdkConstants.OS_FRAMEWORK_RS_CLANG);
-        mPaths.put(IMAGES, mRootFolderOsPath + SdkConstants.OS_IMAGES_FOLDER);
         mPaths.put(SAMPLES, mRootFolderOsPath + SdkConstants.OS_PLATFORM_SAMPLES_FOLDER);
         mPaths.put(SKINS, mRootFolderOsPath + SdkConstants.OS_SKINS_FOLDER);
         mPaths.put(TEMPLATES, mRootFolderOsPath + SdkConstants.OS_PLATFORM_TEMPLATES_FOLDER);
@@ -112,6 +116,36 @@ final class PlatformTarget implements IAndroidTarget {
                 SdkConstants.FN_DX);
         mPaths.put(DX_JAR, sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_LIB_FOLDER +
                 SdkConstants.FN_DX_JAR);
+
+        //set compatibility mode, abis length would be 0 for older APIs
+        if (abis.length > 0) {
+            mAbis = abis;
+        } else {
+            mAbiCompatibilityMode = true;
+            mAbis = new String[] { SdkConstants.ABI_ARMEABI };
+        }
+
+    }
+
+    /**
+     * Return the full path for images
+     * @param abiType type of the abi
+     * @return complete path where the image files are located
+     */
+    public String getImagePath(String abiType) {
+        if (mAbiCompatibilityMode) {
+            // Use legacy directory structure if only arm is supported
+            return mRootFolderOsPath + SdkConstants.OS_IMAGES_FOLDER;
+        } else {
+            return mRootFolderOsPath + SdkConstants.OS_IMAGES_FOLDER + abiType + File.separator;
+        }
+    }
+
+    /**
+     * Retrieve and return the list of abis
+     */
+    public String[] getAbiList() {
+        return mAbis;
     }
 
     public String getLocation() {
