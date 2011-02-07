@@ -40,7 +40,8 @@ bin/mksdcard     tools/mksdcard
 bin/zipalign     tools/zipalign
 
 # emulator
-bin/emulator     tools/emulator
+bin/emulator tools/emulator-arm
+bin/emulator-x86   tools/emulator-x86
 sdk/emulator/snapshot/snapshots.img tools/lib/emulator/snapshots.img
 
 # Java-Based SDK Tools
