@@ -19,23 +19,28 @@ package com.android.ddmuilib.explorer;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.FileListingService;
+import com.android.ddmlib.FileListingService.FileEntry;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.FileListingService.FileEntry;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.Panel;
 import com.android.ddmuilib.SyncProgressHelper;
-import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
+import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.actions.ICommonAction;
 import com.android.ddmuilib.console.DdmConsole;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -96,6 +101,7 @@ public class DeviceExplorer extends Panel {
     private ICommonAction mPushAction;
     private ICommonAction mPullAction;
     private ICommonAction mDeleteAction;
+    private ICommonAction mCreateNewFolderAction;
 
     private Image mFileImage;
     private Image mFolderImage;
@@ -134,12 +140,14 @@ public class DeviceExplorer extends Panel {
      * @param pushAction
      * @param pullAction
      * @param deleteAction
+     * @param createNewFolderAction
      */
     public void setActions(ICommonAction pushAction, ICommonAction pullAction,
-            ICommonAction deleteAction) {
+            ICommonAction deleteAction, ICommonAction createNewFolderAction) {
         mPushAction = pushAction;
         mPullAction = pullAction;
         mDeleteAction = deleteAction;
+        mCreateNewFolderAction = createNewFolderAction;
     }
 
     /**
@@ -201,6 +209,7 @@ public class DeviceExplorer extends Panel {
                     mPullAction.setEnabled(false);
                     mPushAction.setEnabled(false);
                     mDeleteAction.setEnabled(false);
+                    mCreateNewFolderAction.setEnabled(false);
                     return;
                 }
                 if (sel instanceof IStructuredSelection) {
@@ -212,7 +221,9 @@ public class DeviceExplorer extends Panel {
                         mPullAction.setEnabled(true);
                         mPushAction.setEnabled(selection.size() == 1);
                         if (selection.size() == 1) {
-                            setDeleteEnabledState((FileEntry)element);
+                            FileEntry entry = (FileEntry) element;
+                            setDeleteEnabledState(entry);
+                            mCreateNewFolderAction.setEnabled(entry.isDirectory());
                         } else {
                             mDeleteAction.setEnabled(false);
                         }
@@ -615,6 +626,82 @@ public class DeviceExplorer extends Panel {
             // of the shell command.
         }
 
+    }
+
+    public void createNewFolderInSelection() {
+        TreeItem[] items = mTree.getSelection();
+
+        if (items.length != 1) {
+            return;
+        }
+
+        final FileEntry entry = (FileEntry) items[0].getData();
+
+        if (entry.isDirectory()) {
+            InputDialog inputDialog = new InputDialog(mTree.getShell(), "New Folder",
+                    "Please enter the new folder name", "New Folder", new IInputValidator() {
+                        public String isValid(String newText) {
+                            if ((newText != null) && (newText.length() > 0)
+                                    && (newText.trim().length() > 0)
+                                    && (newText.indexOf('/') == -1)
+                                    && (newText.indexOf('\\') == -1)) {
+                                return null;
+                            } else {
+                                return "Invalid name";
+                            }
+                        }
+                    });
+            inputDialog.open();
+            String value = inputDialog.getValue();
+
+            if (value != null) {
+                // create the mkdir command
+                String command = "mkdir " + entry.getFullEscapedPath() //$NON-NLS-1$
+                        + FileListingService.FILE_SEPARATOR + FileEntry.escape(value);
+
+                try {
+                    mCurrentDevice.executeShellCommand(command, new IShellOutputReceiver() {
+
+                        public boolean isCancelled() {
+                            return false;
+                        }
+
+                        public void flush() {
+                            mTreeViewer.refresh(entry);
+                        }
+
+                        public void addOutput(byte[] data, int offset, int length) {
+                            String errorMessage;
+                            if (data != null) {
+                                errorMessage = new String(data);
+                            } else {
+                                errorMessage = "";
+                            }
+                            Status status = new Status(IStatus.ERROR,
+                                    "DeviceExplorer", 0, errorMessage, null); //$NON-NLS-1$
+                            ErrorDialog.openError(mTree.getShell(), "New Folder Error",
+                                    "New Folder Error", status);
+                        }
+                    });
+                } catch (TimeoutException e) {
+                    // adb failed somehow, we do nothing. We should be
+                    // displaying the error from the output of the shell
+                    // command.
+                } catch (AdbCommandRejectedException e) {
+                    // adb failed somehow, we do nothing. We should be
+                    // displaying the error from the output of the shell
+                    // command.
+                } catch (ShellCommandUnresponsiveException e) {
+                    // adb failed somehow, we do nothing. We should be
+                    // displaying the error from the output of the shell
+                    // command.
+                } catch (IOException e) {
+                    // adb failed somehow, we do nothing. We should be
+                    // displaying the error from the output of the shell
+                    // command.
+                }
+            }
+        }
     }
 
     /**

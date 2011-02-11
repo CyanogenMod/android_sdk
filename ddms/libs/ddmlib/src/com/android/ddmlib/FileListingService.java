@@ -389,7 +389,7 @@ public final class FileListingService {
          * Returns an escaped version of the entry name.
          * @param entryName
          */
-        private String escape(String entryName) {
+        public static String escape(String entryName) {
             return sEscapePattern.matcher(entryName).replaceAll("\\\\$1"); //$NON-NLS-1$
         }
     }
