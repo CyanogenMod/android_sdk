@@ -18,7 +18,8 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
-import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -74,17 +75,24 @@ public final class ProjectClassLoader extends ClassLoader {
             return clazz;
         }
 
-        // attempt to load the class from the referenced projects.
+        // attempt to load the class from the libraries
         try {
-            List<IProject> javaProjects = ProjectHelper.getReferencedProjects(
-                    mJavaProject.getProject());
-            List<IJavaProject> referencedJavaProjects = BuildHelper.getJavaProjects(javaProjects);
+            // get the project info
+            ProjectState projectState = Sdk.getProjectState(mJavaProject.getProject());
 
-            for (IJavaProject javaProject : referencedJavaProjects) {
-                clazz = loadFromProject(javaProject, name);
+            // this can happen if the project has no default.properties.
+            if (projectState != null) {
 
-                if (clazz != null) {
-                    return clazz;
+                List<IProject> libProjects = projectState.getFullLibraryProjects();
+                List<IJavaProject> referencedJavaProjects = BuildHelper.getJavaProjects(
+                        libProjects);
+
+                for (IJavaProject javaProject : referencedJavaProjects) {
+                    clazz = loadFromProject(javaProject, name);
+
+                    if (clazz != null) {
+                        return clazz;
+                    }
                 }
             }
         } catch (CoreException e) {

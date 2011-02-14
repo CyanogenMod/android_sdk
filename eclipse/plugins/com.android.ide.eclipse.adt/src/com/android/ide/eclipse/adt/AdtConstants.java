@@ -56,6 +56,14 @@ public class AdtConstants {
     /** Nature of Android export projects */
     public final static String NATURE_EXPORT = "com.android.ide.eclipse.adt.AndroidExportNature"; //$NON-NLS-1$
 
+    /** The container id for the android framework jar file */
+    public final static String CONTAINER_FRAMEWORK =
+        "com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"; //$NON-NLS-1$
+
+    /** The container id for the libraries */
+    public final static String CONTAINER_LIBRARIES = "com.android.ide.eclipse.adt.LIBRARIES"; //$NON-NLS-1$
+
+
     /** Separator for workspace path, i.e. "/". */
     public final static String WS_SEP = "/"; //$NON-NLS-1$
     /** Separator character for workspace path, i.e. '/'. */

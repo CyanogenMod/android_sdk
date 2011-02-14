@@ -61,9 +61,13 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public final static int SOURCES             = 18;
     /** OS Path to the target specific docs */
     public final static int DOCS                = 19;
-    /** OS Path to the target's version of the aapt tool. */
+    /** OS Path to the target's version of the aapt tool.
+      * This is deprecated as aapt is now in the platform tools and not in the platform. */
+    @Deprecated
     public final static int AAPT                = 20;
-    /** OS Path to the target's version of the aidl tool. */
+    /** OS Path to the target's version of the aidl tool.
+      * This is deprecated as aidl is now in the platform tools and not in the platform. */
+    @Deprecated
     public final static int AIDL                = 21;
     /** OS Path to the target's version of the dx too.<br>
      * This is deprecated as dx is now in the platform tools and not in the platform. */

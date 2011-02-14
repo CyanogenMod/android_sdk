@@ -25,18 +25,22 @@ import java.util.ArrayList;
 /**
  * A base class for the ant task that contains logic for handling dependency files
  */
-public class BaseTask extends Task {
+public abstract class BaseTask extends Task {
 
     private DependencyGraph mDependencies;
+    private String mPreviousBuildType;
+    private String mBuildType;
 
-    /*
-     * (non-Javadoc)
-     *
-     * Executes the loop. Based on the values inside default.properties, this will
-     * create alternate temporary ap_ files.
-     *
-     * @see org.apache.tools.ant.Task#execute()
-     */
+    public void setPreviousBuildType(String previousBuildType) {
+        mPreviousBuildType = previousBuildType;
+    }
+
+    public void setBuildType(String buildType) {
+        mBuildType = buildType;
+    }
+
+    protected abstract String getExecTaskName();
+
     @Override
     public void execute() throws BuildException {
 
@@ -46,9 +50,14 @@ public class BaseTask extends Task {
      * Set up the dependency graph by passing it the location of the ".d" file
      * @param dependencyFile path to the dependency file to use
      * @param watchPaths a list of folders to watch for new files
-     * @return true if the dependency graph was sucessfully initialized
+     * @return true if the dependency graph was successfully initialized
      */
     protected boolean initDependencies(String dependencyFile, ArrayList<File> watchPaths) {
+        if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
+            // we don't care about deps, we need to execute the task no matter what.
+            return true;
+        }
+
         File depFile = new File(dependencyFile);
         if (depFile.exists()) {
             mDependencies = new DependencyGraph(dependencyFile, watchPaths);
@@ -64,6 +73,16 @@ public class BaseTask extends Task {
      *         have changed since the last run
      */
     protected boolean dependenciesHaveChanged() {
+        if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
+            String execName = getExecTaskName();
+            if (execName == null) {
+                System.out.println("Current build type is different than previous build: forced task run.");
+            } else {
+                System.out.println("Current build type is different than previous build: forced " + execName + " run.");
+            }
+            return true;
+        }
+
         assert mDependencies != null : "Dependencies have not been initialized";
         return mDependencies.dependenciesHaveChanged();
     }

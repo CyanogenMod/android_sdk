@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
@@ -162,6 +162,9 @@ public final class LayoutReloadMonitor {
     /**
      * Implementation of the {@link IFileListener} as an internal class so that the methods
      * do not appear in the public API of {@link LayoutReloadMonitor}.
+     *
+     * This is only to detect code and manifest change. Resource changes (located in res/)
+     * is done through {@link #mResourceListener}.
      */
     private IFileListener mFileListener = new IFileListener() {
         /*
@@ -183,8 +186,6 @@ public final class LayoutReloadMonitor {
             if (hasAndroidNature) {
                 // project is an Android project, it's the one being affected
                 // directly by its own file change.
-                // Note that resource change is handled separately, so there's no need to
-                // figure out if the project is a library and to update its main project(s).
                 processFileChanged(file, project);
             } else {
                 // check the projects depending on it, if they are Android project, update them.
@@ -248,7 +249,6 @@ public final class LayoutReloadMonitor {
                 }
 
                 changeFlags.manifest = true;
-
             }
         }
     };

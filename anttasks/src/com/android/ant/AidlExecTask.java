@@ -93,9 +93,6 @@ public class AidlExecTask extends Task {
             }
         }
 
-        File exe = new File(mExecutable);
-        String execTaskName = exe.getName();
-
         // now loop on all the source folders to find all the aidl to compile
         // and compile them
         for (String sourceFolder : sourceFolders) {
@@ -115,7 +112,7 @@ public class AidlExecTask extends Task {
                 task.setProject(taskProject);
                 task.setOwningTarget(getOwningTarget());
                 task.setExecutable(mExecutable);
-                task.setTaskName(execTaskName);
+                task.setTaskName("aidl");
                 task.setFailonerror(true);
 
                 task.createArg().setValue("-p" + mFramework);

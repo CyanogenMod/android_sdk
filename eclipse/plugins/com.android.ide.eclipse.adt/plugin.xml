@@ -392,11 +392,11 @@
     <extension point="org.eclipse.jdt.core.classpathContainerInitializer">
         <classpathContainerInitializer
             class="com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer"
-            id="com.android.ide.eclipse.adt.project.AndroidClasspathContainerInitializer">
+            id="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK">
         </classpathContainerInitializer>
         <classpathContainerInitializer
             class="com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer"
-            id="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK">
+            id="com.android.ide.eclipse.adt.LIBRARIES">
         </classpathContainerInitializer>
     </extension>
     <extension point="org.eclipse.jdt.ui.classpathContainerPage">

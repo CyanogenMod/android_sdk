@@ -52,6 +52,12 @@ import javax.xml.xpath.XPathFactory;
  */
 public class MultiApkExportTask extends Task {
 
+    private static final String PROP_OUT_ABS_DIR = "out.absolute.dir";
+
+    private static final String PROP_KEY_STORE_PASSWORD = "key.store.password";
+    private static final String PROP_KEY_ALIAS_PASSWORD = "key.alias.password";
+
+
     private Target mTarget;
     private XPathFactory mXPathFactory;
 
@@ -117,7 +123,7 @@ public class MultiApkExportTask extends Task {
                 mXPathFactory = XPathFactory.newInstance();
 
                 File exportProjectOutput = new File(
-                        getValidatedProperty(antProject, AntConstants.PROP_OUT_ABS_DIR));
+                        getValidatedProperty(antProject, PROP_OUT_ABS_DIR));
 
                 // if there's no error, and we can sign, prompt for the passwords.
                 String keyStorePassword = null;
@@ -127,23 +133,21 @@ public class MultiApkExportTask extends Task {
 
                     Input input = new Input();
                     input.setProject(antProject);
-                    input.setAddproperty(AntConstants.PROP_KEY_STORE_PASSWORD);
+                    input.setAddproperty(PROP_KEY_STORE_PASSWORD);
                     input.setMessage(String.format("Please enter keystore password (store: %1$s):",
                             keyStore));
                     input.execute();
 
                     input = new Input();
                     input.setProject(antProject);
-                    input.setAddproperty(AntConstants.PROP_KEY_ALIAS_PASSWORD);
+                    input.setAddproperty(PROP_KEY_ALIAS_PASSWORD);
                     input.setMessage(String.format("Please enter password for alias '%1$s':",
                             keyAlias));
                     input.execute();
 
                     // and now read the property so that they can be set into the sub ant task.
-                    keyStorePassword = getValidatedProperty(antProject,
-                            AntConstants.PROP_KEY_STORE_PASSWORD);
-                    keyAliasPassword = getValidatedProperty(antProject,
-                            AntConstants.PROP_KEY_ALIAS_PASSWORD);
+                    keyStorePassword = getValidatedProperty(antProject, PROP_KEY_STORE_PASSWORD);
+                    keyAliasPassword = getValidatedProperty(antProject, PROP_KEY_ALIAS_PASSWORD);
                 }
 
                 for (ApkData apk : apks) {

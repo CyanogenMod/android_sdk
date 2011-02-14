@@ -382,9 +382,14 @@ public final class GlobalProjectMonitor {
         IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects(javaModel,
                 null /*filter*/);
 
+
+        notifyResourceEventStart();
+
         for (IJavaProject androidProject : androidProjects) {
             listener.projectOpenedWithWorkspace(androidProject.getProject());
         }
+
+        notifyResourceEventEnd();
     }
 
     /**
@@ -427,7 +432,27 @@ public final class GlobalProjectMonitor {
         mRawDeltaListeners.remove(listener);
     }
 
-    private final IResourceChangeListener mResourceChangeListener = new IResourceChangeListener() {
+    private void notifyResourceEventStart() {
+        for (IResourceEventListener listener : mEventListeners) {
+            try {
+                listener.resourceChangeEventStart();
+            } catch (Throwable t) {
+                AdtPlugin.log(t,"Failed to call IResourceEventListener.resourceChangeEventStart");
+            }
+        }
+    }
+
+    private void notifyResourceEventEnd() {
+        for (IResourceEventListener listener : mEventListeners) {
+            try {
+                listener.resourceChangeEventEnd();
+            } catch (Throwable t) {
+                AdtPlugin.log(t,"Failed to call IResourceEventListener.resourceChangeEventEnd");
+            }
+        }
+    }
+
+    private IResourceChangeListener mResourceChangeListener = new IResourceChangeListener() {
         /**
          * Processes the workspace resource change events.
          *
@@ -435,13 +460,7 @@ public final class GlobalProjectMonitor {
          */
         public synchronized void resourceChanged(IResourceChangeEvent event) {
             // notify the event listeners of a start.
-            for (IResourceEventListener listener : mEventListeners) {
-                try {
-                    listener.resourceChangeEventStart();
-                } catch (Throwable t) {
-                    AdtPlugin.log(t,"Failed to call IResourceEventListener.resourceChangeEventStart");
-                }
-            }
+            notifyResourceEventStart();
 
             if (event.getType() == IResourceChangeEvent.PRE_DELETE) {
                 // a project is being deleted. Lets get the project object and remove
@@ -469,13 +488,7 @@ public final class GlobalProjectMonitor {
             }
 
             // we're done, notify the event listeners.
-            for (IResourceEventListener listener : mEventListeners) {
-                try {
-                    listener.resourceChangeEventEnd();
-                } catch (Throwable t) {
-                    AdtPlugin.log(t,"Failed to call IResourceEventListener.resourceChangeEventEnd");
-                }
-            }
+            notifyResourceEventEnd();
         }
     };
 
