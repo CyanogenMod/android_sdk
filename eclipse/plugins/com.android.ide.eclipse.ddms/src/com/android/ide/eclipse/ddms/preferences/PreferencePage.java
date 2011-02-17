@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.ddms.preferences;
 
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.PortFieldEditor;
@@ -52,53 +53,68 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         IntegerFieldEditor ife;
 
         ife = new PortFieldEditor(PreferenceInitializer.ATTR_DEBUG_PORT_BASE,
-            "Base local debugger port:", getFieldEditorParent());
+                Messages.PreferencePage_Base_Local_Debugger_Port, getFieldEditorParent());
         addField(ife);
 
         BooleanFieldEditor bfe;
 
         bfe = new BooleanFieldEditor(PreferenceInitializer.ATTR_DEFAULT_THREAD_UPDATE,
-            "Thread updates enabled by default", getFieldEditorParent());
+                Messages.PreferencePage_Thread_Updates_Enabled_By_Default, getFieldEditorParent());
         addField(bfe);
 
         bfe = new BooleanFieldEditor(PreferenceInitializer.ATTR_DEFAULT_HEAP_UPDATE,
-            "Heap updates enabled by default", getFieldEditorParent());
+                Messages.PreferencePage_Heap_Updates_Enabled_Default, getFieldEditorParent());
         addField(bfe);
 
         ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_THREAD_INTERVAL,
-            "Thread status refresh interval (seconds):", getFieldEditorParent());
+                Messages.PreferencePage_Thread_Status_Refresh_Interval, getFieldEditorParent());
         ife.setValidRange(1, 60);
         addField(ife);
 
         ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_HPROF_ACTION,
-                "HPROF Action:", new String[][] {
-                    { "Save to disk", HProfHandler.ACTION_SAVE },
-                    { "Open in Eclipse", HProfHandler.ACTION_OPEN },
+                Messages.PreferencePage_HPROF_Action, new String[][] {
+                        {
+                                Messages.PreferencePage_Save_Disk, HProfHandler.ACTION_SAVE
+                        },
+                        {
+                                Messages.PreferencePage_Open_Eclipse, HProfHandler.ACTION_OPEN
+                        },
                 }, getFieldEditorParent());
         addField(cfe);
 
         ife = new IntegerFieldEditor(PreferenceInitializer.ATTR_TIME_OUT,
-                "ADB connection time out (ms):", getFieldEditorParent());
-            addField(ife);
+                Messages.PreferencePage_ADB_Connection_Time_Out, getFieldEditorParent());
+        addField(ife);
 
-        RadioGroupFieldEditor rgfe = new RadioGroupFieldEditor(PreferenceInitializer.ATTR_LOG_LEVEL,
-                "Logging Level", 1, new String[][] {
-                    { "Verbose", LogLevel.VERBOSE.getStringValue() },
-                    { "Debug", LogLevel.DEBUG.getStringValue() },
-                    { "Info", LogLevel.INFO.getStringValue() },
-                    { "Warning", LogLevel.WARN.getStringValue() },
-                    { "Error", LogLevel.ERROR.getStringValue() },
-                    { "Assert", LogLevel.ASSERT.getStringValue() }
+        RadioGroupFieldEditor rgfe = new RadioGroupFieldEditor(
+                PreferenceInitializer.ATTR_LOG_LEVEL,
+                Messages.PreferencePage_Logging_Level, 1, new String[][] {
+                        {
+                                Messages.PreferencePage_Verbose, LogLevel.VERBOSE.getStringValue()
+                        },
+                        {
+                                Messages.PreferencePage_Debug, LogLevel.DEBUG.getStringValue()
+                        },
+                        {
+                                Messages.PreferencePage_Info, LogLevel.INFO.getStringValue()
+                        },
+                        {
+                                Messages.PreferencePage_Warning, LogLevel.WARN.getStringValue()
+                        },
+                        {
+                                Messages.PreferencePage_Error, LogLevel.ERROR.getStringValue()
+                        },
+                        {
+                                Messages.PreferencePage_Assert, LogLevel.ASSERT.getStringValue()
+                        }
                     },
                 getFieldEditorParent(), true);
         addField(rgfe);
-
         mUseAdbHost = new BooleanFieldEditor(PreferenceInitializer.ATTR_USE_ADBHOST,
-                "Use ADBHOST", getFieldEditorParent());
+                Messages.PreferencePage_Use_Adbhost, getFieldEditorParent());
         addField(mUseAdbHost);
-
         mAdbHostValue = new StringFieldEditor(PreferenceInitializer.ATTR_ADBHOST_VALUE,
-                "ADBHOST value:", getFieldEditorParent());
+                Messages.PreferencePage_Adbhost_value, getFieldEditorParent());
         mAdbHostValue.setEnabled(getPreferenceStore()
                 .getBoolean(PreferenceInitializer.ATTR_USE_ADBHOST), getFieldEditorParent());
         addField(mAdbHostValue);

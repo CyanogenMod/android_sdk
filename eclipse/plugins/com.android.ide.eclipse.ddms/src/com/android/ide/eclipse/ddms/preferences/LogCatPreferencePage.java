@@ -16,9 +16,6 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
-import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.views.LogCatView;
-
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -32,6 +29,10 @@ import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.i18n.Messages;
+import com.android.ide.eclipse.ddms.views.LogCatView;
 
 /**
  * Preference Pane for LogCat.
@@ -50,7 +51,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     @Override
     protected void createFieldEditors() {
         FontFieldEditor ffe = new FontFieldEditor(PreferenceInitializer.ATTR_LOGCAT_FONT,
-                "Display Font:", getFieldEditorParent());
+                Messages.LogCatPreferencePage_Display_Font, getFieldEditorParent());
         addField(ffe);
 
         getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
@@ -60,30 +61,35 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
 
                 if (PreferenceInitializer.ATTR_LOGCAT_FONT.equals(property)) {
                     try {
-                        FontData fdat = new FontData((String)event.getNewValue());
+                        FontData fdat = new FontData((String) event.getNewValue());
                         LogCatView.setFont(new Font(getFieldEditorParent().getDisplay(), fdat));
                     } catch (IllegalArgumentException e) {
                         // Looks like the data from the store is not valid.
                         // We do nothing (default font will be used).
                     } catch (SWTError e2) {
                         // Looks like the Font() constructor failed.
-                        // We do nothing in this case, the logcat view will use the default font.
+                        // We do nothing in this case, the logcat view will use
+                        // the default font.
                     }
                 }
             }
         });
 
         ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM,
-                "Double-click Action:", new String[][] {
-                    { "Go to Problem (method declaration)", LogCatView.CHOICE_METHOD_DECLARATION },
-                    { "Go to Problem (error line)", LogCatView.CHOICE_ERROR_LINE },
+                Messages.LogCatPreferencePage_Double_Click_Action, new String[][] {
+                        {
+                                Messages.LogCatPreferencePage_Go_To_Problem_Declararion,
+                                LogCatView.CHOICE_METHOD_DECLARATION
+                        },
+                        {
+                                Messages.LogCatPreferencePage_Go_To_Problem_Error_Line,
+                                LogCatView.CHOICE_ERROR_LINE
+                        },
                 }, getFieldEditorParent());
         addField(cfe);
-
         mSwitchPerspective = new BooleanFieldEditor(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE,
-                "Switch Perspective", getFieldEditorParent());
+                Messages.LogCatPreferencePage_Switch_Perspective, getFieldEditorParent());
         addField(mSwitchPerspective);
-
         IPerspectiveDescriptor[] perspectiveDescriptors =
                 PlatformUI.getWorkbench().getPerspectiveRegistry().getPerspectives();
         String[][] perspectives;
@@ -98,7 +104,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
             perspectives = new String[0][0];
         }
         mWhichPerspective = new ComboFieldEditor(PreferenceInitializer.ATTR_PERSPECTIVE_ID,
-                "Switch to:", perspectives, getFieldEditorParent());
+                Messages.LogCatPreferencePage_Switch_To, perspectives, getFieldEditorParent());
         mWhichPerspective.setEnabled(getPreferenceStore()
                 .getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE), getFieldEditorParent());
         addField(mWhichPerspective);

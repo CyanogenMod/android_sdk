@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.eclipse.ddms;
 
+import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.AllocTrackerView;
 import com.android.ide.eclipse.ddms.views.DeviceView;
 import com.android.ide.eclipse.ddms.views.EmulatorControlView;
@@ -29,7 +31,7 @@ import org.eclipse.ui.IPerspectiveFactory;
 
 public class Perspective implements IPerspectiveFactory {
 
-    public static String ID = "com.android.ide.eclipse.ddms.Perspective";
+    public static String ID = "com.android.ide.eclipse.ddms.Perspective"; //$NON-NLS-1$
 
     public void createInitialLayout(IPageLayout layout) {
         // create a default layout that looks like the stand alone DDMS.
@@ -51,7 +53,7 @@ public class Perspective implements IPerspectiveFactory {
         folder.addView(DeviceView.ID);
 
         folder = layout.createFolder("emulator", IPageLayout.BOTTOM, 0.5f, //$NON-NLS-1$
-                "devices");
+                "devices"); //$NON-NLS-1$
         folder.addPlaceholder(EmulatorControlView.ID + ":*"); //$NON-NLS-1$
         folder.addView(EmulatorControlView.ID);
 
