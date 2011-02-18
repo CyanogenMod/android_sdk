@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@+id/RelativeLayout1" xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <Button android:layout_alignParentLeft="true" android:layout_alignParentTop="true" android:text="FirstButton" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+    <Button android:layout_alignParentLeft="true" android:layout_alignBaseline="@+id/button2" android:layout_below="@+id/button1" android:layout_marginTop="2dip" android:text="SecondButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/button2"></Button>
+    <Button android:layout_toRightOf="@+id/button2" android:layout_alignBaseline="@+id/button2" android:layout_alignTop="@+id/button2" android:text="ThirdButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/button3"></Button>
+    <CheckBox android:layout_toRightOf="@+id/button3" android:layout_alignBaseline="@+id/button2" android:layout_below="@+id/button1" android:id="@+id/checkBox1" android:text="CheckBox" android:layout_width="wrap_content" android:layout_height="wrap_content"></CheckBox>
+    <Button android:layout_alignParentLeft="true" android:layout_below="@+id/checkBox1" android:layout_height="wrap_content" android:text="FourthButton" android:id="@+id/button4" android:layout_width="match_parent"></Button>
+    <Button android:layout_alignParentLeft="true" android:layout_alignBaseline="@+id/button5" android:layout_below="@+id/button4" android:layout_gravity="right" android:id="@+id/button5" android:text="FifthButton" android:layout_height="wrap_content" android:layout_width="wrap_content"></Button>
+                <Button android:layout_alignParentLeft="true" android:layout_alignBaseline="@+id/button6" android:layout_below="@+id/button5" android:text="Button" android:id="@+id/button6" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+</RelativeLayout>
+

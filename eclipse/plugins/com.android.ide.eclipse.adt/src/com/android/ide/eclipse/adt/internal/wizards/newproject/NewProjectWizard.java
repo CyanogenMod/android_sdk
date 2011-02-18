@@ -434,7 +434,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         IPath path = info.getLocationPath();
         IPath defaultLocation = Platform.getLocation();
-        if (!path.equals(defaultLocation)) {
+        if (path != null && !path.equals(defaultLocation)) {
             description.setLocation(path);
         }
 

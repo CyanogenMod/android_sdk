@@ -31,8 +31,9 @@ import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttr
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_COLON;
 import static com.android.resources.ResourceType.LAYOUT;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -105,6 +106,11 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         super(file, editor, selection, treeSelection);
     }
 
+    @VisibleForTesting
+    ExtractIncludeRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+        super(selectedElements, editor);
+    }
+
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException,
             OperationCanceledException {
@@ -149,7 +155,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             }
 
             // This also ensures that we have a valid DOM model:
-            mElements = getElements();
             if (mElements.size() == 0) {
                 status.addFatalError("Nothing to extract");
                 return status;

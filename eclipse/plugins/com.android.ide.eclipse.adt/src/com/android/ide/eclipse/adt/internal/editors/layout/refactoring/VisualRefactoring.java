@@ -27,17 +27,20 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_COLON;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
@@ -50,6 +53,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreePath;
@@ -62,12 +66,14 @@ import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocumentRegion;
@@ -95,19 +101,23 @@ import java.util.Set;
  */
 @SuppressWarnings("restriction") // XML model
 public abstract class VisualRefactoring extends Refactoring {
-    protected static final String KEY_FILE = "file";                      //$NON-NLS-1$
-    protected static final String KEY_PROJECT = "proj";                   //$NON-NLS-1$
-    protected static final String KEY_SEL_START = "sel-start";            //$NON-NLS-1$
-    protected static final String KEY_SEL_END = "sel-end";                //$NON-NLS-1$
+    private static final String KEY_FILE = "file";                      //$NON-NLS-1$
+    private static final String KEY_PROJECT = "proj";                   //$NON-NLS-1$
+    private static final String KEY_SEL_START = "sel-start";            //$NON-NLS-1$
+    private static final String KEY_SEL_END = "sel-end";                //$NON-NLS-1$
 
-    protected IFile mFile;
-    protected LayoutEditor mEditor;
-    protected IProject mProject;
+    protected final IFile mFile;
+    protected final LayoutEditor mEditor;
+    protected final IProject mProject;
     protected int mSelectionStart = -1;
     protected int mSelectionEnd = -1;
-    protected List<Element> mElements = null;
-    protected ITreeSelection mTreeSelection;
-    protected ITextSelection mSelection;
+    protected final List<Element> mElements;
+    protected final ITreeSelection mTreeSelection;
+    protected final ITextSelection mSelection;
+
+    protected final Map<Element, String> mGeneratedIdMap = new HashMap<Element, String>();
+    protected final Set<String> mGeneratedIds = new HashSet<String>();
+
     protected List<Change> mChanges;
     private String mAndroidNamespacePrefix;
 
@@ -124,6 +134,36 @@ public abstract class VisualRefactoring extends Refactoring {
         mSelectionStart = Integer.parseInt(arguments.get(KEY_SEL_START));
         mSelectionEnd = Integer.parseInt(arguments.get(KEY_SEL_END));
         mEditor = null;
+        mElements = null;
+        mSelection = null;
+        mTreeSelection = null;
+    }
+
+    @VisibleForTesting
+    VisualRefactoring(List<Element> elements, LayoutEditor editor) {
+        mElements = elements;
+        mEditor = editor;
+
+        mFile = editor != null ? editor.getInputFile() : null;
+        mProject = editor != null ? editor.getProject() : null;
+        mSelectionStart = 0;
+        mSelectionEnd = 0;
+        mSelection = null;
+        mTreeSelection = null;
+
+        int end = Integer.MIN_VALUE;
+        int start = Integer.MAX_VALUE;
+        for (Element element : elements) {
+            if (element instanceof IndexedRegion) {
+                IndexedRegion region = (IndexedRegion) element;
+                start = Math.min(start, region.getStartOffset());
+                end = Math.max(end, region.getEndOffset());
+            }
+        }
+        if (start >= 0) {
+            mSelectionStart = start;
+            mSelectionEnd = end;
+        }
     }
 
     public VisualRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
@@ -166,6 +206,8 @@ public abstract class VisualRefactoring extends Refactoring {
             mSelectionStart = selection.getOffset();
             mSelectionEnd = mSelectionStart + selection.getLength();
         }
+
+        mElements = initElements();
     }
 
     @Override
@@ -267,8 +309,7 @@ public abstract class VisualRefactoring extends Refactoring {
                 }
             }
 
-            // This also ensures that we have a valid DOM model:
-            mElements = getElements();
+            // Ensures that we have a valid DOM model:
             if (mElements.size() == 0) {
                 status.addFatalError("Nothing to extract");
                 return status;
@@ -291,6 +332,11 @@ public abstract class VisualRefactoring extends Refactoring {
         mChanges = new ArrayList<Change>();
         try {
             monitor.beginTask("Checking post-conditions...", 5);
+
+            // Reset state for each computeChanges call, in case the user goes back
+            // and forth in the refactoring wizard
+            mGeneratedIdMap.clear();
+            mGeneratedIds.clear();
             List<Change> changes = computeChanges();
             mChanges.addAll(changes);
 
@@ -661,16 +707,59 @@ public abstract class VisualRefactoring extends Refactoring {
     }
 
     protected List<Element> getElements() {
-        if (mElements == null) {
-            List<Element> nodes = new ArrayList<Element>();
+        return mElements;
+    }
 
-            AndroidXmlEditor editor = mEditor;
-            IStructuredDocument doc = editor.getStructuredDocument();
+    protected List<Element> initElements() {
+        List<Element> nodes = new ArrayList<Element>();
+
+        assert mTreeSelection == null || mSelection == null :
+            "treeSel= " + mTreeSelection + ", sel=" + mSelection;
+
+        // Initialize mSelectionStart and mSelectionEnd based on the selection context, which
+        // is either a treeSelection (when invoked from the layout editor or the outline), or
+        // a selection (when invoked from an XML editor)
+        if (mTreeSelection != null) {
+            int end = Integer.MIN_VALUE;
+            int start = Integer.MAX_VALUE;
+            for (TreePath path : mTreeSelection.getPaths()) {
+                Object lastSegment = path.getLastSegment();
+                if (lastSegment instanceof CanvasViewInfo) {
+                    CanvasViewInfo viewInfo = (CanvasViewInfo) lastSegment;
+                    UiViewElementNode uiNode = viewInfo.getUiViewNode();
+                    if (uiNode == null) {
+                        continue;
+                    }
+                    Node xmlNode = uiNode.getXmlNode();
+                    if (xmlNode instanceof Element) {
+                        Element element = (Element) xmlNode;
+                        nodes.add(element);
+                        IndexedRegion region = getRegion(element);
+                        start = Math.min(start, region.getStartOffset());
+                        end = Math.max(end, region.getEndOffset());
+                    }
+                }
+            }
+            if (start >= 0) {
+                mSelectionStart = start;
+                mSelectionEnd = end;
+            }
+        } else if (mSelection != null) {
+            mSelectionStart = mSelection.getOffset();
+            mSelectionEnd = mSelectionStart + mSelection.getLength();
+
+            // Figure out the range of selected nodes from the document offsets
+            IStructuredDocument doc = mEditor.getStructuredDocument();
             Pair<Element, Element> range = DomUtilities.getElementRange(doc,
                     mSelectionStart, mSelectionEnd);
             if (range != null) {
                 Element first = range.getFirst();
                 Element last = range.getSecond();
+
+                // Adjust offsets to get rid of surrounding text nodes (if you happened
+                // to select a text range and included whitespace on either end etc)
+                mSelectionStart = getRegion(first).getStartOffset();
+                mSelectionEnd = getRegion(last).getEndOffset();
 
                 if (first == last) {
                     nodes.add(first);
@@ -691,10 +780,18 @@ public abstract class VisualRefactoring extends Refactoring {
                     // elements from different levels. We can't extract ranges like that.
                 }
             }
-            mElements = nodes;
+        } else {
+            assert false;
         }
 
-        return mElements;
+        // Make sure that the list of elements is unique
+        //Set<Element> seen = new HashSet<Element>();
+        //for (Element element : nodes) {
+        //   assert !seen.contains(element) : element;
+        //   seen.add(element);
+        //}
+
+        return nodes;
     }
 
     protected Element getPrimaryElement() {
@@ -707,7 +804,11 @@ public abstract class VisualRefactoring extends Refactoring {
     }
 
     protected Document getDomDocument() {
-        return mEditor.getUiRootNode().getXmlDocument();
+        if (mEditor.getUiRootNode() != null) {
+            return mEditor.getUiRootNode().getXmlDocument();
+        } else {
+            return getElements().get(0).getOwnerDocument();
+        }
     }
 
     protected List<CanvasViewInfo> getSelectedViewInfos() {
@@ -793,7 +894,20 @@ public abstract class VisualRefactoring extends Refactoring {
         return true;
     }
 
-    protected IndexedRegion getRegion(Node node) {
+    protected void ensureIdMatchesType(Element element, String newType, MultiTextEdit rootEdit) {
+        String oldType = element.getTagName();
+        if (oldType.indexOf('.') == -1) {
+            oldType = ANDROID_WIDGET_PREFIX + oldType;
+        }
+        String oldTypeBase = oldType.substring(oldType.lastIndexOf('.') + 1);
+        String id = getId(element);
+        if (id == null || id.toLowerCase().contains(oldTypeBase.toLowerCase())) {
+            String newTypeBase = newType.substring(newType.lastIndexOf('.') + 1);
+            ensureHasId(rootEdit, element, newTypeBase);
+        }
+    }
+
+    protected static IndexedRegion getRegion(Node node) {
         if (node instanceof IndexedRegion) {
             return (IndexedRegion) node;
         }
@@ -801,11 +915,21 @@ public abstract class VisualRefactoring extends Refactoring {
         return null;
     }
 
-    protected String ensureHasId(MultiTextEdit rootEdit, Element element) {
-        if (!element.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
-            String id = DomUtilities.getFreeWidgetId(element);
+    protected String ensureHasId(MultiTextEdit rootEdit, Element element, String prefix) {
+        String id = mGeneratedIdMap.get(element);
+        if (id != null) {
+            return NEW_ID_PREFIX + id;
+        }
+
+        if (!element.hasAttributeNS(ANDROID_URI, ATTR_ID)
+                || (prefix != null && !getId(element).startsWith(prefix))) {
+            id = DomUtilities.getFreeWidgetId(element, mGeneratedIds, prefix);
+            // Make sure we don't use this one again
+            mGeneratedIds.add(id);
+            mGeneratedIdMap.put(element, id);
             id = NEW_ID_PREFIX + id;
-            addAttributeDeclaration(rootEdit, element, getAndroidNamespacePrefix(), ATTR_ID, id);
+            setAttribute(rootEdit, element,
+                    ANDROID_URI, getAndroidNamespacePrefix(), ATTR_ID, id);
             return id;
         }
 
@@ -828,7 +952,7 @@ public abstract class VisualRefactoring extends Refactoring {
         return -1;
     }
 
-    protected static String getId(Element element) {
+    public static String getId(Element element) {
         return element.getAttributeNS(ANDROID_URI, ATTR_ID);
     }
 
@@ -855,16 +979,22 @@ public abstract class VisualRefactoring extends Refactoring {
         return fqcn;
     }
 
-    protected void addAttributeDeclaration(MultiTextEdit rootEdit, Element element,
+    protected void setAttribute(MultiTextEdit rootEdit, Element element,
+            String attributeUri,
             String attributePrefix, String attributeName, String attributeValue) {
         int offset = getFirstAttributeOffset(element);
         if (offset != -1) {
-            addAttributeDeclaration(rootEdit, offset, attributePrefix, attributeName,
-                    attributeValue);
+            if (element.hasAttributeNS(attributeUri, attributeName)) {
+                replaceAttributeDeclaration(rootEdit, offset, element, attributePrefix,
+                        attributeUri, attributeName, attributeValue);
+            } else {
+                addAttributeDeclaration(rootEdit, offset, attributePrefix, attributeName,
+                        attributeValue);
+            }
         }
     }
 
-    protected void addAttributeDeclaration(MultiTextEdit rootEdit, int offset,
+    private void addAttributeDeclaration(MultiTextEdit rootEdit, int offset,
             String attributePrefix, String attributeName, String attributeValue) {
         StringBuilder sb = new StringBuilder();
         sb.append(' ').append(attributePrefix).append(':');
@@ -873,6 +1003,58 @@ public abstract class VisualRefactoring extends Refactoring {
 
         InsertEdit setAttribute = new InsertEdit(offset, sb.toString());
         rootEdit.addChild(setAttribute);
+    }
+
+    /** Replaces the value declaration of the given attribute */
+    private void replaceAttributeDeclaration(MultiTextEdit rootEdit, int offset,
+            Element element, String attributePrefix, String attributeUri,
+            String attributeName, String attributeValue) {
+        // Find attribute value and replace it
+        IStructuredModel model = mEditor.getModelForRead();
+        try {
+            IStructuredDocument doc = model.getStructuredDocument();
+
+            IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(offset);
+            ITextRegionList list = region.getRegions();
+            int regionStart = region.getStart();
+
+            int valueStart = -1;
+            boolean useNextValue = false;
+            String targetName = attributePrefix + ':' + attributeName;
+
+            // Look at all attribute values and look for an id reference match
+            for (int j = 0; j < region.getNumberOfRegions(); j++) {
+                ITextRegion subRegion = list.get(j);
+                String type = subRegion.getType();
+                if (DOMRegionContext.XML_TAG_ATTRIBUTE_NAME.equals(type)) {
+                    // What about prefix?
+                    if (targetName.equals(region.getText(subRegion))) {
+                        useNextValue = true;
+                    }
+                } else if (DOMRegionContext.XML_TAG_ATTRIBUTE_VALUE.equals(type)) {
+                    if (useNextValue) {
+                        valueStart = regionStart + subRegion.getStart();
+                        break;
+                    }
+                }
+            }
+
+            if (valueStart != -1) {
+                String oldValue = element.getAttributeNS(attributeUri, attributeName);
+                int start = valueStart + 1; // Skip opening "
+                ReplaceEdit setAttribute = new ReplaceEdit(start, oldValue.length(),
+                        attributeValue);
+                try {
+                    rootEdit.addChild(setAttribute);
+                } catch (MalformedTreeException mte) {
+                    AdtPlugin.log(mte, "Could not replace attribute %1$s with %2$s",
+                            attributeName, attributeValue);
+                    throw mte;
+                }
+            }
+        } finally {
+            model.releaseFromRead();
+        }
     }
 
     /** Strips out the given attribute, if defined */
@@ -888,6 +1070,230 @@ public abstract class VisualRefactoring extends Refactoring {
                 rootEdit.addChild(deletion);
             }
         }
+    }
+
+    /**
+     * Removes the given element's opening and closing tags (including all of its
+     * attributes) but leaves any children alone
+     *
+     * @param rootEdit the multi edit to add the removal operation to
+     * @param element the element to delete the open and closing tags for
+     * @param skip a list of elements that should not be modified (for example because they
+     *    are targeted for deletion)
+     *
+     * TODO: Rename this to "unwrap" ? And allow for handling nested deletions.
+     */
+    protected void removeElementTags(MultiTextEdit rootEdit, Element element, List<Element> skip) {
+        IndexedRegion elementRegion = getRegion(element);
+        if (elementRegion == null) {
+            return;
+        }
+
+        // Look for the opening tag
+        IStructuredModel model = mEditor.getModelForRead();
+        try {
+            int startLineInclusive = -1;
+            int endLineInclusive = -1;
+            IStructuredDocument doc = model.getStructuredDocument();
+            if (doc != null) {
+                int start = elementRegion.getStartOffset();
+                IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(start);
+                ITextRegionList list = region.getRegions();
+                int regionStart = region.getStart();
+                int startOffset = regionStart;
+                for (int j = 0; j < region.getNumberOfRegions(); j++) {
+                    ITextRegion subRegion = list.get(j);
+                    String type = subRegion.getType();
+                    if (DOMRegionContext.XML_TAG_OPEN.equals(type)) {
+                        startOffset = regionStart + subRegion.getStart();
+                    } else if (DOMRegionContext.XML_TAG_CLOSE.equals(type)) {
+                        int endOffset = regionStart + subRegion.getStart() + subRegion.getLength();
+
+                        DeleteEdit deletion = createDeletion(doc, startOffset, endOffset);
+                        rootEdit.addChild(deletion);
+                        startLineInclusive = doc.getLineOfOffset(endOffset) + 1;
+                        break;
+                    }
+                }
+
+
+
+                // Find the close tag
+                // Look at all attribute values and look for an id reference match
+                region = doc.getRegionAtCharacterOffset(elementRegion.getEndOffset()
+                        - element.getTagName().length() - 1);
+                list = region.getRegions();
+                regionStart = region.getStartOffset();
+                startOffset = -1;
+                for (int j = 0; j < region.getNumberOfRegions(); j++) {
+                    ITextRegion subRegion = list.get(j);
+                    String type = subRegion.getType();
+                    if (DOMRegionContext.XML_END_TAG_OPEN.equals(type)) {
+                        startOffset = regionStart + subRegion.getStart();
+                    } else if (DOMRegionContext.XML_TAG_CLOSE.equals(type)) {
+                        int endOffset = regionStart + subRegion.getStart() + subRegion.getLength();
+                        if (startOffset != -1) {
+                            DeleteEdit deletion = createDeletion(doc, startOffset, endOffset);
+                            rootEdit.addChild(deletion);
+                            endLineInclusive = doc.getLineOfOffset(startOffset) - 1;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Dedent the contents
+            if (startLineInclusive != -1 && endLineInclusive != -1) {
+                String indent = AndroidXmlEditor.getIndentAtOffset(doc, getRegion(element)
+                        .getStartOffset());
+                setIndentation(rootEdit, indent, doc, startLineInclusive, endLineInclusive,
+                        element, skip);
+            }
+        } finally {
+            model.releaseFromRead();
+        }
+    }
+
+    protected void removeIndentation(MultiTextEdit rootEdit, String removeIndent,
+            IStructuredDocument doc, int startLineInclusive, int endLineInclusive,
+            Element element, List<Element> skip) {
+        if (startLineInclusive > endLineInclusive) {
+            return;
+        }
+        int indentLength = removeIndent.length();
+        if (indentLength == 0) {
+            return;
+        }
+
+        try {
+            for (int line = startLineInclusive; line <= endLineInclusive; line++) {
+                IRegion info = doc.getLineInformation(line);
+                int lineStart = info.getOffset();
+                int lineLength = info.getLength();
+                int lineEnd = lineStart + lineLength;
+                if (overlaps(lineStart, lineEnd, element, skip)) {
+                    continue;
+                }
+                String lineText = getText(lineStart,
+                        lineStart + Math.min(lineLength, indentLength));
+                if (lineText.startsWith(removeIndent)) {
+                    rootEdit.addChild(new DeleteEdit(lineStart, indentLength));
+                }
+            }
+        } catch (BadLocationException e) {
+            AdtPlugin.log(e, null);
+        }
+    }
+
+    protected void setIndentation(MultiTextEdit rootEdit, String indent,
+            IStructuredDocument doc, int startLineInclusive, int endLineInclusive,
+            Element element, List<Element> skip) {
+        if (startLineInclusive > endLineInclusive) {
+            return;
+        }
+        int indentLength = indent.length();
+        if (indentLength == 0) {
+            return;
+        }
+
+        try {
+            for (int line = startLineInclusive; line <= endLineInclusive; line++) {
+                IRegion info = doc.getLineInformation(line);
+                int lineStart = info.getOffset();
+                int lineLength = info.getLength();
+                int lineEnd = lineStart + lineLength;
+                if (overlaps(lineStart, lineEnd, element, skip)) {
+                    continue;
+                }
+                String lineText = getText(lineStart, lineStart + lineLength);
+                int indentEnd = getFirstNonSpace(lineText);
+                rootEdit.addChild(new ReplaceEdit(lineStart, indentEnd, indent));
+            }
+        } catch (BadLocationException e) {
+            AdtPlugin.log(e, null);
+        }
+    }
+
+    private int getFirstNonSpace(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return i;
+            }
+        }
+
+        return s.length();
+    }
+
+    /** Returns true if the given line overlaps any of the given elements */
+    private static boolean overlaps(int startOffset, int endOffset,
+            Element element, List<Element> overlaps) {
+        for (Element e : overlaps) {
+            if (e == element) {
+                continue;
+            }
+
+            IndexedRegion region = getRegion(e);
+            if (region.getEndOffset() >= startOffset && region.getStartOffset() <= endOffset) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected DeleteEdit createDeletion(IStructuredDocument doc, int startOffset, int endOffset) {
+        // Expand to delete the whole line?
+        try {
+            IRegion info = doc.getLineInformationOfOffset(startOffset);
+            int lineBegin = info.getOffset();
+            // Is the text on the line leading up to the deletion region,
+            // and the text following it, all whitespace?
+            boolean deleteLine = true;
+            if (lineBegin < startOffset) {
+                String prefix = getText(lineBegin, startOffset);
+                if (prefix.trim().length() > 0) {
+                    deleteLine = false;
+                }
+            }
+            info = doc.getLineInformationOfOffset(endOffset);
+            int lineEnd = info.getOffset() + info.getLength();
+            if (lineEnd > endOffset) {
+                String suffix = getText(endOffset, lineEnd);
+                if (suffix.trim().length() > 0) {
+                    deleteLine = false;
+                }
+            }
+            if (deleteLine) {
+                startOffset = lineBegin;
+                endOffset = lineEnd + 1;
+            }
+        } catch (BadLocationException e) {
+            AdtPlugin.log(e, null);
+        }
+
+
+        return new DeleteEdit(startOffset, endOffset - startOffset);
+    }
+
+    protected ViewElementDescriptor getElementDescriptor(String fqcn) {
+        AndroidTargetData data = mEditor.getTargetData();
+        if (data != null) {
+            List<ViewElementDescriptor> views =
+                data.getLayoutDescriptors().getViewDescriptors();
+            for (ViewElementDescriptor descriptor : views) {
+                if (fqcn.equals(descriptor.getFullClassName())) {
+                    return descriptor;
+                }
+            }
+            List<ViewElementDescriptor> layouts =
+                data.getLayoutDescriptors().getLayoutDescriptors();
+            for (ViewElementDescriptor descriptor : layouts) {
+                if (fqcn.equals(descriptor.getFullClassName())) {
+                    return descriptor;
+                }
+            }
+        }
+
+        return null;
     }
 
     public abstract static class VisualRefactoringDescriptor extends RefactoringDescriptor {

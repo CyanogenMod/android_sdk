@@ -44,6 +44,8 @@ import java.util.Set;
  * operations on this set.
  */
 public class ViewHierarchy {
+    private static final boolean DUMP_INFO = false;
+
     private LayoutCanvas mCanvas;
 
     /**
@@ -168,6 +170,9 @@ public class ViewHierarchy {
                     ViewInfo root = rootList.get(0);
                     if (root != null) {
                         infos = CanvasViewInfo.create(root);
+                        if (DUMP_INFO) {
+                            dump(root, 0);
+                        }
                     } else {
                         infos = null;
                     }
@@ -195,7 +200,7 @@ public class ViewHierarchy {
                 mIncludedBounds = null;
             }
 
-            updateNodeProxies(mLastValidViewInfoRoot, null);
+            updateNodeProxies(mLastValidViewInfoRoot);
 
             // Update the data structures related to tracking invisible and exploded nodes.
             // We need to find the {@link CanvasViewInfo} objects that correspond to
@@ -252,7 +257,7 @@ public class ViewHierarchy {
      * This is a recursive call that updates the whole hierarchy starting at the given
      * view info.
      */
-    private void updateNodeProxies(CanvasViewInfo vi, UiViewElementNode parentKey) {
+    private void updateNodeProxies(CanvasViewInfo vi) {
         if (vi == null) {
             return;
         }
@@ -264,7 +269,7 @@ public class ViewHierarchy {
         }
 
         for (CanvasViewInfo child : vi.getChildren()) {
-            updateNodeProxies(child, key);
+            updateNodeProxies(child);
         }
     }
 
@@ -684,4 +689,44 @@ public class ViewHierarchy {
         return mIncludedBounds;
     }
 
+    /**
+     * Dumps a {@link ViewInfo} hierarchy to stdout
+     *
+     * @param info the {@link ViewInfo} object to dump
+     * @param depth the depth to indent it to
+     */
+    public static void dump(ViewInfo info, int depth) {
+        if (DUMP_INFO) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < depth; i++) {
+                sb.append("    "); //$NON-NLS-1$
+            }
+            sb.append(info.getClassName());
+            sb.append(" ["); //$NON-NLS-1$
+            sb.append(info.getLeft());
+            sb.append(","); //$NON-NLS-1$
+            sb.append(info.getTop());
+            sb.append(","); //$NON-NLS-1$
+            sb.append(info.getRight());
+            sb.append(","); //$NON-NLS-1$
+            sb.append(info.getBottom());
+            sb.append("]"); //$NON-NLS-1$
+            Object cookie = info.getCookie();
+            if (cookie instanceof UiViewElementNode) {
+                sb.append(" "); //$NON-NLS-1$
+                UiViewElementNode node = (UiViewElementNode) cookie;
+                sb.append("<"); //$NON-NLS-1$
+                sb.append(node.getDescriptor().getXmlName());
+                sb.append(">"); //$NON-NLS-1$
+            } else if (cookie != null) {
+                sb.append(" " + cookie); //$NON-NLS-1$
+            }
+
+            System.out.println(sb.toString());
+
+            for (ViewInfo child : info.getChildren()) {
+                dump(child, depth + 1);
+            }
+        }
+    }
 }

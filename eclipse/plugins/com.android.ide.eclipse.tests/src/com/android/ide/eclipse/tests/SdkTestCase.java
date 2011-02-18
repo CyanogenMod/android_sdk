@@ -17,6 +17,7 @@ package com.android.ide.eclipse.tests;
 
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetParser;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
@@ -59,6 +60,13 @@ public abstract class SdkTestCase extends TestCase {
         if (adt == null) {
             return null;
         }
+
+        // We'll never break out of the SDK load-wait-loop if the AdtPlugin doesn't
+        // actually have a valid SDK location because it won't have started an async load:
+        String sdkLocation = AdtPrefs.getPrefs().getOsSdkFolder();
+        assertTrue("No valid SDK installation is set; for tests you typically need to set the"
+                + " environment variable ADT_TEST_SDK_PATH to point to an SDK folder",
+                sdkLocation != null && sdkLocation.length() > 0);
 
         Object sdkLock = Sdk.getLock();
         LoadStatus loadStatus = LoadStatus.LOADING;

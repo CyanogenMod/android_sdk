@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -32,12 +32,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-class ExtractIncludeWizard extends RefactoringWizard {
-    private final IProject mProject;
-
-    public ExtractIncludeWizard(ExtractIncludeRefactoring ref, IProject project) {
-        super(ref, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
-        mProject = project;
+class ExtractIncludeWizard extends VisualRefactoringWizard {
+    public ExtractIncludeWizard(ExtractIncludeRefactoring ref, LayoutEditor editor) {
+        super(ref, editor);
         setDefaultPageTitle(ref.getName());
     }
 
@@ -45,7 +42,7 @@ class ExtractIncludeWizard extends RefactoringWizard {
     protected void addUserInputPages() {
         ExtractIncludeRefactoring ref = (ExtractIncludeRefactoring) getRefactoring();
         String initialName = ref.getInitialName();
-        addPage(new InputPage(mProject, initialName));
+        addPage(new InputPage(mEditor.getProject(), initialName));
     }
 
     /** Wizard page which inputs parameters for the {@link ExtractIncludeRefactoring} operation */

@@ -679,6 +679,15 @@
                style="push"
                tooltip="Changes layouts from one type to another">
          </action>
+         <action
+               class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewAction"
+               definitionId="com.android.ide.eclipse.adt.refactoring.changeview"
+               id="com.android.ide.eclipse.adt.actions.ChangeView"
+               label="Change Widget Type..."
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/com.android.ide.eclipse.adt.refactoring.menu/android"
+               style="push"
+               tooltip="Changes the type of the selected widgets">
+         </action>
          <menu
                id="org.eclipse.jdt.ui.refactoring.menu"
                label="Refactor">
@@ -806,6 +815,12 @@
             id="com.android.ide.eclipse.adt.refactoring.convert"
             name="Change Layout">
       </command>
+      <command
+            categoryId="com.android.ide.eclipse.adt.refactoring.category"
+            description="Changes the widget type for the selection"
+            id="com.android.ide.eclipse.adt.refactoring.changeview"
+            name="Change Widget Type">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ltk.core.refactoring.refactoringContributions">
@@ -824,6 +839,10 @@
       <contribution
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutContribution"
             id="com.android.ide.eclipse.adt.refactoring.convert">
+      </contribution>
+      <contribution
+            class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewContribution"
+            id="com.android.ide.eclipse.adt.refactoring.changeview">
       </contribution>
    </extension>
     <extension

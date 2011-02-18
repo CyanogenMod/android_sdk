@@ -16,6 +16,7 @@ apk
 app
 apps
 arg
+async
 attrs
 avd
 avds
@@ -122,6 +123,7 @@ marquee
 metadata
 min
 monte
+ms
 multi
 multimap
 multimaps

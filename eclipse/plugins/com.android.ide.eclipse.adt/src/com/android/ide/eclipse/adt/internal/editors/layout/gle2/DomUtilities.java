@@ -17,6 +17,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.util.Pair;
@@ -258,7 +260,13 @@ public class DomUtilities {
     private static void addLowercaseIds(Element root, Set<String> seen) {
         if (root.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             String id = root.getAttributeNS(ANDROID_URI, ATTR_ID);
-            seen.add(id.toLowerCase());
+            if (id.startsWith(NEW_ID_PREFIX)) {
+                seen.add(id.substring(NEW_ID_PREFIX.length()).toLowerCase());
+            } else if (id.startsWith(ID_PREFIX)) {
+                seen.add(id.substring(ID_PREFIX.length()).toLowerCase());
+            } else {
+                seen.add(id.toLowerCase());
+            }
         }
     }
 
@@ -267,19 +275,29 @@ public class DomUtilities {
      * given element, which is guaranteed to be unique in this document
      *
      * @param element the element to compute a new widget id for
+     * @param reserved an optional set of extra, "reserved" set of ids that should be
+     *            considered taken
+     * @param prefix an optional prefix to use for the generated name, or null to get a
+     *            default (which is currently the tag name)
      * @return a unique id, never null, which does not include the {@code @id/} prefix
      * @see DescriptorsUtils#getFreeWidgetId
      */
-    public static String getFreeWidgetId(Element element) {
+    public static String getFreeWidgetId(Element element, Set<String> reserved, String prefix) {
         Set<String> ids = new HashSet<String>();
+        if (reserved != null) {
+            for (String id : reserved) {
+                ids.add(id.toLowerCase());
+            }
+        }
         addLowercaseIds(element.getOwnerDocument().getDocumentElement(), ids);
 
-        String prefix = element.getTagName();
+        if (prefix == null) {
+            prefix = element.getTagName();
+        }
         String generated;
         int num = 1;
         do {
-            num++;
-            generated = String.format("%1$s%2$d", prefix, num);   //$NON-NLS-1$
+            generated = String.format("%1$s%2$d", prefix, num++);   //$NON-NLS-1$
         } while (ids.contains(generated.toLowerCase()));
 
         return generated;

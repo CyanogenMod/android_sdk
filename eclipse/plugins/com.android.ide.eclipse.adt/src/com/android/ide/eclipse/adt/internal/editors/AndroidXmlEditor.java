@@ -661,7 +661,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * Returns the {@link IStructuredDocument} used by the StructuredTextEditor (aka Source
      * Editor) or null if not available.
      */
-    public final IStructuredDocument getStructuredDocument() {
+    public IStructuredDocument getStructuredDocument() {
         if (mTextEditor != null && mTextEditor.getTextViewer() != null) {
             return (IStructuredDocument) mTextEditor.getTextViewer().getDocument();
         }
@@ -681,7 +681,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      *
      * @return The model for the XML document or null if cannot be obtained from the editor
      */
-    public final IStructuredModel getModelForRead() {
+    public IStructuredModel getModelForRead() {
         IStructuredDocument document = getStructuredDocument();
         if (document != null) {
             IModelManager mm = StructuredModelManager.getModelManager();
@@ -710,7 +710,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * @return The model for the XML document or null if cannot be obtained from the editor
      */
     private IStructuredModel getModelForEdit() {
-
         IStructuredDocument document = getStructuredDocument();
         if (document != null) {
             IModelManager mm = StructuredModelManager.getModelManager();

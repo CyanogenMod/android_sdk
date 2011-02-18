@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 
 import org.eclipse.swt.widgets.Composite;
@@ -38,8 +39,8 @@ public abstract class UiAttributeNode {
     private boolean mIsDirty;
     private boolean mHasError;
 
-    /** Creates a new {@link UiAttributeNode} linked to a specific {@link AttributeDescriptor} 
-     * and the corresponding runtine {@link UiElementNode} parent. */
+    /** Creates a new {@link UiAttributeNode} linked to a specific {@link AttributeDescriptor}
+     * and the corresponding runtime {@link UiElementNode} parent. */
     public UiAttributeNode(AttributeDescriptor attributeDescriptor, UiElementNode uiParent) {
         mDescriptor = attributeDescriptor;
         mUiParent = uiParent;
@@ -54,7 +55,7 @@ public abstract class UiAttributeNode {
     public final UiElementNode getUiParent() {
         return mUiParent;
     }
-    
+
     /** Returns the current value of the node. */
     public abstract String getCurrentValue();
 
@@ -78,10 +79,13 @@ public abstract class UiAttributeNode {
         mIsDirty = isDirty;
         // TODO: for unknown attributes, getParent() != null && getParent().getEditor() != null
         if (old_value != isDirty) {
-            getUiParent().getEditor().editorDirtyStateChanged();
+            AndroidXmlEditor editor = getUiParent().getEditor();
+            if (editor != null) {
+                editor.editorDirtyStateChanged();
+            }
         }
     }
-    
+
     /**
      * Sets the error flag value.
      * @param errorFlag the error flag
@@ -89,21 +93,21 @@ public abstract class UiAttributeNode {
     public final void setHasError(boolean errorFlag) {
         mHasError = errorFlag;
     }
-    
+
     /**
      * Returns whether this node has errors.
      */
     public final boolean hasError() {
         return mHasError;
     }
-    
+
     /**
      * Called once by the parent user interface to creates the necessary
      * user interface to edit this attribute.
      * <p/>
      * This method can be called more than once in the life cycle of an UI node,
      * typically when the UI is part of a master-detail tree, as pages are swapped.
-     * 
+     *
      * @param parent The composite where to create the user interface.
      * @param managedForm The managed form owning this part.
      */
@@ -116,7 +120,7 @@ public abstract class UiAttributeNode {
      * for an attribute.
      * <p/>
      * Implementations that do not have any known values should return null.
-     * 
+     *
      * @param prefix An optional prefix string, which is whatever the user has already started
      *   typing. Can be null or an empty string. The implementation can use this to filter choices
      *   and only return strings that match this prefix. A lazy or default implementation can
@@ -136,7 +140,7 @@ public abstract class UiAttributeNode {
      * The caller doesn't really know if attributes have changed,
      * so it will call this to refresh the attribute anyway. It's up to the
      * UI implementation to minimize refreshes.
-     * 
+     *
      * @param xml_attribute_node
      */
     public abstract void updateValue(Node xml_attribute_node);

@@ -22,6 +22,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
@@ -38,6 +39,7 @@ import org.xml.sax.InputSource;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -233,9 +235,10 @@ public class ViewMetadataRepository {
                                     if (render.length() > 0) {
                                         mode = RenderMode.get(render);
                                     }
+                                    String relatedTo = child.getAttribute("relatedTo"); //$NON-NLS-1$
                                     ViewData view = new ViewData(category, fqcn, fillPreference,
                                             skip.length() == 0 ? false : Boolean.valueOf(skip),
-                                            mode);
+                                            mode, relatedTo);
                                     category.addView(view);
                                 }
                             }
@@ -369,6 +372,11 @@ public class ViewMetadataRepository {
         return result;
     }
 
+    @VisibleForTesting
+    Collection<String> getAllFqcns() {
+        return getClassToView().keySet();
+    }
+
     /**
      * Metadata holder for a particular category - contains the name of the category, its
      * ordinal (for natural/logical sorting order) and views contained in the category
@@ -424,18 +432,22 @@ public class ViewMetadataRepository {
         private final boolean mSkip;
         /** Must this item be rendered alone? skipped? etc */
         private final RenderMode mRenderMode;
+        /** Related views */
+        private final String mRelatedTo;
         /** The relative rank of the view for natural ordering */
         private final int mOrdinal = sNextOrdinal++;
 
         /** Constructs a new view data for the given class */
         private ViewData(CategoryData category, String fqcn,
-                FillPreference fillPreference, boolean skip, RenderMode renderMode) {
+                FillPreference fillPreference, boolean skip, RenderMode renderMode,
+                String relatedTo) {
             super();
             mCategory = category;
             mFqcn = fqcn;
             mFillPreference = fillPreference;
             mSkip = skip;
             mRenderMode = renderMode;
+            mRelatedTo = relatedTo;
         }
 
         /** Returns the category for views of this type */
@@ -469,6 +481,33 @@ public class ViewMetadataRepository {
 
         public boolean getSkip() {
             return mSkip;
+        }
+
+        public List<String> getRelatedTo() {
+            if (mRelatedTo == null || mRelatedTo.length() == 0) {
+                return Collections.emptyList();
+            } else {
+                String[] basenames = mRelatedTo.split(","); //$NON-NLS-1$
+                List<String> result = new ArrayList<String>();
+                ViewMetadataRepository repository = ViewMetadataRepository.get();
+                Map<String, ViewData> classToView = repository.getClassToView();
+
+                List<String> fqns = new ArrayList<String>(classToView.keySet());
+                for (String basename : basenames) {
+                    boolean found = false;
+                    for (String fqcn : fqns) {
+                        String suffix = '.' + basename;
+                        if (fqcn.endsWith(suffix)) {
+                            result.add(fqcn);
+                            found = true;
+                            break;
+                        }
+                    }
+                    assert found : basename;
+                }
+
+                return result;
+            }
         }
     }
 
@@ -518,6 +557,23 @@ public class ViewMetadataRepository {
         }
 
         return false;
+    }
+
+    /**
+     * Returns a set of fully qualified names for views that are closely related to the
+     * given view
+     *
+     * @param fqcn the fully qualified class name
+     * @return a list, never null but possibly empty, of views that are related to the
+     *         view of the given type
+     */
+    public List<String> getRelatedTo(String fqcn) {
+        ViewData view = getClassToView().get(fqcn);
+        if (view != null) {
+            return view.getRelatedTo();
+        }
+
+        return Collections.emptyList();
     }
 
     /** Render mode for palette preview */

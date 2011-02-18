@@ -31,7 +31,7 @@ public class ChangeLayoutAction extends VisualRefactoringAction {
         if ((mTextSelection != null || mTreeSelection != null) && mFile != null) {
             ChangeLayoutRefactoring ref = new ChangeLayoutRefactoring(mFile, mEditor,
                     mTextSelection, mTreeSelection);
-            RefactoringWizard wizard = new ChangeLayoutWizard(ref, mFile.getProject());
+            RefactoringWizard wizard = new ChangeLayoutWizard(ref, mEditor);
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());

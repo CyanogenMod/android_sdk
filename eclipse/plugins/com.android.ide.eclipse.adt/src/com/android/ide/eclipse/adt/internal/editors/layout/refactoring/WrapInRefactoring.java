@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
@@ -24,6 +25,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -84,6 +86,11 @@ public class WrapInRefactoring extends VisualRefactoring {
         super(file, editor, selection, treeSelection);
     }
 
+    @VisibleForTesting
+    WrapInRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+        super(selectedElements, editor);
+    }
+
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException,
             OperationCanceledException {
@@ -113,8 +120,7 @@ public class WrapInRefactoring extends VisualRefactoring {
                 }
             }
 
-            // This also ensures that we have a valid DOM model:
-            mElements = getElements();
+            // Ensures that we have a valid DOM model:
             if (mElements.size() == 0) {
                 status.addFatalError("Nothing to wrap");
                 return status;
@@ -370,6 +376,19 @@ public class WrapInRefactoring extends VisualRefactoring {
 
         changes.add(change);
         return changes;
+    }
+
+    String getOldType() {
+        Element primary = getPrimaryElement();
+        if (primary != null) {
+            String oldType = primary.getTagName();
+            if (oldType.indexOf('.') == -1) {
+                oldType = ANDROID_WIDGET_PREFIX + oldType;
+            }
+            return oldType;
+        }
+
+        return null;
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {
