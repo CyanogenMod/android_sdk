@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
 import java.util.ArrayList;

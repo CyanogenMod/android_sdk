@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.IAbstractFolder;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 

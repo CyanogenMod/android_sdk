@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfi
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IFile;

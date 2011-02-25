@@ -16,6 +16,8 @@
 
 package com.android.sdklib;
 
+import com.android.AndroidConstants;
+
 import java.io.File;
 
 /**
@@ -180,28 +182,6 @@ public final class SdkConstants {
     public final static String FD_APK_NATIVE_LIBS = "lib"; //$NON-NLS-1$
     /** Default output folder name, i.e. "bin" */
     public final static String FD_OUTPUT = "bin"; //$NON-NLS-1$
-    /** Default anim resource folder name, i.e. "anim" */
-    public final static String FD_ANIM = "anim"; //$NON-NLS-1$
-    /** Default animator resource folder name, i.e. "animator" */
-    public final static String FD_ANIMATOR = "animator"; //$NON-NLS-1$
-    /** Default color resource folder name, i.e. "color" */
-    public final static String FD_COLOR = "color"; //$NON-NLS-1$
-    /** Default drawable resource folder name, i.e. "drawable" */
-    public final static String FD_DRAWABLE = "drawable"; //$NON-NLS-1$
-    /** Default interpolator resource folder name, i.e. "interpolator" */
-    public final static String FD_INTERPOLATOR = "interpolator"; //$NON-NLS-1$
-    /** Default layout resource folder name, i.e. "layout" */
-    public final static String FD_LAYOUT = "layout"; //$NON-NLS-1$
-    /** Default menu resource folder name, i.e. "menu" */
-    public final static String FD_MENU = "menu"; //$NON-NLS-1$
-    /** Default menu resource folder name, i.e. "mipmap" */
-    public final static String FD_MIPMAP = "mipmap"; //$NON-NLS-1$
-    /** Default values resource folder name, i.e. "values" */
-    public final static String FD_VALUES = "values"; //$NON-NLS-1$
-    /** Default xml resource folder name, i.e. "xml" */
-    public final static String FD_XML = "xml"; //$NON-NLS-1$
-    /** Default raw resource folder name, i.e. "raw" */
-    public final static String FD_RAW = "raw"; //$NON-NLS-1$
     /** proguard output folder for mapping, etc.. files */
     public final static String FD_PROGUARD = "proguard"; //$NON-NLS-1$
 
@@ -336,11 +316,13 @@ public final class SdkConstants {
 
     /** Path of the attrs.xml file relative to a platform folder. */
     public final static String OS_PLATFORM_ATTRS_XML =
-            OS_PLATFORM_RESOURCES_FOLDER + FD_VALUES + File.separator + FN_ATTRS_XML;
+            OS_PLATFORM_RESOURCES_FOLDER + AndroidConstants.FD_RES_VALUES + File.separator +
+            FN_ATTRS_XML;
 
     /** Path of the attrs_manifest.xml file relative to a platform folder. */
     public final static String OS_PLATFORM_ATTRS_MANIFEST_XML =
-            OS_PLATFORM_RESOURCES_FOLDER + FD_VALUES + File.separator + FN_ATTRS_MANIFEST_XML;
+            OS_PLATFORM_RESOURCES_FOLDER + AndroidConstants.FD_RES_VALUES + File.separator +
+            FN_ATTRS_MANIFEST_XML;
 
     /** Path of the layoutlib.jar file relative to a platform folder. */
     public final static String OS_PLATFORM_LAYOUTLIB_JAR =

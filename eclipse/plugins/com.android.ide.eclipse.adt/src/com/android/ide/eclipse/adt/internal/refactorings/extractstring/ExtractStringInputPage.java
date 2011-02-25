@@ -17,11 +17,12 @@
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 
+import com.android.AndroidConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.SelectorMode;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
@@ -576,7 +577,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
                     wsFolderPath = wsFolderPath.substring(0, pos);
                 }
 
-                String[] folderSegments = wsFolderPath.split(FolderConfiguration.QUALIFIER_SEP);
+                String[] folderSegments = wsFolderPath.split(AndroidConstants.RES_QUALIFIER_SEP);
 
                 if (folderSegments.length > 0) {
                     String folderName = folderSegments[0];

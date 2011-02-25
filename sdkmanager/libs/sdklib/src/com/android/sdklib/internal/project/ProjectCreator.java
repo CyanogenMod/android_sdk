@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.project;
 
+import com.android.AndroidConstants;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
@@ -325,11 +326,11 @@ public class ProjectCreator {
 
             if (isTestProject == false) {
                 /* Make res files only for non test projects */
-                File valueFolder = createDirs(resourceFolder, SdkConstants.FD_VALUES);
+                File valueFolder = createDirs(resourceFolder, AndroidConstants.FD_RES_VALUES);
                 installTargetTemplate("strings.template", new File(valueFolder, "strings.xml"),
                         keywords, target);
 
-                File layoutFolder = createDirs(resourceFolder, SdkConstants.FD_LAYOUT);
+                File layoutFolder = createDirs(resourceFolder, AndroidConstants.FD_RES_LAYOUT);
                 installTargetTemplate("layout.template", new File(layoutFolder, "main.xml"),
                         keywords, target);
 

@@ -16,9 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.sdklib.SdkConstants.FD_DATA;
 import static com.android.sdklib.SdkConstants.FD_RES;
-import static com.android.sdklib.SdkConstants.FD_VALUES;
+
 import static java.io.File.separator;
 
 import com.android.ide.common.rendering.LayoutLibrary;
@@ -405,7 +406,7 @@ public class AndroidTargetData {
      * returns the result as a map from resource type to a list of names
      */
     private Map<ResourceType, Collection<String>> readPublicAttributeLists() {
-        String relative = FD_DATA + separator + FD_RES + separator + FD_VALUES + separator +
+        String relative = FD_DATA + separator + FD_RES + separator + FD_RES_VALUES + separator +
             "public.xml"; //$NON-NLS-1$
         File file = new File(mTarget.getLocation(), relative);
         if (file.isFile()) {

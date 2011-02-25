@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
  *
- * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.eclipse.org/org/documents/epl-v10.php
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.resources.manager;
+package com.android.resources;
 
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.sdklib.SdkConstants;
+import com.android.AndroidConstants;
 
 /**
  * Enum representing a type of resource folder.
  */
 public enum ResourceFolderType {
-    ANIM(SdkConstants.FD_ANIM),
-    ANIMATOR(SdkConstants.FD_ANIMATOR),
-    COLOR(SdkConstants.FD_COLOR),
-    DRAWABLE(SdkConstants.FD_DRAWABLE),
-    INTERPOLATOR(SdkConstants.FD_INTERPOLATOR),
-    LAYOUT(SdkConstants.FD_LAYOUT),
-    MENU(SdkConstants.FD_MENU),
-    MIPMAP(SdkConstants.FD_MIPMAP),
-    RAW(SdkConstants.FD_RAW),
-    VALUES(SdkConstants.FD_VALUES),
-    XML(SdkConstants.FD_XML);
+    ANIM(AndroidConstants.FD_RES_ANIM),
+    ANIMATOR(AndroidConstants.FD_RES_ANIMATOR),
+    COLOR(AndroidConstants.FD_RES_COLOR),
+    DRAWABLE(AndroidConstants.FD_RES_DRAWABLE),
+    INTERPOLATOR(AndroidConstants.FD_RES_INTERPOLATOR),
+    LAYOUT(AndroidConstants.FD_RES_LAYOUT),
+    MENU(AndroidConstants.FD_RES_MENU),
+    MIPMAP(AndroidConstants.FD_RES_MIPMAP),
+    RAW(AndroidConstants.FD_RES_RAW),
+    VALUES(AndroidConstants.FD_RES_VALUES),
+    XML(AndroidConstants.FD_RES_XML);
 
     private final String mName;
 
@@ -71,7 +70,7 @@ public enum ResourceFolderType {
      */
     public static ResourceFolderType getFolderType(String folderName) {
         // split the name of the folder in segments.
-        String[] folderSegments = folderName.split(FolderConfiguration.QUALIFIER_SEP);
+        String[] folderSegments = folderName.split(AndroidConstants.RES_QUALIFIER_SEP);
 
         // get the enum for the resource type.
         return getTypeByName(folderSegments[0]);

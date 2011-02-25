@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
+import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -297,7 +298,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                 IResource resource = layoutMembers[j];
                 if (resource instanceof IFolder
                         && resource.exists()
-                        && resource.getName().startsWith(SdkConstants.FD_LAYOUT)) {
+                        && resource.getName().startsWith(AndroidConstants.FD_RES_LAYOUT)) {
                     IFolder layoutFolder = (IFolder) resource;
                     IResource[] members = layoutFolder.members();
                     for (int i = 0; i < members.length; i++) {
