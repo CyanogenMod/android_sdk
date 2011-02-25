@@ -20,10 +20,10 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.resources.manager.FolderTypeRelationship;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
