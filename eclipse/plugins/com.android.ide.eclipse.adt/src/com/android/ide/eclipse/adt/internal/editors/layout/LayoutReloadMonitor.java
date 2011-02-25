@@ -352,10 +352,10 @@ public final class LayoutReloadMonitor {
 
             // now check that the file is *NOT* a layout file (those automatically trigger a layout
             // reload and we don't want to do it twice.)
-            ResourceType[] resTypes = file.getResourceTypes();
+            List<ResourceType> resTypes = file.getResourceTypes();
 
             // it's unclear why but there has been cases of resTypes being empty!
-            if (resTypes.length > 0) {
+            if (resTypes.size() > 0) {
                 // this is a resource change, that may require a layout redraw!
                 if (changeFlags == null) {
                     changeFlags = new ChangeFlags();

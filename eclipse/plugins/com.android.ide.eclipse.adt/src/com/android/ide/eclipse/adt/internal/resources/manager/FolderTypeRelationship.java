@@ -20,87 +20,82 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
- * This class gives access to the bi directional relationship between {@link ResourceType} and
+ * This class gives access to the bidirectional relationship between {@link ResourceType} and
  * {@link ResourceFolderType}.
  */
 public final class FolderTypeRelationship {
 
-    private final static HashMap<ResourceType, ResourceFolderType[]> mTypeToFolderMap =
-        new HashMap<ResourceType, ResourceFolderType[]>();
+    private final static Map<ResourceType, List<ResourceFolderType>> mTypeToFolderMap =
+        new HashMap<ResourceType, List<ResourceFolderType>>();
 
-    private final static HashMap<ResourceFolderType, ResourceType[]> mFolderToTypeMap =
-        new HashMap<ResourceFolderType, ResourceType[]>();
+    private final static Map<ResourceFolderType, List<ResourceType>> mFolderToTypeMap =
+        new HashMap<ResourceFolderType, List<ResourceType>>();
 
-    // generate the relationships.
     static {
-        HashMap<ResourceType, List<ResourceFolderType>> typeToFolderMap =
-            new HashMap<ResourceType, List<ResourceFolderType>>();
+        // generate the relationships in a temporary map
+        add(ResourceType.ANIM, ResourceFolderType.ANIM);
+        add(ResourceType.ANIMATOR, ResourceFolderType.ANIMATOR);
+        add(ResourceType.ARRAY, ResourceFolderType.VALUES);
+        add(ResourceType.ATTR, ResourceFolderType.VALUES);
+        add(ResourceType.BOOL, ResourceFolderType.VALUES);
+        add(ResourceType.COLOR, ResourceFolderType.VALUES);
+        add(ResourceType.COLOR, ResourceFolderType.COLOR);
+        add(ResourceType.DECLARE_STYLEABLE, ResourceFolderType.VALUES);
+        add(ResourceType.DIMEN, ResourceFolderType.VALUES);
+        add(ResourceType.DRAWABLE, ResourceFolderType.VALUES);
+        add(ResourceType.DRAWABLE, ResourceFolderType.DRAWABLE);
+        add(ResourceType.FRACTION, ResourceFolderType.VALUES);
+        add(ResourceType.ID, ResourceFolderType.VALUES);
+        add(ResourceType.INTEGER, ResourceFolderType.VALUES);
+        add(ResourceType.INTERPOLATOR, ResourceFolderType.INTERPOLATOR);
+        add(ResourceType.LAYOUT, ResourceFolderType.LAYOUT);
+        add(ResourceType.MENU, ResourceFolderType.MENU);
+        add(ResourceType.MIPMAP, ResourceFolderType.MIPMAP);
+        add(ResourceType.PLURALS, ResourceFolderType.VALUES);
+        add(ResourceType.PUBLIC, ResourceFolderType.VALUES);
+        add(ResourceType.RAW, ResourceFolderType.RAW);
+        add(ResourceType.STRING, ResourceFolderType.VALUES);
+        add(ResourceType.STYLE, ResourceFolderType.VALUES);
+        add(ResourceType.STYLEABLE, ResourceFolderType.VALUES);
+        add(ResourceType.XML, ResourceFolderType.XML);
 
-        HashMap<ResourceFolderType, List<ResourceType>> folderToTypeMap =
-            new HashMap<ResourceFolderType, List<ResourceType>>();
-
-        add(ResourceType.ANIM, ResourceFolderType.ANIM, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.ANIMATOR, ResourceFolderType.ANIMATOR, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.ARRAY, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.ATTR, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.BOOL, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.COLOR, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.COLOR, ResourceFolderType.COLOR, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.DECLARE_STYLEABLE, ResourceFolderType.VALUES, typeToFolderMap,
-                folderToTypeMap);
-        add(ResourceType.DIMEN, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.DRAWABLE, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.DRAWABLE, ResourceFolderType.DRAWABLE, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.FRACTION, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.ID, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.INTEGER, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.INTERPOLATOR, ResourceFolderType.INTERPOLATOR, typeToFolderMap,
-                folderToTypeMap);
-        add(ResourceType.LAYOUT, ResourceFolderType.LAYOUT, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.MENU, ResourceFolderType.MENU, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.MIPMAP, ResourceFolderType.MIPMAP, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.PLURALS, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.PUBLIC, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.RAW, ResourceFolderType.RAW, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.STRING, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.STYLE, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.STYLEABLE, ResourceFolderType.VALUES, typeToFolderMap, folderToTypeMap);
-        add(ResourceType.XML, ResourceFolderType.XML, typeToFolderMap, folderToTypeMap);
-
-        optimize(typeToFolderMap, folderToTypeMap);
+        makeSafe();
     }
 
     /**
      * Returns a list of {@link ResourceType}s that can be generated from files inside a folder
      * of the specified type.
      * @param folderType The folder type.
-     * @return an array of {@link ResourceType}
+     * @return a list of {@link ResourceType}, possibly empty but never null.
      */
-    public static ResourceType[] getRelatedResourceTypes(ResourceFolderType folderType) {
-        ResourceType[] array = mFolderToTypeMap.get(folderType);
-        if (array != null) {
-            return array;
+    public static List<ResourceType> getRelatedResourceTypes(ResourceFolderType folderType) {
+        List<ResourceType> list = mFolderToTypeMap.get(folderType);
+        if (list != null) {
+            return list;
         }
-        return new ResourceType[0];
+
+        return Collections.emptyList();
     }
 
     /**
      * Returns a list of {@link ResourceFolderType} that can contain files generating resources
      * of the specified type.
      * @param resType the type of resource.
-     * @return an array of {@link ResourceFolderType}
+     * @return a list of {@link ResourceFolderType}, possibly empty but never null.
      */
-    public static ResourceFolderType[] getRelatedFolders(ResourceType resType) {
-        ResourceFolderType[] array = mTypeToFolderMap.get(resType);
-        if (array != null) {
-            return array;
+    public static List<ResourceFolderType> getRelatedFolders(ResourceType resType) {
+        List<ResourceFolderType> list = mTypeToFolderMap.get(resType);
+        if (list != null) {
+            return list;
         }
-        return new ResourceFolderType[0];
+
+        return Collections.emptyList();
     }
 
     /**
@@ -111,14 +106,10 @@ public final class FolderTypeRelationship {
      * could generate a resource of the specified {@link ResourceType}
      */
     public static boolean match(ResourceType resType, ResourceFolderType folderType) {
-        ResourceFolderType[] array = mTypeToFolderMap.get(resType);
+        List<ResourceFolderType> list = mTypeToFolderMap.get(resType);
 
-        if (array != null && array.length > 0) {
-            for (ResourceFolderType fType : array) {
-                if (fType == folderType) {
-                    return true;
-                }
-            }
+        if (list != null) {
+            return list.contains(folderType);
         }
 
         return false;
@@ -129,27 +120,23 @@ public final class FolderTypeRelationship {
      * a file in the folder can generate a resource of the specified type.
      * @param type The resourceType
      * @param folder The {@link ResourceFolderType}
-     * @param folderToTypeMap
-     * @param typeToFolderMap
      */
-    private static void add(ResourceType type, ResourceFolderType folder,
-            HashMap<ResourceType, List<ResourceFolderType>> typeToFolderMap,
-            HashMap<ResourceFolderType, List<ResourceType>> folderToTypeMap) {
+    private static void add(ResourceType type, ResourceFolderType folder) {
         // first we add the folder to the list associated with the type.
-        List<ResourceFolderType> folderList = typeToFolderMap.get(type);
+        List<ResourceFolderType> folderList = mTypeToFolderMap.get(type);
         if (folderList == null) {
             folderList = new ArrayList<ResourceFolderType>();
-            typeToFolderMap.put(type, folderList);
+            mTypeToFolderMap.put(type, folderList);
         }
         if (folderList.indexOf(folder) == -1) {
             folderList.add(folder);
         }
 
         // now we add the type to the list associated with the folder.
-        List<ResourceType> typeList = folderToTypeMap.get(folder);
+        List<ResourceType> typeList = mFolderToTypeMap.get(folder);
         if (typeList == null) {
             typeList = new ArrayList<ResourceType>();
-            folderToTypeMap.put(folder, typeList);
+            mFolderToTypeMap.put(folder, typeList);
         }
         if (typeList.indexOf(type) == -1) {
             typeList.add(type);
@@ -157,22 +144,23 @@ public final class FolderTypeRelationship {
     }
 
     /**
-     * Optimize the map to contains array instead of lists (since the api returns arrays)
-     * @param typeToFolderMap
-     * @param folderToTypeMap
+     * Makes the maps safe by replacing the current list values with unmodifiable lists.
      */
-    private static void optimize(HashMap<ResourceType, List<ResourceFolderType>> typeToFolderMap,
-            HashMap<ResourceFolderType, List<ResourceType>> folderToTypeMap) {
-        Set<ResourceType> types = typeToFolderMap.keySet();
-        for (ResourceType type : types) {
-            List<ResourceFolderType> list = typeToFolderMap.get(type);
-            mTypeToFolderMap.put(type, list.toArray(new ResourceFolderType[list.size()]));
+    private static void makeSafe() {
+        for (ResourceType type : ResourceType.values()) {
+            List<ResourceFolderType> list = mTypeToFolderMap.get(type);
+            if (list != null) {
+                // replace with a unmodifiable list wrapper around the current list.
+                mTypeToFolderMap.put(type, Collections.unmodifiableList(list));
+            }
         }
 
-        Set<ResourceFolderType> folders = folderToTypeMap.keySet();
-        for (ResourceFolderType folder : folders) {
-            List<ResourceType> list = folderToTypeMap.get(folder);
-            mFolderToTypeMap.put(folder, list.toArray(new ResourceType[list.size()]));
+        for (ResourceFolderType folder : ResourceFolderType.values()) {
+            List<ResourceType> list = mFolderToTypeMap.get(folder);
+            if (list != null) {
+                // replace with a unmodifiable list wrapper around the current list.
+                mFolderToTypeMap.put(folder, Collections.unmodifiableList(list));
+            }
         }
     }
 }

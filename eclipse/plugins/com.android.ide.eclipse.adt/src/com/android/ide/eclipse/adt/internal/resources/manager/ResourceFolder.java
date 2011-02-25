@@ -29,6 +29,7 @@ import org.eclipse.core.resources.IFolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Resource Folder class. Contains list of {@link ResourceFile}s,
@@ -124,15 +125,13 @@ public final class ResourceFolder extends Resource {
 
         if (mFiles != null) {
             for (ResourceFile file : mFiles) {
-                ResourceType[] types = file.getResourceTypes();
+                List<ResourceType> types = file.getResourceTypes();
 
                 // loop through those and add them to the main list,
                 // if they are not already present
-                if (types != null) {
-                    for (ResourceType resType : types) {
-                        if (list.indexOf(resType) == -1) {
-                            list.add(resType);
-                        }
+                for (ResourceType resType : types) {
+                    if (list.indexOf(resType) == -1) {
+                        list.add(resType);
                     }
                 }
             }
@@ -218,7 +217,7 @@ public final class ResourceFolder extends Resource {
     public boolean hasResources(ResourceType type) {
         // Check if the folder type is able to generate resource of the type that was asked.
         // this is a first check to avoid going through the files.
-        ResourceFolderType[] folderTypes = FolderTypeRelationship.getRelatedFolders(type);
+        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
 
         boolean valid = false;
         for (ResourceFolderType rft : folderTypes) {

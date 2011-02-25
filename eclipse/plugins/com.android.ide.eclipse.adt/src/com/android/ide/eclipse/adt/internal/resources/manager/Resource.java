@@ -23,7 +23,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfi
  */
 public abstract class Resource {
     private boolean mTouched = true;
-    
+
     /**
      * Returns the {@link FolderConfiguration} for this object.
      */
@@ -33,13 +33,13 @@ public abstract class Resource {
      * Indicates that the underlying file was changed.
      */
     public final void touch() {
-       mTouched = true; 
+       mTouched = true;
     }
-    
+
     public final boolean isTouched() {
         return mTouched;
     }
-    
+
     public final void resetTouch() {
         mTouched = false;
     }

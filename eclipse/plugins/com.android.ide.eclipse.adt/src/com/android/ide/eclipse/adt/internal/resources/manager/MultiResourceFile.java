@@ -28,8 +28,10 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,17 +52,24 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
     private final Map<ResourceType, HashMap<String, ResourceValue>> mResourceItems =
         new EnumMap<ResourceType, HashMap<String, ResourceValue>>(ResourceType.class);
 
+    private List<ResourceType> mResourceTypeList = null;
+
     public MultiResourceFile(IAbstractFile file, ResourceFolder folder) {
         super(file, folder);
     }
 
     @Override
-    public ResourceType[] getResourceTypes() {
+    public List<ResourceType> getResourceTypes() {
         update();
 
-        Set<ResourceType> keys = mResourceItems.keySet();
+        if (mResourceTypeList == null) {
+            Set<ResourceType> keys = mResourceItems.keySet();
+            mResourceTypeList = new ArrayList<ResourceType>();
+            mResourceTypeList.addAll(keys);
+            mResourceTypeList = Collections.unmodifiableList(mResourceTypeList);
+        }
 
-        return keys.toArray(new ResourceType[keys.size()]);
+        return mResourceTypeList;
     }
 
     @Override
@@ -113,6 +122,8 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
             parseFile();
 
             resetTouch();
+
+            mResourceTypeList = null;
         }
     }
 

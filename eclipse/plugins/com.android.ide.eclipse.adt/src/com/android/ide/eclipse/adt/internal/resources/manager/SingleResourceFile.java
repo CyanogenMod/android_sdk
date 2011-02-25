@@ -24,6 +24,7 @@ import com.android.resources.ResourceType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.xml.parsers.SAXParserFactory;
 
@@ -49,8 +50,8 @@ public class SingleResourceFile extends ResourceFile {
 
         // we need to infer the type of the resource from the folder type.
         // This is easy since this is a single Resource file.
-        ResourceType[] types = FolderTypeRelationship.getRelatedResourceTypes(folder.getType());
-        mType = types[0];
+        List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(folder.getType());
+        mType = types.get(0);
 
         // compute the resource name
         mResourceName = getResourceName(mType);
@@ -72,7 +73,7 @@ public class SingleResourceFile extends ResourceFile {
     }
 
     @Override
-    public ResourceType[] getResourceTypes() {
+    public List<ResourceType> getResourceTypes() {
         return FolderTypeRelationship.getRelatedResourceTypes(getFolder().getType());
     }
 
