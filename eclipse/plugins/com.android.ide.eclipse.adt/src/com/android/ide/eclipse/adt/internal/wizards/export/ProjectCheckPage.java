@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.export;
 
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -160,7 +160,7 @@ final class ProjectCheckPage extends ExportWizardPage {
             mHasMessage = true;
         } else {
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     addError(mErrorComposite, "Project is not an Android project.");
                 } else {
                     // check for errors
@@ -173,7 +173,7 @@ final class ProjectCheckPage extends ExportWizardPage {
                     if (outputIFolder != null) {
                         String outputOsPath =  outputIFolder.getLocation().toOSString();
                         String apkFilePath =  outputOsPath + File.separator + project.getName() +
-                                AndroidConstants.DOT_ANDROID_PACKAGE;
+                                AdtConstants.DOT_ANDROID_PACKAGE;
 
                         File f = new File(apkFilePath);
                         if (f.isFile() == false) {
@@ -181,7 +181,7 @@ final class ProjectCheckPage extends ExportWizardPage {
                                     String.format("%1$s/%2$s/%1$s%3$s does not exists!",
                                             project.getName(),
                                             outputIFolder.getName(),
-                                            AndroidConstants.DOT_ANDROID_PACKAGE));
+                                            AdtConstants.DOT_ANDROID_PACKAGE));
                         }
                     } else {
                         addError(mErrorComposite,

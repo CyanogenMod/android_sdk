@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
@@ -380,7 +380,7 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             return false;
         }
 
-        if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+        if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
             String msg = String.format("%1$s is not an Android project!", project.getName());
             AdtPlugin.displayError("Android Launch", msg);
             return false;

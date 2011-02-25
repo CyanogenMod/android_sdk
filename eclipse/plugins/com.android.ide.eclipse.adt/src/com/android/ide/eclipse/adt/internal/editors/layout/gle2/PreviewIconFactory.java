@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
-import static com.android.ide.eclipse.adt.AndroidConstants.DOT_PNG;
-import static com.android.ide.eclipse.adt.AndroidConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;

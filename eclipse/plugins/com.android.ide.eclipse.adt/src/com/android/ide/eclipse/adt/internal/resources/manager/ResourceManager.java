@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
@@ -167,7 +167,7 @@ public final class ResourceManager {
             final IProject project = folder.getProject();
 
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e) {
@@ -256,7 +256,7 @@ public final class ResourceManager {
             final IProject project = file.getProject();
 
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e) {
@@ -481,7 +481,7 @@ public final class ResourceManager {
     private void createProject(IProject project) {
         if (project.isOpen()) {
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e1) {

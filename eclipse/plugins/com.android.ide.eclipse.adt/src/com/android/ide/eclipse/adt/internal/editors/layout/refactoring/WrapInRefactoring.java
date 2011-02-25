@@ -22,7 +22,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
-import static com.android.ide.eclipse.adt.AndroidConstants.EXT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;

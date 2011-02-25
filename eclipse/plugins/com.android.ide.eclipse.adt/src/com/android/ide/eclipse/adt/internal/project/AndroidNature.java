@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.ResourceManagerBuilder;
@@ -127,7 +127,7 @@ public class AndroidNature implements IProjectNature {
         // Adding the java nature after the android one, would place the java builder before the
         // android builders.
         addNatureToProjectDescription(project, JavaCore.NATURE_ID, monitor);
-        addNatureToProjectDescription(project, AndroidConstants.NATURE_DEFAULT, monitor);
+        addNatureToProjectDescription(project, AdtConstants.NATURE_DEFAULT, monitor);
     }
 
     /**
@@ -151,7 +151,7 @@ public class AndroidNature implements IProjectNature {
             String[] newNatures = new String[natures.length + 1];
 
             // Android natures always come first.
-            if (natureId.equals(AndroidConstants.NATURE_DEFAULT)) {
+            if (natureId.equals(AdtConstants.NATURE_DEFAULT)) {
                 System.arraycopy(natures, 0, newNatures, 1, natures.length);
                 newNatures[0] = natureId;
             } else {

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
@@ -394,7 +394,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             if (className.startsWith(".")) { //$NON-NLS-1$
                 fullClassName = packageName + className;
             } else {
-                String[] segments = className.split(AndroidConstants.RE_DOT);
+                String[] segments = className.split(AdtConstants.RE_DOT);
                 if (segments.length == 1) {
                     fullClassName = packageName + "." + className; //$NON-NLS-1$
                 }
@@ -503,7 +503,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
             // look for how many segments we have left.
             // if one, just write it that way.
             // if more than one, write it with a leading dot.
-            String[] packages = name.split(AndroidConstants.RE_DOT);
+            String[] packages = name.split(AdtConstants.RE_DOT);
             if (packages.length == 1) {
                 text.setText(name);
             } else {

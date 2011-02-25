@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -65,7 +65,7 @@ import java.util.Set;
  */
 public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, IPartListener {
 
-    public static final String ID = AndroidConstants.EDITORS_NAMESPACE + ".layout.LayoutEditor"; //$NON-NLS-1$
+    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".layout.LayoutEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;

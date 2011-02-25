@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 
@@ -136,7 +136,7 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
                 if (file.exists()) {
                     IProject proj = file.getProject();
                     try {
-                        if (proj != null && proj.hasNature(AndroidConstants.NATURE_DEFAULT)) {
+                        if (proj != null && proj.hasNature(AdtConstants.NATURE_DEFAULT)) {
                             return file;
                         }
                     } catch (CoreException e) {

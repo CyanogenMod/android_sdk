@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.xml;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.FirstElementParser;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -41,7 +41,7 @@ import org.w3c.dom.Document;
  */
 public class XmlEditor extends AndroidXmlEditor {
 
-    public static final String ID = AndroidConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
+    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;

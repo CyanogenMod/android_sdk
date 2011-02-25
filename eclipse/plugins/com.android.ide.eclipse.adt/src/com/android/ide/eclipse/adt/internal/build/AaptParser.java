@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IMarker;
@@ -180,7 +180,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -204,7 +204,7 @@ public final class AaptParser {
 
                 // display the error
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -228,7 +228,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
                 continue;
@@ -242,7 +242,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -266,7 +266,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -282,7 +282,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_WARNING) == false) {
                     return true;
                 }
 
@@ -298,7 +298,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, lineStr, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -313,7 +313,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(location, null, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
@@ -331,7 +331,7 @@ public final class AaptParser {
 
                 // check the values and attempt to mark the file.
                 if (checkAndMark(null /*location*/, null, msg, osRoot, project,
-                        AndroidConstants.MARKER_AAPT_PACKAGE, IMarker.SEVERITY_ERROR) == false) {
+                        AdtConstants.MARKER_AAPT_PACKAGE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 

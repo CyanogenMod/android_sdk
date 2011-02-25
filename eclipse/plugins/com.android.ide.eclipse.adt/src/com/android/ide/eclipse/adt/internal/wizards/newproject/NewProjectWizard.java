@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -134,25 +134,25 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String PH_TEST_INSTRUMENTATION = "TEST-INSTRUMENTATION";   //$NON-NLS-1$
 
     private static final String BIN_DIRECTORY =
-        SdkConstants.FD_OUTPUT + AndroidConstants.WS_SEP;
+        SdkConstants.FD_OUTPUT + AdtConstants.WS_SEP;
     private static final String RES_DIRECTORY =
-        SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_RESOURCES + AdtConstants.WS_SEP;
     private static final String ASSETS_DIRECTORY =
-        SdkConstants.FD_ASSETS + AndroidConstants.WS_SEP;
+        SdkConstants.FD_ASSETS + AdtConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + AndroidConstants.WS_SEP;
+        SdkConstants.FD_DRAWABLE + AdtConstants.WS_SEP;
     private static final String DRAWABLE_HDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.HIGH.getResourceValue() + AndroidConstants.WS_SEP;   //$NON-NLS-1$
+        SdkConstants.FD_DRAWABLE + "-" + Density.HIGH.getResourceValue() + AdtConstants.WS_SEP;   //$NON-NLS-1$
     private static final String DRAWABLE_MDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.MEDIUM.getResourceValue() + AndroidConstants.WS_SEP; //$NON-NLS-1$
+        SdkConstants.FD_DRAWABLE + "-" + Density.MEDIUM.getResourceValue() + AdtConstants.WS_SEP; //$NON-NLS-1$
     private static final String DRAWABLE_LDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.LOW.getResourceValue() + AndroidConstants.WS_SEP;    //$NON-NLS-1$
+        SdkConstants.FD_DRAWABLE + "-" + Density.LOW.getResourceValue() + AdtConstants.WS_SEP;    //$NON-NLS-1$
     private static final String LAYOUT_DIRECTORY =
-        SdkConstants.FD_LAYOUT + AndroidConstants.WS_SEP;
+        SdkConstants.FD_LAYOUT + AdtConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
-        SdkConstants.FD_VALUES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_VALUES + AdtConstants.WS_SEP;
     private static final String GEN_SRC_DIRECTORY =
-        SdkConstants.FD_GEN_SOURCES + AndroidConstants.WS_SEP;
+        SdkConstants.FD_GEN_SOURCES + AdtConstants.WS_SEP;
 
     private static final String TEMPLATES_DIRECTORY = "templates/"; //$NON-NLS-1$
     private static final String TEMPLATE_MANIFEST = TEMPLATES_DIRECTORY
@@ -661,12 +661,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         AndroidNature.setupProjectNatures(project, monitor);
 
         // Create folders in the project if they don't already exist
-        addDefaultDirectories(project, AndroidConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
+        addDefaultDirectories(project, AdtConstants.WS_ROOT, DEFAULT_DIRECTORIES, monitor);
         String[] sourceFolders = new String[] {
                     (String) parameters.get(PARAM_SRC_FOLDER),
                     GEN_SRC_DIRECTORY
                 };
-        addDefaultDirectories(project, AndroidConstants.WS_ROOT, sourceFolders, monitor);
+        addDefaultDirectories(project, AdtConstants.WS_ROOT, sourceFolders, monitor);
 
         // Create the resource folders in the project if they don't already exist.
         if (legacy) {
@@ -891,8 +891,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             throws CoreException, IOException {
 
         // create the IFile object and check if the file doesn't already exist.
-        IFile file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                                     + VALUES_DIRECTORY + AndroidConstants.WS_SEP + STRINGS_FILE);
+        IFile file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                                     + VALUES_DIRECTORY + AdtConstants.WS_SEP + STRINGS_FILE);
         if (!file.exists()) {
             // get the Strings.xml template
             String stringDefinitionTemplate = AdtPlugin.readEmbeddedTextFile(TEMPLATE_STRINGS);
@@ -944,8 +944,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             throws CoreException {
         if (legacy) { // density support
             // do medium density icon only, in the default drawable folder.
-            IFile file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                    + DRAWABLE_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            IFile file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                    + DRAWABLE_DIRECTORY + AdtConstants.WS_SEP + PROJECT_ICON);
             if (!file.exists()) {
                 addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_MDPI), monitor);
             }
@@ -954,22 +954,22 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             IFile file;
 
             // high density
-            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                    + DRAWABLE_HDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                    + DRAWABLE_HDPI_DIRECTORY + AdtConstants.WS_SEP + PROJECT_ICON);
             if (!file.exists()) {
                 addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_HDPI), monitor);
             }
 
             // medium density
-            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                    + DRAWABLE_MDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                    + DRAWABLE_MDPI_DIRECTORY + AdtConstants.WS_SEP + PROJECT_ICON);
             if (!file.exists()) {
                 addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_MDPI), monitor);
             }
 
             // low density
-            file = project.getFile(RES_DIRECTORY + AndroidConstants.WS_SEP
-                    + DRAWABLE_LDPI_DIRECTORY + AndroidConstants.WS_SEP + PROJECT_ICON);
+            file = project.getFile(RES_DIRECTORY + AdtConstants.WS_SEP
+                    + DRAWABLE_LDPI_DIRECTORY + AdtConstants.WS_SEP + PROJECT_ICON);
             if (!file.exists()) {
                 addFile(file, AdtPlugin.readEmbeddedFile(TEMPLATES_DIRECTORY + ICON_LDPI), monitor);
             }
@@ -1029,7 +1029,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
                 // Resource class
                 if (lastDotIndex > 0) {
-                    resourcePackageClass = packageName + "." + AndroidConstants.FN_RESOURCE_BASE; //$NON-NLS-1$
+                    resourcePackageClass = packageName + "." + AdtConstants.FN_RESOURCE_BASE; //$NON-NLS-1$
                 }
 
                 // Package name
@@ -1051,7 +1051,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             }
         }
 
-        String[] components = packageName.split(AndroidConstants.RE_DOT);
+        String[] components = packageName.split(AdtConstants.RE_DOT);
         for (String component : components) {
             pkgFolder = pkgFolder.getFolder(component);
             if (!pkgFolder.exists()) {
@@ -1062,7 +1062,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         if (activityName != null) {
             // create the main activity Java file
-            String activityJava = activityName + AndroidConstants.DOT_JAVA;
+            String activityJava = activityName + AdtConstants.DOT_JAVA;
             IFile file = pkgFolder.getFile(activityJava);
             if (!file.exists()) {
                 copyFile(JAVA_ACTIVITY_TEMPLATE, file, java_activity_parameters, monitor);

@@ -29,7 +29,7 @@ import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.TABLE_ROW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.eclipse.adt.AndroidConstants.EXT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;

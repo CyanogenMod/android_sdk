@@ -34,7 +34,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.ResourceType;
@@ -64,7 +64,7 @@ public final class DescriptorsUtils {
      * The path in the online documentation for the manifest description.
      * <p/>
      * This is NOT a complete URL. To be used, it needs to be appended
-     * to {@link AndroidConstants#CODESITE_BASE_URL} or to the local SDK
+     * to {@link AdtConstants#CODESITE_BASE_URL} or to the local SDK
      * documentation.
      */
     public static final String MANIFEST_SDK_URL = "/reference/android/R.styleable.html#";  //$NON-NLS-1$

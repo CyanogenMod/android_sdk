@@ -23,7 +23,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -1063,7 +1063,7 @@ public class NewProjectCreationPage extends WizardPage {
             // name as a default. If the activity name has dots, it's a part of a
             // package specification and only the last identifier must be used.
             if (activityName.indexOf('.') != -1) {
-                String[] ids = activityName.split(AndroidConstants.RE_DOT);
+                String[] ids = activityName.split(AdtConstants.RE_DOT);
                 activityName = ids[ids.length - 1];
             }
             if (mProjectNameField.getText().length() == 0 || !mProjectNameModifiedByUser) {
@@ -1611,7 +1611,7 @@ public class NewProjectCreationPage extends WizardPage {
         } else if (osTarget.indexOf('.') == 0) {
             osTarget = mInfo.getPackageName() + osTarget;
         }
-        osTarget = osTarget.replace('.', File.separatorChar) + AndroidConstants.DOT_JAVA;
+        osTarget = osTarget.replace('.', File.separatorChar) + AdtConstants.DOT_JAVA;
 
         String projectPath = getProjectLocation();
         File projectDir = new File(projectPath);

@@ -20,7 +20,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -743,7 +743,7 @@ public final class Sdk  {
 
         private void onProjectRemoved(IProject project, boolean deleted) {
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e) {
@@ -830,7 +830,7 @@ public final class Sdk  {
 
         private void onProjectOpened(final IProject openedProject) {
             try {
-                if (openedProject.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (openedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e) {
@@ -897,7 +897,7 @@ public final class Sdk  {
 
         public void projectRenamed(IProject project, IPath from) {
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                     return;
                 }
             } catch (CoreException e) {
@@ -964,7 +964,7 @@ public final class Sdk  {
                     // the target.
                     IProject iProject = file.getProject();
 
-                    if (iProject.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                    if (iProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                         return;
                     }
 

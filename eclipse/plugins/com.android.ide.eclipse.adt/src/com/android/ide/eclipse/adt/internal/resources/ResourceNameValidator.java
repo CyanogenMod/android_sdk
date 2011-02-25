@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import static com.android.ide.eclipse.adt.AndroidConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.resources.manager.FolderTypeRelationship;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -70,7 +70,7 @@ public class ResourceNameValidator implements IInputValidator {
                 newText = newText.substring(0, newText.length() - DOT_XML.length());
             }
 
-            if (newText.indexOf('.') != -1 && !newText.endsWith(AndroidConstants.DOT_XML)) {
+            if (newText.indexOf('.') != -1 && !newText.endsWith(AdtConstants.DOT_XML)) {
                 return String.format("The filename must end with %1$s.", DOT_XML);
             }
 

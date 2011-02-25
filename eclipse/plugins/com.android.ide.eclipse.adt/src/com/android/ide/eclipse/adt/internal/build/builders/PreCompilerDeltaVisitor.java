@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.SourceChangeHandler;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.build.Messages;
@@ -199,9 +199,9 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                     IFile manifestFile = (IFile)resource;
 
                     if (manifestFile.exists()) {
-                        manifestFile.deleteMarkers(AndroidConstants.MARKER_XML, true,
+                        manifestFile.deleteMarkers(AdtConstants.MARKER_XML, true,
                                 IResource.DEPTH_ZERO);
-                        manifestFile.deleteMarkers(AndroidConstants.MARKER_ANDROID, true,
+                        manifestFile.deleteMarkers(AdtConstants.MARKER_ANDROID, true,
                                 IResource.DEPTH_ZERO);
                     }
 
@@ -262,8 +262,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 String fileName = resource.getName();
 
                 // Special case of R.java/Manifest.java.
-                if (AndroidConstants.FN_RESOURCE_CLASS.equals(fileName) ||
-                        AndroidConstants.FN_MANIFEST_CLASS.equals(fileName)) {
+                if (AdtConstants.FN_RESOURCE_CLASS.equals(fileName) ||
+                        AdtConstants.FN_MANIFEST_CLASS.equals(fileName)) {
                     // if it was removed, there's a possibility that it was removed due to a
                     // package change, or an aidl that was removed, but the only thing
                     // that will happen is that we'll have an extra build. Not much of a problem.
@@ -324,17 +324,17 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 case IResourceDelta.CHANGED:
                     // display verbose message
                     message = String.format(Messages.s_Modified_Recreating_s, p,
-                            AndroidConstants.FN_RESOURCE_CLASS);
+                            AdtConstants.FN_RESOURCE_CLASS);
                     break;
                 case IResourceDelta.ADDED:
                     // display verbose message
                     message = String.format(Messages.Added_s_s_Needs_Updating, p,
-                            AndroidConstants.FN_RESOURCE_CLASS);
+                            AdtConstants.FN_RESOURCE_CLASS);
                     break;
                 case IResourceDelta.REMOVED:
                     // display verbose message
                     message = String.format(Messages.s_Removed_s_Needs_Updating, p,
-                            AndroidConstants.FN_RESOURCE_CLASS);
+                            AdtConstants.FN_RESOURCE_CLASS);
                     break;
             }
             if (message != null) {
@@ -346,7 +346,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
                 handler.handleResourceFile((IFile)resource, kind);
             }
 
-            if (AndroidConstants.EXT_XML.equalsIgnoreCase(ext)) {
+            if (AdtConstants.EXT_XML.equalsIgnoreCase(ext)) {
                 if (kind != IResourceDelta.REMOVED) {
                     // check xml Validity
                     mBuilder.checkXML(resource, this);

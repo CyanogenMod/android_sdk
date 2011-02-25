@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.CoreException;
@@ -149,7 +149,7 @@ public class JUnitLaunchConfigDelegate extends JUnitLaunchConfigurationDelegate 
         if (bundle == null) {
             throw new IOException("Cannot find org.junit bundle");
         }
-        URL jarUrl = bundle.getEntry(AndroidConstants.WS_SEP + JUNIT_JAR);
+        URL jarUrl = bundle.getEntry(AdtConstants.WS_SEP + JUNIT_JAR);
         return FileLocator.resolve(jarUrl).getFile();
     }
 }

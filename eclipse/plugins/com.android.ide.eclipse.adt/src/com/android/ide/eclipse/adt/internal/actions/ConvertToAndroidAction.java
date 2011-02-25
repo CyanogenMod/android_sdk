@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.actions;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 
 import org.eclipse.core.resources.IProject;
@@ -107,7 +107,7 @@ public class ConvertToAndroidAction implements IObjectActionDelegate {
 
                     // check if the project already has the android nature.
                     for (int i = 0; i < natures.length; ++i) {
-                        if (AndroidConstants.NATURE_DEFAULT.equals(natures[i])) {
+                        if (AdtConstants.NATURE_DEFAULT.equals(natures[i])) {
                             // we shouldn't be here as the visibility of the item
                             // is dependent on the project.
                             return new Status(Status.WARNING, AdtPlugin.PLUGIN_ID,
@@ -121,7 +121,7 @@ public class ConvertToAndroidAction implements IObjectActionDelegate {
 
                     String[] newNatures = new String[natures.length + 1];
                     System.arraycopy(natures, 0, newNatures, 1, natures.length);
-                    newNatures[0] = AndroidConstants.NATURE_DEFAULT;
+                    newNatures[0] = AdtConstants.NATURE_DEFAULT;
 
                     // set the new nature list in the project
                     description.setNatureIds(newNatures);

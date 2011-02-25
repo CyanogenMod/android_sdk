@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
 import com.android.ide.common.layout.LayoutConstants;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChange;
 import com.android.ide.eclipse.adt.internal.refactoring.changes.AndroidLayoutChangeDescription;
@@ -174,7 +174,7 @@ public class AndroidTypeMoveParticipant extends MoveParticipant {
             IType type = (IType) element;
             IJavaProject javaProject = (IJavaProject) type.getAncestor(IJavaElement.JAVA_PROJECT);
             IProject project = javaProject.getProject();
-            IResource manifestResource = project.findMember(AndroidConstants.WS_SEP
+            IResource manifestResource = project.findMember(AdtConstants.WS_SEP
                     + SdkConstants.FN_ANDROID_MANIFEST_XML);
 
             if (manifestResource == null || !manifestResource.exists()
