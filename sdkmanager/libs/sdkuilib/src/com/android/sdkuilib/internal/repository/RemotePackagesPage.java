@@ -52,7 +52,10 @@ import org.eclipse.swt.widgets.TreeColumn;
 
 import java.util.ArrayList;
 
-
+/**
+ * Page that displays remote repository & add-ons sources and let the user
+ * select packages for installation.
+ */
 public class RemotePackagesPage extends Composite implements ISdkChangeListener {
 
     private final UpdaterData mUpdaterData;
@@ -341,7 +344,6 @@ public class RemotePackagesPage extends Composite implements ISdkChangeListener 
     }
 
     private void onAddSiteSelected() {
-
         final SdkSource[] knowSources = mUpdaterData.getSources().getAllSources();
         String title = "Add Add-on Site URL";
 

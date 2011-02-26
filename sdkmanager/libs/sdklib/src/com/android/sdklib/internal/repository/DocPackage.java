@@ -117,13 +117,35 @@ public class DocPackage extends Package implements IPackageVersion {
         mVersion.saveProperties(props);
     }
 
-    /** Returns the version, for platform, add-on and doc packages.
-     *  Can be 0 if this is a local package of unknown api-level. */
+    /**
+     * Returns the version, for platform, add-on and doc packages.
+     * Can be 0 if this is a local package of unknown api-level.
+     */
     public AndroidVersion getVersion() {
         return mVersion;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        if (mVersion.isPreview()) {
+            return String.format("Documentation for Android '%1$s' Preview SDK%2$s",
+                    mVersion.getCodename(),
+                    isObsolete() ? " (Obsolete)" : "");
+        } else {
+            return String.format("Documentation for Android SDK%2$s",
+                    mVersion.getApiLevel(),
+                    isObsolete() ? " (Obsolete)" : "");
+        }
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         if (mVersion.isPreview()) {

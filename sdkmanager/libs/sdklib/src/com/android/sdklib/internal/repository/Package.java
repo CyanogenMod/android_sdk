@@ -372,6 +372,17 @@ public abstract class Package implements IDescription, Comparable<Package> {
     }
 
     /**
+     * Returns a description of this package that is suitable for a list display.
+     * Should not be empty. Must never be null.
+     * <p/>
+     * Note that this is the "base" name for the package
+     * with no specific revision nor API mentionned.
+     * In contrast, {@link #getShortDescription()} should be used if you want more details
+     * such as the package revision number or the API, if applicable.
+     */
+    public abstract String getListDescription();
+
+    /**
      * Returns a short description for an {@link IDescription}.
      * Can be empty but not null.
      */

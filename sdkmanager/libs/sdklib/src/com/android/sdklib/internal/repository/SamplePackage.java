@@ -175,7 +175,23 @@ public class SamplePackage extends MinToolsPackage
         return mVersion;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        String s = String.format("Samples for SDK API %1$s%2$s%3$s",
+                mVersion.getApiString(),
+                mVersion.isPreview() ? " Preview" : "",
+                isObsolete() ? " (Obsolete)" : "");
+        return s;
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         String s = String.format("Samples for SDK API %1$s%2$s, revision %3$d%4$s",

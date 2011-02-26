@@ -247,7 +247,22 @@ public class AddonPackage extends Package
         return mLibs;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        return String.format("%1$s by %2$s%3$s",
+                getName(),
+                getVendor(),
+                isObsolete() ? " (Obsolete)" : "");
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         return String.format("%1$s by %2$s, Android API %3$s, revision %4$s%5$s",

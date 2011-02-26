@@ -151,7 +151,20 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
         return mMinPlatformToolsRevision;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        return String.format("Android SDK Tools%1$s",
+                isObsolete() ? " (Obsolete)" : "");
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         return String.format("Android SDK Tools, revision %1$d%2$s",

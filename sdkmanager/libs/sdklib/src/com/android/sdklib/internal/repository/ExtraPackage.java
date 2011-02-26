@@ -253,9 +253,7 @@ public class ExtraPackage extends MinToolsPackage
         return ""; //$NON-NLS-1$
     }
 
-    /** Returns a short description for an {@link IDescription}. */
-    @Override
-    public String getShortDescription() {
+    private String getPrettyName() {
         String name = mPath;
 
         // In the past, we used to save the extras in a folder vendor-path,
@@ -299,8 +297,31 @@ public class ExtraPackage extends MinToolsPackage
         name = name.replaceAll(" Usb ", " USB ");   //$NON-NLS-1$
         name = name.replaceAll(" Api ", " API ");   //$NON-NLS-1$
 
+        return name;
+    }
+
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        String s = String.format("%1$s package%2$s",
+                getPrettyName(),
+                isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
+
+        return s;
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
+    @Override
+    public String getShortDescription() {
+
         String s = String.format("%1$s package, revision %2$d%3$s",
-                name,
+                getPrettyName(),
                 getRevision(),
                 isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
 

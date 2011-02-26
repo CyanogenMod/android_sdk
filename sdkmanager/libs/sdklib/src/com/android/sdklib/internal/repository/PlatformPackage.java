@@ -121,7 +121,31 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
         return mVersion;
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        String s;
+
+        if (mVersion.isPreview()) {
+            s = String.format("SDK Platform Android %1$s Preview%2$s",
+                    getVersionName(),
+                    isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
+        } else {
+            s = String.format("SDK Platform Android %1$s%2$s",
+                getVersionName(),
+                isObsolete() ? " (Obsolete)" : "");      //$NON-NLS-2$
+        }
+
+        return s;
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         String s;
@@ -130,13 +154,13 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
             s = String.format("SDK Platform Android %1$s Preview, revision %2$s%3$s",
                     getVersionName(),
                     getRevision(),
-                    isObsolete() ? " (Obsolete)" : "");
+                    isObsolete() ? " (Obsolete)" : "");  //$NON-NLS-2$
         } else {
             s = String.format("SDK Platform Android %1$s, API %2$d, revision %3$s%4$s",
                 getVersionName(),
                 mVersion.getApiLevel(),
                 getRevision(),
-                isObsolete() ? " (Obsolete)" : "");
+                isObsolete() ? " (Obsolete)" : "");      //$NON-NLS-2$
         }
 
         return s;

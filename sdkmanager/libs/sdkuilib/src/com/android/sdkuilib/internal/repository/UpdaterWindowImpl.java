@@ -69,10 +69,11 @@ public class UpdaterWindowImpl {
     private SashForm mSashForm;
     private List mPageList;
     private Composite mPagesRootComposite;
-    private LocalPackagesPage mLocalPackagePage;
-    private RemotePackagesPage mRemotePackagesPage;
     private AvdManagerPage mAvdManagerPage;
     private StackLayout mStackLayout;
+    private PackagesPage mPackagesPage;
+    private LocalPackagesPage mLocalPackagePage;
+    private RemotePackagesPage mRemotePackagesPage;
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -121,6 +122,12 @@ public class UpdaterWindowImpl {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
             }
         });
+
+        mUpdaterData.setWindowShell(mAndroidSdkUpdater);
+        mTaskFactory = new ProgressTaskFactory(mAndroidSdkUpdater);
+        mUpdaterData.setTaskFactory(mTaskFactory);
+        mUpdaterData.setImageFactory(new ImageFactory(mAndroidSdkUpdater.getDisplay()));
+
 
         FillLayout fl;
         mAndroidSdkUpdater.setLayout(fl = new FillLayout(SWT.HORIZONTAL));
@@ -219,15 +226,14 @@ public class UpdaterWindowImpl {
      */
     private void createPages() {
         mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, mUpdaterData);
-        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
-        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
-    }
 
-    /**
-     * Helper to return the SWT shell.
-     */
-    private Shell getShell() {
-        return mAndroidSdkUpdater;
+        // TODO right now the new PackagesPage is experimental and not enabled by default
+        if (System.getenv("EXPERIMENTAL") != null) {  //$NON-NLS-1$
+            mPackagesPage = new PackagesPage(mPagesRootComposite, mUpdaterData);
+        } else {
+            mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
+            mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
+        }
     }
 
     /**
@@ -266,16 +272,17 @@ public class UpdaterWindowImpl {
      * Returns true if we should show the window.
      */
     private boolean postCreate() {
-        mUpdaterData.setWindowShell(getShell());
-        mTaskFactory = new ProgressTaskFactory(getShell());
-        mUpdaterData.setTaskFactory(mTaskFactory);
-        mUpdaterData.setImageFactory(new ImageFactory(getShell().getDisplay()));
-
         setWindowImage(mAndroidSdkUpdater);
 
         addPage(mAvdManagerPage,     "Virtual devices");
-        addPage(mLocalPackagePage,   "Installed packages");
-        addPage(mRemotePackagesPage, "Available packages");
+
+        if (mPackagesPage != null) {  // TODO remove test when experimental is finalized
+            addPage(mPackagesPage,      "Packages List");
+        } else {
+            addPage(mLocalPackagePage,   "Installed packages");
+            addPage(mRemotePackagesPage, "Available packages");
+        }
+
         addExtraPages();
 
         int pageIndex = 0;
@@ -287,11 +294,11 @@ public class UpdaterWindowImpl {
             }
             i++;
         }
-        displayPage(pageIndex);
-        mPageList.setSelection(pageIndex);
 
         setupSources();
         initializeSettings();
+        displayPage(pageIndex);
+        mPageList.setSelection(pageIndex);
 
         if (mUpdaterData.checkIfInitFailed()) {
             return false;
@@ -395,6 +402,10 @@ public class UpdaterWindowImpl {
                 mPageList.setSelection(index);
                 mInternalPageChange = false;
             }
+
+            if (page instanceof IPageListener) {
+                ((IPageListener) page).onPageSelected();
+            }
         }
     }
 
@@ -403,7 +414,6 @@ public class UpdaterWindowImpl {
      */
     private void setupSources() {
         mUpdaterData.setupDefaultSources();
-        mRemotePackagesPage.onSdkReload();
     }
 
     /**
