@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
@@ -151,7 +151,7 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
             IFile file = (IFile)resource;
 
             // remove previous markers
-            removeMarkersFromResource(file, AndroidConstants.MARKER_XML);
+            removeMarkersFromResource(file, AdtConstants.MARKER_XML);
 
             // create  the error handler
             XmlErrorHandler reporter = new XmlErrorHandler(file, visitor);
@@ -309,9 +309,9 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
        }
 
         // abort if there are TARGET or ADT type markers
-        stopOnMarker(iProject, AndroidConstants.MARKER_TARGET, IResource.DEPTH_ZERO,
+        stopOnMarker(iProject, AdtConstants.MARKER_TARGET, IResource.DEPTH_ZERO,
                 false /*checkSeverity*/);
-        stopOnMarker(iProject, AndroidConstants.MARKER_ADT, IResource.DEPTH_ZERO,
+        stopOnMarker(iProject, AdtConstants.MARKER_ADT, IResource.DEPTH_ZERO,
                 false /*checkSeverity*/);
     }
 

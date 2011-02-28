@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
@@ -173,7 +173,7 @@ public final class LayoutReloadMonitor {
 
             boolean hasAndroidNature = false;
             try {
-                hasAndroidNature = project.hasNature(AndroidConstants.NATURE_DEFAULT);
+                hasAndroidNature = project.hasNature(AdtConstants.NATURE_DEFAULT);
             } catch (CoreException e) {
                 // do nothing if the nature cannot be queried.
                 return;
@@ -191,7 +191,7 @@ public final class LayoutReloadMonitor {
 
                 for (IProject p : referencingProjects) {
                     try {
-                        hasAndroidNature = p.hasNature(AndroidConstants.NATURE_DEFAULT);
+                        hasAndroidNature = p.hasNature(AdtConstants.NATURE_DEFAULT);
                     } catch (CoreException e) {
                         // do nothing if the nature cannot be queried.
                         continue;
@@ -220,7 +220,7 @@ public final class LayoutReloadMonitor {
 
             // here we only care about code change (so change for .class files).
             // Resource changes is handled by the IResourceListener.
-            if (AndroidConstants.EXT_CLASS.equals(file.getFileExtension())) {
+            if (AdtConstants.EXT_CLASS.equals(file.getFileExtension())) {
                 if (file.getName().matches("R[\\$\\.](.*)")) {
                     // this is a R change!
                     if (changeFlags == null) {

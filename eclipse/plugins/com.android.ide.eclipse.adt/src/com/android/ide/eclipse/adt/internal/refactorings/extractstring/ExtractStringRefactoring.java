@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
 
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
@@ -424,7 +424,7 @@ public class ExtractStringRefactoring extends Refactoring {
             }
 
             // Check this a Layout XML file and get the selection and its context.
-            if (mFile != null && AndroidConstants.EXT_XML.equals(mFile.getFileExtension())) {
+            if (mFile != null && AdtConstants.EXT_XML.equals(mFile.getFileExtension())) {
 
                 // Currently we only support Android resource XML files, so they must have a path
                 // similar to
@@ -1016,7 +1016,7 @@ public class ExtractStringRefactoring extends Refactoring {
                         // Add all /res folders (technically we don't need to process /res/values
                         // XML files that contain resources/string elements, but it's easier to
                         // not filter them out.)
-                        IFolder f = mProject.getFolder(AndroidConstants.WS_RESOURCES);
+                        IFolder f = mProject.getFolder(AdtConstants.WS_RESOURCES);
                         if (f.exists()) {
                             try {
                                 mFolders.addAll(
@@ -1055,7 +1055,7 @@ public class ExtractStringRefactoring extends Refactoring {
                             if (res.exists() && !res.isDerived() && res instanceof IFile) {
                                 IFile file = (IFile) res;
                                 // Must have an XML extension
-                                if (AndroidConstants.EXT_XML.equals(file.getFileExtension())) {
+                                if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
                                     IPath p = file.getFullPath();
                                     // And not be either paths we want to filter out
                                     if ((mFilterPath1 != null && mFilterPath1.equals(p)) ||
@@ -1101,7 +1101,7 @@ public class ExtractStringRefactoring extends Refactoring {
             SubMonitor monitor) {
 
         TextFileChange xmlChange = new TextFileChange(getName(), targetXml);
-        xmlChange.setTextType(AndroidConstants.EXT_XML);
+        xmlChange.setTextType(AdtConstants.EXT_XML);
 
         String error = "";                  //$NON-NLS-1$
         TextEdit edit = null;
@@ -1478,7 +1478,7 @@ public class ExtractStringRefactoring extends Refactoring {
         HashSet<IFile> files = new HashSet<IFile>();
         files.add(sourceFile);
 
-        if (allConfigurations && AndroidConstants.EXT_XML.equals(sourceFile.getFileExtension())) {
+        if (allConfigurations && AdtConstants.EXT_XML.equals(sourceFile.getFileExtension())) {
             IPath path = sourceFile.getFullPath();
             if (path.segmentCount() == 4 && path.segment(1).equals(SdkConstants.FD_RESOURCES)) {
                 IProject project = sourceFile.getProject();

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidManifest;
@@ -153,7 +153,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
 
             ImportRewrite irw = ImportRewrite.create(cu, true);
             irw.addImport(mNewPackageName.getFullyQualifiedName() + '.'
-                    + AndroidConstants.FN_RESOURCE_BASE);
+                    + AdtConstants.FN_RESOURCE_BASE);
 
             try {
                 rewrittenImports.addChild( irw.rewriteImports(null) );
@@ -210,14 +210,14 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
 
         TextFileChange xmlChange = new TextFileChange("XML resource file edit", file);
-        xmlChange.setTextType(AndroidConstants.EXT_XML);
+        xmlChange.setTextType(AdtConstants.EXT_XML);
 
         MultiTextEdit multiEdit = new MultiTextEdit();
         ArrayList<TextEditGroup> editGroups = new ArrayList<TextEditGroup>();
 
-        final String oldAppNamespaceString = String.format(AndroidConstants.NS_CUSTOM_RESOURCES,
+        final String oldAppNamespaceString = String.format(AdtConstants.NS_CUSTOM_RESOURCES,
                 mOldPackageName.getFullyQualifiedName());
-        final String newAppNamespaceString = String.format(AndroidConstants.NS_CUSTOM_RESOURCES,
+        final String newAppNamespaceString = String.format(AdtConstants.NS_CUSTOM_RESOURCES,
                 mNewPackageName.getFullyQualifiedName());
 
         // Prepare the change set
@@ -301,7 +301,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         }
 
         TextFileChange xmlChange = new TextFileChange("Make Manifest edits", file);
-        xmlChange.setTextType(AndroidConstants.EXT_XML);
+        xmlChange.setTextType(AdtConstants.EXT_XML);
 
         MultiTextEdit multiEdit = new MultiTextEdit();
         ArrayList<TextEditGroup> editGroups = new ArrayList<TextEditGroup>();
@@ -417,7 +417,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
         public boolean visit(IResource resource) throws CoreException {
             if (resource instanceof IFile) {
                 IFile file = (IFile) resource;
-                if (AndroidConstants.EXT_JAVA.equals(file.getFileExtension())) {
+                if (AdtConstants.EXT_JAVA.equals(file.getFileExtension())) {
 
                     ICompilationUnit icu = JavaCore.createCompilationUnitFrom(file);
 
@@ -430,7 +430,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                         edit.addChild(text_edit);
 
                         TextFileChange text_file_change = new TextFileChange(file.getName(), file);
-                        text_file_change.setTextType(AndroidConstants.EXT_JAVA);
+                        text_file_change.setTextType(AdtConstants.EXT_JAVA);
                         text_file_change.setEdit(edit);
                         mChanges.add(text_file_change);
                     }
@@ -438,7 +438,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                     // XXX Partially taken from ExtractStringRefactoring.java
                     // Check this a Layout XML file and get the selection and
                     // its context.
-                } else if (AndroidConstants.EXT_XML.equals(file.getFileExtension())) {
+                } else if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
 
                     if (SdkConstants.FN_ANDROID_MANIFEST_XML.equals(file.getName())) {
 
@@ -510,7 +510,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
                 QualifiedName qualifiedImportName = (QualifiedName) importName;
 
                 if (qualifiedImportName.getName().getIdentifier()
-                        .equals(AndroidConstants.FN_RESOURCE_BASE)) {
+                        .equals(AdtConstants.FN_RESOURCE_BASE)) {
                     mRewriter.replace(qualifiedImportName.getQualifier(), mNewPackageName,
                             null);
                 }

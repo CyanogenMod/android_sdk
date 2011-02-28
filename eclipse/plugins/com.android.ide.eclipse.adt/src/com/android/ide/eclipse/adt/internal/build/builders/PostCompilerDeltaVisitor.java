@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder.BaseDeltaVisitor;
 import com.android.sdklib.SdkConstants;
@@ -177,7 +177,7 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
                 // just check this is a .class file. Any modification will
                 // trigger a change in the classes.dex file
                 String ext = resource.getFileExtension();
-                if (AndroidConstants.EXT_CLASS.equalsIgnoreCase(ext)) {
+                if (AdtConstants.EXT_CLASS.equalsIgnoreCase(ext)) {
                     mConvertToDex = true;
                     mMakeFinalPackage = true;
 
@@ -198,8 +198,8 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
                             mConvertToDex = true;
                             mMakeFinalPackage = true;
                         } else if (resourceName.equalsIgnoreCase(
-                                AndroidConstants.FN_RESOURCES_AP_) ||
-                                AndroidConstants.PATTERN_RESOURCES_S_AP_.matcher(
+                                AdtConstants.FN_RESOURCES_AP_) ||
+                                AdtConstants.PATTERN_RESOURCES_S_AP_.matcher(
                                         resourceName).matches()) {
                             // or if the default resources.ap_ or a configured version
                             // (resources-###.ap_) was removed.
@@ -237,7 +237,7 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
         } else if (mLibFolder != null && mLibFolder.isPrefixOf(path)) {
             // inside the native library folder. Test if the changed resource is a .so file.
             if (type == IResource.FILE &&
-                    (AndroidConstants.EXT_NATIVE_LIB.equalsIgnoreCase(path.getFileExtension())
+                    (AdtConstants.EXT_NATIVE_LIB.equalsIgnoreCase(path.getFileExtension())
                             || SdkConstants.FN_GDBSERVER.equals(resource.getName()))) {
                 mMakeFinalPackage = true;
                 return false; // return false for file.

@@ -19,7 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
-import static com.android.ide.eclipse.adt.AndroidConstants.ANDROID_PKG;
+import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
@@ -35,7 +35,7 @@ import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.ContextPullParser;
@@ -1821,7 +1821,7 @@ public class GraphicalEditorPart extends EditorPart
                             if (severity == IMarker.SEVERITY_ERROR) {
                                 hasJavaErrors = true;
                             }
-                        } else if (markerType.equals(AndroidConstants.MARKER_AAPT_COMPILE)) {
+                        } else if (markerType.equals(AdtConstants.MARKER_AAPT_COMPILE)) {
                             int severity = marker.getAttribute(IMarker.SEVERITY, -1);
                             if (severity == IMarker.SEVERITY_ERROR) {
                                 hasAaptErrors = true;

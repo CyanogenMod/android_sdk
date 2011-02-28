@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.menu;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
@@ -42,7 +42,7 @@ import javax.xml.xpath.XPathExpressionException;
  */
 public class MenuEditor extends AndroidXmlEditor {
 
-    public static final String ID = AndroidConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
+    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
     private UiElementNode mUiRootNode;

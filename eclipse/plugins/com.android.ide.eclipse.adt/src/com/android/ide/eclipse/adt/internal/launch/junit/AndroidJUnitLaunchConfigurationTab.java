@@ -16,7 +16,7 @@
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.launch.MainLaunchConfigTab;
@@ -659,7 +659,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         validateJavaProject(javaProject);
 
         try {
-            if (!project.hasNature(AndroidConstants.NATURE_DEFAULT)) {
+            if (!project.hasNature(AdtConstants.NATURE_DEFAULT)) {
                 setErrorMessage(
                         LaunchMessages.NonAndroidProjectError);
                 return;

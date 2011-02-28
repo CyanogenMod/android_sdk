@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.DexException;
@@ -124,7 +124,7 @@ public final class ExportHelper {
 
             // tmp file for the packaged resource file. To not disturb the incremental builders
             // output, all intermediary files are created in tmp files.
-            File resourceFile = File.createTempFile(TEMP_PREFIX, AndroidConstants.DOT_RES);
+            File resourceFile = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_RES);
             resourceFile.deleteOnExit();
 
             // package the resources.
@@ -139,7 +139,7 @@ public final class ExportHelper {
             // Step 2. Convert the byte code to Dalvik bytecode
 
             // tmp file for the packaged resource file.
-            File dexFile = File.createTempFile(TEMP_PREFIX, AndroidConstants.DOT_DEX);
+            File dexFile = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_DEX);
             dexFile.deleteOnExit();
 
             ProjectState state = Sdk.getProjectState(project);
@@ -163,7 +163,7 @@ public final class ExportHelper {
                 String[] projectOutputs = helper.getProjectOutputs();
 
                 // create a jar from the output of these projects
-                File inputJar = File.createTempFile(TEMP_PREFIX, AndroidConstants.DOT_JAR);
+                File inputJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
                 inputJar.deleteOnExit();
 
                 JarOutputStream jos = new JarOutputStream(new FileOutputStream(inputJar));
@@ -180,7 +180,7 @@ public final class ExportHelper {
                         null /*resourceMarker*/);
 
                 // destination file for proguard
-                File obfuscatedJar = File.createTempFile(TEMP_PREFIX, AndroidConstants.DOT_JAR);
+                File obfuscatedJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
                 obfuscatedJar.deleteOnExit();
 
                 // run proguard
@@ -274,7 +274,7 @@ public final class ExportHelper {
             IPath binLocation = outputFolder.getLocation();
 
             // make the full path to the package
-            String fileName = project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
+            String fileName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
 
             File file = new File(binLocation.toOSString() + File.separator + fileName);
 
@@ -348,7 +348,7 @@ public final class ExportHelper {
         } else if (file.isFile()) {
             // check the extension
             String name = file.getName();
-            if (name.toLowerCase().endsWith(AndroidConstants.DOT_CLASS) == false) {
+            if (name.toLowerCase().endsWith(AdtConstants.DOT_CLASS) == false) {
                 return;
             }
 

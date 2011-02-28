@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import static com.android.ide.eclipse.adt.AndroidConstants.EXT_XML;
-import static com.android.ide.eclipse.adt.AndroidConstants.WS_SEP;
+import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 import static com.android.sdklib.SdkConstants.FD_VALUES;

@@ -20,7 +20,7 @@ import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -199,7 +199,7 @@ public final class ProjectCallback extends LegacyCallback {
             ManifestData manifestData = AndroidManifestHelper.parseForData(mProject);
             if (manifestData != null) {
                 String javaPackage = manifestData.getPackage();
-                mNamespace = String.format(AndroidConstants.NS_CUSTOM_RESOURCES, javaPackage);
+                mNamespace = String.format(AdtConstants.NS_CUSTOM_RESOURCES, javaPackage);
             }
         }
 

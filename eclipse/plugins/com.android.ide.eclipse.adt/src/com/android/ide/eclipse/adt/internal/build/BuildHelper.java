@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -145,10 +145,10 @@ public class BuildHelper {
         // need to figure out some path before we can execute aapt;
 
         // get the resource folder
-        IFolder resFolder = mProject.getFolder(AndroidConstants.WS_RESOURCES);
+        IFolder resFolder = mProject.getFolder(AdtConstants.WS_RESOURCES);
 
         // and the assets folder
-        IFolder assetsFolder = mProject.getFolder(AndroidConstants.WS_ASSETS);
+        IFolder assetsFolder = mProject.getFolder(AdtConstants.WS_ASSETS);
 
         // we need to make sure this one exists.
         if (assetsFolder.exists() == false) {
@@ -747,7 +747,7 @@ public class BuildHelper {
             // (This is to handle the case of reference Android projects in the context of
             // instrumentation projects that need to reference the projects to be tested).
             if (referencedJavaProject.getProject().hasNature(
-                    AndroidConstants.NATURE_DEFAULT) == false) {
+                    AdtConstants.NATURE_DEFAULT) == false) {
                 writeStandardProjectResources(apkBuilder, referencedJavaProject, wsRoot, list);
             }
         }
@@ -842,7 +842,7 @@ public class BuildHelper {
 
                     IResource resource = wsRoot.findMember(path);
                     // case of a jar file (which could be relative to the workspace or a full path)
-                    if (AndroidConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+                    if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
                         if (resource != null && resource.exists() &&
                                 resource.getType() == IResource.FILE) {
                             oslibraryList.add(resource.getLocation().toOSString());
@@ -908,7 +908,7 @@ public class BuildHelper {
             // only include output from non android referenced project
             // (This is to handle the case of reference Android projects in the context of
             // instrumentation projects that need to reference the projects to be tested).
-            if (javaProject.getProject().hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+            if (javaProject.getProject().hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                 // get the output folder
                 IPath path = null;
                 try {

@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunch;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchController;
@@ -188,7 +188,7 @@ public class AndroidJUnitLaunchConfigDelegate extends LaunchConfigDelegate {
                     LaunchMessages.AndroidJUnitDelegate_NoRunnerConsoleMsg_4s,
                     project.getName(),
                     SdkConstants.CLASS_INSTRUMENTATION_RUNNER,
-                    AndroidConstants.LIBRARY_TEST_RUNNER,
+                    AdtConstants.LIBRARY_TEST_RUNNER,
                     SdkConstants.FN_ANDROID_MANIFEST_XML));
             return null;
         } catch (CoreException e) {

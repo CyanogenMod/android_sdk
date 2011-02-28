@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
@@ -56,7 +56,7 @@ import javax.xml.xpath.XPathExpressionException;
  */
 public final class ManifestEditor extends AndroidXmlEditor {
 
-    public static final String ID = AndroidConstants.EDITORS_NAMESPACE + ".manifest.ManifestEditor"; //$NON-NLS-1$
+    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".manifest.ManifestEditor"; //$NON-NLS-1$
 
     private final static String EMPTY = ""; //$NON-NLS-1$
 
@@ -256,7 +256,7 @@ public final class ManifestEditor extends AndroidXmlEditor {
         try {
             // get the markers for the file
             IMarker[] markers = inputFile.findMarkers(
-                    AndroidConstants.MARKER_ANDROID, true, IResource.DEPTH_ZERO);
+                    AdtConstants.MARKER_ANDROID, true, IResource.DEPTH_ZERO);
 
             AndroidManifestDescriptors desc = getManifestDescriptors();
             if (desc != null) {
@@ -304,12 +304,12 @@ public final class ManifestEditor extends AndroidXmlEditor {
      */
     private void processMarker(IMarker marker, List<UiElementNode> nodeList, int kind) {
         // get the data from the marker
-        String nodeType = marker.getAttribute(AndroidConstants.MARKER_ATTR_TYPE, EMPTY);
+        String nodeType = marker.getAttribute(AdtConstants.MARKER_ATTR_TYPE, EMPTY);
         if (nodeType == EMPTY) {
             return;
         }
 
-        String className = marker.getAttribute(AndroidConstants.MARKER_ATTR_CLASS, EMPTY);
+        String className = marker.getAttribute(AdtConstants.MARKER_ATTR_CLASS, EMPTY);
         if (className == EMPTY) {
             return;
         }

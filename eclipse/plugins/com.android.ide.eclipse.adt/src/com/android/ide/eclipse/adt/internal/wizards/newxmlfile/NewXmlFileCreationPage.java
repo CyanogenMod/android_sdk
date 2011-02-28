@@ -18,7 +18,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
@@ -313,9 +313,9 @@ class NewXmlFileCreationPage extends WizardPage {
     final static int NUM_COL = 4;
 
     /** Absolute destination folder root, e.g. "/res/" */
-    private static final String RES_FOLDER_ABS = AndroidConstants.WS_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_ABS = AdtConstants.WS_RESOURCES + AdtConstants.WS_SEP;
     /** Relative destination folder root, e.g. "res/" */
-    private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AndroidConstants.WS_SEP;
+    private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AdtConstants.WS_SEP;
 
     private IProject mProject;
     private Text mProjectTextField;
@@ -433,7 +433,7 @@ class NewXmlFileCreationPage extends WizardPage {
         } else {
             fileName = mFileNameTextField.getText().trim();
             if (fileName.length() > 0 && fileName.indexOf('.') == -1) {
-                fileName = fileName + AndroidConstants.DOT_XML;
+                fileName = fileName + AdtConstants.DOT_XML;
             }
         }
 
@@ -755,7 +755,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
                 // Is this an Android project?
                 try {
-                    if (project == null || !project.hasNature(AndroidConstants.NATURE_DEFAULT)) {
+                    if (project == null || !project.hasNature(AdtConstants.NATURE_DEFAULT)) {
                         continue;
                     }
                 } catch (CoreException e) {
@@ -1018,7 +1018,7 @@ class NewXmlFileCreationPage extends WizardPage {
         if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
             wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
 
-            int pos = wsFolderPath.indexOf(AndroidConstants.WS_SEP_CHAR);
+            int pos = wsFolderPath.indexOf(AdtConstants.WS_SEP_CHAR);
             if (pos >= 0) {
                 wsFolderPath = wsFolderPath.substring(0, pos);
             }

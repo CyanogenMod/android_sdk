@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  */
-public class AndroidConstants {
+public class AdtConstants {
     /**
      * The old Editors Plugin ID. It is still used in some places for compatibility.
      * Please do not use for new features.

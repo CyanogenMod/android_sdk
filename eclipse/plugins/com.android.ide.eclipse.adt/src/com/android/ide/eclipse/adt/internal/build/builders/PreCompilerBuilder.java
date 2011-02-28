@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AidlProcessor;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
@@ -303,7 +303,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String msg = String.format(Messages.s_File_Missing,
                         SdkConstants.FN_ANDROID_MANIFEST_XML);
                 AdtPlugin.printErrorToConsole(project, msg);
-                markProject(AndroidConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+                markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
                 return result;
 
@@ -350,7 +350,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 AndroidVersion projectVersion = projectTarget.getVersion();
 
                 // remove earlier marker from the manifest
-                removeMarkersFromResource(manifestFile, AndroidConstants.MARKER_ADT);
+                removeMarkersFromResource(manifestFile, AdtConstants.MARKER_ADT);
 
                 if (minSdkValue != -1) {
                     String codename = projectVersion.getCodename();
@@ -360,7 +360,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 "Platform %1$s is a preview and requires application manifest to set %2$s to '%1$s'",
                                 codename, AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION);
                         AdtPlugin.printErrorToConsole(project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
                     } else if (minSdkValue < projectVersion.getApiLevel()) {
@@ -370,7 +370,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
                                 minSdkValue, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_WARNING);
                     } else if (minSdkValue > projectVersion.getApiLevel()) {
                         // integer minSdk is too high for the target => warning
@@ -379,7 +379,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
                                 minSdkValue, projectVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_WARNING);
                     }
                 } else {
@@ -392,7 +392,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 "Manifest attribute '%1$s' is set to '%2$s'. Integer is expected.",
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION, minSdkVersion);
                         AdtPlugin.printErrorToConsole(project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
                     } else if (codename.equals(minSdkVersion) == false) {
@@ -401,7 +401,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 "Value of manifest attribute '%1$s' does not match platform codename '%2$s'",
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION, codename);
                         AdtPlugin.printErrorToConsole(project, msg);
-                        BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                        BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
                     }
@@ -414,7 +414,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         "Platform %1$s is a preview and requires application manifests to set %2$s to '%1$s'",
                         codename, AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION);
                 AdtPlugin.printErrorToConsole(project, msg);
-                BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT, msg,
+                BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT, msg,
                         IMarker.SEVERITY_ERROR);
                 return result;
             }
@@ -424,7 +424,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 String msg = String.format(Messages.s_Doesnt_Declare_Package_Error,
                         SdkConstants.FN_ANDROID_MANIFEST_XML);
                 AdtPlugin.printErrorToConsole(project, msg);
-                BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                         msg, IMarker.SEVERITY_ERROR);
 
                 return result;
@@ -434,7 +434,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                         "Application package '%1$s' must have a minimum of 2 segments.",
                         SdkConstants.FN_ANDROID_MANIFEST_XML);
                 AdtPlugin.printErrorToConsole(project, msg);
-                BaseProjectHelper.markResource(manifestFile, AndroidConstants.MARKER_ADT,
+                BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                         msg, IMarker.SEVERITY_ERROR);
 
                 return result;
@@ -530,11 +530,11 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
 
         // Clear the project of the generic markers
-        removeMarkersFromContainer(project, AndroidConstants.MARKER_AAPT_COMPILE);
-        removeMarkersFromContainer(project, AndroidConstants.MARKER_XML);
-        removeMarkersFromContainer(project, AndroidConstants.MARKER_AIDL);
-        removeMarkersFromContainer(project, AndroidConstants.MARKER_RENDERSCRIPT);
-        removeMarkersFromContainer(project, AndroidConstants.MARKER_ANDROID);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_COMPILE);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_XML);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_AIDL);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_RENDERSCRIPT);
+        removeMarkersFromContainer(project, AdtConstants.MARKER_ANDROID);
     }
 
     @Override
@@ -576,7 +576,7 @@ public class PreCompilerBuilder extends BaseBuilder {
     private void handleResources(IProject project, String javaPackage, IAndroidTarget projectTarget,
             IFile manifest, List<IProject> libProjects) throws CoreException, AbortBuildException {
         // get the resource folder
-        IFolder resFolder = project.getFolder(AndroidConstants.WS_RESOURCES);
+        IFolder resFolder = project.getFolder(AdtConstants.WS_RESOURCES);
 
         // get the file system path
         IPath outputLocation = mGenFolder.getLocation();
@@ -591,8 +591,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             String osManifestPath = manifestLocation.toOSString();
 
             // remove the aapt markers
-            removeMarkersFromResource(manifest, AndroidConstants.MARKER_AAPT_COMPILE);
-            removeMarkersFromContainer(resFolder, AndroidConstants.MARKER_AAPT_COMPILE);
+            removeMarkersFromResource(manifest, AdtConstants.MARKER_AAPT_COMPILE);
+            removeMarkersFromContainer(resFolder, AdtConstants.MARKER_AAPT_COMPILE);
 
             AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                     Messages.Preparing_Generated_Files);
@@ -661,7 +661,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         // We actually need to delete the manifest.java as it may become empty and
         // in this case aapt doesn't generate an empty one, but instead doesn't
         // touch it.
-        IFile manifestJavaFile = packageFolder.getFile(AndroidConstants.FN_MANIFEST_CLASS);
+        IFile manifestJavaFile = packageFolder.getFile(AdtConstants.FN_MANIFEST_CLASS);
         manifestJavaFile.getLocation().toFile().delete();
 
         // launch aapt: create the command line
@@ -737,7 +737,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // (and therefore not all files that should have been marked,
                 // were marked), we put a generic marker on the project and abort.
                 if (parsingError) {
-                    markProject(AndroidConstants.MARKER_ADT,
+                    markProject(AdtConstants.MARKER_ADT,
                             Messages.Unparsed_AAPT_Errors, IMarker.SEVERITY_ERROR);
                 }
 
@@ -751,7 +751,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // something happen while executing the process,
             // mark the project and exit
             String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
-            markProject(AndroidConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+            markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // This interrupts the build.
             throw new AbortBuildException();
@@ -759,7 +759,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // we got interrupted waiting for the process to end...
             // mark the project and exit
             String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
-            markProject(AndroidConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+            markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
 
             // This interrupts the build.
             throw new AbortBuildException();
@@ -783,11 +783,11 @@ public class PreCompilerBuilder extends BaseBuilder {
      */
     private IPath getJavaPackagePath(String javaPackageName) {
         // convert the java package into path
-        String[] segments = javaPackageName.split(AndroidConstants.RE_DOT);
+        String[] segments = javaPackageName.split(AdtConstants.RE_DOT);
 
         StringBuilder path = new StringBuilder();
         for (String s : segments) {
-           path.append(AndroidConstants.WS_SEP_CHAR);
+           path.append(AdtConstants.WS_SEP_CHAR);
            path.append(s);
         }
 

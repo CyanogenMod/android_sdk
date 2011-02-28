@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
 
@@ -116,11 +116,11 @@ public final class ProjectHelper {
     public static String getJavaDocPath(String javaDocOSLocation) {
         // first thing we do is convert the \ into /
         String javaDoc = javaDocOSLocation.replaceAll("\\\\", //$NON-NLS-1$
-                AndroidConstants.WS_SEP);
+                AdtConstants.WS_SEP);
 
         // then we add file: at the beginning for unix path, and file:/ for non
         // unix path
-        if (javaDoc.startsWith(AndroidConstants.WS_SEP)) {
+        if (javaDoc.startsWith(AdtConstants.WS_SEP)) {
             return "file:" + javaDoc; //$NON-NLS-1$
         }
 
@@ -365,11 +365,11 @@ public final class ProjectHelper {
         if (checkCompilerCompliance(javaProject) != COMPILER_COMPLIANCE_OK) {
             // setup the preferred compiler compliance level.
             javaProject.setOption(JavaCore.COMPILER_COMPLIANCE,
-                    AndroidConstants.COMPILER_COMPLIANCE_PREFERRED);
+                    AdtConstants.COMPILER_COMPLIANCE_PREFERRED);
             javaProject.setOption(JavaCore.COMPILER_SOURCE,
-                    AndroidConstants.COMPILER_COMPLIANCE_PREFERRED);
+                    AdtConstants.COMPILER_COMPLIANCE_PREFERRED);
             javaProject.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM,
-                    AndroidConstants.COMPILER_COMPLIANCE_PREFERRED);
+                    AdtConstants.COMPILER_COMPLIANCE_PREFERRED);
 
             // clean the project to make sure we recompile
             try {
@@ -402,7 +402,7 @@ public final class ProjectHelper {
         for (IProject p : projects) {
             if (p.isOpen()) {
                 try {
-                    if (p.hasNature(AndroidConstants.NATURE_DEFAULT) == false) {
+                    if (p.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                         // ignore non android projects
                         continue;
                     }
@@ -451,16 +451,16 @@ public final class ProjectHelper {
         String[] natures = description.getNatureIds();
 
         // if the android nature is not the first one, we reorder them
-        if (AndroidConstants.NATURE_DEFAULT.equals(natures[0]) == false) {
+        if (AdtConstants.NATURE_DEFAULT.equals(natures[0]) == false) {
             // look for the index
             for (int i = 0 ; i < natures.length ; i++) {
-                if (AndroidConstants.NATURE_DEFAULT.equals(natures[i])) {
+                if (AdtConstants.NATURE_DEFAULT.equals(natures[i])) {
                     // if we try to just reorder the array in one pass, this doesn't do
                     // anything. I guess JDT check that we are actually adding/removing nature.
                     // So, first we'll remove the android nature, and then add it back.
 
                     // remove the android nature
-                    removeNature(project, AndroidConstants.NATURE_DEFAULT);
+                    removeNature(project, AdtConstants.NATURE_DEFAULT);
 
                     // now add it back at the first index.
                     description = project.getDescription();
@@ -469,7 +469,7 @@ public final class ProjectHelper {
                     String[] newNatures = new String[natures.length + 1];
 
                     // first one is android
-                    newNatures[0] = AndroidConstants.NATURE_DEFAULT;
+                    newNatures[0] = AdtConstants.NATURE_DEFAULT;
 
                     // next the rest that was before the android nature
                     System.arraycopy(natures, 0, newNatures, 1, natures.length);
@@ -675,7 +675,7 @@ public final class ProjectHelper {
      * @return true if the option value is supproted.
      */
     private static boolean checkCompliance(String optionValue) {
-        for (String s : AndroidConstants.COMPILER_COMPLIANCE) {
+        for (String s : AdtConstants.COMPILER_COMPLIANCE) {
             if (s != null && s.equals(optionValue)) {
                 return true;
             }
@@ -691,10 +691,10 @@ public final class ProjectHelper {
      */
     public static String getApkFilename(IProject project, String config) {
         if (config != null) {
-            return project.getName() + "-" + config + AndroidConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$
+            return project.getName() + "-" + config + AdtConstants.DOT_ANDROID_PACKAGE; //$NON-NLS-1$
         }
 
-        return project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
+        return project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
     }
 
     /**
@@ -718,7 +718,7 @@ public final class ProjectHelper {
 
             //Verify that the project has also the Android Nature
             try {
-                if (!androidJavaProject.getProject().hasNature(AndroidConstants.NATURE_DEFAULT)) {
+                if (!androidJavaProject.getProject().hasNature(AdtConstants.NATURE_DEFAULT)) {
                     continue;
                 }
             } catch (CoreException e) {
@@ -750,7 +750,7 @@ public final class ProjectHelper {
 
 
         // get the package path
-        String packageName = project.getName() + AndroidConstants.DOT_ANDROID_PACKAGE;
+        String packageName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
         IResource r = outputLocation.findMember(packageName);
 
         // check the package is present
@@ -772,7 +772,7 @@ public final class ProjectHelper {
      *         is missing.
      */
     public static IFile getManifest(IProject project) {
-        IResource r = project.findMember(AndroidConstants.WS_SEP
+        IResource r = project.findMember(AdtConstants.WS_SEP
                 + SdkConstants.FN_ANDROID_MANIFEST_XML);
 
         if (r == null || r.exists() == false || (r instanceof IFile) == false) {

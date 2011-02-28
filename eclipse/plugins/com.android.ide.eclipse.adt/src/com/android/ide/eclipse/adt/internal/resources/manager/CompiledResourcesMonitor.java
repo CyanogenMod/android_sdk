@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
@@ -77,7 +77,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      * @see IFileListener#fileChanged
      */
     public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
-        if (file.getName().equals(AndroidConstants.FN_COMPILED_RESOURCE_CLASS)) {
+        if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)) {
             loadAndParseRClass(file.getProject());
         }
     }
@@ -115,7 +115,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     public void projectOpenedWithWorkspace(IProject project) {
         try {
             // check this is an android project
-            if (project.hasNature(AndroidConstants.NATURE_DEFAULT)) {
+            if (project.hasNature(AdtConstants.NATURE_DEFAULT)) {
                 loadAndParseRClass(project);
             }
         } catch (CoreException e) {

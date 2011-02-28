@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AndroidConstants;
+import com.android.ide.eclipse.adt.AdtConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -402,7 +402,7 @@ public final class BaseProjectHelper {
 
             // check if it's an android project based on its nature
             try {
-                if (project.hasNature(AndroidConstants.NATURE_DEFAULT)) {
+                if (project.hasNature(AdtConstants.NATURE_DEFAULT)) {
                     if (filter == null || filter.accept(project)) {
                         androidProjectList.add(javaProject);
                     }
