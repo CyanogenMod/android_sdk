@@ -98,6 +98,10 @@ final class AvdCreationDialog extends GridDialog {
     private final ArrayList<String> mEditedProperties = new ArrayList<String>();
     private final ImageFactory mImageFactory;
     private final ISdkLog mSdkLog;
+    /**
+     * The original AvdInfo if we're editing an existing AVD.
+     * Null when we're creating a new AVD.
+     */
     private final AvdInfo mEditAvdInfo;
 
     private Text mAvdName;
@@ -157,6 +161,9 @@ final class AvdCreationDialog extends GridDialog {
         public void modifyText(ModifyEvent e) {
             String name = mAvdName.getText().trim();
             if (mEditAvdInfo == null || !name.equals(mEditAvdInfo.getName())) {
+                // Case where we're creating a new AVD or editing an existing one
+                // and the AVD name has been changed... check for name uniqueness.
+
                 Pair<AvdConflict, String> conflict = mAvdManager.isAvdNameConflicting(name);
                 if (conflict.getFirst() != AvdManager.AvdConflict.NO_CONFLICT) {
                     // If we're changing the state from disabled to enabled, make sure
@@ -172,8 +179,10 @@ final class AvdCreationDialog extends GridDialog {
                     mForceCreation.setSelection(false);
                 }
             } else {
+                // Case where we're editing an existing AVD with the name unchanged.
+
                 mForceCreation.setEnabled(false);
-                mForceCreation.setSelection(true);
+                mForceCreation.setSelection(false);
             }
             validatePage();
         }
@@ -714,71 +723,78 @@ final class AvdCreationDialog extends GridDialog {
         }
 
         Map<String, String> props = mEditAvdInfo.getProperties();
+        if (props != null) {
+            // First try the skin name and if it doesn't work fallback on the skin path
+            nextSkin: for (int s = 0; s < 2; s++) {
+                String skin = props.get(s == 0 ? AvdManager.AVD_INI_SKIN_NAME
+                                               : AvdManager.AVD_INI_SKIN_PATH);
+                if (skin != null && skin.length() > 0) {
+                    Matcher m = AvdManager.NUMERIC_SKIN_SIZE.matcher(skin);
+                    if (m.matches() && m.groupCount() == 2) {
+                        enableSkinWidgets(false);
+                        mSkinListRadio.setSelection(false);
+                        mSkinSizeRadio.setSelection(true);
+                        mSkinSizeWidth.setText(m.group(1));
+                        mSkinSizeHeight.setText(m.group(2));
+                        break nextSkin;
+                    } else {
+                        enableSkinWidgets(true);
+                        mSkinSizeRadio.setSelection(false);
+                        mSkinListRadio.setSelection(true);
 
-        // First try the skin name and if it doesn't work fallback on the skin path
-        nextSkin: for (int s = 0; s < 2; s++) {
-            String skin = props.get(s == 0 ? AvdManager.AVD_INI_SKIN_NAME
-                                           : AvdManager.AVD_INI_SKIN_PATH);
-            if (skin != null && skin.length() > 0) {
-                Matcher m = AvdManager.NUMERIC_SKIN_SIZE.matcher(skin);
-                if (m.matches() && m.groupCount() == 2) {
-                    enableSkinWidgets(false);
-                    mSkinListRadio.setSelection(false);
-                    mSkinSizeRadio.setSelection(true);
-                    mSkinSizeWidth.setText(m.group(1));
-                    mSkinSizeHeight.setText(m.group(2));
-                    break nextSkin;
-                } else {
-                    enableSkinWidgets(true);
-                    mSkinSizeRadio.setSelection(false);
-                    mSkinListRadio.setSelection(true);
-
-                    int n = mSkinCombo.getItemCount();
-                    for (int i = 0; i < n; i++) {
-                        if (skin.equals(mSkinCombo.getItem(i))) {
-                            mSkinCombo.select(i);
-                            break nextSkin;
+                        int n = mSkinCombo.getItemCount();
+                        for (int i = 0; i < n; i++) {
+                            if (skin.equals(mSkinCombo.getItem(i))) {
+                                mSkinCombo.select(i);
+                                break nextSkin;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        String sdcard = props.get(AvdManager.AVD_INI_SDCARD_PATH);
-        if (sdcard != null && sdcard.length() > 0) {
-            enableSdCardWidgets(false);
-            mSdCardSizeRadio.setSelection(false);
-            mSdCardFileRadio.setSelection(true);
-            mSdCardFile.setText(sdcard);
-        }
+            String sdcard = props.get(AvdManager.AVD_INI_SDCARD_PATH);
+            if (sdcard != null && sdcard.length() > 0) {
+                enableSdCardWidgets(false);
+                mSdCardSizeRadio.setSelection(false);
+                mSdCardFileRadio.setSelection(true);
+                mSdCardFile.setText(sdcard);
+            }
 
-        sdcard = props.get(AvdManager.AVD_INI_SDCARD_SIZE);
-        if (sdcard != null && sdcard.length() > 0) {
-            Matcher m = AvdManager.SDCARD_SIZE_PATTERN.matcher(sdcard);
-            if (m.matches() && m.groupCount() == 2) {
-                enableSdCardWidgets(true);
-                mSdCardFileRadio.setSelection(false);
-                mSdCardSizeRadio.setSelection(true);
+            sdcard = props.get(AvdManager.AVD_INI_SDCARD_SIZE);
+            if (sdcard != null && sdcard.length() > 0) {
 
-                mSdCardSize.setText(m.group(1));
+                String[] values = new String[2];
+                long sdcardSize = AvdManager.parseSdcardSize(sdcard, values);
 
-                String suffix = m.group(2);
-                int n = mSdCardSizeCombo.getItemCount();
-                for (int i = 0; i < n; i++) {
-                    if (mSdCardSizeCombo.getItem(i).startsWith(suffix)) {
-                        mSdCardSizeCombo.select(i);
+                if (sdcardSize != AvdManager.SDCARD_NOT_SIZE_PATTERN) {
+                    enableSdCardWidgets(true);
+                    mSdCardFileRadio.setSelection(false);
+                    mSdCardSizeRadio.setSelection(true);
+
+                    mSdCardSize.setText(values[0]);
+
+                    String suffix = values[1];
+                    int n = mSdCardSizeCombo.getItemCount();
+                    for (int i = 0; i < n; i++) {
+                        if (mSdCardSizeCombo.getItem(i).startsWith(suffix)) {
+                            mSdCardSizeCombo.select(i);
+                        }
                     }
                 }
             }
-        }
 
-        String snapshots = props.get(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
-        if (snapshots != null && snapshots.length() > 0) {
-            mSnapshotCheck.setSelection(snapshots.equals("true"));
+            String snapshots = props.get(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
+            if (snapshots != null && snapshots.length() > 0) {
+                mSnapshotCheck.setSelection(snapshots.equals("true"));
+            }
         }
 
         mProperties.clear();
-        mProperties.putAll(props);
+
+        if (props != null) {
+            mProperties.putAll(props);
+        }
 
         // Cleanup known non-hardware properties
         mProperties.remove(AvdManager.AVD_INI_ABI_TYPE);
@@ -1030,6 +1046,22 @@ final class AvdCreationDialog extends GridDialog {
                     }
                     if (value <= 0) {
                         error = "SD Card size is invalid. Range is 9 MiB..1023 GiB.";
+                    } else if (mEditAvdInfo != null) {
+                        // When editing an existing AVD, compare with the existing
+                        // sdcard size, if any. It only matters if there was an sdcard setting
+                        // before.
+                        Map<String, String> props = mEditAvdInfo.getProperties();
+                        if (props != null) {
+                            String original =
+                                mEditAvdInfo.getProperties().get(AvdManager.AVD_INI_SDCARD_SIZE);
+                            if (original != null && original.length() > 0) {
+                                long originalSize =
+                                    AvdManager.parseSdcardSize(original, null/*parsedStrings*/);
+                                if (originalSize > 0 && value != originalSize) {
+                                    warning = "A new SD Card file will be created.\nThe current SD Card file will be lost.";
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1298,8 +1330,9 @@ final class AvdCreationDialog extends GridDialog {
                 skinName,
                 sdName,
                 mProperties,
-                force,
                 snapshot,
+                force,
+                mEditAvdInfo != null, //edit existing
                 log);
 
         success = avdInfo != null;
