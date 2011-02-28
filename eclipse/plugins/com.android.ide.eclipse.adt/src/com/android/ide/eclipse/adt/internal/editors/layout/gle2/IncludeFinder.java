@@ -419,7 +419,7 @@ public class IncludeFinder {
      * @return true if we updated the includes for the resource file
      */
     private boolean updateFileIncludes(ResourceFile resourceFile, boolean singleUpdate) {
-        ResourceType[] resourceTypes = resourceFile.getResourceTypes();
+        List<ResourceType> resourceTypes = resourceFile.getResourceTypes();
         for (ResourceType type : resourceTypes) {
             if (type == ResourceType.LAYOUT) {
                 ensureInitialized();

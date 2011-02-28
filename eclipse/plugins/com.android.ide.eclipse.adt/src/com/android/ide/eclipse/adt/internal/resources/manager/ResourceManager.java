@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * The ResourceManager tracks resources for all opened projects.
@@ -625,9 +626,9 @@ public final class ResourceManager {
             // the ability to have 2 files in the same folder generating 2 different types of
             // resource. The former is handled by MultiResourceFile properly while we don't
             // handle the latter. If we were to add this behavior we'd have to change this call.
-            ResourceType[] types = FolderTypeRelationship.getRelatedResourceTypes(type);
+            List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(type);
 
-            if (types.length == 1) {
+            if (types.size() == 1) {
                 resFile = new SingleResourceFile(file, folder);
             } else {
                 resFile = new MultiResourceFile(file, folder);

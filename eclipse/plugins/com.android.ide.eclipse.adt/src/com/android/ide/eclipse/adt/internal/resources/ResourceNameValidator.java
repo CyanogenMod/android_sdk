@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jface.dialogs.IInputValidator;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -182,7 +183,7 @@ public class ResourceNameValidator implements IInputValidator {
      * @return true if the given resource type is stored in a file named by the resource
      */
     public static boolean isFileBasedResourceType(ResourceType type) {
-        ResourceFolderType[] folderTypes = FolderTypeRelationship.getRelatedFolders(type);
+        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
         for (ResourceFolderType folderType : folderTypes) {
             if (folderType != ResourceFolderType.VALUES) {
                 return true;
@@ -205,7 +206,7 @@ public class ResourceNameValidator implements IInputValidator {
      *         values/ folder
      */
     public static boolean isValueBasedResourceType(ResourceType type) {
-        ResourceFolderType[] folderTypes = FolderTypeRelationship.getRelatedFolders(type);
+        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
         for (ResourceFolderType folderType : folderTypes) {
             if (folderType == ResourceFolderType.VALUES) {
                 return true;
