@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.tests.functests.layoutRendering;
 
+import com.android.AndroidConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
@@ -168,7 +169,7 @@ public class ApiDemosRenderingTest extends SdkTestCase {
         }
 
         // look for the layout folder
-        File layoutFolder = new File(resFolder, SdkConstants.FD_LAYOUT);
+        File layoutFolder = new File(resFolder, AndroidConstants.FD_RES_LAYOUT);
         if (layoutFolder.isDirectory() == false) {
             fail("Sample project has no layout folder!");
         }

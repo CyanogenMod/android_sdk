@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -140,17 +141,20 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String ASSETS_DIRECTORY =
         SdkConstants.FD_ASSETS + AdtConstants.WS_SEP;
     private static final String DRAWABLE_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + AdtConstants.WS_SEP;
+        AndroidConstants.FD_RES_DRAWABLE + AdtConstants.WS_SEP;
     private static final String DRAWABLE_HDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.HIGH.getResourceValue() + AdtConstants.WS_SEP;   //$NON-NLS-1$
+        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.HIGH.getResourceValue() +   //$NON-NLS-1$
+        AdtConstants.WS_SEP;
     private static final String DRAWABLE_MDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.MEDIUM.getResourceValue() + AdtConstants.WS_SEP; //$NON-NLS-1$
+        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.MEDIUM.getResourceValue() + //$NON-NLS-1$
+        AdtConstants.WS_SEP;
     private static final String DRAWABLE_LDPI_DIRECTORY =
-        SdkConstants.FD_DRAWABLE + "-" + Density.LOW.getResourceValue() + AdtConstants.WS_SEP;    //$NON-NLS-1$
+        AndroidConstants.FD_RES_DRAWABLE + "-" + Density.LOW.getResourceValue() +    //$NON-NLS-1$
+        AdtConstants.WS_SEP;
     private static final String LAYOUT_DIRECTORY =
-        SdkConstants.FD_LAYOUT + AdtConstants.WS_SEP;
+        AndroidConstants.FD_RES_LAYOUT + AdtConstants.WS_SEP;
     private static final String VALUES_DIRECTORY =
-        SdkConstants.FD_VALUES + AdtConstants.WS_SEP;
+        AndroidConstants.FD_RES_VALUES + AdtConstants.WS_SEP;
     private static final String GEN_SRC_DIRECTORY =
         SdkConstants.FD_GEN_SOURCES + AdtConstants.WS_SEP;
 

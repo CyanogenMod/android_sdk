@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
 import java.util.Collections;

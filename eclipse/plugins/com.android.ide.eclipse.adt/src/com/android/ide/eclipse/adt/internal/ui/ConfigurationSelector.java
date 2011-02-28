@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
+import com.android.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.DockModeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
@@ -509,7 +510,7 @@ public class ConfigurationSelector extends Composite {
      */
     public boolean setConfiguration(String folderName) {
         // split the name of the folder in segments.
-        String[] folderSegments = folderName.split(FolderConfiguration.QUALIFIER_SEP);
+        String[] folderSegments = folderName.split(AndroidConstants.RES_QUALIFIER_SEP);
 
         return setConfiguration(folderSegments);
     }

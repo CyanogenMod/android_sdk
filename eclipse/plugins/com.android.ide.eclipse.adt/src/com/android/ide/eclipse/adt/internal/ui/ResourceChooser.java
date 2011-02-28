@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
+import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
-import static com.android.sdklib.SdkConstants.FD_VALUES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -251,7 +251,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         // Find "dimens.xml" file in res/values/ (or corresponding name for other
         // value types)
         String fileName = type.getName() + 's';
-        String projectPath = FD_RESOURCES + WS_SEP + FD_VALUES + WS_SEP + fileName + '.' + EXT_XML;
+        String projectPath = FD_RESOURCES + WS_SEP + FD_RES_VALUES + WS_SEP + fileName + '.' + EXT_XML;
         IResource member = mProject.findMember(projectPath);
         if (member != null) {
             if (member instanceof IFile) {

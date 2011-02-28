@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
+import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -193,7 +194,7 @@ public class AndroidTypeRenameParticipant extends AndroidRenameParticipant {
     private void addLayoutChanges(IProject project, String className) {
         try {
             IFolder resFolder = project.getFolder(SdkConstants.FD_RESOURCES);
-            IFolder layoutFolder = resFolder.getFolder(SdkConstants.FD_LAYOUT);
+            IFolder layoutFolder = resFolder.getFolder(AndroidConstants.FD_RES_LAYOUT);
             IResource[] members = layoutFolder.members();
             for (int i = 0; i < members.length; i++) {
                 IResource member = members[i];

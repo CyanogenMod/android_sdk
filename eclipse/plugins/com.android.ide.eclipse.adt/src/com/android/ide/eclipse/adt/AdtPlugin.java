@@ -36,7 +36,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonit
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -44,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.io.StreamException;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdkstats.SdkStatsService;

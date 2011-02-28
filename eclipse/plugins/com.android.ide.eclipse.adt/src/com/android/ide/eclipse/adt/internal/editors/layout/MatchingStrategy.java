@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;

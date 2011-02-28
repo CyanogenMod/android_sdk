@@ -21,7 +21,6 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQua
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.SingleResourceFile;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -34,6 +33,7 @@ import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
 import com.android.resources.NightMode;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.TouchScreen;
 

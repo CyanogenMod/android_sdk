@@ -46,7 +46,6 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfi
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -55,6 +54,7 @@ import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.FileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;

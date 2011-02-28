@@ -17,8 +17,9 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.AndroidConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
@@ -30,13 +31,13 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFi
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
 import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.SelectorMode;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
@@ -1023,7 +1024,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 wsFolderPath = wsFolderPath.substring(0, pos);
             }
 
-            String[] folderSegments = wsFolderPath.split(FolderConfiguration.QUALIFIER_SEP);
+            String[] folderSegments = wsFolderPath.split(AndroidConstants.RES_QUALIFIER_SEP);
 
             if (folderSegments.length > 0) {
                 String folderName = folderSegments[0];
@@ -1044,7 +1045,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 // For now, treat a selection of /res/animator as /res/anim/,
                 // though we need to handle this better
                 // TODO: Properly support ANIMATOR templates!
-                if (!selected && folderName.equals(SdkConstants.FD_ANIMATOR)) {
+                if (!selected && folderName.equals(AndroidConstants.FD_RES_ANIMATOR)) {
                     for (TypeInfo type : sTypes) {
                         if (type.getResFolderType() == ResourceFolderType.ANIM) {
                             matches.add(type);

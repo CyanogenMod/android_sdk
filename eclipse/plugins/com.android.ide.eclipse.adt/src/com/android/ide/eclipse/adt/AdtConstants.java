@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt;
 
+import com.android.AndroidConstants;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.build.builders.ResourceManagerBuilder;
@@ -144,7 +145,7 @@ public class AdtConstants {
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;
 
     /** Absolute path of the layout folder, e.g. "/res/layout".<br> This is a workspace path. */
-    public final static String WS_LAYOUTS = WS_RESOURCES + WS_SEP + SdkConstants.FD_LAYOUT;
+    public final static String WS_LAYOUTS = WS_RESOURCES + WS_SEP + AndroidConstants.FD_RES_LAYOUT;
 
     /** Leaf of the javaDoc folder. Does not start with a separator. */
     public final static String WS_JAVADOC_FOLDER_LEAF = SdkConstants.FD_DOCS + "/" + //$NON-NLS-1$

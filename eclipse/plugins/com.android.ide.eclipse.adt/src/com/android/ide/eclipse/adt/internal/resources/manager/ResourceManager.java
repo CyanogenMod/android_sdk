@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.AndroidConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
@@ -29,6 +30,7 @@ import com.android.io.FolderWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.IAbstractResource;
+import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -579,7 +581,7 @@ public final class ResourceManager {
      */
     private ResourceFolder processFolder(IAbstractFolder folder, ProjectResources project) {
         // split the name of the folder in segments.
-        String[] folderSegments = folder.getName().split(FolderConfiguration.QUALIFIER_SEP);
+        String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
 
         // get the enum for the resource type.
         ResourceFolderType type = ResourceFolderType.getTypeByName(folderSegments[0]);

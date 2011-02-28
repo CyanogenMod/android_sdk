@@ -19,7 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_LAYOUTS;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.sdklib.SdkConstants.FD_LAYOUT;
+import static com.android.AndroidConstants.FD_RES_LAYOUT;
 
 import static org.eclipse.core.resources.IResourceDelta.ADDED;
 import static org.eclipse.core.resources.IResourceDelta.CHANGED;
@@ -666,7 +666,7 @@ public class IncludeFinder {
         //     /res/layout/foo.xml => "foo"
         //     /res/layout-land/foo.xml => "-land/foo"
 
-        if (FD_LAYOUT.equals(folderName)) {
+        if (FD_RES_LAYOUT.equals(folderName)) {
             // Normal case -- keep just the basename
             return name;
         } else {
@@ -913,7 +913,7 @@ public class IncludeFinder {
         public IFile getFile() {
             String reference = mId;
             if (!reference.contains(WS_SEP)) {
-                reference = SdkConstants.FD_LAYOUT + WS_SEP + reference;
+                reference = FD_RES_LAYOUT + WS_SEP + reference;
             }
 
             String projectPath = SdkConstants.FD_RESOURCES + WS_SEP + reference + '.' + EXT_XML;

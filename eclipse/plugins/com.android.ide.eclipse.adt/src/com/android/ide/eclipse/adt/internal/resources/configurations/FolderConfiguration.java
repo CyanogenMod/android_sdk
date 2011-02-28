@@ -16,7 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType;
+import com.android.AndroidConstants;
+import com.android.resources.ResourceFolderType;
 
 
 /**
@@ -24,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolderType
  * value which means that the property is not set.
  */
 public final class FolderConfiguration implements Comparable<FolderConfiguration> {
-    public final static String QUALIFIER_SEP = "-"; //$NON-NLS-1$
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
 
@@ -404,7 +404,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             if (qualifier != null) {
                 String segment = qualifier.getFolderSegment();
                 if (segment != null && segment.length() > 0) {
-                    result.append(QUALIFIER_SEP);
+                    result.append(AndroidConstants.RES_QUALIFIER_SEP);
                     result.append(segment);
                 }
             }

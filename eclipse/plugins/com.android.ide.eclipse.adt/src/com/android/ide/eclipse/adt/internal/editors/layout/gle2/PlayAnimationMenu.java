@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.AndroidConstants.FD_RES_ANIMATOR;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.sdklib.SdkConstants.FD_ANIMATOR;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 
 import com.android.ide.common.rendering.api.Capability;
@@ -228,7 +228,7 @@ public class PlayAnimationMenu extends SubmenuAction {
             LayoutEditor editor = mCanvas.getLayoutEditor();
             IWorkbenchWindow workbenchWindow = editor.getEditorSite().getWorkbenchWindow();
             IWorkbench workbench = workbenchWindow.getWorkbench();
-            String animationDir = FD_RESOURCES + WS_SEP + FD_ANIMATOR;
+            String animationDir = FD_RESOURCES + WS_SEP + FD_RES_ANIMATOR;
             Pair<IProject, String> pair = Pair.of(editor.getProject(), animationDir);
             IStructuredSelection selection = new StructuredSelection(pair);
             wizard.init(workbench, selection);
