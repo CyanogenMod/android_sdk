@@ -71,6 +71,8 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -83,6 +85,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -123,7 +127,7 @@ public class PaletteControl extends Composite {
      */
     public static class PaletteDecor implements IDecorContent {
         private final GraphicalEditorPart mEditorPart;
-        private Control mControl;
+        private PaletteControl mControl;
 
         public PaletteDecor(GraphicalEditorPart editor) {
             mEditorPart = editor;
@@ -143,6 +147,22 @@ public class PaletteControl extends Composite {
 
         public Control getControl() {
             return mControl;
+        }
+
+        public void createToolbarItems(final ToolBar toolbar) {
+            final ToolItem popupMenuItem = new ToolItem(toolbar, SWT.PUSH);
+            popupMenuItem.setToolTipText("View Menu");
+            popupMenuItem.setImage(IconFactory.getInstance().getIcon("view_menu"));
+            popupMenuItem.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    Rectangle bounds = popupMenuItem.getBounds();
+                    // Align menu horizontally with the toolbar button and
+                    // vertically with the bottom of the toolbar
+                    Point point = toolbar.toDisplay(bounds.x, bounds.y + bounds.height);
+                    mControl.showMenu(point.x, point.y);
+                }
+            });
         }
     }
 
@@ -1005,41 +1025,44 @@ public class PaletteControl extends Composite {
     private void addMenu(Control control) {
         control.addMenuDetectListener(new MenuDetectListener() {
             public void menuDetected(MenuDetectEvent e) {
-                MenuManager manager = new MenuManager() {
-                    @Override
-                    public boolean isDynamic() {
-                        return true;
-                    }
-                };
-                boolean previews = previewsAvailable();
-                for (PaletteMode mode : PaletteMode.values()) {
-                    if (mode.isPreview() && !previews) {
-                        continue;
-                    }
-                    manager.add(new PaletteModeAction(mode));
-                }
-                if (mPaletteMode.isPreview()) {
-                    manager.add(new Separator());
-                    manager.add(new ToggleViewOptionAction("Refresh Previews",
-                            ToggleViewOptionAction.REFRESH,
-                            false));
-                }
-                manager.add(new Separator());
-                manager.add(new ToggleViewOptionAction("Show Categories",
-                        ToggleViewOptionAction.TOGGLE_CATEGORY,
-                        mCategories));
-                manager.add(new ToggleViewOptionAction("Sort Alphabetically",
-                        ToggleViewOptionAction.TOGGLE_ALPHABETICAL,
-                        mAlphabetical));
-                manager.add(new Separator());
-                manager.add(new ToggleViewOptionAction("Auto Close Previous",
-                        ToggleViewOptionAction.TOGGLE_AUTO_CLOSE,
-                        mAutoClose));
-                Menu menu = manager.createContextMenu(PaletteControl.this);
-                Point point = new Point(e.x, e.y);
-                menu.setLocation(point.x, point.y);
-                menu.setVisible(true);
+                showMenu(e.x, e.y);
             }
         });
+    }
+
+    private void showMenu(int x, int y) {
+        MenuManager manager = new MenuManager() {
+            @Override
+            public boolean isDynamic() {
+                return true;
+            }
+        };
+        boolean previews = previewsAvailable();
+        for (PaletteMode mode : PaletteMode.values()) {
+            if (mode.isPreview() && !previews) {
+                continue;
+            }
+            manager.add(new PaletteModeAction(mode));
+        }
+        if (mPaletteMode.isPreview()) {
+            manager.add(new Separator());
+            manager.add(new ToggleViewOptionAction("Refresh Previews",
+                    ToggleViewOptionAction.REFRESH,
+                    false));
+        }
+        manager.add(new Separator());
+        manager.add(new ToggleViewOptionAction("Show Categories",
+                ToggleViewOptionAction.TOGGLE_CATEGORY,
+                mCategories));
+        manager.add(new ToggleViewOptionAction("Sort Alphabetically",
+                ToggleViewOptionAction.TOGGLE_ALPHABETICAL,
+                mAlphabetical));
+        manager.add(new Separator());
+        manager.add(new ToggleViewOptionAction("Auto Close Previous",
+                ToggleViewOptionAction.TOGGLE_AUTO_CLOSE,
+                mAutoClose));
+        Menu menu = manager.createContextMenu(PaletteControl.this);
+        menu.setLocation(x, y);
+        menu.setVisible(true);
     }
 }

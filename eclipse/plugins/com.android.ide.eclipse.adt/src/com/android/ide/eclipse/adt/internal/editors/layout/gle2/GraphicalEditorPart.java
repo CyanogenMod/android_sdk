@@ -330,9 +330,9 @@ public class GraphicalEditorPart extends EditorPart
         mSashPalette = new SashForm(parent, SWT.HORIZONTAL);
         mSashPalette.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        DecorComposite paleteDecor = new DecorComposite(mSashPalette, SWT.BORDER);
-        paleteDecor.setContent(new PaletteControl.PaletteDecor(this));
-        mPalette = (PaletteControl) paleteDecor.getContentControl();
+        DecorComposite paletteDecor = new DecorComposite(mSashPalette, SWT.BORDER);
+        paletteDecor.setContent(new PaletteControl.PaletteDecor(this));
+        mPalette = (PaletteControl) paletteDecor.getContentControl();
 
         Composite layoutBarAndCanvas = new Composite(mSashPalette, SWT.NONE);
         GridLayout gridLayout = new GridLayout(1, false);
