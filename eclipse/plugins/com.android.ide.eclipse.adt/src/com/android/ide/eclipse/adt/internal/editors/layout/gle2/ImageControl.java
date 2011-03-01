@@ -147,13 +147,20 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         int destWidth = imageWidth;
         int destHeight = imageHeight;
 
+        int oldGcAlias = gc.getAntialias();
+        int oldGcInterpolation = gc.getInterpolation();
         if (mScale != 1.0f) {
             destWidth = (int) (mScale * destWidth);
             destHeight = (int) (mScale * destHeight);
+            gc.setAntialias(SWT.ON);
+            gc.setInterpolation(SWT.HIGH);
         }
 
         gc.drawImage(mImage, 0, 0, imageWidth, imageHeight, rect.x + mLeftMargin, rect.y
                 + mTopMargin, destWidth, destHeight);
+
+        gc.setAntialias(oldGcAlias);
+        gc.setInterpolation(oldGcInterpolation);
 
         if (mHoverColor != null && mMouseIn) {
             gc.setAlpha(60);
