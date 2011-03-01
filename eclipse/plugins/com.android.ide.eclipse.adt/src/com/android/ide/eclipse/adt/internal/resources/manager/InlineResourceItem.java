@@ -16,39 +16,39 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.ide.eclipse.adt.internal.resources.IIdResourceItem;
-import com.android.resources.ResourceType;
 
 /**
- * Represents a resource item of type {@link ResourceType#ID}
+ * Represents a resource item that has been declared inline in another resource file.
+ *
+ * This covers the typical ID declaration of "@+id/foo", but does not cover normal value
+ * resources declared in strings.xml or other similar value files.
+ *
+ * This resource will return {@code true} for {@link #isDeclaredInline()} and {@code false} for
+ * {@link #isEditableDirectly()}.
  */
-public class IdResourceItem extends ProjectResourceItem implements IIdResourceItem {
-
-    private final boolean mIsDeclaredInline;
+class InlineResourceItem extends ResourceItem {
 
     /**
-     * Constructs a new ResourceItem.
+     * Constructs a new inline ResourceItem.
      * @param name the name of the resource as it appears in the XML and R.java files.
-     * @param isDeclaredInline Whether this id was declared inline.
      */
-    IdResourceItem(String name, boolean isDeclaredInline) {
+    InlineResourceItem(String name) {
         super(name);
-        mIsDeclaredInline = isDeclaredInline;
     }
 
-    /*
-     * (non-Javadoc)
-     * Returns whether the ID resource has been declared inline inside another resource XML file. 
-     */
+    @Override
     public boolean isDeclaredInline() {
-        return mIsDeclaredInline;
+        return true;
     }
 
-    /* (non-Javadoc)
-     * Returns whether the item can be edited (ie, the id was not declared inline).
-     */
     @Override
     public boolean isEditableDirectly() {
-        return !mIsDeclaredInline;
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "InlineResourceItem [mName=" + getName() + ", mFiles=" //$NON-NLS-1$ //$NON-NLS-2$
+                + getSourceFileList() + "]"; //$NON-NLS-1$
     }
 }

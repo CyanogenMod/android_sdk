@@ -38,6 +38,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMe
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.io.FolderWrapper;
@@ -175,7 +176,7 @@ public class ApiDemosRenderingTest extends SdkTestCase {
         }
 
         // first load the project's target framework resource
-        ProjectResources framework = ResourceManager.getInstance().loadFrameworkResources(target);
+        ResourceRepository framework = ResourceManager.getInstance().loadFrameworkResources(target);
 
         // now load the project resources
         ProjectResources project = new ProjectResources(null /*project*/);

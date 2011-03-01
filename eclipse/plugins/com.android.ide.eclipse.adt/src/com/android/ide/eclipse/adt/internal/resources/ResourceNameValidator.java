@@ -20,7 +20,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.FolderTypeRelationship;
@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jface.dialogs.IInputValidator;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -160,9 +161,9 @@ public class ResourceNameValidator implements IInputValidator {
         Set<String> existing = new HashSet<String>();
         ResourceManager manager = ResourceManager.getInstance();
         ProjectResources projectResources = manager.getProjectResources(project);
-        ProjectResourceItem[] resources = projectResources.getResources(type);
-        for (ProjectResourceItem resource : resources) {
-            existing.add(resource.getName());
+        Collection<ResourceItem> items = projectResources.getResourceItemsOfType(type);
+        for (ResourceItem item : items) {
+            existing.add(item.getName());
         }
 
         boolean isFileType = isFileBasedResourceType(type);

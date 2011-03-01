@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.AndroidConstants;
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
@@ -24,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQua
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFolderListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.FolderWrapper;
@@ -70,6 +73,7 @@ import java.util.List;
  * @see ProjectResources
  */
 public final class ResourceManager {
+    public final static boolean DEBUG = false;
 
     private final static ResourceManager sThis = new ResourceManager();
 
@@ -114,7 +118,9 @@ public final class ResourceManager {
      * @param monitor The global project monitor
      */
     public static void setup(GlobalProjectMonitor monitor) {
+        monitor.addResourceEventListener(sThis.mResourceEventListener);
         monitor.addProjectListener(sThis.mProjectListener);
+
         int mask = IResourceDelta.ADDED | IResourceDelta.REMOVED | IResourceDelta.CHANGED;
         monitor.addFolderListener(sThis.mFolderListener, mask);
         monitor.addFileListener(sThis.mFileListener, mask);
@@ -160,6 +166,40 @@ public final class ResourceManager {
         }
     }
 
+    private class ResourceEventListener implements IResourceEventListener {
+        private final List<IProject> mChangedProjects = new ArrayList<IProject>();
+
+        public void resourceChangeEventEnd() {
+            for (IProject project : mChangedProjects) {
+                ProjectResources resources;
+                synchronized (mMap) {
+                    resources = mMap.get(project);
+                }
+
+                resources.postUpdate();
+            }
+
+            mChangedProjects.clear();
+        }
+
+        public void resourceChangeEventStart() {
+            // pass
+        }
+
+        void addProject(IProject project) {
+            if (mChangedProjects.contains(project) == false) {
+                mChangedProjects.add(project);
+            }
+        }
+    }
+
+    /**
+     * Delegate listener for resource changes. This is called before and after any calls to the
+     * project and file listeners (for a given resource change event).
+     */
+    private ResourceEventListener mResourceEventListener = new ResourceEventListener();
+
+
     /**
      * Implementation of the {@link IFolderListener} as an internal class so that the methods
      * do not appear in the public API of {@link ResourceManager}.
@@ -178,6 +218,8 @@ public final class ResourceManager {
                 // can't get the project nature? return!
                 return;
             }
+
+            mResourceEventListener.addProject(project);
 
             switch (kind) {
                 case IResourceDelta.ADDED:
@@ -207,13 +249,13 @@ public final class ResourceManager {
                     }
                     break;
                 case IResourceDelta.CHANGED:
+                    // only call the listeners.
                     synchronized (mMap) {
                         resources = mMap.get(folder.getProject());
                     }
                     if (resources != null) {
                         ResourceFolder resFolder = resources.getResourceFolder(folder);
                         if (resFolder != null) {
-                            resFolder.touch();
                             notifyListenerOnFolderChange(project, resFolder, kind);
                         }
                     }
@@ -227,7 +269,8 @@ public final class ResourceManager {
                         ResourceFolderType type = ResourceFolderType.getFolderType(
                                 folder.getName());
 
-                        ResourceFolder removedFolder = resources.removeFolder(type, folder);
+                        ResourceFolder removedFolder = resources.removeFolder(type,
+                                new IFolderWrapper(folder));
                         if (removedFolder != null) {
                             notifyListenerOnFolderChange(project, removedFolder, kind);
                         }
@@ -255,8 +298,6 @@ public final class ResourceManager {
          * @see IFileListener#fileChanged
          */
         public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
-            ProjectResources resources;
-
             final IProject project = file.getProject();
 
             try {
@@ -268,80 +309,39 @@ public final class ResourceManager {
                 return;
             }
 
-            switch (kind) {
-                case IResourceDelta.ADDED:
-                    // checks if the file is under res/something.
-                    IPath path = file.getFullPath();
+            // get the project resources
+            ProjectResources resources;
+            synchronized (mMap) {
+                resources = mMap.get(project);
+            }
 
-                    if (path.segmentCount() == 4) {
-                        if (isInResFolder(path)) {
-                            // get the project and its resources
-                            synchronized (mMap) {
-                                resources = mMap.get(project);
-                            }
+            if (resources == null) {
+                return;
+            }
 
-                            IContainer container = file.getParent();
-                            if (container instanceof IFolder && resources != null) {
+            // checks if the file is under res/something.
+            IPath path = file.getFullPath();
 
-                                ResourceFolder folder = resources.getResourceFolder(
-                                        (IFolder)container);
+            if (path.segmentCount() == 4) {
+                if (isInResFolder(path)) {
+                    IContainer container = file.getParent();
+                    if (container instanceof IFolder) {
 
-                                if (folder != null) {
-                                    ResourceFile resFile = processFile(
-                                            new IFileWrapper(file), folder);
-                                    notifyListenerOnFileChange(project, resFile, kind);
-                                }
-                            }
+                        ResourceFolder folder = resources.getResourceFolder(
+                                (IFolder)container);
+
+                        // folder can be null as when the whole folder is deleted, the
+                        // REMOVED event for the folder comes first. In this case, the
+                        // folder will have taken care of things.
+                        if (folder != null) {
+                            ResourceFile resFile = processFile(
+                                    new IFileWrapper(file),
+                                    folder,
+                                    kind);
+                            notifyListenerOnFileChange(project, resFile, kind);
                         }
                     }
-                    break;
-                case IResourceDelta.CHANGED:
-                    // try to find a matching ResourceFile
-                    synchronized (mMap) {
-                        resources = mMap.get(project);
-                    }
-                    if (resources != null) {
-                        IContainer container = file.getParent();
-                        if (container instanceof IFolder) {
-                            ResourceFolder resFolder = resources.getResourceFolder(
-                                    (IFolder)container);
-
-                            // we get the delete on the folder before the file, so it is possible
-                            // the associated ResourceFolder doesn't exist anymore.
-                            if (resFolder != null) {
-                                // get the resourceFile, and touch it.
-                                ResourceFile resFile = resFolder.getFile(file);
-                                if (resFile != null) {
-                                    resFile.touch();
-                                    notifyListenerOnFileChange(project, resFile, kind);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case IResourceDelta.REMOVED:
-                    // try to find a matching ResourceFile
-                    synchronized (mMap) {
-                        resources = mMap.get(project);
-                    }
-                    if (resources != null) {
-                        IContainer container = file.getParent();
-                        if (container instanceof IFolder) {
-                            ResourceFolder resFolder = resources.getResourceFolder(
-                                    (IFolder)container);
-
-                            // we get the delete on the folder before the file, so it is possible
-                            // the associated ResourceFolder doesn't exist anymore.
-                            if (resFolder != null) {
-                                // remove the file
-                                ResourceFile resFile = resFolder.removeFile(file);
-                                if (resFile != null) {
-                                    notifyListenerOnFileChange(project, resFile, kind);
-                                }
-                            }
-                        }
-                    }
-                    break;
+                }
             }
         }
     };
@@ -413,15 +413,16 @@ public final class ResourceManager {
      * Loads and returns the resources for a given {@link IAndroidTarget}
      * @param androidTarget the target from which to load the framework resources
      */
-    public ProjectResources loadFrameworkResources(IAndroidTarget androidTarget) {
+    public ResourceRepository loadFrameworkResources(IAndroidTarget androidTarget) {
         String osResourcesPath = androidTarget.getPath(IAndroidTarget.RESOURCES);
 
         FolderWrapper frameworkRes = new FolderWrapper(osResourcesPath);
         if (frameworkRes.exists()) {
-            ProjectResources resources = new ProjectResources();
+            FrameworkResources resources = new FrameworkResources();
 
             try {
                 loadResources(resources, frameworkRes);
+                resources.loadPublicResources(frameworkRes);
                 return resources;
             } catch (IOException e) {
                 // since we test that folders are folders, and files are files, this shouldn't
@@ -433,7 +434,7 @@ public final class ResourceManager {
     }
 
     /**
-     * Loads the resources from a folder, and fills the given {@link ProjectResources}.
+     * Loads the resources from a folder, and fills the given {@link ResourceRepository}.
      * <p/>
      * This is mostly a utility method that should not be used to process actual Eclipse projects
      * (Those are loaded with {@link #createProject(IProject)} for new project or
@@ -447,13 +448,14 @@ public final class ResourceManager {
      * setting rendering tests.
      *
      *
-     * @param resources The {@link ProjectResources} files to load. It is expected that the
-     * framework flag has been properly setup. This is filled up with the content of the folder.
+     * @param resources The {@link ResourceRepository} files to fill.
+     *       This is filled up with the content of the folder.
      * @param rootFolder The folder to read the resources from. This is the top level
      * resource folder (res/)
      * @throws IOException
      */
-    public void loadResources(ProjectResources resources, IAbstractFolder rootFolder)
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public void loadResources(ResourceRepository resources, IAbstractFolder rootFolder)
             throws IOException {
         IAbstractResource[] files = rootFolder.listMembers();
         for (IAbstractResource file : files) {
@@ -467,15 +469,12 @@ public final class ResourceManager {
 
                     for (IAbstractResource childRes : children) {
                         if (childRes instanceof IAbstractFile) {
-                            processFile((IAbstractFile) childRes, resFolder);
+                            processFile((IAbstractFile) childRes, resFolder, IResourceDelta.ADDED);
                         }
                     }
                 }
             }
         }
-
-        // now that we have loaded the files, we need to force load the resources from them
-        resources.loadAll();
     }
 
     /**
@@ -522,7 +521,8 @@ public final class ResourceManager {
                                     if (fileRes.getType() == IResource.FILE) {
                                         IFile file = (IFile)fileRes;
 
-                                        processFile(new IFileWrapper(file), resFolder);
+                                        processFile(new IFileWrapper(file), resFolder,
+                                                IResourceDelta.ADDED);
                                     }
                                 }
                             }
@@ -578,10 +578,10 @@ public final class ResourceManager {
     /**
      * Processes a folder and adds it to the list of the project resources.
      * @param folder the folder to process
-     * @param project the folder's project.
+     * @param resources the resource repository.
      * @return the ConfiguredFolder created from this folder, or null if the process failed.
      */
-    private ResourceFolder processFolder(IAbstractFolder folder, ProjectResources project) {
+    private ResourceFolder processFolder(IAbstractFolder folder, ResourceRepository resources) {
         // split the name of the folder in segments.
         String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
 
@@ -593,7 +593,7 @@ public final class ResourceManager {
             FolderConfiguration config = getConfig(folderSegments);
 
             if (config != null) {
-                ResourceFolder configuredFolder = project.add(type, config, folder);
+                ResourceFolder configuredFolder = resources.add(type, config, folder);
 
                 return configuredFolder;
             }
@@ -606,37 +606,45 @@ public final class ResourceManager {
      * Processes a file and adds it to its parent folder resource.
      * @param file the underlying resource file.
      * @param folder the parent of the resource file.
+     * @param kind the file change kind.
      * @return the {@link ResourceFile} that was created.
      */
-    private ResourceFile processFile(IAbstractFile file, ResourceFolder folder) {
+    private ResourceFile processFile(IAbstractFile file, ResourceFolder folder, int kind) {
         // get the type of the folder
         ResourceFolderType type = folder.getType();
 
         // look for this file if it's already been created
         ResourceFile resFile = folder.getFile(file);
 
-        if (resFile != null) {
-            // invalidate the file
-            resFile.touch();
-        } else {
-            // create a ResourceFile for it.
+        if (resFile == null) {
+            if (kind != IResourceDelta.REMOVED) {
+                // create a ResourceFile for it.
 
-            // check if that's a single or multi resource type folder. For now we define this by
-            // the number of possible resource type output by files in the folder. This does
-            // not make the difference between several resource types from a single file or
-            // the ability to have 2 files in the same folder generating 2 different types of
-            // resource. The former is handled by MultiResourceFile properly while we don't
-            // handle the latter. If we were to add this behavior we'd have to change this call.
-            List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(type);
+                // check if that's a single or multi resource type folder. For now we define this by
+                // the number of possible resource type output by files in the folder. This does
+                // not make the difference between several resource types from a single file or
+                // the ability to have 2 files in the same folder generating 2 different types of
+                // resource. The former is handled by MultiResourceFile properly while we don't
+                // handle the latter. If we were to add this behavior we'd have to change this call.
+                List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(type);
 
-            if (types.size() == 1) {
-                resFile = new SingleResourceFile(file, folder);
-            } else {
-                resFile = new MultiResourceFile(file, folder);
+                if (types.size() == 1) {
+                    resFile = new SingleResourceFile(file, folder);
+                } else {
+                    resFile = new MultiResourceFile(file, folder);
+                }
+
+                resFile.load();
+
+                // add it to the folder
+                folder.addFile(resFile);
             }
-
-            // add it to the folder
-            folder.addFile(resFile);
+        } else {
+            if (kind == IResourceDelta.REMOVED) {
+                folder.removeFile(resFile);
+            } else {
+                resFile.update();
+            }
         }
 
         return resFile;
@@ -686,5 +694,19 @@ public final class ResourceManager {
         FolderConfiguration defaultConfig = new FolderConfiguration();
         defaultConfig.createDefault();
         mQualifiers = defaultConfig.getQualifiers();
+    }
+
+    // debug only
+    @SuppressWarnings("unused")
+    private String getKindString(int kind) {
+        if (DEBUG) {
+            switch (kind) {
+                case IResourceDelta.ADDED: return "ADDED";
+                case IResourceDelta.REMOVED: return "REMOVED";
+                case IResourceDelta.CHANGED: return "CHANGED";
+            }
+        }
+
+        return Integer.toString(kind);
     }
 }

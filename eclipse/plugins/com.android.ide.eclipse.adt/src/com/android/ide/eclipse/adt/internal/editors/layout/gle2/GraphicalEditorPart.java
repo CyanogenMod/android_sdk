@@ -60,6 +60,7 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQ
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -541,7 +542,7 @@ public class GraphicalEditorPart extends EditorPart
 
         public Map<ResourceType, Map<String, ResourceValue>> getConfiguredFrameworkResources() {
             if (mConfiguredFrameworkRes == null && mConfigComposite != null) {
-                ProjectResources frameworkRes = getFrameworkResources();
+                ResourceRepository frameworkRes = getFrameworkResources();
 
                 if (frameworkRes == null) {
                     AdtPlugin.log(IStatus.ERROR, "Failed to get ProjectResource for the framework");
@@ -559,9 +560,6 @@ public class GraphicalEditorPart extends EditorPart
             if (mConfiguredProjectRes == null && mConfigComposite != null) {
                 ProjectResources project = getProjectResources();
 
-                // make sure they are loaded
-                project.loadAll();
-
                 // get the project resource values based on the current config
                 mConfiguredProjectRes = project.getConfiguredResources(
                         mConfigComposite.getCurrentConfig());
@@ -575,7 +573,7 @@ public class GraphicalEditorPart extends EditorPart
          * configuration selection.
          * @return the framework resources or null if not found.
          */
-        public ProjectResources getFrameworkResources() {
+        public ResourceRepository getFrameworkResources() {
             return getFrameworkResources(getRenderingTarget());
         }
 
@@ -585,7 +583,7 @@ public class GraphicalEditorPart extends EditorPart
          * @param target the target for which to return the framework resources.
          * @return the framework resources or null if not found.
          */
-        public ProjectResources getFrameworkResources(IAndroidTarget target) {
+        public ResourceRepository getFrameworkResources(IAndroidTarget target) {
             if (target != null) {
                 AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
 

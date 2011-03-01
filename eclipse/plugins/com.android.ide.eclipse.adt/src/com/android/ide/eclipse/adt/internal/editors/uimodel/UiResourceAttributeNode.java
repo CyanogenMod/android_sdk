@@ -23,9 +23,9 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescrip
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.ui.SectionHelper;
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
@@ -48,6 +48,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -128,19 +130,19 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         IProject project = editor.getProject();
         if (project != null) {
             // get the resource repository for this project and the system resources.
-            IResourceRepository projectRepository =
+            ResourceRepository projectRepository =
                 ResourceManager.getInstance().getProjectResources(project);
 
             if (mType != null) {
                 // get the Target Data to get the system resources
                 AndroidTargetData data = editor.getTargetData();
-                IResourceRepository systemRepository = data.getSystemResources();
+                ResourceRepository frameworkRepository = data.getFrameworkResources();
 
                 // open a resource chooser dialog for specified resource type.
                 ResourceChooser dlg = new ResourceChooser(project,
                         mType,
                         projectRepository,
-                        systemRepository,
+                        frameworkRepository,
                         shell);
 
                 dlg.setCurrentResource(currentValue);
@@ -196,7 +198,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
      */
     @Override
     public String[] getPossibleValues(String prefix) {
-        IResourceRepository repository = null;
+        ResourceRepository repository = null;
         boolean isSystem = false;
 
         UiElementNode uiNode = getUiParent();
@@ -212,15 +214,15 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // If there's a prefix with "android:" in it, use the system resources
             // Non-public framework resources are filtered out later.
             AndroidTargetData data = editor.getTargetData();
-            repository = data.getSystemResources();
+            repository = data.getFrameworkResources();
             isSystem = true;
         }
 
         // Get list of potential resource types, either specific to this project
         // or the generic list.
-        ResourceType[] resTypes = (repository != null) ?
+        Collection<ResourceType> resTypes = (repository != null) ?
                     repository.getAvailableResourceTypes() :
-                    ResourceType.values();
+                    EnumSet.allOf(ResourceType.class);
 
         // Get the type name from the prefix, if any. It's any word before the / if there's one
         String typeName = null;
@@ -265,18 +267,8 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 sb.append(typeName).append('/');
                 String base = sb.toString();
 
-                if (isSystem) {
-                    AndroidTargetData targetData = editor.getTargetData();
-                    for (ResourceItem item : repository.getResources(resType)) {
-                        String name = item.getName();
-                        if (targetData == null || targetData.isPublicResource(resType, name)) {
-                            results.add(base + name);
-                        }
-                    }
-                } else {
-                    for (ResourceItem item : repository.getResources(resType)) {
-                        results.add(base + item.getName());
-                    }
+                for (ResourceItem item : repository.getResourceItemsOfType(resType)) {
+                    results.add(base + item.getName());
                 }
             }
         }

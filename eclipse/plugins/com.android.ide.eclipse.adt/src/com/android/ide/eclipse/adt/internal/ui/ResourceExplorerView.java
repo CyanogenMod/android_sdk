@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.ui;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -138,10 +138,10 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
                                 }
                             } catch (PartInitException e) {
                             }
-                        } else if (element instanceof ProjectResourceItem) {
+                        } else if (element instanceof ResourceItem) {
                             // if it's a ResourceItem, we open the first file, but only if
                             // there's no alternate files.
-                            ProjectResourceItem item = (ProjectResourceItem)element;
+                            ResourceItem item = (ResourceItem)element;
 
                             if (item.isEditableDirectly()) {
                                 ResourceFile[] files = item.getSourceFileArray();

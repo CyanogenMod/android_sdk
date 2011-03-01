@@ -16,10 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_LAYOUTS;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
+import static com.android.resources.ResourceType.LAYOUT;
 
 import static org.eclipse.core.resources.IResourceDelta.ADDED;
 import static org.eclipse.core.resources.IResourceDelta.CHANGED;
@@ -30,10 +31,10 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager.IResourceListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -62,6 +63,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -396,8 +398,8 @@ public class IncludeFinder {
     private void scanProject() {
         ProjectResources resources = ResourceManager.getInstance().getProjectResources(mProject);
         if (resources != null) {
-            ProjectResourceItem[] layouts = resources.getResources(ResourceType.LAYOUT);
-            for (ProjectResourceItem layout : layouts) {
+            Collection<ResourceItem> layouts = resources.getResourceItemsOfType(LAYOUT);
+            for (ResourceItem layout : layouts) {
                 List<ResourceFile> sources = layout.getSourceFileList();
                 for (ResourceFile source : sources) {
                     updateFileIncludes(source, false);
@@ -419,7 +421,7 @@ public class IncludeFinder {
      * @return true if we updated the includes for the resource file
      */
     private boolean updateFileIncludes(ResourceFile resourceFile, boolean singleUpdate) {
-        List<ResourceType> resourceTypes = resourceFile.getResourceTypes();
+        Collection<ResourceType> resourceTypes = resourceFile.getResourceTypes();
         for (ResourceType type : resourceTypes) {
             if (type == ResourceType.LAYOUT) {
                 ensureInitialized();

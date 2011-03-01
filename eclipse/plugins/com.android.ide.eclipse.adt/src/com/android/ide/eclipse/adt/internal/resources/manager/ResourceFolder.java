@@ -16,17 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,14 +31,15 @@ import java.util.List;
 
 /**
  * Resource Folder class. Contains list of {@link ResourceFile}s,
- * the {@link FolderConfiguration}, and a link to the workspace {@link IFolder} object.
+ * the {@link FolderConfiguration}, and a link to the {@link IAbstractFolder} object.
  */
-public final class ResourceFolder extends Resource {
-    ResourceFolderType mType;
-    FolderConfiguration mConfiguration;
+public final class ResourceFolder implements Configurable {
+    final ResourceFolderType mType;
+    final FolderConfiguration mConfiguration;
     IAbstractFolder mFolder;
     ArrayList<ResourceFile> mFiles = null;
-    private final boolean mIsFramework;
+    private final ResourceRepository mRepository;
+
 
     /**
      * Creates a new {@link ResourceFolder}
@@ -50,18 +48,19 @@ public final class ResourceFolder extends Resource {
      * @param folder The associated {@link IAbstractFolder} object.
      * @param isFrameworkRepository
      */
-    public ResourceFolder(ResourceFolderType type, FolderConfiguration config,
-            IAbstractFolder folder, boolean isFrameworkRepository) {
+    protected ResourceFolder(ResourceFolderType type, FolderConfiguration config,
+            IAbstractFolder folder, ResourceRepository repository) {
         mType = type;
         mConfiguration = config;
         mFolder = folder;
-        mIsFramework = isFrameworkRepository;
+        mRepository = repository;
     }
 
     /**
      * Adds a {@link ResourceFile} to the folder.
      * @param file The {@link ResourceFile}.
      */
+    @VisibleForTesting(visibility=Visibility.PROTECTED)
     public void addFile(ResourceFile file) {
         if (mFiles == null) {
             mFiles = new ArrayList<ResourceFile>();
@@ -70,35 +69,21 @@ public final class ResourceFolder extends Resource {
         mFiles.add(file);
     }
 
-    /**
-     * Attempts to remove the {@link ResourceFile} associated with a specified {@link IFile}.
-     * @param file the IFile object.
-     * @return the {@link ResourceFile} that was removed.
-     */
-    public ResourceFile removeFile(IFile file) {
-        if (mFiles != null) {
-            int count = mFiles.size();
-            for (int i = 0 ; i < count ; i++) {
-                ResourceFile resFile = mFiles.get(i);
-                if (resFile != null) {
-                    IAbstractFile abstractFile = resFile.getFile();
-                    if (abstractFile instanceof IFileWrapper) {
-                        IFile iFile = ((IFileWrapper)resFile.getFile()).getIFile();
-                        if (iFile != null && iFile.equals(file)) {
-                            mFiles.remove(i);
-                            touch();
-                            return resFile;
-                        }
-                    }
-                }
-            }
+    protected void removeFile(ResourceFile file) {
+        file.dispose();
+        mFiles.remove(file);
+    }
+
+    protected void dispose() {
+        for (ResourceFile file : mFiles) {
+            file.dispose();
         }
 
-        return null;
+        mFiles.clear();
     }
 
     /**
-     * Returns the {@link IFolder} associated with this object.
+     * Returns the {@link IAbstractFolder} associated with this object.
      */
     public IAbstractFolder getFolder() {
         return mFolder;
@@ -111,11 +96,8 @@ public final class ResourceFolder extends Resource {
         return mType;
     }
 
-    /**
-     * Returns whether the folder is a framework resource folder.
-     */
-    public boolean isFramework() {
-        return mIsFramework;
+    public ResourceRepository getRepository() {
+        return mRepository;
     }
 
     /**
@@ -126,7 +108,7 @@ public final class ResourceFolder extends Resource {
 
         if (mFiles != null) {
             for (ResourceFile file : mFiles) {
-                List<ResourceType> types = file.getResourceTypes();
+                Collection<ResourceType> types = file.getResourceTypes();
 
                 // loop through those and add them to the main list,
                 // if they are not already present
@@ -141,11 +123,6 @@ public final class ResourceFolder extends Resource {
         return list;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.android.ide.eclipse.editors.resources.manager.Resource#getConfiguration()
-     */
-    @Override
     public FolderConfiguration getConfiguration() {
         return mConfiguration;
     }
@@ -160,7 +137,7 @@ public final class ResourceFolder extends Resource {
 
     /**
      * Returns the {@link ResourceFile} matching a {@link IAbstractFile} object.
-     * @param file The {@link IFile} object.
+     * @param file The {@link IAbstractFile} object.
      * @return the {@link ResourceFile} or null if no match was found.
      */
     public ResourceFile getFile(IAbstractFile file) {
@@ -173,27 +150,6 @@ public final class ResourceFolder extends Resource {
         }
         return null;
     }
-
-    /**
-     * Returns the {@link ResourceFile} matching a {@link IFile} object.
-     * @param file The {@link IFile} object.
-     * @return the {@link ResourceFile} or null if no match was found.
-     */
-    public ResourceFile getFile(IFile file) {
-        if (mFiles != null) {
-            for (ResourceFile f : mFiles) {
-                IAbstractFile abstractFile = f.getFile();
-                if (abstractFile instanceof IFileWrapper) {
-                    IFile iFile = ((IFileWrapper)f.getFile()).getIFile();
-                    if (iFile != null && iFile.equals(file)) {
-                        return f;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
 
     /**
      * Returns the {@link ResourceFile} matching a given name.
@@ -238,27 +194,6 @@ public final class ResourceFolder extends Resource {
             }
         }
         return false;
-    }
-
-    /**
-     * Get the list of {@link ResourceItem} of a specific type generated by all the files
-     * in the folder.
-     * This method must make sure not to create duplicates.
-     * @param type The type of {@link ResourceItem} to return.
-     * @param projectResources The global Project Resource object, allowing the implementation to
-     * query for already existing {@link ResourceItem}
-     * @return The list of <b>new</b> {@link ResourceItem}
-     * @see ProjectResources#findResourceItem(ResourceType, String)
-     */
-    public Collection<ProjectResourceItem> getResources(ResourceType type,
-            ProjectResources projectResources) {
-        Collection<ProjectResourceItem> list = new ArrayList<ProjectResourceItem>();
-        if (mFiles != null) {
-            for (ResourceFile f : mFiles) {
-                list.addAll(f.getResources(type, projectResources));
-            }
-        }
-        return list;
     }
 
     @Override

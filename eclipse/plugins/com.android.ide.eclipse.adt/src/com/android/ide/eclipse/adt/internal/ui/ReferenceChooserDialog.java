@@ -19,9 +19,9 @@ package com.android.ide.eclipse.adt.internal.ui;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IProject;
@@ -52,6 +52,7 @@ import org.eclipse.ui.dialogs.FilteredTree;
 import org.eclipse.ui.dialogs.PatternFilter;
 import org.eclipse.ui.dialogs.SelectionStatusDialog;
 
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,7 +67,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
 
     private static IDialogSettings sDialogSettings = new DialogSettings("");
 
-    private IResourceRepository mResources;
+    private ResourceRepository mProjectResources;
     private String mCurrentResource;
     private FilteredTree mFilteredTree;
     private Button mNewResButton;
@@ -77,10 +78,11 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
      * @param project
      * @param parent
      */
-    public ReferenceChooserDialog(IProject project, IResourceRepository resources, Shell parent) {
+    public ReferenceChooserDialog(IProject project, ResourceRepository projectResources,
+            Shell parent) {
         super(parent);
         mProject = project;
-        mResources = resources;
+        mProjectResources = projectResources;
 
         int shellStyle = getShellStyle();
         setShellStyle(shellStyle | SWT.MAX | SWT.RESIZE);
@@ -177,7 +179,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
 
         mTreeViewer.setLabelProvider(new ResourceLabelProvider());
         mTreeViewer.setContentProvider(new ResourceContentProvider(false /* fullLevels */));
-        mTreeViewer.setInput(mResources);
+        mTreeViewer.setInput(mProjectResources);
     }
 
     protected void handleSelection() {
@@ -339,7 +341,8 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
      */
     private void setupInitialSelection(ResourceType resourceType, String resourceName) {
         // get all the resources of this type
-        ResourceItem[] resourceItems = mResources.getResources(resourceType);
+        Collection<ResourceItem> resourceItems =
+                mProjectResources.getResourceItemsOfType(resourceType);
 
         for (ResourceItem resourceItem : resourceItems) {
             if (resourceName.equals(resourceItem.getName())) {
