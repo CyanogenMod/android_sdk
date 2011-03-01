@@ -355,15 +355,17 @@ public class SdkManager {
                     return null;
                 }
 
+                String[] abiList = getAbiList(platformFolder.getAbsolutePath());
                 // create the target.
                 PlatformTarget target = new PlatformTarget(
                         sdkOsPath,
                         platformFolder.getAbsolutePath(),
-                        map,
                         apiNumber,
                         apiCodename,
                         apiName,
-                        revision);
+                        revision,
+                        abiList,
+                        map);
 
                 // need to parse the skins.
                 String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
@@ -380,6 +382,30 @@ public class SdkManager {
         return null;
     }
 
+    /**
+    * Get all the abi types supported for a given target
+    * @param path Path where the images folder for a target is located
+    * @return an array of strings containing all the abi names for the target
+    */
+    private static String[] getAbiList(String path) {
+        ArrayList list = new ArrayList();
+
+        File imagesFolder = new File(path + File.separator + SdkConstants.OS_IMAGES_FOLDER);
+        File[] files = imagesFolder.listFiles();
+
+        if (files != null) {
+            // Loop through Images directory.  If subdirectories exist, set multiprocessor mode
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    list.add(file.getName());
+                }
+            }
+        }
+        String[] abis = new String[list.size()];
+        list.toArray(abis);
+
+        return abis;
+    }
 
     /**
      * Loads the Add-on from the SDK.
@@ -514,8 +540,9 @@ public class SdkManager {
                 }
             }
 
+            String[] abiList = getAbiList(addonDir.getAbsolutePath());
             AddOnTarget target = new AddOnTarget(addonDir.getAbsolutePath(), name, vendor,
-                    revisionValue, description, libMap, baseTarget);
+                    revisionValue, description, abiList, libMap, baseTarget);
 
             // need to parse the skins.
             String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));

@@ -132,9 +132,13 @@ public final class SdkConstants {
     public final static String FN_ADB = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
             "adb.exe" : "adb"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    /** emulator executable (with extension for the current OS) */
-    public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
+    /** emulator executable (_WITHOUT_ extension for the current OS) */
+    public final static String FN_EMULATOR =
+            "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
+
+    /** emulator executable extension for the current OS */
+    public final static String FN_EMULATOR_EXTENSION = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
+            ".exe" : ""; //$NON-NLS-1$ //$NON-NLS-2$
 
     /** zipalign executable (with extension for the current OS)  */
     public final static String FN_ZIPALIGN = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
@@ -203,6 +207,10 @@ public final class SdkConstants {
     public static final String FD_DOCS_REFERENCE = "reference";
     /** Name of the SDK images folder. */
     public final static String FD_IMAGES = "images";
+    /** Name of the processors to support. */
+    public final static String ABI_ARMEABI = "armeabi";
+    public final static String ABI_INTEL_ATOM = "x86";
+
     /** Name of the SDK skins folder. */
     public final static String FD_SKINS = "skins";
     /** Name of the SDK samples folder. */

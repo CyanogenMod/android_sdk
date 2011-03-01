@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import java.util.Map;
 import java.util.Properties;
@@ -98,6 +99,14 @@ public class MockPlatformPackage extends PlatformPackage {
 
         public String getFullName() {
             return "mock platform target";
+        }
+
+        public String[] getAbiList() {
+            return new String[] { SdkConstants.ABI_ARMEABI };
+        }
+
+        public String getImagePath(String abiType) {
+            return SdkConstants.OS_IMAGES_FOLDER;
         }
 
         public String getLocation() {

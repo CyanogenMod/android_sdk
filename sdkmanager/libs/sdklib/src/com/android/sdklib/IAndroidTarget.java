@@ -29,8 +29,6 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     public final static int ANDROID_JAR         = 1;
     /** OS Path to the "framework.aidl" file. */
     public final static int ANDROID_AIDL        = 2;
-    /** OS Path to "images" folder which contains the emulator system images. */
-    public final static int IMAGES              = 3;
     /** OS Path to the "samples" folder which contains sample projects. */
     public final static int SAMPLES             = 4;
     /** OS Path to the "skins" folder which contains the emulator skins. */
@@ -225,6 +223,16 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * <p/>If the target defines no USB Vendor ID, then the method return 0.
      */
     int getUsbVendorId();
+
+    /**
+     * Returns array of permitted processor architectures
+     */
+    public String[] getAbiList();
+
+    /**
+     * Returns string to append to images directory for current ProcessorType
+     */
+    public String getImagePath(String abiType);
 
     /**
      * Returns whether the given target is compatible with the receiver.

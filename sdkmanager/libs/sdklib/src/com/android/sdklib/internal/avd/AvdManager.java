@@ -67,6 +67,13 @@ public final class AvdManager {
     public final static String AVD_INFO_TARGET = "target";     //$NON-NLS-1$
 
     /**
+     * AVD/config.ini key name representing the abi type of the specific avd
+     *
+     */
+     public final static String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
+
+
+    /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
      * or a 320x480 like constant for a numeric skin size.
      *
@@ -204,6 +211,7 @@ public final class AvdManager {
         private final String mPath;
         private final String mTargetHash;
         private final IAndroidTarget mTarget;
+        private final String mAbiType;
         private final Map<String, String> mProperties;
         private final AvdStatus mStatus;
 
@@ -217,11 +225,12 @@ public final class AvdManager {
          * @param path The path to the config.ini file
          * @param targetHash the target hash
          * @param target The target. Can be null, if the target was not resolved.
+         * @param abiType Name of the abi.
          * @param properties The property map. Cannot be null.
          */
         public AvdInfo(String name, String path, String targetHash, IAndroidTarget target,
-                Map<String, String> properties) {
-            this(name, path, targetHash, target, properties, AvdStatus.OK);
+                String abiType, Map<String, String> properties) {
+             this(name, path, targetHash, target, abiType, properties, AvdStatus.OK);
         }
 
         /**
@@ -234,15 +243,17 @@ public final class AvdManager {
          * @param path The path to the config.ini file
          * @param targetHash the target hash
          * @param target The target. Can be null, if the target was not resolved.
+         * @param abiType Name of the abi.
          * @param properties The property map. Can be null.
          * @param status The {@link AvdStatus} of this AVD. Cannot be null.
          */
         public AvdInfo(String name, String path, String targetHash, IAndroidTarget target,
-                Map<String, String> properties, AvdStatus status) {
+                String abiType, Map<String, String> properties, AvdStatus status) {
             mName = name;
             mPath = path;
             mTargetHash = targetHash;
             mTarget = target;
+            mAbiType = abiType;
             mProperties = properties == null ? null : Collections.unmodifiableMap(properties);
             mStatus = status;
         }
@@ -255,6 +266,45 @@ public final class AvdManager {
         /** Returns the path of the AVD data directory. */
         public String getPath() {
             return mPath;
+        }
+
+        /** Returns the processor type of the AVD. */
+        public String getAbiType() {
+            return mAbiType;
+        }
+
+        /** Convenience function to return a more user friendly name of the abi type. */
+        public static String getPrettyAbiType(String raw) {
+            String s = null;
+            if (raw.equalsIgnoreCase(SdkConstants.ABI_ARMEABI)) {
+                s = "ARM (" + SdkConstants.ABI_ARMEABI + ")";
+            }
+            else if (raw.equalsIgnoreCase(SdkConstants.ABI_INTEL_ATOM)) {
+                s = "Intel Atom (" + SdkConstants.ABI_INTEL_ATOM + ")";
+            }
+            else {
+                s = raw + " (" + raw + ")";
+            }
+            return s;
+        }
+
+        /**
+        * Returns the emulator executable path
+        * @param sdkPath path of the sdk
+        * @return path of the emulator executable
+        */
+        public String getEmulatorPath(String sdkPath) {
+            String path = sdkPath + SdkConstants.OS_SDK_TOOLS_FOLDER;
+
+            // Start with base name of the emulator
+            path = path + SdkConstants.FN_EMULATOR;
+            // If not using ARM, add processor type to emulator command line
+            if (!getAbiType().equalsIgnoreCase(SdkConstants.ABI_ARMEABI)) {
+                path = path + "-" + getAbiType();
+            }
+            // Add OS appropriate emulator extension (e.g., .exe on windows)
+            path = path + SdkConstants.FN_EMULATOR_EXTENSION;
+            return path;
         }
 
         /**
@@ -588,14 +638,17 @@ public final class AvdManager {
     /**
      * Creates a new AVD, but with no snapshot.
      *
-     * See {@link #createAvd(File, String, IAndroidTarget, String, String, Map, boolean, boolean, ISdkLog)}
+     * See {@link #createAvd(File, String, IAndroidTarget,
+     *                 String, String,
+     *                 Map, boolean, boolean, ISdkLog)}
      **/
     @Deprecated
-    public AvdInfo createAvd(File avdFolder, String name, IAndroidTarget target, String skinName,
+    public AvdInfo createAvd(File avdFolder, String name, IAndroidTarget target,
+            String abiType, String skinName,
             String sdcard, Map<String, String> hardwareConfig, boolean removePrevious,
             ISdkLog log) {
-        return createAvd(avdFolder, name, target, skinName, sdcard, hardwareConfig, removePrevious,
-                false, log);
+       return createAvd(avdFolder, name, target, abiType, skinName, sdcard,
+                hardwareConfig, removePrevious, false, log);
     }
 
     /**
@@ -604,6 +657,7 @@ public final class AvdManager {
      * @param avdFolder the data folder for the AVD. It will be created as needed.
      * @param name the name of the AVD
      * @param target the target of the AVD
+     * @param abiType the abi type of the AVD
      * @param skinName the name of the skin. Can be null. Must have been verified by caller.
      * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to
      *        an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
@@ -615,8 +669,8 @@ public final class AvdManager {
      *         internal list) or null in case of failure.
      */
     public AvdInfo createAvd(File avdFolder, String name, IAndroidTarget target,
-            String skinName, String sdcard, Map<String,String> hardwareConfig,
-            boolean removePrevious, boolean createSnapshot, ISdkLog log) {
+           String abiType, String skinName, String sdcard, Map<String,String> hardwareConfig,
+           boolean removePrevious, boolean createSnapshot, ISdkLog log){
         if (log == null) {
             throw new IllegalArgumentException("log cannot be null");
         }
@@ -649,17 +703,20 @@ public final class AvdManager {
             iniFile = createAvdIniFile(name, avdFolder, target, removePrevious);
 
             // writes the userdata.img in it.
-            String imagePath = target.getPath(IAndroidTarget.IMAGES);
+            String imagePath = target.getImagePath(abiType);
+
             File userdataSrc = new File(imagePath, USERDATA_IMG);
 
             if (userdataSrc.exists() == false && target.isPlatform() == false) {
-                imagePath = target.getParent().getPath(IAndroidTarget.IMAGES);
+                imagePath =
+                    target.getParent().getImagePath(abiType);
                 userdataSrc = new File(imagePath, USERDATA_IMG);
             }
 
             if (userdataSrc.exists() == false) {
-                log.error(null, "Unable to find a '%1$s' file to copy into the AVD folder.",
-                        USERDATA_IMG);
+                log.error(null,
+                        "Unable to find a '%1$s' file of '%2$s' to copy into the AVD folder.",
+                        USERDATA_IMG, imagePath);
                 needCleanup = true;
                 return null;
             }
@@ -667,12 +724,20 @@ public final class AvdManager {
 
             copyImageFile(userdataSrc, userdataDest);
 
+            if (userdataDest.exists() == false) {
+                log.error(null, "Unable to create '%1$s' file in the AVD folder.",
+                        userdataDest);
+                needCleanup = true;
+                return null;
+            }
+
             // Config file.
             HashMap<String, String> values = new HashMap<String, String>();
 
-            if (setImagePathProperties(target, values, log) == false) {
-                needCleanup = true;
-                return null;
+           if (setImagePathProperties(target, abiType, values, log) == false) {
+               log.error(null, "Failed to set image path properties in the AVD folder.");
+               needCleanup = true;
+               return null;
             }
 
             // Create the snapshot file
@@ -681,7 +746,7 @@ public final class AvdManager {
                         + SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER;
                 File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
                 if (snapshotBlank.exists() == false) {
-                    log.error(null, "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
+                   log.error(null, "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
                             SNAPSHOTS_IMG, toolsLib);
                     needCleanup = true;
                     return null;
@@ -690,6 +755,9 @@ public final class AvdManager {
                 copyImageFile(snapshotBlank, snapshotDest);
                 values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
             }
+
+            // Now the abi type
+            values.put(AVD_INI_ABI_TYPE, abiType);
 
             // Now the skin.
             if (skinName == null || skinName.length() == 0) {
@@ -707,6 +775,7 @@ public final class AvdManager {
                 // assume skin name is valid
                 String skinPath = getSkinRelativePath(skinName, target, log);
                 if (skinPath == null) {
+                    log.error(null, "Missing skinpath in the AVD folder.");
                     needCleanup = true;
                     return null;
                 }
@@ -771,6 +840,7 @@ public final class AvdManager {
                         }
 
                         if (createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log) == false) {
+                            log.error(null, "Failed to create sdcard in the AVD folder.");
                             needCleanup = true;
                             return null; // mksdcard output has already been displayed, no need to
                                          // output anything else.
@@ -846,6 +916,7 @@ public final class AvdManager {
                 report.append(String.format("Created AVD '%1$s' based on %2$s (%3$s)", name,
                         target.getName(), target.getVendor()));
             }
+            report.append(String.format(", %s processor", AvdInfo.getPrettyAbiType(abiType)));
 
             // display the chosen hardware config
             if (finalHardwareValues.size() > 0) {
@@ -863,7 +934,7 @@ public final class AvdManager {
             AvdInfo newAvdInfo = new AvdInfo(name,
                     avdFolder.getAbsolutePath(),
                     target.hashString(),
-                    target, values);
+                    target, abiType, values);
 
             AvdInfo oldAvdInfo = getAvd(name, false /*validAvdOnly*/);
 
@@ -942,9 +1013,9 @@ public final class AvdManager {
      * is not empty. If the image folder is empty or does not exist, <code>null</code> is returned.
      * @throws InvalidTargetPathException if the target image folder is not in the current SDK.
      */
-    private String getImageRelativePath(IAndroidTarget target)
+    private String getImageRelativePath(IAndroidTarget target, String abiType)
             throws InvalidTargetPathException {
-        String imageFullPath = target.getPath(IAndroidTarget.IMAGES);
+        String imageFullPath = target.getImagePath(abiType);
 
         // make this path relative to the SDK location
         String sdkLocation = mSdkManager.getLocation();
@@ -1166,7 +1237,7 @@ public final class AvdManager {
 
                 // update AVD info
                 AvdInfo info = new AvdInfo(avdInfo.getName(), paramFolderPath,
-                        avdInfo.getTargetHash(), avdInfo.getTarget(), avdInfo.getProperties());
+                      avdInfo.getTargetHash(), avdInfo.getTarget(), avdInfo.getAbiType(), avdInfo.getProperties());
                 replaceAvd(avdInfo, info);
 
                 // update the ini file
@@ -1186,7 +1257,8 @@ public final class AvdManager {
 
                 // update AVD info
                 AvdInfo info = new AvdInfo(newName, avdInfo.getPath(),
-                        avdInfo.getTargetHash(), avdInfo.getTarget(), avdInfo.getProperties());
+                        avdInfo.getTargetHash(), avdInfo.getTarget(),
+                        avdInfo.getAbiType(), avdInfo.getProperties());
                 replaceAvd(avdInfo, info);
             }
 
@@ -1329,6 +1401,14 @@ public final class AvdManager {
             name = matcher.group(1);
         }
 
+        // get abi type
+        String abiType = properties.get(AVD_INI_ABI_TYPE);
+        // for the avds created previously without enhancement, i.e. They are created based
+        // on previous API Levels. They are supposed to have ARM processor type
+        if (abiType == null) {
+            abiType = SdkConstants.ABI_ARMEABI;
+        }
+
         // check the image.sysdir are valid
         boolean validImageSysdir = true;
         if (properties != null) {
@@ -1374,6 +1454,7 @@ public final class AvdManager {
                 avdPath,
                 targetHash,
                 target,
+                abiType,
                 properties,
                 status);
 
@@ -1585,7 +1666,7 @@ public final class AvdManager {
         AvdStatus status;
 
         // create the path to the new system images.
-        if (setImagePathProperties(avd.getTarget(), properties, log)) {
+        if (setImagePathProperties(avd.getTarget(), avd.getAbiType(), properties, log)) {
             if (properties.containsKey(AVD_INI_IMAGES_1)) {
                 log.printf("Updated '%1$s' with value '%2$s'\n", AVD_INI_IMAGES_1,
                         properties.get(AVD_INI_IMAGES_1));
@@ -1617,6 +1698,7 @@ public final class AvdManager {
                 avd.getPath(),
                 avd.getTargetHash(),
                 avd.getTarget(),
+                avd.getAbiType(),
                 properties,
                 status);
 
@@ -1626,13 +1708,14 @@ public final class AvdManager {
     /**
      * Sets the paths to the system images in a properties map.
      * @param target the target in which to find the system images.
+     * @param abiType the abi type of the avd to find
+     *        the architecture-dependent system images.
      * @param properties the properties in which to set the paths.
      * @param log the log object to receive action logs. Cannot be null.
      * @return true if success, false if some path are missing.
      */
     private boolean setImagePathProperties(IAndroidTarget target,
-            Map<String, String> properties,
-            ISdkLog log) {
+        String abiType, Map<String, String> properties, ISdkLog log) {
         properties.remove(AVD_INI_IMAGES_1);
         properties.remove(AVD_INI_IMAGES_2);
 
@@ -1640,7 +1723,7 @@ public final class AvdManager {
             String property = AVD_INI_IMAGES_1;
 
             // First the image folders of the target itself
-            String imagePath = getImageRelativePath(target);
+            String imagePath = getImageRelativePath(target, abiType);
             if (imagePath != null) {
                 properties.put(property, imagePath);
                 property = AVD_INI_IMAGES_2;
@@ -1650,7 +1733,7 @@ public final class AvdManager {
             // If the target is an add-on we need to add the Platform image as a backup.
             IAndroidTarget parent = target.getParent();
             if (parent != null) {
-                imagePath = getImageRelativePath(parent);
+                imagePath = getImageRelativePath(parent, abiType);
                 if (imagePath != null) {
                     properties.put(property, imagePath);
                 }

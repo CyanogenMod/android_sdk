@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ArrayList;
 
 /**
  * Represents an add-on target in the SDK.
@@ -67,6 +68,7 @@ final class AddOnTarget implements IAndroidTarget {
     private final String mLocation;
     private final PlatformTarget mBasePlatform;
     private final String mName;
+    private String[] mAbis;
     private final String mVendor;
     private final int mRevision;
     private final String mDescription;
@@ -74,6 +76,7 @@ final class AddOnTarget implements IAndroidTarget {
     private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
     private int mVendorId = NO_USB_ID;
+    private boolean mAbiCompatibilityMode;
 
     /**
      * Creates a new add-on
@@ -82,12 +85,13 @@ final class AddOnTarget implements IAndroidTarget {
      * @param vendor the vendor name of the add-on
      * @param revision the revision of the add-on
      * @param description the add-on description
+     * @param abis list of supported abis
      * @param libMap A map containing the optional libraries. The map key is the fully-qualified
      * library name. The value is a 2 string array with the .jar filename, and the description.
      * @param basePlatform the platform the add-on is extending.
      */
     AddOnTarget(String location, String name, String vendor, int revision, String description,
-            Map<String, String[]> libMap, PlatformTarget basePlatform) {
+            String[] abis, Map<String, String[]> libMap, PlatformTarget basePlatform) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
         }
@@ -98,6 +102,14 @@ final class AddOnTarget implements IAndroidTarget {
         mRevision = revision;
         mDescription = description;
         mBasePlatform = basePlatform;
+
+        //set compatibility mode
+        if (abis.length > 0) {
+            mAbis = abis;
+        } else {
+            mAbiCompatibilityMode = true;
+            mAbis = new String[] { SdkConstants.ABI_ARMEABI };
+        }
 
         // handle the optional libraries.
         if (libMap != null) {
@@ -119,6 +131,25 @@ final class AddOnTarget implements IAndroidTarget {
 
     public String getName() {
         return mName;
+    }
+
+    /**
+    * Return the full path for images
+    * @param abiType type of the abi
+    * @return complete path where the image files are located
+    */
+    public String getImagePath(String abiType) {
+
+        if (mAbiCompatibilityMode) {
+        // Use legacy directory structure if only arm
+            return mLocation + SdkConstants.OS_IMAGES_FOLDER;
+        } else {
+            return mLocation + SdkConstants.OS_IMAGES_FOLDER + abiType + File.separator;
+          }
+    }
+
+    public String[] getAbiList() {
+        return mAbis;
     }
 
     public String getVendor() {
@@ -160,8 +191,6 @@ final class AddOnTarget implements IAndroidTarget {
 
     public String getPath(int pathId) {
         switch (pathId) {
-            case IMAGES:
-                return mLocation + SdkConstants.OS_IMAGES_FOLDER;
             case SKINS:
                 return mLocation + SdkConstants.OS_SKINS_FOLDER;
             case DOCS:
