@@ -74,6 +74,8 @@ public class DecorComposite extends Composite {
             setImage(i);
         }
 
+        content.createToolbarItems(mToolbar);
+
         return this;
     }
 

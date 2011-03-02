@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.ui;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.ToolBar;
 
 /**
  * Describes the content of a {@link IDecorContent}.
@@ -30,6 +31,16 @@ public interface IDecorContent {
      * @param parent The {@link IDecorContent} parent. Never null.
      */
     public void createControl(Composite parent);
+
+    /**
+     * Creates the toolbar items that will be displayed in the {@link IDecorContent}. This
+     * method will always be called <b>after</b> {@link #createControl}, so the
+     * implementation can assume that it can call {@link #getControl()} to obtain the
+     * corresponding control that the toolbar items will operate on.
+     *
+     * @param toolbar the toolbar to add the toolbar items to
+     */
+    public void createToolbarItems(ToolBar toolbar);
 
     /**
      * Returns the control previously created by {@link #createControl(Composite)}.
