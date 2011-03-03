@@ -174,6 +174,21 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
         return choice(message, title, choices);
     }
 
+    @MonkeyRunnerExported(doc = "Loads a MonkeyImage from a file.",
+            args = { "path" },
+            argDocs = {
+            "The path to the file to load.  This file path is in terms of the computer running " +
+            "MonkeyRunner and not a path on the Android Device. ", },
+            returns = "A new MonkeyImage representing the specified file")
+    public static MonkeyImage loadImageFromFile(PyObject[] args, String kws[]) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+
+        String path = ap.getString(0);
+
+        return MonkeyImage.loadImageFromFile(path);
+    }
+
     /**
      * Display an alert dialog.
      *

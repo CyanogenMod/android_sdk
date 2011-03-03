@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
@@ -42,6 +44,8 @@ import javax.imageio.stream.ImageOutputStream;
  */
 @MonkeyRunnerExported(doc = "An image")
 public abstract class MonkeyImage extends PyObject implements ClassDictInit {
+    private static Logger LOG = Logger.getLogger(MonkeyImage.class.getCanonicalName());
+
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyImage.class, dict);
     }
@@ -130,7 +134,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
             return writeToFile(path, "png");
         }
         ImageWriter writer = writers.next();
-        BufferedImage image = getBufferedImage();
+        BufferedImage image = convertSnapshot();
         try {
             File f = new File(path);
             f.delete();
@@ -273,7 +277,26 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
         public BufferedImage createBufferedImage() {
             return image;
         }
+    }
 
+    /* package */ static MonkeyImage loadImageFromFile(String path) {
+        File f = new File(path);
+        if (f.exists() && f.canRead()) {
+            try {
+                BufferedImage bufferedImage = ImageIO.read(new File(path));
+                if (bufferedImage == null) {
+                    LOG.log(Level.WARNING, "Cannot decode file %s", path);
+                    return null;
+                }
+                return new BufferedImageMonkeyImage(bufferedImage);
+            } catch (IOException e) {
+                LOG.log(Level.WARNING, "Exception trying to decode image", e);
+                return null;
+            }
+        } else {
+            LOG.log(Level.WARNING, "Cannot read file %s", path);
+            return null;
+        }
     }
 
     @MonkeyRunnerExported(doc = "Copy a rectangular region of the image.",
