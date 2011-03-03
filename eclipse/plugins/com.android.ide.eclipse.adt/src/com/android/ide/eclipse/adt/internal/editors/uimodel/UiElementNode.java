@@ -23,6 +23,7 @@ import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttr
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_URI;
 import static com.android.sdklib.SdkConstants.NS_RESOURCES;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -1436,8 +1437,8 @@ public class UiElementNode implements IPropertySource {
 
     // --- for derived implementations only ---
 
-    // TODO doc
-    protected void setXmlNode(Node xmlNode) {
+    @VisibleForTesting
+    public void setXmlNode(Node xmlNode) {
         mXmlNode = xmlNode;
     }
 

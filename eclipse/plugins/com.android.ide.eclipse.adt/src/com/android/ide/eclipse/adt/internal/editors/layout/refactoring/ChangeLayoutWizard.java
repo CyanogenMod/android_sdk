@@ -16,24 +16,29 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
+
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+
 import org.eclipse.core.resources.IProject;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-class ChangeLayoutWizard extends RefactoringWizard {
-    private final IProject mProject;
+import java.util.List;
 
-    public ChangeLayoutWizard(ChangeLayoutRefactoring ref, IProject project) {
-        super(ref, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
-        mProject = project;
+class ChangeLayoutWizard extends VisualRefactoringWizard {
+
+    public ChangeLayoutWizard(ChangeLayoutRefactoring ref, LayoutEditor editor) {
+        super(ref, editor);
         setDefaultPageTitle("Change Layout");
     }
 
@@ -41,7 +46,7 @@ class ChangeLayoutWizard extends RefactoringWizard {
     protected void addUserInputPages() {
         ChangeLayoutRefactoring ref = (ChangeLayoutRefactoring) getRefactoring();
         String oldType = ref.getOldType();
-        addPage(new InputPage(mProject, oldType));
+        addPage(new InputPage(mEditor.getProject(), oldType));
     }
 
     /** Wizard page which inputs parameters for the {@link ChangeLayoutRefactoring} operation */
@@ -49,6 +54,8 @@ class ChangeLayoutWizard extends RefactoringWizard {
         private final IProject mProject;
         private final String mOldType;
         private Combo mTypeCombo;
+        private Button mFlatten;
+        private List<String> mClassNames;
 
         public InputPage(IProject project, String oldType) {
             super("ChangeLayoutInputPage");  //$NON-NLS-1$
@@ -60,6 +67,11 @@ class ChangeLayoutWizard extends RefactoringWizard {
             Composite composite = new Composite(parent, SWT.NONE);
             composite.setLayout(new GridLayout(2, false));
 
+            Label fromLabel = new Label(composite, SWT.NONE);
+            fromLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+            String oldTypeBase = mOldType.substring(mOldType.lastIndexOf('.') + 1);
+            fromLabel.setText(String.format("Change from %1$s", oldTypeBase));
+
             Label typeLabel = new Label(composite, SWT.NONE);
             typeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
             typeLabel.setText("New Layout Type:");
@@ -70,11 +82,40 @@ class ChangeLayoutWizard extends RefactoringWizard {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     validatePage();
+                    // Hierarchy flattening only works for relative layout (and any future
+                    // layouts that can also support arbitrary layouts).
+                    mFlatten.setVisible(mTypeCombo.getText().equals(FQCN_RELATIVE_LAYOUT));
                 }
             };
             mTypeCombo.addSelectionListener(selectionListener);
 
-            WrapInWizard.addLayouts(mProject, mTypeCombo, mOldType);
+            mFlatten = new Button(composite, SWT.CHECK);
+            mFlatten.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER,
+                    false, false, 2, 1));
+            mFlatten.setText("Flatten hierarchy");
+            mFlatten.addSelectionListener(selectionListener);
+            // Should flattening be selected by default?
+            mFlatten.setSelection(true);
+
+            // We don't exclude RelativeLayout even if the current layout is RelativeLayout,
+            // in case you are trying to flatten the hierarchy for a hierarchy that has a
+            // RelativeLayout at the root.
+            boolean oldIsRelativeLayout = mOldType.equals(FQCN_RELATIVE_LAYOUT);
+            String exclude = oldIsRelativeLayout ? null : mOldType;
+
+            mClassNames = WrapInWizard.addLayouts(mProject, mOldType, mTypeCombo, exclude, false);
+
+            mTypeCombo.select(0);
+            // The default should be Relative layout, if available (and not the old Type)
+            if (!oldIsRelativeLayout) {
+                for (int i = 0; i < mTypeCombo.getItemCount(); i++) {
+                    if (mTypeCombo.getItem(i).equals(RELATIVE_LAYOUT)) {
+                        mTypeCombo.select(i);
+                        break;
+                    }
+                }
+            }
+            mFlatten.setVisible(mTypeCombo.getText().equals(RELATIVE_LAYOUT));
 
             setControl(composite);
             validatePage();
@@ -83,18 +124,19 @@ class ChangeLayoutWizard extends RefactoringWizard {
         private boolean validatePage() {
             boolean ok = true;
 
-            if (mTypeCombo.getText().equals(WrapInWizard.SEPARATOR_LABEL)) {
+            int selectionIndex = mTypeCombo.getSelectionIndex();
+            String type = selectionIndex != -1 ? mClassNames.get(selectionIndex) : null;
+            if (type == null) {
                 setErrorMessage("Select a layout type");
-                ok = false;
-            }
-
-            if (ok) {
+                ok = false; // The user has chosen a separator
+            } else {
                 setErrorMessage(null);
 
                 // Record state
                 ChangeLayoutRefactoring refactoring =
                     (ChangeLayoutRefactoring) getRefactoring();
-                refactoring.setType(mTypeCombo.getText());
+                refactoring.setType(type);
+                refactoring.setFlatten(mFlatten.getSelection());
             }
 
             setPageComplete(ok);

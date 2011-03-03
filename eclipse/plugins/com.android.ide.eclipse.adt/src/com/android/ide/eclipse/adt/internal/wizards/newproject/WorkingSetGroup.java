@@ -69,7 +69,13 @@ public class WorkingSetGroup {
     }
 
     public IWorkingSet[] getSelectedWorkingSets() {
-        return fWorkingSetBlock.getSelectedWorkingSets();
+        try {
+            return fWorkingSetBlock.getSelectedWorkingSets();
+        } catch (Throwable t) {
+            // Test scenarios; no UI is created, which the fWorkingSetBlock assumes
+            // (it dereferences the enabledButton)
+            return new IWorkingSet[0];
+        }
     }
 
     public boolean isChecked() {

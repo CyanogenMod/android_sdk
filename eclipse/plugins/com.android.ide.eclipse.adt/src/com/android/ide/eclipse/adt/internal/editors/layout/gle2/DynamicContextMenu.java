@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.MenuAction;
@@ -24,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutAction;
+import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction;
 
@@ -207,13 +210,22 @@ import java.util.regex.Pattern;
     }
 
     private void insertVisualRefactorings(String endId) {
-        // Extract As <include> refactoring.
+        // Extract As <include> refactoring, Wrap In Refactoring, etc.
+        List<SelectionItem> selection = mCanvas.getSelectionManager().getSelections();
+        if (selection.size() == 0) {
+            return;
+        }
         // Only include the menu item if you are not right clicking on a root,
         // or on an included view, or on a non-contiguous selection
         mMenuManager.insertBefore(endId, new Separator());
         mMenuManager.insertBefore(endId, ExtractIncludeAction.create(mEditor));
         mMenuManager.insertBefore(endId, WrapInAction.create(mEditor));
-        mMenuManager.insertBefore(endId, ChangeLayoutAction.create(mEditor));
+        if (selection.size() == 1 && (selection.get(0).isLayout() ||
+                selection.get(0).getViewInfo().getName().equals(FQCN_GESTURE_OVERLAY_VIEW))) {
+            mMenuManager.insertBefore(endId, ChangeLayoutAction.create(mEditor));
+        } else {
+            mMenuManager.insertBefore(endId, ChangeViewAction.create(mEditor));
+        }
         mMenuManager.insertBefore(endId, new Separator());
     }
 

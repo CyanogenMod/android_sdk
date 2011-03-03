@@ -31,7 +31,7 @@ public class ExtractIncludeAction extends VisualRefactoringAction {
         if ((mTextSelection != null || mTreeSelection != null) && mFile != null) {
             ExtractIncludeRefactoring ref = new ExtractIncludeRefactoring(mFile, mEditor,
                     mTextSelection, mTreeSelection);
-            RefactoringWizard wizard = new ExtractIncludeWizard(ref, mFile.getProject());
+            RefactoringWizard wizard = new ExtractIncludeWizard(ref, mEditor);
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());

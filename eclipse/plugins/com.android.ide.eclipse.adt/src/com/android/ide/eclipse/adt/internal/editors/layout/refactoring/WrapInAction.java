@@ -31,7 +31,7 @@ public class WrapInAction extends VisualRefactoringAction {
         if ((mTextSelection != null || mTreeSelection != null) && mFile != null) {
             WrapInRefactoring ref = new WrapInRefactoring(mFile, mEditor,
                     mTextSelection, mTreeSelection);
-            RefactoringWizard wizard = new WrapInWizard(ref, mFile.getProject());
+            RefactoringWizard wizard = new WrapInWizard(ref, mEditor);
             RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
             try {
                 op.run(mWindow.getShell(), wizard.getDefaultPageTitle());

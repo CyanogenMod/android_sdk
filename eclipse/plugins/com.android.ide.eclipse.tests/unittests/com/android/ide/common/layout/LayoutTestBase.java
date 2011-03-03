@@ -39,7 +39,7 @@ import junit.framework.TestCase;
 /**
  * Common layout helpers from LayoutRule tests
  */
-public abstract class LayoutTestBase extends TestCase {
+public class LayoutTestBase extends TestCase {
     /**
      * Helper function used by tests to drag a button into a canvas containing
      * the given children.

@@ -139,4 +139,13 @@ class SelectionItem {
 
         return elements.toArray(new SimpleElement[elements.size()]);
     }
+
+    /**
+     * Returns true if this selection item is a layout
+     *
+     * @return true if this selection item is a layout
+     */
+    public boolean isLayout() {
+        return mCanvasViewInfo.getUiViewNode().getDescriptor().hasChildren();
+    }
 }

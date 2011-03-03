@@ -22,21 +22,24 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BA
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.TABLE_ROW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.sdklib.IAndroidTarget;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -67,9 +70,11 @@ import java.util.Set;
  */
 @SuppressWarnings("restriction") // XML model
 public class ChangeLayoutRefactoring extends VisualRefactoring {
-    private static final String KEY_TYPE = "type"; //$NON-NLS-1$
+    private static final String KEY_TYPE = "type";       //$NON-NLS-1$
+    private static final String KEY_FLATTEN = "flatten"; //$NON-NLS-1$
 
     private String mTypeFqcn;
+    private boolean mFlatten;
 
     /**
      * This constructor is solely used by {@link Descriptor},
@@ -79,6 +84,12 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     ChangeLayoutRefactoring(Map<String, String> arguments) {
         super(arguments);
         mTypeFqcn = arguments.get(KEY_TYPE);
+        mFlatten = Boolean.parseBoolean(arguments.get(KEY_FLATTEN));
+    }
+
+    @VisibleForTesting
+    ChangeLayoutRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+        super(selectedElements, editor);
     }
 
     public ChangeLayoutRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
@@ -99,7 +110,6 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 return status;
             }
 
-            mElements = getElements();
             if (mElements.size() != 1) {
                 status.addFatalError("Select precisely one layout to convert");
                 return status;
@@ -127,6 +137,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     protected Map<String, String> createArgumentMap() {
         Map<String, String> args = super.createArgumentMap();
         args.put(KEY_TYPE, mTypeFqcn);
+        args.put(KEY_FLATTEN, Boolean.toString(mFlatten));
 
         return args;
     }
@@ -138,6 +149,48 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
     void setType(String typeFqcn) {
         mTypeFqcn = typeFqcn;
+    }
+
+    void setFlatten(boolean flatten) {
+        mFlatten = flatten;
+    }
+
+    @Override
+    protected List<Element> initElements() {
+        List<Element> elements = super.initElements();
+
+        // Don't convert a root GestureOverlayView; convert its child. This looks for
+        // gesture overlays, and if found, it generates a new child list where the gesture
+        // overlay children are replaced by their first element children
+        for (Element element : elements) {
+            String tagName = element.getTagName();
+            if (tagName.equals(GESTURE_OVERLAY_VIEW)
+                    || tagName.equals(FQCN_GESTURE_OVERLAY_VIEW)) {
+                List<Element> replacement = new ArrayList<Element>(elements.size());
+                for (Element e : elements) {
+                    tagName = e.getTagName();
+                    if (tagName.equals(GESTURE_OVERLAY_VIEW)
+                            || tagName.equals(FQCN_GESTURE_OVERLAY_VIEW)) {
+                        NodeList children = e.getChildNodes();
+                        Element first = null;
+                        for (int i = 0, n = children.getLength(); i < n; i++) {
+                            Node node = children.item(i);
+                            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                                first = (Element) node;
+                                break;
+                            }
+                        }
+                        if (first != null) {
+                            e = first;
+                        }
+                    }
+                    replacement.add(e);
+                }
+                return replacement;
+            }
+        }
+
+        return elements;
     }
 
     @Override
@@ -166,20 +219,34 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             }
         }
 
+        ensureIdMatchesType(layout, mTypeFqcn, rootEdit);
+
         String oldType = getOldType();
         String newType = mTypeFqcn;
-        if (oldType.equals(FQCN_LINEAR_LAYOUT) && newType.equals(FQCN_RELATIVE_LAYOUT)) {
-            // Hand-coded conversion
-            convertLinearToRelative(rootEdit);
+        if (newType.equals(FQCN_RELATIVE_LAYOUT)) {
+            if (oldType.equals(FQCN_LINEAR_LAYOUT) && !mFlatten) {
+                // Hand-coded conversion specifically tailored for linear to relative, provided
+                // there is no hierarchy flattening
+                // TODO: use the RelativeLayoutConversionHelper for this; it does a better job
+                // analyzing gravities etc.
+                convertLinearToRelative(rootEdit);
+                removeUndefinedLayoutAttrs(rootEdit, layout);
+            } else {
+                // Generic conversion to relative - can also flatten the hierarchy
+                convertAnyToRelative(rootEdit);
+                // This already handles removing undefined layout attributes -- right?
+                //removeUndefinedLayoutAttrs(rootEdit, layout);
+            }
         } else if (oldType.equals(FQCN_RELATIVE_LAYOUT) && newType.equals(FQCN_LINEAR_LAYOUT)) {
             convertRelativeToLinear(rootEdit);
+            removeUndefinedLayoutAttrs(rootEdit, layout);
         } else if (oldType.equals(FQCN_LINEAR_LAYOUT) && newType.equals(FQCN_TABLE_LAYOUT)) {
             convertLinearToTable(rootEdit);
+            removeUndefinedLayoutAttrs(rootEdit, layout);
         } else {
             convertGeneric(rootEdit, oldType, newType);
+            removeUndefinedLayoutAttrs(rootEdit, layout);
         }
-
-        removeUndefinedLayoutAttrs(rootEdit, layout);
 
         return changes;
     }
@@ -247,9 +314,9 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 Node node = children.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element child = (Element) node;
-                    String id = ensureHasId(rootEdit, child);
+                    String id = ensureHasId(rootEdit, child, null);
                     if (prevId != null) {
-                        addAttributeDeclaration(rootEdit, child, attributePrefix,
+                        setAttribute(rootEdit, child, ANDROID_URI, attributePrefix,
                                 ATTR_LAYOUT_BELOW, prevId);
                     }
                     prevId = id;
@@ -266,12 +333,12 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 Node node = children.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element child = (Element) node;
-                    String id = ensureHasId(rootEdit, child);
+                    String id = ensureHasId(rootEdit, child, null);
                     if (prevId != null) {
-                        addAttributeDeclaration(rootEdit, child, attributePrefix,
+                        setAttribute(rootEdit, child, ANDROID_URI, attributePrefix,
                                 ATTR_LAYOUT_TO_RIGHT_OF, prevId);
                         if (isBaselineAligned) {
-                            addAttributeDeclaration(rootEdit, child, attributePrefix,
+                            setAttribute(rootEdit, child, ANDROID_URI, attributePrefix,
                                     ATTR_LAYOUT_ALIGN_BASELINE, prevId);
                         }
                     }
@@ -334,7 +401,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
     /** Removes all the unused attributes after a conversion */
     private void removeUndefinedLayoutAttrs(MultiTextEdit rootEdit, Element layout) {
-        ViewElementDescriptor descriptor = getLayoutDescriptor();
+        ViewElementDescriptor descriptor = getElementDescriptor(mTypeFqcn);
         if (descriptor == null) {
             return;
         }
@@ -363,23 +430,20 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         }
     }
 
-    private ViewElementDescriptor getLayoutDescriptor() {
-        Sdk current = Sdk.getCurrent();
-        if (current != null) {
-            IAndroidTarget target = current.getTarget(mProject);
-            if (target != null) {
-                AndroidTargetData targetData = current.getTargetData(target);
-                List<ViewElementDescriptor> layouts =
-                    targetData.getLayoutDescriptors().getLayoutDescriptors();
-                for (ViewElementDescriptor descriptor : layouts) {
-                    if (mTypeFqcn.equals(descriptor.getFullClassName())) {
-                        return descriptor;
-                    }
-                }
-            }
+    /** Hand coded conversion from any layout to a RelativeLayout */
+    private void convertAnyToRelative(MultiTextEdit rootEdit) {
+        // To perform a conversion from any other layout type, including nested conversion,
+        Element layout = getPrimaryElement();
+        CanvasViewInfo rootView = mRootView;
+        if (rootView == null) {
+            LayoutCanvas canvas = mEditor.getGraphicalEditor().getCanvasControl();
+            ViewHierarchy viewHierarchy = canvas.getViewHierarchy();
+            rootView = viewHierarchy.getRoot();
         }
 
-        return null;
+        RelativeLayoutConversionHelper helper =
+            new RelativeLayoutConversionHelper(this, layout, mFlatten, rootEdit, rootView);
+        helper.convertToRelative();
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {
@@ -406,5 +470,13 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         }
 
         return null;
+    }
+
+    @VisibleForTesting
+    protected CanvasViewInfo mRootView;
+
+    @VisibleForTesting
+    public void setRootView(CanvasViewInfo rootView) {
+        mRootView = rootView;
     }
 }

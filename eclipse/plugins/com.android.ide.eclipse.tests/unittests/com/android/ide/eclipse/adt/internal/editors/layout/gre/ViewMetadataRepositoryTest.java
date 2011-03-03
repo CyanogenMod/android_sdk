@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import com.android.ide.common.api.IViewMetadata.FillPreference;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 
 import junit.framework.TestCase;
 
@@ -31,5 +32,32 @@ public class ViewMetadataRepositoryTest extends TestCase {
                 repository.getFillPreference("android.widget.Spinner"));
         assertEquals(FillPreference.NONE,
                 repository.getFillPreference("foo.bar"));
+    }
+
+    // Ensure that all basenames referenced in the metadata refer to other views in the file
+    // (e.g. no typos)
+    public void testRelatedTo() throws Exception {
+        // Make sure unit tests are run with assertions on
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // Intentional assignment
+        assertTrue("This unit test must be run with assertions enabled (-ea)", assertionsEnabled);
+
+        ViewMetadataRepository repository = ViewMetadataRepository.get();
+        for (String fqcn : repository.getAllFqcns()) {
+            repository.getRelatedTo(fqcn);
+        }
+    }
+
+    public void testSkip() throws Exception {
+        ViewMetadataRepository repository = ViewMetadataRepository.get();
+        assertTrue(repository.getSkip("include"));
+        assertFalse(repository.getSkip("android.widget.Button"));
+    }
+
+    public void testRenderMode() throws Exception {
+        ViewMetadataRepository repository = ViewMetadataRepository.get();
+        assertEquals(RenderMode.NORMAL, repository.getRenderMode("android.widget.Button"));
+        assertEquals(RenderMode.SKIP, repository.getRenderMode("android.widget.LinearLayout"));
+        assertEquals(RenderMode.ALONE, repository.getRenderMode("android.widget.TabHost"));
     }
 }

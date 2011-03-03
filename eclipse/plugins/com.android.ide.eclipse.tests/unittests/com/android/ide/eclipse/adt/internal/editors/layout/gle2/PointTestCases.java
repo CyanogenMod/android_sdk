@@ -29,7 +29,7 @@ import junit.framework.TestCase;
  * Common utilities for the point tests {@link LayoutPointTest} and
  * {@link ControlPointTest}
  */
-public abstract class PointTestCases extends TestCase {
+public class PointTestCases extends TestCase {
     LayoutCanvas mCanvas = new TestLayoutCanvas();
 
     protected MouseEvent canvasMouseEvent(int x, int y, int stateMask) {

@@ -44,13 +44,17 @@ public class LayoutConstants {
     public static final String GALLERY = "Gallery";                     //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                  //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";              //$NON-NLS-1$
+    public static final String RADIO_BUTTON = "RadioButton";            //$NON-NLS-1$
+    public static final String RADIO_GROUP = "RadioGroup";              //$NON-NLS-1$
     public static final String EXPANDABLE_LIST_VIEW = "ExpandableListView";//$NON-NLS-1$
+    public static final String GESTURE_OVERLAY_VIEW = "GestureOverlayView";//$NON-NLS-1$
 
     public static final String ATTR_TEXT = "text";                      //$NON-NLS-1$
     public static final String ATTR_ID = "id";                          //$NON-NLS-1$
     public static final String ATTR_HANDLE = "handle";                  //$NON-NLS-1$
     public static final String ATTR_CONTENT = "content";                //$NON-NLS-1$
     public static final String ATTR_CHECKED = "checked";                //$NON-NLS-1$
+    public static final String ATTR_BACKGROUND = "background";          //$NON-NLS-1$
 
     public static final String ATTR_LAYOUT_PREFIX = "layout_";          //$NON-NLS-1$
     public static final String ATTR_LAYOUT_HEIGHT = "layout_height";    //$NON-NLS-1$
@@ -64,10 +68,16 @@ public class LayoutConstants {
     public static final String ATTR_LAYOUT_MARGIN_TOP = "layout_marginTop";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MARGIN_BOTTOM = "layout_marginBottom";  //$NON-NLS-1$
 
+    public static final String ATTR_LAYOUT_ALIGN_LEFT = "layout_alignLeft";        //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_RIGHT = "layout_alignRight";      //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_TOP = "layout_alignTop";          //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_BOTTOM = "layout_alignBottom";    //$NON-NLS-1$
+
     public static final String ATTR_LAYOUT_ALIGN_PARENT_TOP = "layout_alignParentTop"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_BOTTOM = "layout_alignParentBottom"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_LEFT = "layout_alignParentLeft";//$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_RIGHT = "layout_alignParentRight";   //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING = "layout_alignWithParentMissing"; //$NON-NLS-1$
 
     public static final String ATTR_LAYOUT_ALIGN_BASELINE = "layout_alignBaseline"; //$NON-NLS-1$
 
@@ -107,6 +117,21 @@ public class LayoutConstants {
     public static final String VALUE_ABOVE = "above";                            //$NON-NLS-1$
     public static final String VALUE_ALIGN_WITH_PARENT_MISSING =
         "alignWithParentMissing"; //$NON-NLS-1$
+
+    // Gravity values. These have the GRAVITY_ prefix in front of value because we already
+    // have VALUE_CENTER_HORIZONTAL defined for layouts, and its definition conflicts
+    // (centerHorizontal versus center_horizontal)
+    public static final String GRAVITY_VALUE_ = "center";                             //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_CENTER = "center";                       //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_RIGHT = "right";                         //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_LEFT = "left";                           //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_BOTTOM = "bottom";                       //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_TOP = "top";                             //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_FILL_HORIZONTAL = "fill_horizontal";     //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_FILL_VERTICAL = "fill_vertical";         //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_CENTER_HORIZONTAL = "center_horizontal"; //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_CENTER_VERTICAL = "center_vertical";     //$NON-NLS-1$
+    public static final String GRAVITY_VALUE_FILL = "fill";                           //$NON-NLS-1$
 
     /** The default prefix used for the {@link #ANDROID_URI} name space */
     public static final String ANDROID_NS_PREFIX = "android"; //$NON-NLS-1$
@@ -152,6 +177,12 @@ public class LayoutConstants {
 
     /** The fully qualified class name of an AdapterView */
     public static final String FQCN_ADAPTER_VIEW = "android.widget.AdapterView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a GestureOverlayView */
+    public static final String FQCN_GESTURE_OVERLAY_VIEW = "android.gesture.GestureOverlayView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a RadioGroup */
+    public static final String FQCN_RADIO_GROUP = "android.widgets.RadioGroup";  //$NON-NLS-1$
 
     public static final String ATTR_SRC = "src"; //$NON-NLS-1$
 

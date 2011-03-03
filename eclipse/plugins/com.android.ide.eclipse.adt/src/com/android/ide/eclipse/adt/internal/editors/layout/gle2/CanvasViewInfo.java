@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
 import com.android.ide.common.api.Rect;
@@ -352,7 +353,7 @@ public class CanvasViewInfo implements IPropertySource {
         // root as well (such that the whole layout canvas does not highlight as part of hovers
         // etc)
         if (mParent != null
-                && mParent.mName.endsWith("GestureOverlayView") //$NON-NLS-1$
+                && mParent.mName.endsWith(GESTURE_OVERLAY_VIEW)
                 && mParent.isRoot()) {
             return true;
         }
