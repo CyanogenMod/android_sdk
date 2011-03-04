@@ -476,9 +476,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
             String nsKeyword = nsPrefix == null ? keyword : (nsPrefix + keyword);
 
-            if (keyword.startsWith(wordPrefix) ||
-                    (nsPrefix != null && keyword.startsWith(nsPrefix)) ||
-                    (nsPrefix != null && nsKeyword.startsWith(wordPrefix))) {
+            if (startsWith(keyword, wordPrefix) ||
+                    (nsPrefix != null && startsWith(keyword, nsPrefix)) ||
+                    (nsPrefix != null && startsWith(nsKeyword, wordPrefix))) {
                 if (nsPrefix != null) {
                     keyword = nsPrefix + keyword;
                 }
@@ -532,6 +532,31 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
+    }
+
+    /**
+     * Returns true if the given word starts with the given prefix. The comparison is not
+     * case sensitive.
+     *
+     * @param word the word to test
+     * @param prefix the prefix the word should start with
+     * @return true if the given word starts with the given prefix
+     */
+    static boolean startsWith(String word, String prefix) {
+        int prefixLength = prefix.length();
+        int wordLength = word.length();
+        if (wordLength < prefixLength) {
+            return false;
+        }
+
+        for (int i = 0; i < prefixLength; i++) {
+            if (Character.toLowerCase(prefix.charAt(i))
+                    != Character.toLowerCase(word.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
