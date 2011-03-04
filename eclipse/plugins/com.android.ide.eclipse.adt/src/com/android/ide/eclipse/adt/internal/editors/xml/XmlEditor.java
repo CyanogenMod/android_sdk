@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.xml;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.FirstElementParser;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -30,6 +30,7 @@ import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
@@ -73,9 +74,15 @@ public class XmlEditor extends AndroidXmlEditor {
      * @return True if the {@link XmlEditor} can handle that file.
      */
     public static boolean canHandleFile(IFile file) {
+        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+            AdtPlugin.log(IStatus.INFO, "canHandleFile(%1$s)", file.getFullPath().toOSString());
+        }
         // we need the target of the file's project to access the descriptors.
         IProject project = file.getProject();
         IAndroidTarget target = Sdk.getCurrent().getTarget(project);
+        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+            AdtPlugin.log(IStatus.INFO, "   target=%1$s", target);
+        }
         if (target != null) {
             // Note: the target data can be null when an SDK is not finished loading yet.
             // We can potentially arrive here when Eclipse is started with a file previously
@@ -85,9 +92,16 @@ public class XmlEditor extends AndroidXmlEditor {
             FirstElementParser.Result result = FirstElementParser.parse(
                     file.getLocation().toOSString(),
                     SdkConstants.NS_RESOURCES);
+            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(IStatus.INFO, "   data=%1$s, result=%2$s", data, result);
+            }
 
             if (result != null && data != null) {
                 String name = result.getElement();
+                if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                    AdtPlugin.log(IStatus.INFO, "   name=%1$s, xmlnsprefix=%2$s", name,
+                        result.getXmlnsPrefix());
+                }
                 if (name != null && result.getXmlnsPrefix() != null) {
                     DocumentDescriptor desc = data.getXmlDescriptors().getDescriptor();
                     for (ElementDescriptor elem : desc.getChildren()) {
@@ -98,6 +112,10 @@ public class XmlEditor extends AndroidXmlEditor {
                     }
                 }
             }
+        }
+
+        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+            AdtPlugin.log(IStatus.INFO, "   File cannot be handled");
         }
 
         return false;
