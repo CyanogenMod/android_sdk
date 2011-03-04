@@ -41,6 +41,7 @@ public class LayoutConstants {
     public static final String TABLE_LAYOUT = "TableLayout";            //$NON-NLS-1$
     public static final String TABLE_ROW = "TableRow";                  //$NON-NLS-1$
     public static final String LIST_VIEW = "ListView";                  //$NON-NLS-1$
+    public static final String EDIT_TEXT = "EditText";                  //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                     //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                  //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";              //$NON-NLS-1$
@@ -134,7 +135,9 @@ public class LayoutConstants {
     public static final String GRAVITY_VALUE_FILL = "fill";                           //$NON-NLS-1$
 
     /** The default prefix used for the {@link #ANDROID_URI} name space */
-    public static final String ANDROID_NS_PREFIX = "android"; //$NON-NLS-1$
+    public static final String ANDROID_NS_NAME = "android"; //$NON-NLS-1$
+    /** The default prefix used for the {@link #ANDROID_URI} name space including the colon  */
+    public static final String ANDROID_NS_NAME_PREFIX = "android:"; //$NON-NLS-1$
 
     /**
      * Namespace for the Android resource XML, i.e.

@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -200,7 +202,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
         UiElementNode uiNode = getUiParent();
         AndroidXmlEditor editor = uiNode.getEditor();
 
-        if (prefix == null || prefix.indexOf("android:") < 0) {                 //$NON-NLS-1$
+        if (prefix == null || !prefix.contains(ANDROID_NS_NAME_PREFIX)) {
             IProject project = editor.getProject();
             if (project != null) {
                 // get the resource repository for this project and the system resources.
@@ -257,7 +259,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 }
 
                 if (isSystem) {
-                    sb.append("android:");                                  //$NON-NLS-1$
+                    sb.append(ANDROID_NS_NAME_PREFIX);
                 }
 
                 sb.append(typeName).append('/');

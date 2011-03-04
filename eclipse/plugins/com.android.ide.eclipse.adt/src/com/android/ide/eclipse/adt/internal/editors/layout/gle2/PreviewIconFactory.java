@@ -33,6 +33,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
@@ -41,6 +42,7 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.RGB;
 import org.w3c.dom.Attr;
@@ -236,7 +238,7 @@ public class PreviewIconFactory {
                 // Important to get these sizes large enough for clients that don't support
                 // RenderMode.FULL_EXPAND such as 1.6
                 int width = 200;
-                int height = 2000;
+                int height = documentElement.getChildNodes().getLength() == 1 ? 400 : 1600;
                 Set<UiElementNode> expandNodes = Collections.<UiElementNode>emptySet();
                 RenderingMode renderingMode = RenderingMode.FULL_EXPAND;
 
@@ -308,6 +310,13 @@ public class PreviewIconFactory {
                                 }
                             }
                         }
+                    }
+                } else {
+                    if (session.getResult().getException() != null) {
+                        AdtPlugin.log(session.getResult().getException(),
+                                session.getResult().getErrorMessage());
+                    } else if (session.getResult().getErrorMessage() != null) {
+                        AdtPlugin.log(IStatus.WARNING, session.getResult().getErrorMessage());
                     }
                 }
 
@@ -488,6 +497,19 @@ public class PreviewIconFactory {
     }
 
     private String getFileName(ElementDescriptor descriptor) {
+        if (descriptor instanceof PaletteMetadataDescriptor) {
+            PaletteMetadataDescriptor pmd = (PaletteMetadataDescriptor) descriptor;
+            StringBuilder sb = new StringBuilder();
+            String name = pmd.getUiName();
+            // Strip out whitespace, parentheses, etc.
+            for (int i = 0, n = name.length(); i < n; i++) {
+                char c = name.charAt(i);
+                if (Character.isLetter(c)) {
+                    sb.append(c);
+                }
+            }
+            return sb.toString() + DOT_PNG;
+        }
         return descriptor.getUiName() + DOT_PNG;
     }
 
@@ -539,7 +561,7 @@ public class PreviewIconFactory {
             if (themeName.startsWith(themeNamePrefix)) {
                 themeName = themeName.substring(themeNamePrefix.length());
             }
-            String dirName = String.format("palette-preview-r10-%s-%s-%s", cleanup(targetName),
+            String dirName = String.format("palette-preview-r11-%s-%s-%s", cleanup(targetName),
                     cleanup(themeName), cleanup(mPalette.getCurrentDevice()));
             IPath dirPath = pluginState.append(dirName);
 

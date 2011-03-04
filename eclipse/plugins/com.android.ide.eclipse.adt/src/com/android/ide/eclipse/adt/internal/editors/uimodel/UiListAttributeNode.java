@@ -140,7 +140,7 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
         // FrameworkResourceManager expects a specific prefix for the attribute.
         String nsPrefix = "";
         if (SdkConstants.NS_RESOURCES.equals(descriptor.getNamespaceUri())) {
-            nsPrefix = LayoutConstants.ANDROID_NS_PREFIX + ':';
+            nsPrefix = LayoutConstants.ANDROID_NS_NAME + ':';
         } else if (XmlnsAttributeDescriptor.XMLNS_URI.equals(descriptor.getNamespaceUri())) {
             nsPrefix = XmlnsAttributeDescriptor.XMLNS_COLON;
         }

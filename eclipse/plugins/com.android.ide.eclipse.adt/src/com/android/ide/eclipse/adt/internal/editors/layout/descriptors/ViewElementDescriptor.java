@@ -47,13 +47,13 @@ import org.eclipse.swt.graphics.Image;
  *
  * @see ElementDescriptor
  */
-public final class ViewElementDescriptor extends ElementDescriptor {
+public class ViewElementDescriptor extends ElementDescriptor {
 
     /** The full class name (FQCN) of this view. */
-    private String mFullClassName;
+    private final String mFullClassName;
 
     /** The list of layout attributes. Can be empty but not null. */
-    private AttributeDescriptor[] mLayoutAttributes;
+    private final AttributeDescriptor[] mLayoutAttributes;
 
     /** The super-class descriptor. Can be null. */
     private ViewElementDescriptor mSuperClassDesc;
@@ -100,6 +100,7 @@ public final class ViewElementDescriptor extends ElementDescriptor {
     public ViewElementDescriptor(String xml_name, String fullClassName) {
         super(xml_name);
         mFullClassName = fullClassName;
+        mLayoutAttributes = null;
     }
 
     /**

@@ -40,6 +40,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configu
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
@@ -50,7 +51,6 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
 import org.eclipse.jface.action.Action;
@@ -437,7 +437,14 @@ public class PaletteControl extends Composite {
             categoryToItems.put(category, categoryItems);
         }
 
-        if (expandedCategories == null && headers.size() > 0) {
+        // Set the categories to expand the first item if
+        //   (1) we don't have a previously selected category, or
+        //   (2) there's just one category anyway, or
+        //   (3) the set of categories have changed so our previously selected category
+        //       doesn't exist anymore (can happen when you toggle "Show Categories")
+        if ((expandedCategories == null && headers.size() > 0) || headers.size() == 1 ||
+                (expandedCategories != null && expandedCategories.size() >= 1
+                        && !headers.contains(expandedCategories.iterator().next()))) {
             // Expand the first category if we don't have a previous selection (e.g. refresh)
             expandedCategories = Collections.singleton(headers.get(0));
         }
@@ -649,6 +656,10 @@ public class PaletteControl extends Composite {
                     null   /* parentFqcn */,
                     bounds /* bounds */,
                     null   /* parentBounds */);
+            if (mDesc instanceof PaletteMetadataDescriptor) {
+                PaletteMetadataDescriptor pm = (PaletteMetadataDescriptor) mDesc;
+                pm.initializeNew(se);
+            }
             mElements = new SimpleElement[] { se };
 
             // Register this as the current dragged data
@@ -784,14 +795,20 @@ public class PaletteControl extends Composite {
             attr.setValue(ANDROID_URI);
             element.getAttributes().setNamedItemNS(attr);
 
-            element.setAttributeNS(SdkConstants.NS_RESOURCES,
+            element.setAttributeNS(ANDROID_URI,
                     ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
-            element.setAttributeNS(SdkConstants.NS_RESOURCES,
+            element.setAttributeNS(ANDROID_URI,
                     ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
 
             // This doesn't apply to all, but doesn't seem to cause harm and makes for a
             // better experience with text-oriented views like buttons and texts
-            element.setAttributeNS(SdkConstants.NS_RESOURCES, ATTR_TEXT, mDesc.getUiName());
+            element.setAttributeNS(ANDROID_URI, ATTR_TEXT, mDesc.getUiName());
+
+            // Is this a palette variation?
+            if (mDesc instanceof PaletteMetadataDescriptor) {
+                PaletteMetadataDescriptor pm = (PaletteMetadataDescriptor) mDesc;
+                pm.initializeNew(element);
+            }
 
             document.appendChild(element);
 

@@ -1283,7 +1283,7 @@ public class LayoutCanvas extends Canvas {
 
                 // A root node requires the Android XMLNS
                 uiNew.setAttributeValue(
-                        LayoutConstants.ANDROID_NS_PREFIX,
+                        LayoutConstants.ANDROID_NS_NAME,
                         XmlnsAttributeDescriptor.XMLNS_URI,
                         SdkConstants.NS_RESOURCES,
                         true /*override*/);

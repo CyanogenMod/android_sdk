@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
+import static com.android.ide.common.layout.LayoutConstants.EDIT_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_ADAPTER_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.GALLERY;
@@ -677,49 +678,53 @@ public final class DescriptorsUtils {
      * <p/>
      * This does not override attributes which are not empty.
      */
-    public static void setDefaultLayoutAttributes(UiElementNode ui_node, boolean updateLayout) {
+    public static void setDefaultLayoutAttributes(UiElementNode node, boolean updateLayout) {
         // if this ui_node is a layout and we're adding it to a document, use match_parent for
         // both W/H. Otherwise default to wrap_layout.
-        boolean fill = ui_node.getDescriptor().hasChildren() &&
-                       ui_node.getUiParent() instanceof UiDocumentNode;
-        ui_node.setAttributeValue(
+        ElementDescriptor descriptor = node.getDescriptor();
+        boolean fill = descriptor.hasChildren() &&
+                       node.getUiParent() instanceof UiDocumentNode;
+        node.setAttributeValue(
                 ATTR_LAYOUT_WIDTH,
                 SdkConstants.NS_RESOURCES,
                 fill ? VALUE_FILL_PARENT : VALUE_WRAP_CONTENT,
                 false /* override */);
-        ui_node.setAttributeValue(
+        node.setAttributeValue(
                 ATTR_LAYOUT_HEIGHT,
                 SdkConstants.NS_RESOURCES,
                 fill ? VALUE_FILL_PARENT : VALUE_WRAP_CONTENT,
                 false /* override */);
 
-        String widget_id = getFreeWidgetId(ui_node);
-        if (widget_id != null) {
-            ui_node.setAttributeValue(
+        String freeId = getFreeWidgetId(node);
+        if (freeId != null) {
+            node.setAttributeValue(
                     ATTR_ID,
                     SdkConstants.NS_RESOURCES,
-                    widget_id,
+                    freeId,
                     false /* override */);
         }
 
-        String widget_type = ui_node.getDescriptor().getUiName();
-        ui_node.setAttributeValue(
+        // Don't set default text value into edit texts - they typically start out blank
+        if (!descriptor.getXmlLocalName().equals(EDIT_TEXT)) {
+            String type = descriptor.getUiName();
+            node.setAttributeValue(
                 ATTR_TEXT,
                 SdkConstants.NS_RESOURCES,
-                widget_type,
+                type,
                 false /*override*/);
+        }
 
         if (updateLayout) {
-            UiElementNode ui_parent = ui_node.getUiParent();
-            if (ui_parent != null &&
-                    ui_parent.getDescriptor().getXmlLocalName().equals(
+            UiElementNode parent = node.getUiParent();
+            if (parent != null &&
+                    parent.getDescriptor().getXmlLocalName().equals(
                             RELATIVE_LAYOUT)) {
-                UiElementNode ui_previous = ui_node.getUiPreviousSibling();
-                if (ui_previous != null) {
-                    String id = ui_previous.getAttributeValue(ATTR_ID);
+                UiElementNode previous = node.getUiPreviousSibling();
+                if (previous != null) {
+                    String id = previous.getAttributeValue(ATTR_ID);
                     if (id != null && id.length() > 0) {
                         id = id.replace("@+", "@");                     //$NON-NLS-1$ //$NON-NLS-2$
-                        ui_node.setAttributeValue(
+                        node.setAttributeValue(
                                 ATTR_LAYOUT_BELOW,
                                 SdkConstants.NS_RESOURCES,
                                 id,

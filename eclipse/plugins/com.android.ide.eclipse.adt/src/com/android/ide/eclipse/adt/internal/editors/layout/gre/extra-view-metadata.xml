@@ -15,9 +15,12 @@
 <!ATTLIST category name CDATA #IMPLIED>
 <!--- Each view is identified by its full class name and has various
       other attributes such as a fill preference  -->
-<!ELEMENT view EMPTY>
+<!ELEMENT view (view)*>
 <!ATTLIST view
-    class CDATA #REQUIRED
+    class CDATA #IMPLIED
+    name CDATA #IMPLIED
+    init CDATA #IMPLIED
+    icon CDATA #IMPLIED
     relatedTo CDATA #IMPLIED
     skip (true|false) "false"
     render (alone|skip|normal) "normal"
@@ -35,11 +38,11 @@
             class="android.widget.Button"
             relatedTo="ImageButton" />
         <view
-            class="android.widget.CheckBox"
-            relatedTo="RadioButton,ToggleButton,CheckedTextView" />
-        <view
             class="android.widget.ToggleButton"
             relatedTo="CheckBox" />
+        <view
+            class="android.widget.CheckBox"
+            relatedTo="RadioButton,ToggleButton,CheckedTextView" />
         <view
             class="android.widget.RadioButton"
             relatedTo="CheckBox,ToggleButton" />
@@ -55,33 +58,95 @@
             relatedTo="Spinner,TextView,AutoCompleteTextView,MultiAutoCompleteTextView"
             fill="width_in_vertical" />
         <view
-            class="android.widget.AutoCompleteTextView"
-            relatedTo="EditText,MultiAutoCompleteTextView"
-            fill="width_in_vertical" />
-        <view
-            class="android.widget.MultiAutoCompleteTextView"
-            relatedTo="EditText,AutoCompleteTextView"
-            fill="width_in_vertical" />
-        <view
             class="android.widget.ProgressBar"
-            relatedTo="SeekBar" />
+            relatedTo="SeekBar"
+            name="ProgressBar (Large)"
+            init="style=?android:attr/progressBarStyleLarge">
+            <view
+                name="ProgressBar (Normal)"
+                init="" />
+            <view
+                name="ProgressBar (Small)"
+                init="style=?android:attr/progressBarStyleSmall" />
+            <view
+                name="ProgressBar (Horizontal)"
+                init="style=?android:attr/progressBarStyleHorizontal" />
+        </view>
+        <view
+            class="android.widget.SeekBar"
+            relatedTo="ProgressBar"
+            fill="width_in_vertical" />
         <view
             class="android.widget.QuickContactBadge" />
         <view
             class="android.widget.RadioGroup" />
         <view
             class="android.widget.RatingBar" />
+    </category>
+    <category
+        name="Text Fields">
         <view
-            class="android.widget.SeekBar"
-            relatedTo="ProgressBar"
+            class="android.widget.EditText"
+            name="Plain Text"
+            init=""
+            relatedTo="Spinner,TextView,AutoCompleteTextView,MultiAutoCompleteTextView"
+            fill="width_in_vertical">
+            <view
+                name="Person Name"
+                init="android:inputType=textPersonName" />
+            <view
+                name="Password"
+                init="android:inputType=textPassword" />
+            <view
+                name="Password (Numeric)"
+                init="android:inputType=numberPassword" />
+            <view
+                name="E-mail"
+                init="android:inputType=textEmailAddress" />
+            <view
+                name="Phone"
+                init="android:inputType=phone" />
+            <view
+                name="Postal Address"
+                init="android:inputType=textPostalAddress" />
+            <view
+                name="Multiline Text"
+                init="android:inputType=textMultiLine" />
+            <view
+                name="Time"
+                init="android:inputType=time" />
+            <view
+                name="Date"
+                init="android:inputType=date" />
+            <view
+                name="Number"
+                init="android:inputType=number" />
+            <view
+                name="Number (Signed)"
+                init="android:inputType=numberSigned" />
+            <view
+                name="Number (Decimal)"
+                init="android:inputType=numberDecimal" />
+        </view>
+        <view
+            class="android.widget.AutoCompleteTextView"
+            fill="width_in_vertical" />
+        <view
+            class="android.widget.MultiAutoCompleteTextView"
             fill="width_in_vertical" />
     </category>
     <category
         name="Layouts">
         <view
             class="android.widget.LinearLayout"
+            name="LinearLayout (Vertical)"
+            init="android:orientation=vertical"
+            icon="VerticalLinearLayout"
             fill="opposite"
-            render="skip" />
+            render="skip">
+            <view
+                name="LinearLayout (Horizontal)" />
+        </view>
         <view
             class="android.widget.RelativeLayout"
             fill="opposite"

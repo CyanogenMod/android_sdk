@@ -17,10 +17,13 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.DRAWABLE_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static org.eclipse.jface.viewers.StyledString.QUALIFIER_STYLER;
 
 import com.android.annotations.VisibleForTesting;
@@ -468,7 +471,20 @@ public class OutlinePage extends ContentOutlinePage
                 UiElementNode node = (UiElementNode) element;
                 ElementDescriptor desc = node.getDescriptor();
                 if (desc != null) {
-                    Image img = desc.getIcon();
+                    Image img = null;
+                    // Special case for the common case of vertical linear layouts:
+                    // show vertical linear icon (the default icon shows horizontal orientation)
+                    if (desc.getUiName().equals(LINEAR_LAYOUT)) {
+                        Element e = (Element) node.getXmlNode();
+                        if (VALUE_VERTICAL.equals(e.getAttributeNS(ANDROID_URI,
+                                ATTR_ORIENTATION))) {
+                            IconFactory factory = IconFactory.getInstance();
+                            img = factory.getIcon("VerticalLinearLayout"); //$NON-NLS-1$
+                        }
+                    }
+                    if (img == null) {
+                        img = desc.getIcon();
+                    }
                     if (img != null) {
                         if (node.hasError()) {
                             return new ErrorImageComposite(img).createImage();
