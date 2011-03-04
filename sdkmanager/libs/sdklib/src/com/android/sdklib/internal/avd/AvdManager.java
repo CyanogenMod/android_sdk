@@ -1402,7 +1402,7 @@ public final class AvdManager {
         }
 
         // get abi type
-        String abiType = properties.get(AVD_INI_ABI_TYPE);
+        String abiType = properties == null ? null : properties.get(AVD_INI_ABI_TYPE);
         // for the avds created previously without enhancement, i.e. They are created based
         // on previous API Levels. They are supposed to have ARM processor type
         if (abiType == null) {
