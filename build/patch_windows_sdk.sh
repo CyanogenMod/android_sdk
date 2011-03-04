@@ -22,7 +22,7 @@ TOPDIR=${TOPDIR:-$3}
 # Remove obsolete stuff from tools
 TOOLS=$TEMP_SDK_DIR/tools
 LIB=$TEMP_SDK_DIR/tools/lib
-rm $V $TOOLS/{android,apkbuilder,ddms,draw9patch,emulator}
+rm $V $TOOLS/{android,apkbuilder,ddms,draw9patch,emulator-arm,emulator-x86}
 rm $V $TOOLS/{hierarchyviewer,layoutopt,mksdcard,traceview,monkeyrunner}
 rm $V $TOOLS/proguard/bin/*.sh
 
