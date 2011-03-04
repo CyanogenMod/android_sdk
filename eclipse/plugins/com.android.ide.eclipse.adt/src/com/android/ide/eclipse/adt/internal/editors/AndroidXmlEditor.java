@@ -612,6 +612,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                     IconFactory.getInstance().getIcon("editor_page_source")); //$NON-NLS-1$
 
             if (!(mTextEditor.getTextViewer().getDocument() instanceof IStructuredDocument)) {
+                if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                    AdtPlugin.log(IStatus.ERROR, "Unexpected document class: %1$s, file=%2$s",
+                            mTextEditor.getTextViewer().getDocument() != null ?
+                                    mTextEditor.getTextViewer().getDocument().getClass() :
+                                    "null",
+                                    getEditorInput()
+                            );
+                }
                 Status status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                         "Error opening the Android XML editor. Is the document an XML file?");
                 throw new RuntimeException("Android XML Editor Error", new CoreException(status));
