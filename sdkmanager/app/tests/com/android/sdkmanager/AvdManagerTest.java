@@ -59,8 +59,18 @@ public class AvdManagerTest extends TestCase {
 
     public void testCreateAvdWithoutSnapshot() {
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
-                null, null, null, false, false, mLog);
+                mAvdFolder,
+                this.getName(),
+                mTarget,
+                SdkConstants.ABI_ARMEABI,
+                null,   // skinName
+                null,   // sdName
+                null,   // properties
+                false,  // createSnapshot
+                false,  // removePrevious
+                false,  // editExisting
+                mLog);
+
         assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
                 mLog.toString());
         assertTrue("Expected config.ini in " + mAvdFolder,
@@ -78,9 +88,19 @@ public class AvdManagerTest extends TestCase {
     }
 
     public void testCreateAvdWithSnapshot() {
+
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
-                null, null, null, false, true, mLog);
+                mAvdFolder,
+                this.getName(),
+                mTarget,
+                SdkConstants.ABI_ARMEABI,
+                null,   // skinName
+                null,   // sdName
+                null,   // properties
+                true,   // createSnapshot
+                false,  // removePrevious
+                false,  // editExisting
+                mLog);
 
         assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
                 mLog.toString());

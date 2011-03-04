@@ -100,6 +100,7 @@ public final class AvdManager {
      * This property is for UI purposes only. It is not used by the emulator.
      *
      * @see #SDCARD_SIZE_PATTERN
+     * @see #parseSdcardSize(String, String[])
      */
     public final static String AVD_INI_SDCARD_SIZE = "sdcard.size"; //$NON-NLS-1$
     /**
@@ -145,17 +146,26 @@ public final class AvdManager {
 
     /**
      * Pattern for matching SD Card sizes, e.g. "4K" or "16M".
+     * Callers should use {@link #parseSdcardSize(String, String[])} instead of using this directly.
      */
-    public final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("(\\d+)([KMG])"); //$NON-NLS-1$
+    private final static Pattern SDCARD_SIZE_PATTERN = Pattern.compile("(\\d+)([KMG])"); //$NON-NLS-1$
 
     /**
      * Minimal size of an SDCard image file in bytes. Currently 9 MiB.
      */
+
     public static final long SDCARD_MIN_BYTE_SIZE = 9<<20;
     /**
      * Maximal size of an SDCard image file in bytes. Currently 1023 GiB.
      */
     public static final long SDCARD_MAX_BYTE_SIZE = 1023L<<30;
+
+    /** The sdcard string represents a valid number but the size is outside of the allowed range. */
+    public final static int SDCARD_SIZE_NOT_IN_RANGE = 0;
+    /** The sdcard string looks like a size number+suffix but the number failed to decode. */
+    public final static int SDCARD_SIZE_INVALID = -1;
+    /** The sdcard string doesn't look like a size, it might be a path instead. */
+    public final static int SDCARD_NOT_SIZE_PATTERN = -2;
 
     /** Regex used to validate characters that compose an AVD name. */
     public final static Pattern RE_AVD_NAME = Pattern.compile("[a-zA-Z0-9._-]+"); //$NON-NLS-1$
@@ -487,6 +497,71 @@ public final class AvdManager {
     }
 
     /**
+     * Parse the sdcard string to decode the size.
+     * Returns:
+     * <ul>
+     * <li> The size in bytes > 0 if the sdcard string is a valid size in the allowed range.
+     * <li> {@link #SDCARD_SIZE_NOT_IN_RANGE} (0)
+     *          if the sdcard string is a valid size NOT in the allowed range.
+     * <li> {@link #SDCARD_SIZE_INVALID} (-1)
+     *          if the sdcard string is number that fails to parse correctly.
+     * <li> {@link #SDCARD_NOT_SIZE_PATTERN} (-2)
+     *          if the sdcard string is not a number, in which case it's probably a file path.
+     * </ul>
+     *
+     * @param sdcard The sdcard string, which can be a file path, a size string or something else.
+     * @param parsedStrings If non-null, an array of 2 strings. The first string will be
+     *  filled with the parsed numeric size and the second one will be filled with the
+     *  parsed suffix. This is filled even if the returned size is deemed out of range or
+     *  failed to parse. The values are null if the sdcard is not a size pattern.
+     * @return A size in byte if > 0, or {@link #SDCARD_SIZE_NOT_IN_RANGE},
+     *  {@link #SDCARD_SIZE_INVALID} or {@link #SDCARD_NOT_SIZE_PATTERN} as error codes.
+     */
+    public static long parseSdcardSize(String sdcard, String[] parsedStrings) {
+
+        if (parsedStrings != null) {
+            assert parsedStrings.length == 2;
+            parsedStrings[0] = null;
+            parsedStrings[1] = null;
+        }
+
+        Matcher m = SDCARD_SIZE_PATTERN.matcher(sdcard);
+        if (m.matches()) {
+            if (parsedStrings != null) {
+                assert parsedStrings.length == 2;
+                parsedStrings[0] = m.group(1);
+                parsedStrings[1] = m.group(2);
+            }
+
+            // get the sdcard values for checks
+            try {
+                long sdcardSize = Long.parseLong(m.group(1));
+
+                String sdcardSizeModifier = m.group(2);
+                if ("K".equals(sdcardSizeModifier)) {           //$NON-NLS-1$
+                    sdcardSize <<= 10;
+                } else if ("M".equals(sdcardSizeModifier)) {    //$NON-NLS-1$
+                    sdcardSize <<= 20;
+                } else if ("G".equals(sdcardSizeModifier)) {    //$NON-NLS-1$
+                    sdcardSize <<= 30;
+                }
+
+                if (sdcardSize < SDCARD_MIN_BYTE_SIZE ||
+                        sdcardSize > SDCARD_MAX_BYTE_SIZE) {
+                    return SDCARD_SIZE_NOT_IN_RANGE;
+                }
+
+                return sdcardSize;
+            } catch (NumberFormatException e) {
+                // This could happen if the number is too large to fit in a long.
+                return SDCARD_SIZE_INVALID;
+            }
+        }
+
+        return SDCARD_NOT_SIZE_PATTERN;
+    }
+
+    /**
      * Returns all the existing AVDs.
      * @return a newly allocated array containing all the AVDs.
      */
@@ -636,22 +711,6 @@ public final class AvdManager {
     }
 
     /**
-     * Creates a new AVD, but with no snapshot.
-     *
-     * See {@link #createAvd(File, String, IAndroidTarget,
-     *                 String, String,
-     *                 Map, boolean, boolean, ISdkLog)}
-     **/
-    @Deprecated
-    public AvdInfo createAvd(File avdFolder, String name, IAndroidTarget target,
-            String abiType, String skinName,
-            String sdcard, Map<String, String> hardwareConfig, boolean removePrevious,
-            ISdkLog log) {
-       return createAvd(avdFolder, name, target, abiType, skinName, sdcard,
-                hardwareConfig, removePrevious, false, log);
-    }
-
-    /**
      * Creates a new AVD. It is expected that there is no existing AVD with this name already.
      *
      * @param avdFolder the data folder for the AVD. It will be created as needed.
@@ -662,15 +721,26 @@ public final class AvdManager {
      * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to
      *        an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
      * @param hardwareConfig the hardware setup for the AVD. Can be null to use defaults.
-     * @param removePrevious If true remove any previous files.
      * @param createSnapshot If true copy a blank snapshot image into the AVD.
+     * @param removePrevious If true remove any previous files.
+     * @param editExisting If true, edit an existing AVD, changing only the minimum required.
+     *          This won't remove files unless required or unless {@code removePrevious} is set.
      * @param log the log object to receive action logs. Cannot be null.
      * @return The new {@link AvdInfo} in case of success (which has just been added to the
      *         internal list) or null in case of failure.
      */
-    public AvdInfo createAvd(File avdFolder, String name, IAndroidTarget target,
-           String abiType, String skinName, String sdcard, Map<String,String> hardwareConfig,
-           boolean removePrevious, boolean createSnapshot, ISdkLog log){
+    public AvdInfo createAvd(
+            File avdFolder,
+            String name,
+            IAndroidTarget target,
+            String abiType,
+            String skinName,
+            String sdcard,
+            Map<String,String> hardwareConfig,
+            boolean createSnapshot,
+            boolean removePrevious,
+            boolean editExisting,
+            ISdkLog log) {
         if (log == null) {
             throw new IllegalArgumentException("log cannot be null");
         }
@@ -687,8 +757,9 @@ public final class AvdManager {
                     } catch (SecurityException e) {
                         log.error(e, "Failed to delete %1$s", avdFolder.getAbsolutePath());
                     }
-                } else {
-                    // AVD shouldn't already exist if removePrevious is false.
+                } else if (!editExisting) {
+                    // AVD shouldn't already exist if removePrevious is false and
+                    // we're not editing an existing AVD.
                     log.error(null,
                             "Folder %1$s is in the way. Use --force if you want to overwrite.",
                             avdFolder.getAbsolutePath());
@@ -697,6 +768,8 @@ public final class AvdManager {
             } else {
                 // create the AVD folder.
                 avdFolder.mkdir();
+                // We're not editing an existing AVD.
+                editExisting = false;
             }
 
             // actually write the ini file
@@ -742,17 +815,24 @@ public final class AvdManager {
 
             // Create the snapshot file
             if (createSnapshot) {
-                String toolsLib = mSdkManager.getLocation() + File.separator
-                        + SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER;
-                File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
-                if (snapshotBlank.exists() == false) {
-                   log.error(null, "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
-                            SNAPSHOTS_IMG, toolsLib);
-                    needCleanup = true;
-                    return null;
-                }
                 File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
-                copyImageFile(snapshotBlank, snapshotDest);
+                if (snapshotDest.isFile() && editExisting) {
+                    log.printf("Snapshot image already present, was not changed.");
+
+                } else {
+                    String toolsLib = mSdkManager.getLocation() + File.separator
+                                      + SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER;
+                    File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
+                    if (snapshotBlank.exists() == false) {
+                        log.error(null,
+                                "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
+                                SNAPSHOTS_IMG, toolsLib);
+                        needCleanup = true;
+                        return null;
+                    }
+
+                    copyImageFile(snapshotBlank, snapshotDest);
+                }
                 values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
             }
 
@@ -785,46 +865,48 @@ public final class AvdManager {
             }
 
             if (sdcard != null && sdcard.length() > 0) {
-                File sdcardFile = new File(sdcard);
-                if (sdcardFile.isFile()) {
-                    // sdcard value is an external sdcard, so we put its path into the config.ini
-                    values.put(AVD_INI_SDCARD_PATH, sdcard);
+                // Sdcard is possibly a size. In that case we create a file called 'sdcard.img'
+                // in the AVD folder, and do not put any value in config.ini.
+
+                long sdcardSize = parseSdcardSize(sdcard, null/*parsedStrings*/);
+
+                if (sdcardSize == SDCARD_SIZE_NOT_IN_RANGE) {
+                    log.error(null, "SD Card size must be in the range 9 MiB..1023 GiB.");
+                    needCleanup = true;
+                    return null;
+
+                } else if (sdcardSize == SDCARD_SIZE_INVALID) {
+                    log.error(null, "Unable to parse SD Card size");
+                    needCleanup = true;
+                    return null;
+
+                } else if (sdcardSize == SDCARD_NOT_SIZE_PATTERN) {
+                    File sdcardFile = new File(sdcard);
+                    if (sdcardFile.isFile()) {
+                        // sdcard value is an external sdcard, so we put its path into the config.ini
+                        values.put(AVD_INI_SDCARD_PATH, sdcard);
+                    } else {
+                        log.error(null, "'%1$s' is not recognized as a valid sdcard value.\n"
+                                + "Value should be:\n" + "1. path to an sdcard.\n"
+                                + "2. size of the sdcard to create: <size>[K|M]", sdcard);
+                        needCleanup = true;
+                        return null;
+                    }
                 } else {
-                    // Sdcard is possibly a size. In that case we create a file called 'sdcard.img'
-                    // in the AVD folder, and do not put any value in config.ini.
+                    // create the sdcard.
+                    File sdcardFile = new File(avdFolder, SDCARD_IMG);
 
-                    // First, check that it matches the pattern for sdcard size
-                    Matcher m = SDCARD_SIZE_PATTERN.matcher(sdcard);
-                    if (m.matches()) {
-                        // get the sdcard values for checks
-                        try {
-                            long sdcardSize = Long.parseLong(m.group(1));
-
-                            String sdcardSizeModifier = m.group(2);
-                            if ("K".equals(sdcardSizeModifier)) {           //$NON-NLS-1$
-                                sdcardSize <<= 10;
-                            } else if ("M".equals(sdcardSizeModifier)) {    //$NON-NLS-1$
-                                sdcardSize <<= 20;
-                            } else if ("G".equals(sdcardSizeModifier)) {    //$NON-NLS-1$
-                                sdcardSize <<= 30;
-                            }
-
-                            if (sdcardSize < SDCARD_MIN_BYTE_SIZE ||
-                                    sdcardSize > SDCARD_MAX_BYTE_SIZE) {
-                                log.error(null, "SD Card size must be in the range 9 MiB..1023 GiB.");
-                                needCleanup = true;
-                                return null;
-                            }
-                        } catch (NumberFormatException e) {
-                            // this should never happen since the string is validated
-                            // by the regexp
-                            log.error(null, "Unable to parse SD Card size");
-                            needCleanup = true;
-                            return null;
+                    boolean runMkSdcard = true;
+                    if (sdcardFile.exists()) {
+                        if (sdcardFile.length() == sdcardSize && editExisting) {
+                            // There's already an sdcard file with the right size and we're
+                            // not overriding it... so don't remove it.
+                            runMkSdcard = false;
+                            log.printf("SD Card already present with same size, was not changed.");
                         }
+                    }
 
-                        // create the sdcard.
-                        sdcardFile = new File(avdFolder, SDCARD_IMG);
+                    if (runMkSdcard) {
                         String path = sdcardFile.getAbsolutePath();
 
                         // execute mksdcard with the proper parameters.
@@ -845,17 +927,11 @@ public final class AvdManager {
                             return null; // mksdcard output has already been displayed, no need to
                                          // output anything else.
                         }
-
-                        // add a property containing the size of the sdcard for display purpose
-                        // only when the dev does 'android list avd'
-                        values.put(AVD_INI_SDCARD_SIZE, sdcard);
-                    } else {
-                        log.error(null, "'%1$s' is not recognized as a valid sdcard value.\n"
-                                + "Value should be:\n" + "1. path to an sdcard.\n"
-                                + "2. size of the sdcard to create: <size>[K|M]", sdcard);
-                        needCleanup = true;
-                        return null;
                     }
+
+                    // add a property containing the size of the sdcard for display purpose
+                    // only when the dev does 'android list avd'
+                    values.put(AVD_INI_SDCARD_SIZE, sdcard);
                 }
             }
 
@@ -910,11 +986,21 @@ public final class AvdManager {
             StringBuilder report = new StringBuilder();
 
             if (target.isPlatform()) {
-                report.append(String.format("Created AVD '%1$s' based on %2$s",
-                        name, target.getName()));
+                if (editExisting) {
+                    report.append(String.format("Updated AVD '%1$s' based on %2$s",
+                            name, target.getName()));
+                } else {
+                    report.append(String.format("Created AVD '%1$s' based on %2$s",
+                            name, target.getName()));
+                }
             } else {
-                report.append(String.format("Created AVD '%1$s' based on %2$s (%3$s)", name,
-                        target.getName(), target.getVendor()));
+                if (editExisting) {
+                    report.append(String.format("Updated AVD '%1$s' based on %2$s (%3$s)", name,
+                            target.getName(), target.getVendor()));
+                } else {
+                    report.append(String.format("Created AVD '%1$s' based on %2$s (%3$s)", name,
+                            target.getName(), target.getVendor()));
+                }
             }
             report.append(String.format(", %s processor", AvdInfo.getPrettyAbiType(abiType)));
 
@@ -939,14 +1025,14 @@ public final class AvdManager {
             AvdInfo oldAvdInfo = getAvd(name, false /*validAvdOnly*/);
 
             synchronized (mAllAvdList) {
-                if (oldAvdInfo != null && removePrevious) {
+                if (oldAvdInfo != null && (removePrevious || editExisting)) {
                     mAllAvdList.remove(oldAvdInfo);
                 }
                 mAllAvdList.add(newAvdInfo);
                 mValidAvdList = mBrokenAvdList = null;
             }
 
-            if (removePrevious &&
+            if ((removePrevious || editExisting) &&
                     newAvdInfo != null &&
                     oldAvdInfo != null &&
                     !oldAvdInfo.getPath().equals(newAvdInfo.getPath())) {
@@ -1120,14 +1206,18 @@ public final class AvdManager {
             IAndroidTarget target,
             boolean removePrevious)
             throws AndroidLocationException, IOException {
-        HashMap<String, String> values = new HashMap<String, String>();
         File iniFile = AvdInfo.getIniFile(name);
-        if (iniFile.isFile()) {
-            iniFile.delete();
-        } else if (iniFile.isDirectory()) {
-            deleteContentOf(iniFile);
-            iniFile.delete();
+
+        if (removePrevious) {
+            if (iniFile.isFile()) {
+                iniFile.delete();
+            } else if (iniFile.isDirectory()) {
+                deleteContentOf(iniFile);
+                iniFile.delete();
+            }
         }
+
+        HashMap<String, String> values = new HashMap<String, String>();
         values.put(AVD_INFO_PATH, avdFolder.getAbsolutePath());
         values.put(AVD_INFO_TARGET, target.hashString());
         writeIniFile(iniFile, values);

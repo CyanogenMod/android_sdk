@@ -69,8 +69,18 @@ public class MainTest extends TestCase {
         Main main = new Main();
         main.setLogger(mLog);
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
-                null, null, null, false, false, mLog);
+                mAvdFolder,
+                this.getName(),
+                mTarget,
+                SdkConstants.ABI_ARMEABI,
+                null,   // skinName
+                null,   // sdName
+                null,   // properties
+                false,  // createSnapshot
+                false,  // removePrevious
+                false,  // editExisting
+                mLog);
+
         mLog.clear();
         main.displayAvdList(mAvdManager);
         assertEquals(
@@ -86,9 +96,20 @@ public class MainTest extends TestCase {
     public void testDisplayAvdListOfOneSnapshot() {
         Main main = new Main();
         main.setLogger(mLog);
+
         mAvdManager.createAvd(
-                mAvdFolder, this.getName(), mTarget, SdkConstants.ABI_ARMEABI,
-                null, null, null, false, true, mLog);
+                mAvdFolder,
+                this.getName(),
+                mTarget,
+                SdkConstants.ABI_ARMEABI,
+                null,   // skinName
+                null,   // sdName
+                null,   // properties
+                true,  // createSnapshot
+                false,  // removePrevious
+                false,  // editExisting
+                mLog);
+
         mLog.clear();
         main.displayAvdList(mAvdManager);
         assertEquals(

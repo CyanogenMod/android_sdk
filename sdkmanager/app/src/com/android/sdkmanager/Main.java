@@ -985,15 +985,16 @@ public class Main {
             String preferredAbi = SdkConstants.ABI_ARMEABI;
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
-                        avdName,
-                        target,
-                        preferredAbi,
-                        skin,
-                        mSdkCommandLine.getParamSdCard(),
-                        hardwareConfig,
-                        removePrevious,
-                        mSdkCommandLine.getFlagSnapshot(),
-                        mSdkLog);
+                    avdName,
+                    target,
+                    preferredAbi,
+                    skin,
+                    mSdkCommandLine.getParamSdCard(),
+                    hardwareConfig,
+                    mSdkCommandLine.getFlagSnapshot(),
+                    removePrevious,
+                    false, //edit existing
+                    mSdkLog);
 
         } catch (AndroidLocationException e) {
             errorAndExit(e.getMessage());
