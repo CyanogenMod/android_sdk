@@ -96,10 +96,12 @@ public abstract class AttributeDescriptor {
 
     /**
      * Returns an optional icon for the attribute.
+     * This icon is generic, that is all attribute descriptors have the same icon
+     * no matter what they represent.
      *
      * @return An icon for this element or null.
      */
-    public Image getIcon() {
+    public Image getGenericIcon() {
         return IconFactory.getInstance().getIcon(ATTRIBUTE_ICON_FILENAME);
     }
 

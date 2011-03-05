@@ -226,12 +226,52 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
     }
 
     /**
-     * Returns an optional icon for the element.
+     * Returns an icon for the element.
+     * This icon is generic, that is all element descriptors have the same icon
+     * no matter what they represent.
      *
      * @return An icon for this element or null.
+     * @see #getCustomizedIcon()
      */
-    public Image getIcon() {
+    public Image getGenericIcon() {
         return IconFactory.getInstance().getIcon(ELEMENT_ICON_FILENAME);
+    }
+
+    /**
+     * Returns an optional icon for the element, typically to be used in XML form trees.
+     * <p/>
+     * This icon is customized to the given descriptor, that is different elements
+     * will have different icons.
+     * <p/>
+     * By default this tries to return an icon based on the XML name of the element.
+     * If this fails, it tries to return the default Android logo as defined in the
+     * plugin. If all fails, it returns null.
+     *
+     * @return An icon for this element. This is never null.
+     */
+    public Image getCustomizedIcon() {
+        IconFactory factory = IconFactory.getInstance();
+        int color = hasChildren() ? IconFactory.COLOR_BLUE
+                : IconFactory.COLOR_GREEN;
+        int shape = hasChildren() ? IconFactory.SHAPE_RECT
+                : IconFactory.SHAPE_CIRCLE;
+        String name = mXmlName;
+
+        int pos = name.lastIndexOf('.');
+        if (pos != -1) {
+            // If the user uses a fully qualified name, such as
+            // "android.gesture.GestureOverlayView" in their XML, we need to
+            // look up only by basename
+            name = name.substring(pos + 1);
+        }
+        Image icon = factory.getIcon(name, color, shape);
+        if (icon == null) {
+            icon = getGenericIcon();
+        }
+        if (icon == null) {
+            icon = AdtPlugin.getAndroidLogo();
+        }
+        return icon;
     }
 
     /**

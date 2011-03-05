@@ -29,7 +29,7 @@ import org.eclipse.swt.graphics.Image;
  * UiModelTreeLabelProvider is a trivial implementation of {@link ILabelProvider}
  * where elements are expected to derive from {@link UiElementNode} or
  * from {@link ElementDescriptor}.
- * 
+ *
  * It is used by both the master tree viewer and by the list in the Add... selection dialog.
  */
 public class UiModelTreeLabelProvider implements ILabelProvider {
@@ -42,26 +42,27 @@ public class UiModelTreeLabelProvider implements ILabelProvider {
      */
     public Image getImage(Object element) {
         ElementDescriptor desc = null;
+        UiElementNode node = null;
+
         if (element instanceof ElementDescriptor) {
-            Image img = ((ElementDescriptor) element).getIcon();
-            if (img != null) {
-                return img;
-            }
+            desc = (ElementDescriptor) element;
         } else if (element instanceof UiElementNode) {
-            UiElementNode node = (UiElementNode) element;
+            node = (UiElementNode) element;
             desc = node.getDescriptor();
-            if (desc != null) {
-                Image img = desc.getIcon();
-                if (img != null) {
-                    if (node.hasError()) {
-                        //TODO: cache image
-                        return new ErrorImageComposite(img).createImage();
-                    } else {
-                        return img;
-                    }
+        }
+
+        if (desc != null) {
+            Image img = desc.getCustomizedIcon();
+            if (img != null) {
+                if (node != null && node.hasError()) {
+                    //TODO: cache image
+                    return new ErrorImageComposite(img).createImage();
+                } else {
+                    return img;
                 }
             }
         }
+
         return AdtPlugin.getAndroidLogo();
     }
 

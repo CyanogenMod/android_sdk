@@ -552,7 +552,7 @@ public class PaletteControl extends Composite {
                 break;
             }
             case ICON_ONLY: {
-                item = new ImageControl(parent, SWT.None, desc.getIcon());
+                item = new ImageControl(parent, SWT.None, desc.getGenericIcon());
                 item.setToolTipText(desc.getUiName());
                 break;
             }
@@ -586,7 +586,7 @@ public class PaletteControl extends Composite {
             mMouseIn = false;
 
             setText(desc.getUiName());
-            setImage(desc.getIcon());
+            setImage(desc.getGenericIcon());
             setToolTipText(desc.getTooltip());
             addMouseTrackListener(this);
         }
