@@ -28,10 +28,18 @@ import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("restriction") // No replacement for restricted XML model yet
@@ -303,4 +311,239 @@ public class DomUtilities {
         return generated;
     }
 
+    /**
+     * Returns the element children of the given element
+     *
+     * @param element the parent element
+     * @return a list of child elements, possibly empty but never null
+     */
+    public static List<Element> getChildren(Element element) {
+        // Convenience to avoid lots of ugly DOM access casting
+        NodeList children = element.getChildNodes();
+        // An iterator would have been more natural (to directly drive the child list
+        // iteration) but iterators can't be used in enhanced for loops...
+        List<Element> result = new ArrayList<Element>(children.getLength());
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element child = (Element) node;
+                result.add(child);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns true iff the given elements are contiguous siblings
+     *
+     * @param elements the elements to be tested
+     * @return true if the elements are contiguous siblings with no gaps
+     */
+    public static boolean isContiguous(List<Element> elements) {
+        if (elements.size() > 1) {
+            // All elements must be siblings (e.g. same parent)
+            Node parent = elements.get(0).getParentNode();
+            if (!(parent instanceof Element)) {
+                return false;
+            }
+            for (Element node : elements) {
+                if (parent != node.getParentNode()) {
+                    return false;
+                }
+            }
+
+            // Ensure that the siblings are contiguous; no gaps.
+            // If we've selected all the children of the parent then we don't need
+            // to look.
+            List<Element> siblings = DomUtilities.getChildren((Element) parent);
+            if (siblings.size() != elements.size()) {
+                Set<Element> nodeSet = new HashSet<Element>(elements);
+                boolean inRange = false;
+                int remaining = elements.size();
+                for (Element node : siblings) {
+                    boolean in = nodeSet.contains(node);
+                    if (in) {
+                        remaining--;
+                        if (remaining == 0) {
+                            break;
+                        }
+                        inRange = true;
+                    } else if (inRange) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Determines whether two element trees are equivalent. Two element trees are
+     * equivalent if they represent the same DOM structure (elements, attributes, and
+     * children in order). This is almost the same as simply checking whether the String
+     * representations of the two nodes are identical, but this allows for minor
+     * variations that are not semantically significant, such as variations in formatting
+     * or ordering of the element attribute declarations, and the text children are
+     * ignored (this is such that in for example layout where content is only used for
+     * indentation the indentation differences are ignored). Null trees are never equal.
+     *
+     * @param element1 the first element to compare
+     * @param element2 the second element to compare
+     * @return true if the two element hierarchies are logically equal
+     */
+    public static boolean isEquivalent(Element element1, Element element2) {
+        if (element1 == null || element2 == null) {
+            return false;
+        }
+
+        if (!element1.getTagName().equals(element2.getTagName())) {
+            return false;
+        }
+
+        // Check attribute map
+        NamedNodeMap attributes1 = element1.getAttributes();
+        NamedNodeMap attributes2 = element2.getAttributes();
+        if (attributes1.getLength() != attributes2.getLength()) {
+            return false;
+        }
+        if (attributes1.getLength() > 0) {
+            List<Attr> attributeNodes1 = new ArrayList<Attr>();
+            for (int i = 0, n = attributes1.getLength(); i < n; i++) {
+                attributeNodes1.add((Attr) attributes1.item(i));
+            }
+            List<Attr> attributeNodes2 = new ArrayList<Attr>();
+            for (int i = 0, n = attributes2.getLength(); i < n; i++) {
+                attributeNodes2.add((Attr) attributes2.item(i));
+            }
+            Collections.sort(attributeNodes1, ATTRIBUTE_COMPARATOR);
+            Collections.sort(attributeNodes2, ATTRIBUTE_COMPARATOR);
+            for (int i = 0; i < attributeNodes1.size(); i++) {
+                Attr attr1 = attributeNodes1.get(i);
+                Attr attr2 = attributeNodes2.get(i);
+                if (attr1.getLocalName() == null || attr2.getLocalName() == null) {
+                    if (!attr1.getName().equals(attr2.getName())) {
+                        return false;
+                    }
+                } else if (!attr1.getLocalName().equals(attr2.getLocalName())) {
+                    return false;
+                }
+                if (!attr1.getValue().equals(attr2.getValue())) {
+                    return false;
+                }
+                if (attr1.getNamespaceURI() == null) {
+                    if (attr2.getNamespaceURI() != null) {
+                        return false;
+                    }
+                } else if (attr2.getNamespaceURI() == null) {
+                    return false;
+                } else if (!attr1.getNamespaceURI().equals(attr2.getNamespaceURI())) {
+                    return false;
+                }
+            }
+        }
+
+        NodeList children1 = element1.getChildNodes();
+        NodeList children2 = element2.getChildNodes();
+        int nextIndex1 = 0;
+        int nextIndex2 = 0;
+        while (true) {
+            while (nextIndex1 < children1.getLength() &&
+                    children1.item(nextIndex1).getNodeType() != Node.ELEMENT_NODE) {
+                nextIndex1++;
+            }
+
+            while (nextIndex2 < children2.getLength() &&
+                    children2.item(nextIndex2).getNodeType() != Node.ELEMENT_NODE) {
+                nextIndex2++;
+            }
+
+            Element nextElement1 = (Element) (nextIndex1 < children1.getLength()
+                    ? children1.item(nextIndex1) : null);
+            Element nextElement2 = (Element) (nextIndex2 < children2.getLength()
+                    ? children2.item(nextIndex2) : null);
+            if (nextElement1 == null) {
+                if (nextElement2 == null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (nextElement2 == null) {
+                return false;
+            } else if (!isEquivalent(nextElement1, nextElement2)) {
+                return false;
+            }
+            nextIndex1++;
+            nextIndex2++;
+        }
+    }
+
+    /**
+     * Finds the corresponding element in a document to a given element in another
+     * document. Note that this does <b>not</b> do any kind of equivalence check
+     * (see {@link #isEquivalent(Element, Element)}), and currently the search
+     * is only by id; there is no structural search.
+     *
+     * @param element the element to find an equivalent for
+     * @param document the document to search for an equivalent element in
+     * @return an equivalent element, or null
+     */
+    public static Element findCorresponding(Element element, Document document) {
+        // Make sure the method is called correctly -- the element is for a different
+        // document than the one we are searching
+        assert element.getOwnerDocument() != document;
+
+        // First search by id. This allows us to find the corresponding
+        String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
+        if (id != null && id.length() > 0) {
+            if (id.startsWith(ID_PREFIX)) {
+                id = NEW_ID_PREFIX + id.substring(ID_PREFIX.length());
+            }
+
+            return findCorresponding(document.getDocumentElement(), id);
+        }
+
+        // TODO: Search by structure - look in the document and
+        // find a corresponding element in the same location in the structure,
+        // e.g. 4th child of root, 3rd child, 6th child, then pick node with tag "foo".
+
+        return null;
+    }
+
+    /** Helper method for {@link #findCorresponding(Element, Document)} */
+    private static Element findCorresponding(Element element, String targetId) {
+        String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
+        if (id != null) { // Work around DOM bug
+            if (id.equals(targetId)) {
+                return element;
+            } else if (id.startsWith(ID_PREFIX)) {
+                id = NEW_ID_PREFIX + id.substring(ID_PREFIX.length());
+                if (id.equals(targetId)) {
+                    return element;
+                }
+            }
+        }
+
+        NodeList children = element.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element child = (Element) node;
+                Element match = findCorresponding(child, targetId);
+                if (match != null) {
+                    return match;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** Can be used to sort attributes by name */
+    private static final Comparator<Attr> ATTRIBUTE_COMPARATOR = new Comparator<Attr>() {
+        public int compare(Attr a1, Attr a2) {
+            return a1.getName().compareTo(a2.getName());
+        }
+    };
 }

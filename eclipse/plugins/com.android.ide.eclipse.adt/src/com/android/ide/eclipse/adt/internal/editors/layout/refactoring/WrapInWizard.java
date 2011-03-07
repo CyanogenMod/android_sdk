@@ -29,6 +29,7 @@ import static com.android.sdklib.SdkConstants.FN_FRAMEWORK_LIBRARY;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -54,15 +55,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 import org.eclipse.jdt.internal.core.ResolvedSourceType;
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -91,13 +86,12 @@ class WrapInWizard extends VisualRefactoringWizard {
     }
 
     /** Wizard page which inputs parameters for the {@link WrapInRefactoring} operation */
-    private static class InputPage extends UserInputWizardPage {
+    private static class InputPage extends VisualRefactoringInputPage {
         private final IProject mProject;
         private final String mOldType;
         private Text mIdText;
         private Combo mTypeCombo;
-        private Button mUpdateReferences;
-        private List<String> mClassNames;
+        private List<Pair<String, ViewElementDescriptor>> mClassNames;
 
         public InputPage(IProject project, String oldType) {
             super("WrapInInputPage");  //$NON-NLS-1$
@@ -115,13 +109,7 @@ class WrapInWizard extends VisualRefactoringWizard {
 
             mTypeCombo = new Combo(composite, SWT.READ_ONLY);
             mTypeCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-            SelectionAdapter selectionListener = new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    validatePage();
-                }
-            };
-            mTypeCombo.addSelectionListener(selectionListener);
+            mTypeCombo.addSelectionListener(mSelectionValidateListener);
 
             Label idLabel = new Label(composite, SWT.NONE);
             idLabel.setText("New Layout Id:");
@@ -129,18 +117,7 @@ class WrapInWizard extends VisualRefactoringWizard {
 
             mIdText = new Text(composite, SWT.BORDER);
             mIdText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-            mIdText.addModifyListener(new ModifyListener() {
-                public void modifyText(ModifyEvent e) {
-                    validatePage();
-                }
-            });
-
-            mUpdateReferences = new Button(composite, SWT.CHECK);
-            mUpdateReferences.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER,
-                    false, false, 2, 1));
-            mUpdateReferences.setSelection(true);
-            mUpdateReferences.setText("Update layout references");
-            mUpdateReferences.addSelectionListener(selectionListener);
+            mIdText.addModifyListener(mModifyValidateListener);
 
             Set<String> exclude = Collections.singleton(VIEW_INCLUDE);
             mClassNames = addLayouts(mProject, mOldType, mTypeCombo, exclude, true);
@@ -152,18 +129,15 @@ class WrapInWizard extends VisualRefactoringWizard {
             mTypeCombo.setFocus();
         }
 
-        private boolean validatePage() {
+        @Override
+        protected boolean validatePage() {
             boolean ok = true;
 
             String id = mIdText.getText().trim();
 
             if (id.length() == 0) {
-                // It's okay to not define a title...
-                // ...unless you want to update references
-                if (mUpdateReferences.getSelection()) {
-                    setErrorMessage("ID required when updating layout references");
-                    ok = false;
-                }
+                setErrorMessage("ID required");
+                ok = false;
             } else {
                 // ...but if you do, it has to be valid!
                 ResourceNameValidator validator = ResourceNameValidator.create(false, mProject,
@@ -176,7 +150,7 @@ class WrapInWizard extends VisualRefactoringWizard {
             }
 
             int selectionIndex = mTypeCombo.getSelectionIndex();
-            String type = selectionIndex != -1 ? mClassNames.get(selectionIndex) : null;
+            String type = selectionIndex != -1 ? mClassNames.get(selectionIndex).getFirst() : null;
             if (type == null) {
                 setErrorMessage("Select a container type");
                 ok = false; // The user has chosen a separator
@@ -190,7 +164,16 @@ class WrapInWizard extends VisualRefactoringWizard {
                     (WrapInRefactoring) getRefactoring();
                 refactoring.setId(id);
                 refactoring.setType(type);
-                refactoring.setUpdateReferences(mUpdateReferences.getSelection());
+
+                ViewElementDescriptor descriptor = mClassNames.get(selectionIndex).getSecond();
+                if (descriptor instanceof PaletteMetadataDescriptor) {
+                    PaletteMetadataDescriptor paletteDescriptor =
+                        (PaletteMetadataDescriptor) descriptor;
+                    String initializedAttributes = paletteDescriptor.getInitializedAttributes();
+                    refactoring.setInitializedAttributes(initializedAttributes);
+                } else {
+                    refactoring.setInitializedAttributes(null);
+                }
             }
 
             setPageComplete(ok);
@@ -198,17 +181,19 @@ class WrapInWizard extends VisualRefactoringWizard {
         }
     }
 
-    static List<String> addLayouts(IProject project, String oldType, Combo combo,
+    static List<Pair<String, ViewElementDescriptor>> addLayouts(IProject project,
+            String oldType, Combo combo,
             Set<String> exclude, boolean addGestureOverlay) {
-        List<String> classNames = new ArrayList<String>();
+        List<Pair<String, ViewElementDescriptor>> classNames =
+            new ArrayList<Pair<String, ViewElementDescriptor>>();
 
-        if (oldType.equals(FQCN_RADIO_BUTTON)) {
+        if (oldType != null && oldType.equals(FQCN_RADIO_BUTTON)) {
             combo.add(RADIO_GROUP);
             // NOT a fully qualified name since android widgets do not include the package
-            classNames.add(RADIO_GROUP);
+            classNames.add(Pair.of(RADIO_GROUP, (ViewElementDescriptor) null));
 
             combo.add(SEPARATOR_LABEL);
-            classNames.add(null);
+            classNames.add(Pair.<String,ViewElementDescriptor>of(null, null));
         }
 
         Pair<List<String>,List<String>> result = findViews(project, true);
@@ -217,10 +202,10 @@ class WrapInWizard extends VisualRefactoringWizard {
         if (customViews.size() > 0) {
             for (String view : customViews) {
                 combo.add(view);
-                classNames.add(view);
+                classNames.add(Pair.of(view, (ViewElementDescriptor) null));
             }
             combo.add(SEPARATOR_LABEL);
-            classNames.add(null);
+            classNames.add(Pair.<String,ViewElementDescriptor>of(null, null));
         }
 
         // Populate type combo
@@ -251,7 +236,7 @@ class WrapInWizard extends VisualRefactoringWizard {
                             String className = d.getFullClassName();
                             if (exclude == null || !exclude.contains(className)) {
                                 combo.add(d.getUiName());
-                                classNames.add(className);
+                                classNames.add(Pair.of(className, d));
                             }
                         }
 
@@ -262,7 +247,7 @@ class WrapInWizard extends VisualRefactoringWizard {
                         if (thirdPartyViews.size() > 0) {
                             for (String view : thirdPartyViews) {
                                 combo.add(view);
-                                classNames.add(view);
+                                classNames.add(Pair.of(view, (ViewElementDescriptor) null));
                             }
                             combo.add(SEPARATOR_LABEL);
                             classNames.add(null);
@@ -270,10 +255,11 @@ class WrapInWizard extends VisualRefactoringWizard {
 
                         if (addGestureOverlay) {
                             combo.add(GESTURE_OVERLAY_VIEW);
-                            classNames.add(FQCN_GESTURE_OVERLAY_VIEW);
+                            classNames.add(Pair.<String, ViewElementDescriptor> of(
+                                    FQCN_GESTURE_OVERLAY_VIEW, null));
 
                             combo.add(SEPARATOR_LABEL);
-                            classNames.add(null);
+                            classNames.add(Pair.<String,ViewElementDescriptor>of(null, null));
                         }
                     }
 
@@ -286,14 +272,14 @@ class WrapInWizard extends VisualRefactoringWizard {
                         String className = d.getFullClassName();
                         if (exclude == null || !exclude.equals(className)) {
                             combo.add(d.getUiName());
-                            classNames.add(className);
+                            classNames.add(Pair.of(className, d));
                         }
                     }
                 }
             }
         } else {
             combo.add("SDK not initialized");
-            classNames.add(null);
+            classNames.add(Pair.<String,ViewElementDescriptor>of(null, null));
         }
 
         return classNames;

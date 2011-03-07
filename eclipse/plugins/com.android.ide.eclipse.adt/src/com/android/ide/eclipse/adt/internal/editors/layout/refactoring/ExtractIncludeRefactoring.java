@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
@@ -30,6 +31,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_COLON;
 import static com.android.resources.ResourceType.LAYOUT;
+import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -40,11 +42,11 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
-import com.android.util.Pair;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -64,13 +66,20 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMDocument;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +93,8 @@ import java.util.Map;
 public class ExtractIncludeRefactoring extends VisualRefactoring {
     private static final String KEY_NAME = "name";                      //$NON-NLS-1$
     private static final String KEY_OCCURRENCES = "all-occurrences";    //$NON-NLS-1$
-    private static final String KEY_UPDATE_REFS = "update-refs";        //$NON-NLS-1$
     private String mLayoutName;
     private boolean mReplaceOccurrences;
-    private boolean mUpdateReferences;
 
     /**
      * This constructor is solely used by {@link Descriptor},
@@ -97,7 +104,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     ExtractIncludeRefactoring(Map<String, String> arguments) {
         super(arguments);
         mLayoutName = arguments.get(KEY_NAME);
-        mUpdateReferences = Boolean.parseBoolean(arguments.get(KEY_UPDATE_REFS));
         mReplaceOccurrences  = Boolean.parseBoolean(arguments.get(KEY_OCCURRENCES));
     }
 
@@ -182,7 +188,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     protected Map<String, String> createArgumentMap() {
         Map<String, String> args = super.createArgumentMap();
         args.put(KEY_NAME, mLayoutName);
-        args.put(KEY_UPDATE_REFS, Boolean.toString(mUpdateReferences));
         args.put(KEY_OCCURRENCES, Boolean.toString(mReplaceOccurrences));
 
         return args;
@@ -197,10 +202,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         mLayoutName = layoutName;
     }
 
-    void setUpdateReferences(boolean selection) {
-        mUpdateReferences = selection;
-    }
-
     void setReplaceOccurrences(boolean selection) {
         mReplaceOccurrences = selection;
     }
@@ -211,9 +212,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     protected List<Change> computeChanges() {
         String extractedText = getExtractedText();
 
-        Pair<String, String> namespace = computeNamespaces();
-        String androidNsPrefix = namespace.getFirst();
-        String namespaceDeclarations = namespace.getSecond();
+        String namespaceDeclarations = computeNamespaceDeclarations();
 
         // Insert namespace:
         extractedText = insertNamespace(extractedText, namespaceDeclarations);
@@ -229,39 +228,79 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         IProject project = mEditor.getProject();
         IFile sourceFile = mEditor.getInputFile();
 
-        TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
-        MultiTextEdit rootEdit = new MultiTextEdit();
-        change.setEdit(rootEdit);
-        change.setTextType(EXT_XML);
-        changes.add(change);
+        // Replace extracted elements by <include> tag
+        handleIncludingFile(changes, sourceFile, mSelectionStart, mSelectionEnd,
+                getDomDocument(), getPrimaryElement());
 
-        String referenceId = getReferenceId();
-        // Replace existing elements in the source file and insert <include>
-        String include = computeIncludeString(mLayoutName, androidNsPrefix, referenceId);
-        int length = mSelectionEnd - mSelectionStart;
-        ReplaceEdit replace = new ReplaceEdit(mSelectionStart, length, include);
-        rootEdit.addChild(replace);
+        // Also extract in other variations of the same file (landscape/portrait, etc)
+        boolean haveVariations = false;
+        if (mReplaceOccurrences) {
+            //String id = primary.getAttributeNS(ANDROID_URI, ATTR_ID);
+            List<IFile> variations = getConfigurationVariations(sourceFile);
+            for (IFile variation : variations) {
+                IModelManager modelManager = StructuredModelManager.getModelManager();
+                IStructuredModel model = null;
+                try {
+                    model = modelManager.getModelForRead(variation);
+                    if (model instanceof IDOMModel) {
+                        IDOMModel domModel = (IDOMModel) model;
+                        IDOMDocument otherDocument = domModel.getDocument();
+                        List<Element> otherElements = new ArrayList<Element>();
+                        Element otherPrimary = null;
 
-        // Update any layout references to the old id with the new id
-        if (mUpdateReferences && referenceId != null) {
-            String rootId = getRootId();
-            IStructuredModel model = mEditor.getModelForRead();
-            try {
-                IStructuredDocument doc = model.getStructuredDocument();
-                if (doc != null) {
-                    List<TextEdit> replaceIds = replaceIds(doc, mSelectionStart,
-                            mSelectionEnd, rootId, referenceId);
-                    for (TextEdit edit : replaceIds) {
-                        rootEdit.addChild(edit);
+                        for (Element element : getElements()) {
+                            Element other = DomUtilities.findCorresponding(element,
+                                    otherDocument);
+                            if (other != null) {
+                                // See if the structure is similar to what we have in this
+                                // document
+                                if (DomUtilities.isEquivalent(element, other)) {
+                                    otherElements.add(other);
+                                    if (element == getPrimaryElement()) {
+                                        otherPrimary = other;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Only perform extract in the other file if we find a match for
+                        // ALL of elements being extracted, and if they too are contiguous
+                        if (otherElements.size() == getElements().size() &&
+                                DomUtilities.isContiguous(otherElements)) {
+                            // Find the range
+                            int begin = Integer.MAX_VALUE;
+                            int end = Integer.MIN_VALUE;
+                            for (Element element : otherElements) {
+                                // Yes!! Extract this one as well!
+                                IndexedRegion region = getRegion(element);
+                                end = Math.max(end, region.getEndOffset());
+                                begin = Math.min(begin, region.getStartOffset());
+                            }
+                            handleIncludingFile(changes, variation, begin,
+                                    end, otherDocument, otherPrimary);
+                            haveVariations = true;
+                        }
+                    }
+                } catch (IOException e) {
+                    AdtPlugin.log(e, null);
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                } finally {
+                    if (model != null) {
+                        model.releaseFromRead();
                     }
                 }
-            } finally {
-                model.releaseFromRead();
             }
         }
 
         // Add change to create the new file
         IContainer parent = sourceFile.getParent();
+        if (haveVariations) {
+            // If we're extracting from multiple configuration folders, then we need to
+            // place the extracted include in the base layout folder (if not it goes next to
+            // the including file)
+            parent = mProject.getFolder(FD_RES).getFolder(FD_RES_LAYOUT);
+        }
         IPath parentPath = parent.getProjectRelativePath();
         final IFile file = project.getFile(new Path(parentPath + WS_SEP + newFileName));
         TextFileChange addFile = new TextFileChange("Create new separate layout", file);
@@ -273,6 +312,87 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         changes.add(finishHook);
 
         return changes;
+    }
+
+    private void handleIncludingFile(List<Change> changes,
+            IFile sourceFile, int begin, int end, Document document, Element primary) {
+        TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
+        MultiTextEdit rootEdit = new MultiTextEdit();
+        change.setEdit(rootEdit);
+        change.setTextType(EXT_XML);
+        changes.add(change);
+
+        String referenceId = getReferenceId();
+        // Replace existing elements in the source file and insert <include>
+        String androidNsPrefix = getAndroidNamespacePrefix(document);
+        String include = computeIncludeString(primary, mLayoutName, androidNsPrefix, referenceId);
+        int length = end - begin;
+        ReplaceEdit replace = new ReplaceEdit(begin, length, include);
+        rootEdit.addChild(replace);
+
+        // Update any layout references to the old id with the new id
+        if (referenceId != null && primary != null) {
+            String rootId = getId(primary);
+            IStructuredModel model = null;
+            try {
+                model = StructuredModelManager.getModelManager().getModelForRead(sourceFile);
+                IStructuredDocument doc = model.getStructuredDocument();
+                if (doc != null && rootId != null) {
+                    List<TextEdit> replaceIds = replaceIds(androidNsPrefix, doc, begin,
+                            end, rootId, referenceId);
+                    for (TextEdit edit : replaceIds) {
+                        rootEdit.addChild(edit);
+                    }
+                }
+            } catch (IOException e) {
+                AdtPlugin.log(e, null);
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+            } finally {
+                if (model != null) {
+                    model.releaseFromRead();
+                }
+            }
+        }
+    }
+
+    /**
+     * This method returns all the configuration variations of the given layout. For
+     * example, if you have both layout/foo.xml and layout-land/foo.xml and
+     * layout-xlarge/foo.xml, then calling this method on any of the three files will
+     * return the other two.
+     *
+     * @param file the file to find configuration variations of
+     * @return the other layout variations of the file
+     */
+    public static List<IFile> getConfigurationVariations(IFile file) {
+        List<IFile> variations = new ArrayList<IFile>();
+
+        // This currently just searches the layout folders in the project for an exact
+        // resource name match. This could later use ProjectResources instead, but
+        // currently that's not done since it doesn't work from the tests.
+
+        String name = file.getName();
+        IContainer resFolder = file.getParent().getParent();
+        try {
+            for (IResource member : resFolder.members()) {
+                if (member.getName().startsWith(FD_RES_LAYOUT)) {
+                    if (member instanceof IContainer) {
+                        IContainer container = (IContainer) member;
+                        IResource alternative = container.findMember(name);
+                        IPath relPath = file.getProjectRelativePath();
+                        if (alternative instanceof IFile
+                                && !alternative.getProjectRelativePath().equals(relPath)) {
+                            variations.add((IFile) alternative);
+                        }
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
+
+        return variations;
     }
 
     String getInitialName() {
@@ -295,6 +415,10 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         }
 
         return defaultName;
+    }
+
+    IFile getSourceFile() {
+        return mFile;
     }
 
     private Change createFinishHook(final IFile file) {
@@ -322,7 +446,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         };
     }
 
-    private Pair<String, String> computeNamespaces() {
+    private String computeNamespaceDeclarations() {
         String androidNsPrefix = null;
         String namespaceDeclarations = null;
 
@@ -364,7 +488,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             namespaceDeclarations = sb.toString();
         }
 
-        return Pair.of(androidNsPrefix, namespaceDeclarations);
+        return namespaceDeclarations;
     }
 
     /** Returns the id to be used for the include tag itself (may be null) */
@@ -381,8 +505,8 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
      * Compute the actual {@code <include>} string to be inserted in place of the old
      * selection
      */
-    private String computeIncludeString(String newName, String androidNsPrefix,
-            String referenceId) {
+    private static String computeIncludeString(Element primaryNode, String newName,
+            String androidNsPrefix, String referenceId) {
         StringBuilder sb = new StringBuilder();
         sb.append("<include layout=\"@layout/"); //$NON-NLS-1$
         sb.append(newName);
@@ -408,7 +532,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
 
         // HACK: see issue 13494: We must duplicate the width/height attributes on the
         // <include> statement for designtime rendering only
-        Element primaryNode = getPrimaryElement();
         String width = null;
         String height = null;
         if (primaryNode == null) {

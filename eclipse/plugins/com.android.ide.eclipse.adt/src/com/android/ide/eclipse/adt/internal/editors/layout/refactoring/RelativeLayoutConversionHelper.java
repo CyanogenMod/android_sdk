@@ -65,6 +65,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IStatus;
@@ -370,29 +371,6 @@ class RelativeLayoutConversionHelper {
     }
 
     /**
-     * Returns the element children of the given element
-     *
-     * @param element the parent element
-     * @return a list of child elements, possibly empty but never null
-     */
-    public static List<Element> getChildren(Element element) {
-        // Convenience to avoid lots of ugly DOM access casting
-        NodeList children = element.getChildNodes();
-        // An iterator would have been more natural (to directly drive the child list
-        // iteration) but iterators can't be used in enhanced for loops...
-        List<Element> result = new ArrayList<Element>(children.getLength());
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element child = (Element) node;
-                result.add(child);
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Returns the layout weight of of the given child of a LinearLayout, or 0.0 if it
      * does not define a weight
      */
@@ -417,7 +395,7 @@ class RelativeLayoutConversionHelper {
      */
     private float getWeightSum(Element linearLayout) {
         float sum = 0;
-        for (Element child : getChildren(linearLayout)) {
+        for (Element child : DomUtilities.getChildren(linearLayout)) {
             sum += getWeight(child);
         }
 
@@ -439,7 +417,7 @@ class RelativeLayoutConversionHelper {
             // Baseline alignment. Find the tallest child and set it as the baseline reference.
             int tallestHeight = 0;
             View tallest = null;
-            for (Element child : getChildren(layout)) {
+            for (Element child : DomUtilities.getChildren(layout)) {
                 View view = edgeList.getView(child);
                 if (view != null && view.getHeight() > tallestHeight) {
                     tallestHeight = view.getHeight();
@@ -454,7 +432,7 @@ class RelativeLayoutConversionHelper {
         float weightSum = getWeightSum(layout);
         float cumulativeWeight = 0;
 
-        List<Element> children = getChildren(layout);
+        List<Element> children = DomUtilities.getChildren(layout);
         String prevId = null;
         boolean isFirstChild = true;
         boolean linkBackwards = true;

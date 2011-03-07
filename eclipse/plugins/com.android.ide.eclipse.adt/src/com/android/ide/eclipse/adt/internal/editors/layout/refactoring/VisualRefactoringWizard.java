@@ -19,6 +19,11 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
+import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 
 public abstract class VisualRefactoringWizard extends RefactoringWizard {
     protected final LayoutEditor mEditor;
@@ -37,5 +42,34 @@ public abstract class VisualRefactoringWizard extends RefactoringWizard {
             mEditor.setIgnoreXmlUpdate(false);
             mEditor.refreshXmlModel();
         }
+    }
+
+    protected abstract static class VisualRefactoringInputPage extends UserInputWizardPage {
+        public VisualRefactoringInputPage(String name) {
+            super(name);
+        }
+
+        /**
+         * Listener which can be attached on any widget in the wizard page to force
+         * modifications of the associated widget to validate the page again
+         */
+        protected ModifyListener mModifyValidateListener = new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                validatePage();
+            }
+        };
+
+        /**
+         * Listener which can be attached on any widget in the wizard page to force
+         * selection changes of the associated widget to validate the page again
+         */
+        protected SelectionAdapter mSelectionValidateListener = new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                validatePage();
+            }
+        };
+
+        protected abstract boolean validatePage();
     }
 }

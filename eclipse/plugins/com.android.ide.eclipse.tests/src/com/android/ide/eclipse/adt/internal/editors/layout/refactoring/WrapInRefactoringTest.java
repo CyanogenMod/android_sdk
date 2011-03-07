@@ -44,7 +44,7 @@ public class WrapInRefactoringTest extends RefactoringTest {
     private void checkRefactoring(String basename, String fqcn, String... ids) throws Exception {
         assertTrue(ids.length > 0);
 
-        IFile file = getTestFile(sProject, basename);
+        IFile file = getLayoutFile(sProject, basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
         List<Element> selectedElements = getElements(info.mElement, ids);

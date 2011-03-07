@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 
@@ -56,7 +56,7 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
     /**
      * Examine the selection to determine if the action should be enabled or not.
      * <p/>
-     * Keep a link to the relevant selection structure (i.e. a part of the Java AST).
+     * Keep a link to the relevant selection structure
      */
     public void selectionChanged(IAction action, ISelection selection) {
         // Look for selections in XML and in the layout UI editor
@@ -76,10 +76,8 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
 
         if (selection instanceof ITextSelection) {
             mTextSelection = (ITextSelection) selection;
-            if (mTextSelection.getLength() > 0) {
-                editor = getActiveEditor();
-                mFile = getSelectedFile(editor);
-            }
+            editor = getActiveEditor();
+            mFile = getSelectedFile(editor);
         } else if (selection instanceof ITreeSelection) {
              Object firstElement = ((ITreeSelection)selection).getFirstElement();
              if (firstElement instanceof CanvasViewInfo) {
