@@ -75,7 +75,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             "^ *[a-zA-Z_:]+ *= *(?:\"[^<\"]*\"|'[^<']*')");  //$NON-NLS-1$
 
     /** Regexp to detect an element tag name */
-    private static Pattern sFirstElementWord = Pattern.compile("^[a-zA-Z0-9_:]+"); //$NON-NLS-1$
+    private static Pattern sFirstElementWord = Pattern.compile("^[a-zA-Z0-9_:-]+"); //$NON-NLS-1$
 
     /** Regexp to detect whitespace */
     private static Pattern sWhitespace = Pattern.compile("\\s+"); //$NON-NLS-1$
