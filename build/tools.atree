@@ -43,8 +43,9 @@ bin/zipalign     tools/zipalign
 bin/emulator tools/emulator-arm
 bin/emulator-x86   tools/emulator-x86
 sdk/emulator/snapshot/snapshots.img tools/lib/emulator/snapshots.img
-usr/share/pc-bios/bios.bin   tools/lib/pc-bios/bios.bin
-usr/share/pc-bios/vgabios-cirrus.bin   tools/lib/pc-bios/vgabios-cirrus.bin
+# DISABLED 2 lines that break the build: sdk/build/tools.atree:46: couldn't locate source file:...
+#usr/share/pc-bios/bios.bin   tools/lib/pc-bios/bios.bin
+#usr/share/pc-bios/vgabios-cirrus.bin   tools/lib/pc-bios/vgabios-cirrus.bin
 
 # Java-Based SDK Tools
 bin/ddms            tools/ddms
