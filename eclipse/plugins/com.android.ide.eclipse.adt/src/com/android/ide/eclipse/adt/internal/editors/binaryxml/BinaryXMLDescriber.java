@@ -16,6 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.binaryxml;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
+
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.content.IContentDescriber;
 import org.eclipse.core.runtime.content.IContentDescription;
@@ -50,20 +53,28 @@ public class BinaryXMLDescriber implements IContentDescriber {
      * InputStream, org.eclipse.core.runtime.content.IContentDescription)
      */
     public int describe(InputStream contents, IContentDescription description) throws IOException {
+        int status = INVALID;
         int length = 8;
         byte[] bytes = new byte[length];
-        if (contents.read(bytes, 0, length) != length) {
-            return INVALID;
+        if (contents.read(bytes, 0, length) == length) {
+            ByteBuffer buf = ByteBuffer.wrap(bytes);
+            buf.order(ByteOrder.LITTLE_ENDIAN);
+            short type = buf.getShort();
+            short headerSize = buf.getShort();
+            int size = buf.getInt(); // chunk size
+            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(IStatus.ERROR, "BinaryXML: type 0x%04x, headerSize 0x%04x, size 0x%08x", type, headerSize, size);
+            }
+            if (type == RES_XML_TYPE && headerSize == RES_XML_HEADER_SIZE) {
+                status = VALID;
+            }
         }
-        ByteBuffer buf = ByteBuffer.wrap(bytes);
-        buf.order(ByteOrder.LITTLE_ENDIAN);
-        short type = buf.getShort();
-        short headerSize = buf.getShort();
-        buf.getInt(); // chunk size
-        if (type == RES_XML_TYPE && headerSize == RES_XML_HEADER_SIZE) {
-            return VALID;
+        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+            AdtPlugin.log(IStatus.ERROR, "BinaryXML status: %d (%s)",
+                    status,
+                    status == VALID ? "VALID" : "INVALID");
         }
-        return INVALID;
+        return status;
     }
 
     /*

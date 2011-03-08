@@ -604,6 +604,38 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     private void createTextEditor() {
         try {
+            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(
+                        IStatus.ERROR,
+                        "%s.createTextEditor: input=%s %s",
+                        this.getClass(),
+                        getEditorInput() == null ? "null" : getEditorInput().getClass(),
+                        getEditorInput() == null ? "null" : getEditorInput().toString()
+                        );
+
+                org.eclipse.core.runtime.IAdaptable adaptable= (org.eclipse.core.runtime.IAdaptable) getEditorInput();
+                IFile file1 = (IFile)adaptable.getAdapter(IFile.class);
+                org.eclipse.core.runtime.IPath location= file1.getFullPath();
+                org.eclipse.core.resources.IWorkspaceRoot workspaceRoot= ResourcesPlugin.getWorkspace().getRoot();
+                IFile file2 = workspaceRoot.getFile(location);
+
+                try {
+                    org.eclipse.core.runtime.content.IContentDescription desc = file2.getContentDescription();
+                    org.eclipse.core.runtime.content.IContentType type = desc.getContentType();
+
+                    AdtPlugin.log(IStatus.ERROR,
+                            "file %s description %s %s; contentType %s %s",
+                            file2,
+                            desc == null ? "null" : desc.getClass(),
+                            desc == null ? "null" : desc.toString(),
+                            type == null ? "null" : type.getClass(),
+                            type == null ? "null" : type.toString());
+
+                } catch (CoreException e) {
+                    e.printStackTrace();
+                }
+            }
+
             mTextEditor = new StructuredTextEditor();
             int index = addPage(mTextEditor, getEditorInput());
             mTextPageIndex = index;
@@ -611,15 +643,16 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             setPageImage(index,
                     IconFactory.getInstance().getIcon("editor_page_source")); //$NON-NLS-1$
 
+            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(IStatus.ERROR, "Found document class: %1$s, file=%2$s",
+                        mTextEditor.getTextViewer().getDocument() != null ?
+                                mTextEditor.getTextViewer().getDocument().getClass() :
+                                "null",
+                                getEditorInput()
+                        );
+            }
+
             if (!(mTextEditor.getTextViewer().getDocument() instanceof IStructuredDocument)) {
-                if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.ERROR, "Unexpected document class: %1$s, file=%2$s",
-                            mTextEditor.getTextViewer().getDocument() != null ?
-                                    mTextEditor.getTextViewer().getDocument().getClass() :
-                                    "null",
-                                    getEditorInput()
-                            );
-                }
                 Status status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                         "Error opening the Android XML editor. Is the document an XML file?");
                 throw new RuntimeException("Android XML Editor Error", new CoreException(status));
