@@ -539,28 +539,32 @@ public class PreCompilerBuilder extends BaseBuilder {
 
     @Override
     protected void startupOnInitialize() {
-        super.startupOnInitialize();
+        try {
+            super.startupOnInitialize();
 
-        IProject project = getProject();
+            IProject project = getProject();
 
-        // load the previous IFolder and java package.
-        mManifestPackage = loadProjectStringProperty(PROPERTY_PACKAGE);
+            // load the previous IFolder and java package.
+            mManifestPackage = loadProjectStringProperty(PROPERTY_PACKAGE);
 
-        // get the source folder in which all the Java files are created
-        mGenFolder = project.getFolder(SdkConstants.FD_GEN_SOURCES);
+            // get the source folder in which all the Java files are created
+            mGenFolder = project.getFolder(SdkConstants.FD_GEN_SOURCES);
+            mDerivedProgressMonitor = new DerivedProgressMonitor(mGenFolder);
 
-        // Load the current compile flags. We ask for true if not found to force a recompile.
-        mMustCompileResources = loadProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, true);
+            // Load the current compile flags. We ask for true if not found to force a recompile.
+            mMustCompileResources = loadProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, true);
 
-        IJavaProject javaProject = JavaCore.create(project);
+            IJavaProject javaProject = JavaCore.create(project);
 
-        // load the source processors
-        SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
-        mProcessors.add(aidlProcessor);
-        SourceProcessor renderScriptProcessor = new RenderScriptProcessor(javaProject, mGenFolder);
-        mProcessors.add(renderScriptProcessor);
-
-        mDerivedProgressMonitor = new DerivedProgressMonitor(mGenFolder);
+            // load the source processors
+            SourceProcessor aidlProcessor = new AidlProcessor(javaProject, mGenFolder);
+            mProcessors.add(aidlProcessor);
+            SourceProcessor renderScriptProcessor = new RenderScriptProcessor(javaProject,
+                    mGenFolder);
+            mProcessors.add(renderScriptProcessor);
+        } catch (Throwable throwable) {
+            AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
+        }
     }
 
     /**
