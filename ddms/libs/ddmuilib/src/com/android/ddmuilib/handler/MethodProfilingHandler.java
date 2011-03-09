@@ -17,14 +17,14 @@
 package com.android.ddmuilib.handler;
 
 import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData.IMethodProfilingHandler;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.ClientData.IMethodProfilingHandler;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.SyncProgressHelper;
 import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
@@ -126,7 +126,7 @@ public class MethodProfilingHandler extends BaseFileHandler
             SyncProgressHelper.run(new SyncRunnable() {
                     public void run(ISyncProgressMonitor monitor)
                             throws SyncException, IOException, TimeoutException {
-                        sync.pullFile(tempPath, remoteFilePath, monitor);
+                        sync.pullFile(remoteFilePath, tempPath, monitor);
                     }
 
                     public void close() {
