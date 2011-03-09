@@ -419,9 +419,10 @@ public class AdbMonkeyDevice extends MonkeyDevice {
             } else {
                 // treat is as a string.
                 valueString = value.toString();
-                arg = "--esmake";
+                arg = "--es";
             }
             parts.add(arg);
+            parts.add(entry.getKey());
             parts.add(valueString);
         }
 

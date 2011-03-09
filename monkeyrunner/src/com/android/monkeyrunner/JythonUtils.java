@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import org.python.core.ArgParser;
 import org.python.core.ClassDictInit;
 import org.python.core.Py;
+import org.python.core.PyBoolean;
 import org.python.core.PyDictionary;
 import org.python.core.PyFloat;
 import org.python.core.PyInteger;
@@ -73,6 +74,7 @@ public final class JythonUtils {
         // What python calls float, most people call double
         builder.put(PyFloat.class, Double.class);
         builder.put(PyInteger.class, Integer.class);
+        builder.put(PyBoolean.class, Boolean.class);
 
         PYOBJECT_TO_JAVA_OBJECT_MAP = builder.build();
     }
@@ -228,6 +230,8 @@ public final class JythonUtils {
         } else if (o instanceof Float) {
             float f = (Float) o;
             return new PyFloat(f);
+        } else if (o instanceof Boolean) {
+            return new PyBoolean((Boolean) o);
         }
         return Py.None;
     }
