@@ -268,7 +268,7 @@ class UiElementDetail implements IDetailsPage {
                     FormText text = SectionHelper.createFormText(masterTable, toolkit,
                             true /* isHtml */, tooltip, true /* setupLayoutData */);
                     text.addHyperlinkListener(mTree.getEditor().createHyperlinkListener());
-                    Image icon = elem_desc.getIcon();
+                    Image icon = elem_desc.getCustomizedIcon();
                     if (icon != null) {
                         text.setImage(DescriptorsUtils.IMAGE_KEY, icon);
                     }

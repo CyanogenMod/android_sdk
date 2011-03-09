@@ -150,7 +150,7 @@ public class ViewElementDescriptor extends ElementDescriptor {
      * @return An icon for this element or null.
      */
     @Override
-    public Image getIcon() {
+    public Image getGenericIcon() {
         IconFactory factory = IconFactory.getInstance();
         String name = mXmlName;
         if (name.indexOf('.') != -1) {

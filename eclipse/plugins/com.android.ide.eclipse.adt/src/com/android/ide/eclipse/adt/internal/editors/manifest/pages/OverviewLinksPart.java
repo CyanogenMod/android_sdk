@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.manifest.pages;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
@@ -44,7 +46,7 @@ final class OverviewLinksPart extends ManifestSectionPart {
         section.setDescription("The content of the Android Manifest is made up of three sections. You can also edit the XML directly.");
 
         Composite table = createTableLayout(toolkit, 2 /* numColumns */);
-        
+
         StringBuffer buf = new StringBuffer();
         buf.append(String.format("<form><li style=\"image\" value=\"app_img\"><a href=\"page:%1$s\">", //$NON-NLS-1$
                 ApplicationPage.PAGE_ID));
@@ -67,7 +69,7 @@ final class OverviewLinksPart extends ManifestSectionPart {
         buf.append(": Instrumentation defined.");
         buf.append("</li>"); //$NON-NLS-1$
 
-        buf.append(String.format("<li style=\"image\" value=\"android_img\"><a href=\"page:%1$s\">", //$NON-NLS-1$
+        buf.append(String.format("<li style=\"image\" value=\"srce_img\"><a href=\"page:%1$s\">", //$NON-NLS-1$
                 ManifestEditor.TEXT_EDITOR_ID));
         buf.append("XML Source");
         buf.append("</a>"); //$NON-NLS-1$
@@ -81,12 +83,13 @@ final class OverviewLinksPart extends ManifestSectionPart {
 
         mFormText = createFormText(table, toolkit, true, buf.toString(),
                 false /* setupLayoutData */);
-        
+
         AndroidManifestDescriptors manifestDescriptor = editor.getManifestDescriptors();
 
         Image androidLogo = AdtPlugin.getAndroidLogo();
         mFormText.setImage("android_img", androidLogo); //$NON-NLS-1$
-        
+        mFormText.setImage("srce_img", IconFactory.getInstance().getIcon(AndroidXmlEditor.ICON_XML_PAGE));
+
         if (manifestDescriptor != null) {
             mFormText.setImage("app_img", getIcon(manifestDescriptor.getApplicationElement())); //$NON-NLS-1$
             mFormText.setImage("perm_img", getIcon(manifestDescriptor.getPermissionElement())); //$NON-NLS-1$
@@ -98,7 +101,7 @@ final class OverviewLinksPart extends ManifestSectionPart {
         }
         mFormText.addHyperlinkListener(editor.createHyperlinkListener());
     }
-    
+
     /**
      * Update the UI with information from the new descriptors.
      * <p/>At this point, this only refreshes the icons.
@@ -114,12 +117,8 @@ final class OverviewLinksPart extends ManifestSectionPart {
             mFormText.setImage("inst_img", getIcon(manifestDescriptor.getInstrumentationElement())); //$NON-NLS-1$
         }
     }
-    
+
     private Image getIcon(ElementDescriptor desc) {
-        if (desc != null && desc.getIcon() != null) {
-            return desc.getIcon();
-        }
-        
-        return AdtPlugin.getAndroidLogo();
+        return desc.getCustomizedIcon();
     }
 }

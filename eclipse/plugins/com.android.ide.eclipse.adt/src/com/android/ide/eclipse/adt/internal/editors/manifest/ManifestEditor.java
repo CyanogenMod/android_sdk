@@ -54,6 +54,7 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for AndroidManifest.xml.
  */
+@SuppressWarnings("restriction")
 public final class ManifestEditor extends AndroidXmlEditor {
 
     public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".manifest.ManifestEditor"; //$NON-NLS-1$
@@ -197,7 +198,6 @@ public final class ManifestEditor extends AndroidXmlEditor {
         return null;
     }
 
-    @SuppressWarnings("restriction")
     private void onDescriptorsChanged() {
         IStructuredModel model = getModelForRead();
         if (model != null) {

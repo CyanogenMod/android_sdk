@@ -441,7 +441,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             String tooltip = null;
             if (choice instanceof ElementDescriptor) {
                 keyword = ((ElementDescriptor)choice).getXmlName();
-                icon    = ((ElementDescriptor)choice).getIcon();
+                icon    = ((ElementDescriptor)choice).getGenericIcon();
                 tooltip = DescriptorsUtils.formatTooltip(((ElementDescriptor)choice).getTooltip());
             } else if (choice instanceof TextValueDescriptor) {
                 continue; // Value nodes are not part of the completion choices
@@ -449,7 +449,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 continue; // not real attribute descriptors
             } else if (choice instanceof AttributeDescriptor) {
                 keyword = ((AttributeDescriptor)choice).getXmlLocalName();
-                icon    = ((AttributeDescriptor)choice).getIcon();
+                icon    = ((AttributeDescriptor)choice).getGenericIcon();
                 if (choice instanceof TextAttributeDescriptor) {
                     tooltip = ((TextAttributeDescriptor) choice).getTooltip();
                 }

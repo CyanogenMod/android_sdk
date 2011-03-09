@@ -483,7 +483,7 @@ public class OutlinePage extends ContentOutlinePage
                         }
                     }
                     if (img == null) {
-                        img = desc.getIcon();
+                        img = desc.getCustomizedIcon();
                     }
                     if (img != null) {
                         if (node.hasError()) {

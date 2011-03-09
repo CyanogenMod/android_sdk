@@ -89,6 +89,9 @@ import java.net.URL;
 @SuppressWarnings("restriction") // Uses XML model, which has no non-restricted replacement yet
 public abstract class AndroidXmlEditor extends FormEditor implements IResourceChangeListener {
 
+    /** Icon used for the XML source page. */
+    public static final String ICON_XML_PAGE = "editor_page_source"; //$NON-NLS-1$
+
     /** Preference name for the current page of this file */
     private static final String PREF_CURRENT_PAGE = "_current_page"; //$NON-NLS-1$
 
@@ -641,7 +644,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             mTextPageIndex = index;
             setPageText(index, mTextEditor.getTitle());
             setPageImage(index,
-                    IconFactory.getInstance().getIcon("editor_page_source")); //$NON-NLS-1$
+                    IconFactory.getInstance().getIcon(ICON_XML_PAGE));
 
             if (AdtPlugin.DEBUG_XML_FILE_INIT) {
                 AdtPlugin.log(IStatus.ERROR, "Found document class: %1$s, file=%2$s",

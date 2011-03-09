@@ -61,7 +61,7 @@ public class PaletteMetadataDescriptor extends ViewElementDescriptor {
     }
 
     @Override
-    public Image getIcon() {
+    public Image getGenericIcon() {
         if (mIconName != null) {
             IconFactory factory = IconFactory.getInstance();
             Image icon = factory.getIcon(mIconName);
@@ -70,7 +70,7 @@ public class PaletteMetadataDescriptor extends ViewElementDescriptor {
             }
         }
 
-        return super.getIcon();
+        return super.getGenericIcon();
     }
 
     /**

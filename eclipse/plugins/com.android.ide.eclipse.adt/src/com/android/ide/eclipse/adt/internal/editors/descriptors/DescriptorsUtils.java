@@ -459,7 +459,7 @@ public final class DescriptorsUtils {
 
         StringBuilder sb = new StringBuilder();
 
-        Image icon = elementDescriptor.getIcon();
+        Image icon = elementDescriptor.getCustomizedIcon();
         if (icon != null) {
             sb.append("<form><li style=\"image\" value=\"" +        //$NON-NLS-1$
                     IMAGE_KEY + "\">");                             //$NON-NLS-1$
