@@ -24,6 +24,12 @@ public enum InsertType {
     /** The view is newly created (by for example a palette drag) */
     CREATE,
 
+    /**
+     * Same as {@link #CREATE} but when the views are constructed for previewing, for
+     * example as part of a palette drag.
+     */
+    CREATE_PREVIEW,
+
     /** The view is being inserted here because it was moved from somewhere else */
     MOVE,
 
@@ -32,4 +38,15 @@ public enum InsertType {
      * (including drags, but not from the palette)
      */
     PASTE;
+
+    /**
+     * Returns true if this insert type is for a newly created view (for example a by
+     * palette drag). Note that this includes both normal create events as well as well as
+     * views created as part of previewing operations.
+     *
+     * @return true if this {@link InsertType} is for a newly created view
+     */
+    public boolean isCreate() {
+        return this == CREATE || this == CREATE_PREVIEW;
+    }
 }

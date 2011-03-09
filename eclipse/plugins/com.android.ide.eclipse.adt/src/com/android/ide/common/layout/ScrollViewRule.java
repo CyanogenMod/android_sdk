@@ -44,7 +44,7 @@ public class ScrollViewRule extends FrameLayoutRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             // Insert a default linear layout (which will in turn be registered as
             // a child of this node and the create child method above will set its
             // fill parent attributes, its id, etc.

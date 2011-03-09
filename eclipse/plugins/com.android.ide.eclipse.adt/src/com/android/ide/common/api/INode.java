@@ -128,6 +128,15 @@ public interface INode {
     INode insertChildAt(String viewFqcn, int index);
 
     /**
+     * Removes the given XML element child from this node's list of children.
+     * <p/>
+     * This call must be done in the context of editXml().
+     *
+     * @param node The child to be deleted.
+     */
+    void removeChild(INode node);
+
+    /**
      * Sets an attribute for the underlying XML element.
      * Attributes are not written immediately -- instead the XML editor batches edits and
      * then commits them all together at once later.

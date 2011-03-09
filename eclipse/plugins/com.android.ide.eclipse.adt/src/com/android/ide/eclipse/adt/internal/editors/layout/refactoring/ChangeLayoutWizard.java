@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 
@@ -33,7 +34,9 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 class ChangeLayoutWizard extends VisualRefactoringWizard {
 
@@ -100,9 +103,12 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
             // We don't exclude RelativeLayout even if the current layout is RelativeLayout,
             // in case you are trying to flatten the hierarchy for a hierarchy that has a
             // RelativeLayout at the root.
+            Set<String> exclude = new HashSet<String>();
+            exclude.add(VIEW_INCLUDE);
             boolean oldIsRelativeLayout = mOldType.equals(FQCN_RELATIVE_LAYOUT);
-            String exclude = oldIsRelativeLayout ? null : mOldType;
-
+            if (oldIsRelativeLayout) {
+                exclude.add(mOldType);
+            }
             mClassNames = WrapInWizard.addLayouts(mProject, mOldType, mTypeCombo, exclude, false);
 
             mTypeCombo.select(0);

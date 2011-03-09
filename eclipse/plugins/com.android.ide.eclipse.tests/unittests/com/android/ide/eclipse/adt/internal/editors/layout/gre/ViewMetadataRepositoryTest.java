@@ -50,7 +50,7 @@ public class ViewMetadataRepositoryTest extends TestCase {
 
     public void testSkip() throws Exception {
         ViewMetadataRepository repository = ViewMetadataRepository.get();
-        assertTrue(repository.getSkip("include"));
+        assertTrue(repository.getSkip("merge"));
         assertFalse(repository.getSkip("android.widget.Button"));
     }
 

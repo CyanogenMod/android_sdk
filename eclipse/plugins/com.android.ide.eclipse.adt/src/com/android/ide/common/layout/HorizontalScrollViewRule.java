@@ -46,7 +46,7 @@ public class HorizontalScrollViewRule extends FrameLayoutRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             // Insert a horizontal linear layout which is commonly used with horizontal scrollbars
             // as described by the documentation for HorizontalScrollbars.
             INode linearLayout = node.appendChild(FQCN_LINEAR_LAYOUT);

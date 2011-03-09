@@ -42,6 +42,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
@@ -77,6 +78,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,6 +98,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
     private Button mNewButton;
     private String mCurrentResource;
     private final IProject mProject;
+    private IInputValidator mInputValidator;
 
     /**
      * Creates a Resource Chooser dialog.
@@ -135,6 +138,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         return mCurrentResource;
     }
 
+    public void setInputValidator(IInputValidator inputValidator) {
+        mInputValidator = inputValidator;
+    }
+
     @Override
     protected void computeResult() {
         Object[] elements = getSelectedElements();
@@ -143,6 +150,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
             mCurrentResource = ResourceHelper.getXmlString(mResourceType, item,
                     mSystemButton.getSelection());
+
+            if (mInputValidator != null && mInputValidator.isValid(mCurrentResource) != null) {
+                mCurrentResource = null;
+            }
         }
     }
 
@@ -227,6 +238,27 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 }
             }
         });
+    }
+
+    @Override
+    protected void handleSelectionChanged() {
+        super.handleSelectionChanged();
+        if (mInputValidator != null) {
+            Object[] elements = getSelectedElements();
+            if (elements.length == 1 && elements[0] instanceof ResourceItem) {
+                ResourceItem item = (ResourceItem)elements[0];
+                String current = ResourceHelper.getXmlString(mResourceType, item,
+                        mSystemButton.getSelection());
+                String error = mInputValidator.isValid(current);
+                IStatus status;
+                if (error != null) {
+                    status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID, error);
+                } else {
+                    status = new Status(IStatus.OK, AdtPlugin.PLUGIN_ID, null);
+                }
+                updateStatus(status);
+            }
+        }
     }
 
     private String createNewValue(ResourceType type) {
@@ -376,6 +408,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             items = mFrameworkResources.getResourceItemsOfType(mResourceType);
         }
 
+        if (items == null) {
+            items = Collections.emptyList();
+        }
+
         ResourceItem[] arrayItems = items.toArray(new ResourceItem[items.size()]);
 
         // sort the array
@@ -410,19 +446,21 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         boolean isSystem = false;
         String itemName = null;
 
-        // Is this a system resource?
-        // If not a system resource or if they are not available, this will be a project res.
-        Matcher m = mSystemResourcePattern.matcher(resourceString);
-        if (m.matches()) {
-            itemName = m.group(1);
-            isSystem = true;
-        }
-
-        if (!isSystem && itemName == null) {
-            // Try to match project resource name
-            m = mProjectResourcePattern.matcher(resourceString);
+        if (resourceString != null) {
+            // Is this a system resource?
+            // If not a system resource or if they are not available, this will be a project res.
+            Matcher m = mSystemResourcePattern.matcher(resourceString);
             if (m.matches()) {
                 itemName = m.group(1);
+                isSystem = true;
+            }
+
+            if (!isSystem && itemName == null) {
+                // Try to match project resource name
+                m = mProjectResourcePattern.matcher(resourceString);
+                if (m.matches()) {
+                    itemName = m.group(1);
+                }
             }
         }
 

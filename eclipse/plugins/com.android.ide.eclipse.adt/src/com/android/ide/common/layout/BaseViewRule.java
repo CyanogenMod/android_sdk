@@ -674,21 +674,4 @@ public class BaseViewRule implements IViewRule {
         }
         return value;
     }
-
-    private static class PropertySettingNodeHandler implements INodeHandler {
-        private final String mNamespaceUri;
-        private final String mAttribute;
-        private final String mValue;
-
-        public PropertySettingNodeHandler(String namespaceUri, String attribute, String value) {
-            super();
-            mNamespaceUri = namespaceUri;
-            mAttribute = attribute;
-            mValue = value;
-        }
-
-        public void handle(INode node) {
-            node.setAttribute(mNamespaceUri, mAttribute, mValue);
-        }
-    }
 }

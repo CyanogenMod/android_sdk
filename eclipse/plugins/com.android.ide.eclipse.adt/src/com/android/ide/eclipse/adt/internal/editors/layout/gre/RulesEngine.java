@@ -36,6 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -63,6 +64,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -874,6 +876,11 @@ public class RulesEngine {
         }
 
         public String displayResourceInput(String resourceTypeName, String currentValue) {
+            return displayResourceInput(resourceTypeName, currentValue, null);
+        }
+
+        private String displayResourceInput(String resourceTypeName, String currentValue,
+                IInputValidator validator) {
             AndroidXmlEditor editor = mEditor.getLayoutEditor();
             IProject project = editor.getProject();
             ResourceType type = ResourceType.getEnum(resourceTypeName);
@@ -892,6 +899,12 @@ public class RulesEngine {
                 // open a resource chooser dialog for specified resource type.
                 ResourceChooser dlg = new ResourceChooser(project, type, projectRepository,
                         systemRepository, shell);
+
+                if (validator != null) {
+                    // Ensure wide enough to accommodate validator error message
+                    dlg.setSize(70, 10);
+                    dlg.setInputValidator(validator);
+                }
 
                 dlg.setCurrentResource(currentValue);
 
@@ -918,6 +931,30 @@ public class RulesEngine {
                 if (dialog.open() == Window.OK) {
                     return dialog.getMargins();
                 }
+            }
+
+            return null;
+        }
+
+        public String displayIncludeSourceInput() {
+            AndroidXmlEditor editor = mEditor.getLayoutEditor();
+            IProject project = editor.getProject();
+            if (project != null) {
+                IncludeFinder includeFinder = IncludeFinder.get(project);
+                final Collection<String> invalid =
+                    includeFinder.getInvalidIncludes(editor.getInputFile());
+                IInputValidator validator = new IInputValidator() {
+                    public String isValid(String newText) {
+                        if (invalid.contains(newText)) {
+                            return String.format(
+                                    "Cyclic include, not valid",
+                                    newText);
+                        }
+                        return null;
+                    }
+                };
+
+                return displayResourceInput(ResourceType.LAYOUT.getName(), null, validator);
             }
 
             return null;

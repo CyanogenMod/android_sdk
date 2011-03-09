@@ -203,6 +203,12 @@ public class NodeProxy implements INode {
         return insertOrAppend(viewFqcn, index);
     }
 
+    public void removeChild(INode node) {
+        checkEditOK();
+
+        ((NodeProxy) node).mNode.deleteXmlNode();
+    }
+
     private INode insertOrAppend(String viewFqcn, int index) {
         checkEditOK();
 

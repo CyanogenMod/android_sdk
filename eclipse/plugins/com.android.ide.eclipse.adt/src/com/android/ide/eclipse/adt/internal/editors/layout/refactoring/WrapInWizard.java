@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RADIO_BUTTON;
 import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.RADIO_GROUP;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.sdklib.SdkConstants.CLASS_VIEW;
 import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.sdklib.SdkConstants.FN_FRAMEWORK_LIBRARY;
@@ -68,7 +69,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("restriction") // JDT model access for custom-view class lookup
 class WrapInWizard extends VisualRefactoringWizard {
@@ -139,7 +142,8 @@ class WrapInWizard extends VisualRefactoringWizard {
             mUpdateReferences.setText("Update layout references");
             mUpdateReferences.addSelectionListener(selectionListener);
 
-            mClassNames = addLayouts(mProject, mOldType, mTypeCombo, null, true);
+            Set<String> exclude = Collections.singleton(VIEW_INCLUDE);
+            mClassNames = addLayouts(mProject, mOldType, mTypeCombo, exclude, true);
             mTypeCombo.select(0);
 
             setControl(composite);
@@ -194,8 +198,8 @@ class WrapInWizard extends VisualRefactoringWizard {
         }
     }
 
-    static List<String> addLayouts(IProject project, String oldType, Combo combo, String exclude,
-            boolean addGestureOverlay) {
+    static List<String> addLayouts(IProject project, String oldType, Combo combo,
+            Set<String> exclude, boolean addGestureOverlay) {
         List<String> classNames = new ArrayList<String>();
 
         if (oldType.equals(FQCN_RADIO_BUTTON)) {
@@ -245,7 +249,7 @@ class WrapInWizard extends VisualRefactoringWizard {
                     if (layoutDescriptors != null) {
                         for (ViewElementDescriptor d : layoutDescriptors) {
                             String className = d.getFullClassName();
-                            if (exclude == null || !exclude.equals(className)) {
+                            if (exclude == null || !exclude.contains(className)) {
                                 combo.add(d.getUiName());
                                 classNames.add(className);
                             }

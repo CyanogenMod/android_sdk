@@ -42,6 +42,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.ui.IDecorContent;
@@ -770,6 +771,12 @@ public class PaletteControl extends Composite {
 
         /** Performs the actual rendering of the descriptor into an image */
         private Image renderPreview() {
+            ViewMetadataRepository repository = ViewMetadataRepository.get();
+            RenderMode renderMode = repository.getRenderMode(mDesc.getFullClassName());
+            if (renderMode == RenderMode.SKIP) {
+                return null;
+            }
+
             // Create blank XML document
             Document document = null;
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -836,7 +843,7 @@ public class PaletteControl extends Composite {
                 UiViewElementNode childUiNode = (UiViewElementNode) child;
                 NodeProxy childNode = nodeFactory.create(childUiNode);
                 canvas.getRulesEngine().callCreateHooks(layoutEditor,
-                        null, childNode, InsertType.CREATE);
+                        null, childNode, InsertType.CREATE_PREVIEW);
             }
 
             Integer overrideBgColor = null;

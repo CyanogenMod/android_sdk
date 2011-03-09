@@ -156,6 +156,10 @@
             fill="opposite"
             render="skip" />
         <view
+            class="include"
+            name="Include Other Layout"
+            render="skip" />
+        <view
             class="android.widget.TableLayout"
             fill="opposite"
             render="skip" />
@@ -309,10 +313,6 @@
             relatedTo="Button" />
         <view
             class="android.widget.ZoomControls" />
-        <view
-            class="include"
-            skip="true"
-            render="skip" />
         <view
             class="merge"
             skip="true"

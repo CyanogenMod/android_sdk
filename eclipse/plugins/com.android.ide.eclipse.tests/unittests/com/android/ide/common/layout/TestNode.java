@@ -154,6 +154,13 @@ public class TestNode implements INode {
         return child;
     }
 
+    public void removeChild(INode node) {
+        int index = mChildren.indexOf(node);
+        if (index != -1) {
+            removeChild(index);
+        }
+    }
+
     public boolean setAttribute(String uri, String localName, String value) {
         mAttributes.put(uri + localName, new TestAttribute(uri, localName, value));
         return true;
@@ -164,4 +171,5 @@ public class TestNode implements INode {
         return "TestNode [fqn=" + mFqcn + ", infos=" + mAttributeInfos
                 + ", attributes=" + mAttributes + ", bounds=" + mBounds + "]";
     }
+
 }

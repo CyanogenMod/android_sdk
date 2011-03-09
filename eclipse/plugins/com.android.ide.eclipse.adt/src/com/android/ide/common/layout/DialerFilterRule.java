@@ -37,7 +37,7 @@ public class DialerFilterRule extends BaseViewRule {
         super.onCreate(node, parent, insertType);
 
         // A DialerFilter requires a couple of nested EditTexts with fixed ids:
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             String fillParent = getFillParentValueName();
             INode hint = node.appendChild(FQCN_EDIT_TEXT);
             hint.setAttribute(ANDROID_URI, ATTR_TEXT, "Hint");
