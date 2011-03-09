@@ -191,13 +191,12 @@ public class MonkeyRunnerStarter {
     public static void main(String[] args) {
         MonkeyRunnerOptions options = MonkeyRunnerOptions.processOptions(args);
 
-        // logging property files are difficult
-        replaceAllLogFormatters(MonkeyFormatter.DEFAULT_INSTANCE, options.getLogLevel());
-
         if (options == null) {
             return;
         }
 
+        // logging property files are difficult
+        replaceAllLogFormatters(MonkeyFormatter.DEFAULT_INSTANCE, options.getLogLevel());
 
         MonkeyRunnerStarter runner = new MonkeyRunnerStarter(options);
         int error = runner.run();
