@@ -15,8 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceType;
 
@@ -196,11 +197,11 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
                 Button button = (Button) event.widget;
 
                 // Open a resource chooser dialog for specified resource type.
-                IResourceRepository projectRepository = ResourceManager.getInstance()
+                ProjectResources projectRepository = ResourceManager.getInstance()
                         .getProjectResources(mProject);
-                IResourceRepository systemRepository = mTargetData.getSystemResources();
+                ResourceRepository frameworkRepository = mTargetData.getFrameworkResources();
                 ResourceChooser dlg = new ResourceChooser(mProject, ResourceType.DIMEN,
-                        projectRepository, systemRepository, getShell());
+                        projectRepository, frameworkRepository, getShell());
                 Text text = (Text) button.getData(PROP_TEXTFIELD);
                 dlg.setCurrentResource(text.getText().trim());
                 if (dlg.open() == Window.OK) {

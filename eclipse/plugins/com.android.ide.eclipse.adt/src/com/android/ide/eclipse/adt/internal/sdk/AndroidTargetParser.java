@@ -25,11 +25,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
@@ -86,7 +83,7 @@ public final class AndroidTargetParser {
         try {
             SubMonitor progress = SubMonitor.convert(monitor,
                     String.format("Parsing SDK %1$s", mAndroidTarget.getName()),
-                    13);
+                    12);
 
             AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget);
 
@@ -96,15 +93,6 @@ public final class AndroidTargetParser {
                 new AndroidJarLoader(mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
 
             preload(classLoader, progress.newChild(40, SubMonitor.SUPPRESS_NONE));
-
-            if (progress.isCanceled()) {
-                return Status.CANCEL_STATUS;
-            }
-
-            // get the resource Ids.
-            progress.subTask("Resource IDs");
-            IResourceRepository frameworkRepository = collectResourceIds(classLoader);
-            progress.worked(1);
 
             if (progress.isCanceled()) {
                 return Status.CANCEL_STATUS;
@@ -231,8 +219,8 @@ public final class AndroidTargetParser {
             progress.worked(1);
 
             // load the framework resources.
-            ProjectResources resources = ResourceManager.getInstance().loadFrameworkResources(
-                    mAndroidTarget);
+            ResourceRepository frameworkResources =
+                    ResourceManager.getInstance().loadFrameworkResources(mAndroidTarget);
             progress.worked(1);
 
             // now load the layout lib bridge
@@ -243,7 +231,7 @@ public final class AndroidTargetParser {
             progress.worked(1);
 
             // and finally create the PlatformData with all that we loaded.
-            targetData.setExtraData(frameworkRepository,
+            targetData.setExtraData(
                     manifestDescriptors,
                     layoutDescriptors,
                     menuDescriptors,
@@ -256,7 +244,7 @@ public final class AndroidTargetParser {
                     categories.toArray(new String[categories.size()]),
                     mAndroidTarget.getPlatformLibraries(),
                     mAndroidTarget.getOptionalLibraries(),
-                    resources,
+                    frameworkResources,
                     layoutBridge);
 
             Sdk.getCurrent().setTargetData(mAndroidTarget, targetData);
@@ -287,72 +275,6 @@ public final class AndroidTargetParser {
         } catch (IOException e) {
             AdtPlugin.log(e, "Problem preloading classes"); //$NON-NLS-1$
         }
-    }
-
-    /**
-     * Creates an IResourceRepository for the framework resources.
-     *
-     * @param classLoader The framework SDK jar classloader
-     * @return a map of the resources, or null if it failed.
-     */
-    private IResourceRepository collectResourceIds(
-            AndroidJarLoader classLoader) {
-        try {
-            Class<?> r = classLoader.loadClass(SdkConstants.CLASS_R);
-
-            if (r != null) {
-                Map<ResourceType, List<ResourceItem>> map = parseRClass(r);
-                if (map != null) {
-                    return new FrameworkResourceRepository(map);
-                }
-            }
-        } catch (ClassNotFoundException e) {
-            AdtPlugin.logAndPrintError(e, TAG,
-                    "Collect resource IDs failed, class %1$s not found in %2$s", //$NON-NLS-1$
-                    SdkConstants.CLASS_R,
-                    mAndroidTarget.getPath(IAndroidTarget.ANDROID_JAR));
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse the R class and build the resource map.
-     *
-     * @param rClass the Class object representing the Resources.
-     * @return a map of the resource or null
-     */
-    private Map<ResourceType, List<ResourceItem>> parseRClass(Class<?> rClass) {
-        // get the sub classes.
-        Class<?>[] classes = rClass.getClasses();
-
-        if (classes.length > 0) {
-            HashMap<ResourceType, List<ResourceItem>> map =
-                new HashMap<ResourceType, List<ResourceItem>>();
-
-            // get the fields of each class.
-            for (int c = 0 ; c < classes.length ; c++) {
-                Class<?> subClass = classes[c];
-                String name = subClass.getSimpleName();
-
-                // get the matching ResourceType
-                ResourceType type = ResourceType.getEnum(name);
-                if (type != null) {
-                    List<ResourceItem> list = new ArrayList<ResourceItem>();
-                    map.put(type, list);
-
-                    Field[] fields = subClass.getFields();
-
-                    for (Field f : fields) {
-                        list.add(new ResourceItem(f.getName()));
-                    }
-                }
-            }
-
-            return map;
-        }
-
-        return null;
     }
 
     /**

@@ -47,6 +47,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -790,7 +791,7 @@ public class Hyperlinks {
     }
 
     /** Return either the project resources or the framework resources (or null) */
-    private static ProjectResources getResources(IProject project, boolean framework) {
+    private static ResourceRepository getResources(IProject project, boolean framework) {
         if (framework) {
             IAndroidTarget target = getTarget(project);
             if (target == null) {
@@ -822,7 +823,7 @@ public class Hyperlinks {
         }
 
         // Look in the configuration folder: Search compatible configurations
-        ProjectResources resources = getResources(project, false /* isFramework */);
+        ResourceRepository resources = getResources(project, false /* isFramework */);
         FolderConfiguration configuration = getConfiguration();
         if (configuration != null) { // Not the case when searching from Java files for example
             List<ResourceFolder> folders = resources.getFolders(ResourceFolderType.LAYOUT);
@@ -1128,7 +1129,7 @@ public class Hyperlinks {
 
         boolean isFramework = url.startsWith("@android"); //$NON-NLS-1$
 
-        ProjectResources resources = getResources(project, isFramework);
+        ResourceRepository resources = getResources(project, isFramework);
         if (resources == null) {
             return null;
         }

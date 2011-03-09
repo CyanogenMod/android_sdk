@@ -28,12 +28,10 @@ import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.Resour
 import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
-import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IFile;
@@ -77,10 +75,8 @@ import org.w3c.dom.Text;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -92,7 +88,8 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     private Pattern mProjectResourcePattern;
     private ResourceType mResourceType;
-    private IResourceRepository mProjectResources;
+    private final ResourceRepository mProjectResources;
+    private final ResourceRepository mFrameworkResources;
     private Pattern mSystemResourcePattern;
     private Button mProjectButton;
     private Button mSystemButton;
@@ -105,18 +102,19 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
      * @param project Project being worked on
      * @param type The type of the resource to choose
      * @param projectResources The repository for the project
-     * @param systemResources The System resource repository
+     * @param frameworkResources The Framework resource repository
      * @param parent the parent shell
      */
     public ResourceChooser(IProject project, ResourceType type,
-            IResourceRepository projectResources,
-            IResourceRepository systemResources,
+            ResourceRepository projectResources,
+            ResourceRepository frameworkResources,
             Shell parent) {
         super(parent, new ResourceLabelProvider());
         mProject = project;
 
         mResourceType = type;
         mProjectResources = projectResources;
+        mFrameworkResources = frameworkResources;
 
         mProjectResourcePattern = Pattern.compile(
                 "@" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -371,25 +369,21 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
      * Setups the current list.
      */
     private ResourceItem[] setupResourceList() {
-        ResourceItem[] items = null;
+        Collection<ResourceItem> items = null;
         if (mProjectButton.getSelection()) {
-            items = mProjectResources.getResources(mResourceType);
-            setListElements(items);
+            items = mProjectResources.getResourceItemsOfType(mResourceType);
         } else if (mSystemButton.getSelection()) {
-            AndroidTargetData targetData = Sdk.getCurrent().getTargetData(mProject);
-            if (targetData != null) {
-                Collection<String> names = targetData.getPublicResourceNames(mResourceType);
-                List<ResourceItem> list = new ArrayList<ResourceItem>();
-                for (String name : names) {
-                    list.add(new ResourceItem(name));
-                }
-                Collections.sort(list);
-                items = list.toArray(new ResourceItem[list.size()]);
-                setListElements(items);
-            }
+            items = mFrameworkResources.getResourceItemsOfType(mResourceType);
         }
 
-        return items;
+        ResourceItem[] arrayItems = items.toArray(new ResourceItem[items.size()]);
+
+        // sort the array
+        Arrays.sort(arrayItems);
+
+        setListElements(arrayItems);
+
+        return arrayItems;
     }
 
     /**

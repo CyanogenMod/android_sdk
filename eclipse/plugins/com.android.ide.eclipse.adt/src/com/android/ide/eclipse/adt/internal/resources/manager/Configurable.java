@@ -19,28 +19,11 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 
 /**
- * Base class for file system resource items (Folders, Files).
+ * An object that is associated with a {@link FolderConfiguration}.
  */
-public abstract class Resource {
-    private boolean mTouched = true;
-
+public interface Configurable {
     /**
      * Returns the {@link FolderConfiguration} for this object.
      */
-    public abstract FolderConfiguration getConfiguration();
-
-    /**
-     * Indicates that the underlying file was changed.
-     */
-    public final void touch() {
-       mTouched = true;
-    }
-
-    public final boolean isTouched() {
-        return mTouched;
-    }
-
-    public final void resetTouch() {
-        mTouched = false;
-    }
+    public FolderConfiguration getConfiguration();
 }

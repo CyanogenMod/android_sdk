@@ -121,14 +121,10 @@ public class ResourceResolver extends RenderResources {
         if (frameworkTheme) {
             Map<String, ResourceValue> frameworkStyleMap = mFrameworkResources.get(
                     ResourceType.STYLE);
-            if (frameworkStyleMap != null) {
-                theme = frameworkStyleMap.get(name);
-            }
+            theme = frameworkStyleMap.get(name);
         } else {
             Map<String, ResourceValue> projectStyleMap = mProjectResources.get(ResourceType.STYLE);
-            if (projectStyleMap != null) {
-                theme = projectStyleMap.get(name);
-            }
+            theme = projectStyleMap.get(name);
         }
 
         if (theme instanceof StyleResourceValue) {
@@ -334,29 +330,25 @@ public class ResourceResolver extends RenderResources {
         // if allowed, search in the project resources first.
         if (frameworkOnly == false) {
             typeMap = mProjectResources.get(resType);
-            if (typeMap != null) {
-                ResourceValue item = typeMap.get(resName);
-                if (item != null) {
-                    return item;
-                }
+            ResourceValue item = typeMap.get(resName);
+            if (item != null) {
+                return item;
             }
         }
 
         // now search in the framework resources.
         typeMap = mFrameworkResources.get(resType);
-        if (typeMap != null) {
-            ResourceValue item = typeMap.get(resName);
-            if (item != null) {
-                return item;
-            }
+        ResourceValue item = typeMap.get(resName);
+        if (item != null) {
+            return item;
+        }
 
-            // if it was not found and the type is an id, it is possible that the ID was
-            // generated dynamically when compiling the framework resources.
-            // Look for it in the R map.
-            if (mFrameworkProvider != null && resType == ResourceType.ID) {
-                if (mFrameworkProvider.getId(resType, resName) != null) {
-                    return new ResourceValue(resType, resName, true);
-                }
+        // if it was not found and the type is an id, it is possible that the ID was
+        // generated dynamically when compiling the framework resources.
+        // Look for it in the R map.
+        if (mFrameworkProvider != null && resType == ResourceType.ID) {
+            if (mFrameworkProvider.getId(resType, resName) != null) {
+                return new ResourceValue(resType, resName, true);
             }
         }
 
@@ -397,32 +389,30 @@ public class ResourceResolver extends RenderResources {
         Map<String, ResourceValue> projectStyleMap = mProjectResources.get(ResourceType.STYLE);
         Map<String, ResourceValue> frameworkStyleMap = mFrameworkResources.get(ResourceType.STYLE);
 
-        if (projectStyleMap != null && frameworkStyleMap != null) {
-            // first, get the theme
-            ResourceValue theme = null;
+        // first, get the theme
+        ResourceValue theme = null;
 
-            // project theme names have been prepended with a *
-            if (isProjectTheme) {
-                theme = projectStyleMap.get(themeName);
-            } else {
-                theme = frameworkStyleMap.get(themeName);
-            }
+        // project theme names have been prepended with a *
+        if (isProjectTheme) {
+            theme = projectStyleMap.get(themeName);
+        } else {
+            theme = frameworkStyleMap.get(themeName);
+        }
 
-            if (theme instanceof StyleResourceValue) {
-                // compute the inheritance map for both the project and framework styles
-                computeStyleInheritance(projectStyleMap.values(), projectStyleMap,
-                        frameworkStyleMap);
+        if (theme instanceof StyleResourceValue) {
+            // compute the inheritance map for both the project and framework styles
+            computeStyleInheritance(projectStyleMap.values(), projectStyleMap,
+                    frameworkStyleMap);
 
-                // Compute the style inheritance for the framework styles/themes.
-                // Since, for those, the style parent values do not contain 'android:'
-                // we want to force looking in the framework style only to avoid using
-                // similarly named styles from the project.
-                // To do this, we pass null in lieu of the project style map.
-                computeStyleInheritance(frameworkStyleMap.values(), null /*inProjectStyleMap */,
-                        frameworkStyleMap);
+            // Compute the style inheritance for the framework styles/themes.
+            // Since, for those, the style parent values do not contain 'android:'
+            // we want to force looking in the framework style only to avoid using
+            // similarly named styles from the project.
+            // To do this, we pass null in lieu of the project style map.
+            computeStyleInheritance(frameworkStyleMap.values(), null /*inProjectStyleMap */,
+                    frameworkStyleMap);
 
-                mTheme = (StyleResourceValue) theme;
-            }
+            mTheme = (StyleResourceValue) theme;
         }
     }
 

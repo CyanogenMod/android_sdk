@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.resources.ResourceType;
 
 
@@ -29,11 +30,8 @@ public class ResourceHelper {
      */
     public static String getXmlString(ResourceType type, ResourceItem resourceItem,
             boolean system) {
-        if (type == ResourceType.ID && resourceItem instanceof IIdResourceItem) {
-            IIdResourceItem idResource = (IIdResourceItem)resourceItem;
-            if (idResource.isDeclaredInline()) {
-                return (system?"@android:":"@+") + type.getName() + "/" + resourceItem.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            }
+        if (type == ResourceType.ID && resourceItem.isDeclaredInline()) {
+            return (system?"@android:":"@+") + type.getName() + "/" + resourceItem.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
 
         return (system?"@android:":"@") + type.getName() + "/" + resourceItem.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

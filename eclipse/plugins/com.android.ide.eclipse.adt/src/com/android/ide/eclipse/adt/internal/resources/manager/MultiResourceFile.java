@@ -26,14 +26,11 @@ import com.android.resources.ResourceType;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -49,81 +46,79 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     private final static SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
 
-    private final Map<ResourceType, HashMap<String, ResourceValue>> mResourceItems =
-        new EnumMap<ResourceType, HashMap<String, ResourceValue>>(ResourceType.class);
+    private final Map<ResourceType, Map<String, ResourceValue>> mResourceItems =
+        new EnumMap<ResourceType, Map<String, ResourceValue>>(ResourceType.class);
 
-    private List<ResourceType> mResourceTypeList = null;
+    private Collection<ResourceType> mResourceTypeList = null;
 
     public MultiResourceFile(IAbstractFile file, ResourceFolder folder) {
         super(file, folder);
     }
 
     @Override
-    public List<ResourceType> getResourceTypes() {
-        update();
+    protected void load() {
+        // need to parse the file and find the content.
+        parseFile();
 
-        if (mResourceTypeList == null) {
-            Set<ResourceType> keys = mResourceItems.keySet();
-            mResourceTypeList = new ArrayList<ResourceType>();
-            mResourceTypeList.addAll(keys);
-            mResourceTypeList = Collections.unmodifiableList(mResourceTypeList);
-        }
+        // create new ResourceItems for the new content.
+        mResourceTypeList = Collections.unmodifiableCollection(mResourceItems.keySet());
 
+        // create/update the resource items.
+        updateResourceItems();
+    }
+
+    @Override
+    protected void update() {
+        // remove this file from all existing ResourceItem.
+        getFolder().getRepository().removeFile(mResourceTypeList, this);
+
+        // reset current content.
+        mResourceItems.clear();
+
+        // need to parse the file and find the content.
+        parseFile();
+
+        // create new ResourceItems for the new content.
+        mResourceTypeList = Collections.unmodifiableCollection(mResourceItems.keySet());
+
+        // create/update the resource items.
+        updateResourceItems();
+    }
+
+    @Override
+    protected void dispose() {
+        // only remove this file from all existing ResourceItem.
+        getFolder().getRepository().removeFile(mResourceTypeList, this);
+
+        // don't need to touch the content, it'll get reclaimed as this objects disappear.
+        // In the mean time other objects may need to access it.
+    }
+
+    @Override
+    public Collection<ResourceType> getResourceTypes() {
         return mResourceTypeList;
     }
 
     @Override
     public boolean hasResources(ResourceType type) {
-        update();
-
-        HashMap<String, ResourceValue> list = mResourceItems.get(type);
+        Map<String, ResourceValue> list = mResourceItems.get(type);
         return (list != null && list.size() > 0);
     }
 
-    @Override
-    public Collection<ProjectResourceItem> getResources(ResourceType type,
-            ProjectResources projectResources) {
-        update();
+    private void updateResourceItems() {
+        ResourceRepository repository = getRepository();
+        for (ResourceType type : mResourceTypeList) {
+            Map<String, ResourceValue> list = mResourceItems.get(type);
 
-        HashMap<String, ResourceValue> list = mResourceItems.get(type);
+            if (list != null) {
+                Collection<ResourceValue> values = list.values();
+                for (ResourceValue res : values) {
+                    ResourceItem item = repository.getResourceItem(type, res.getName());
 
-        ArrayList<ProjectResourceItem> items = new ArrayList<ProjectResourceItem>();
-
-        if (list != null) {
-            Collection<ResourceValue> values = list.values();
-            for (ResourceValue res : values) {
-                ProjectResourceItem item = projectResources.findResourceItem(type, res.getName());
-
-                if (item == null) {
-                    if (type == ResourceType.ID) {
-                        item = new IdResourceItem(res.getName(), false /* isDeclaredInline */);
-                    } else {
-                        item = new ConfigurableResourceItem(res.getName());
-                    }
-                    items.add(item);
+                    // add this file to the list of files generating this resource item.
+                    item.add(this);
                 }
-
-                item.add(this);
             }
-        }
-
-        return items;
-    }
-
-    /**
-     * Updates the Resource items if necessary.
-     */
-    private void update() {
-        if (isTouched() == true) {
-            // reset current content.
-            mResourceItems.clear();
-
-            // need to parse the file and find the content.
-            parseFile();
-
-            resetTouch();
-
-            mResourceTypeList = null;
         }
     }
 
@@ -147,7 +142,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
      * @param value The value of the resource.
      */
     public void addResourceValue(ResourceType resType, ResourceValue value) {
-        HashMap<String, ResourceValue> list = mResourceItems.get(resType);
+        Map<String, ResourceValue> list = mResourceItems.get(resType);
 
         // if the list does not exist, create it.
         if (list == null) {
@@ -169,10 +164,8 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     @Override
     public ResourceValue getValue(ResourceType type, String name) {
-        update();
-
         // get the list for the given type
-        HashMap<String, ResourceValue> list = mResourceItems.get(type);
+        Map<String, ResourceValue> list = mResourceItems.get(type);
 
         if (list != null) {
             return list.get(name);

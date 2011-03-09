@@ -38,8 +38,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
-import com.android.ide.eclipse.adt.internal.resources.IResourceRepository;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -852,7 +852,7 @@ public class RulesEngine {
             IProject project = editor.getProject();
             if (project != null) {
                 // get the resource repository for this project and the system resources.
-                IResourceRepository projectRepository =
+                ResourceRepository projectRepository =
                     ResourceManager.getInstance().getProjectResources(project);
                 Shell shell = AdtPlugin.getDisplay().getActiveShell();
                 if (shell == null) {
@@ -879,7 +879,7 @@ public class RulesEngine {
             ResourceType type = ResourceType.getEnum(resourceTypeName);
             if (project != null) {
                 // get the resource repository for this project and the system resources.
-                IResourceRepository projectRepository = ResourceManager.getInstance()
+                ResourceRepository projectRepository = ResourceManager.getInstance()
                         .getProjectResources(project);
                 Shell shell = AdtPlugin.getDisplay().getActiveShell();
                 if (shell == null) {
@@ -887,7 +887,7 @@ public class RulesEngine {
                 }
 
                 AndroidTargetData data = editor.getTargetData();
-                IResourceRepository systemRepository = data.getSystemResources();
+                ResourceRepository systemRepository = data.getFrameworkResources();
 
                 // open a resource chooser dialog for specified resource type.
                 ResourceChooser dlg = new ResourceChooser(project, type, projectRepository,

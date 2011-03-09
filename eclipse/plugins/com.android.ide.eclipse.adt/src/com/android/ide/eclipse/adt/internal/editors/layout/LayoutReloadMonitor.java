@@ -37,6 +37,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -352,7 +353,7 @@ public final class LayoutReloadMonitor {
 
             // now check that the file is *NOT* a layout file (those automatically trigger a layout
             // reload and we don't want to do it twice.)
-            List<ResourceType> resTypes = file.getResourceTypes();
+            Collection<ResourceType> resTypes = file.getResourceTypes();
 
             // it's unclear why but there has been cases of resTypes being empty!
             if (resTypes.size() > 0) {

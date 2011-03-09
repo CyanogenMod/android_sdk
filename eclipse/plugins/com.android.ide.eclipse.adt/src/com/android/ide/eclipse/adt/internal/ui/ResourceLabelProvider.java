@@ -16,10 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.eclipse.adt.internal.resources.IIdResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.ResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.manager.ConfigurableResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.manager.IdResourceItem;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.resources.ResourceType;
 
@@ -47,15 +44,15 @@ import org.eclipse.ui.PlatformUI;
  * <li>{@link ResourceFile}. This represents a particular version of the {@link ResourceItem}.
  * It is displayed as a list of resource qualifier.
  * </li>
- * </ul> 
- * </ul> 
- * </ul> 
- * 
+ * </ul>
+ * </ul>
+ * </ul>
+ *
  * @see ResourceContentProvider
  */
 public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvider {
     private Image mWarningImage;
-    
+
     public ResourceLabelProvider() {
         mWarningImage = PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(
                 ISharedImages.IMG_OBJS_WARN_TSK).createImage();
@@ -94,8 +91,8 @@ public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvide
 
     public Image getColumnImage(Object element, int columnIndex) {
         if (columnIndex == 1) {
-            if (element instanceof ConfigurableResourceItem) {
-                ConfigurableResourceItem item = (ConfigurableResourceItem)element;
+            if (element instanceof ResourceItem) {
+                ResourceItem item = (ResourceItem)element;
                 if (item.hasDefault() == false) {
                     return mWarningImage;
                 }
@@ -116,19 +113,18 @@ public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvide
                 }
                 break;
             case 1:
-                if (element instanceof ConfigurableResourceItem) {
-                    ConfigurableResourceItem item = (ConfigurableResourceItem)element;
-                    int count = item.getAlternateCount();
-                    if (count > 0) {
-                        if (item.hasDefault()) {
-                            count++;
-                        }
-                        return String.format("%1$d version(s)", count);
-                    }
-                } else if (element instanceof IIdResourceItem) {
-                    IIdResourceItem idResource = (IIdResourceItem)element;
-                    if (idResource.isDeclaredInline()) {
+                if (element instanceof ResourceItem) {
+                    ResourceItem item = (ResourceItem)element;
+                    if (item.isDeclaredInline()) {
                         return "Declared inline";
+                    } else {
+                        int count = item.getAlternateCount();
+                        if (count > 0) {
+                            if (item.hasDefault()) {
+                                count++;
+                            }
+                            return String.format("%1$d version(s)", count);
+                        }
                     }
                 }
                 return null;

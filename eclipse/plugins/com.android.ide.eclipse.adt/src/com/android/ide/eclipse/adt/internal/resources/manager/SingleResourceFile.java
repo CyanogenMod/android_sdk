@@ -23,7 +23,6 @@ import com.android.io.IAbstractFile;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceType;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -74,33 +73,37 @@ public class SingleResourceFile extends ResourceFile {
     }
 
     @Override
-    public List<ResourceType> getResourceTypes() {
+    protected void load() {
+        // get a resource item matching the given type and name
+        ResourceItem item = getRepository().getResourceItem(mType, mResourceName);
+
+        // add this file to the list of files generating this resource item.
+        item.add(this);
+    }
+
+    @Override
+    protected void update() {
+        // when this happens, nothing needs to be done since the file only generates
+        // a single resources that doesn't actually change (its content is the file path)
+    }
+
+    @Override
+    protected void dispose() {
+        // only remove this file from the existing ResourceItem.
+        getFolder().getRepository().removeFile(mType, this);
+
+        // don't need to touch the content, it'll get reclaimed as this objects disappear.
+        // In the mean time other objects may need to access it.
+    }
+
+    @Override
+    public Collection<ResourceType> getResourceTypes() {
         return FolderTypeRelationship.getRelatedResourceTypes(getFolder().getType());
     }
 
     @Override
     public boolean hasResources(ResourceType type) {
         return FolderTypeRelationship.match(type, getFolder().getType());
-    }
-
-    @Override
-    public Collection<ProjectResourceItem> getResources(ResourceType type,
-            ProjectResources projectResources) {
-
-        // looking for an existing ResourceItem with this name and type
-        ProjectResourceItem item = projectResources.findResourceItem(type, mResourceName);
-
-        ArrayList<ProjectResourceItem> items = new ArrayList<ProjectResourceItem>();
-
-        if (item == null) {
-            item = new ConfigurableResourceItem(mResourceName);
-            items.add(item);
-        }
-
-        // add this ResourceFile to the ResourceItem
-        item.add(this);
-
-        return items;
     }
 
     /*

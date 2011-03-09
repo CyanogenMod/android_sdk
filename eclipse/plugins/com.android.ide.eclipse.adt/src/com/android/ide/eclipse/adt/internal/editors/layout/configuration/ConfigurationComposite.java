@@ -36,6 +36,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
@@ -211,9 +212,9 @@ public class ConfigurationComposite extends Composite {
          */
         void onRenderingTargetPostChange(IAndroidTarget target);
 
-        ProjectResources getProjectResources();
-        ProjectResources getFrameworkResources();
-        ProjectResources getFrameworkResources(IAndroidTarget target);
+        ResourceRepository getProjectResources();
+        ResourceRepository getFrameworkResources();
+        ResourceRepository getFrameworkResources(IAndroidTarget target);
         Map<ResourceType, Map<String, ResourceValue>> getConfiguredProjectResources();
         Map<ResourceType, Map<String, ResourceValue>> getConfiguredFrameworkResources();
     }
@@ -1121,12 +1122,12 @@ public class ConfigurationComposite extends Composite {
             boolean hasLocale = false;
 
             // get the languages from the project.
-            ProjectResources project = mListener.getProjectResources();
+            ResourceRepository projectRes = mListener.getProjectResources();
 
             // in cases where the opened file is not linked to a project, this could be null.
-            if (project != null) {
+            if (projectRes != null) {
                 // now get the languages from the project.
-                languages = project.getLanguages();
+                languages = projectRes.getLanguages();
 
                 for (String language : languages) {
                     hasLocale = true;
@@ -1134,7 +1135,7 @@ public class ConfigurationComposite extends Composite {
                     LanguageQualifier langQual = new LanguageQualifier(language);
 
                     // find the matching regions and add them
-                    SortedSet<String> regions = project.getRegions(language);
+                    SortedSet<String> regions = projectRes.getRegions(language);
                     for (String region : regions) {
                         mLocaleCombo.add(
                                 String.format("%1$s / %2$s", language, region)); //$NON-NLS-1$
@@ -1225,7 +1226,7 @@ public class ConfigurationComposite extends Composite {
             return; // can't do anything w/o it.
         }
 
-        ProjectResources frameworkProject = mListener.getFrameworkResources(getRenderingTarget());
+        ResourceRepository frameworkRes = mListener.getFrameworkResources(getRenderingTarget());
 
         mDisableUpdates++;
 
@@ -1237,10 +1238,10 @@ public class ConfigurationComposite extends Composite {
             ArrayList<String> themes = new ArrayList<String>();
 
             // get the themes, and languages from the Framework.
-            if (frameworkProject != null) {
+            if (frameworkRes != null) {
                 // get the configured resources for the framework
                 Map<ResourceType, Map<String, ResourceValue>> frameworResources =
-                    frameworkProject.getConfiguredResources(getCurrentConfig());
+                    frameworkRes.getConfiguredResources(getCurrentConfig());
 
                 if (frameworResources != null) {
                     // get the styles.
@@ -1269,9 +1270,9 @@ public class ConfigurationComposite extends Composite {
             }
 
             // now get the themes and languages from the project.
-            ProjectResources project = mListener.getProjectResources();
+            ResourceRepository projectRes = mListener.getProjectResources();
             // in cases where the opened file is not linked to a project, this could be null.
-            if (project != null) {
+            if (projectRes != null) {
                 // get the configured resources for the project
                 Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes =
                     mListener.getConfiguredProjectResources();
