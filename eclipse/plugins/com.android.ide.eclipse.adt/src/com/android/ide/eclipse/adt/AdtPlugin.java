@@ -117,8 +117,11 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     /**
      * Temporary logging code to help track down
      * http://code.google.com/p/android/issues/detail?id=15003
+     *
+     * Deactivated right now.
+     * TODO remove this and associated logging code once we're done with issue 15003.
      */
-    public static final boolean DEBUG_XML_FILE_INIT = true;
+    public static final boolean DEBUG_XML_FILE_INIT = false;
 
     /** The plug-in ID */
     public static final String PLUGIN_ID = "com.android.ide.eclipse.adt"; //$NON-NLS-1$
