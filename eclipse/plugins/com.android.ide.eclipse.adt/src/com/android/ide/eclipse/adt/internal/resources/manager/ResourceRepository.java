@@ -20,7 +20,6 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.IAbstractFolder;
 import com.android.resources.FolderTypeRelationship;
@@ -135,7 +134,7 @@ public abstract class ResourceRepository {
             for (int i = 0 ; i < count ; i++) {
                 ResourceFolder resFolder = list.get(i);
                 // this is only used for Eclipse stuff so we know it's an IFolderWrapper
-                IAbstractFolder folder = (IFolderWrapper) resFolder.getFolder();
+                IAbstractFolder folder = resFolder.getFolder();
                 if (removedFolder.equals(folder)) {
                     // we found the matching ResourceFolder. we need to remove it.
                     list.remove(i);
@@ -315,7 +314,7 @@ public abstract class ResourceRepository {
         }
 
         // from those, get the folder with a config matching the given reference configuration.
-        Configurable match = findMatchingConfigurable(matchingFolders, config);
+        Configurable match = config.findMatchingConfigurable(matchingFolders);
 
         // do we have a matching folder?
         if (match instanceof ResourceFolder) {
@@ -345,8 +344,9 @@ public abstract class ResourceRepository {
         for (ResourceItem item : items) {
             if (name.equals(item.getName())) {
                 if (referenceConfig != null) {
-                    Configurable match = findMatchingConfigurable(item.getSourceFileList(),
-                            referenceConfig);
+                    Configurable match = referenceConfig.findMatchingConfigurable(
+                            item.getSourceFileList());
+
                     if (match instanceof ResourceFile) {
                         return Collections.singletonList((ResourceFile) match);
                     }
@@ -471,135 +471,16 @@ public abstract class ResourceRepository {
         HashMap<String, ResourceValue> map = new HashMap<String, ResourceValue>(items.size());
 
         for (ResourceItem item : items) {
-            // get the source files generating this resource
-            List<ResourceFile> list = item.getSourceFileList();
-
-            // look for the best match for the given configuration
-            Configurable match = findMatchingConfigurable(list, referenceConfig);
-
-            if (match instanceof ResourceFile) {
-                ResourceFile matchResFile = (ResourceFile)match;
-
-                // get the value of this configured resource.
-                ResourceValue value = matchResFile.getValue(type, item.getName());
-
-                if (value != null) {
-                    map.put(item.getName(), value);
-                }
+            ResourceValue value = item.getResourceValue(type, referenceConfig,
+                    isFrameworkRepository());
+            if (value != null) {
+                map.put(item.getName(), value);
             }
         }
 
         return map;
     }
 
-    /**
-     * Returns the best matching {@link Configurable}.
-     *
-     * @param configurables the list of {@link Configurable} to choose from.
-     * @param referenceConfig the {@link FolderConfiguration} to match.
-     *
-     * @return an item from the given list of {@link Configurable} or null.
-     *
-     * @see http://d.android.com/guide/topics/resources/resources-i18n.html#best-match
-     */
-    private Configurable findMatchingConfigurable(List<? extends Configurable> configurables,
-            FolderConfiguration referenceConfig) {
-        //
-        // 1: eliminate resources that contradict the reference configuration
-        // 2: pick next qualifier type
-        // 3: check if any resources use this qualifier, if no, back to 2, else move on to 4.
-        // 4: eliminate resources that don't use this qualifier.
-        // 5: if more than one resource left, go back to 2.
-        //
-        // The precedence of the qualifiers is more important than the number of qualifiers that
-        // exactly match the device.
-
-        // 1: eliminate resources that contradict
-        ArrayList<Configurable> matchingConfigurables = new ArrayList<Configurable>();
-        for (int i = 0 ; i < configurables.size(); i++) {
-            Configurable res = configurables.get(i);
-
-            if (res.getConfiguration().isMatchFor(referenceConfig)) {
-                matchingConfigurables.add(res);
-            }
-        }
-
-        // if there is only one match, just take it
-        if (matchingConfigurables.size() == 1) {
-            return matchingConfigurables.get(0);
-        } else if (matchingConfigurables.size() == 0) {
-            return null;
-        }
-
-        // 2. Loop on the qualifiers, and eliminate matches
-        final int count = FolderConfiguration.getQualifierCount();
-        for (int q = 0 ; q < count ; q++) {
-            // look to see if one configurable has this qualifier.
-            // At the same time also record the best match value for the qualifier (if applicable).
-
-            // The reference value, to find the best match.
-            // Note that this qualifier could be null. In which case any qualifier found in the
-            // possible match, will all be considered best match.
-            ResourceQualifier referenceQualifier = referenceConfig.getQualifier(q);
-
-            boolean found = false;
-            ResourceQualifier bestMatch = null; // this is to store the best match.
-            for (Configurable configurable : matchingConfigurables) {
-                ResourceQualifier qualifier = configurable.getConfiguration().getQualifier(q);
-                if (qualifier != null) {
-                    // set the flag.
-                    found = true;
-
-                    // Now check for a best match. If the reference qualifier is null ,
-                    // any qualifier is a "best" match (we don't need to record all of them.
-                    // Instead the non compatible ones are removed below)
-                    if (referenceQualifier != null) {
-                        if (qualifier.isBetterMatchThan(bestMatch, referenceQualifier)) {
-                            bestMatch = qualifier;
-                        }
-                    }
-                }
-            }
-
-            // 4. If a configurable has a qualifier at the current index, remove all the ones that
-            // do not have one, or whose qualifier value does not equal the best match found above
-            // unless there's no reference qualifier, in which case they are all considered
-            // "best" match.
-            if (found) {
-                for (int i = 0 ; i < matchingConfigurables.size(); ) {
-                    Configurable configurable = matchingConfigurables.get(i);
-                    ResourceQualifier qualifier = configurable.getConfiguration().getQualifier(q);
-
-                    if (qualifier == null) {
-                        // this resources has no qualifier of this type: rejected.
-                        matchingConfigurables.remove(configurable);
-                    } else if (referenceQualifier != null && bestMatch != null &&
-                            bestMatch.equals(qualifier) == false) {
-                        // there's a reference qualifier and there is a better match for it than
-                        // this resource, so we reject it.
-                        matchingConfigurables.remove(configurable);
-                    } else {
-                        // looks like we keep this resource, move on to the next one.
-                        i++;
-                    }
-                }
-
-                // at this point we may have run out of matching resources before going
-                // through all the qualifiers.
-                if (matchingConfigurables.size() < 2) {
-                    break;
-                }
-            }
-        }
-
-        // Because we accept resources whose configuration have qualifiers where the reference
-        // configuration doesn't, we can end up with more than one match. In this case, we just
-        // take the first one.
-        if (matchingConfigurables.size() == 0) {
-            return null;
-        }
-        return matchingConfigurables.get(0);
-    }
 
     /**
      * Called after a resource change event, when the resource delta has been processed.

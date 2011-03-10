@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.resources.ResourceType;
 
@@ -91,6 +92,29 @@ public class ResourceItem implements Comparable<ResourceItem> {
      */
     public boolean isDeclaredInline() {
         return false;
+    }
+
+    /**
+     * Returns a {@link ResourceValue} for this item based on the given configuration.
+     * If the ResourceItem has several source files, one will be selected based on the config.
+     * @param type the type of the resource. This is necessary because ResourceItem doesn't embed
+     *     its type, but ResourceValue does.
+     * @param referenceConfig the config of the resource item.
+     * @param isFramework whether the resource is a framework value. Same as the type.
+     * @return a ResourceValue or null if none match the config.
+     */
+    public ResourceValue getResourceValue(ResourceType type, FolderConfiguration referenceConfig,
+            boolean isFramework) {
+        // look for the best match for the given configuration
+        // the match has to be of type ResourceFile since that's what the input list contains
+        ResourceFile match = (ResourceFile) referenceConfig.findMatchingConfigurable(mFiles);
+
+        if (match != null) {
+            // get the value of this configured resource.
+            return match.getValue(type, mName);
+        }
+
+        return null;
     }
 
     /**

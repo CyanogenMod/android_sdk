@@ -224,7 +224,7 @@ public final class ProjectCallback extends LegacyCallback {
 
     public Integer getResourceId(ResourceType type, String name) {
         if (mProjectRes != null) {
-            return mProjectRes.getResourceValue(type, name);
+            return mProjectRes.getResourceId(type, name);
         }
 
         return null;

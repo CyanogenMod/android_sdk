@@ -528,6 +528,8 @@ public final class ResourceManager {
                             }
                         }
                     }
+
+                    projectResources.postUpdate();
                 } catch (CoreException e) {
                     // This happens if the project is closed or if the folder doesn't exist.
                     // Since we already test for that, we can ignore this exception.

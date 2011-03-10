@@ -56,7 +56,7 @@ public class ProjectResources extends ResourceRepository {
     private Map<IntArrayWrapper, String> mStyleableValueToNameMap;
 
     /**
-     * This list is used by {@link #getResourceValue(String, String)} when the resource
+     * This list is used by {@link #getResourceId(String, String)} when the resource
      * query is an ID that doesn't exist (for example for ID automatically generated in
      * layout files that are not saved yet).
      */
@@ -179,12 +179,12 @@ public class ProjectResources extends ResourceRepository {
     }
 
     /**
-     * Returns the value of a resource by its type and name.
+     * Returns the integer id of a resource given its type and name.
      * <p/>If the resource is of type {@link ResourceType#ID} and does not exist in the
      * internal map, then new id values are dynamically generated (and stored so that queries
      * with the same names will return the same value).
      */
-    public Integer getResourceValue(ResourceType type, String name) {
+    public Integer getResourceId(ResourceType type, String name) {
         if (mResourceValueMap != null) {
             Map<String, Integer> map = mResourceValueMap.get(type);
             if (map != null) {
@@ -206,7 +206,7 @@ public class ProjectResources extends ResourceRepository {
 
     /**
      * Resets the list of dynamic Ids. This list is used by
-     * {@link #getResourceValue(String, String)} when the resource query is an ID that doesn't
+     * {@link #getResourceId(String, String)} when the resource query is an ID that doesn't
      * exist (for example for ID automatically generated in layout files that are not saved yet.)
      * <p/>This method resets those dynamic ID and must be called whenever the actual list of IDs
      * change.
@@ -272,6 +272,10 @@ public class ProjectResources extends ResourceRepository {
      * coming from XML declaration into the cached list {@link #mIdResourceList}.
      */
     void mergeIdResources() {
+        if (mResourceValueMap == null) {
+            return;
+        }
+
         // get the current ID values
         List<ResourceItem> resources = mResourceMap.get(ResourceType.ID);
 
