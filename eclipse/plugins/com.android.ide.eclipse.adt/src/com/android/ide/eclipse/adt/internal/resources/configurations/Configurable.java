@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.resources.manager;
+package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 
 /**
  * An object that is associated with a {@link FolderConfiguration}.

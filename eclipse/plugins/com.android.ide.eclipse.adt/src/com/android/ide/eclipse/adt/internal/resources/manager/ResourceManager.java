@@ -16,13 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.AndroidConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFolderListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
@@ -33,9 +30,7 @@ import com.android.io.FolderWrapper;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.IAbstractResource;
-import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
-import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
@@ -76,9 +71,6 @@ public final class ResourceManager {
     public final static boolean DEBUG = false;
 
     private final static ResourceManager sThis = new ResourceManager();
-
-    /** List of the qualifier object helping for the parsing of folder names */
-    private final ResourceQualifier[] mQualifiers;
 
     /**
      * Map associating project resource with project objects.
@@ -240,8 +232,8 @@ public final class ResourceManager {
                                 }
                             }
 
-                            ResourceFolder newFolder = processFolder(new IFolderWrapper(folder),
-                                    resources);
+                            ResourceFolder newFolder = resources.processFolder(
+                                    new IFolderWrapper(folder));
                             if (newFolder != null) {
                                 notifyListenerOnFolderChange(project, newFolder, kind);
                             }
@@ -334,10 +326,8 @@ public final class ResourceManager {
                         // REMOVED event for the folder comes first. In this case, the
                         // folder will have taken care of things.
                         if (folder != null) {
-                            ResourceFile resFile = processFile(
-                                    new IFileWrapper(file),
-                                    folder,
-                                    kind);
+                            ResourceFile resFile = folder.processFile(
+                                    new IFileWrapper(file), kind);
                             notifyListenerOnFileChange(project, resFile, kind);
                         }
                     }
@@ -461,7 +451,7 @@ public final class ResourceManager {
         for (IAbstractResource file : files) {
             if (file instanceof IAbstractFolder) {
                 IAbstractFolder folder = (IAbstractFolder) file;
-                ResourceFolder resFolder = processFolder(folder, resources);
+                ResourceFolder resFolder = resources.processFolder(folder);
 
                 if (resFolder != null) {
                     // now we process the content of the folder
@@ -469,7 +459,7 @@ public final class ResourceManager {
 
                     for (IAbstractResource childRes : children) {
                         if (childRes instanceof IAbstractFile) {
-                            processFile((IAbstractFile) childRes, resFolder, IResourceDelta.ADDED);
+                            resFolder.processFile((IAbstractFile) childRes, IResourceDelta.ADDED);
                         }
                     }
                 }
@@ -510,8 +500,8 @@ public final class ResourceManager {
                     for (IResource res : resources) {
                         if (res.getType() == IResource.FOLDER) {
                             IFolder folder = (IFolder)res;
-                            ResourceFolder resFolder = processFolder(new IFolderWrapper(folder),
-                                    projectResources);
+                            ResourceFolder resFolder = projectResources.processFolder(
+                                    new IFolderWrapper(folder));
 
                             if (resFolder != null) {
                                 // now we process the content of the folder
@@ -521,7 +511,7 @@ public final class ResourceManager {
                                     if (fileRes.getType() == IResource.FILE) {
                                         IFile file = (IFile)fileRes;
 
-                                        processFile(new IFileWrapper(file), resFolder,
+                                        resFolder.processFile(new IFileWrapper(file),
                                                 IResourceDelta.ADDED);
                                     }
                                 }
@@ -538,119 +528,6 @@ public final class ResourceManager {
         }
     }
 
-    /**
-     * Creates a {@link FolderConfiguration} matching the folder segments.
-     * @param folderSegments The segments of the folder name. The first segments should contain
-     * the name of the folder
-     * @return a FolderConfiguration object, or null if the folder name isn't valid..
-     */
-    public FolderConfiguration getConfig(String[] folderSegments) {
-        FolderConfiguration config = new FolderConfiguration();
-
-        // we are going to loop through the segments, and match them with the first
-        // available qualifier. If the segment doesn't match we try with the next qualifier.
-        // Because the order of the qualifier is fixed, we do not reset the first qualifier
-        // after each sucessful segment.
-        // If we run out of qualifier before processing all the segments, we fail.
-
-        int qualifierIndex = 0;
-        int qualifierCount = mQualifiers.length;
-
-        for (int i = 1 ; i < folderSegments.length; i++) {
-            String seg = folderSegments[i];
-            if (seg.length() > 0) {
-                while (qualifierIndex < qualifierCount &&
-                        mQualifiers[qualifierIndex].checkAndSet(seg, config) == false) {
-                    qualifierIndex++;
-                }
-
-                // if we reached the end of the qualifier we didn't find a matching qualifier.
-                if (qualifierIndex == qualifierCount) {
-                    return null;
-                }
-
-            } else {
-                return null;
-            }
-        }
-
-        return config;
-    }
-
-    /**
-     * Processes a folder and adds it to the list of the project resources.
-     * @param folder the folder to process
-     * @param resources the resource repository.
-     * @return the ConfiguredFolder created from this folder, or null if the process failed.
-     */
-    private ResourceFolder processFolder(IAbstractFolder folder, ResourceRepository resources) {
-        // split the name of the folder in segments.
-        String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
-
-        // get the enum for the resource type.
-        ResourceFolderType type = ResourceFolderType.getTypeByName(folderSegments[0]);
-
-        if (type != null) {
-            // get the folder configuration.
-            FolderConfiguration config = getConfig(folderSegments);
-
-            if (config != null) {
-                ResourceFolder configuredFolder = resources.add(type, config, folder);
-
-                return configuredFolder;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Processes a file and adds it to its parent folder resource.
-     * @param file the underlying resource file.
-     * @param folder the parent of the resource file.
-     * @param kind the file change kind.
-     * @return the {@link ResourceFile} that was created.
-     */
-    private ResourceFile processFile(IAbstractFile file, ResourceFolder folder, int kind) {
-        // get the type of the folder
-        ResourceFolderType type = folder.getType();
-
-        // look for this file if it's already been created
-        ResourceFile resFile = folder.getFile(file);
-
-        if (resFile == null) {
-            if (kind != IResourceDelta.REMOVED) {
-                // create a ResourceFile for it.
-
-                // check if that's a single or multi resource type folder. For now we define this by
-                // the number of possible resource type output by files in the folder. This does
-                // not make the difference between several resource types from a single file or
-                // the ability to have 2 files in the same folder generating 2 different types of
-                // resource. The former is handled by MultiResourceFile properly while we don't
-                // handle the latter. If we were to add this behavior we'd have to change this call.
-                List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(type);
-
-                if (types.size() == 1) {
-                    resFile = new SingleResourceFile(file, folder);
-                } else {
-                    resFile = new MultiResourceFile(file, folder);
-                }
-
-                resFile.load();
-
-                // add it to the folder
-                folder.addFile(resFile);
-            }
-        } else {
-            if (kind == IResourceDelta.REMOVED) {
-                folder.removeFile(resFile);
-            } else {
-                resFile.update();
-            }
-        }
-
-        return resFile;
-    }
 
     /**
      * Returns true if the path is under /project/res/
@@ -692,10 +569,6 @@ public final class ResourceManager {
      * Private constructor to enforce singleton design.
      */
     private ResourceManager() {
-        // get the default qualifiers.
-        FolderConfiguration defaultConfig = new FolderConfiguration();
-        defaultConfig.createDefault();
-        mQualifiers = defaultConfig.getQualifiers();
     }
 
     // debug only

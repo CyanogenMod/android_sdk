@@ -155,10 +155,10 @@ public class ProjectResources extends ResourceRepository {
 
     /**
      * Resolves a compiled resource id into the resource name and type
-     * @param id
-     * @return an array of 2 strings { name, type } or null if the id could not be resolved
+     * @param id the resource integer id.
+     * @return a {@link Pair} of 2 strings { name, type } or null if the id could not be resolved
      */
-    public Pair<ResourceType, String> resolveResourceValue(int id) {
+    public Pair<ResourceType, String> resolveResourceId(int id) {
         if (mResIdValueToNameMap != null) {
             return mResIdValueToNameMap.get(id);
         }
@@ -167,9 +167,9 @@ public class ProjectResources extends ResourceRepository {
     }
 
     /**
-     * Resolves a compiled resource id of type int[] into the resource name.
+     * Resolves a compiled styleable id of type int[] into the styleable name.
      */
-    public String resolveResourceValue(int[] id) {
+    public String resolveStyleable(int[] id) {
         if (mStyleableValueToNameMap != null) {
             mWrapper.set(id);
             return mStyleableValueToNameMap.get(mWrapper);
@@ -246,11 +246,13 @@ public class ProjectResources extends ResourceRepository {
 
     /**
      * Sets compiled resource information.
+     *
      * @param resIdValueToNameMap a map of compiled resource id to resource name.
-     *  The map is acquired by the {@link ProjectResources} object.
-     * @param styleableValueMap
+     *    The map is acquired by the {@link ProjectResources} object.
+     * @param styleableValueMap a map of (int[], name) for the styleable information. The map is
+     *    acquired by the {@link ProjectResources} object.
      * @param resourceValueMap a map of (name, id) for resources of type {@link ResourceType#ID}.
-     * The list is acquired by the {@link ProjectResources} object.
+     *    The list is acquired by the {@link ProjectResources} object.
      */
     void setCompiledResources(Map<Integer, Pair<ResourceType, String>> resIdValueToNameMap,
             Map<IntArrayWrapper, String> styleableValueMap,

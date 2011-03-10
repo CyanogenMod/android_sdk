@@ -36,7 +36,6 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQ
 import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQualifier;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.Density;
 import com.android.resources.DockMode;
 import com.android.resources.Keyboard;
@@ -491,7 +490,7 @@ public class ConfigurationSelector extends Composite {
      * @return true if success, or false if the folder name is not a valid name.
      */
     public boolean setConfiguration(String[] folderSegments) {
-        FolderConfiguration config = ResourceManager.getInstance().getConfig(folderSegments);
+        FolderConfiguration config = FolderConfiguration.getConfig(folderSegments);
 
         if (config == null) {
             return false;

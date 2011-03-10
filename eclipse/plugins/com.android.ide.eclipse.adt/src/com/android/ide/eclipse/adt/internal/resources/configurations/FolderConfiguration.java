@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.AndroidConstants;
-import com.android.ide.eclipse.adt.internal.resources.manager.Configurable;
 import com.android.resources.ResourceFolderType;
 
 import java.util.ArrayList;
@@ -29,6 +28,16 @@ import java.util.List;
  * value which means that the property is not set.
  */
 public final class FolderConfiguration implements Comparable<FolderConfiguration> {
+
+    private final static ResourceQualifier[] DEFAULT_QUALIFIERS;
+
+    static {
+        // get the default qualifiers.
+        FolderConfiguration defaultConfig = new FolderConfiguration();
+        defaultConfig.createDefault();
+        DEFAULT_QUALIFIERS = defaultConfig.getQualifiers();
+    }
+
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
 
@@ -50,6 +59,45 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_SCREEN_DIMENSION   = 15;
     private final static int INDEX_VERSION            = 16;
     private final static int INDEX_COUNT              = 17;
+
+    /**
+     * Creates a {@link FolderConfiguration} matching the folder segments.
+     * @param folderSegments The segments of the folder name. The first segments should contain
+     * the name of the folder
+     * @return a FolderConfiguration object, or null if the folder name isn't valid..
+     */
+    public static FolderConfiguration getConfig(String[] folderSegments) {
+        FolderConfiguration config = new FolderConfiguration();
+
+        // we are going to loop through the segments, and match them with the first
+        // available qualifier. If the segment doesn't match we try with the next qualifier.
+        // Because the order of the qualifier is fixed, we do not reset the first qualifier
+        // after each successful segment.
+        // If we run out of qualifier before processing all the segments, we fail.
+
+        int qualifierIndex = 0;
+        int qualifierCount = DEFAULT_QUALIFIERS.length;
+
+        for (int i = 1 ; i < folderSegments.length; i++) {
+            String seg = folderSegments[i];
+            if (seg.length() > 0) {
+                while (qualifierIndex < qualifierCount &&
+                        DEFAULT_QUALIFIERS[qualifierIndex].checkAndSet(seg, config) == false) {
+                    qualifierIndex++;
+                }
+
+                // if we reached the end of the qualifier we didn't find a matching qualifier.
+                if (qualifierIndex == qualifierCount) {
+                    return null;
+                }
+
+            } else {
+                return null;
+            }
+        }
+
+        return config;
+    }
 
     /**
      * Returns the number of {@link ResourceQualifier} that make up a Folder configuration.
