@@ -29,6 +29,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiFlagAttributeNode;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
@@ -61,8 +62,6 @@ import java.util.regex.Pattern;
  * Content Assist Processor for Android XML files
  */
 public abstract class AndroidContentAssist implements IContentAssistProcessor {
-
-    private static final String ATTRIBUTE_ICON_FILENAME = "attribute";
 
     /** Regexp to detect a full attribute after an element tag.
      * <pre>Syntax:
@@ -352,6 +351,18 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                             attrInfo.needTag = 0;
                         }
                     }
+                }
+
+                if (choices == null && value.startsWith("@")) { //$NON-NLS-1$
+                    // Special case: If the attribute value looks like a reference to a
+                    // resource, offer to complete it, since in many cases our metadata
+                    // does not correctly state whether a resource value is allowed. We don't
+                    // offer these for an empty completion context, but if the user has
+                    // actually typed "@", in that case list resource matches.
+                    // For example, for android:minHeight this makes completion on @dimen/
+                    // possible.
+                    choices = UiResourceAttributeNode.computeResourceStringMatches(currentUiNode,
+                            value);
                 }
             }
 

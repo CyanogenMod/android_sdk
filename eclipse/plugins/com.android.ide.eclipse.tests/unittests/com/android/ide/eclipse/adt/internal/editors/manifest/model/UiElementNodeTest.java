@@ -16,14 +16,23 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.editors.mock.MockXmlNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.Iterator;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import junit.framework.TestCase;
 
@@ -252,4 +261,30 @@ public class UiElementNodeTest extends TestCase {
     }
 
 
+    public void testlookupNamespacePrefix() throws Exception {
+        // Setup
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.newDocument();
+        Element rootElement = document.createElement("root");
+        Attr attr = document.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
+                "xmlns:customPrefix");
+        attr.setValue(ANDROID_URI);
+        rootElement.getAttributes().setNamedItemNS(attr);
+        document.appendChild(rootElement);
+        Element root = document.getDocumentElement();
+        root.appendChild(document.createTextNode("    "));
+        Element foo = document.createElement("foo");
+        root.appendChild(foo);
+        root.appendChild(document.createTextNode("    "));
+        Element bar = document.createElement("bar");
+        root.appendChild(bar);
+        Element baz = document.createElement("baz");
+        root.appendChild(baz);
+
+        String prefix = UiElementNode.lookupNamespacePrefix(baz, ANDROID_URI);
+        assertEquals("customPrefix", prefix);
+    }
 }
