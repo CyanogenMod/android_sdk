@@ -16,7 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.AndroidConstants;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.eclipse.adt.internal.resources.configurations.Configurable;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
@@ -66,6 +68,7 @@ public abstract class ResourceRepository {
 
     protected final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
 
+
     /**
      * Makes a resource repository
      * @param isFrameworkRepository whether the repository is for framework resources.
@@ -85,7 +88,7 @@ public abstract class ResourceRepository {
      * @param folder The workspace folder object.
      * @return the {@link ResourceFolder} object associated to this folder.
      */
-    protected ResourceFolder add(ResourceFolderType type, FolderConfiguration config,
+    private ResourceFolder add(ResourceFolderType type, FolderConfiguration config,
             IAbstractFolder folder) {
         // get the list for the resource type
         List<ResourceFolder> list = mFolderMap.get(type);
@@ -192,6 +195,29 @@ public abstract class ResourceRepository {
      */
     protected abstract ResourceItem createResourceItem(String name);
 
+    /**
+     * Processes a folder and adds it to the list of existing folders.
+     * @param folder the folder to process
+     * @return the ResourceFolder created from this folder, or null if the process failed.
+     */
+    public ResourceFolder processFolder(IAbstractFolder folder) {
+        // split the name of the folder in segments.
+        String[] folderSegments = folder.getName().split(AndroidConstants.RES_QUALIFIER_SEP);
+
+        // get the enum for the resource type.
+        ResourceFolderType type = ResourceFolderType.getTypeByName(folderSegments[0]);
+
+        if (type != null) {
+            // get the folder configuration.
+            FolderConfiguration config = FolderConfiguration.getConfig(folderSegments);
+
+            if (config != null) {
+                return add(type, config, folder);
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Returns a list of {@link ResourceFolder} for a specific {@link ResourceFolderType}.

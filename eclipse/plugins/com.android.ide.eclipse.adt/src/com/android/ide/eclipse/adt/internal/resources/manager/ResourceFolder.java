@@ -18,12 +18,15 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.ide.eclipse.adt.internal.resources.configurations.Configurable;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+
+import org.eclipse.core.resources.IResourceDelta;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +58,52 @@ public final class ResourceFolder implements Configurable {
         mFolder = folder;
         mRepository = repository;
     }
+
+    /**
+     * Processes a file and adds it to its parent folder resource.
+     * @param file the underlying resource file.
+     * @param folder the parent of the resource file.
+     * @param kind the file change kind.
+     * @return the {@link ResourceFile} that was created.
+     */
+    public ResourceFile processFile(IAbstractFile file, int kind) {
+        // look for this file if it's already been created
+        ResourceFile resFile = getFile(file);
+
+        if (resFile == null) {
+            if (kind != IResourceDelta.REMOVED) {
+                // create a ResourceFile for it.
+
+                // check if that's a single or multi resource type folder. For now we define this by
+                // the number of possible resource type output by files in the folder. This does
+                // not make the difference between several resource types from a single file or
+                // the ability to have 2 files in the same folder generating 2 different types of
+                // resource. The former is handled by MultiResourceFile properly while we don't
+                // handle the latter. If we were to add this behavior we'd have to change this call.
+                List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(mType);
+
+                if (types.size() == 1) {
+                    resFile = new SingleResourceFile(file, this);
+                } else {
+                    resFile = new MultiResourceFile(file, this);
+                }
+
+                resFile.load();
+
+                // add it to the folder
+                addFile(resFile);
+            }
+        } else {
+            if (kind == IResourceDelta.REMOVED) {
+                removeFile(resFile);
+            } else {
+                resFile.update();
+            }
+        }
+
+        return resFile;
+    }
+
 
     /**
      * Adds a {@link ResourceFile} to the folder.
@@ -140,7 +189,7 @@ public final class ResourceFolder implements Configurable {
      * @param file The {@link IAbstractFile} object.
      * @return the {@link ResourceFile} or null if no match was found.
      */
-    public ResourceFile getFile(IAbstractFile file) {
+    private ResourceFile getFile(IAbstractFile file) {
         if (mFiles != null) {
             for (ResourceFile f : mFiles) {
                 if (f.getFile().equals(file)) {

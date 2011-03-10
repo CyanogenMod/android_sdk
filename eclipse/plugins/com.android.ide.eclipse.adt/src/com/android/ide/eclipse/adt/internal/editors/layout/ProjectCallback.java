@@ -208,7 +208,7 @@ public final class ProjectCallback extends LegacyCallback {
 
     public Pair<ResourceType, String> resolveResourceId(int id) {
         if (mProjectRes != null) {
-            return mProjectRes.resolveResourceValue(id);
+            return mProjectRes.resolveResourceId(id);
         }
 
         return null;
@@ -216,7 +216,7 @@ public final class ProjectCallback extends LegacyCallback {
 
     public String resolveResourceId(int[] id) {
         if (mProjectRes != null) {
-            return mProjectRes.resolveResourceValue(id);
+            return mProjectRes.resolveStyleable(id);
         }
 
         return null;
