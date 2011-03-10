@@ -17,7 +17,11 @@
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
 import com.android.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.resources.manager.Configurable;
 import com.android.resources.ResourceFolderType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -517,6 +521,114 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         // if we arrive here, all the qualifier matches
         return 0;
     }
+
+    /**
+     * Returns the best matching {@link Configurable} for this configuration.
+     *
+     * @param configurables the list of {@link Configurable} to choose from.
+     *
+     * @return an item from the given list of {@link Configurable} or null.
+     *
+     * @see http://d.android.com/guide/topics/resources/resources-i18n.html#best-match
+     */
+    public Configurable findMatchingConfigurable(List<? extends Configurable> configurables) {
+        //
+        // 1: eliminate resources that contradict the reference configuration
+        // 2: pick next qualifier type
+        // 3: check if any resources use this qualifier, if no, back to 2, else move on to 4.
+        // 4: eliminate resources that don't use this qualifier.
+        // 5: if more than one resource left, go back to 2.
+        //
+        // The precedence of the qualifiers is more important than the number of qualifiers that
+        // exactly match the device.
+
+        // 1: eliminate resources that contradict
+        ArrayList<Configurable> matchingConfigurables = new ArrayList<Configurable>();
+        for (int i = 0 ; i < configurables.size(); i++) {
+            Configurable res = configurables.get(i);
+
+            if (res.getConfiguration().isMatchFor(this)) {
+                matchingConfigurables.add(res);
+            }
+        }
+
+        // if there is only one match, just take it
+        if (matchingConfigurables.size() == 1) {
+            return matchingConfigurables.get(0);
+        } else if (matchingConfigurables.size() == 0) {
+            return null;
+        }
+
+        // 2. Loop on the qualifiers, and eliminate matches
+        final int count = FolderConfiguration.getQualifierCount();
+        for (int q = 0 ; q < count ; q++) {
+            // look to see if one configurable has this qualifier.
+            // At the same time also record the best match value for the qualifier (if applicable).
+
+            // The reference value, to find the best match.
+            // Note that this qualifier could be null. In which case any qualifier found in the
+            // possible match, will all be considered best match.
+            ResourceQualifier referenceQualifier = getQualifier(q);
+
+            boolean found = false;
+            ResourceQualifier bestMatch = null; // this is to store the best match.
+            for (Configurable configurable : matchingConfigurables) {
+                ResourceQualifier qualifier = configurable.getConfiguration().getQualifier(q);
+                if (qualifier != null) {
+                    // set the flag.
+                    found = true;
+
+                    // Now check for a best match. If the reference qualifier is null ,
+                    // any qualifier is a "best" match (we don't need to record all of them.
+                    // Instead the non compatible ones are removed below)
+                    if (referenceQualifier != null) {
+                        if (qualifier.isBetterMatchThan(bestMatch, referenceQualifier)) {
+                            bestMatch = qualifier;
+                        }
+                    }
+                }
+            }
+
+            // 4. If a configurable has a qualifier at the current index, remove all the ones that
+            // do not have one, or whose qualifier value does not equal the best match found above
+            // unless there's no reference qualifier, in which case they are all considered
+            // "best" match.
+            if (found) {
+                for (int i = 0 ; i < matchingConfigurables.size(); ) {
+                    Configurable configurable = matchingConfigurables.get(i);
+                    ResourceQualifier qualifier = configurable.getConfiguration().getQualifier(q);
+
+                    if (qualifier == null) {
+                        // this resources has no qualifier of this type: rejected.
+                        matchingConfigurables.remove(configurable);
+                    } else if (referenceQualifier != null && bestMatch != null &&
+                            bestMatch.equals(qualifier) == false) {
+                        // there's a reference qualifier and there is a better match for it than
+                        // this resource, so we reject it.
+                        matchingConfigurables.remove(configurable);
+                    } else {
+                        // looks like we keep this resource, move on to the next one.
+                        i++;
+                    }
+                }
+
+                // at this point we may have run out of matching resources before going
+                // through all the qualifiers.
+                if (matchingConfigurables.size() < 2) {
+                    break;
+                }
+            }
+        }
+
+        // Because we accept resources whose configuration have qualifiers where the reference
+        // configuration doesn't, we can end up with more than one match. In this case, we just
+        // take the first one.
+        if (matchingConfigurables.size() == 0) {
+            return null;
+        }
+        return matchingConfigurables.get(0);
+    }
+
 
     /**
      * Returns whether the configuration is a match for the given reference config.

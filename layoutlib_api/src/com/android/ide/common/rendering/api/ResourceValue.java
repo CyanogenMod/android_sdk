@@ -27,19 +27,19 @@ public class ResourceValue implements IResourceValue {
     private final ResourceType mType;
     private final String mName;
     private String mValue = null;
-    private final boolean mIsFramwork;
+    private final boolean mIsFramework;
 
-    public ResourceValue(ResourceType type, String name, boolean isFramwork) {
+    public ResourceValue(ResourceType type, String name, boolean isFramework) {
         mType = type;
         mName = name;
-        mIsFramwork = isFramwork;
+        mIsFramework = isFramework;
     }
 
     public ResourceValue(ResourceType type, String name, String value, boolean isFramework) {
         mType = type;
         mName = name;
         mValue = value;
-        mIsFramwork = isFramework;
+        mIsFramework = isFramework;
     }
 
     public ResourceType getResourceType() {
@@ -50,6 +50,7 @@ public class ResourceValue implements IResourceValue {
      * Returns the type of the resource. For instance "drawable", "color", etc...
      * @deprecated use {@link #getResourceType()} instead.
      */
+    @Deprecated
     public String getType() {
         return mType.getName();
     }
@@ -73,7 +74,7 @@ public class ResourceValue implements IResourceValue {
      * resource (<code>false</false>).
      */
     public final boolean isFramework() {
-        return mIsFramwork;
+        return mIsFramework;
     }
 
     /**
@@ -94,8 +95,8 @@ public class ResourceValue implements IResourceValue {
 
     @Override
     public String toString() {
-        return "ResourceValue [" + mType + "/" + mName + " = " + mValue
-                + " (framework:" + mIsFramwork + ")]";
+        return "ResourceValue [" + mType + "/" + mName + " = " + mValue  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                + " (framework:" + mIsFramework + ")]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 

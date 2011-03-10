@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.resources.ResourceType;
+
 
 /**
  * Represents a resource item that has been declared inline in another resource file.
@@ -27,6 +31,8 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
  * {@link #isEditableDirectly()}.
  */
 class InlineResourceItem extends ResourceItem {
+
+    private ResourceValue mValue = null;
 
     /**
      * Constructs a new inline ResourceItem.
@@ -44,6 +50,17 @@ class InlineResourceItem extends ResourceItem {
     @Override
     public boolean isEditableDirectly() {
         return false;
+    }
+
+    @Override
+    public ResourceValue getResourceValue(ResourceType type, FolderConfiguration referenceConfig,
+            boolean isFramework) {
+        assert type == ResourceType.ID;
+        if (mValue == null) {
+            mValue = new ResourceValue(type, getName(), isFramework);
+        }
+
+        return mValue;
     }
 
     @Override
