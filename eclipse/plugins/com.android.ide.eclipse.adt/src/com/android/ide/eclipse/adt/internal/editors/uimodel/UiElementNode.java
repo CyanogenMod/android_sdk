@@ -211,17 +211,24 @@ public class UiElementNode implements IPropertySource {
     /**
      * Computes a short string describing the UI node suitable for tree views.
      * Uses the element's attribute "android:name" if present, or the "android:label" one
-     * followed by the element's name.
+     * followed by the element's name if not repeated.
      *
      * @return A short string describing the UI node suitable for tree views.
      */
     public String getShortDescription() {
+        String name = mDescriptor.getUiName();
         String attr = getDescAttribute();
         if (attr != null) {
-            return String.format("%1$s (%2$s)", attr, mDescriptor.getUiName());
+            // If the ui name is repeated in the attribute value, don't use it.
+            // Typical case is to avoid ".pkg.MyActivity (Activity)".
+            if (attr.contains(name)) {
+                return attr;
+            } else {
+                return String.format("%1$s (%2$s)", attr, name);
+            }
         }
 
-        return mDescriptor.getUiName();
+        return name;
     }
 
     /** Returns the key attribute that can be used to describe this node, or null */
