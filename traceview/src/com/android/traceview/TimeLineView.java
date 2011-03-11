@@ -22,6 +22,7 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -281,6 +282,12 @@ public class TimeLineView extends Composite implements Observer {
         mSurface.addMouseMoveListener(new MouseMoveListener() {
             public void mouseMove(MouseEvent me) {
                 mSurface.mouseMove(me);
+            }
+        });
+
+        mSurface.addMouseWheelListener(new MouseWheelListener() {
+            public void mouseScrolled(MouseEvent me) {
+                mSurface.mouseScrolled(me);
             }
         });
 
@@ -842,7 +849,7 @@ public class TimeLineView extends Composite implements Observer {
     }
 
     private static enum GraphicsState {
-        Normal, Marking, Scaling, Animating
+        Normal, Marking, Scaling, Animating, Scrolling
     };
 
     private class Surface extends Canvas {
@@ -966,7 +973,8 @@ public class TimeLineView extends Composite implements Observer {
                 int xdim = dim.x - TotalXMargin;
                 mScaleInfo.setNumPixels(xdim);
                 boolean forceEndPoints = (mGraphicsState == GraphicsState.Scaling
-                        || mGraphicsState == GraphicsState.Animating);
+                        || mGraphicsState == GraphicsState.Animating
+                        || mGraphicsState == GraphicsState.Scrolling);
                 mScaleInfo.computeTicks(forceEndPoints);
                 mCachedMinVal = mScaleInfo.getMinVal();
                 mCachedMaxVal = mScaleInfo.getMaxVal();
@@ -1685,6 +1693,44 @@ public class TimeLineView extends Composite implements Observer {
             getDisplay().timerExec(ZOOM_TIMER_INTERVAL, mZoomAnimator);
             redraw();
             update();
+        }
+
+        private void mouseScrolled(MouseEvent me) {
+            mGraphicsState = GraphicsState.Scrolling;
+            double tMin = mScaleInfo.getMinVal();
+            double tMax = mScaleInfo.getMaxVal();
+            double zoomFactor = 2;
+            double tMinRef = mLimitMinVal;
+            double tMaxRef = mLimitMaxVal;
+            double t; // the fixed point
+            double tMinNew;
+            double tMaxNew;
+            if (me.count > 0) {
+                // we zoom in
+                Point dim = mSurface.getSize();
+                int x = me.x;
+                if (x < LeftMargin)
+                    x = LeftMargin;
+                if (x > dim.x - RightMargin)
+                    x = dim.x - RightMargin;
+                double ppr = mScaleInfo.getPixelsPerRange();
+                t = tMin + ((x - LeftMargin) / ppr);
+                tMinNew = Math.max(tMinRef, t - (t - tMin) / zoomFactor);
+                tMaxNew = Math.min(tMaxRef, t + (tMax - t) / zoomFactor);
+            } else {
+                // we zoom out
+                double factor = (tMax - tMin) / (tMaxRef - tMinRef);
+                if (factor < 1) {
+                    t = (factor * tMinRef - tMin) / (factor - 1);
+                    tMinNew = Math.max(tMinRef, t - zoomFactor * (t - tMin));
+                    tMaxNew = Math.min(tMaxRef, t + zoomFactor * (tMax - t));
+                } else {
+                    return;
+                }
+            }
+            mScaleInfo.setMinVal(tMinNew);
+            mScaleInfo.setMaxVal(tMaxNew);
+            mSurface.redraw();
         }
 
         // No defined behavior yet for double-click.
