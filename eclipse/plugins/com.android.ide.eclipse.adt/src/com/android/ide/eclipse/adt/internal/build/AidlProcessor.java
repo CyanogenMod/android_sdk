@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -105,7 +105,9 @@ public class AidlProcessor extends SourceProcessor {
         IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
         for (IPath p : sourceFolders) {
             IFolder f = wsRoot.getFolder(p);
-            command[index++] = quote("-I" + f.getLocation().toOSString()); //$NON-NLS-1$
+            if (f.exists()) { // if the resource doesn't exist, getLocation will return null.
+                command[index++] = quote("-I" + f.getLocation().toOSString()); //$NON-NLS-1$
+            }
         }
 
         boolean verbose = AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE;
