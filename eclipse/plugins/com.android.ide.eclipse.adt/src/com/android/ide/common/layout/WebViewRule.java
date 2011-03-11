@@ -35,7 +35,7 @@ public class WebViewRule extends IgnoredLayoutRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             String matchParent = getFillParentValueName();
             node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, matchParent);
             node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, matchParent);

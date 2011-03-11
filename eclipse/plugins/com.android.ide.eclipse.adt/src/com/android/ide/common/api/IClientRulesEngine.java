@@ -133,5 +133,15 @@ public interface IClientRulesEngine {
      *         right, top and bottom margins respectively
      */
     String[] displayMarginInput(String all, String left, String right, String top, String bottom);
+
+    /**
+     * Displays an input dialog tailored for inputing the source of an {@code <include>}
+     * layout tag. This is similar to {@link #displayResourceInput} for resource type
+     * "layout", but should also attempt to filter out layout resources that cannot be
+     * included from the current context (because it would result in a cyclic dependency).
+     *
+     * @return the layout resource to include
+     */
+    String displayIncludeSourceInput();
 }
 

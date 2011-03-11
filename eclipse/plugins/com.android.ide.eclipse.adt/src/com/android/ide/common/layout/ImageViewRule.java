@@ -32,7 +32,7 @@ public class ImageViewRule extends BaseViewRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             node.setAttribute(ANDROID_URI, ATTR_SRC, getSampleImageSrc());
         }
     }

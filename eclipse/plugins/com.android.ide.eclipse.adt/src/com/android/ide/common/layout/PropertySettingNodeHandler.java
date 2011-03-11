@@ -15,19 +15,26 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
-
 import com.android.ide.common.api.INode;
-import com.android.ide.common.api.InsertType;
+import com.android.ide.common.api.INodeHandler;
 
-public class ZoomButtonRule extends BaseViewRule {
-    @Override
-    public void onCreate(INode node, INode parent, InsertType insertType) {
-        super.onCreate(node, parent, insertType);
+/**
+ * A convenience implementation of {@link INodeHandler} for setting a given attribute to a
+ * given value on a particular node.
+ */
+class PropertySettingNodeHandler implements INodeHandler {
+    private final String mNamespaceUri;
+    private final String mAttribute;
+    private final String mValue;
 
-        if (insertType.isCreate()) {
-            node.setAttribute(ANDROID_URI, ATTR_SRC, "@android:drawable/btn_plus"); //$NON-NLS-1$
-        }
+    PropertySettingNodeHandler(String namespaceUri, String attribute, String value) {
+        super();
+        mNamespaceUri = namespaceUri;
+        mAttribute = attribute;
+        mValue = value;
+    }
+
+    public void handle(INode node) {
+        node.setAttribute(mNamespaceUri, mAttribute, mValue);
     }
 }

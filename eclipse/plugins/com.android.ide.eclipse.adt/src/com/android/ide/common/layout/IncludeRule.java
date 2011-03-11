@@ -15,31 +15,28 @@
  */
 package com.android.ide.common.layout;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_CHECKED;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 
 /**
- * An {@link IViewRule} for android.widget.RadioGroup which initializes the radio group
- * with some radio buttons
+ * An {@link IViewRule} for the special XML {@code <include>} tag.
  */
-public class RadioGroupRule extends LinearLayoutRule {
+public class IncludeRule extends BaseViewRule {
     @Override
     public void onCreate(INode node, INode parent, InsertType insertType) {
-        super.onCreate(node, parent, insertType);
-
-        if (insertType.isCreate()) {
-            for (int i = 0; i < 3; i++) {
-                INode handle = node.appendChild(LayoutConstants.FQCN_RADIO_BUTTON);
-                handle.setAttribute(ANDROID_URI, ATTR_ID, String.format("@+id/radio%d", i));
-                if (i == 0) {
-                    handle.setAttribute(ANDROID_URI, ATTR_CHECKED, VALUE_TRUE);
-                }
+        // When dropping an include tag, ask the user which layout to include.
+        if (insertType == InsertType.CREATE) { // NOT InsertType.CREATE_PREVIEW
+            String include = mRulesEngine.displayIncludeSourceInput();
+            if (include != null) {
+                node.editXml("Include Layout",
+                    // Note -- the layout attribute is NOT in the Android namespace!
+                    new PropertySettingNodeHandler(null, ATTR_LAYOUT, include));
+            } else {
+                // Remove the view; the insertion was canceled
+                parent.removeChild(node);
             }
         }
     }

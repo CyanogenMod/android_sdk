@@ -43,7 +43,7 @@ public class TabHostRule extends IgnoredLayoutRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             String fillParent = getFillParentValueName();
 
             // Configure default Table setup as described in the Table tutorial

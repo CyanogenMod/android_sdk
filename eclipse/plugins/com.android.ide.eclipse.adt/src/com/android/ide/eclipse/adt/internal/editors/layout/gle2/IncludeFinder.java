@@ -21,7 +21,6 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_LAYOUTS;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.resources.ResourceType.LAYOUT;
-
 import static org.eclipse.core.resources.IResourceDelta.ADDED;
 import static org.eclipse.core.resources.IResourceDelta.CHANGED;
 import static org.eclipse.core.resources.IResourceDelta.CONTENT;
@@ -67,6 +66,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -186,7 +186,6 @@ public class IncludeFinder {
         }
     }
 
-    /** For test suite only -- do not call */
     @VisibleForTesting
     /* package */ List<String> getIncludedBy(String included) {
         ensureInitialized();
@@ -1001,5 +1000,71 @@ public class IncludeFinder {
         public static Reference create(IFile file) {
             return new Reference(file.getProject(), getMapKey(file));
         }
+
+        /**
+         * Returns the resource name of this layout, such as {@code @layout/foo}.
+         *
+         * @return the resource name
+         */
+        public String getResourceName() {
+            return '@' + FD_RES_LAYOUT + '/' + getName();
+        }
+    }
+
+    /**
+     * Returns a collection of layouts (expressed as resource names, such as
+     * {@code @layout/foo} which would be invalid includes in the given layout
+     * (because it would introduce a cycle)
+     *
+     * @param layout the layout file to check for cyclic dependencies from
+     * @return a collection of layout resources which cannot be included from
+     *         the given layout, never null
+     */
+    public Collection<String> getInvalidIncludes(IFile layout) {
+        IProject project = layout.getProject();
+        Reference self = Reference.create(layout);
+
+        // Add anyone who transitively can reach this file via includes.
+        LinkedList<Reference> queue = new LinkedList<Reference>();
+        List<Reference> invalid = new ArrayList<Reference>();
+        queue.add(self);
+        invalid.add(self);
+        Set<String> seen = new HashSet<String>();
+        seen.add(self.getId());
+        while (!queue.isEmpty()) {
+            Reference reference = queue.removeFirst();
+            String refId = reference.getId();
+
+            // Look up both configuration specific includes as well as includes in the
+            // base versions
+            List<String> included = getIncludedBy(refId);
+            if (refId.indexOf('/') != -1) {
+                List<String> baseIncluded = getIncludedBy(reference.getName());
+                if (included == null) {
+                    included = baseIncluded;
+                } else if (baseIncluded != null) {
+                    included = new ArrayList<String>(included);
+                    included.addAll(baseIncluded);
+                }
+            }
+
+            if (included != null && included.size() > 0) {
+                for (String id : included) {
+                    if (!seen.contains(id)) {
+                        seen.add(id);
+                        Reference ref = new Reference(project, id);
+                        invalid.add(ref);
+                        queue.addLast(ref);
+                    }
+                }
+            }
+        }
+
+        List<String> result = new ArrayList<String>();
+        for (Reference reference : invalid) {
+            result.add(reference.getResourceName());
+        }
+
+        return result;
     }
 }

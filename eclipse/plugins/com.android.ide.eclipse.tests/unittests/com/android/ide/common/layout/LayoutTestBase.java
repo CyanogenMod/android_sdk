@@ -244,6 +244,11 @@ public class LayoutTestBase extends TestCase {
             fail("Not supported in tests yet");
             return null;
         }
+
+        public String displayIncludeSourceInput() {
+            fail("Not supported in tests yet");
+            return null;
+        }
     }
 
     public void testDummy() {

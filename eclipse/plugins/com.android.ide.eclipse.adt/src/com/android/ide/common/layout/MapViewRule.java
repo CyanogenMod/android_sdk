@@ -34,7 +34,7 @@ public class MapViewRule extends BaseViewRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
-        if (insertType == InsertType.CREATE) {
+        if (insertType.isCreate()) {
             node.setAttribute(ANDROID_URI, "android:apiKey",  //$NON-NLS-1$
                    "Your API key: see " + //$NON-NLS-1$
                    "http://code.google.com/android/add-ons/google-apis/mapkey.html"); //$NON-NLS-1$
