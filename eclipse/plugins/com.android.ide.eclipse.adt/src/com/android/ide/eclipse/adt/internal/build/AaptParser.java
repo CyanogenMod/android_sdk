@@ -17,12 +17,18 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 
 import java.io.File;
 import java.util.List;
@@ -116,6 +122,17 @@ public final class AaptParser {
 
     private final static Pattern sPattern8Line1 = Pattern.compile(
             "^(invalid resource directory name): (.*)$"); //$NON-NLS-1$
+
+    /**
+     * Portion of the error message which states the context in which the error occurred,
+     * such as which property was being processed and what the string value was that
+     * caused the error.
+     * <p>
+     * Example:
+     * Error: No resource found that matches the given name (at 'text' with value '@string/foo')
+     */
+    private static final Pattern sValueRangePattern =
+        Pattern.compile("\\(at '(.+)' with value '(.+)'\\)"); //$NON-NLS-1$
 
     /**
      * 2 line aapt error<br>
@@ -392,12 +409,56 @@ public final class AaptParser {
             }
         }
 
+        // Attempt to determine the exact range of characters affected by this error.
+        // This will look up the actual text of the file, go to the particular error line
+        // and scan for the specific string mentioned in the error.
+        int startOffset = -1;
+        int endOffset = -1;
+        if (f2 instanceof IFile) {
+            Matcher matcher = sValueRangePattern.matcher(message);
+            if (matcher.find()) {
+                String property = matcher.group(1);
+                String value = matcher.group(2);
+                IFile iFile = (IFile) f2;
+                IDocumentProvider provider = new TextFileDocumentProvider();
+                try {
+                    provider.connect(iFile);
+                    IDocument document = provider.getDocument(iFile);
+                    if (document != null) {
+                        IRegion lineInfo = document.getLineInformation(line - 1);
+                        String text = document.get(lineInfo.getOffset(), lineInfo.getLength());
+                        int propertyIndex = text.indexOf(property);
+                        int valueIndex = text.indexOf(value, propertyIndex + 1);
+                        if (valueIndex != -1) {
+                            startOffset = lineInfo.getOffset() + valueIndex;
+                            endOffset = startOffset + value.length();
+                        }
+                    }
+                } catch (Exception e) {
+                    AdtPlugin.log(e, "Can't find range information for %1$s", location);
+                } finally {
+                    provider.disconnect(iFile);
+                }
+            }
+        }
+
         // check if there's a similar marker already, since aapt is launched twice
         boolean markerAlreadyExists = false;
         try {
             IMarker[] markers = f2.findMarkers(markerId, true, IResource.DEPTH_ZERO);
 
             for (IMarker marker : markers) {
+                if (startOffset != -1) {
+                    int tmpBegin = marker.getAttribute(IMarker.CHAR_START, -1);
+                    if (tmpBegin != startOffset) {
+                        break;
+                    }
+                    int tmpEnd = marker.getAttribute(IMarker.CHAR_END, -1);
+                    if (tmpEnd != startOffset) {
+                        break;
+                    }
+                }
+
                 int tmpLine = marker.getAttribute(IMarker.LINE_NUMBER, -1);
                 if (tmpLine != line) {
                     break;
@@ -425,7 +486,8 @@ public final class AaptParser {
         }
 
         if (markerAlreadyExists == false) {
-            BaseProjectHelper.markResource(f2, markerId, message, line, severity);
+            BaseProjectHelper.markResource(f2, markerId, message, line,
+                    startOffset, endOffset, severity);
         }
 
         return true;

@@ -119,11 +119,13 @@ lowercase
 luminance
 mac
 macs
+malformed
 marquee
 metadata
 min
 monte
 ms
+msg
 multi
 multimap
 multimaps
