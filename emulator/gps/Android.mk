@@ -13,6 +13,13 @@
 # limitations under the License.
 
 
+# We're moving the emulator-specific platform libs to
+# development.git/tools/emulator/. The following test is to ensure
+# smooth builds even if the tree contains both versions.
+#
+ifndef BUILD_EMULATOR_GPS_MODULE
+BUILD_EMULATOR_GPS_MODULE := true
+
 LOCAL_PATH := $(call my-dir)
 
 ifneq ($(TARGET_PRODUCT),sim)
@@ -28,3 +35,5 @@ LOCAL_MODULE := gps.goldfish
 LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
 endif
+
+endif # BUILD_EMULATOR_GPS_MODULE
