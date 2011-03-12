@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -110,6 +110,26 @@ public final class BaseProjectHelper {
      */
     public final static IMarker markResource(IResource resource, String markerId,
             String message, int lineNumber, int severity) {
+        return markResource(resource, markerId, message, lineNumber, -1, -1, severity);
+    }
+
+    /**
+     * Adds a marker to a file on a specific line, for a specific range of text. This
+     * methods catches thrown {@link CoreException}, and returns null instead.
+     *
+     * @param resource the resource to be marked
+     * @param markerId The id of the marker to add.
+     * @param message the message associated with the mark
+     * @param lineNumber the line number where to put the mark. If line is < 1, it puts
+     *            the marker on line 1,
+     * @param startOffset the beginning offset of the marker (relative to the beginning of
+     *            the document, not the line), or -1 for no range
+     * @param endOffset the ending offset of the marker
+     * @param severity the severity of the marker.
+     * @return the IMarker that was added or null if it failed to add one.
+     */
+    public final static IMarker markResource(IResource resource, String markerId,
+                String message, int lineNumber, int startOffset, int endOffset, int severity) {
         try {
             IMarker marker = resource.createMarker(markerId);
             marker.setAttribute(IMarker.MESSAGE, message);
@@ -123,6 +143,11 @@ public final class BaseProjectHelper {
 
             if (lineNumber >= 1) {
                 marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+            }
+
+            if (startOffset != -1) {
+                marker.setAttribute(IMarker.CHAR_START, startOffset);
+                marker.setAttribute(IMarker.CHAR_END, endOffset);
             }
 
             // on Windows, when adding a marker to a project, it takes a refresh for the marker
