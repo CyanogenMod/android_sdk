@@ -32,7 +32,6 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -210,119 +209,6 @@ public abstract class VisualRefactoring extends Refactoring {
         mElements = initElements();
     }
 
-    @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException,
-            OperationCanceledException {
-        RefactoringStatus status = new RefactoringStatus();
-
-        try {
-            pm.beginTask("Checking preconditions...", 6);
-
-            if (mSelectionStart == -1 || mSelectionEnd == -1) {
-                status.addFatalError("No selection to extract");
-                return status;
-            }
-
-            // Make sure the selection is contiguous
-            if (mTreeSelection != null) {
-                // TODO - don't do this if we based the selection on text. In this case,
-                // make sure we're -balanced-.
-
-                List<CanvasViewInfo> infos = new ArrayList<CanvasViewInfo>();
-                for (TreePath path : mTreeSelection.getPaths()) {
-                    Object lastSegment = path.getLastSegment();
-                    if (lastSegment instanceof CanvasViewInfo) {
-                        infos.add((CanvasViewInfo) lastSegment);
-                    }
-                }
-
-                if (infos.size() == 0) {
-                    status.addFatalError("No selection to extract");
-                    return status;
-                }
-
-                // Can't extract the root -- wouldn't that be pointless? (or maybe not
-                // always)
-                for (CanvasViewInfo info : infos) {
-                    if (info.isRoot()) {
-                        status.addFatalError("Cannot refactor the root");
-                        return status;
-                    }
-                }
-
-                // Disable if you've selected a single include tag
-                if (infos.size() == 1) {
-                    UiViewElementNode uiNode = infos.get(0).getUiViewNode();
-                    if (uiNode != null) {
-                        Node xmlNode = uiNode.getXmlNode();
-                        if (xmlNode.getLocalName().equals(LayoutDescriptors.VIEW_INCLUDE)) {
-                            status.addWarning("No point in refactoring a single include tag");
-                        }
-                    }
-                }
-
-                // Enforce that the selection is -contiguous-
-                if (infos.size() > 1) {
-                    // All elements must be siblings (e.g. same parent)
-                    List<UiViewElementNode> nodes = new ArrayList<UiViewElementNode>(infos
-                            .size());
-                    for (CanvasViewInfo info : infos) {
-                        UiViewElementNode node = info.getUiViewNode();
-                        if (node != null) {
-                            nodes.add(node);
-                        }
-                    }
-                    if (nodes.size() == 0) {
-                        status.addFatalError("No selected views");
-                        return status;
-                    }
-
-                    UiElementNode parent = nodes.get(0).getUiParent();
-                    for (UiViewElementNode node : nodes) {
-                        if (parent != node.getUiParent()) {
-                            status.addFatalError("The selected elements must be adjacent");
-                            return status;
-                        }
-                    }
-                    // Ensure that the siblings are contiguous; no gaps.
-                    // If we've selected all the children of the parent then we don't need
-                    // to look.
-                    List<UiElementNode> siblings = parent.getUiChildren();
-                    if (siblings.size() != nodes.size()) {
-                        Set<UiViewElementNode> nodeSet = new HashSet<UiViewElementNode>(nodes);
-                        boolean inRange = false;
-                        int remaining = nodes.size();
-                        for (UiElementNode node : siblings) {
-                            boolean in = nodeSet.contains(node);
-                            if (in) {
-                                remaining--;
-                                if (remaining == 0) {
-                                    break;
-                                }
-                                inRange = true;
-                            } else if (inRange) {
-                                status.addFatalError("The selected elements must be adjacent");
-                                return status;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Ensures that we have a valid DOM model:
-            if (mElements.size() == 0) {
-                status.addFatalError("Nothing to extract");
-                return status;
-            }
-
-            pm.worked(1);
-            return status;
-
-        } finally {
-            pm.done();
-        }
-    }
-
     protected abstract List<Change> computeChanges();
 
     @Override
@@ -429,7 +315,8 @@ public abstract class VisualRefactoring extends Refactoring {
 
 
     /** Produce a list of edits to replace references to the given id with the given new id */
-    protected List<TextEdit> replaceIds(IStructuredDocument doc, int skipStart, int skipEnd,
+    protected static List<TextEdit> replaceIds(String androidNamePrefix,
+            IStructuredDocument doc, int skipStart, int skipEnd,
             String rootId, String referenceId) {
         if (rootId == null) {
             return Collections.emptyList();
@@ -448,7 +335,7 @@ public abstract class VisualRefactoring extends Refactoring {
             return Collections.emptyList();
         }
 
-        String namePrefix = getAndroidNamespacePrefix() + ':' + ATTR_LAYOUT_PREFIX;
+        String namePrefix = androidNamePrefix + ':' + ATTR_LAYOUT_PREFIX;
         List<TextEdit> edits = new ArrayList<TextEdit>();
 
         IStructuredDocumentRegion region = doc.getFirstStructuredDocumentRegion();
@@ -528,8 +415,37 @@ public abstract class VisualRefactoring extends Refactoring {
         return mAndroidNamespacePrefix;
     }
 
+    protected static String getAndroidNamespacePrefix(Document document) {
+        String nsPrefix = null;
+        List<Attr> attributeNodes = findNamespaceAttributes(document);
+        for (Node attributeNode : attributeNodes) {
+            String prefix = attributeNode.getPrefix();
+            if (XMLNS.equals(prefix)) {
+                String name = attributeNode.getNodeName();
+                String value = attributeNode.getNodeValue();
+                if (value.equals(ANDROID_URI)) {
+                    nsPrefix = name;
+                    if (nsPrefix.startsWith(XMLNS_COLON)) {
+                        nsPrefix =
+                            nsPrefix.substring(XMLNS_COLON.length());
+                    }
+                }
+            }
+        }
+
+        if (nsPrefix == null) {
+            nsPrefix = ANDROID_NS_NAME;
+        }
+
+        return nsPrefix;
+    }
+
     protected List<Attr> findNamespaceAttributes() {
         Document document = getDomDocument();
+        return findNamespaceAttributes(document);
+    }
+
+    protected static List<Attr> findNamespaceAttributes(Document document) {
         if (document != null) {
             Element root = document.getDocumentElement();
             return findNamespaceAttributes(root);
@@ -538,7 +454,7 @@ public abstract class VisualRefactoring extends Refactoring {
         return Collections.emptyList();
     }
 
-    protected List<Attr> findNamespaceAttributes(Node root) {
+    protected static List<Attr> findNamespaceAttributes(Node root) {
         List<Attr> result = new ArrayList<Attr>();
         NamedNodeMap attributes = root.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
@@ -894,7 +810,11 @@ public abstract class VisualRefactoring extends Refactoring {
         return true;
     }
 
-    protected void ensureIdMatchesType(Element element, String newType, MultiTextEdit rootEdit) {
+    /**
+     * Updates the given element with a new name if the current id reflects the old
+     * element type. If the name was changed, it will return the new name.
+     */
+    protected String ensureIdMatchesType(Element element, String newType, MultiTextEdit rootEdit) {
         String oldType = element.getTagName();
         if (oldType.indexOf('.') == -1) {
             oldType = ANDROID_WIDGET_PREFIX + oldType;
@@ -903,8 +823,10 @@ public abstract class VisualRefactoring extends Refactoring {
         String id = getId(element);
         if (id == null || id.toLowerCase().contains(oldTypeBase.toLowerCase())) {
             String newTypeBase = newType.substring(newType.lastIndexOf('.') + 1);
-            ensureHasId(rootEdit, element, newTypeBase);
+            return ensureHasId(rootEdit, element, newTypeBase);
         }
+
+        return null;
     }
 
     protected static IndexedRegion getRegion(Node node) {

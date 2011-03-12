@@ -53,7 +53,10 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -219,7 +222,25 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             }
         }
 
-        ensureIdMatchesType(layout, mTypeFqcn, rootEdit);
+        String oldId = getId(layout);
+        String newId = ensureIdMatchesType(layout, mTypeFqcn, rootEdit);
+        // Update any layout references to the old id with the new id
+        if (oldId != null && newId != null) {
+            IStructuredModel model = mEditor.getModelForRead();
+            try {
+                IStructuredDocument doc = model.getStructuredDocument();
+                if (doc != null) {
+                    List<TextEdit> replaceIds = replaceIds(getAndroidNamespacePrefix(), doc,
+                            mSelectionStart,
+                            mSelectionEnd, oldId, newId);
+                    for (TextEdit edit : replaceIds) {
+                        rootEdit.addChild(edit);
+                    }
+                }
+            } finally {
+                model.releaseFromRead();
+            }
+        }
 
         String oldType = getOldType();
         String newType = mTypeFqcn;

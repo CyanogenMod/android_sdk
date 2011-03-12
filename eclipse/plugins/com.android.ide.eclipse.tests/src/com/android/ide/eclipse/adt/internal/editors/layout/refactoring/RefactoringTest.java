@@ -15,17 +15,22 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -47,17 +52,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("restriction")
 public class RefactoringTest extends AdtProjectTest {
+
+    protected IFile getLayoutFile(IProject project, String name) throws Exception {
+        return getTestDataFile(project, name, FD_RES + "/" + FD_RES_LAYOUT + "/" + name);
+    }
+
     protected static Element findElementById(Element root, String id) {
         if (id.equals(VisualRefactoring.getId(root))) {
             return root;
         }
 
-        for (Element child : RelativeLayoutConversionHelper.getChildren(root)) {
+        for (Element child : DomUtilities.getChildren(root)) {
             Element result = findElementById(child, id);
             if (result != null) {
                 return result;
@@ -106,6 +117,42 @@ public class RefactoringTest extends AdtProjectTest {
         assertEqualsGolden(basename, actual);
     }
 
+    protected void checkEdits(List<Change> changes,
+            Map<IPath, String> fileToGoldenName) throws BadLocationException,
+            IOException {
+        for (Change change : changes) {
+            if (change instanceof TextFileChange) {
+                TextFileChange tf = (TextFileChange) change;
+                IFile file = tf.getFile();
+                assertNotNull(file);
+                IPath path = file.getProjectRelativePath();
+                String goldenName = fileToGoldenName.get(path);
+                assertNotNull(goldenName);
+
+                String xml = readTestFile(goldenName, false);
+                if (xml == null) { // New file
+                    xml = ""; //$NON-NLS-1$
+                }
+                IDocument document = new Document();
+                document.set(xml);
+
+                TextEdit edit = tf.getEdit();
+                if (edit instanceof MultiTextEdit) {
+                    MultiTextEdit edits = (MultiTextEdit) edit;
+                    edits.apply(document);
+                } else {
+                    edit.apply(document);
+                }
+
+                String actual = document.get();
+                assertEqualsGolden(goldenName, actual);
+            } else {
+                System.out.println("Ignoring non-textfilechange in refactoring result");
+                assertNull(change.getAffectedObjects());
+            }
+        }
+    }
+
     protected void assertEqualsGolden(String basename, String actual) {
         String testName = getName();
         if (testName.startsWith("test")) {
@@ -145,7 +192,7 @@ public class RefactoringTest extends AdtProjectTest {
     }
 
     protected UiViewElementNode createModel(UiViewElementNode parent, Element element) {
-        List<Element> children = RelativeLayoutConversionHelper.getChildren(element);
+        List<Element> children = DomUtilities.getChildren(element);
         String fqcn = ANDROID_WIDGET_PREFIX + element.getTagName();
         boolean hasChildren = children.size() > 0;
         UiViewElementNode node = createNode(parent, fqcn, hasChildren);

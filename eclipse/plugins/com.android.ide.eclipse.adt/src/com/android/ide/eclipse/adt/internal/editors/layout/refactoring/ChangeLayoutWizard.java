@@ -21,9 +21,10 @@ import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -53,12 +54,12 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
     }
 
     /** Wizard page which inputs parameters for the {@link ChangeLayoutRefactoring} operation */
-    private static class InputPage extends UserInputWizardPage {
+    private static class InputPage extends VisualRefactoringInputPage {
         private final IProject mProject;
         private final String mOldType;
         private Combo mTypeCombo;
         private Button mFlatten;
-        private List<String> mClassNames;
+        private List<Pair<String, ViewElementDescriptor>> mClassNames;
 
         public InputPage(IProject project, String oldType) {
             super("ChangeLayoutInputPage");  //$NON-NLS-1$
@@ -91,6 +92,7 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
                 }
             };
             mTypeCombo.addSelectionListener(selectionListener);
+            mTypeCombo.addSelectionListener(mSelectionValidateListener);
 
             mFlatten = new Button(composite, SWT.CHECK);
             mFlatten.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER,
@@ -99,6 +101,7 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
             mFlatten.addSelectionListener(selectionListener);
             // Should flattening be selected by default?
             mFlatten.setSelection(true);
+            mFlatten.addSelectionListener(mSelectionValidateListener);
 
             // We don't exclude RelativeLayout even if the current layout is RelativeLayout,
             // in case you are trying to flatten the hierarchy for a hierarchy that has a
@@ -127,11 +130,12 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
             validatePage();
         }
 
-        private boolean validatePage() {
+        @Override
+        protected boolean validatePage() {
             boolean ok = true;
 
             int selectionIndex = mTypeCombo.getSelectionIndex();
-            String type = selectionIndex != -1 ? mClassNames.get(selectionIndex) : null;
+            String type = selectionIndex != -1 ? mClassNames.get(selectionIndex).getFirst() : null;
             if (type == null) {
                 setErrorMessage("Select a layout type");
                 ok = false; // The user has chosen a separator

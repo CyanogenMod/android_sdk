@@ -16,21 +16,21 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceType;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+
+import java.util.List;
 
 class ExtractIncludeWizard extends VisualRefactoringWizard {
     public ExtractIncludeWizard(ExtractIncludeRefactoring ref, LayoutEditor editor) {
@@ -42,20 +42,22 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
     protected void addUserInputPages() {
         ExtractIncludeRefactoring ref = (ExtractIncludeRefactoring) getRefactoring();
         String initialName = ref.getInitialName();
-        addPage(new InputPage(mEditor.getProject(), initialName));
+        IFile sourceFile = ref.getSourceFile();
+        addPage(new InputPage(mEditor.getProject(), sourceFile, initialName));
     }
 
     /** Wizard page which inputs parameters for the {@link ExtractIncludeRefactoring} operation */
-    private static class InputPage extends UserInputWizardPage {
+    private static class InputPage extends VisualRefactoringInputPage {
         private final IProject mProject;
+        private final IFile mSourceFile;
         private final String mSuggestedName;
         private Text mNameText;
-        private Button mUpdateReferences;
         private Button mReplaceAllOccurrences;
 
-        public InputPage(IProject project, String suggestedName) {
-            super("ExtractIncludeInputPage");  //$NON-NLS-1$
+        public InputPage(IProject project, IFile sourceFile, String suggestedName) {
+            super("ExtractIncludeInputPage");
             mProject = project;
+            mSourceFile = sourceFile;
             mSuggestedName = suggestedName;
         }
 
@@ -69,23 +71,19 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
 
             mNameText = new Text(composite, SWT.BORDER);
             mNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-            mNameText.addModifyListener(new ModifyListener() {
-                public void modifyText(ModifyEvent e) {
-                    validatePage();
-                }
-            });
-
-            mUpdateReferences = new Button(composite, SWT.CHECK);
-            mUpdateReferences.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER,
-                    false, false, 2, 1));
-            mUpdateReferences.setSelection(true);
-            mUpdateReferences.setText("Update layout references");
+            mNameText.addModifyListener(mModifyValidateListener);
 
             mReplaceAllOccurrences = new Button(composite, SWT.CHECK);
             mReplaceAllOccurrences.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER,
                     false, false, 2, 1));
-            mReplaceAllOccurrences.setText("Replace all occurrences with include to new layout");
-            mReplaceAllOccurrences.setEnabled(false);
+            mReplaceAllOccurrences.setText(
+                    "Replace occurrences in all layouts with include to new layout");
+            List<IFile> variations =
+                ExtractIncludeRefactoring.getConfigurationVariations(mSourceFile);
+            boolean enabled = variations.size() > 0;
+            mReplaceAllOccurrences.setEnabled(enabled);
+            mReplaceAllOccurrences.setSelection(enabled);
+            mReplaceAllOccurrences.addSelectionListener(mSelectionValidateListener);
 
             // Initialize UI:
             if (mSuggestedName != null) {
@@ -96,7 +94,8 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
             validatePage();
         }
 
-        private boolean validatePage() {
+        @Override
+        protected boolean validatePage() {
             boolean ok = true;
 
             String text = mNameText.getText().trim();
@@ -122,7 +121,6 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
                     (ExtractIncludeRefactoring) getRefactoring();
                 refactoring.setLayoutName(text);
                 refactoring.setReplaceOccurrences(mReplaceAllOccurrences.getSelection());
-                refactoring.setUpdateReferences(mUpdateReferences.getSelection());
             }
 
             setPageComplete(ok);

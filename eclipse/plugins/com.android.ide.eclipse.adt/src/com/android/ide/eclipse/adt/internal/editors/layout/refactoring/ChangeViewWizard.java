@@ -26,10 +26,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -66,7 +63,7 @@ class ChangeViewWizard extends VisualRefactoringWizard {
     }
 
     /** Wizard page which inputs parameters for the {@link ChangeViewRefactoring} operation */
-    private static class InputPage extends UserInputWizardPage {
+    private static class InputPage extends VisualRefactoringInputPage {
         private final IProject mProject;
         private Combo mTypeCombo;
         private final String mOldType;
@@ -88,13 +85,7 @@ class ChangeViewWizard extends VisualRefactoringWizard {
 
             mTypeCombo = new Combo(composite, SWT.READ_ONLY);
             mTypeCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-            SelectionAdapter selectionListener = new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    validatePage();
-                }
-            };
-            mTypeCombo.addSelectionListener(selectionListener);
+            mTypeCombo.addSelectionListener(mSelectionValidateListener);
 
             mClassNames = getWidgetTypes(mOldType, mTypeCombo);
             mTypeCombo.select(0);
@@ -177,7 +168,8 @@ class ChangeViewWizard extends VisualRefactoringWizard {
             return classNames;
         }
 
-        private boolean validatePage() {
+        @Override
+        protected boolean validatePage() {
             boolean ok = true;
             int selectionIndex = mTypeCombo.getSelectionIndex();
             String type = selectionIndex != -1 ? mClassNames.get(selectionIndex) : null;

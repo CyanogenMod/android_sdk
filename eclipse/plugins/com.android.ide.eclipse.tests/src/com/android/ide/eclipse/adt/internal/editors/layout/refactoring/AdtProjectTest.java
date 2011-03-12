@@ -15,9 +15,6 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
-import static com.android.sdklib.SdkConstants.FD_RES;
-
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -81,19 +78,31 @@ public class AdtProjectTest extends SdkTestCase {
         return sProject;
     }
 
-    protected IFile getTestFile(IProject project, String name) throws Exception {
-        IFolder resFolder = project.getFolder(FD_RES);
+    protected IFile getTestDataFile(IProject project, String name) throws Exception {
+        return getTestDataFile(project, name, name);
+    }
+
+    protected IFile getTestDataFile(IProject project, String sourceName,
+            String destPath) throws Exception {
+        String[] split = destPath.split("/"); //$NON-NLS-1$
+        assertTrue(split.length > 1);
+        IFolder folder = project.getFolder(split[0]);
         NullProgressMonitor monitor = new NullProgressMonitor();
-        if (!resFolder.exists()) {
-            resFolder.create(true /* force */, true /* local */, monitor);
+        if (!folder.exists()) {
+            folder.create(true /* force */, true /* local */, monitor);
         }
-        IFolder layoutfolder = resFolder.getFolder(FD_RES_LAYOUT);
-        if (!layoutfolder.exists()) {
-            layoutfolder.create(true /* force */, true /* local */, monitor);
+        for (int i = 1, n = split.length; i < n -1; i++) {
+            IFolder subFolder = folder.getFolder(split[i]);
+            if (!subFolder.exists()) {
+                subFolder.create(true /* force */, true /* local */, monitor);
+            }
+            folder = subFolder;
         }
-        IFile file = layoutfolder.getFile(name);
+
+        String name = split[split.length - 1];
+        IFile file = folder.getFile(name);
         if (!file.exists()) {
-            String xml = readTestFile(name, true);
+            String xml = readTestFile(sourceName, true);
             InputStream bstream = new ByteArrayInputStream(xml.getBytes("UTF-8")); //$NON-NLS-1$
             file.create(bstream, false /* force */, monitor);
         }

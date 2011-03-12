@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
@@ -63,11 +64,10 @@ import java.util.Map;
 public class WrapInRefactoring extends VisualRefactoring {
     private static final String KEY_ID = "name";                           //$NON-NLS-1$
     private static final String KEY_TYPE = "type";                         //$NON-NLS-1$
-    private static final String KEY_UPDATE_REFS = "update-refs";           //$NON-NLS-1$
 
     private String mId;
     private String mTypeFqcn;
-    private boolean mUpdateReferences;
+    private String mInitializedAttributes;
 
     /**
      * This constructor is solely used by {@link Descriptor},
@@ -78,7 +78,6 @@ public class WrapInRefactoring extends VisualRefactoring {
         super(arguments);
         mId = arguments.get(KEY_ID);
         mTypeFqcn = arguments.get(KEY_TYPE);
-        mUpdateReferences = Boolean.parseBoolean(arguments.get(KEY_UPDATE_REFS));
     }
 
     public WrapInRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
@@ -149,7 +148,6 @@ public class WrapInRefactoring extends VisualRefactoring {
         Map<String, String> args = super.createArgumentMap();
         args.put(KEY_TYPE, mTypeFqcn);
         args.put(KEY_ID, mId);
-        args.put(KEY_UPDATE_REFS, Boolean.toString(mUpdateReferences));
 
         return args;
     }
@@ -167,8 +165,8 @@ public class WrapInRefactoring extends VisualRefactoring {
         mTypeFqcn = typeFqcn;
     }
 
-    void setUpdateReferences(boolean selection) {
-        mUpdateReferences = selection;
+    void setInitializedAttributes(String initializedAttributes) {
+        mInitializedAttributes = initializedAttributes;
     }
 
     @Override
@@ -194,6 +192,8 @@ public class WrapInRefactoring extends VisualRefactoring {
         String startIndent = AndroidXmlEditor.getIndentAtOffset(document, mSelectionStart);
 
         String viewClass = getViewClass(mTypeFqcn);
+        String androidNsPrefix = getAndroidNamespacePrefix();
+
 
         IFile file = mEditor.getInputFile();
         List<Change> changes = new ArrayList<Change>();
@@ -205,14 +205,14 @@ public class WrapInRefactoring extends VisualRefactoring {
         String id = ensureNewId(mId);
 
         // Update any layout references to the old id with the new id
-        if (mUpdateReferences && id != null) {
+        if (id != null) {
             String rootId = getRootId();
             IStructuredModel model = mEditor.getModelForRead();
             try {
                 IStructuredDocument doc = model.getStructuredDocument();
                 if (doc != null) {
-                    List<TextEdit> replaceIds = replaceIds(doc, mSelectionStart,
-                            mSelectionEnd, rootId, id);
+                    List<TextEdit> replaceIds = replaceIds(androidNsPrefix,
+                            doc, mSelectionStart, mSelectionEnd, rootId, id);
                     for (TextEdit edit : replaceIds) {
                         rootEdit.addChild(edit);
                     }
@@ -262,8 +262,6 @@ public class WrapInRefactoring extends VisualRefactoring {
             sb.append(namespace);
         }
 
-        String androidNsPrefix = getAndroidNamespacePrefix();
-
         // Set the ID if any
         if (id != null) {
             if (separateAttributes) {
@@ -308,8 +306,22 @@ public class WrapInRefactoring extends VisualRefactoring {
         sb.append(androidNsPrefix).append(':');
         sb.append(ATTR_LAYOUT_HEIGHT).append('=').append('"').append(height).append('"');
 
+        if (mInitializedAttributes != null && mInitializedAttributes.length() > 0) {
+            for (String s : mInitializedAttributes.split(",")) { //$NON-NLS-1$
+                sb.append(' ');
+                String[] nameValue = s.split("="); //$NON-NLS-1$
+                String name = nameValue[0];
+                String value = nameValue[1];
+                if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
+                    name = name.substring(ANDROID_NS_NAME_PREFIX.length());
+                    sb.append(androidNsPrefix).append(':');
+                }
+                sb.append(name).append('=').append('"').append(value).append('"');
+            }
+        }
+
         // Transfer layout_ attributes (other than width and height)
-        if (mUpdateReferences) {
+        if (primary != null) {
             List<Attr> layoutAttributes = findLayoutAttributes(primary);
             for (Attr attribute : layoutAttributes) {
                 String name = attribute.getLocalName();

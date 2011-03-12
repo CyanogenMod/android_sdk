@@ -26,20 +26,31 @@ import java.util.List;
 public class ChangeViewRefactoringTest extends RefactoringTest {
 
     public void testChangeView1() throws Exception {
-        checkRefactoring("sample1a.xml", "@+id/button1", "@+id/button6");
+        checkRefactoring("sample1a.xml", FQCN_RADIO_BUTTON, "@+id/button1", "@+id/button6");
     }
 
-    private void checkRefactoring(String basename, String... ids) throws Exception {
+    public void testChangeView2() throws Exception {
+        // Tests (1) updating references to the renamed id of the changed widgets
+        // (e.g. button3 is renamed to imageButton1 and layout references to button3
+        // must be updated), and (2) removal of attributes not available in the new type
+        // (the text property is removed since it is not available on the new widget
+        // type ImageButton)
+        checkRefactoring("sample2.xml", "android.widget.ImageButton",
+                "@+id/button3", "@+id/button5");
+    }
+
+    private void checkRefactoring(String basename, String newType,
+            String... ids) throws Exception {
         assertTrue(ids.length > 0);
 
-        IFile file = getTestFile(sProject, basename);
+        IFile file = getLayoutFile(sProject, basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
         List<Element> selectedElements = getElements(info.mElement, ids);
 
         ChangeViewRefactoring refactoring = new ChangeViewRefactoring(selectedElements,
                 layoutEditor);
-        refactoring.setType(FQCN_RADIO_BUTTON);
+        refactoring.setType(newType);
 
         List<Change> changes = refactoring.computeChanges();
         checkEdits(basename, changes);
