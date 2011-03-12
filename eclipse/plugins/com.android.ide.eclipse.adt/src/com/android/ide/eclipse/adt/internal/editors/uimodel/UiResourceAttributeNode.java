@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -198,13 +198,15 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
      */
     @Override
     public String[] getPossibleValues(String prefix) {
+        return computeResourceStringMatches(getUiParent(), prefix);
+    }
+
+    public static String[] computeResourceStringMatches(UiElementNode uiNode, String prefix) {
         ResourceRepository repository = null;
         boolean isSystem = false;
-
-        UiElementNode uiNode = getUiParent();
         AndroidXmlEditor editor = uiNode.getEditor();
 
-        if (prefix == null || !prefix.contains(ANDROID_NS_NAME_PREFIX)) {
+        if (prefix == null || !prefix.regionMatches(1, ANDROID_PKG, 0, ANDROID_PKG.length())) {
             IProject project = editor.getProject();
             if (project != null) {
                 // get the resource repository for this project and the system resources.
@@ -242,11 +244,22 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // resource types.
 
             for (ResourceType resType : resTypes) {
-                results.add("@" + resType.getName() + "/");         //$NON-NLS-1$ //$NON-NLS-2$
+                if (isSystem) {
+                    results.add("@" + ANDROID_PKG + ':' + resType.getName() + "/"); //$NON-NLS-1$ //$NON-NLS-2$
+                } else {
+                    results.add("@" + resType.getName() + "/");         //$NON-NLS-1$ //$NON-NLS-2$
+                }
                 if (resType == ResourceType.ID) {
                     // Also offer the + version to create an id from scratch
                     results.add("@+" + resType.getName() + "/");    //$NON-NLS-1$ //$NON-NLS-2$
                 }
+            }
+
+            // Also add in @android: prefix to completion such that if user has typed
+            // "@an" we offer to complete it.
+            if (prefix == null ||
+                    ANDROID_PKG.regionMatches(0, prefix, 1, prefix.length() - 1)) {
+                results.add('@' + ANDROID_PKG + ':');
             }
         } else if (repository != null) {
             // We have a style name and a repository. Find all resources that match this
@@ -261,7 +274,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 }
 
                 if (isSystem) {
-                    sb.append(ANDROID_NS_NAME_PREFIX);
+                    sb.append(ANDROID_PKG).append(':');
                 }
 
                 sb.append(typeName).append('/');

@@ -1546,7 +1546,7 @@ public class UiElementNode implements IPropertySource {
      *              e.g. SdkConstants.NS_RESOURCES
      * @return The first prefix declared or the default "android" prefix.
      */
-    private String lookupNamespacePrefix(Node node, String nsUri) {
+    public static String lookupNamespacePrefix(Node node, String nsUri) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following code emulates this simple call:
         //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
