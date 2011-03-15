@@ -13,7 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-SDKLIB_LOCAL_DIR := $(call my-dir)
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_JAVA_RESOURCE_DIRS := src
+
+LOCAL_JAR_MANIFEST := manifest.txt
+
+# IMPORTANT: if you add a new dependency here, please make sure
+# to also check the following files:
+#   sdkmanager/sdklib/manifest.txt
+#   sdkmanager/app/etc/android.bat
+LOCAL_JAVA_LIBRARIES := \
+        androidprefs \
+        common \
+        commons-compress-1.0
+
+LOCAL_MODULE := sdklib
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
 
 # Build all sub-directories
-include $(call all-makefiles-under,$(SDKLIB_LOCAL_DIR))
+include $(call all-makefiles-under,$(LOCAL_PATH))
