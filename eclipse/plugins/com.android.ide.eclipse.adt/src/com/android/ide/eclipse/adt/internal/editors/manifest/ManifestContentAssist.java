@@ -16,16 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 
 /**
  * Content Assist Processor for AndroidManifest.xml
  */
-final class ManifestContentAssist extends AndroidContentAssist {
+@VisibleForTesting
+public final class ManifestContentAssist extends AndroidContentAssist {
 
     /**
-     * Constructor for ManifestContentAssist 
+     * Constructor for ManifestContentAssist
      */
     public ManifestContentAssist() {
         super(AndroidTargetData.DESCRIPTOR_MANIFEST);

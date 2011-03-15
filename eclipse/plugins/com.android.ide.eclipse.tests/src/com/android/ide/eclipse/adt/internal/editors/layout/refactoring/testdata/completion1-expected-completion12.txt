@@ -1,0 +1,60 @@
+Code completion in completion1.xml for btn_default">^</FrameLayout>:
+<AbsoluteLayout ></AbsoluteLayout>
+<AdapterViewFlipper ></AdapterViewFlipper>
+<DialerFilter ></DialerFilter>
+<ExpandableListView ></ExpandableListView>
+<FrameLayout ></FrameLayout>
+<GridView ></GridView>
+<HorizontalScrollView ></HorizontalScrollView>
+<ImageSwitcher ></ImageSwitcher>
+<LinearLayout ></LinearLayout>
+<ListView ></ListView>
+<MediaController ></MediaController>
+<RadioGroup ></RadioGroup>
+<RelativeLayout ></RelativeLayout>
+<ScrollView ></ScrollView>
+<SearchView ></SearchView>
+<SlidingDrawer ></SlidingDrawer> : SlidingDrawer specific attributes.
+<StackView ></StackView>
+<TabHost ></TabHost>
+<TabWidget ></TabWidget>
+<TableLayout ></TableLayout>
+<TableRow ></TableRow>
+<TextSwitcher ></TextSwitcher>
+<ViewAnimator ></ViewAnimator>
+<ViewFlipper ></ViewFlipper>
+<ViewSwitcher ></ViewSwitcher>
+<GestureOverlayView /> : GestureOverlayView specific attributes.
+<SurfaceView />
+<View /> : Attributes that can be used with android.view.View or any of its subclasses.
+<ViewStub /> : A android.view.ViewStub lets you lazily include other XML layouts inside your application  at runtime.
+<WebView />
+<AnalogClock />
+<AutoCompleteTextView />
+<Button />
+<CalendarView />
+<CheckBox />
+<CheckedTextView />
+<Chronometer />
+<DatePicker />
+<DigitalClock />
+<EditText />
+<Gallery />
+<ImageButton />
+<ImageView />
+<MultiAutoCompleteTextView />
+<NumberPicker />
+<ProgressBar />
+<QuickContactBadge />
+<RadioButton />
+<RatingBar />
+<SeekBar />
+<Spinner />
+<TextView />
+<TimePicker />
+<ToggleButton />
+<TwoLineListItem />
+<VideoView />
+<ZoomButton />
+<ZoomControls />
+<include /> : Lets you statically include XML layouts inside other XML layouts.

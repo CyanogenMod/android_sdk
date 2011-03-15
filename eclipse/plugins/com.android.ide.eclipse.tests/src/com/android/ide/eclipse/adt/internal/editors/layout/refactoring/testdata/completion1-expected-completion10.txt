@@ -1,0 +1,10 @@
+Code completion in completion1.xml for <T^extView:
+TabHost
+TabWidget
+TableLayout
+TableRow
+TextSwitcher
+TextView
+TimePicker
+ToggleButton
+TwoLineListItem

@@ -17,7 +17,7 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DIP;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
@@ -190,9 +190,9 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
                     }
 
                     newChild.setAttribute(ANDROID_URI, "layout_x", //$NON-NLS-1$
-                            String.format(VALUE_N_DIP, x));
+                            String.format(VALUE_N_DP, x));
                     newChild.setAttribute(ANDROID_URI, "layout_y", //$NON-NLS-1$
-                            String.format(VALUE_N_DIP, y));
+                            String.format(VALUE_N_DP, y));
 
                     addInnerElements(newChild, element, idMap);
                 }

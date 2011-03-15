@@ -15,21 +15,15 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -46,7 +40,6 @@ import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Element;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +51,6 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("restriction")
 public class RefactoringTest extends AdtProjectTest {
-
-    protected IFile getLayoutFile(IProject project, String name) throws Exception {
-        return getTestDataFile(project, name, FD_RES + "/" + FD_RES_LAYOUT + "/" + name);
-    }
 
     protected static Element findElementById(Element root, String id) {
         if (id.equals(VisualRefactoring.getId(root))) {
@@ -153,44 +142,6 @@ public class RefactoringTest extends AdtProjectTest {
         }
     }
 
-    protected void assertEqualsGolden(String basename, String actual) {
-        String testName = getName();
-        if (testName.startsWith("test")) {
-            testName = testName.substring(4);
-            if (Character.isUpperCase(testName.charAt(0))) {
-                testName = Character.toLowerCase(testName.charAt(0)) + testName.substring(1);
-            }
-        }
-        String expectedName;
-        if (basename.endsWith(DOT_XML)) {
-            expectedName = basename.substring(0, basename.length() - DOT_XML.length())
-                    + "-expected-" + testName + DOT_XML;
-        } else {
-            expectedName = basename + ".expected";
-        }
-        String expected = readTestFile(expectedName, false);
-        if (expected == null) {
-            File expectedPath = new File(getTempDir(), expectedName);
-            AdtPlugin.writeFile(expectedPath, actual);
-            System.out.println("Expected - written to " + expectedPath + ":\n");
-            System.out.println(actual);
-            fail("Did not find golden file (" + expectedName + "): Wrote contents as "
-                    + expectedPath);
-        } else {
-            if (!expected.equals(actual)) {
-                File expectedPath = new File(getTempDir(), expectedName);
-                File actualPath = new File(getTempDir(),
-                        expectedName.replace("expected", "actual"));
-               AdtPlugin.writeFile(expectedPath, expected);
-                AdtPlugin.writeFile(actualPath, actual);
-                System.out.println("The files differ - see " + expectedPath + " versus "
-                        + actualPath);
-                assertEquals("The files differ - see " + expectedPath + " versus " + actualPath,
-                        expected, actual);
-            }
-        }
-    }
-
     protected UiViewElementNode createModel(UiViewElementNode parent, Element element) {
         List<Element> children = DomUtilities.getChildren(element);
         String fqcn = ANDROID_WIDGET_PREFIX + element.getTagName();
@@ -258,13 +209,6 @@ public class RefactoringTest extends AdtProjectTest {
         }
 
         return view;
-    }
-
-    protected File getTempDir() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            return new File("/tmp"); //$NON-NLS-1$
-        }
-        return new File(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
     }
 
     protected TestContext setupTestContext(IFile file, String relativePath) throws Exception {

@@ -57,7 +57,7 @@ import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DIP;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
@@ -911,7 +911,7 @@ class RelativeLayoutConversionHelper {
                             view.addHorizConstraint(attachLeftProperty, attachLeftValue);
                             if (marginLeft > 0) {
                                 view.addHorizConstraint(ATTR_LAYOUT_MARGIN_LEFT,
-                                        String.format(VALUE_N_DIP, marginLeft));
+                                        String.format(VALUE_N_DP, marginLeft));
                                 marginLeft = 0;
                             }
                         } else {
@@ -965,7 +965,7 @@ class RelativeLayoutConversionHelper {
                             view.addVerticalConstraint(attachTopProperty, attachTopValue);
                             if (marginTop > 0) {
                                 view.addVerticalConstraint(ATTR_LAYOUT_MARGIN_TOP,
-                                        String.format(VALUE_N_DIP, marginTop));
+                                        String.format(VALUE_N_DP, marginTop));
                                 marginTop = 0;
                             }
                         } else {

@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
+
+import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -32,10 +36,12 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiFlagAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
+import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
@@ -50,12 +56,15 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -148,29 +157,51 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             return null;
         }
 
+        boolean isNew = true;
+        int replaceLength = 0;
         if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
             parent = currentNode.getNodeName();
 
-            if (wordPrefix.equals(parent)) {
+            // We're not editing the current node name, so we might be editing its
+            // attributes instead...
+            AttribInfo info = parseAttributeInfo(viewer, offset);
+            if (info != null) {
+                isAttribute = true;
+                // We're editing attributes in an element node (either the attributes' names
+                // or their values).
+                choices = getChoicesForAttribute(parent, currentNode, currentUiNode, info);
+
+                if (info.isInValue) {
+                    // Note - this must be done before the prefix correction below since
+                    // otherwise, when the prefix gets cleared out (for a flag list) we
+                    // end up with a wrong count for the prefix length
+                    Element element = (Element) currentNode;
+                    String attribute = element.getAttribute(info.name);
+                    if (attribute != null) { // Eclipse DOM bug
+                        replaceLength = attribute.length() - wordPrefix.length();
+                        if (info.needTag != 0) {
+                            replaceLength += 2;
+                        }
+                    }
+                } else {
+                    replaceLength = info.name.length() - wordPrefix.length();
+                }
+
+                if (info.correctedPrefix != null) {
+                    wordPrefix = info.correctedPrefix;
+                }
+                needTag = info.needTag;
+                isNew = info.name.length() == 0;
+            } else if (parent.startsWith(wordPrefix)) {
                 // We are still editing the element's tag name, not the attributes
                 // (the element's tag name may not even be complete)
                 isElement = true;
                 choices = getChoicesForElement(parent, currentNode);
-            } else {
-                // We're not editing the current node name, so we might be editing its
-                // attributes instead...
-                isAttribute = true;
-                AttribInfo info = parseAttributeInfo(viewer, offset);
-                if (info != null) {
-                    // We're editing attributes in an element node (either the attributes' names
-                    // or their values).
-                    choices = getChoicesForAttribute(parent, currentNode, currentUiNode, info);
-
-                    if (info.correctedPrefix != null) {
-                        wordPrefix = info.correctedPrefix;
-                    }
-                    needTag = info.needTag;
+                replaceLength = parent.length() - wordPrefix.length();
+                if (wordPrefix.length() == 0) {
+                    replaceLength = 0; // Only do this if on <
                 }
+                isNew = replaceLength == 0;
             }
         } else if (currentNode.getNodeType() == Node.TEXT_NODE) {
             isElement = true;
@@ -201,7 +232,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return computeProposals(offset, currentNode, choices, wordPrefix, needTag,
-                isAttribute, selectionLength);
+                isAttribute, isNew, selectionLength + replaceLength);
     }
 
     /**
@@ -345,24 +376,31 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                         // A "flag" can consist of several values separated by "or" (|).
                         // If the correct prefix contains such a pipe character, we change
                         // it so that only the currently edited value is completed.
-                        pos = value.indexOf('|');
+                        pos = value.lastIndexOf('|');
                         if (pos >= 0) {
                             attrInfo.correctedPrefix = value = value.substring(pos + 1);
                             attrInfo.needTag = 0;
                         }
                     }
-                }
 
-                if (choices == null && value.startsWith("@")) { //$NON-NLS-1$
-                    // Special case: If the attribute value looks like a reference to a
-                    // resource, offer to complete it, since in many cases our metadata
-                    // does not correctly state whether a resource value is allowed. We don't
-                    // offer these for an empty completion context, but if the user has
-                    // actually typed "@", in that case list resource matches.
-                    // For example, for android:minHeight this makes completion on @dimen/
-                    // possible.
-                    choices = UiResourceAttributeNode.computeResourceStringMatches(currentUiNode,
-                            value);
+                    // Should we do suffix completion on dimension units etc?
+                    choices = completeSuffix(choices, value, currAttrNode);
+
+                    // Check to see if the user is attempting resource completion
+                    AttributeDescriptor attributeDescriptor = currAttrNode.getDescriptor();
+                    IAttributeInfo attributeInfo = attributeDescriptor.getAttributeInfo();
+                    if (value.startsWith("@")  //$NON-NLS-1$
+                            && !Format.REFERENCE.in(attributeInfo.getFormats())) {
+                        // Special case: If the attribute value looks like a reference to a
+                        // resource, offer to complete it, since in many cases our metadata
+                        // does not correctly state whether a resource value is allowed. We don't
+                        // offer these for an empty completion context, but if the user has
+                        // actually typed "@", in that case list resource matches.
+                        // For example, for android:minHeight this makes completion on @dimen/
+                        // possible.
+                        choices = UiResourceAttributeNode.computeResourceStringMatches(
+                                currentUiNode, attributeDescriptor, value);
+                    }
                 }
             }
 
@@ -436,14 +474,16 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * - AttributeDescriptor: a possible attribute descriptor which XML name should be completed.
      * - String: string values to display as-is to the user. Typically those are possible
      *           values for a given attribute.
+     * - Pair of Strings: the first value is the keyword to insert, and the second value
+     *           is the tooltip/help for the value to be displayed in the documentation popup.
      *
      * @return The ICompletionProposal[] to display to the user.
      */
     private ICompletionProposal[] computeProposals(int offset, Node currentNode,
-            Object[] choices, String wordPrefix, char need_tag,
-            boolean is_attribute, int selectionLength) {
-        ArrayList<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
-        HashMap<String, String> nsUriMap = new HashMap<String, String>();
+            Object[] choices, String wordPrefix, char needTag,
+            boolean isAttribute, boolean isNew, int replaceLength) {
+        List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+        Map<String, String> nsUriMap = new HashMap<String, String>();
 
         for (Object choice : choices) {
             String keyword = null;
@@ -481,6 +521,17 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
             } else if (choice instanceof String) {
                 keyword = (String) choice;
+                if (isAttribute) {
+                    icon = IconFactory.getInstance().getIcon(ATTRIBUTE_ICON_FILENAME);
+                }
+            } else if (choice instanceof Pair<?, ?>) {
+                @SuppressWarnings("unchecked")
+                Pair<String, String> pair = (Pair<String, String>) choice;
+                keyword = pair.getFirst();
+                tooltip = pair.getSecond();
+                if (isAttribute) {
+                    icon = IconFactory.getInstance().getIcon(ATTRIBUTE_ICON_FILENAME);
+                }
             } else {
                 continue; // discard unknown choice
             }
@@ -493,18 +544,18 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (nsPrefix != null) {
                     keyword = nsPrefix + keyword;
                 }
-                String end_tag = ""; //$NON-NLS-1$
-                if (need_tag != 0) {
-                    if (need_tag == '"') {
-                        keyword = need_tag + keyword;
-                        end_tag = String.valueOf(need_tag);
-                    } else if (need_tag == '<') {
+                String endTag = ""; //$NON-NLS-1$
+                if (needTag != 0) {
+                    if (needTag == '"') {
+                        keyword = needTag + keyword;
+                        endTag = String.valueOf(needTag);
+                    } else if (needTag == '<') {
                         if (elementCanHaveChildren(choice)) {
-                            end_tag = String.format("></%1$s>", keyword);  //$NON-NLS-1$
-                            keyword = need_tag + keyword;
+                            endTag = String.format("></%1$s>", keyword);  //$NON-NLS-1$
+                            keyword = needTag + keyword;
                         } else {
-                            keyword = need_tag + keyword;
-                            end_tag = "/>";  //$NON-NLS-1$
+                            keyword = needTag + keyword;
+                            endTag = "/>";  //$NON-NLS-1$
                         }
                     }
                 }
@@ -513,13 +564,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
                 // For attributes, automatically insert ns:attribute="" and place the cursor
                 // inside the quotes.
-                if (choice instanceof AttributeDescriptor) {
+                if (choice instanceof AttributeDescriptor && isNew) {
                     // Special case for attributes: insert ="" stuff and locate caret inside ""
                     String suffix = "=\"\""; //$NON-NLS-1$
                     proposal = new CompletionProposal(
                         keyword + suffix ,                 // String replacementString
                         offset - wordPrefix.length(),       // int replacementOffset
-                        wordPrefix.length() + selectionLength,  // int replacementLength
+                        wordPrefix.length() + replaceLength,  // int replacementLength
                         keyword.length() + suffix.length() - 1, // cursorPosition
                         icon,                               // Image image
                         keyword,                            // displayString - don't include =""
@@ -527,11 +578,16 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                         tooltip                             // String additionalProposalInfo
                         );
                 } else {
+                    int cursorPosition = keyword.length();
+                    if (choice instanceof ElementDescriptor && isNew) {
+                        endTag = ' ' + endTag;
+                        cursorPosition += 1;
+                    }
                     proposal = new CompletionProposal(
-                        keyword + end_tag,                  // String replacementString
+                        keyword + endTag,                  // String replacementString
                         offset - wordPrefix.length(),           // int replacementOffset
-                        wordPrefix.length() + selectionLength,  // int replacementLength
-                        keyword.length(),                   // int cursorPosition (rel. to rplcmntOffset)
+                        wordPrefix.length() + replaceLength,  // int replacementLength
+                        cursorPosition,                     // int cursorPosition (rel. to rplcmntOffset)
                         icon,                               // Image image
                         null,                               // String displayString
                         null,                               // IContextInformation contextInformation
@@ -579,7 +635,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * or if one of the attributes is a TextValueDescriptor.
      *
      * @param descriptor An ElementDescriptor or an AttributeDescriptor
-     * @return True if the descriptor is an ElementDescriptor that can have children or a text value
+     * @return True if the descriptor is an ElementDescriptor that can have children or a text
+     *         value
      */
     private boolean elementCanHaveChildren(Object descriptor) {
         if (descriptor instanceof ElementDescriptor) {
@@ -587,8 +644,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             if (desc.hasChildren()) {
                 return true;
             }
-            for (AttributeDescriptor attr_desc : desc.getAttributes()) {
-                if (attr_desc instanceof TextValueDescriptor) {
+            for (AttributeDescriptor attrDesc : desc.getAttributes()) {
+                if (attrDesc instanceof TextValueDescriptor) {
                     return true;
                 }
             }
@@ -729,14 +786,22 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      */
     private AttribInfo parseAttributeInfo(ITextViewer viewer, int offset) {
         AttribInfo info = new AttribInfo();
+        int originalOffset = offset;
 
         IDocument document = viewer.getDocument();
         int n = document.getLength();
         if (offset <= n) {
             try {
+                // Look to the right to make sure we aren't sitting on the boundary of the
+                // beginning of a new element with whitespace before it
+                if (offset < n && document.getChar(offset) == '<') {
+                    return null;
+                }
+
                 n = offset;
                 for (;offset > 0; --offset) {
                     char ch = document.getChar(offset - 1);
+                    if (ch == '>') break;
                     if (ch == '<') break;
                 }
 
@@ -780,6 +845,22 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 if (pos_equal == -1) {
                     info.isInValue = false;
                     info.name = text.trim();
+
+                    // info.name is currently just the prefix of the attribute name.
+                    // Look at the text buffer to find the complete name (since we need
+                    // to know its bounds in order to replace it when a different attribute
+                    // that matches this prefix is chosen)
+                    IRegion lineInfo = document.getLineInformationOfOffset(originalOffset);
+                    String line = document.get(lineInfo.getOffset(), lineInfo.getLength());
+                    int nameStart = originalOffset - lineInfo.getOffset();
+                    for (int nameEnd = nameStart; nameEnd < line.length(); nameEnd++) {
+                        char c = line.charAt(nameEnd);
+                        if (!(Character.isLetter(c) || c == ':' || c == '_')) {
+                            String nameSuffix = line.substring(nameStart, nameEnd);
+                            info.name = text.trim() + nameSuffix;
+                            break;
+                        }
+                    }
                 } else {
                     info.isInValue = true;
                     info.name = text.substring(0, pos_equal).trim();
@@ -831,7 +912,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             if (page != null) {
                 IEditorPart editor = page.getActiveEditor();
                 if (editor instanceof AndroidXmlEditor) {
-                    ISourceViewer ssviewer = ((AndroidXmlEditor) editor).getStructuredSourceViewer();
+                    ISourceViewer ssviewer =
+                        ((AndroidXmlEditor) editor).getStructuredSourceViewer();
                     if (ssviewer == viewer) {
                         return (AndroidXmlEditor) editor;
                     }
@@ -842,6 +924,132 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return null;
     }
 
+    /**
+     * Fixed list of dimension units, along with user documentation, for use by
+     * {@link #completeSuffix}.
+     */
+    private static final String[] sDimensionUnits = new String[] {
+        "dp", //$NON-NLS-1$
+        "<b>Density-independent Pixels</b> - an abstract unit that is based on the physical "
+                + "density of the screen.",
 
+        "sp", //$NON-NLS-1$
+        "<b>Scale-independent Pixels</b> - this is like the dp unit, but it is also scaled by "
+                + "the user's font size preference.",
 
+        "pt", //$NON-NLS-1$
+        "<b>Points</b> - 1/72 of an inch based on the physical size of the screen.",
+
+        "mm", //$NON-NLS-1$
+        "<b>Millimeters</b> - based on the physical size of the screen.",
+
+        "in", //$NON-NLS-1$
+        "<b>Inches</b> - based on the physical size of the screen.",
+
+        "px", //$NON-NLS-1$
+        "<b>Pixels</b> - corresponds to actual pixels on the screen. Not recommended.",
+    };
+
+    /**
+     * Fixed list of fractional units, along with user documentation, for use by
+     * {@link #completeSuffix}
+     */
+    private static final String[] sFractionUnits = new String[] {
+        "%",  //$NON-NLS-1$
+        "<b>Fraction</b> - a percentage of the base size",
+
+        "%p", //$NON-NLS-1$
+        "<b>Fraction</b> - a percentage relative to parent container",
+    };
+
+    /**
+     * Completes suffixes for applicable types (like dimensions and fractions) such that
+     * after a dimension number you get completion on unit types like "px".
+     */
+    private Object[] completeSuffix(Object[] choices, String value, UiAttributeNode currAttrNode) {
+        IAttributeInfo attributeInfo = currAttrNode.getDescriptor().getAttributeInfo();
+        Format[] formats = attributeInfo.getFormats();
+        List<Object> suffixes = new ArrayList<Object>();
+
+        if (value.length() > 0 && Character.isDigit(value.charAt(0))) {
+            boolean hasDimension = Format.DIMENSION.in(formats);
+            boolean hasFraction = Format.FRACTION.in(formats);
+
+            if (hasDimension || hasFraction) {
+                // Split up the value into a numeric part (the prefix) and the
+                // unit part (the suffix)
+                int suffixBegin = 0;
+                for (; suffixBegin < value.length(); suffixBegin++) {
+                    if (!Character.isDigit(value.charAt(suffixBegin))) {
+                        break;
+                    }
+                }
+                String number = value.substring(0, suffixBegin);
+                String suffix = value.substring(suffixBegin);
+
+                // Add in the matching dimension and/or fraction units, if any
+                if (hasDimension) {
+                    // Each item has two entries in the array of strings: the first odd numbered
+                    // ones are the unit names and the second even numbered ones are the
+                    // corresponding descriptions.
+                    for (int i = 0; i < sDimensionUnits.length; i += 2) {
+                        String unit = sDimensionUnits[i];
+                        if (startsWith(unit, suffix)) {
+                            String description = sDimensionUnits[i + 1];
+                            suffixes.add(Pair.of(number + unit, description));
+                        }
+                    }
+
+                    // Allow "dip" completion but don't offer it ("dp" is preferred)
+                    if (suffix.startsWith("di") || suffix.startsWith("dip")) { //$NON-NLS-1$ //$NON-NLS-2$
+                        suffixes.add(Pair.of(number + "dip", "Alternative name for \"dp\"")); //$NON-NLS-1$
+                    }
+                }
+                if (hasFraction) {
+                    for (int i = 0; i < sFractionUnits.length; i += 2) {
+                        String unit = sFractionUnits[i];
+                        if (startsWith(unit, suffix)) {
+                            String description = sFractionUnits[i + 1];
+                            suffixes.add(Pair.of(number + unit, description));
+                        }
+                    }
+                }
+            }
+        }
+
+        boolean hasFlag = Format.FLAG.in(formats);
+        if (hasFlag) {
+            boolean isDone = false;
+            String[] flagValues = attributeInfo.getFlagValues();
+            for (String flagValue : flagValues) {
+                if (flagValue.equals(value)) {
+                    isDone = true;
+                    break;
+                }
+            }
+            if (isDone) {
+                // Add in all the new values with a separator of |
+                String currentValue = currAttrNode.getCurrentValue();
+                for (String flagValue : flagValues) {
+                    if (currentValue == null || !currentValue.contains(flagValue)) {
+                        suffixes.add(value + '|' + flagValue);
+                    }
+                }
+            }
+        }
+
+        if (suffixes.size() > 0) {
+            // Merge previously added choices (from attribute enums etc) with the new matches
+            List<Object> all = new ArrayList<Object>();
+            if (choices != null) {
+                for (Object s : choices) {
+                    all.add(s);
+                }
+            }
+            all.addAll(suffixes);
+            choices = all.toArray();
+        }
+
+        return choices;
+    }
 }

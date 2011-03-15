@@ -16,16 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 
 /**
  * Content Assist Processor for /res/layout XML files
  */
-class LayoutContentAssist extends AndroidContentAssist {
+@VisibleForTesting
+public final class LayoutContentAssist extends AndroidContentAssist {
 
     /**
-     * Constructor for LayoutContentAssist 
+     * Constructor for LayoutContentAssist
      */
     public LayoutContentAssist() {
         super(AndroidTargetData.DESCRIPTOR_LAYOUT);

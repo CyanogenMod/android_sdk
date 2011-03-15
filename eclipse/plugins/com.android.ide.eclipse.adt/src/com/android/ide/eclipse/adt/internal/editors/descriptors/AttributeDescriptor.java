@@ -35,7 +35,7 @@ import org.eclipse.swt.graphics.Image;
  * the correct UiAttributeNode-derived class.
  */
 public abstract class AttributeDescriptor {
-    private static final String ATTRIBUTE_ICON_FILENAME = "attribute"; //$NON-NLS-1$
+    public static final String ATTRIBUTE_ICON_FILENAME = "attribute"; //$NON-NLS-1$
 
     private final String mXmlLocalName;
     private final String mNsUri;
