@@ -57,7 +57,7 @@ import javax.xml.validation.Validator;
  * It may be a full repository or an add-on only repository.
  * A repository describes one or {@link Package}s available for download.
  */
-public abstract class SdkSource implements IDescription {
+public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
     private String mUrl;
 
@@ -148,6 +148,14 @@ public abstract class SdkSource implements IDescription {
     @Override
     public int hashCode() {
         return mUrl.hashCode();
+    }
+
+    /**
+     * Implementation of the {@link Comparable} interface.
+     * Simply compares the URL using the string's default ordering.
+     */
+    public int compareTo(SdkSource rhs) {
+        return this.getUrl().compareTo(rhs.getUrl());
     }
 
     /**

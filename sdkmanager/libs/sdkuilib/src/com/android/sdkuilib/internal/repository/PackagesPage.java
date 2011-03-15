@@ -95,6 +95,8 @@ public class PackagesPage extends Composite
     private Color mColorUpdate;
     private Color mColorNew;
     private Font mTreeFontItalic;
+    private Button mButtonReload;
+    private Button mButtonAddonSites;
 
     public PackagesPage(Composite parent, UpdaterData updaterData) {
         super(parent, SWT.BORDER);
@@ -188,61 +190,89 @@ public class PackagesPage extends Composite
         mCheckSortApi.setText("API level");
         mCheckSortApi.setSelection(true);
 
-                Label expandPlaceholder = new Label(mGroupOptions, SWT.NONE);
-                expandPlaceholder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        Label expandPlaceholder = new Label(mGroupOptions, SWT.NONE);
+        expandPlaceholder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-                Label label3 = new Label(mGroupOptions, SWT.NONE);
-                label3.setText("Show:");
+        Label label3 = new Label(mGroupOptions, SWT.NONE);
+        label3.setText("Show:");
 
-                        mCheckFilterNew = new Button(mGroupOptions, SWT.CHECK);
-                        mCheckFilterNew.setToolTipText("Show Updates and New");
-                        mCheckFilterNew.addSelectionListener(new SelectionAdapter() {
-                            @Override
-                            public void widgetSelected(SelectionEvent e) {
-                                sortPackages();
-                            }
-                        });
-                        mCheckFilterNew.setImage(getImage("reject_icon16.png"));
-                        mCheckFilterNew.setSelection(true);
-                        mCheckFilterNew.setText("Updates/New");
+        mCheckFilterNew = new Button(mGroupOptions, SWT.CHECK);
+        mCheckFilterNew.setToolTipText("Show Updates and New");
+        mCheckFilterNew.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                sortPackages();
+            }
+        });
+        mCheckFilterNew.setImage(getImage("reject_icon16.png"));
+        mCheckFilterNew.setSelection(true);
+        mCheckFilterNew.setText("Updates/New");
 
-                        mCheckFilterInstalled = new Button(mGroupOptions, SWT.CHECK);
-                        mCheckFilterInstalled.setToolTipText("Show Installed");
-                        mCheckFilterInstalled.addSelectionListener(new SelectionAdapter() {
-                            @Override
-                            public void widgetSelected(SelectionEvent e) {
-                                sortPackages();
-                            }
-                        });
-                        mCheckFilterInstalled.setImage(getImage("accept_icon16.png"));  //$NON-NLS-1$
-                        mCheckFilterInstalled.setSelection(true);
-                        mCheckFilterInstalled.setText("Installed");
+        mCheckFilterInstalled = new Button(mGroupOptions, SWT.CHECK);
+        mCheckFilterInstalled.setToolTipText("Show Installed");
+        mCheckFilterInstalled.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                sortPackages();
+            }
+        });
+        mCheckFilterInstalled.setImage(getImage("accept_icon16.png"));  //$NON-NLS-1$
+        mCheckFilterInstalled.setSelection(true);
+        mCheckFilterInstalled.setText("Installed");
 
-                mCheckFilterObsolete = new Button(mGroupOptions, SWT.CHECK);
-                mCheckFilterObsolete.setToolTipText("Show Obsolete");
-                mCheckFilterObsolete.addSelectionListener(new SelectionAdapter() {
-                    @Override
-                    public void widgetSelected(SelectionEvent e) {
-                        sortPackages();
-                    }
-                });
-                mCheckFilterObsolete.setImage(getImage("nopkg_icon16.png"));  //$NON-NLS-1$
-                mCheckFilterObsolete.setSelection(false);
-                mCheckFilterObsolete.setText("Obsolete");
+        mCheckFilterObsolete = new Button(mGroupOptions, SWT.CHECK);
+        mCheckFilterObsolete.setToolTipText("Show everything including obsolete packages and all archives)");
+        mCheckFilterObsolete.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                sortPackages();
+            }
+        });
+        mCheckFilterObsolete.setImage(getImage("nopkg_icon16.png"));  //$NON-NLS-1$
+        mCheckFilterObsolete.setSelection(false);
+        mCheckFilterObsolete.setText("Details");
 
         mGroupButtons = new Composite(parent, SWT.NONE);
         mGroupButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
                 false, 1, 1));
-        mGroupButtons.setLayout(new GridLayout(3, false));
+        mGroupButtons.setLayout(new GridLayout(7, false));
+
+        mButtonAddonSites = new Button(mGroupButtons, SWT.NONE);
+        mButtonAddonSites.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onButtonAddonSites(e);
+            }
+        });
+        mButtonAddonSites.setToolTipText("Manage the list of add-on sites");
+        mButtonAddonSites.setText("Add-on Sites...");
+
+        Label label6 = new Label(mGroupButtons, SWT.NONE);
+        label6.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+
+        mButtonReload = new Button(mGroupButtons, SWT.NONE);
+        mButtonReload.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onButtonReload(e);
+            }
+        });
+        mButtonReload.setToolTipText("Reload the package list");
+        mButtonReload.setText("Reload");
+
+        Label label5 = new Label(mGroupButtons, SWT.NONE);
+        label5.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
         mButtonDelete = new Button(mGroupButtons, SWT.NONE);
-        mButtonDelete.setText("Delete");
+        mButtonDelete.setToolTipText("Delete an installed package");
+        mButtonDelete.setText("Delete...");
 
         Label label4 = new Label(mGroupButtons, SWT.NONE);
         label4.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
         mButtonInstall = new Button(mGroupButtons, SWT.NONE);
-        mButtonInstall.setText("Install");
+        mButtonInstall.setToolTipText("Install all the selected packages");
+        mButtonInstall.setText("Install Selected");
     }
 
     private Image getImage(String filename) {
@@ -806,4 +836,14 @@ public class PackagesPage extends Composite
     // --- End of hiding from SWT Designer ---
     //$hide<<$
 
+    protected void onButtonReload(SelectionEvent e) {
+        loadPackages();
+    }
+
+    protected void onButtonAddonSites(SelectionEvent e) {
+        AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
+        if (d.open()) {
+            loadPackages();
+        }
+    }
 }
