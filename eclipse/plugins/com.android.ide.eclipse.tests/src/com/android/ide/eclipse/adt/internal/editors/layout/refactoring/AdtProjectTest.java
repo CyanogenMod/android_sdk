@@ -238,6 +238,14 @@ public class AdtProjectTest extends SdkTestCase {
         return sb.toString();
     }
 
+    protected String removeSessionData(String data) {
+        if (getProject() != null) {
+            data = data.replace(getProject().getName(), "PROJECTNAME");
+        }
+
+        return data;
+    }
+
     public static ViewElementDescriptor createDesc(String name, String fqn, boolean hasChildren) {
         if (hasChildren) {
             return new ViewElementDescriptor(name, name, fqn, "", "", new AttributeDescriptor[0],
@@ -276,6 +284,11 @@ public class AdtProjectTest extends SdkTestCase {
         String xml = AdtPlugin.readFile(reader);
         assertNotNull(xml);
         assertTrue(xml.length() > 0);
+
+        // Remove any references to the project name such that we are isolated from
+        // that in golden file.
+        // Appears in strings.xml etc.
+        xml = removeSessionData(xml);
 
         return xml;
     }

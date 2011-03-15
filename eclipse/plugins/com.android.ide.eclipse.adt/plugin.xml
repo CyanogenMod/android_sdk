@@ -49,6 +49,11 @@
       <super type="org.eclipse.core.resources.textmarker"/>
       <persistent value="true"/>
    </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+         markerType="com.android.ide.eclipse.common.aaptProblem"
+         class="com.android.ide.eclipse.adt.internal.build.AaptQuickFix"/>
+   </extension>
    <extension
          id="ResourceManagerBuilder"
          name="Android Resource Manager"
@@ -590,6 +595,10 @@
             class="com.android.ide.eclipse.adt.internal.editors.xml.XmlSourceViewerConfig"
             target="com.android.ide.eclipse.editors.xml.XmlEditor">
       </sourceViewerConfiguration>
+      <provisionalConfiguration
+                type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
+                class="com.android.ide.eclipse.adt.internal.build.AaptQuickFix"
+                target="org.eclipse.wst.xml.XML_DEFAULT" />
    </extension>
    <extension
          point="org.eclipse.ui.propertyPages">

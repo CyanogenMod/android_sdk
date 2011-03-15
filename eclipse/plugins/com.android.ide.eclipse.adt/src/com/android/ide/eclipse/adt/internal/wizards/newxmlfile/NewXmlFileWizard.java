@@ -21,10 +21,12 @@ package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
+import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -130,6 +132,30 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
     private IFile createXmlFile() {
         IFile file = mMainPage.getDestinationFile();
+        TypeInfo type = mMainPage.getSelectedType();
+        if (type == null) {
+            // this is not expected to happen
+            String name = file.getFullPath().toString();
+            AdtPlugin.log(IStatus.ERROR, "Failed to create %1$s: missing type", name);  //$NON-NLS-1$
+            return null;
+        }
+        String xmlns = type.getXmlns();
+        String root = mMainPage.getRootElement();
+        if (root == null) {
+            // this is not expected to happen
+            AdtPlugin.log(IStatus.ERROR, "Failed to create %1$s: missing root element", //$NON-NLS-1$
+                    file.toString());
+            return null;
+        }
+
+        String attrs = type.getDefaultAttrs(mMainPage.getProject());
+
+        return createXmlFile(file, xmlns, root, attrs);
+    }
+
+    /** Creates a new file using the given root element, namespace and root attributes */
+    private static IFile createXmlFile(IFile file, String xmlns,
+            String root, String rootAttributes) {
         String name = file.getFullPath().toString();
         boolean need_delete = false;
 
@@ -144,21 +170,6 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             createWsParentDirectory(file.getParent());
         }
 
-        TypeInfo type = mMainPage.getSelectedType();
-        if (type == null) {
-            // this is not expected to happen
-            AdtPlugin.log(IStatus.ERROR, "Failed to create %1$s: missing type", name);  //$NON-NLS-1$
-            return null;
-        }
-        String xmlns = type.getXmlns();
-        String root = mMainPage.getRootElement();
-        if (root == null) {
-            // this is not expected to happen
-            AdtPlugin.log(IStatus.ERROR, "Failed to create %1$s: missing root element", //$NON-NLS-1$
-                    file.toString());
-            return null;
-        }
-
         StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");   //$NON-NLS-1$
 
         sb.append('<').append(root);
@@ -166,10 +177,9 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             sb.append('\n').append("  xmlns:android=\"").append(xmlns).append("\"");  //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        String attrs = type.getDefaultAttrs(mMainPage.getProject());
-        if (attrs != null) {
+        if (rootAttributes != null) {
             sb.append("\n  ");                       //$NON-NLS-1$
-            sb.append(attrs.replace("\n", "\n  "));  //$NON-NLS-1$ //$NON-NLS-2$
+            sb.append(rootAttributes.replace("\n", "\n  "));  //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         sb.append(">\n");                            //$NON-NLS-1$
@@ -196,7 +206,39 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         return null;
     }
 
-    private boolean createWsParentDirectory(IContainer wsPath) {
+    /**
+     * Returns true if the New XML Wizard can create new files of the given
+     * {@link ResourceFolderType}
+     *
+     * @param folderType the folder type to create a file for
+     * @return true if this wizard can create new files for the given folder type
+     */
+    public static boolean canCreateXmlFile(ResourceFolderType folderType) {
+        TypeInfo typeInfo = NewXmlFileCreationPage.getTypeInfo(folderType);
+        return typeInfo != null && (typeInfo.getDefaultRoot() != null ||
+                typeInfo.getRootSeed() instanceof String);
+    }
+
+    /**
+     * Creates a new XML file using the template according to the given folder type
+     *
+     * @param project the project to create the file in
+     * @param file the file to be created
+     * @param folderType the type of folder to look up a template for
+     * @return the created file
+     */
+    public static IFile createXmlFile(IProject project, IFile file, ResourceFolderType folderType) {
+        TypeInfo type = NewXmlFileCreationPage.getTypeInfo(folderType);
+        String xmlns = type.getXmlns();
+        String root = type.getDefaultRoot();
+        if (root == null) {
+            root = type.getRootSeed().toString();
+        }
+        String attrs = type.getDefaultAttrs(project);
+        return createXmlFile(file, xmlns, root, attrs);
+    }
+
+    private static boolean createWsParentDirectory(IContainer wsPath) {
         if (wsPath.getType() == IResource.FOLDER) {
             if (wsPath == null || wsPath.exists()) {
                 return true;

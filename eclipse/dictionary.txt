@@ -84,6 +84,7 @@ gen
 groovy
 guava
 hardcoded
+hardcodes
 hotfix
 href
 http
@@ -140,6 +141,7 @@ pings
 placeholder
 plugin
 popup
+popups
 pre
 precompiler
 pref

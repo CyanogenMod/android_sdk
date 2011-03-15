@@ -829,7 +829,7 @@ public abstract class VisualRefactoring extends Refactoring {
         return null;
     }
 
-    protected static IndexedRegion getRegion(Node node) {
+    public static IndexedRegion getRegion(Node node) {
         if (node instanceof IndexedRegion) {
             return (IndexedRegion) node;
         }
