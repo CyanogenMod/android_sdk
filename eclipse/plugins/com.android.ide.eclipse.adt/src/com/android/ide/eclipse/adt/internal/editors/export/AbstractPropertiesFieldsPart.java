@@ -34,6 +34,7 @@ import org.eclipse.ui.forms.widgets.Section;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Section part for editing fields of a properties file in an Export editor.
@@ -302,13 +303,15 @@ abstract class AbstractPropertiesFieldsPart extends ManifestSectionPart {
         }
 
         // Clear the text of any keyword we didn't find in the document
-        for (String key : allKeywords) {
+        Iterator<String> iterator = allKeywords.iterator();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
             Control field = mNameToField.get(key);
             if (field != null) {
                 try {
                     mInternalTextUpdate = true;
                     setFieldText(field, "");
-                    allKeywords.remove(key);
+                    iterator.remove();
                 } finally {
                     mInternalTextUpdate = false;
                 }
