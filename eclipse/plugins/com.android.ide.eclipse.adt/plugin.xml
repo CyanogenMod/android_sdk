@@ -500,9 +500,6 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.export.ExportEditor"
             name="Android Export Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor"
