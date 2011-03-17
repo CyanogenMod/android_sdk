@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CustomViewFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -122,7 +123,7 @@ class ChangeViewWizard extends VisualRefactoringWizard {
                     }
 
                     Pair<List<String>,List<String>> result =
-                        WrapInWizard.findViews(mProject, false);
+                        CustomViewFinder.findViews(mProject, false);
                     List<String> customViews = result.getFirst();
                     List<String> thirdPartyViews = result.getSecond();
                     if (customViews.size() > 0) {

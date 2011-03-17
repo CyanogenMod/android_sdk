@@ -671,6 +671,23 @@ public final class DescriptorsUtils {
     }
 
     /**
+     * Returns the basename for the given fully qualified class name. It is okay to pass
+     * a basename to this method which will just be returned back.
+     *
+     * @param fqcn The fully qualified class name to convert
+     * @return the basename of the class name
+     */
+    public static String getBasename(String fqcn) {
+        String name = fqcn;
+        int lastDot = name.lastIndexOf('.');
+        if (lastDot != -1) {
+            name = name.substring(lastDot + 1);
+        }
+
+        return name;
+    }
+
+    /**
      * Sets the default layout attributes for the a new UiElementNode.
      * <p/>
      * Note that ideally the node should already be part of a hierarchy so that its
@@ -706,7 +723,7 @@ public final class DescriptorsUtils {
 
         // Don't set default text value into edit texts - they typically start out blank
         if (!descriptor.getXmlLocalName().equals(EDIT_TEXT)) {
-            String type = descriptor.getUiName();
+            String type = getBasename(descriptor.getUiName());
             node.setAttributeValue(
                 ATTR_TEXT,
                 SdkConstants.NS_RESOURCES,
@@ -745,7 +762,7 @@ public final class DescriptorsUtils {
      * (e.g. "@+id/something")
      */
     public static String getFreeWidgetId(UiElementNode uiNode) {
-        String name = uiNode.getDescriptor().getXmlLocalName();
+        String name = getBasename(uiNode.getDescriptor().getXmlLocalName());
         return getFreeWidgetId(uiNode.getUiRoot(), name);
     }
 

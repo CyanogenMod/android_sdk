@@ -218,7 +218,7 @@ public class SelectionManager implements ISelectionProvider {
                             mSelections.add(createSelection(newVi));
                             changed = true;
                         }
-                        if (newVi.isInvisibleParent()) {
+                        if (newVi.isInvisible()) {
                             redoLayout = true;
                         }
                     }
@@ -419,7 +419,7 @@ public class SelectionManager implements ISelectionProvider {
 
         if (vi != null) {
             mSelections.add(createSelection(vi));
-            if (vi.isInvisibleParent()) {
+            if (vi.isInvisible()) {
                 redoLayout = true;
             }
         }
@@ -461,7 +461,7 @@ public class SelectionManager implements ISelectionProvider {
         if (viewInfos != null) {
             for (CanvasViewInfo viewInfo : viewInfos) {
                 mSelections.add(createSelection(viewInfo));
-                if (viewInfo.isInvisibleParent()) {
+                if (viewInfo.isInvisible()) {
                     redoLayout = true;
                 }
             }

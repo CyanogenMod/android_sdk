@@ -747,6 +747,7 @@ public class LayoutCanvas extends Canvas {
         if (mShowInvisible == show) {
             return;
         }
+        mShowInvisible = show;
 
         // Optimization: Avoid doing work when we don't have invisible parents (on show)
         // or formerly exploded nodes (on hide).
@@ -756,7 +757,6 @@ public class LayoutCanvas extends Canvas {
             return;
         }
 
-        mShowInvisible = show;
         mLayoutEditor.recomputeLayout();
     }
 

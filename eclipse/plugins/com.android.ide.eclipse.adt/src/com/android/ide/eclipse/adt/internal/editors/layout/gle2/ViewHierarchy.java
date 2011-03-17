@@ -82,7 +82,7 @@ public class ViewHierarchy {
     private boolean mIsResultValid;
 
     /**
-     * A list of invisible parents (see {@link CanvasViewInfo#isInvisibleParent()} for
+     * A list of invisible parents (see {@link CanvasViewInfo#isInvisible()} for
      * details) in the current view hierarchy.
      */
     private final List<CanvasViewInfo> mInvisibleParents = new ArrayList<CanvasViewInfo>();
@@ -293,7 +293,7 @@ public class ViewHierarchy {
             return;
         }
 
-        if (vi.isInvisibleParent()) {
+        if (vi.isInvisible()) {
             mInvisibleParents.add(vi);
         } else if (invisibleNodes != null) {
             UiViewElementNode key = vi.getUiViewNode();

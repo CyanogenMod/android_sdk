@@ -146,6 +146,11 @@ class SelectionItem {
      * @return true if this selection item is a layout
      */
     public boolean isLayout() {
-        return mCanvasViewInfo.getUiViewNode().getDescriptor().hasChildren();
+        UiViewElementNode node = mCanvasViewInfo.getUiViewNode();
+        if (node != null) {
+            return node.getDescriptor().hasChildren();
+        } else {
+            return false;
+        }
     }
 }

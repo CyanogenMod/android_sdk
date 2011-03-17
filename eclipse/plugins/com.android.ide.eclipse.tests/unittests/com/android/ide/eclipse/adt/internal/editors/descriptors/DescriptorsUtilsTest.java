@@ -240,4 +240,10 @@ public class DescriptorsUtilsTest extends TestCase {
             return super.findClass(name);
         }
     }
+
+    public void testGetBasename() {
+        assertEquals("Foo", DescriptorsUtils.getBasename("Foo"));
+        assertEquals("Foo", DescriptorsUtils.getBasename("foo.Foo"));
+        assertEquals("String", DescriptorsUtils.getBasename("java.util.String"));
+    }
 }

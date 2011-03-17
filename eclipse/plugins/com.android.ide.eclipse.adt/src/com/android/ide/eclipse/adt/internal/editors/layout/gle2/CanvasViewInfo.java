@@ -363,16 +363,16 @@ public class CanvasViewInfo implements IPropertySource {
     }
 
     /**
-     * Returns true if this {@link CanvasViewInfo} represents an invisible parent - in
-     * other words, a view that can have children, and that has zero bounds making it
-     * effectively invisible. (We don't actually look for -0- bounds, but
-     * bounds smaller than SELECTION_MIN_SIZE.)
+     * Returns true if this {@link CanvasViewInfo} represents an invisible widget that
+     * should be highlighted when selected.  This is the case for any layout that is less than the minimum
+     * threshold ({@link #SELECTION_MIN_SIZE}), or any other view that has -0- bounds.
      *
-     * @return True if this is an invisible parent.
+     * @return True if this is a tiny layout or invisible view
      */
-    public boolean isInvisibleParent() {
+    public boolean isInvisible() {
         if (mAbsRect.width < SELECTION_MIN_SIZE || mAbsRect.height < SELECTION_MIN_SIZE) {
-            return mUiViewNode != null && mUiViewNode.getDescriptor().hasChildren();
+            return mUiViewNode != null && (mUiViewNode.getDescriptor().hasChildren() ||
+                    mAbsRect.width <= 0 || mAbsRect.height <= 0);
         }
 
         return false;
@@ -383,7 +383,7 @@ public class CanvasViewInfo implements IPropertySource {
      * make it visible during selection or dragging? Note that this is NOT considered to
      * be the case in the explode-all-views mode where all nodes have their padding
      * increased; it's only used for views that individually exploded because they were
-     * requested visible and they returned true for {@link #isInvisibleParent()}.
+     * requested visible and they returned true for {@link #isInvisible()}.
      *
      * @return True if this is an exploded node.
      */

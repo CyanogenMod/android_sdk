@@ -300,7 +300,7 @@ public class DomUtilities {
         addLowercaseIds(element.getOwnerDocument().getDocumentElement(), ids);
 
         if (prefix == null) {
-            prefix = element.getTagName();
+            prefix = DescriptorsUtils.getBasename(element.getTagName());
         }
         String generated;
         int num = 1;
