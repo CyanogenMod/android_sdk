@@ -97,6 +97,10 @@ public class IFileWrapper implements IAbstractFile {
         return mFile;
     }
 
+    public long getModificationStamp() {
+        return mFile.getModificationStamp();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof IFileWrapper) {

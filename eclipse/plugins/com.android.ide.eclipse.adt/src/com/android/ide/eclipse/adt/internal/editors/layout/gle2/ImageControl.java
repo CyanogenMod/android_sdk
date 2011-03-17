@@ -49,14 +49,16 @@ public class ImageControl extends Canvas implements MouseTrackListener {
     private float mScale = 1.0f;
 
     /**
-     * Creates an ImageControl rendering the given image, which will be dispose when this
-     * control is disposed
+     * Creates an ImageControl rendering the given image, which will be disposed when this
+     * control is disposed (unless the {@link #setDisposeImage} method is called to turn
+     * off auto dispose).
      *
      * @param parent the parent to add the image control to
      * @param style the SWT style to use
      * @param image the image to be rendered, which must not be null and should be unique
      *            for this image control since it will be disposed by this control when
-     *            the control is disposed
+     *            the control is disposed (unless the {@link #setDisposeImage} method is
+     *            called to turn off auto dispose)
      */
     public ImageControl(Composite parent, int style, Image image) {
         super(parent, style | SWT.NO_FOCUS | SWT.DOUBLE_BUFFERED);

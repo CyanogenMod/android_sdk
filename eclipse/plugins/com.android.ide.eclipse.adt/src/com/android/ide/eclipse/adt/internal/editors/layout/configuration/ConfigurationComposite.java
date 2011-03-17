@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
@@ -32,9 +33,12 @@ import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -73,9 +77,11 @@ import org.eclipse.swt.widgets.Label;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 /**
@@ -137,7 +143,13 @@ public class ConfigurationComposite extends Composite {
     private Combo mThemeCombo;
     private Combo mTargetCombo;
 
-    private int mPlatformThemeCount = 0;
+    /**
+     * List of booleans, matching item for item the theme names in the mThemeCombo
+     * combobox, where each boolean represents whether the corresponding theme is a
+     * project theme
+     */
+    private List<Boolean> mIsProjectTheme = new ArrayList<Boolean>(40);
+
     /** updates are disabled if > 0 */
     private int mDisableUpdates = 0;
 
@@ -219,6 +231,7 @@ public class ConfigurationComposite extends Composite {
         ResourceRepository getFrameworkResources(IAndroidTarget target);
         Map<ResourceType, Map<String, ResourceValue>> getConfiguredProjectResources();
         Map<ResourceType, Map<String, ResourceValue>> getConfiguredFrameworkResources();
+        String getIncludedWithin();
     }
 
     /**
@@ -681,8 +694,6 @@ public class ConfigurationComposite extends Composite {
                         loadedConfigData = mState.setData(data);
                     }
 
-                    // update the themes and locales.
-                    updateThemes();
                     updateLocales();
 
                     // If the current state was loaded from the persistent storage, we update the
@@ -711,6 +722,14 @@ public class ConfigurationComposite extends Composite {
                             mTargetCombo.select(mTargetList.indexOf(target));
                         }
                     }
+
+                    // Update themes. This is done after updating the devices above,
+                    // since we want to look at the chosen device size to decide
+                    // what the default theme (for example, with Honeycomb we choose
+                    // Holo as the default theme but only if the screen size is XLARGE
+                    // (and of course only if the manifest does not specify another
+                    // default theme).
+                    updateThemes();
 
                     // update the string showing the config value
                     updateConfigDisplay(mEditedConfig);
@@ -1344,11 +1363,109 @@ public class ConfigurationComposite extends Composite {
         try {
             // Reset the combo
             mThemeCombo.removeAll();
-            mPlatformThemeCount = 0;
+            mIsProjectTheme.clear();
 
             ArrayList<String> themes = new ArrayList<String>();
+            String includedIn = mListener != null ? mListener.getIncludedWithin() : null;
+
+            // First list any themes that are declared by the manifest
+            if (mEditedFile != null) {
+                IProject project = mEditedFile.getProject();
+                ManifestInfo manifest = ManifestInfo.get(project);
+
+                // Look up the screen size for the current configuration
+                ScreenSize screenSize = null;
+                if (mState.device != null) {
+                    List<DeviceConfig> configs = mState.device.getConfigs();
+                    for (DeviceConfig config : configs) {
+                        ScreenSizeQualifier qualifier =
+                            config.getConfig().getScreenSizeQualifier();
+                        screenSize = qualifier.getValue();
+                        break;
+                    }
+                }
+                // Look up the default/fallback theme to use for this project (which
+                // depends on the screen size when no particular theme is specified
+                // in the manifest)
+                String defaultTheme = manifest.getDefaultTheme(screenSize);
+
+                Map<String, String> activityThemes = manifest.getActivityThemes();
+                String pkg = manifest.getPackage();
+                String preferred = null;
+                boolean isIncluded = includedIn != null;
+                if (mState.theme == null || isIncluded) {
+                    String layoutName = ResourceHelper.getLayoutName(mEditedFile);
+
+                    // If we are rendering a layout in included context, pick the theme
+                    // from the outer layout instead
+                    if (includedIn != null) {
+                        layoutName = includedIn;
+                    }
+
+                    String activity = ManifestInfo.guessActivity(project, layoutName, pkg);
+                    if (activity != null) {
+                        preferred = activityThemes.get(activity);
+                    }
+                    if (preferred == null) {
+                        preferred = defaultTheme;
+                    }
+                    String preferredTheme = ResourceHelper.styleToTheme(preferred);
+                    if (includedIn == null) {
+                        mState.theme = preferredTheme;
+                    }
+                    boolean isProjectTheme = !preferred.startsWith(PREFIX_ANDROID_STYLE);
+                    mThemeCombo.add(preferredTheme);
+                    mIsProjectTheme.add(Boolean.valueOf(isProjectTheme));
+
+                    mThemeCombo.add(THEME_SEPARATOR);
+                    mIsProjectTheme.add(Boolean.FALSE);
+                }
+
+                // Create a sorted list of unique themes referenced in the manifest
+                // (sort alphabetically, but place the preferred theme at the
+                // top of the list)
+                Set<String> themeSet = new HashSet<String>(activityThemes.values());
+                themeSet.add(defaultTheme);
+                List<String> themeList = new ArrayList<String>(themeSet);
+                final String first = preferred;
+                Collections.sort(themeList, new Comparator<String>() {
+                    public int compare(String s1, String s2) {
+                        if (s1 == first) {
+                            return -1;
+                        } else if (s1 == first) {
+                            return 1;
+                        } else {
+                            return s1.compareTo(s2);
+                        }
+                    }
+                });
+
+                if (themeList.size() > 1 ||
+                        (themeList.size() == 1 && (preferred == null ||
+                                !preferred.equals(themeList.get(0))))) {
+                    for (String style : themeList) {
+                        String theme = ResourceHelper.styleToTheme(style);
+
+                        // Initialize the chosen theme to the first item
+                        // in the used theme list (that's what would be chosen
+                        // anyway) such that we stop attempting to look up
+                        // the associated activity (during initialization,
+                        // this method can be called repeatedly.)
+                        if (mState.theme == null) {
+                            mState.theme = theme;
+                        }
+
+                        boolean isProjectTheme = !style.startsWith(PREFIX_ANDROID_STYLE);
+                        mThemeCombo.add(theme);
+                        mIsProjectTheme.add(Boolean.valueOf(isProjectTheme));
+                    }
+                    mThemeCombo.add(THEME_SEPARATOR);
+                    mIsProjectTheme.add(Boolean.FALSE);
+                }
+            }
 
             // get the themes, and languages from the Framework.
+            int platformThemeCount = 0;
             if (frameworkRes != null) {
                 // get the configured resources for the framework
                 Map<ResourceType, Map<String, ResourceValue>> frameworResources =
@@ -1364,7 +1481,6 @@ public class ConfigurationComposite extends Composite {
                         String name = value.getName();
                         if (name.startsWith("Theme.") || name.equals("Theme")) {
                             themes.add(value.getName());
-                            mPlatformThemeCount++;
                         }
                     }
 
@@ -1373,9 +1489,10 @@ public class ConfigurationComposite extends Composite {
 
                     for (String theme : themes) {
                         mThemeCombo.add(theme);
+                        mIsProjectTheme.add(Boolean.FALSE);
                     }
 
-                    mPlatformThemeCount = themes.size();
+                    platformThemeCount = themes.size();
                     themes.clear();
                 }
             }
@@ -1403,14 +1520,16 @@ public class ConfigurationComposite extends Composite {
                         }
 
                         // sort them and add them the to the combo.
-                        if (mPlatformThemeCount > 0 && themes.size() > 0) {
+                        if (platformThemeCount > 0 && themes.size() > 0) {
                             mThemeCombo.add(THEME_SEPARATOR);
+                            mIsProjectTheme.add(Boolean.FALSE);
                         }
 
                         Collections.sort(themes);
 
                         for (String theme : themes) {
                             mThemeCombo.add(theme);
+                            mIsProjectTheme.add(Boolean.TRUE);
                         }
                     }
                 }
@@ -1419,7 +1538,7 @@ public class ConfigurationComposite extends Composite {
             // try to reselect the previous theme.
             boolean needDefaultSelection = true;
 
-            if (mState.theme != null) {
+            if (mState.theme != null && includedIn == null) {
                 final int count = mThemeCombo.getItemCount();
                 for (int i = 0 ; i < count ; i++) {
                     if (mState.theme.equals(mThemeCombo.getItem(i))) {
@@ -1444,6 +1563,8 @@ public class ConfigurationComposite extends Composite {
         } finally {
             mDisableUpdates--;
         }
+
+        assert mIsProjectTheme.size() == mThemeCombo.getItemCount();
     }
 
     // ---- getters for the config selection values ----
@@ -1573,7 +1694,7 @@ public class ConfigurationComposite extends Composite {
      * @return true for project theme, false for framework theme
      */
     public boolean isProjectTheme() {
-        return mThemeCombo.getSelectionIndex() >= mPlatformThemeCount;
+        return mIsProjectTheme.get(mThemeCombo.getSelectionIndex()).booleanValue();
     }
 
     public IAndroidTarget getRenderingTarget() {
@@ -2323,4 +2444,3 @@ public class ConfigurationComposite extends Composite {
         }
     }
 }
-

@@ -20,6 +20,7 @@ import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.sdklib.SdkConstants.FN_FRAMEWORK_LIBRARY;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.util.Pair;
@@ -38,7 +39,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -225,7 +225,7 @@ public class CustomViewFinder {
             }
         };
         try {
-            IJavaProject javaProject = (IJavaProject) mProject.getNature(JavaCore.NATURE_ID);
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(mProject);
             if (javaProject != null) {
                 String className = layoutsOnly ? CLASS_VIEWGROUP : CLASS_VIEW;
                 IType activityType = javaProject.findType(className);

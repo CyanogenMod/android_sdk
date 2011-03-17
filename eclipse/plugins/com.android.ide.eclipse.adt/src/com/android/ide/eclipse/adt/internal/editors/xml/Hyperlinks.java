@@ -47,6 +47,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -89,7 +90,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -617,7 +617,7 @@ public class Hyperlinks {
         try {
             IJavaSearchScope scope = null;
             IType activityType = null;
-            IJavaProject javaProject = (IJavaProject) project.getNature(JavaCore.NATURE_ID);
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(project);
             if (javaProject != null) {
                 activityType = javaProject.findType(SdkConstants.CLASS_ACTIVITY);
                 if (activityType != null) {

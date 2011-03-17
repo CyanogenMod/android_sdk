@@ -186,6 +186,27 @@ public class IncludeFinder {
         }
     }
 
+    /**
+     * Returns true if the given resource is included from some other layout in the
+     * project
+     *
+     * @param included the resource to check
+     * @return true if the file is included by some other layout
+     */
+    public boolean isIncluded(IResource included) {
+        ensureInitialized();
+        String mapKey = getMapKey(included);
+        List<String> result = mIncludedBy.get(mapKey);
+        if (result == null) {
+            String name = getResourceName(included);
+            if (!name.equals(mapKey)) {
+                result = mIncludedBy.get(name);
+            }
+        }
+
+        return result != null && result.size() > 0;
+    }
+
     @VisibleForTesting
     /* package */ List<String> getIncludedBy(String included) {
         ensureInitialized();
