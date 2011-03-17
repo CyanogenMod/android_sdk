@@ -18,23 +18,28 @@ package com.android.ide.eclipse.adt.internal.editors;
 
 
 import org.eclipse.jface.text.IAutoEditStrategy;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextHover;
+import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.formatter.IContentFormatter;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.viewers.IInputProvider;
 import org.eclipse.wst.sse.core.text.IStructuredPartitions;
 import org.eclipse.wst.xml.core.text.IXMLPartitions;
 import org.eclipse.wst.xml.ui.StructuredTextViewerConfigurationXML;
+import org.eclipse.wst.xml.ui.internal.contentassist.XMLContentAssistProcessor;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Base Source Viewer Configuration for Android resources.
  */
+@SuppressWarnings("restriction") // XMLContentAssistProcessor
 public class AndroidSourceViewerConfig extends StructuredTextViewerConfigurationXML {
 
     /** Content Assist Processor to use for all handled partitions. */
@@ -67,17 +72,6 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
         if (partitionType == IStructuredPartitions.UNKNOWN_PARTITION ||
             partitionType == IStructuredPartitions.DEFAULT_PARTITION ||
             partitionType == IXMLPartitions.XML_DEFAULT) {
-            if (sourceViewer instanceof IInputProvider) {
-                IInputProvider input = (IInputProvider) sourceViewer;
-                Object a = input.getInput();
-                if (a != null)
-                    a.toString();
-            }
-
-            IDocument doc = sourceViewer.getDocument();
-            if (doc != null)
-                doc.toString();
-
             processors.add(mProcessor);
         }
 
@@ -85,7 +79,13 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
                 partitionType);
         if (others != null && others.length > 0) {
             for (IContentAssistProcessor p : others) {
-                processors.add(p);
+                // Builtin Eclipse WTP code completion assistant? If so,
+                // wrap it with our own filter which hides some unwanted completions.
+                if (p instanceof XMLContentAssistProcessor) {
+                    processors.add(new FilteringContentAssistProcessor(p));
+                } else {
+                    processors.add(p);
+                }
             }
         }
 
@@ -125,4 +125,69 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
         return targets;
     }
 
+    /**
+     * A delegating {@link IContentAssistProcessor} whose purpose is to filter out some
+     * default Eclipse XML completions which are distracting in Android XML files
+     */
+    private class FilteringContentAssistProcessor implements IContentAssistProcessor {
+        private IContentAssistProcessor mDelegate;
+
+        public FilteringContentAssistProcessor(IContentAssistProcessor delegate) {
+            super();
+            mDelegate = delegate;
+        }
+
+        public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
+            ICompletionProposal[] result = mDelegate.computeCompletionProposals(viewer, offset);
+            if (result == null) {
+                return null;
+            }
+
+            List<ICompletionProposal> proposals =
+                new ArrayList<ICompletionProposal>(result.length);
+            for (ICompletionProposal proposal : result) {
+                String replacement = proposal.getDisplayString();
+                if (replacement.charAt(0) == '"' &&
+                        replacement.charAt(replacement.length() - 1) == '"') {
+                    // Filter out attribute values. In Android XML files (where there is no DTD
+                    // etc) the default Eclipse XML code completion simply provides the
+                    // existing value as a completion. This is often misleading, since if you
+                    // for example have a typo, completion will show your current (wrong)
+                    // value as a valid completion.
+                } else if (replacement.contains("Namespace")  //$NON-NLS-1$
+                        || replacement.contains("Schema")) {  //$NON-NLS-1$
+                    // Eclipse adds in a number of namespace and schema related completions which
+                    // are not usually applicable in our files.
+                } else {
+                    proposals.add(proposal);
+                }
+            }
+
+            if (proposals.size() == result.length) {
+                return result;
+            } else {
+                return proposals.toArray(new ICompletionProposal[proposals.size()]);
+            }
+        }
+
+        public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
+            return mDelegate.computeContextInformation(viewer, offset);
+        }
+
+        public char[] getCompletionProposalAutoActivationCharacters() {
+            return mDelegate.getCompletionProposalAutoActivationCharacters();
+        }
+
+        public char[] getContextInformationAutoActivationCharacters() {
+            return mDelegate.getContextInformationAutoActivationCharacters();
+        }
+
+        public IContextInformationValidator getContextInformationValidator() {
+            return mDelegate.getContextInformationValidator();
+        }
+
+        public String getErrorMessage() {
+            return mDelegate.getErrorMessage();
+        }
+    }
 }

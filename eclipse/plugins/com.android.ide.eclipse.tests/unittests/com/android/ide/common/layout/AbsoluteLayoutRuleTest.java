@@ -60,8 +60,8 @@ public class AbsoluteLayoutRuleTest extends LayoutTestBase {
                 // Drop preview
                 "useStyle(DROP_PREVIEW), drawRect(Rect[30,-10,105,80])");
 
-        assertEquals("30dip", inserted.getStringAttr(ANDROID_URI, "layout_x"));
-        assertEquals("-10dip", inserted.getStringAttr(ANDROID_URI, "layout_y"));
+        assertEquals("30dp", inserted.getStringAttr(ANDROID_URI, "layout_x"));
+        assertEquals("-10dp", inserted.getStringAttr(ANDROID_URI, "layout_y"));
 
         // Without drag bounds we should just draw guide lines instead
         inserted = dragInto(new Rect(0, 0, 0, 0), new Point(30, -10), 4, -1,
@@ -70,8 +70,8 @@ public class AbsoluteLayoutRuleTest extends LayoutTestBase {
                 "useStyle(GUIDELINE), drawLine(30,0,30,480), drawLine(0,-10,240,-10)",
                 // Drop preview
                 "useStyle(DROP_PREVIEW), drawLine(30,-10,240,-10), drawLine(30,-10,30,480)");
-        assertEquals("30dip", inserted.getStringAttr(ANDROID_URI, "layout_x"));
-        assertEquals("-10dip", inserted.getStringAttr(ANDROID_URI, "layout_y"));
+        assertEquals("30dp", inserted.getStringAttr(ANDROID_URI, "layout_x"));
+        assertEquals("-10dp", inserted.getStringAttr(ANDROID_URI, "layout_y"));
     }
 
 }

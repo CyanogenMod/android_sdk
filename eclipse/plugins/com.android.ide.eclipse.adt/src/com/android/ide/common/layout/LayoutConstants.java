@@ -52,6 +52,7 @@ public class LayoutConstants {
 
     public static final String ATTR_TEXT = "text";                      //$NON-NLS-1$
     public static final String ATTR_ID = "id";                          //$NON-NLS-1$
+    public static final String ATTR_STYLE = "style";                    //$NON-NLS-1$
     public static final String ATTR_HANDLE = "handle";                  //$NON-NLS-1$
     public static final String ATTR_CONTENT = "content";                //$NON-NLS-1$
     public static final String ATTR_CHECKED = "checked";                //$NON-NLS-1$
@@ -98,7 +99,7 @@ public class LayoutConstants {
     public static final String VALUE_FILL_PARENT = "fill_parent";               //$NON-NLS-1$
     public static final String VALUE_TRUE = "true";                             //$NON-NLS-1$
     public static final String VALUE_FALSE= "false";                            //$NON-NLS-1$
-    public static final String VALUE_N_DIP = "%ddip";                           //$NON-NLS-1$
+    public static final String VALUE_N_DP = "%ddp";                             //$NON-NLS-1$
 
     public static final String VALUE_CENTER_VERTICAL = "centerVertical";        //$NON-NLS-1$
     public static final String VALUE_CENTER_IN_PARENT = "centerInParent";       //$NON-NLS-1$
