@@ -905,7 +905,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     /**
      * Returns the active {@link AndroidXmlEditor} matching this source viewer.
      */
-    private AndroidXmlEditor getAndroidXmlEditor(ITextViewer viewer) {
+    public static AndroidXmlEditor getAndroidXmlEditor(ITextViewer viewer) {
         IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (wwin != null) {
             IWorkbenchPage page = wwin.getActivePage();

@@ -1331,4 +1331,20 @@ class NewXmlFileCreationPage extends WizardPage {
         }
     }
 
+    /**
+     * Returns the {@link TypeInfo} for the given {@link ResourceFolderType}, or null if
+     * not found
+     *
+     * @param folderType the {@link ResourceFolderType} to look for
+     * @return the corresponding {@link TypeInfo}
+     */
+    static TypeInfo getTypeInfo(ResourceFolderType folderType) {
+        for (TypeInfo typeInfo : sTypes) {
+            if (typeInfo.getResFolderType() == folderType) {
+                return typeInfo;
+            }
+        }
+
+        return null;
+    }
 }

@@ -528,14 +528,21 @@ public class Hyperlinks {
         }
     }
 
-    /** Opens the given file and shows the given (optional) region */
-    private static void openFile(IFile file, IRegion region) throws PartInitException {
+    /**
+     * Opens the given file and shows the given (optional) region
+     *
+     * @param file the file to be opened
+     * @param region an optional region which if set will be selected and shown to the
+     *            user
+     * @throws PartInitException if something goes wrong
+     */
+    public static void openFile(IFile file, IRegion region) throws PartInitException {
         IEditorPart sourceEditor = getEditor();
         IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
         IEditorPart targetEditor = IDE.openEditor(page, file, true);
         if (targetEditor instanceof AndroidXmlEditor) {
             AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
-            if ((region != null)) {
+            if (region != null) {
                 editor.show(region.getOffset(), region.getLength());
             } else {
                 editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
@@ -1029,7 +1036,7 @@ public class Hyperlinks {
     }
 
     /** Return the resource type of the given url, and the resource name */
-    private static Pair<ResourceType,String> parseResource(String url) {
+    public static Pair<ResourceType,String> parseResource(String url) {
         if (!url.startsWith("@")) { //$NON-NLS-1$
             return null;
         }
@@ -1340,7 +1347,7 @@ public class Hyperlinks {
     }
 
     /** Returns the editor applicable to this hyperlink detection */
-    private static IEditorPart getEditor() {
+    public static IEditorPart getEditor() {
         // I would like to be able to find this via getAdapter(TextEditor.class) but
         // couldn't find a way to initialize the editor context from
         // AndroidSourceViewerConfig#getHyperlinkDetectorTargets (which only has
