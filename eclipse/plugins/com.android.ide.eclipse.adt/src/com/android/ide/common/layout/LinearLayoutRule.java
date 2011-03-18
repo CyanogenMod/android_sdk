@@ -530,6 +530,11 @@ public class LinearLayoutRule extends BaseLayoutRule {
             String fillParent = getFillParentValueName();
             if (fill.fillHorizontally(vertical)) {
                 node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, fillParent);
+            } else if (!vertical && fill == FillPreference.WIDTH_IN_VERTICAL) {
+                // In a horizontal layout, make views that would fill horizontally in a
+                // vertical layout have a non-zero weight instead. This will make the item
+                // fill but only enough to allow other views to be shown as well.
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, "1"); //$NON-NLS-1$
             }
             if (fill.fillVertically(vertical)) {
                 node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, fillParent);

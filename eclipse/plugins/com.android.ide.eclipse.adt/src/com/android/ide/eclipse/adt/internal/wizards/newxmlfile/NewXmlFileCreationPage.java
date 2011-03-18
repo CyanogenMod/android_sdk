@@ -17,6 +17,9 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
+import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+
 import com.android.AndroidConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
@@ -234,17 +237,20 @@ class NewXmlFileCreationPage extends WizardPage {
                 @Override
                 String getDefaultAttrs(IProject project) {
                     Sdk currentSdk = Sdk.getCurrent();
+                    String fill = VALUE_FILL_PARENT;
                     if (currentSdk != null) {
                         IAndroidTarget target = currentSdk.getTarget(project);
                         // fill_parent was renamed match_parent in API level 8
                         if (target != null && target.getVersion().getApiLevel() >= 8) {
-                            return "android:layout_width=\"match_parent\"\n"    //$NON-NLS-1$
-                                    + "android:layout_height=\"match_parent\""; //$NON-NLS-1$
+                            fill = VALUE_MATCH_PARENT;
                         }
                     }
 
-                    return "android:layout_width=\"fill_parent\"\n"    //$NON-NLS-1$
-                            + "android:layout_height=\"fill_parent\""; //$NON-NLS-1$
+                    return String.format(
+                            "android:orientation=\"vertical\"\n"       //$NON-NLS-1$
+                            + "android:layout_width=\"%1$s\"\n"            //$NON-NLS-1$
+                            + "android:layout_height=\"%1$s\"", //$NON-NLS-1$
+                            fill, fill);
                 }
         },
         new TypeInfo("Values",                                              // UI name
