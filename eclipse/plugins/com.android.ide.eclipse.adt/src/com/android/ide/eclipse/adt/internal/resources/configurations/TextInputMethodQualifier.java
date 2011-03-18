@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.Keyboard;
 import com.android.resources.ResourceEnum;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Resource Qualifier for Text Input Method.
@@ -57,11 +54,6 @@ public final class TextInputMethodQualifier extends EnumBasedResourceQualifier {
     @Override
     public String getShortName() {
         return "Text Input";
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("text_input"); //$NON-NLS-1$
     }
 
     @Override

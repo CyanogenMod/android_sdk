@@ -16,25 +16,112 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
-import com.android.resources.ResourceType;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.DockModeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.KeyboardStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NavigationStateQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NetworkCodeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.NightModeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.PixelDensityQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenDimensionQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenOrientationQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenRatioQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.ScreenSizeQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TextInputMethodQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.TouchScreenQualifier;
+import com.android.ide.eclipse.adt.internal.resources.configurations.VersionQualifier;
 
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.swt.graphics.Image;
 
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Helper class to deal with SWT specifics for the resources.
+ */
 public class ResourceHelper {
 
+    private final static Map<Class<?>, Image> ICON_MAP = new HashMap<Class<?>, Image>(20);
+
     /**
-     * Returns a formatted string usable in an XML to use the specified {@link ResourceItem}.
-     * @param resourceItem The resource item.
-     * @param system Whether this is a system resource or a project resource.
-     * @return a string in the format @[type]/[name]
+     * Returns the icon for the qualifier.
      */
-    public static String getXmlString(ResourceType type, ResourceItem resourceItem,
-            boolean system) {
-        if (type == ResourceType.ID && resourceItem.isDeclaredInline()) {
-            return (system?"@android:":"@+") + type.getName() + "/" + resourceItem.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    public static Image getIcon(Class<? extends ResourceQualifier> theClass) {
+        Image image = ICON_MAP.get(theClass);
+        if (image == null) {
+            image = computeImage(theClass);
+            ICON_MAP.put(theClass, image);
         }
 
-        return (system?"@android:":"@") + type.getName() + "/" + resourceItem.getName(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return image;
     }
 
+    private static Image computeImage(Class<? extends ResourceQualifier> theClass) {
+        if (theClass == CountryCodeQualifier.class) {
+            return IconFactory.getInstance().getIcon("mcc"); //$NON-NLS-1$
+        } else if (theClass == NetworkCodeQualifier.class) {
+            return IconFactory.getInstance().getIcon("mnc"); //$NON-NLS-1$
+        } else if (theClass == LanguageQualifier.class) {
+            return IconFactory.getInstance().getIcon("language"); //$NON-NLS-1$
+        } else if (theClass == RegionQualifier.class) {
+            return IconFactory.getInstance().getIcon("region"); //$NON-NLS-1$
+        } else if (theClass == ScreenSizeQualifier.class) {
+            return IconFactory.getInstance().getIcon("size"); //$NON-NLS-1$
+        } else if (theClass == ScreenRatioQualifier.class) {
+            return IconFactory.getInstance().getIcon("ratio"); //$NON-NLS-1$
+        } else if (theClass == ScreenOrientationQualifier.class) {
+            return IconFactory.getInstance().getIcon("orientation"); //$NON-NLS-1$
+        } else if (theClass == DockModeQualifier.class) {
+            return IconFactory.getInstance().getIcon("dockmode"); //$NON-NLS-1$
+        } else if (theClass == NightModeQualifier.class) {
+            return IconFactory.getInstance().getIcon("nightmode"); //$NON-NLS-1$
+        } else if (theClass == PixelDensityQualifier.class) {
+            return IconFactory.getInstance().getIcon("dpi"); //$NON-NLS-1$
+        } else if (theClass == TouchScreenQualifier.class) {
+            return IconFactory.getInstance().getIcon("touch"); //$NON-NLS-1$
+        } else if (theClass == KeyboardStateQualifier.class) {
+            return IconFactory.getInstance().getIcon("keyboard"); //$NON-NLS-1$
+        } else if (theClass == TextInputMethodQualifier.class) {
+            return IconFactory.getInstance().getIcon("text_input"); //$NON-NLS-1$
+        } else if (theClass == NavigationStateQualifier.class) {
+            return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
+        } else if (theClass == NavigationMethodQualifier.class) {
+            return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
+        } else if (theClass == ScreenDimensionQualifier.class) {
+            return IconFactory.getInstance().getIcon("dimension"); //$NON-NLS-1$
+        } else if (theClass == VersionQualifier.class) {
+            return IconFactory.getInstance().getIcon("version"); //$NON-NLS-1$
+        }
+
+        // this can only happen if we forget to add a class above.
+        return null;
+    }
+
+    /**
+     * Returns a {@link ResourceDeltaKind} from an {@link IResourceDelta} value.
+     * @param kind a {@link IResourceDelta} integer constant.
+     * @return a matching {@link ResourceDeltaKind} or null.
+     *
+     * @see IResourceDelta#ADDED
+     * @see IResourceDelta#REMOVED
+     * @see IResourceDelta#CHANGED
+     */
+    public static ResourceDeltaKind getResourceDeltaKind(int kind) {
+        switch (kind) {
+            case IResourceDelta.ADDED:
+                return ResourceDeltaKind.ADDED;
+            case IResourceDelta.REMOVED:
+                return ResourceDeltaKind.REMOVED;
+            case IResourceDelta.CHANGED:
+                return ResourceDeltaKind.CHANGED;
+        }
+
+        return null;
+    }
 }

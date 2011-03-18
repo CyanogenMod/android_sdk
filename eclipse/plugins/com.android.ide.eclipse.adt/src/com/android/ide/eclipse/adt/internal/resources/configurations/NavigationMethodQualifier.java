@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.Navigation;
 import com.android.resources.ResourceEnum;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Resource Qualifier for Navigation Method.
@@ -56,12 +53,6 @@ public final class NavigationMethodQualifier extends EnumBasedResourceQualifier 
     @Override
     public String getShortName() {
         return NAME;
-    }
-
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
     }
 
     @Override

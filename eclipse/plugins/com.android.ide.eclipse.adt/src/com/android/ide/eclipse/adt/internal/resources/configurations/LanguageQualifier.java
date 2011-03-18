@@ -16,10 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-
-import org.eclipse.swt.graphics.Image;
-
 import java.util.regex.Pattern;
 
 /**
@@ -87,11 +83,6 @@ public final class LanguageQualifier extends ResourceQualifier {
     @Override
     public String getShortName() {
         return NAME;
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("language"); //$NON-NLS-1$
     }
 
     @Override

@@ -217,6 +217,19 @@ public class ResourceItem implements Comparable<ResourceItem> {
         return count;
     }
 
+    /**
+     * Returns a formatted string usable in an XML to use for the {@link ResourceItem}.
+     * @param system Whether this is a system resource or a project resource.
+     * @return a string in the format @[type]/[name]
+     */
+    public String getXmlString(ResourceType type, boolean system) {
+        if (type == ResourceType.ID && isDeclaredInline()) {
+            return (system ? "@android:" : "@+") + type.getName() + "/" + mName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+
+        return (system ? "@android:" : "@") + type.getName() + "/" + mName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+
     @Override
     public String toString() {
         return "ResourceItem [mName=" + mName + ", mFiles=" + mFiles + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

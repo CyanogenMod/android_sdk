@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.ui;
 
 import com.android.AndroidConstants;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.configurations.CountryCodeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.DockModeQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
@@ -657,7 +658,7 @@ public class ConfigurationSelector extends Composite {
         public Image getColumnImage(Object element, int columnIndex) {
             // only one column, so we can ignore columnIndex
             if (element instanceof ResourceQualifier) {
-                return ((ResourceQualifier)element).getIcon();
+                return ResourceHelper.getIcon(((ResourceQualifier)element).getClass());
             }
 
             return null;

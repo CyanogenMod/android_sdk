@@ -20,6 +20,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFolderListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
@@ -327,7 +328,8 @@ public final class ResourceManager {
                         // folder will have taken care of things.
                         if (folder != null) {
                             ResourceFile resFile = folder.processFile(
-                                    new IFileWrapper(file), kind);
+                                    new IFileWrapper(file),
+                                    ResourceHelper.getResourceDeltaKind(kind));
                             notifyListenerOnFileChange(project, resFile, kind);
                         }
                     }
@@ -412,7 +414,7 @@ public final class ResourceManager {
 
             try {
                 loadResources(resources, frameworkRes);
-                resources.loadPublicResources(frameworkRes);
+                resources.loadPublicResources(frameworkRes, AdtPlugin.getDefault());
                 return resources;
             } catch (IOException e) {
                 // since we test that folders are folders, and files are files, this shouldn't
@@ -459,7 +461,8 @@ public final class ResourceManager {
 
                     for (IAbstractResource childRes : children) {
                         if (childRes instanceof IAbstractFile) {
-                            resFolder.processFile((IAbstractFile) childRes, IResourceDelta.ADDED);
+                            resFolder.processFile((IAbstractFile) childRes,
+                                    ResourceHelper.getResourceDeltaKind(IResourceDelta.ADDED));
                         }
                     }
                 }
@@ -512,7 +515,8 @@ public final class ResourceManager {
                                         IFile file = (IFile)fileRes;
 
                                         resFolder.processFile(new IFileWrapper(file),
-                                                IResourceDelta.ADDED);
+                                                ResourceHelper.getResourceDeltaKind(
+                                                        IResourceDelta.ADDED));
                                     }
                                 }
                             }

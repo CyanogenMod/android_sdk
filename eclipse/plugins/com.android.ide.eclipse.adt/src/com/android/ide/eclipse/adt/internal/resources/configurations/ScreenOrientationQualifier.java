@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.ResourceEnum;
 import com.android.resources.ScreenOrientation;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Resource Qualifier for Screen Orientation.
@@ -55,11 +52,6 @@ public final class ScreenOrientationQualifier extends EnumBasedResourceQualifier
     @Override
     public String getShortName() {
         return "Orientation";
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("orientation"); //$NON-NLS-1$
     }
 
     @Override

@@ -16,10 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-
-import org.eclipse.swt.graphics.Image;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -91,11 +87,6 @@ public final class RegionQualifier extends ResourceQualifier {
     @Override
     public String getShortName() {
         return NAME;
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("region"); //$NON-NLS-1$
     }
 
     @Override

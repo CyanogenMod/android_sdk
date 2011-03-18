@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceEnum;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Resource Qualifier for Navigation Method.
@@ -56,11 +53,6 @@ public final class NightModeQualifier extends EnumBasedResourceQualifier {
     @Override
     public String getShortName() {
         return "Night Mode";
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("nightmode"); //$NON-NLS-1$
     }
 
     @Override

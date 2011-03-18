@@ -16,10 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-
-import org.eclipse.swt.graphics.Image;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,11 +91,6 @@ public final class CountryCodeQualifier extends ResourceQualifier {
     @Override
     public String getShortName() {
         return "Country Code";
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("mcc"); //$NON-NLS-1$
     }
 
     @Override

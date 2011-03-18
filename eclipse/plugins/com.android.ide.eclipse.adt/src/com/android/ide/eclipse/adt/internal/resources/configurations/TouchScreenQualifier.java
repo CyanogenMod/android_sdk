@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.ResourceEnum;
 import com.android.resources.TouchScreen;
-
-import org.eclipse.swt.graphics.Image;
 
 
 /**
@@ -57,11 +54,6 @@ public final class TouchScreenQualifier extends EnumBasedResourceQualifier {
     @Override
     public String getShortName() {
         return NAME;
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("touch"); //$NON-NLS-1$
     }
 
     @Override
