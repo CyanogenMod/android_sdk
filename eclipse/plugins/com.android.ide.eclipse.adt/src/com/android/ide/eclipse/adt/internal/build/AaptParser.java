@@ -25,6 +25,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
@@ -417,7 +418,6 @@ public final class AaptParser {
         if (f2 instanceof IFile) {
             Matcher matcher = sValueRangePattern.matcher(message);
             if (matcher.find()) {
-                String property = matcher.group(1);
                 String value = matcher.group(2);
                 IFile iFile = (IFile) f2;
                 IDocumentProvider provider = new TextFileDocumentProvider();
@@ -426,11 +426,19 @@ public final class AaptParser {
                     IDocument document = provider.getDocument(iFile);
                     if (document != null) {
                         IRegion lineInfo = document.getLineInformation(line - 1);
-                        String text = document.get(lineInfo.getOffset(), lineInfo.getLength());
-                        int propertyIndex = text.indexOf(property);
-                        int valueIndex = text.indexOf(value, propertyIndex + 1);
-                        if (valueIndex != -1) {
-                            startOffset = lineInfo.getOffset() + valueIndex;
+                        int lineStartOffset = lineInfo.getOffset();
+                        // The aapt errors will be anchored on the line where the
+                        // element starts - which means that with formatting where
+                        // attributes end up on subsequent lines we don't find it on
+                        // the error line indicated by aapt.
+                        // Therefore, search forwards in the document.
+                        FindReplaceDocumentAdapter adapter =
+                            new FindReplaceDocumentAdapter(document);
+                        IRegion region = adapter.find(lineStartOffset, value,
+                                true /*forwardSearch*/, true /*caseSensitive*/,
+                                false /*wholeWord*/, false /*regExSearch*/);
+                        if (region != null) {
+                            startOffset = region.getOffset();
                             endOffset = startOffset + value.length();
                         }
                     }
