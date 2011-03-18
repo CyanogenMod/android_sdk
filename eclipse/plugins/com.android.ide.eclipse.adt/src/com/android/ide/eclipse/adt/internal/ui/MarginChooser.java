@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.ui;
 
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceType;
 

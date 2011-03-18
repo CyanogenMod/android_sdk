@@ -17,7 +17,12 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
+import com.android.ide.common.resources.InlineResourceItem;
+import com.android.ide.common.resources.IntArrayWrapper;
+import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;

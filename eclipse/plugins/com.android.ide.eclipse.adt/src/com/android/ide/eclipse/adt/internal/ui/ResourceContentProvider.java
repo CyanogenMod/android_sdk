@@ -16,9 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFile;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
+import com.android.ide.common.resources.ResourceFile;
+import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceType;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;

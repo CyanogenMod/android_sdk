@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceFolder;
+import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
 
