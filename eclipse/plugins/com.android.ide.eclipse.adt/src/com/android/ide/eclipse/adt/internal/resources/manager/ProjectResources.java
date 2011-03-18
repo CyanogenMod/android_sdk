@@ -20,9 +20,11 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 
 import java.util.ArrayList;
@@ -151,6 +153,17 @@ public class ProjectResources extends ResourceRepository {
         }
 
         return resultMap;
+    }
+
+    /**
+     * Returns the {@link ResourceFolder} associated with a {@link IFolder}.
+     * @param folder The {@link IFolder} object.
+     * @return the {@link ResourceFolder} or null if it was not found.
+     *
+     * @see ResourceRepository#getResourceFolder(com.android.io.IAbstractFolder)
+     */
+    public ResourceFolder getResourceFolder(IFolder folder) {
+        return getResourceFolder(new IFolderWrapper(folder));
     }
 
     /**

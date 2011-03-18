@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.common.log.ILogger;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.resources.ResourceType;
@@ -103,7 +103,7 @@ class FrameworkResources extends ResourceRepository {
      *
      * @param osFrameworkResourcePath The root folder of the resources
      */
-    void loadPublicResources(IAbstractFolder resFolder) {
+    void loadPublicResources(IAbstractFolder resFolder, ILogger logger) {
         IAbstractFolder valueFolder = resFolder.getFolder(FD_RES_VALUES);
         if (valueFolder.exists() == false) {
             return;
@@ -176,7 +176,9 @@ class FrameworkResources extends ResourceRepository {
                     }
                 }
             } catch (Exception e) {
-                AdtPlugin.log(e, "Can't read and parse public attribute list");
+                if (logger != null) {
+                    logger.error(e, "Can't read and parse public attribute list");
+                }
             } finally {
                 if (reader != null) {
                     try {

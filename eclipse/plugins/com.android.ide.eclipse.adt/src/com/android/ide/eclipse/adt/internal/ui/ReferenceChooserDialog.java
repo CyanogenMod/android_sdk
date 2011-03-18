@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.ui;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
-import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.resources.ResourceType;
@@ -115,8 +114,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
                 ResourceType resourceType = (ResourceType)treeSelection.getFirstSegment();
                 ResourceItem resourceItem = (ResourceItem)treeSelection.getLastSegment();
 
-                mCurrentResource = ResourceHelper.getXmlString(resourceType,
-                        resourceItem, false /* system */);
+                mCurrentResource = resourceItem.getXmlString(resourceType, false /* system */);
             }
         }
     }

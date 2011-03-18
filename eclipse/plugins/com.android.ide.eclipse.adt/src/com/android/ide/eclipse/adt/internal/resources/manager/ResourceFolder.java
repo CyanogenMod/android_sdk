@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.ide.eclipse.adt.internal.resources.ResourceDeltaKind;
 import com.android.ide.eclipse.adt.internal.resources.configurations.Configurable;
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.io.IAbstractFile;
@@ -25,8 +26,6 @@ import com.android.io.IAbstractFolder;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-
-import org.eclipse.core.resources.IResourceDelta;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,12 +65,12 @@ public final class ResourceFolder implements Configurable {
      * @param kind the file change kind.
      * @return the {@link ResourceFile} that was created.
      */
-    public ResourceFile processFile(IAbstractFile file, int kind) {
+    public ResourceFile processFile(IAbstractFile file, ResourceDeltaKind kind) {
         // look for this file if it's already been created
         ResourceFile resFile = getFile(file);
 
         if (resFile == null) {
-            if (kind != IResourceDelta.REMOVED) {
+            if (kind != ResourceDeltaKind.REMOVED) {
                 // create a ResourceFile for it.
 
                 // check if that's a single or multi resource type folder. For now we define this by
@@ -94,7 +93,7 @@ public final class ResourceFolder implements Configurable {
                 addFile(resFile);
             }
         } else {
-            if (kind == IResourceDelta.REMOVED) {
+            if (kind == ResourceDeltaKind.REMOVED) {
                 removeFile(resFile);
             } else {
                 resFile.update();

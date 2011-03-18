@@ -30,7 +30,6 @@ import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.Resour
 import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
-import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
@@ -158,8 +157,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         if (elements.length == 1 && elements[0] instanceof ResourceItem) {
             ResourceItem item = (ResourceItem)elements[0];
 
-            mCurrentResource = ResourceHelper.getXmlString(mResourceType, item,
-                    mSystemButton.getSelection());
+            mCurrentResource = item.getXmlString(mResourceType, mSystemButton.getSelection());
 
             if (mInputValidator != null && mInputValidator.isValid(mCurrentResource) != null) {
                 mCurrentResource = null;
@@ -257,8 +255,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             Object[] elements = getSelectedElements();
             if (elements.length == 1 && elements[0] instanceof ResourceItem) {
                 ResourceItem item = (ResourceItem)elements[0];
-                String current = ResourceHelper.getXmlString(mResourceType, item,
-                        mSystemButton.getSelection());
+                String current = item.getXmlString(mResourceType, mSystemButton.getSelection());
                 String error = mInputValidator.isValid(current);
                 IStatus status;
                 if (error != null) {

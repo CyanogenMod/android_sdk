@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.ResourceEnum;
 import com.android.resources.ScreenSize;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Resource Qualifier for Screen Size. Size can be "small", "normal", "large" and "x-large"
@@ -56,11 +53,6 @@ public class ScreenSizeQualifier extends EnumBasedResourceQualifier {
     @Override
     public String getShortName() {
         return "Size";
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("size"); //$NON-NLS-1$
     }
 
     @Override

@@ -16,11 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.resources.Density;
 import com.android.resources.ResourceEnum;
-
-import org.eclipse.swt.graphics.Image;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,11 +57,6 @@ public final class PixelDensityQualifier extends EnumBasedResourceQualifier {
     @Override
     public String getShortName() {
         return NAME;
-    }
-
-    @Override
-    public Image getIcon() {
-        return IconFactory.getInstance().getIcon("dpi"); //$NON-NLS-1$
     }
 
     @Override

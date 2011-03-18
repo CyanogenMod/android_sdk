@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.resources.configurations;
 
-import org.eclipse.swt.graphics.Image;
 
 /**
  * Base class for resource qualifiers.
@@ -34,11 +33,6 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
      * @see #getName()
      */
     public abstract String getShortName();
-
-    /**
-     * Returns the icon for the qualifier.
-     */
-    public abstract Image getIcon();
 
     /**
      * Returns whether the qualifier has a valid filter value.

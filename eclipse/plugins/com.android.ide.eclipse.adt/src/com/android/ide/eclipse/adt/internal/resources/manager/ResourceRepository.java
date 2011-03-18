@@ -22,13 +22,10 @@ import com.android.ide.eclipse.adt.internal.resources.configurations.Configurabl
 import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
 import com.android.ide.eclipse.adt.internal.resources.configurations.LanguageQualifier;
 import com.android.ide.eclipse.adt.internal.resources.configurations.RegionQualifier;
-import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.IAbstractFolder;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-
-import org.eclipse.core.resources.IFolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +44,7 @@ import java.util.TreeSet;
  * A repository is both a file representation of a resource folder and a representation
  * of the generated resources, organized by type.
  *
- * {@link #getResourceFolder(IFolder)} and {@link #getSourceFiles(ResourceType, String, FolderConfiguration)}
+ * {@link #getResourceFolder(IAbstractFolder)} and {@link #getSourceFiles(ResourceType, String, FolderConfiguration)}
  * give access to the folders and files of the resource folder.
  *
  * {@link #getResources(ResourceType)} gives access to the resources directly.
@@ -136,7 +133,6 @@ public abstract class ResourceRepository {
             int count = list.size();
             for (int i = 0 ; i < count ; i++) {
                 ResourceFolder resFolder = list.get(i);
-                // this is only used for Eclipse stuff so we know it's an IFolderWrapper
                 IAbstractFolder folder = resFolder.getFolder();
                 if (removedFolder.equals(folder)) {
                     // we found the matching ResourceFolder. we need to remove it.
@@ -297,16 +293,15 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Returns the {@link ResourceFolder} associated with a {@link IFolder}.
-     * @param folder The {@link IFolder} object.
+     * Returns the {@link ResourceFolder} associated with a {@link IAbstractFolder}.
+     * @param folder The {@link IAbstractFolder} object.
      * @return the {@link ResourceFolder} or null if it was not found.
      */
-    public ResourceFolder getResourceFolder(IFolder folder) {
+    public ResourceFolder getResourceFolder(IAbstractFolder folder) {
         for (List<ResourceFolder> list : mFolderMap.values()) {
             for (ResourceFolder resFolder : list) {
-                // this is only used for Eclipse stuff so we know it's an IFolderWrapper
-                IFolderWrapper wrapper = (IFolderWrapper) resFolder.getFolder();
-                if (wrapper.getIFolder().equals(folder)) {
+                IAbstractFolder wrapper = resFolder.getFolder();
+                if (wrapper.equals(folder)) {
                     return resFolder;
                 }
             }
