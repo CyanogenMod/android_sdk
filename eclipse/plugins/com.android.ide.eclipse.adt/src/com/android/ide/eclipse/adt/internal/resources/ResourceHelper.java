@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.resources;
 import com.android.ide.common.resources.ResourceDeltaKind;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DockModeQualifier;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
@@ -48,60 +49,35 @@ import java.util.Map;
  */
 public class ResourceHelper {
 
-    private final static Map<Class<?>, Image> ICON_MAP = new HashMap<Class<?>, Image>(20);
+    private final static Map<Class<?>, Image> sIconMap = new HashMap<Class<?>, Image>(
+            FolderConfiguration.getQualifierCount());
+
+    static {
+        IconFactory factory = IconFactory.getInstance();
+        sIconMap.put(CountryCodeQualifier.class,       factory.getIcon("mcc")); //$NON-NLS-1$
+        sIconMap.put(NetworkCodeQualifier.class,       factory.getIcon("mnc")); //$NON-NLS-1$
+        sIconMap.put(LanguageQualifier.class,          factory.getIcon("language")); //$NON-NLS-1$
+        sIconMap.put(RegionQualifier.class,            factory.getIcon("region")); //$NON-NLS-1$
+        sIconMap.put(ScreenSizeQualifier.class,        factory.getIcon("size")); //$NON-NLS-1$
+        sIconMap.put(ScreenRatioQualifier.class,       factory.getIcon("ratio")); //$NON-NLS-1$
+        sIconMap.put(ScreenOrientationQualifier.class, factory.getIcon("orientation")); //$NON-NLS-1$
+        sIconMap.put(DockModeQualifier.class,          factory.getIcon("dockmode")); //$NON-NLS-1$
+        sIconMap.put(NightModeQualifier.class,         factory.getIcon("nightmode")); //$NON-NLS-1$
+        sIconMap.put(PixelDensityQualifier.class,      factory.getIcon("dpi")); //$NON-NLS-1$
+        sIconMap.put(TouchScreenQualifier.class,       factory.getIcon("touch")); //$NON-NLS-1$
+        sIconMap.put(KeyboardStateQualifier.class,     factory.getIcon("keyboard")); //$NON-NLS-1$
+        sIconMap.put(TextInputMethodQualifier.class,   factory.getIcon("text_input")); //$NON-NLS-1$
+        sIconMap.put(NavigationStateQualifier.class,   factory.getIcon("navpad")); //$NON-NLS-1$
+        sIconMap.put(NavigationMethodQualifier.class,  factory.getIcon("navpad")); //$NON-NLS-1$
+        sIconMap.put(ScreenDimensionQualifier.class,   factory.getIcon("dimension")); //$NON-NLS-1$
+        sIconMap.put(VersionQualifier.class,           factory.getIcon("version")); //$NON-NLS-1$
+    }
 
     /**
      * Returns the icon for the qualifier.
      */
     public static Image getIcon(Class<? extends ResourceQualifier> theClass) {
-        Image image = ICON_MAP.get(theClass);
-        if (image == null) {
-            image = computeImage(theClass);
-            ICON_MAP.put(theClass, image);
-        }
-
-        return image;
-    }
-
-    private static Image computeImage(Class<? extends ResourceQualifier> theClass) {
-        if (theClass == CountryCodeQualifier.class) {
-            return IconFactory.getInstance().getIcon("mcc"); //$NON-NLS-1$
-        } else if (theClass == NetworkCodeQualifier.class) {
-            return IconFactory.getInstance().getIcon("mnc"); //$NON-NLS-1$
-        } else if (theClass == LanguageQualifier.class) {
-            return IconFactory.getInstance().getIcon("language"); //$NON-NLS-1$
-        } else if (theClass == RegionQualifier.class) {
-            return IconFactory.getInstance().getIcon("region"); //$NON-NLS-1$
-        } else if (theClass == ScreenSizeQualifier.class) {
-            return IconFactory.getInstance().getIcon("size"); //$NON-NLS-1$
-        } else if (theClass == ScreenRatioQualifier.class) {
-            return IconFactory.getInstance().getIcon("ratio"); //$NON-NLS-1$
-        } else if (theClass == ScreenOrientationQualifier.class) {
-            return IconFactory.getInstance().getIcon("orientation"); //$NON-NLS-1$
-        } else if (theClass == DockModeQualifier.class) {
-            return IconFactory.getInstance().getIcon("dockmode"); //$NON-NLS-1$
-        } else if (theClass == NightModeQualifier.class) {
-            return IconFactory.getInstance().getIcon("nightmode"); //$NON-NLS-1$
-        } else if (theClass == PixelDensityQualifier.class) {
-            return IconFactory.getInstance().getIcon("dpi"); //$NON-NLS-1$
-        } else if (theClass == TouchScreenQualifier.class) {
-            return IconFactory.getInstance().getIcon("touch"); //$NON-NLS-1$
-        } else if (theClass == KeyboardStateQualifier.class) {
-            return IconFactory.getInstance().getIcon("keyboard"); //$NON-NLS-1$
-        } else if (theClass == TextInputMethodQualifier.class) {
-            return IconFactory.getInstance().getIcon("text_input"); //$NON-NLS-1$
-        } else if (theClass == NavigationStateQualifier.class) {
-            return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
-        } else if (theClass == NavigationMethodQualifier.class) {
-            return IconFactory.getInstance().getIcon("navpad"); //$NON-NLS-1$
-        } else if (theClass == ScreenDimensionQualifier.class) {
-            return IconFactory.getInstance().getIcon("dimension"); //$NON-NLS-1$
-        } else if (theClass == VersionQualifier.class) {
-            return IconFactory.getInstance().getIcon("version"); //$NON-NLS-1$
-        }
-
-        // this can only happen if we forget to add a class above.
-        return null;
+        return sIconMap.get(theClass);
     }
 
     /**

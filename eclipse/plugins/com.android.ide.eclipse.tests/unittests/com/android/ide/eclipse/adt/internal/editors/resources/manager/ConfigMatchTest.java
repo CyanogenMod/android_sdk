@@ -21,13 +21,10 @@ import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.SingleResourceFile;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.ide.eclipse.mock.Mocks;
-import com.android.io.IAbstractFolder;
 import com.android.resources.DockMode;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -41,9 +38,6 @@ import com.android.resources.TouchScreen;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
 import junit.framework.TestCase;
 
 public class ConfigMatchTest extends TestCase {
@@ -51,8 +45,8 @@ public class ConfigMatchTest extends TestCase {
     private static final String MISC1_FILENAME = "foo.xml"; //$NON-NLS-1$
     private static final String MISC2_FILENAME = "bar.xml"; //$NON-NLS-1$
 
+    private FolderConfiguration mDefaultConfig;
     private ProjectResources mResources;
-    private ResourceQualifier[] mQualifierList;
     private FolderConfiguration config4;
     private FolderConfiguration config3;
     private FolderConfiguration config2;
@@ -62,15 +56,9 @@ public class ConfigMatchTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        // create a Resource Manager to get a list of qualifier as instantiated by the real code.
-        // Thanks for QualifierListTest we know this contains all the qualifiers.
-        ResourceManager manager = ResourceManager.getInstance();
-        Field qualifierListField = ResourceManager.class.getDeclaredField("mQualifiers");
-        assertNotNull(qualifierListField);
-        qualifierListField.setAccessible(true);
-
-        // get the actual list.
-        mQualifierList = (ResourceQualifier[])qualifierListField.get(manager);
+        // create a default config with all qualifiers.
+        mDefaultConfig = new FolderConfiguration();
+        mDefaultConfig.createDefault();
 
         // create the project resources.
         mResources = new ProjectResources(null /*project*/);
@@ -234,17 +222,18 @@ public class ConfigMatchTest extends TestCase {
      * this particular qualifier.
      */
     private FolderConfiguration getConfiguration(String... qualifierValues) {
+        // FolderConfiguration.getQualifierCount is always valid and up to date.
+        final int count = FolderConfiguration.getQualifierCount();
+
+        // Check we have the right number of qualifier.
+        assertEquals(qualifierValues.length, count);
+
         FolderConfiguration config = new FolderConfiguration();
 
-        // those must be of the same length
-        assertEquals(qualifierValues.length, mQualifierList.length);
-
-        int index = 0;
-
-        for (ResourceQualifier qualifier : mQualifierList) {
-            String value = qualifierValues[index++];
+        for (int i = 0 ; i < count ; i++) {
+            String value = qualifierValues[i];
             if (value != null) {
-                assertTrue(qualifier.checkAndSet(value, config));
+                assertTrue(mDefaultConfig.getQualifier(i).checkAndSet(value, config));
             }
         }
 
@@ -268,28 +257,11 @@ public class ConfigMatchTest extends TestCase {
         IFolder folder = Mocks.createFolder(folderName, memberList);
 
         // add it to the resource, and get back a ResourceFolder object.
-        ResourceFolder resFolder = _addProjectResourceFolder(resources, config, folder);
+        ResourceFolder resFolder = resources.processFolder(new IFolderWrapper(folder));
 
         // and fill it with files from the list.
         for (IFile file : memberList) {
             resFolder.addFile(new SingleResourceFile(new IFileWrapper(file), resFolder));
         }
-    }
-
-    /** Calls ResourceRepository.add() method via reflection to circumvent access
-     * restrictions that are enforced when running in the plug-in environment
-     * ie cannot access package or protected members in a different plug-in, even
-     * if they are in the same declared package as the accessor
-     */
-    private ResourceFolder _addProjectResourceFolder(ResourceRepository resources,
-            FolderConfiguration config, IFolder folder) throws Exception {
-
-        Method addMethod = ResourceRepository.class.getDeclaredMethod("add",
-                ResourceFolderType.class, FolderConfiguration.class,
-                IAbstractFolder.class);
-        addMethod.setAccessible(true);
-        ResourceFolder resFolder = (ResourceFolder)addMethod.invoke(resources,
-                ResourceFolderType.LAYOUT, config, new IFolderWrapper(folder));
-        return resFolder;
     }
 }
