@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DRAW9PATCH_LOCAL_DIR := $(call my-dir)
-include $(DRAW9PATCH_LOCAL_DIR)/etc/Android.mk
-include $(DRAW9PATCH_LOCAL_DIR)/src/Android.mk
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_JAVA_RESOURCE_DIRS := src
+
+LOCAL_JAR_MANIFEST := etc/manifest.txt
+
+LOCAL_JAVA_LIBRARIES := \
+	swing-worker-1.1
+
+LOCAL_MODULE := draw9patch
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
+# Build all sub-directories
+include $(call all-makefiles-under,$(LOCAL_PATH))

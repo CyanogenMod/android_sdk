@@ -20,7 +20,7 @@ include $(CLEAR_VARS)
 # Only compile source java files in this lib.
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
-LOCAL_MODULE := app-tests
+LOCAL_MODULE := sdkmanager-tests
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_JAVA_LIBRARIES := sdkmanager sdklib-tests junit

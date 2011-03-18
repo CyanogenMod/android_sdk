@@ -13,5 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-ANTTASKS_LOCAL_DIR := $(call my-dir)
-include $(ANTTASKS_LOCAL_DIR)/src/Android.mk
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_JAVA_RESOURCE_DIRS := src
+
+LOCAL_JAR_MANIFEST := etc/manifest.txt
+
+LOCAL_JAVA_LIBRARIES := \
+        sdklib \
+        ant
+
+LOCAL_MODULE := anttasks
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
