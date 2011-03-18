@@ -641,13 +641,16 @@ public class PaletteControl extends Composite {
 
             createDragImage(e);
             if (mImage != null && !mIsPlaceholder) {
-                ImageData data = mImage.getImageData();
+                int imageWidth = mImageLayoutBounds.width;
+                int imageHeight = mImageLayoutBounds.height;
+                assert mImageLayoutBounds.x == 0;
+                assert mImageLayoutBounds.y == 0;
                 LayoutCanvas canvas = mEditor.getCanvasControl();
                 double scale = canvas.getScale();
-                int x = -data.width / 2;
-                int y = -data.height / 2;
-                int width = (int) (data.width / scale);
-                int height = (int) (data.height / scale);
+                int x = -imageWidth / 2;
+                int y = -imageHeight / 2;
+                int width = (int) (imageWidth / scale);
+                int height = (int) (imageHeight / scale);
                 bounds = new Rect(0, 0, width, height);
                 dragBounds = new Rect(x, y, width, height);
             }
@@ -713,8 +716,10 @@ public class PaletteControl extends Composite {
         /** Amount of alpha to multiply into the image (divided by 256) */
         private static final int IMG_ALPHA = 216;
 
-        /** The image shown by the drag source effect */
+        /** The image shown during the drag */
         private Image mImage;
+        /** The non-effect bounds of the drag image */
+        private Rectangle mImageLayoutBounds;
 
         /**
          * If true, the image is a preview of the view, and if not it is a "fallback"
@@ -723,7 +728,14 @@ public class PaletteControl extends Composite {
         private boolean mIsPlaceholder;
 
         private void createDragImage(DragSourceEvent event) {
-            mImage = renderPreview();
+            Pair<Image, Rectangle> preview = renderPreview();
+            if (preview != null) {
+                mImage = preview.getFirst();
+                mImageLayoutBounds = preview.getSecond();
+            } else {
+                mImage = null;
+                mImageLayoutBounds = null;
+            }
 
             mIsPlaceholder = mImage == null;
             if (mIsPlaceholder) {
@@ -769,8 +781,11 @@ public class PaletteControl extends Composite {
             }
         }
 
-        /** Performs the actual rendering of the descriptor into an image */
-        private Image renderPreview() {
+        /**
+         * Performs the actual rendering of the descriptor into an image and returns the
+         * image as well as the layout bounds of the image (not including drop shadow etc)
+         */
+        private Pair<Image, Rectangle> renderPreview() {
             ViewMetadataRepository repository = ViewMetadataRepository.get();
             RenderMode renderMode = repository.getRenderMode(mDesc.getFullClassName());
             if (renderMode == RenderMode.SKIP) {
@@ -922,6 +937,8 @@ public class PaletteControl extends Composite {
                         }
 
                         if (cropped != null) {
+                            int width = initialCrop != null ? initialCrop.w : cropped.getWidth();
+                            int height = initialCrop != null ? initialCrop.h : cropped.getHeight();
                             boolean needsContrast = hasTransparency
                                     && !ImageUtils.containsDarkPixels(cropped);
                             cropped = ImageUtils.createDropShadow(cropped,
@@ -937,7 +954,8 @@ public class PaletteControl extends Composite {
                             Display display = getDisplay();
                             int alpha = (!hasTransparency || !needsContrast) ? IMG_ALPHA : -1;
                             Image swtImage = SwtUtils.convertToSwt(display, cropped, true, alpha);
-                            return swtImage;
+                            Rectangle imageBounds = new Rectangle(0, 0, width, height);
+                            return Pair.of(swtImage, imageBounds);
                         }
                     }
                 }
