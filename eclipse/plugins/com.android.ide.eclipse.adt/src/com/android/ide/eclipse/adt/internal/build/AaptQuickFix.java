@@ -18,10 +18,8 @@ package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
-import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
@@ -89,7 +87,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                 provider.connect(markerResource);
                 IDocument document = provider.getDocument(markerResource);
                 String resource = document.get(start, length);
-                if (ResourceChooser.canCreateResource(resource)) {
+                if (ResourceHelper.canCreateResource(resource)) {
                     return new IMarkerResolution[] {
                         new CreateResourceProposal(project, resource)
                     };
@@ -128,7 +126,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         // we'll make sure that that editor has the same sourceViewer such that
         // we are indeed looking at the right file:
         ISourceViewer sourceViewer = invocationContext.getSourceViewer();
-        AndroidXmlEditor editor = AndroidContentAssist.getAndroidXmlEditor(sourceViewer);
+        AndroidXmlEditor editor = AndroidXmlEditor.getAndroidXmlEditor(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
 
@@ -153,7 +151,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                             String resource = document.get(start, length);
                             // Can only offer create value for non-framework value
                             // resources
-                            if (ResourceChooser.canCreateResource(resource)) {
+                            if (ResourceHelper.canCreateResource(resource)) {
                                 IProject project = editor.getProject();
                                 return new ICompletionProposal[] {
                                     new CreateResourceProposal(project, resource)
@@ -188,7 +186,7 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         }
 
         private void perform() {
-            Pair<ResourceType,String> resource = Hyperlinks.parseResource(mResource);
+            Pair<ResourceType,String> resource = ResourceHelper.parseResource(mResource);
             ResourceType type = resource.getFirst();
             String name = resource.getSecond();
             String value = ""; //$NON-NLS-1$
@@ -206,12 +204,12 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
             }
 
             Pair<IFile, IRegion> location =
-                ResourceChooser.createResource(mProject, type, name, value);
+                ResourceHelper.createResource(mProject, type, name, value);
             if (location != null) {
                 IFile file = location.getFirst();
                 IRegion region = location.getSecond();
                 try {
-                    Hyperlinks.openFile(file, region);
+                    AdtPlugin.openFile(file, region);
                 } catch (PartInitException e) {
                     AdtPlugin.log(e, "Can't open file %1$s", file.getName());
                 }

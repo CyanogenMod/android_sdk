@@ -48,29 +48,4 @@ public class ResourceNameValidatorTest extends TestCase {
         assertTrue(ResourceNameValidator.create(true, ResourceFolderType.LAYOUT)
                 .isValid("foo123_") == null);
     }
-
-    public void testIsFileBasedResourceType() throws Exception {
-        assertTrue(ResourceNameValidator.isFileBasedResourceType(ResourceType.ANIMATOR));
-        assertTrue(ResourceNameValidator.isFileBasedResourceType(ResourceType.LAYOUT));
-
-        assertFalse(ResourceNameValidator.isFileBasedResourceType(ResourceType.STRING));
-        assertFalse(ResourceNameValidator.isFileBasedResourceType(ResourceType.DIMEN));
-        assertFalse(ResourceNameValidator.isFileBasedResourceType(ResourceType.ID));
-
-        // Both:
-        assertTrue(ResourceNameValidator.isFileBasedResourceType(ResourceType.DRAWABLE));
-        assertTrue(ResourceNameValidator.isFileBasedResourceType(ResourceType.COLOR));
-    }
-
-    public void testIsValueBasedResourceType() throws Exception {
-        assertTrue(ResourceNameValidator.isValueBasedResourceType(ResourceType.STRING));
-        assertTrue(ResourceNameValidator.isValueBasedResourceType(ResourceType.DIMEN));
-        assertTrue(ResourceNameValidator.isValueBasedResourceType(ResourceType.ID));
-
-        assertFalse(ResourceNameValidator.isValueBasedResourceType(ResourceType.LAYOUT));
-
-        // These can be both:
-        assertTrue(ResourceNameValidator.isValueBasedResourceType(ResourceType.DRAWABLE));
-        assertTrue(ResourceNameValidator.isValueBasedResourceType(ResourceType.COLOR));
-    }
 }

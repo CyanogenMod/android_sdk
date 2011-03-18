@@ -49,13 +49,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
-import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -126,7 +121,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 
         if (mEditor == null) {
-            mEditor = getAndroidXmlEditor(viewer);
+            mEditor = AndroidXmlEditor.getAndroidXmlEditor(viewer);
             if (mEditor == null) {
                 // This should not happen. Duck and forget.
                 AdtPlugin.log(IStatus.ERROR, "Editor not found during completion");
@@ -900,28 +895,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return mRootDescriptor;
-    }
-
-    /**
-     * Returns the active {@link AndroidXmlEditor} matching this source viewer.
-     */
-    public static AndroidXmlEditor getAndroidXmlEditor(ITextViewer viewer) {
-        IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (wwin != null) {
-            IWorkbenchPage page = wwin.getActivePage();
-            if (page != null) {
-                IEditorPart editor = page.getActiveEditor();
-                if (editor instanceof AndroidXmlEditor) {
-                    ISourceViewer ssviewer =
-                        ((AndroidXmlEditor) editor).getStructuredSourceViewer();
-                    if (ssviewer == viewer) {
-                        return (AndroidXmlEditor) editor;
-                    }
-                }
-            }
-        }
-
-        return null;
     }
 
     /**

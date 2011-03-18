@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.resources.ResourceFolderType;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -31,15 +32,13 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.ide.IDE;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -107,22 +106,19 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
      */
     @Override
     public boolean performFinish() {
-        IFile file = createXmlFile();
-        if (file == null) {
+        Pair<IFile, IRegion> created = createXmlFile();
+        if (created == null) {
             return false;
         } else {
+            IFile file = created.getFirst();
+            IRegion region = created.getSecond();
+
             // Open the file in an editor
-            IWorkbenchWindow win = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-            if (win != null) {
-                IWorkbenchPage page = win.getActivePage();
-                if (page != null) {
-                    try {
-                        IDE.openEditor(page, file);
-                    } catch (PartInitException e) {
-                        AdtPlugin.log(e, "Failed to create %1$s: missing type",  //$NON-NLS-1$
-                                file.getFullPath().toString());
-                    }
-                }
+            try {
+                AdtPlugin.openFile(file, region);
+            } catch (PartInitException e) {
+                AdtPlugin.log(e, "Failed to create %1$s: missing type",  //$NON-NLS-1$
+                        file.getFullPath().toString());
             }
             return true;
         }
@@ -130,7 +126,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
     // -- Custom Methods --
 
-    private IFile createXmlFile() {
+    private Pair<IFile, IRegion> createXmlFile() {
         IFile file = mMainPage.getDestinationFile();
         TypeInfo type = mMainPage.getSelectedType();
         if (type == null) {
@@ -154,7 +150,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
     }
 
     /** Creates a new file using the given root element, namespace and root attributes */
-    private static IFile createXmlFile(IFile file, String xmlns,
+    private static Pair<IFile, IRegion> createXmlFile(IFile file, String xmlns,
             String root, String rootAttributes) {
         String name = file.getFullPath().toString();
         boolean need_delete = false;
@@ -183,6 +179,12 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         }
 
         sb.append(">\n");                            //$NON-NLS-1$
+
+        // The insertion line
+        sb.append("    ");                           //$NON-NLS-1$
+        int caretOffset = sb.length();
+        sb.append("\n");                             //$NON-NLS-1$
+
         sb.append("</").append(root).append(">\n");  //$NON-NLS-1$ //$NON-NLS-2$
 
         String result = sb.toString();
@@ -194,7 +196,8 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
                 file.delete(IResource.KEEP_HISTORY | IResource.FORCE, null /*monitor*/);
             }
             file.create(stream, true /*force*/, null /*progress*/);
-            return file;
+            IRegion region = new Region(caretOffset, 0);
+            return Pair.of(file, region);
         } catch (UnsupportedEncodingException e) {
             error = e.getMessage();
         } catch (CoreException e) {
@@ -227,7 +230,8 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
      * @param folderType the type of folder to look up a template for
      * @return the created file
      */
-    public static IFile createXmlFile(IProject project, IFile file, ResourceFolderType folderType) {
+    public static Pair<IFile, IRegion> createXmlFile(IProject project, IFile file,
+            ResourceFolderType folderType) {
         TypeInfo type = NewXmlFileCreationPage.getTypeInfo(folderType);
         String xmlns = type.getXmlns();
         String root = type.getDefaultRoot();

@@ -23,7 +23,6 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
@@ -34,7 +33,6 @@ import org.eclipse.jface.dialogs.IInputValidator;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -143,7 +141,7 @@ public class ResourceNameValidator implements IInputValidator {
      */
     public static ResourceNameValidator create(boolean allowXmlExtension, Set<String> existing,
             ResourceType type) {
-        boolean isFileType = isFileBasedResourceType(type);
+        boolean isFileType = ResourceHelper.isFileBasedResourceType(type);
         return new ResourceNameValidator(allowXmlExtension, existing, isFileType);
     }
 
@@ -166,54 +164,7 @@ public class ResourceNameValidator implements IInputValidator {
             existing.add(item.getName());
         }
 
-        boolean isFileType = isFileBasedResourceType(type);
+        boolean isFileType = ResourceHelper.isFileBasedResourceType(type);
         return new ResourceNameValidator(allowXmlExtension, existing, isFileType);
-    }
-
-    /**
-     * Is this a resource that is defined in a file named by the resource plus the XML
-     * extension?
-     * <p>
-     * Some resource types can be defined <b>both</b> as a separate XML file as well as
-     * defined within a value XML file along with other properties. This method will
-     * return true for these resource types as well. In other words, a ResourceType can
-     * return true for both {@link #isValueBasedResourceType} and
-     * {@link #isFileBasedResourceType}.
-     *
-     * @param type the resource type to check
-     * @return true if the given resource type is stored in a file named by the resource
-     */
-    public static boolean isFileBasedResourceType(ResourceType type) {
-        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
-        for (ResourceFolderType folderType : folderTypes) {
-            if (folderType != ResourceFolderType.VALUES) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Is this a resource that can be defined in any file within the "values" folder?
-     * <p>
-     * Some resource types can be defined <b>both</b> as a separate XML file as well
-     * as defined within a value XML file. This method will return true for these types
-     * as well. In other words, a ResourceType can return true for both
-     * {@link #isValueBasedResourceType} and {@link #isFileBasedResourceType}.
-     *
-     * @param type the resource type to check
-     * @return true if the given resource type can be represented as a value under the
-     *         values/ folder
-     */
-    public static boolean isValueBasedResourceType(ResourceType type) {
-        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
-        for (ResourceFolderType folderType : folderTypes) {
-            if (folderType == ResourceFolderType.VALUES) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

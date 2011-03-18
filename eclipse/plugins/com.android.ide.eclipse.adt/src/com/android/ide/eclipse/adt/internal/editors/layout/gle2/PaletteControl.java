@@ -31,6 +31,7 @@ import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -50,7 +51,6 @@ import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.ui.IDecorContent;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -571,7 +571,7 @@ public class PaletteControl extends Composite {
                     @Override
                     public void mouseDown(MouseEvent e) {
                         if ((e.stateMask & SWT.MOD1) != 0) {
-                            Hyperlinks.openJavaClass(mEditor.getProject(), fqcn);
+                            AdtPlugin.openJavaClass(mEditor.getProject(), fqcn);
                         }
                     }
                 });
