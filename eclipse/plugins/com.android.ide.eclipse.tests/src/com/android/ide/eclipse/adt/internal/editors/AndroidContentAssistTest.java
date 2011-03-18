@@ -372,15 +372,7 @@ public class AndroidContentAssistTest extends AdtProjectTest {
             AndroidContentAssist assist) throws Exception {
 
         // Determine the offset
-        String fileContent = AdtPlugin.readFile(file);
-        int caretDelta = caretLocation.indexOf(CARET);
-        assertTrue(caretLocation, caretDelta != -1);
-        String caretContext = caretLocation.substring(0, caretDelta)
-            + caretLocation.substring(caretDelta + CARET.length());
-        int caretContextIndex = fileContent.indexOf(caretContext);
-        assertTrue("Caret content " + caretContext + " not found in file",
-                caretContextIndex != -1);
-        int offset = caretContextIndex + caretDelta;
+        int offset = getCaretOffset(file, caretLocation);
 
         // Open file
         IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();

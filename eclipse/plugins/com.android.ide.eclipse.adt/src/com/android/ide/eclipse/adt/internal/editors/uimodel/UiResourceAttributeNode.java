@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
 import com.android.ide.common.api.IAttributeInfo;
@@ -71,9 +72,6 @@ import java.util.regex.Pattern;
  * See {@link UiTextAttributeNode} for more information.
  */
 public class UiResourceAttributeNode extends UiTextAttributeNode {
-    /** The resource prefix @android: */
-    private static final String ANDROID_RESOURCE_PREFIX = '@' + ANDROID_PKG + ':';
-
     private ResourceType mType;
 
     public UiResourceAttributeNode(ResourceType type,
@@ -256,7 +254,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
 
             for (ResourceType resType : resTypes) {
                 if (isSystem) {
-                    results.add(ANDROID_RESOURCE_PREFIX + resType.getName() + '/');
+                    results.add(PREFIX_ANDROID_RESOURCE_REF + resType.getName() + '/');
                 } else {
                     results.add('@' + resType.getName() + '/');
                 }
@@ -270,7 +268,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             // "@an" we offer to complete it.
             if (prefix == null ||
                     ANDROID_PKG.regionMatches(0, prefix, 1, prefix.length() - 1)) {
-                results.add(ANDROID_RESOURCE_PREFIX);
+                results.add(PREFIX_ANDROID_RESOURCE_REF);
             }
         } else if (repository != null) {
             // We have a style name and a repository. Find all resources that match this
@@ -326,7 +324,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
 
     /** Compute a suitable sorting score for the given  */
     private static final int score(IAttributeInfo attributeInfo, String value) {
-        if (value.equals(ANDROID_RESOURCE_PREFIX)) {
+        if (value.equals(PREFIX_ANDROID_RESOURCE_REF)) {
             return -1;
         }
 
@@ -357,7 +355,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                     return -2;
                 }
 
-                if (value.startsWith(ANDROID_RESOURCE_PREFIX + type + '/')) {
+                if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
                     return -2;
                 }
             }
@@ -380,7 +378,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
                 return -2;
             }
 
-            if (value.startsWith(ANDROID_RESOURCE_PREFIX + type + '/')) {
+            if (value.startsWith(PREFIX_ANDROID_RESOURCE_REF + type + '/')) {
                 return -2;
             }
         }

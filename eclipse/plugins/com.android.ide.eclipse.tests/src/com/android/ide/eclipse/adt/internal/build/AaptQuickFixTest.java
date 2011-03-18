@@ -72,15 +72,8 @@ public class AaptQuickFixTest extends AdtProjectTest {
         IFile file = getTestDataFile(project, name, FD_RES + "/" + FD_RES_LAYOUT + "/" + name);
 
         // Determine the offset
-        String fileContent = AdtPlugin.readFile(file);
-        int caretDelta = caretLocation.indexOf("^");
-        assertTrue(caretLocation, caretDelta != -1);
-        String caretContext = caretLocation.substring(0, caretDelta)
-                + caretLocation.substring(caretDelta + "^".length());
-        int caretContextIndex = fileContent.indexOf(caretContext);
-        assertTrue("Caret content " + caretContext + " not found in file",
-                caretContextIndex != -1);
-        final int offset = caretContextIndex + caretDelta;
+        final int offset = getCaretOffset(file, caretLocation);
+
 
         // Run AaptParser such that markers are added...
         // When debugging these tests, the project gets a chance to build itself so
@@ -162,6 +155,7 @@ public class AaptQuickFixTest extends AdtProjectTest {
         assertTrue(proposal.getDisplayString().contains("Create resource"));
 
         IDocument document = new Document();
+        String fileContent = AdtPlugin.readFile(file);
         document.set(fileContent);
 
         // Apply quick fix

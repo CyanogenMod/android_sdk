@@ -29,11 +29,11 @@ import java.util.Map;
 public class ResourceResolver extends RenderResources {
 
     private final static String REFERENCE_STYLE = ResourceType.STYLE.getName() + "/";
-    private final static String PREFIX_ANDROID_RESOURCE_REF = "@android:";
-    private final static String PREFIX_RESOURCE_REF = "@";
-    private final static String PREFIX_ANDROID_THEME_REF = "?android:";
-    private final static String PREFIX_THEME_REF = "?";
-    private final static String PREFIX_ANDROID = "android:";
+    public final static String PREFIX_ANDROID_RESOURCE_REF = "@android:";
+    public final static String PREFIX_RESOURCE_REF = "@";
+    public final static String PREFIX_ANDROID_THEME_REF = "?android:";
+    public final static String PREFIX_THEME_REF = "?";
+    public final static String PREFIX_ANDROID = "android:";
 
 
     private final Map<ResourceType, Map<String, ResourceValue>> mProjectResources;
