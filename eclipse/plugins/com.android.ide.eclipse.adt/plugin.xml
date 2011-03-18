@@ -489,9 +489,6 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
             name="Android Manifest Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.export.ExportEditor"
@@ -508,9 +505,6 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.resources.ResourcesEditor"
             name="Android Resource Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor"
@@ -521,9 +515,6 @@
             id="com.android.ide.eclipse.editors.layout.LayoutEditor"
             matchingStrategy="com.android.ide.eclipse.adt.internal.editors.layout.MatchingStrategy"
             name="Android Layout Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor"
@@ -532,9 +523,6 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.menu.MenuEditor"
             name="Android Menu Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor"
@@ -543,9 +531,6 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.xml.XmlEditor"
             name="Android Xml Resources Editor">
-         <contentTypeBinding
-               contentTypeId="org.eclipse.core.runtime.xml">
-         </contentTypeBinding>
       </editor>
       <editor
             class="com.android.ide.eclipse.adt.internal.editors.binaryxml.BinaryXMLMultiPageEditorPart"
