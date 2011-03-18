@@ -96,7 +96,7 @@ public class AaptQuickFixTest extends AdtProjectTest {
         String filePath = osRoot + File.separator + fileRelativePath;
         errors.add(filePath + ":7: error: Error: No resource found that matches the given name"
                 + " (at 'text' with value '@string/firststring').");
-        errors.add(filePath + ":9: error: Error: No resource found that matches the given name"
+        errors.add(filePath + ":7: error: Error: No resource found that matches the given name"
                 + " (at 'layout_width' with value '@dimen/testdimen').");
         errors.add(filePath + ":13: error: Error: No resource found that matches the given name"
                 + " (at 'layout' with value '@layout/testlayout').");

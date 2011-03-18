@@ -139,26 +139,25 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                 // Look for a match on the same line as the caret.
                 int offset = invocationContext.getOffset();
                 IDocument document = sourceViewer.getDocument();
-                int currentLine = document.getLineOfOffset(offset) + 1;
+                IRegion lineInfo = document.getLineInformationOfOffset(offset);
+                int lineStart = lineInfo.getOffset();
+                int lineEnd = lineStart + lineInfo.getLength();
 
                 for (IMarker marker : markers) {
-                    int line = marker.getAttribute(IMarker.LINE_NUMBER, -1);
-                    if (line == currentLine) {
-                        String message = marker.getAttribute(IMarker.MESSAGE, ""); //$NON-NLS-1$
-                        if (message.contains(getTargetMarkerErrorMessage())) {
-                            int start = marker.getAttribute(IMarker.CHAR_START, 0);
-                            int end = marker.getAttribute(IMarker.CHAR_END, 0);
-                            if (end > start) {
-                                int length = end - start;
-                                String resource = document.get(start, length);
-                                // Can only offer create value for non-framework value
-                                // resources
-                                if (ResourceChooser.canCreateResource(resource)) {
-                                    IProject project = editor.getProject();
-                                    return new ICompletionProposal[] {
-                                        new CreateResourceProposal(project, resource)
-                                    };
-                                }
+                    String message = marker.getAttribute(IMarker.MESSAGE, ""); //$NON-NLS-1$
+                    if (message.contains(getTargetMarkerErrorMessage())) {
+                        int start = marker.getAttribute(IMarker.CHAR_START, 0);
+                        int end = marker.getAttribute(IMarker.CHAR_END, 0);
+                        if (start >= lineStart && start <= lineEnd && end > start) {
+                            int length = end - start;
+                            String resource = document.get(start, length);
+                            // Can only offer create value for non-framework value
+                            // resources
+                            if (ResourceChooser.canCreateResource(resource)) {
+                                IProject project = editor.getProject();
+                                return new ICompletionProposal[] {
+                                    new CreateResourceProposal(project, resource)
+                                };
                             }
                         }
                     }
