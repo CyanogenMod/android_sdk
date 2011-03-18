@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
-import com.android.ide.eclipse.adt.internal.resources.configurations.FolderConfiguration;
-import com.android.ide.eclipse.adt.internal.resources.configurations.ResourceQualifier;
+import com.android.ide.common.resources.ResourceDeltaKind;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.resources.configuration.ResourceQualifier;
 
 import org.eclipse.core.resources.IResourceDelta;
 

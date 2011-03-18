@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
+import com.android.ide.common.resources.ResourceFile;
+import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 

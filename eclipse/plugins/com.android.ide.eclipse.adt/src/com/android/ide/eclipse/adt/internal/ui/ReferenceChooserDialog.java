@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
+import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IProject;

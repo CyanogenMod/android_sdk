@@ -18,9 +18,9 @@ package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
+import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceItem;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.FolderTypeRelationship;

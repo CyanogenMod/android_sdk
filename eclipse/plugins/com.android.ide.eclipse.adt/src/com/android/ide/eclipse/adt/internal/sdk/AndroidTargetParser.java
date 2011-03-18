@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.platform.AttrsXmlParser;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.common.resources.platform.ViewClassInfo;
@@ -26,7 +27,6 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.Android
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceRepository;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
