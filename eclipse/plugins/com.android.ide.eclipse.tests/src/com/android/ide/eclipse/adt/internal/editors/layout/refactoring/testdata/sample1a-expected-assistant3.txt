@@ -1,0 +1,2 @@
+Quick assistant in sample1a.xml for <Button andr^oid:text="FirstButton":
+None found.

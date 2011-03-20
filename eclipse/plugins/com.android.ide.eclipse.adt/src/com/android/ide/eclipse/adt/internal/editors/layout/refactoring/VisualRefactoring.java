@@ -1218,6 +1218,9 @@ public abstract class VisualRefactoring extends Refactoring {
         return null;
     }
 
+    /** Create a wizard for this refactoring */
+    abstract VisualRefactoringWizard createWizard();
+
     public abstract static class VisualRefactoringDescriptor extends RefactoringDescriptor {
         private final Map<String, String> mArguments;
 

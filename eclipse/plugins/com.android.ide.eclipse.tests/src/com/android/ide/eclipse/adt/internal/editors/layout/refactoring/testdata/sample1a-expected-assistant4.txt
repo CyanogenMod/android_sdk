@@ -1,0 +1,2 @@
+Quick assistant in sample1a.xml for android:id="@+id/Linea^rLayout2":
+None found.
