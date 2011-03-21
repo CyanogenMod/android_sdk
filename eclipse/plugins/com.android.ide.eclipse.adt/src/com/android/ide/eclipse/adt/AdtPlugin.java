@@ -29,7 +29,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -1819,8 +1818,18 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * @throws PartInitException if something goes wrong
      */
     public static void openFile(IFile file, IRegion region) throws PartInitException {
-        IEditorPart sourceEditor = Hyperlinks.getEditor();
-        IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        if (workbench == null) {
+            return;
+        }
+        IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return;
+        }
+        IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
+        if (page == null) {
+            return;
+        }
         IEditorPart targetEditor = IDE.openEditor(page, file, true);
         if (targetEditor instanceof AndroidXmlEditor) {
             AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
