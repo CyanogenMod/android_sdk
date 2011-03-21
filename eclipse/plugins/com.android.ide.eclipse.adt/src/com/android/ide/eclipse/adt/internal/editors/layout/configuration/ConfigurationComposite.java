@@ -48,6 +48,7 @@ import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
+import com.android.resources.ScreenSize;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.util.Pair;
@@ -71,6 +72,7 @@ import org.eclipse.swt.widgets.Label;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -767,6 +769,26 @@ public class ConfigurationComposite extends Composite {
         }
     }
 
+    private static class ConfigMatch {
+        final FolderConfiguration testConfig;
+        final LayoutDevice device;
+        final String name;
+        final ConfigBundle bundle;
+
+        public ConfigMatch(FolderConfiguration testConfig,
+                LayoutDevice device, String name, ConfigBundle bundle) {
+            this.testConfig = testConfig;
+            this.device = device;
+            this.name = name;
+            this.bundle = bundle;
+        }
+
+        @Override
+        public String toString() {
+            return device.getName() + " - " + name;
+        }
+    }
+
     /**
      * Finds a device/config that can display {@link #mEditedConfig}.
      * <p/>Once found the device and config combos are set to the config.
@@ -775,23 +797,19 @@ public class ConfigurationComposite extends Composite {
      * the current config. This must only be true if the current config is compatible.
      */
     private void findAndSetCompatibleConfig(boolean favorCurrentConfig) {
-        LayoutDevice anyDeviceMatch = null; // a compatible device/config/locale
-        String anyConfigMatchName = null;
-        ConfigBundle anyConfigBundle = null;
+        // list of compatible device/config/locale
+        List<ConfigMatch> anyMatches = new ArrayList<ConfigMatch>();
 
-        LayoutDevice bestDeviceMatch = null; // an actual best match
-        String bestConfigMatchName = null;
-        ConfigBundle bestConfigBundle = null;
-
-        FolderConfiguration testConfig = new FolderConfiguration();
+        // list of actual best match (ie the file is a best match for the device/config)
+        List<ConfigMatch> bestMatches = new ArrayList<ConfigMatch>();
 
         // get a locale that match the host locale roughly (may not be exact match on the region.)
         int localeHostMatch = getLocaleMatch();
 
         // build a list of combinations of non standard qualifiers to add to each device's
         // qualifier set when testing for a match.
-        // These qualifiers are: locale, nightmode, car dock.
-        List<ConfigBundle> addConfig = new ArrayList<ConfigBundle>();
+        // These qualifiers are: locale, night-mode, car dock.
+        List<ConfigBundle> configBundles = new ArrayList<ConfigBundle>(200);
 
         // If the edited file has locales, then we have to select a matching locale from
         // the list.
@@ -816,48 +834,44 @@ public class ConfigurationComposite extends Composite {
             bundle.config.setRegionQualifier((RegionQualifier) l[LOCALE_REGION]);
 
             bundle.localeIndex = i;
-            addConfig.add(bundle);
+            configBundles.add(bundle);
         }
 
         // add the dock mode to the bundle combinations.
-        addDockModeToBundles(addConfig);
+        addDockModeToBundles(configBundles);
 
         // add the night mode to the bundle combinations.
-        addNightModeToBundles(addConfig);
+        addNightModeToBundles(configBundles);
 
-        mainloop: for (LayoutDevice device : mDeviceList) {
+        for (LayoutDevice device : mDeviceList) {
             for (DeviceConfig config : device.getConfigs()) {
 
-                // loop on the list of qualifier adds
-                for (ConfigBundle bundle : addConfig) {
-                    // set the base config. This erase all data in testConfig.
+                // loop on the list of config bundles to create full configurations.
+                for (ConfigBundle bundle : configBundles) {
+                    // create a new config with device config
+                    FolderConfiguration testConfig = new FolderConfiguration();
                     testConfig.set(config.getConfig());
 
-                    // add on top of it, the extra qualifiers
+                    // add on top of it, the extra qualifiers from the bundle
                     testConfig.add(bundle.config);
 
                     if (mEditedConfig.isMatchFor(testConfig)) {
                         // this is a basic match. record it in case we don't find a match
                         // where the edited file is a best config.
-                        if (anyDeviceMatch == null) {
-                            anyDeviceMatch = device;
-                            anyConfigMatchName = config.getName();
-                            anyConfigBundle = bundle;
-                        }
+                        anyMatches.add(new ConfigMatch(testConfig, device, config.getName(),
+                                bundle));
 
                         if (isCurrentFileBestMatchFor(testConfig)) {
                             // this is what we want.
-                            bestDeviceMatch = device;
-                            bestConfigMatchName = config.getName();
-                            bestConfigBundle = bundle;
-                            break mainloop;
+                            bestMatches.add(new ConfigMatch(testConfig, device, config.getName(),
+                                    bundle));
                         }
                     }
                 }
             }
         }
 
-        if (bestDeviceMatch == null) {
+        if (bestMatches.size() == 0) {
             if (favorCurrentConfig) {
                 // quick check
                 if (mEditedConfig.isMatchFor(mCurrentConfig) == false) {
@@ -873,13 +887,14 @@ public class ConfigurationComposite extends Composite {
                         String.format(
                                 "Displaying it with '%1$s'",
                                 mCurrentConfig.toDisplayString()));
-            } else if (anyDeviceMatch != null) {
-                // select the device anyway.
-                selectDevice(mState.device = anyDeviceMatch);
-                fillConfigCombo(anyConfigMatchName);
-                mLocaleCombo.select(anyConfigBundle.localeIndex);
-                mDockCombo.select(anyConfigBundle.dockModeIndex);
-                mNightCombo.select(anyConfigBundle.nightModeIndex);
+            } else if (anyMatches.size() > 0) {
+                // select the best device anyway.
+                ConfigMatch match = selectConfigMatch(anyMatches);
+                selectDevice(mState.device = match.device);
+                fillConfigCombo(match.name);
+                mLocaleCombo.select(match.bundle.localeIndex);
+                mDockCombo.select(match.bundle.dockModeIndex);
+                mNightCombo.select(match.bundle.nightModeIndex);
 
                 // TODO: display a better warning!
                 computeCurrentConfig();
@@ -897,12 +912,108 @@ public class ConfigurationComposite extends Composite {
                 // and replace whatever qualifier required by the layout file.
             }
         } else {
-            selectDevice(mState.device = bestDeviceMatch);
-            fillConfigCombo(bestConfigMatchName);
-            mLocaleCombo.select(bestConfigBundle.localeIndex);
-            mDockCombo.select(bestConfigBundle.dockModeIndex);
-            mNightCombo.select(bestConfigBundle.nightModeIndex);
+            ConfigMatch match = selectConfigMatch(bestMatches);
+            selectDevice(mState.device = match.device);
+            fillConfigCombo(match.name);
+            mLocaleCombo.select(match.bundle.localeIndex);
+            mDockCombo.select(match.bundle.dockModeIndex);
+            mNightCombo.select(match.bundle.nightModeIndex);
         }
+    }
+
+    /**
+     * Note: this comparator imposes orderings that are inconsistent with equals.
+     */
+    private static class TabletConfigComparator implements Comparator<ConfigMatch> {
+        public int compare(ConfigMatch o1, ConfigMatch o2) {
+            ScreenSize ss1 = o1.testConfig.getScreenSizeQualifier().getValue();
+            ScreenSize ss2 = o2.testConfig.getScreenSizeQualifier().getValue();
+
+            // X-LARGE is better than all others (which are considered identical)
+            // if both X-LARGE, then LANDSCAPE is better than all others (which are identical)
+
+            if (ss1 == ScreenSize.XLARGE) {
+                if (ss2 == ScreenSize.XLARGE) {
+                    ScreenOrientation so1 =
+                        o1.testConfig.getScreenOrientationQualifier().getValue();
+                    ScreenOrientation so2 =
+                        o2.testConfig.getScreenOrientationQualifier().getValue();
+
+                    if (so1 == ScreenOrientation.LANDSCAPE) {
+                        if (so2 == ScreenOrientation.LANDSCAPE) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    } else if (so2 == ScreenOrientation.LANDSCAPE) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                } else {
+                    return -1;
+                }
+            } else if (ss2 == ScreenSize.XLARGE) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * Note: this comparator imposes orderings that are inconsistent with equals.
+     */
+    private static class PhoneConfigComparator implements Comparator<ConfigMatch> {
+        public int compare(ConfigMatch o1, ConfigMatch o2) {
+            int dpi1 = Density.DEFAULT_DENSITY;
+            if (o1.testConfig.getPixelDensityQualifier() != null) {
+                dpi1 = o1.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+            }
+
+            int dpi2 = Density.DEFAULT_DENSITY;
+            if (o2.testConfig.getPixelDensityQualifier() != null) {
+                dpi2 = o2.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+            }
+
+            if (dpi1 == dpi2) {
+                // portrait is better
+                ScreenOrientation so1 =
+                    o1.testConfig.getScreenOrientationQualifier().getValue();
+                ScreenOrientation so2 =
+                    o2.testConfig.getScreenOrientationQualifier().getValue();
+
+                if (so1 == ScreenOrientation.PORTRAIT) {
+                    if (so2 == ScreenOrientation.PORTRAIT) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                } else if (so2 == ScreenOrientation.PORTRAIT) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+
+            return dpi1 - dpi2;
+        }
+    }
+
+    private ConfigMatch selectConfigMatch(List<ConfigMatch> matches) {
+        // API 11+ : look for a x-large device.
+        if (mProjectTarget.getVersion().getApiLevel() >= 11) {
+            // TODO: Revisit this once phones can run higher APIs.
+            // Maybe check the compatible-screen tag in the manifest to figure out what kind of
+            // device should be used for display.
+            Collections.sort(matches, new TabletConfigComparator());
+        } else {
+            // lets look for a high density device
+            Collections.sort(matches, new PhoneConfigComparator());
+        }
+
+        // the list has been sorted so that the first item is the best config
+        return matches.get(0);
     }
 
     private void addDockModeToBundles(List<ConfigBundle> addConfig) {
