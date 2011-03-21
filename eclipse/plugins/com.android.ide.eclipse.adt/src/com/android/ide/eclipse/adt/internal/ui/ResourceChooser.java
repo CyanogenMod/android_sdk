@@ -16,41 +16,24 @@
 
 package com.android.ide.eclipse.adt.internal.ui;
 
-import static com.android.AndroidConstants.FD_RES_VALUES;
-import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
-import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
-import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
-import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.VisualRefactoring;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
-import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
-import com.android.resources.FolderTypeRelationship;
-import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.Region;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
@@ -70,21 +53,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.AbstractElementListSelectionDialog;
 import org.eclipse.ui.dialogs.SelectionStatusDialog;
-import org.eclipse.wst.sse.core.StructuredModelManager;
-import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
-import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
-import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
-import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
-import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -94,7 +63,6 @@ import java.util.regex.Pattern;
 /**
  * A dialog to let the user select a resource based on a resource type.
  */
-@SuppressWarnings("restriction") // XML model
 public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     private Pattern mProjectResourcePattern;
@@ -226,7 +194,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         mNewButton.setText(title);
 
         // We only support adding new values right now
-        mNewButton.setEnabled(ResourceNameValidator.isValueBasedResourceType(mResourceType));
+        mNewButton.setEnabled(ResourceHelper.isValueBasedResourceType(mResourceType));
 
         mNewButton.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -236,7 +204,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 if (mResourceType == ResourceType.STRING) {
                     createNewString();
                 } else {
-                    assert ResourceNameValidator.isValueBasedResourceType(mResourceType);
+                    assert ResourceHelper.isValueBasedResourceType(mResourceType);
                     String newName = createNewValue(mResourceType);
                     if (newName != null) {
                         // Recompute the "current resource" to select the new id
@@ -285,190 +253,11 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             return null;
         }
 
-        Pair<IFile, IRegion> resource = createResource(mProject, type, name, value);
+        Pair<IFile, IRegion> resource = ResourceHelper.createResource(mProject, type, name, value);
         if (resource != null) {
             return name;
         }
 
-        return null;
-    }
-
-    /**
-     * Returns true if this class can create the given resource
-     *
-     * @param resource the resource to be created
-     * @return true if the {@link #createResource} method can create this resource
-     */
-    public static boolean canCreateResource(String resource) {
-        // Cannot create framework resources
-        if (resource.startsWith('@' + ANDROID_PKG + ':')) {
-            return false;
-        }
-
-        Pair<ResourceType,String> parsed = Hyperlinks.parseResource(resource);
-        if (parsed != null) {
-            // We can create all value types
-            ResourceType type = parsed.getFirst();
-            if (ResourceNameValidator.isValueBasedResourceType(type)) {
-                return true;
-            }
-
-            // We can create -some- file-based types - those supported by the New XML wizard:
-
-            for (ResourceFolderType folderType : FolderTypeRelationship.getRelatedFolders(type)) {
-                if (NewXmlFileWizard.canCreateXmlFile(folderType)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /** Creates a file-based resource, like a layout */
-    private static Pair<IFile,IRegion> createFileResource(IProject project, ResourceType type,
-            String name) {
-
-        ResourceFolderType folderType = null;
-        for (ResourceFolderType f : FolderTypeRelationship.getRelatedFolders(type)) {
-            if (NewXmlFileWizard.canCreateXmlFile(f)) {
-                folderType = f;
-                break;
-            }
-        }
-        if (folderType == null) {
-            return null;
-        }
-
-        // Find "dimens.xml" file in res/values/ (or corresponding name for other
-        // value types)
-        IPath projectPath = new Path(FD_RESOURCES + WS_SEP + folderType.getName() + WS_SEP
-            + name + '.' + EXT_XML);
-        IFile file = project.getFile(projectPath);
-        IRegion region = new Region(0, 0);
-        return Pair.of(NewXmlFileWizard.createXmlFile(project, file, folderType), region);
-    }
-
-    /**
-     * Creates a resource of a given type, name and (if applicable) value
-     *
-     * @param project the project to contain the resource
-     * @param type the type of resource
-     * @param name the name of the resource
-     * @param value the value of the resource, if it is a value-type resource
-     * @return a pair of the file containing the resource and a region where the value
-     *         appears
-     */
-    public static Pair<IFile,IRegion> createResource(IProject project, ResourceType type,
-            String name, String value) {
-        if (!ResourceNameValidator.isValueBasedResourceType(type)) {
-            return createFileResource(project, type, name);
-        }
-
-        // Find "dimens.xml" file in res/values/ (or corresponding name for other
-        // value types)
-        String fileName = type.getName() + 's';
-        String projectPath = FD_RESOURCES + WS_SEP + FD_RES_VALUES + WS_SEP
-            + fileName + '.' + EXT_XML;
-        Object editRequester = project;
-        IResource member = project.findMember(projectPath);
-        if (member != null) {
-            if (member instanceof IFile) {
-                IFile file = (IFile) member;
-                // File exists: Must add item to the XML
-                IModelManager manager = StructuredModelManager.getModelManager();
-                IStructuredModel model = null;
-                try {
-                    model = manager.getExistingModelForEdit(file);
-                    if (model == null) {
-                        model = manager.getModelForEdit(file);
-                    }
-                    if (model instanceof IDOMModel) {
-                        model.beginRecording(editRequester, String.format("Add %1$s",
-                                type.getDisplayName()));
-                        IDOMModel domModel = (IDOMModel) model;
-                        Document document = domModel.getDocument();
-                        Element root = document.getDocumentElement();
-                        IStructuredDocument structuredDocument = model.getStructuredDocument();
-                        Node lastElement = null;
-                        NodeList childNodes = root.getChildNodes();
-                        String indent = null;
-                        for (int i = childNodes.getLength() - 1; i >= 0; i--) {
-                            Node node = childNodes.item(i);
-                            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                                lastElement = node;
-                                indent = AndroidXmlEditor.getIndent(structuredDocument, node);
-                                break;
-                            }
-                        }
-                        if (indent == null || indent.length() == 0) {
-                            indent = "    "; //$NON-NLS-1$
-                        }
-                        Node nextChild = lastElement != null ? lastElement.getNextSibling() : null;
-                        Text indentNode = document.createTextNode('\n' + indent);
-                        root.insertBefore(indentNode, nextChild);
-                        Element element = document.createElement(Hyperlinks.getTagName(type));
-                        element.setAttribute(NAME_ATTR, name);
-                        root.insertBefore(element, nextChild);
-                        Text valueNode = document.createTextNode(value);
-                        element.appendChild(valueNode);
-                        model.save();
-                        IndexedRegion domRegion = VisualRefactoring.getRegion(valueNode);
-                        int startOffset = domRegion.getStartOffset();
-                        int length = domRegion.getLength();
-                        IRegion region = new Region(startOffset, length);
-                        return Pair.of(file, region);
-                    }
-                } catch (Exception e) {
-                    AdtPlugin.log(e, "Cannot access XML value model");
-                } finally {
-                    if (model != null) {
-                        model.endRecording(editRequester);
-                        model.releaseFromEdit();
-                    }
-                }
-            }
-
-            return null;
-        } else {
-            // No such file exists: just create it
-            String prolog = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"; //$NON-NLS-1$
-            StringBuilder sb = new StringBuilder(prolog);
-
-            String root = ResourcesDescriptors.ROOT_ELEMENT;
-            sb.append('<').append(root).append('>').append('\n');
-            sb.append("    "); //$NON-NLS-1$
-            sb.append('<');
-            sb.append(type.getName());
-            sb.append(" name=\""); //$NON-NLS-1$
-            sb.append(name);
-            sb.append('"');
-            sb.append('>');
-            int start = sb.length();
-            sb.append(value);
-            int end = sb.length();
-            sb.append('<').append('/');
-            sb.append(type.getName());
-            sb.append(">\n");                            //$NON-NLS-1$
-            sb.append('<').append('/').append(root).append('>').append('\n');
-            String result = sb.toString();
-            String error = null;
-            try {
-                byte[] buf = result.getBytes("UTF8");    //$NON-NLS-1$
-                InputStream stream = new ByteArrayInputStream(buf);
-                IFile file = project.getFile(new Path(projectPath));
-                file.create(stream, true /*force*/, null /*progress*/);
-                IRegion region = new Region(start, end - start);
-                return Pair.of(file, region);
-            } catch (UnsupportedEncodingException e) {
-                error = e.getMessage();
-            } catch (CoreException e) {
-                error = e.getMessage();
-            }
-
-            error = String.format("Failed to generate %1$s: %2$s", name, error);
-            AdtPlugin.displayError("New Android XML File", error);
-        }
         return null;
     }
 

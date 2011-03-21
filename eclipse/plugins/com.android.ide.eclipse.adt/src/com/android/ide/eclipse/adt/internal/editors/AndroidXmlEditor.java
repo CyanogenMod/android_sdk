@@ -40,6 +40,7 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Display;
@@ -49,7 +50,9 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.forms.IManagedForm;
@@ -616,7 +619,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                         getEditorInput() == null ? "null" : getEditorInput().toString()
                         );
 
-                org.eclipse.core.runtime.IAdaptable adaptable= (org.eclipse.core.runtime.IAdaptable) getEditorInput();
+                org.eclipse.core.runtime.IAdaptable adaptable= getEditorInput();
                 IFile file1 = (IFile)adaptable.getAdapter(IFile.class);
                 org.eclipse.core.runtime.IPath location= file1.getFullPath();
                 org.eclipse.core.resources.IWorkspaceRoot workspaceRoot= ResourcesPlugin.getWorkspace().getRoot();
@@ -1193,6 +1196,32 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         }
 
         return ""; //$NON-NLS-1$
+    }
+
+    /**
+     * Returns the active {@link AndroidXmlEditor}, provided it matches the given source
+     * viewer
+     *
+     * @param viewer the source viewer to ensure the active editor is associated with
+     * @return the active editor provided it matches the given source viewer
+     */
+    public static AndroidXmlEditor getAndroidXmlEditor(ITextViewer viewer) {
+        IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (wwin != null) {
+            IWorkbenchPage page = wwin.getActivePage();
+            if (page != null) {
+                IEditorPart editor = page.getActiveEditor();
+                if (editor instanceof AndroidXmlEditor) {
+                    ISourceViewer ssviewer =
+                        ((AndroidXmlEditor) editor).getStructuredSourceViewer();
+                    if (ssviewer == viewer) {
+                        return (AndroidXmlEditor) editor;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

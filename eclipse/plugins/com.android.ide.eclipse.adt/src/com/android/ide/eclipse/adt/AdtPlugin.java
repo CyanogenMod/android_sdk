@@ -23,11 +23,13 @@ import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor;
+import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -64,10 +66,14 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Color;
@@ -79,7 +85,10 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleConstants;
@@ -1751,5 +1760,75 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     public void warning(String format, Object... args) {
         log(IStatus.WARNING, format, args);
+    }
+
+    /**
+     * Opens the given URL in a browser tab
+     *
+     * @param url the URL to open in a browser
+     */
+    public static void openUrl(URL url) {
+        IWorkbenchBrowserSupport support = PlatformUI.getWorkbench().getBrowserSupport();
+        IWebBrowser browser;
+        try {
+            browser = support.createBrowser(PLUGIN_ID);
+            browser.openURL(url);
+        } catch (PartInitException e) {
+            log(e, null);
+        }
+    }
+
+    /**
+     * Opens a Java class for the given fully qualified class name
+     *
+     * @param project the project containing the class
+     * @param fqcn the fully qualified class name of the class to be opened
+     * @return true if the class was opened, false otherwise
+     */
+    public static boolean openJavaClass(IProject project, String fqcn) {
+        if (fqcn == null) {
+            return false;
+        }
+
+        // Handle inner classes
+        if (fqcn.indexOf('$') != -1) {
+            fqcn = fqcn.replaceAll("\\$", "."); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        try {
+            if (project.hasNature(JavaCore.NATURE_ID)) {
+                IJavaProject javaProject = JavaCore.create(project);
+                IJavaElement result = javaProject.findType(fqcn);
+                if (result != null) {
+                    return JavaUI.openInEditor(result) != null;
+                }
+            }
+        } catch (Throwable e) {
+            log(e, "Can't open class %1$s", fqcn); //$NON-NLS-1$
+        }
+
+        return false;
+    }
+
+    /**
+     * Opens the given file and shows the given (optional) region
+     *
+     * @param file the file to be opened
+     * @param region an optional region which if set will be selected and shown to the
+     *            user
+     * @throws PartInitException if something goes wrong
+     */
+    public static void openFile(IFile file, IRegion region) throws PartInitException {
+        IEditorPart sourceEditor = Hyperlinks.getEditor();
+        IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
+        IEditorPart targetEditor = IDE.openEditor(page, file, true);
+        if (targetEditor instanceof AndroidXmlEditor) {
+            AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
+            if (region != null) {
+                editor.show(region.getOffset(), region.getLength());
+            } else {
+                editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+            }
+        }
     }
 }

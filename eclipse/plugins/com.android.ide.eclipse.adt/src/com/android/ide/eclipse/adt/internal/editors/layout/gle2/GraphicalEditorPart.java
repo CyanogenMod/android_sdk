@@ -58,7 +58,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -2054,7 +2053,7 @@ public class GraphicalEditorPart extends EditorPart
 
             if (r instanceof ClassLinkStyleRange) {
                 String fqcn = mErrorLabel.getText(r.start, r.start + r.length - 1);
-                if (!Hyperlinks.openJavaClass(getProject(), fqcn)) {
+                if (!AdtPlugin.openJavaClass(getProject(), fqcn)) {
                     createNewClass(fqcn);
                 }
             }

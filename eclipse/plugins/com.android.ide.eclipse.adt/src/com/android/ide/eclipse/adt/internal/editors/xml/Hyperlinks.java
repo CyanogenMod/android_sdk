@@ -40,12 +40,11 @@ import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -119,8 +118,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
-import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.MultiPageEditorPart;
@@ -216,7 +213,7 @@ public class Hyperlinks {
             return false;
         }
 
-        Pair<ResourceType,String> resource = parseResource(value);
+        Pair<ResourceType,String> resource = ResourceHelper.parseResource(value);
         if (resource != null) {
             ResourceType type = resource.getFirst();
             if (type != null) {
@@ -275,10 +272,10 @@ public class Hyperlinks {
     private static boolean openManifestName(IProject project, XmlContext context) {
         if (isActivity(context)) {
             String fqcn = getActivityClassFqcn(context);
-            return openJavaClass(project, fqcn);
+            return AdtPlugin.openJavaClass(project, fqcn);
         } else if (isService(context)) {
             String fqcn = getServiceClassFqcn(context);
-            return openJavaClass(project, fqcn);
+            return AdtPlugin.openJavaClass(project, fqcn);
         } else if (isBuiltinPermission(context)) {
             String permission = context.getAttribute().getValue();
             // Mutate something like android.permission.ACCESS_CHECKIN_PROPERTIES
@@ -289,7 +286,7 @@ public class Hyperlinks {
 
             URL url = getDocUrl(relative);
             if (url != null) {
-                openUrl(url);
+                AdtPlugin.openUrl(url);
                 return true;
             } else {
                 return false;
@@ -310,7 +307,7 @@ public class Hyperlinks {
             }
             URL url = getDocUrl(relative);
             if (url != null) {
-                openUrl(url);
+                AdtPlugin.openUrl(url);
                 return true;
             } else {
                 return false;
@@ -400,18 +397,6 @@ public class Hyperlinks {
         } catch (MalformedURLException e) {
             AdtPlugin.log(e, "Can't create URL for %1$s", docs);
             return null;
-        }
-    }
-
-    /** Opens the given URL in a browser tab */
-    private static void openUrl(URL url) {
-        IWorkbenchBrowserSupport support = PlatformUI.getWorkbench().getBrowserSupport();
-        IWebBrowser browser;
-        try {
-            browser = support.createBrowser(AdtPlugin.PLUGIN_ID);
-            browser.openURL(url);
-        } catch (PartInitException e) {
-            AdtPlugin.log(e, null);
         }
     }
 
@@ -520,33 +505,11 @@ public class Hyperlinks {
         if (isManifestName(context)) {
             return openManifestName(project, context);
         } else if (isClassElement(context) || isClassAttribute(context)) {
-            return openJavaClass(project, getClassFqcn(context));
+            return AdtPlugin.openJavaClass(project, getClassFqcn(context));
         } else if (isOnClickAttribute(context)) {
             return openOnClickMethod(project, context.getAttribute().getValue());
         } else {
             return false;
-        }
-    }
-
-    /**
-     * Opens the given file and shows the given (optional) region
-     *
-     * @param file the file to be opened
-     * @param region an optional region which if set will be selected and shown to the
-     *            user
-     * @throws PartInitException if something goes wrong
-     */
-    public static void openFile(IFile file, IRegion region) throws PartInitException {
-        IEditorPart sourceEditor = getEditor();
-        IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
-        IEditorPart targetEditor = IDE.openEditor(page, file, true);
-        if (targetEditor instanceof AndroidXmlEditor) {
-            AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
-            if (region != null) {
-                editor.show(region.getOffset(), region.getLength());
-            } else {
-                editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
-            }
         }
     }
 
@@ -561,7 +524,7 @@ public class Hyperlinks {
             IResource file = workspace.findMember(relativePath);
             if (file instanceof IFile) {
                 try {
-                    openFile((IFile)file, region);
+                    AdtPlugin.openFile((IFile) file, region);
                     return;
                 } catch (PartInitException ex) {
                     AdtPlugin.log(ex, "Can't open %$1s", filePath); //$NON-NLS-1$
@@ -607,38 +570,6 @@ public class Hyperlinks {
         IEditorSite editorSite = getEditor().getEditorSite();
         IStatusLineManager status = editorSite.getActionBars().getStatusLineManager();
         status.setErrorMessage(message);
-    }
-
-    /**
-     * Opens a Java class for the given fully qualified class name
-     *
-     * @param project the project containing the class
-     * @param fqcn the fully qualified class name of the class to be opened
-     * @return true if the class was opened, false otherwise
-     */
-    public static boolean openJavaClass(IProject project, String fqcn) {
-        if (fqcn == null) {
-            return false;
-        }
-
-        // Handle inner classes
-        if (fqcn.indexOf('$') != -1) {
-            fqcn = fqcn.replaceAll("\\$", "."); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        try {
-            if (project.hasNature(JavaCore.NATURE_ID)) {
-                IJavaProject javaProject = JavaCore.create(project);
-                IJavaElement result = javaProject.findType(fqcn);
-                if (result != null) {
-                    return JavaUI.openInEditor(result) != null;
-                }
-            }
-        } catch (Throwable e) {
-            AdtPlugin.log(e, "Can't open class %1$s", fqcn); //$NON-NLS-1$
-        }
-
-        return false;
     }
 
     /**
@@ -1035,34 +966,6 @@ public class Hyperlinks {
         return null;
     }
 
-    /** Return the resource type of the given url, and the resource name */
-    public static Pair<ResourceType,String> parseResource(String url) {
-        if (!url.startsWith("@")) { //$NON-NLS-1$
-            return null;
-        }
-        int typeEnd = url.indexOf('/', 1);
-        if (typeEnd == -1) {
-            return null;
-        }
-        int nameBegin = typeEnd + 1;
-
-        // Skip @ and @+
-        int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
-
-        int colon = url.lastIndexOf(':', typeEnd);
-        if (colon != -1) {
-            typeBegin = colon + 1;
-        }
-        String typeName = url.substring(typeBegin, typeEnd);
-        ResourceType type = ResourceType.getEnum(typeName);
-        if (type == null) {
-            return null;
-        }
-        String name = url.substring(nameBegin);
-
-        return Pair.of(type, name);
-    }
-
     /** Parses the given file and locates a definition of the given resource */
     private static Pair<File, Integer> findValueInXml(ResourceType type, String name, File file) {
         // We can't use the StructureModelManager on files outside projects
@@ -1127,7 +1030,7 @@ public class Hyperlinks {
         IProject project = Hyperlinks.getProject();
         FolderConfiguration configuration = getConfiguration();
 
-        Pair<ResourceType,String> resource = parseResource(url);
+        Pair<ResourceType,String> resource = ResourceHelper.parseResource(url);
         if (resource == null || resource.getFirst() == null) {
             return null;
         }
@@ -1171,7 +1074,7 @@ public class Hyperlinks {
                 });
 
                 // Is this something found in a values/ folder?
-                boolean valueResource = ResourceNameValidator.isValueBasedResourceType(type);
+                boolean valueResource = ResourceHelper.isValueBasedResourceType(type);
 
                 for (ResourceFile file : matches) {
                     String folderName = file.getFolder().getFolder().getName();
@@ -1482,7 +1385,7 @@ public class Hyperlinks {
                 Pair<IFile,IRegion> def = findIdDefinition(project, mName);
                 if (def != null) {
                     try {
-                        openFile(def.getFirst(), def.getSecond());
+                        AdtPlugin.openFile(def.getFirst(), def.getSecond());
                     } catch (PartInitException e) {
                         AdtPlugin.log(e, null);
                     }
@@ -1499,13 +1402,14 @@ public class Hyperlinks {
                 try {
                     // Lazily search for the target?
                     IRegion region = null;
-                    if (mType != null && mName != null && EXT_XML.equals(file.getFileExtension())) {
+                    String extension = file.getFileExtension();
+                    if (mType != null && mName != null && EXT_XML.equals(extension)) {
                         Pair<IFile, IRegion> target = findValueInXml(mType, mName, file);
                         if (target != null) {
                             region = target.getSecond();
                         }
                     }
-                    openFile(file, region);
+                    AdtPlugin.openFile(file, region);
                 } catch (PartInitException e) {
                     AdtPlugin.log(e, null);
                 }

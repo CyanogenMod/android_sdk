@@ -16,13 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.resources;
 
+import static com.android.resources.ResourceType.DIMEN;
+import static com.android.resources.ResourceType.LAYOUT;
+
 import com.android.ide.common.resources.ResourceDeltaKind;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
+import com.android.resources.ResourceType;
 
 import org.eclipse.core.resources.IResourceDelta;
 
 import junit.framework.TestCase;
+
 
 /**
  * Test ResourceHelper
@@ -111,5 +116,58 @@ public class ResourceHelperTest extends TestCase {
                 ResourceHelper.getResourceDeltaKind(IResourceDelta.CHANGED));
 
         assertNull(ResourceHelper.getResourceDeltaKind(IResourceDelta.ADDED_PHANTOM));
+    }
+
+    public void testParseResource() {
+        assertNull(ResourceHelper.parseResource(""));
+        assertNull(ResourceHelper.parseResource("not_a_resource"));
+
+        assertEquals(LAYOUT, ResourceHelper.parseResource("@layout/foo").getFirst());
+        assertEquals(DIMEN, ResourceHelper.parseResource("@dimen/foo").getFirst());
+        assertEquals(DIMEN, ResourceHelper.parseResource("@android:dimen/foo").getFirst());
+        assertEquals("foo", ResourceHelper.parseResource("@layout/foo").getSecond());
+        assertEquals("foo", ResourceHelper.parseResource("@dimen/foo").getSecond());
+        assertEquals("foo", ResourceHelper.parseResource("@android:dimen/foo").getSecond());
+    }
+
+
+    public void testIsFileBasedResourceType() throws Exception {
+        assertTrue(ResourceHelper.isFileBasedResourceType(ResourceType.ANIMATOR));
+        assertTrue(ResourceHelper.isFileBasedResourceType(ResourceType.LAYOUT));
+
+        assertFalse(ResourceHelper.isFileBasedResourceType(ResourceType.STRING));
+        assertFalse(ResourceHelper.isFileBasedResourceType(ResourceType.DIMEN));
+        assertFalse(ResourceHelper.isFileBasedResourceType(ResourceType.ID));
+
+        // Both:
+        assertTrue(ResourceHelper.isFileBasedResourceType(ResourceType.DRAWABLE));
+        assertTrue(ResourceHelper.isFileBasedResourceType(ResourceType.COLOR));
+    }
+
+    public void testIsValueBasedResourceType() throws Exception {
+        assertTrue(ResourceHelper.isValueBasedResourceType(ResourceType.STRING));
+        assertTrue(ResourceHelper.isValueBasedResourceType(ResourceType.DIMEN));
+        assertTrue(ResourceHelper.isValueBasedResourceType(ResourceType.ID));
+
+        assertFalse(ResourceHelper.isValueBasedResourceType(ResourceType.LAYOUT));
+
+        // These can be both:
+        assertTrue(ResourceHelper.isValueBasedResourceType(ResourceType.DRAWABLE));
+        assertTrue(ResourceHelper.isValueBasedResourceType(ResourceType.COLOR));
+    }
+
+    public void testCanCreateResource() throws Exception {
+        assertTrue(ResourceHelper.canCreateResource("@layout/foo"));
+        assertTrue(ResourceHelper.canCreateResource("@string/foo"));
+        assertTrue(ResourceHelper.canCreateResource("@dimen/foo"));
+        assertTrue(ResourceHelper.canCreateResource("@color/foo"));
+
+        assertFalse(ResourceHelper.canCreateResource("@typo/foo")); // nonexistent type
+        assertFalse(ResourceHelper.canCreateResource("@layout/foo bar")); // space
+        assertFalse(ResourceHelper.canCreateResource("@layout/new")); // keyword
+        assertFalse(ResourceHelper.canCreateResource("@animator/foo")); // unsupported file type
+        assertFalse(ResourceHelper.canCreateResource("@android:string/foo")); // framework
+        assertFalse(ResourceHelper.canCreateResource("@android:dimen/foo"));
+        assertFalse(ResourceHelper.canCreateResource("@android:color/foo"));
     }
 }
