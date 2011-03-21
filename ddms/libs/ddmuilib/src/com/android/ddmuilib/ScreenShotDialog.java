@@ -58,6 +58,8 @@ public class ScreenShotDialog extends Dialog {
     private RawImage mRawImage;
     private Clipboard mClipboard;
 
+    /** Number of 90 degree rotations applied to the current image */
+    private int mRotateCount = 0;
 
     /**
      * Create with default style.
@@ -119,6 +121,14 @@ public class ScreenShotDialog extends Dialog {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 updateDeviceImage(shell);
+                // RawImage only allows us to rotate the image 90 degrees at the time,
+                // so to preserve the current rotation we must call getRotated()
+                // the same number of times the user has done it manually.
+                // TODO: improve the RawImage class.
+                for (int i=0; i < mRotateCount; i++) {
+                    mRawImage = mRawImage.getRotated();
+                }
+                updateImageDisplay(shell);
             }
         });
 
@@ -132,6 +142,7 @@ public class ScreenShotDialog extends Dialog {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 if (mRawImage != null) {
+                    mRotateCount = (mRotateCount + 1) % 4;
                     mRawImage = mRawImage.getRotated();
                     updateImageDisplay(shell);
                 }
