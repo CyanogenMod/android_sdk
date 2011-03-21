@@ -51,12 +51,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </DigitalClock>
-    <EditText
-        android:id="@+id/android_widget_EditText"
-        android:layout_height="wrap_content"
-        android:text="EditText"
-        android:layout_width="200dip">
-    </EditText>
 
     <EditText
         android:id="@+id/PlainText"
@@ -160,6 +154,30 @@
         android:layout_width="200dip"
         android:layout_height="wrap_content">
     </EditText>
+
+    <TextView
+        android:text="Large"
+        android:id="@+id/LargeText"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </TextView>
+
+    <TextView
+        android:text="Medium"
+        android:id="@+id/MediumText"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </TextView>
+
+    <TextView
+        android:text="Small"
+        android:id="@+id/SmallText"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </TextView>
 
     <ImageButton
         android:layout_height="wrap_content"

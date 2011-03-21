@@ -33,7 +33,19 @@
         name="Form Widgets">
         <view
             class="android.widget.TextView"
-            relatedTo="EditText,AutoCompleteTextView,MultiAutoCompleteTextView" />
+            name="TextView"
+            init=""
+            relatedTo="EditText,AutoCompleteTextView,MultiAutoCompleteTextView">
+            <view
+                name="Large Text"
+                init="android:textAppearance=?android:attr/textAppearanceLarge" />
+            <view
+                name="Medium Text"
+                init="android:textAppearance=?android:attr/textAppearanceMedium" />
+            <view
+                name="Small Text"
+                init="android:textAppearance=?android:attr/textAppearanceSmall" />
+        </view>
         <view
             class="android.widget.Button"
             relatedTo="ImageButton" />
@@ -52,10 +64,6 @@
         <view
             class="android.widget.Spinner"
             relatedTo="EditText"
-            fill="width_in_vertical" />
-        <view
-            class="android.widget.EditText"
-            relatedTo="Spinner,TextView,AutoCompleteTextView,MultiAutoCompleteTextView"
             fill="width_in_vertical" />
         <view
             class="android.widget.ProgressBar"
