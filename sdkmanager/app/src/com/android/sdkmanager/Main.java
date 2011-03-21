@@ -20,23 +20,23 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
-import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
-import com.android.sdkuilib.internal.repository.LocalPackagesPage;
+import com.android.sdkuilib.internal.repository.PackagesPage;
 import com.android.sdkuilib.internal.repository.UpdateNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.UpdaterWindow;
@@ -306,7 +306,7 @@ public class Main {
             window.registerPage("Settings", SettingsPage.class);
             window.registerPage("About", AboutPage.class);
             if (autoUpdate) {
-                window.setInitialPage(LocalPackagesPage.class);
+                window.setInitialPage(PackagesPage.class);
                 window.setRequestAutoUpdate(true);
             }
             window.open();

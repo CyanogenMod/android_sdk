@@ -143,7 +143,20 @@ public class PlatformToolPackage extends Package {
                 archiveOsPath);
     }
 
-    /** Returns a short description for an {@link IDescription}. */
+    /**
+     * Returns a description of this package that is suitable for a list display.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String getListDescription() {
+        return String.format("Android SDK Platform-tools%1$s",
+                isObsolete() ? " (Obsolete)" : "");
+    }
+
+    /**
+     * Returns a short description for an {@link IDescription}.
+     */
     @Override
     public String getShortDescription() {
         return String.format("Android SDK Platform-tools, revision %1$d%2$s",

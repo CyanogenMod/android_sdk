@@ -241,6 +241,11 @@ public class UpdaterDataTest extends TestCase {
         }
 
         @Override
+        public String getListDescription() {
+            return this.getClass().getSimpleName();
+        }
+
+        @Override
         public String getShortDescription() {
             return this.getClass().getSimpleName();
         }

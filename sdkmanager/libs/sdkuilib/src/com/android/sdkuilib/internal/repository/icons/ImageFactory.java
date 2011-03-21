@@ -122,6 +122,10 @@ public class ImageFactory {
             }
         }
 
+        if (object instanceof String) {
+            return getImageByName((String) object);
+        }
+
         return null;
     }
 
