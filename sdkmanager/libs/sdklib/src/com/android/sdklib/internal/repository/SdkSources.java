@@ -111,7 +111,7 @@ public class SdkSources {
     }
 
     /**
-     * Returns an array of sources attached to the given category.
+     * Returns a new array of sources attached to the given category.
      * Might return an empty array, but never returns null.
      */
     public SdkSource[] getSources(SdkSourceCategory category) {
