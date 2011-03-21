@@ -263,6 +263,11 @@ public class ChangeViewRefactoring extends VisualRefactoring {
         return types;
     }
 
+    @Override
+    VisualRefactoringWizard createWizard() {
+        return new ChangeViewWizard(this, mEditor);
+    }
+
     public static class Descriptor extends VisualRefactoringDescriptor {
         public Descriptor(String project, String description, String comment,
                 Map<String, String> arguments) {

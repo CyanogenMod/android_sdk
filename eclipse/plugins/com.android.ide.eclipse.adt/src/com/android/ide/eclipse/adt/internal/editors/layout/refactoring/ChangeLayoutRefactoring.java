@@ -500,4 +500,9 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     public void setRootView(CanvasViewInfo rootView) {
         mRootView = rootView;
     }
+
+    @Override
+    VisualRefactoringWizard createWizard() {
+        return new ChangeLayoutWizard(this, mEditor);
+    }
 }

@@ -620,6 +620,11 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         return xml;
     }
 
+    @Override
+    VisualRefactoringWizard createWizard() {
+        return new ExtractIncludeWizard(this, mEditor);
+    }
+
     public static class Descriptor extends VisualRefactoringDescriptor {
         public Descriptor(String project, String description, String comment,
                 Map<String, String> arguments) {

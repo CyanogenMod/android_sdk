@@ -403,6 +403,11 @@ public class WrapInRefactoring extends VisualRefactoring {
         return null;
     }
 
+    @Override
+    VisualRefactoringWizard createWizard() {
+        return new WrapInWizard(this, mEditor);
+    }
+
     public static class Descriptor extends VisualRefactoringDescriptor {
         public Descriptor(String project, String description, String comment,
                 Map<String, String> arguments) {
