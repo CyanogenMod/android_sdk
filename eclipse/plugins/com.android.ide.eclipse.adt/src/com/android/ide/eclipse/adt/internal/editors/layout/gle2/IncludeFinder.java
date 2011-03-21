@@ -90,7 +90,7 @@ public class IncludeFinder {
      * {@link IncludeFinder} for this project
      */
     private final static QualifiedName INCLUDE_FINDER = new QualifiedName(AdtPlugin.PLUGIN_ID,
-            "finder"); //$NON-NLS-1$
+            "includefinder"); //$NON-NLS-1$
 
     /** Project that the include finder locates includes for */
     private final IProject mProject;

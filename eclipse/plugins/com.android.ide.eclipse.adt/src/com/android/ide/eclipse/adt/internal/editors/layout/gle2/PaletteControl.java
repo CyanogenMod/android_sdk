@@ -32,11 +32,13 @@ import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -48,6 +50,7 @@ import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.ui.IDecorContent;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -70,6 +73,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -82,6 +86,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -96,6 +103,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -438,6 +446,8 @@ public class PaletteControl extends Composite {
             categoryToItems.put(category, categoryItems);
         }
 
+        headers.add("Custom & Library Views");
+
         // Set the categories to expand the first item if
         //   (1) we don't have a previously selected category, or
         //   (2) there's just one category anyway, or
@@ -445,7 +455,8 @@ public class PaletteControl extends Composite {
         //       doesn't exist anymore (can happen when you toggle "Show Categories")
         if ((expandedCategories == null && headers.size() > 0) || headers.size() == 1 ||
                 (expandedCategories != null && expandedCategories.size() >= 1
-                        && !headers.contains(expandedCategories.iterator().next()))) {
+                        && !headers.contains(
+                                expandedCategories.iterator().next().replace("&&", "&")))) { //$NON-NLS-1$ //$NON-NLS-2$
             // Expand the first category if we don't have a previous selection (e.g. refresh)
             expandedCategories = Collections.singleton(headers.get(0));
         }
@@ -458,10 +469,45 @@ public class PaletteControl extends Composite {
         mAccordion = new AccordionControl(this, SWT.NONE, headers, fillVertical, wrap,
                 expandedCategories) {
             @Override
-            protected Composite createChildContainer(Composite parent) {
-                Composite composite = super.createChildContainer(parent);
-                if (mPaletteMode.isPreview() && mBackground != null) {
-                    composite.setBackground(mBackground);
+            protected Composite createChildContainer(Composite parent, Object header, int style) {
+                assert categoryToItems != null;
+                List<ViewElementDescriptor> list = categoryToItems.get(header);
+                final Composite composite;
+                if (list == null) {
+                    assert header.equals("Custom & Library Views");
+
+                    Composite wrapper = new Composite(parent, SWT.NONE);
+                    GridLayout gridLayout = new GridLayout(1, false);
+                    gridLayout.marginWidth = gridLayout.marginHeight = 0;
+                    gridLayout.horizontalSpacing = gridLayout.verticalSpacing = 0;
+                    gridLayout.marginBottom = 3;
+                    wrapper.setLayout(gridLayout);
+                    if (mPaletteMode.isPreview() && mBackground != null) {
+                        wrapper.setBackground(mBackground);
+                    }
+                    composite = super.createChildContainer(wrapper, header,
+                            style | SWT.NO_BACKGROUND);
+                    composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+
+                    Button refreshButton = new Button(wrapper, SWT.PUSH | SWT.FLAT);
+                    refreshButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER,
+                            false, false, 1, 1));
+                    refreshButton.setText("Refresh");
+                    refreshButton.setImage(IconFactory.getInstance().getIcon("refresh")); //$NON-NLS-1$
+                    refreshButton.addSelectionListener(new SelectionAdapter() {
+                        @Override
+                        public void widgetSelected(SelectionEvent e) {
+                            CustomViewFinder finder = CustomViewFinder.get(mEditor.getProject());
+                            finder.refresh(new ViewFinderListener(composite));
+                        }
+                    });
+
+                    wrapper.layout(true);
+                } else {
+                    composite = super.createChildContainer(parent, header, style);
+                    if (mPaletteMode.isPreview() && mBackground != null) {
+                        composite.setBackground(mBackground);
+                    }
                 }
                 addMenu(composite);
                 return composite;
@@ -470,8 +516,14 @@ public class PaletteControl extends Composite {
             protected void createChildren(Composite parent, Object header) {
                 assert categoryToItems != null;
                 List<ViewElementDescriptor> list = categoryToItems.get(header);
-                for (ViewElementDescriptor desc : list) {
-                    createItem(parent, desc);
+                if (list == null) {
+                    assert header.equals("Custom & Library Views");
+                    addCustomItems(parent);
+                    return;
+                } else {
+                    for (ViewElementDescriptor desc : list) {
+                        createItem(parent, desc);
+                    }
                 }
             }
         };
@@ -491,6 +543,40 @@ public class PaletteControl extends Composite {
         }
 
         layout(true);
+    }
+
+    protected void addCustomItems(final Composite parent) {
+        final CustomViewFinder finder = CustomViewFinder.get(mEditor.getProject());
+        Collection<String> allViews = finder.getAllViews();
+        if (allViews == null) { // Not yet initialized: trigger an async refresh
+            finder.refresh(new ViewFinderListener(parent));
+            return;
+        }
+
+        // Remove previous content
+        for (Control c : parent.getChildren()) {
+            c.dispose();
+        }
+
+        // Add new views
+        for (final String fqcn : allViews) {
+            CustomViewDescriptorService service = CustomViewDescriptorService.getInstance();
+            ViewElementDescriptor desc = service.getDescriptor(mEditor.getProject(), fqcn);
+            Control item = createItem(parent, desc);
+
+            // Add control-click listener on custom view items to you can warp to
+            if (item instanceof IconTextItem) {
+                IconTextItem it = (IconTextItem) item;
+                it.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseDown(MouseEvent e) {
+                        if ((e.stateMask & SWT.MOD1) != 0) {
+                            Hyperlinks.openJavaClass(mEditor.getProject(), fqcn);
+                        }
+                    }
+                });
+            }
+        }
     }
 
     /* package */ GraphicalEditorPart getEditor() {
@@ -824,7 +910,8 @@ public class PaletteControl extends Composite {
 
             // This doesn't apply to all, but doesn't seem to cause harm and makes for a
             // better experience with text-oriented views like buttons and texts
-            element.setAttributeNS(ANDROID_URI, ATTR_TEXT, mDesc.getUiName());
+            element.setAttributeNS(ANDROID_URI, ATTR_TEXT,
+                    DescriptorsUtils.getBasename(mDesc.getUiName()));
 
             // Is this a palette variation?
             if (mDesc instanceof PaletteMetadataDescriptor) {
@@ -1106,5 +1193,19 @@ public class PaletteControl extends Composite {
         Menu menu = manager.createContextMenu(PaletteControl.this);
         menu.setLocation(x, y);
         menu.setVisible(true);
+    }
+
+    private final class ViewFinderListener implements CustomViewFinder.Listener {
+        private final Composite mParent;
+
+        private ViewFinderListener(Composite parent) {
+            this.mParent = parent;
+        }
+
+        public void viewsUpdated(Collection<String> customViews,
+                Collection<String> thirdPartyViews) {
+            addCustomItems(mParent);
+            mParent.layout(true);
+        }
     }
 }

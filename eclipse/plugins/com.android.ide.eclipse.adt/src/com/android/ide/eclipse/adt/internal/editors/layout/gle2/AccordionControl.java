@@ -82,8 +82,8 @@ public abstract class AccordionControl extends Composite {
      * overridden to lay out the children with a different layout than the default
      * vertical RowLayout
      */
-    protected Composite createChildContainer(Composite parent) {
-        Composite composite = new Composite(parent, SWT.NONE);
+    protected Composite createChildContainer(Composite parent, Object header, int style) {
+        Composite composite = new Composite(parent, style);
         if (mWrap) {
             RowLayout layout = new RowLayout(SWT.HORIZONTAL);
             layout.center = true;
@@ -335,9 +335,12 @@ public abstract class AccordionControl extends Composite {
         updateIcon(label);
 
         if (!scrollGridData.exclude && scrolledComposite.getContent() == null) {
-            Composite composite = createChildContainer(scrolledComposite);
             Object header = getHeader(label);
+            Composite composite = createChildContainer(scrolledComposite, header, SWT.NONE);
             createChildren(composite, header);
+            while (composite.getParent() != scrolledComposite) {
+                composite = composite.getParent();
+            }
             scrolledComposite.setContent(composite);
             scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         }

@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
 import com.android.ide.common.resources.platform.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
@@ -29,6 +30,10 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.ui.ISharedImages;
+import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 
 import java.util.HashMap;
 import java.util.List;
@@ -157,16 +162,9 @@ public final class CustomViewDescriptorService {
                     if (parentDescriptor != null) {
                         // we have a valid parent, lets create a new ViewElementDescriptor.
 
-                        ViewElementDescriptor descriptor = new ViewElementDescriptor(fqcn,
-                                fqcn, // ui_name
-                                fqcn, // canonical class name
-                                null, // tooltip
-                                null, // sdk_url
-                                getAttributeDescriptor(type, parentDescriptor),
-                                null, // layout attributes
-                                null, // children
-                                false /* mandatory */);
-
+                        String name = DescriptorsUtils.getBasename(fqcn);
+                        ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
+                                getAttributeDescriptor(type, parentDescriptor));
                         descriptor.setSuperClass(parentDescriptor);
 
                         synchronized (mCustomDescriptorMap) {
@@ -242,16 +240,9 @@ public final class CustomViewDescriptorService {
             if (parentDescriptor != null) {
                 // parent class is a valid View class with a descriptor, so we create one
                 // for this class.
-                ViewElementDescriptor descriptor = new ViewElementDescriptor(fqcn,
-                        fqcn, // ui_name
-                        fqcn, // canonical name
-                        null, // tooltip
-                        null, // sdk_url
-                        getAttributeDescriptor(type, parentDescriptor),
-                        null, // layout attributes
-                        null, // children
-                        false /* mandatory */);
-
+                String name = DescriptorsUtils.getBasename(fqcn);
+                ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
+                        getAttributeDescriptor(type, parentDescriptor));
                 descriptor.setSuperClass(parentDescriptor);
 
                 // add it to the map
@@ -289,5 +280,32 @@ public final class CustomViewDescriptorService {
             ViewElementDescriptor parentDescriptor) {
         // TODO add the class attribute descriptors to the parent descriptors.
         return parentDescriptor.getAttributes();
+    }
+
+    private class CustomViewDescriptor extends ViewElementDescriptor {
+        public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes) {
+            super(
+                    fqcn, // xml name
+                    name, // ui name
+                    fqcn, // full class name
+                    fqcn, // tooltip
+                    null, // sdk_url
+                    attributes,
+                    null, // layout attributes
+                    null, // children
+                    false // mandatory
+            );
+        }
+
+        @Override
+        public Image getGenericIcon() {
+            // Java source file icon. We could use the Java class icon here
+            // (IMG_OBJS_CLASS), but it does not work well on anything but
+            // white backgrounds
+            ISharedImages sharedImages = JavaUI.getSharedImages();
+            String key = ISharedImages.IMG_OBJS_CUNIT;
+            ImageDescriptor descriptor = sharedImages.getImageDescriptor(key);
+            return descriptor.createImage();
+        }
     }
 }
