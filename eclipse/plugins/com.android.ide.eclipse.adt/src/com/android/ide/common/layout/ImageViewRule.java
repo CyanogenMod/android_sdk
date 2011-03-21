@@ -32,6 +32,17 @@ public class ImageViewRule extends BaseViewRule {
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
+        // When dropping an include tag, ask the user which layout to include.
+        if (insertType == InsertType.CREATE) { // NOT InsertType.CREATE_PREVIEW
+            String src = mRulesEngine.displayResourceInput("drawable", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            if (src != null) {
+                node.editXml("Set Image",
+                    new PropertySettingNodeHandler(ANDROID_URI, ATTR_SRC, src));
+                return;
+            }
+        }
+
+        // Fallback if dismissed or during previews etc
         if (insertType.isCreate()) {
             node.setAttribute(ANDROID_URI, ATTR_SRC, getSampleImageSrc());
         }
