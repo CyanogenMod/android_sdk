@@ -52,6 +52,10 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.graphics.Image;
 import org.w3c.dom.Element;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -64,6 +68,21 @@ import java.util.regex.Pattern;
 
 /**
  * Content Assist Processor for Android XML files
+ * <p>
+ * Remaining corner cases:
+ * <ul>
+ * <li>If you are inside quotes, and you complete a value, then (after inserting the new
+ *   value inside the quotes) the cursor should be moved outside the quotes and a space
+ *   added.
+ * <li>If you are at the end of a closing quote (but with no space), completion currently
+ *   offers full attribute completion. However, the completion items should include a
+ *   separating space.
+ * <li>Completion does not work right if there is a space between the = and the opening
+ *   quote.
+ * <li>Replacement completion does not work right if the caret is to the left of the
+ *   opening quote, where the opening quote is a single quote, and the replacement items use
+ *   double quotes.
+ * </ul>
  */
 public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
@@ -159,44 +178,36 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
             // We're not editing the current node name, so we might be editing its
             // attributes instead...
-            AttribInfo info = parseAttributeInfo(viewer, offset);
+            AttribInfo info = parseAttributeInfo(viewer, offset, offset - wordPrefix.length());
+            char nextChar = extractChar(viewer, offset);
             if (info != null) {
                 isAttribute = true;
                 // We're editing attributes in an element node (either the attributes' names
                 // or their values).
                 choices = getChoicesForAttribute(parent, currentNode, currentUiNode, info);
 
-                if (info.isInValue) {
-                    // Note - this must be done before the prefix correction below since
-                    // otherwise, when the prefix gets cleared out (for a flag list) we
-                    // end up with a wrong count for the prefix length
-                    Element element = (Element) currentNode;
-                    String attribute = element.getAttribute(info.name);
-                    if (attribute != null) { // Eclipse DOM bug
-                        replaceLength = attribute.length() - wordPrefix.length();
-                        if (info.needTag != 0) {
-                            replaceLength += 2;
-                        }
-                    }
-                } else {
-                    replaceLength = info.name.length() - wordPrefix.length();
-                }
-
+                replaceLength = info.replaceLength;
                 if (info.correctedPrefix != null) {
                     wordPrefix = info.correctedPrefix;
                 }
                 needTag = info.needTag;
-                isNew = info.name.length() == 0;
+                // Look to the right and see if we're followed by whitespace
+                isNew = replaceLength == 0
+                    && (Character.isWhitespace(nextChar) || nextChar == '>' || nextChar == '/');
             } else if (parent.startsWith(wordPrefix)) {
                 // We are still editing the element's tag name, not the attributes
                 // (the element's tag name may not even be complete)
                 isElement = true;
                 choices = getChoicesForElement(parent, currentNode);
                 replaceLength = parent.length() - wordPrefix.length();
-                if (wordPrefix.length() == 0) {
-                    replaceLength = 0; // Only do this if on <
+                isNew = replaceLength == 0 && nextNonspaceChar(viewer, offset) == '<';
+                // Special case: if we are right before the beginning of a new
+                // element, wipe out the replace length such that we insert before it,
+                // we don't edit the current element.
+                if (wordPrefix.length() == 0 && nextChar == '<') {
+                    replaceLength = 0;
+                    isNew = true;
                 }
-                isNew = replaceLength == 0;
             }
         } else if (currentNode.getNodeType() == Node.TEXT_NODE) {
             isElement = true;
@@ -212,7 +223,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             // for the element? We don't if the cursor is right after "<" or "</".
             // Per XML Spec, there's no whitespace between "<" or "</" and the tag name.
             int offset2 = offset - wordPrefix.length() - 1;
-            int c1 = extractChar(viewer, offset2);
+            char c1 = extractChar(viewer, offset2);
             if (!((c1 == '<') || (c1 == '/' && extractChar(viewer, offset2 - 1) == '<'))) {
                 needTag = '<';
             }
@@ -222,7 +233,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         int selectionLength = 0;
         ISelection selection = viewer.getSelectionProvider().getSelection();
         if (selection instanceof TextSelection) {
-            TextSelection textSelection = (TextSelection)selection;
+            TextSelection textSelection = (TextSelection) selection;
             selectionLength = textSelection.getLength();
         }
 
@@ -336,7 +347,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         if (attrInfo.isInValue) {
             // Editing an attribute's value... Get the attribute name and then the
             // possible choices for the tuple(parent,attribute)
-            String value = attrInfo.value;
+            String value = attrInfo.valuePrefix;
             if (value.startsWith("'") || value.startsWith("\"")) {   //$NON-NLS-1$   //$NON-NLS-2$
                 value = value.substring(1);
                 // The prefix that was found at the beginning only scan for characters
@@ -547,12 +558,18 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     } else if (needTag == '<') {
                         if (elementCanHaveChildren(choice)) {
                             endTag = String.format("></%1$s>", keyword);  //$NON-NLS-1$
-                            keyword = needTag + keyword;
                         } else {
-                            keyword = needTag + keyword;
                             endTag = "/>";  //$NON-NLS-1$
                         }
+                        keyword = needTag + keyword + ' ';
                     }
+                } else if (!isAttribute && isNew) {
+                    if (elementCanHaveChildren(choice)) {
+                        endTag = String.format("></%1$s>", keyword);  //$NON-NLS-1$
+                    } else {
+                        endTag = "/>";  //$NON-NLS-1$
+                    }
+                    keyword = keyword + ' ';
                 }
 
                 final CompletionProposal proposal;
@@ -563,9 +580,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     // Special case for attributes: insert ="" stuff and locate caret inside ""
                     String suffix = "=\"\""; //$NON-NLS-1$
                     proposal = new CompletionProposal(
-                        keyword + suffix ,                 // String replacementString
+                        keyword + suffix ,                  // String replacementString
                         offset - wordPrefix.length(),       // int replacementOffset
-                        wordPrefix.length() + replaceLength,  // int replacementLength
+                        wordPrefix.length() + replaceLength,// int replacementLength
                         keyword.length() + suffix.length() - 1, // cursorPosition
                         icon,                               // Image image
                         keyword,                            // displayString - don't include =""
@@ -573,16 +590,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                         tooltip                             // String additionalProposalInfo
                         );
                 } else {
-                    int cursorPosition = keyword.length();
-                    if (choice instanceof ElementDescriptor && isNew) {
-                        endTag = ' ' + endTag;
-                        cursorPosition += 1;
-                    }
                     proposal = new CompletionProposal(
-                        keyword + endTag,                  // String replacementString
-                        offset - wordPrefix.length(),           // int replacementOffset
-                        wordPrefix.length() + replaceLength,  // int replacementLength
-                        cursorPosition,                     // int cursorPosition (rel. to rplcmntOffset)
+                        keyword + endTag,                   // String replacementString
+                        offset - wordPrefix.length(),       // int replacementOffset
+                        wordPrefix.length() + replaceLength,// int replacementLength
+                        keyword.length(),                   // int cursorPosition (rel. to rplcmntOffset)
                         icon,                               // Image image
                         null,                               // String displayString
                         null,                               // IContextInformation contextInformation
@@ -747,6 +759,28 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     }
 
     /**
+     * Search forward and find the first non-space character and return it. Returns 0 if no
+     * such character was found.
+     */
+    private char nextNonspaceChar(ITextViewer viewer, int offset) {
+        IDocument document = viewer.getDocument();
+        int length = document.getLength();
+        for (; offset < length; offset++) {
+            try {
+                char c = document.getChar(offset);
+                if (!Character.isWhitespace(c)) {
+                    return c;
+                }
+            } catch (BadLocationException e) {
+                return 0;
+            }
+        }
+
+        return 0;
+    }
+
+
+    /**
      * Information about the current edit of an attribute as reported by parseAttributeInfo.
      */
     private class AttribInfo {
@@ -754,17 +788,19 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         public boolean isInValue = false;
         /** The attribute name. Null when not set. */
         public String name = null;
-        /** The attribute value. Null when not set. The value *may* start with a quote
-         *  (' or "), in which case we know we don't need to quote the string for the user */
-        public String value = null;
+        /** The attribute value top the left of the cursor. Null when not set. The value
+         * *may* start with a quote (' or "), in which case we know we don't need to quote
+         * the string for the user */
+        public String valuePrefix = null;
         /** String typed by the user so far (i.e. right before requesting code completion),
          *  which will be corrected if we find a possible completion for an attribute value.
          *  See the long comment in getChoicesForAttribute(). */
         public String correctedPrefix = null;
         /** Non-zero if an attribute value need a start/end tag (i.e. quotes or brackets) */
         public char needTag = 0;
+        /** Number of characters to replace after the prefix */
+        public int replaceLength = 0;
     }
-
 
     /**
      * Try to guess if the cursor is editing an element's name or an attribute following an
@@ -779,7 +815,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * @return An AttribInfo describing which attribute is being edited or null if the cursor is
      *         not editing an attribute (in which case it must be an element's name).
      */
-    private AttribInfo parseAttributeInfo(ITextViewer viewer, int offset) {
+    private AttribInfo parseAttributeInfo(ITextViewer viewer, int offset, int prefixStartOffset) {
         AttribInfo info = new AttribInfo();
         int originalOffset = offset;
 
@@ -829,6 +865,12 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     text = sFirstAttribute.matcher(temp).replaceFirst("");  //$NON-NLS-1$
                 } while(!temp.equals(text));
 
+                IRegion lineInfo = document.getLineInformationOfOffset(originalOffset);
+                int lineStart = lineInfo.getOffset();
+                String line = document.get(lineStart, lineInfo.getLength());
+                int cursorColumn = originalOffset - lineStart;
+                int prefixLength = originalOffset - prefixStartOffset;
+
                 // Now we're left with 3 cases:
                 // - nothing: either there is no attribute definition or the cursor located after
                 //   a completed attribute definition.
@@ -836,8 +878,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 //   merged with the previous one.
                 // - string with an = sign, optionally followed by a quote (' or "): the user is
                 //   writing the value of the attribute.
-                int pos_equal = text.indexOf('=');
-                if (pos_equal == -1) {
+                int posEqual = text.indexOf('=');
+                if (posEqual == -1) {
                     info.isInValue = false;
                     info.name = text.trim();
 
@@ -845,9 +887,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     // Look at the text buffer to find the complete name (since we need
                     // to know its bounds in order to replace it when a different attribute
                     // that matches this prefix is chosen)
-                    IRegion lineInfo = document.getLineInformationOfOffset(originalOffset);
-                    String line = document.get(lineInfo.getOffset(), lineInfo.getLength());
-                    int nameStart = originalOffset - lineInfo.getOffset();
+                    int nameStart = cursorColumn;
                     for (int nameEnd = nameStart; nameEnd < line.length(); nameEnd++) {
                         char c = line.charAt(nameEnd);
                         if (!(Character.isLetter(c) || c == ':' || c == '_')) {
@@ -856,10 +896,59 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                             break;
                         }
                     }
+
+                    info.replaceLength = info.name.length() - prefixLength;
                 } else {
                     info.isInValue = true;
-                    info.name = text.substring(0, pos_equal).trim();
-                    info.value = text.substring(pos_equal + 1).trim();
+                    info.name = text.substring(0, posEqual).trim();
+                    info.valuePrefix = text.substring(posEqual + 1);
+
+                    char quoteChar = '"'; // Does " or ' surround the XML value?
+                    for (int i = posEqual + 1; i < text.length(); i++) {
+                        if (!Character.isWhitespace(text.charAt(i))) {
+                            quoteChar = text.charAt(i);
+                            break;
+                        }
+                    }
+
+                    // Must compute the complete value
+                    int valueStart = cursorColumn;
+                    int valueEnd = valueStart;
+                    for (; valueEnd < line.length(); valueEnd++) {
+                        char c = line.charAt(valueEnd);
+                        if (c == quoteChar) {
+                            // Make sure this isn't the *opening* quote of the value,
+                            // which is the case if we invoke code completion with the
+                            // caret between the = and the opening quote; in that case
+                            // we consider it value completion, and offer items including
+                            // the quotes, but we shouldn't bail here thinking we have found
+                            // the end of the value.
+                            // Look backwards to make sure we find another " before
+                            // we find a =
+                            boolean isFirst = false;
+                            for (int j = valueEnd - 1; j >= 0; j--) {
+                                char pc = line.charAt(j);
+                                if (pc == '=') {
+                                    isFirst = true;
+                                    break;
+                                } else if (pc == quoteChar) {
+                                    valueStart = j;
+                                    break;
+                                }
+                            }
+                            if (!isFirst) {
+                                break;
+                            }
+                        }
+                    }
+                    int valueEndOffset = valueEnd + lineStart;
+                    info.replaceLength = valueEndOffset - (prefixStartOffset + prefixLength);
+                    // Is the caret to the left of the value quote? If so, include it in
+                    // the replace length.
+                    int valueStartOffset = valueStart + lineStart;
+                    if (valueStartOffset == prefixStartOffset && valueEnd > valueStart) {
+                        info.replaceLength++;
+                    }
                 }
                 return info;
             } catch (BadLocationException e) {

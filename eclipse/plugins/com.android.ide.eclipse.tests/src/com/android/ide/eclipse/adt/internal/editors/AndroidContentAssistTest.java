@@ -155,6 +155,26 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 "<activity android:^name=\".TestActivity\"");
     }
 
+    public void testCompletion19() throws Exception {
+        // Test special case where completing on a new element in an otherwise blank line
+        // does not add in full completion (with closing tags)
+        checkLayoutCompletion("broken3.xml", "<EditT^");
+    }
+
+    public void testCompletion20() throws Exception {
+        checkLayoutCompletion("broken1.xml", "android:textColorHigh^");
+    }
+
+    public void testCompletion21() throws Exception {
+        checkLayoutCompletion("broken2.xml", "style=^");
+    }
+
+    public void testCompletion22() throws Exception {
+        // Test completion where the cursor is inside an element (e.g. the next
+        // char is NOT a <) - should not complete with end tags
+        checkLayoutCompletion("completion4.xml", "<Button^");
+    }
+
     // ---- Test *applying* code completion ----
 
     // The following tests check -applying- a specific code completion
@@ -265,6 +285,65 @@ public class AndroidContentAssistTest extends AdtProjectTest {
     public void testApplyCompletion13c() throws Exception {
         checkApplyLayoutCompletion("completion2.xml", "gravity=\"left|bottom^|cen",
                 "bottom|fill_horizontal");
+    }
+
+    public void testApplyCompletion14() throws Exception {
+        // Test special case where completing on a new element in an otherwise blank line
+        // does not add in full completion (with closing tags)
+        checkApplyLayoutCompletion("broken3.xml", "<EditT^", "EditText />");
+    }
+
+    public void testApplyCompletion15() throws Exception {
+        checkApplyLayoutCompletion("broken1.xml", "android:textColorHigh^",
+                "android:textColorHighlight");
+    }
+
+    public void testApplyCompletion16() throws Exception {
+        checkApplyLayoutCompletion("broken2.xml", "style=^",
+                "\"@android:\"");
+    }
+
+    public void testApplyCompletion17() throws Exception {
+        // Make sure that completion right before a / inside an element still
+        // inserts the ="" part (e.g. handles it as "insertNew)
+        checkApplyLayoutCompletion("completion3.xml", "<EditText ^/>",
+                "android:textColorHighlight");
+    }
+
+    public void testApplyCompletion18() throws Exception {
+        // Make sure that completion right before a > inside an element still
+        // inserts the ="" part (e.g. handles it as "insertNew)
+        checkApplyLayoutCompletion("completion3.xml", "<Button ^></Button>",
+                "android:paddingRight");
+    }
+
+    public void testApplyCompletion19() throws Exception {
+        // Test completion with single quotes (apostrophe)
+        checkApplyLayoutCompletion("completion5.xml", "android:orientation='^'", "horizontal");
+    }
+
+    public void testApplyCompletion20() throws Exception {
+        // Test completion with single quotes (apostrophe)
+        checkApplyLayoutCompletion("completion5.xml", "android:layout_marginTop='50^dp'", "50pt");
+    }
+
+    public void testApplyCompletion21() throws Exception {
+        // Test completion with single quotes (apostrophe)
+        checkApplyLayoutCompletion("completion5.xml", "android:layout_width='^wrap_content'",
+                "match_parent");
+        // Still broken - but not a common case
+        //checkApplyLayoutCompletion("completion5.xml", "android:layout_width=^'wrap_content'",
+        //     "\"match_parent\"");
+    }
+
+    public void testApplyCompletion22() throws Exception {
+        // Test completion in an empty string
+        checkApplyLayoutCompletion("completion6.xml", "android:orientation=\"^\"", "horizontal");
+    }
+
+    public void testApplyCompletion23() throws Exception {
+        // Test completion in an empty string
+        checkApplyLayoutCompletion("completion7.xml", "android:orientation=\"^", "horizontal");
     }
 
     // --- Code Completion test infrastructure ----
