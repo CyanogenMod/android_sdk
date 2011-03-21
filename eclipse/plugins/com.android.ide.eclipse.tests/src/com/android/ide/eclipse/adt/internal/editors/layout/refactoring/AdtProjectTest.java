@@ -192,6 +192,20 @@ public class AdtProjectTest extends SdkTestCase {
         return iproject;
     }
 
+    protected int getCaretOffset(IFile file, String caretLocation) {
+        assertTrue(caretLocation, caretLocation.contains("^"));
+
+        String fileContent = AdtPlugin.readFile(file);
+        int caretDelta = caretLocation.indexOf("^");
+        assertTrue(caretLocation, caretDelta != -1);
+        String caretContext = caretLocation.substring(0, caretDelta)
+            + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+        int caretContextIndex = fileContent.indexOf(caretContext);
+        assertTrue("Caret content " + caretContext + " not found in file",
+                caretContextIndex != -1);
+        return caretContextIndex + caretDelta;
+    }
+
     /**
      * Very primitive line differ, intended for files where there are very minor changes
      * (such as code completion apply-tests)

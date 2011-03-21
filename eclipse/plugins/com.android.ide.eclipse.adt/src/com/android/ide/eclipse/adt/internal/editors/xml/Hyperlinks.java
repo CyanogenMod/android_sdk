@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VIEW;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
@@ -159,6 +160,7 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("restriction")
 public class Hyperlinks {
+    private static final String STYLE_ELEMENT = "style";                          //$NON-NLS-1$
     private static final String CATEGORY = "category";                            //$NON-NLS-1$
     private static final String ACTION = "action";                                //$NON-NLS-1$
     private static final String PERMISSION = "permission";                        //$NON-NLS-1$
@@ -178,7 +180,7 @@ public class Hyperlinks {
         "(([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)+\\.)+[a-zA-Z_\\$][a-zA-Z0-9_\\$]*"); //$NON-NLS-1$
 
     /** Determines whether the given attribute <b>name</b> is linkable */
-    private static boolean isAttributeNameLink(@SuppressWarnings("unused") XmlContext context) {
+    private static boolean isAttributeNameLink(XmlContext context) {
         // We could potentially allow you to link to builtin Android properties:
         //   ANDROID_URI.equals(attribute.getNamespaceURI())
         // and then jump into the res/values/attrs.xml document that is available
@@ -201,7 +203,8 @@ public class Hyperlinks {
             return false;
         }
 
-        if (isClassAttribute(context) || isOnClickAttribute(context) || isManifestName(context)) {
+        if (isClassAttribute(context) || isOnClickAttribute(context)
+                || isManifestName(context) || isStyleAttribute(context)) {
             return true;
         }
 
@@ -255,7 +258,7 @@ public class Hyperlinks {
      */
     private static boolean isManifestName(XmlContext context) {
         Attr attribute = context.getAttribute();
-        if (ATTRIBUTE_NAME.equals(attribute.getLocalName())
+        if (attribute != null && ATTRIBUTE_NAME.equals(attribute.getLocalName())
                 && ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (getEditor() instanceof ManifestEditor) {
                 return true;
@@ -315,6 +318,12 @@ public class Hyperlinks {
         }
 
         return false;
+    }
+
+    /** Returns true if this represents a {@code <view class="foo.bar.Baz">} class attribute */
+    private static boolean isStyleAttribute(XmlContext context) {
+        String tag = context.getElement().getTagName();
+        return STYLE_ELEMENT.equals(tag);
     }
 
     /** Returns true if this represents a {@code <view class="foo.bar.Baz">} class attribute */
@@ -1021,9 +1030,39 @@ public class Hyperlinks {
         return null;
     }
 
+    private static IHyperlink[] getStyleLinks(XmlContext context, IRegion range, String url) {
+        Attr attribute = context.getAttribute();
+        if (attribute != null) {
+            // Split up theme resource urls to the nearest dot forwards, such that you
+            // can point to "Theme.Light" by placing the caret anywhere after the dot,
+            // and point to just "Theme" by pointing before it.
+            int caret = context.getInnerRegionCaretOffset();
+            String value = attribute.getValue();
+            int index = value.indexOf('.', caret);
+            if (index != -1) {
+                url = url.substring(0, index);
+                range = new Region(range.getOffset(),
+                        range.getLength() - (value.length() - index));
+            }
+        }
+
+        Pair<ResourceType,String> resource = ResourceHelper.parseResource(url);
+        if (resource == null) {
+            String androidStyle = "@android:style/"; //$NON-NLS-1$
+            if (url.startsWith(PREFIX_ANDROID_RESOURCE_REF)) {
+                url = androidStyle + url.substring(PREFIX_ANDROID_RESOURCE_REF.length());
+            } else if (url.startsWith(ANDROID_PKG + ':')) {
+                url = androidStyle + url.substring(ANDROID_PKG.length() + 1);
+            } else {
+                url = "@style/" + url; //$NON-NLS-1$
+            }
+        }
+        return getResourceLinks(range, url);
+    }
+
     /**
-     * Computes hyperlinks to resource definitions for resource urls (e.g. {@code
-     * @android:string/ok} or {@code @layout/foo}. May create multiple links.
+     * Computes hyperlinks to resource definitions for resource urls (e.g.
+     * {@code @android:string/ok} or {@code @layout/foo}. May create multiple links.
      */
     private static IHyperlink[] getResourceLinks(IRegion range, String url) {
         List<IHyperlink> links = new ArrayList<IHyperlink>();
@@ -1136,6 +1175,9 @@ public class Hyperlinks {
                     range = new Region(range.getOffset() + 1, range.getLength() - 2);
 
                     Attr attribute = context.getAttribute();
+                    if (isStyleAttribute(context)) {
+                        return getStyleLinks(context, range, attribute.getValue());
+                    }
                     if (attribute != null && attribute.getValue().startsWith("@")) { //$NON-NLS-1$
                         // Instantly create links for resources since we can use the existing
                         // resolved maps for this and offer multiple choices for the user
@@ -1152,6 +1194,53 @@ public class Hyperlinks {
                 if (isElementNameLink(context)) {
                     isLinkable = true;
                 }
+            } else if (type == DOMRegionContext.XML_CONTENT) {
+                Node parentNode = context.getNode().getParentNode();
+                if (parentNode != null && parentNode.getNodeType() == Node.ELEMENT_NODE) {
+                    // Try to complete resources defined inline as text, such as
+                    // style definitions
+                    ITextRegion outer = context.getElementRegion();
+                    ITextRegion inner = context.getInnerRegion();
+                    int innerOffset = outer.getStart() + inner.getStart();
+                    int caretOffset = innerOffset + context.getInnerRegionCaretOffset();
+                    try {
+                        IRegion lineInfo = document.getLineInformationOfOffset(caretOffset);
+                        int lineStart = lineInfo.getOffset();
+                        int lineEnd = Math.min(lineStart + lineInfo.getLength(),
+                                innerOffset + inner.getLength());
+
+                        // Compute the resource URL
+                        int urlStart = -1;
+                        int offset = caretOffset;
+                        while (offset > lineStart) {
+                            char c = document.getChar(offset);
+                            if (c == '@') {
+                                urlStart = offset;
+                                break;
+                            } else if (!isValidResourceUrlChar(c)) {
+                                break;
+                            }
+                            offset--;
+                        }
+
+                        if (urlStart != -1) {
+                            offset = caretOffset;
+                            while (offset < lineEnd) {
+                                if (!isValidResourceUrlChar(document.getChar(offset))) {
+                                    break;
+                                }
+                                offset++;
+                            }
+
+                            int length = offset - urlStart;
+                            String url = document.get(urlStart, length);
+                            range = new Region(urlStart, length);
+                            return getResourceLinks(range, url);
+                        }
+                    } catch (BadLocationException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                }
             }
 
             if (isLinkable) {
@@ -1165,6 +1254,11 @@ public class Hyperlinks {
 
             return null;
         }
+    }
+
+    private static boolean isValidResourceUrlChar(char c) {
+        return Character.isJavaIdentifierPart(c) || c == ':' || c == '/' || c == '.' || c == '+';
+
     }
 
     /** Detector for finding Android references in Java files */
@@ -1334,7 +1428,7 @@ public class Hyperlinks {
      * is known, but the value location within XML files is deferred until the link is
      * actually opened.
      */
-    private static class ResourceLink implements IHyperlink {
+    static class ResourceLink implements IHyperlink {
         private final String mLinkText;
         private final IRegion mLinkRegion;
         private final ResourceType mType;
@@ -1431,6 +1525,10 @@ public class Hyperlinks {
                 throw new IllegalArgumentException("Invalid link parameters");
             }
         }
+
+        ResourceFile getFile() {
+            return mFile;
+        }
     }
 
     /**
@@ -1438,22 +1536,37 @@ public class Hyperlinks {
      * particular caret offset
      */
     private static class XmlContext {
+        private final Node mNode;
         private final Element mElement;
         private final Attr mAttribute;
         private final IStructuredDocumentRegion mOuterRegion;
         private final ITextRegion mInnerRegion;
+        private final int mInnerRegionOffset;
 
-        public XmlContext(Element element, Attr attribute, IStructuredDocumentRegion outerRegion,
-                ITextRegion innerRegion) {
+        public XmlContext(Node node, Element element, Attr attribute,
+                IStructuredDocumentRegion outerRegion,
+                ITextRegion innerRegion, int innerRegionOffset) {
             super();
+            mNode = node;
             mElement = element;
             mAttribute = attribute;
             mOuterRegion = outerRegion;
             mInnerRegion = innerRegion;
+            mInnerRegionOffset = innerRegionOffset;
         }
 
         /**
          * Gets the current node, never null
+         *
+         * @return the surrounding node
+         */
+        public Node getNode() {
+            return mNode;
+        }
+
+
+        /**
+         * Gets the current node, may be null
          *
          * @return the surrounding node
          */
@@ -1487,6 +1600,15 @@ public class Hyperlinks {
          */
         public ITextRegion getInnerRegion() {
             return mInnerRegion;
+        }
+
+        /**
+         * Gets the caret offset relative to the inner region
+         *
+         * @return the offset relative to the inner region
+         */
+        public int getInnerRegionCaretOffset() {
+            return mInnerRegionOffset;
         }
 
         /**
@@ -1551,8 +1673,25 @@ public class Hyperlinks {
                         if (region != null
                                 && DOMRegionContext.XML_TAG_NAME.equals(region.getType())) {
                             ITextRegion subRegion = region.getRegionAtCharacterOffset(offset);
-                            return new XmlContext(element, attribute, region, subRegion);
+                            int regionStart = region.getStartOffset();
+                            int subregionStart = subRegion.getStart();
+                            int relativeOffset = offset - (regionStart + subregionStart);
+                            return new XmlContext(element, element, attribute, region, subRegion,
+                                    relativeOffset);
                         }
+                    } else if (inode instanceof Node) {
+                        IStructuredDocument doc = model.getStructuredDocument();
+                        IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(offset);
+                        if (region != null
+                                && DOMRegionContext.XML_CONTENT.equals(region.getType())) {
+                            ITextRegion subRegion = region.getRegionAtCharacterOffset(offset);
+                            int regionStart = region.getStartOffset();
+                            int subregionStart = subRegion.getStart();
+                            int relativeOffset = offset - (regionStart + subregionStart);
+                            return new XmlContext((Node) inode, null, null, region, subRegion,
+                                    relativeOffset);
+                        }
+
                     }
                 }
             } finally {
