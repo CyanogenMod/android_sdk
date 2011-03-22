@@ -18,6 +18,7 @@ package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
+import com.android.sdkuilib.internal.repository.UpdaterWindowImpl2;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
@@ -39,7 +40,13 @@ public class UpdaterWindow {
      * @param osSdkRoot The OS path to the SDK root.
      */
     public UpdaterWindow(Shell parentShell, ISdkLog sdkLog, String osSdkRoot) {
-        mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot);
+
+        // TODO right now the new PackagesPage is experimental and not enabled by default
+        if (System.getenv("ANDROID_SDKMAN_EXP") != null) {  //$NON-NLS-1$
+            mWindow = new UpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot);
+        } else {
+            mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot);
+        }
     }
 
     /**

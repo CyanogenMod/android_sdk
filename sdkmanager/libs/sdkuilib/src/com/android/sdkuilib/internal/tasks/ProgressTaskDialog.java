@@ -19,9 +19,12 @@ package com.android.sdkuilib.internal.tasks;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -34,18 +37,16 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.events.ShellAdapter;
-import org.eclipse.swt.events.ShellEvent;
 
 
 /**
- * Implements a {@link ProgressDialog}, used by the {@link ProgressTask} class.
+ * Implements a {@link ProgressTaskDialog}, used by the {@link ProgressTask} class.
  * This separates the dialog UI from the task logic.
  *
  * Note: this does not implement the {@link ITaskMonitor} interface to avoid confusing
  * SWT Designer.
  */
-final class ProgressDialog extends Dialog {
+final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
 
     /**
      * Min Y location for dialog. Need to deal with the menu bar on mac os.
@@ -79,29 +80,27 @@ final class ProgressDialog extends Dialog {
     private ProgressBar mProgressBar;
     private Button mCancelButton;
     private Text mResultText;
-    private final Thread mTaskThread;
 
 
     /**
      * Create the dialog.
      * @param parent Parent container
-     * @param taskThread The thread to run the task.
      */
-    public ProgressDialog(Shell parent, Thread taskThread) {
+    public ProgressTaskDialog(Shell parent) {
         super(parent, SWT.APPLICATION_MODAL);
-        mTaskThread = taskThread;
     }
 
     /**
      * Open the dialog and blocks till it gets closed
+     * @param taskThread The thread to run the task. Cannot be null.
      */
-    public void open() {
+    public void open(Thread taskThread) {
         createContents();
-        positionShell();            //$hide$ (hide from SWT designer)
+        positionShell();                        //$hide$ (hide from SWT designer)
         mDialogShell.open();
         mDialogShell.layout();
 
-        startThread();              //$hide$ (hide from SWT designer)
+        startThread(taskThread);                //$hide$ (hide from SWT designer)
 
         Display display = getParent().getDisplay();
         while (!mDialogShell.isDisposed() && mCancelMode != CancelMode.CLOSE_AUTO) {
@@ -273,11 +272,11 @@ final class ProgressDialog extends Dialog {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setDescription(final String descriptionFormat, final Object...args) {
+    public void setDescription(final String description) {
         mDialogShell.getDisplay().syncExec(new Runnable() {
             public void run() {
                 if (!mLabel.isDisposed()) {
-                    mLabel.setText(String.format(descriptionFormat, args));
+                    mLabel.setText(description);
                 }
             }
         });
@@ -287,21 +286,20 @@ final class ProgressDialog extends Dialog {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setResult(final String resultFormat, final Object...args) {
+    public void setResult(final String result) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
                 public void run() {
                     if (!mResultText.isDisposed()) {
                         mResultText.setVisible(true);
-                        String newText = String.format(resultFormat, args);
                         String lastText = mResultText.getText();
                         if (lastText != null &&
                                 lastText.length() > 0 &&
                                 !lastText.endsWith("\n") &&
-                                !newText.startsWith("\n")) {
+                                !result.startsWith("\n")) {
                             mResultText.append("\n");
                         }
-                        mResultText.append(newText);
+                        mResultText.append(result);
                     }
                 }
             });
@@ -364,12 +362,35 @@ final class ProgressDialog extends Dialog {
     }
 
     /**
+     * Display a yes/no question dialog box.
+     *
+     * This implementation allow this to be called from any thread, it
+     * makes sure the dialog is opened synchronously in the ui thread.
+     *
+     * @param title The title of the dialog box
+     * @param message The error message
+     * @return true if YES was clicked.
+     */
+    public boolean displayPrompt(final String title, final String message) {
+        Display display = mDialogShell.getDisplay();
+
+        // we need to ask the user what he wants to do.
+        final boolean[] result = new boolean[] { false };
+        display.syncExec(new Runnable() {
+            public void run() {
+                result[0] = MessageDialog.openQuestion(mDialogShell, title, message);
+            }
+        });
+        return result[0];
+    }
+
+    /**
      * Starts the thread that runs the task.
      * This is deferred till the UI is created.
      */
-    private void startThread() {
-        if (mTaskThread != null) {
-            mTaskThread.start();
+    private void startThread(Thread taskThread) {
+        if (taskThread != null) {
+            taskThread.start();
         }
     }
 

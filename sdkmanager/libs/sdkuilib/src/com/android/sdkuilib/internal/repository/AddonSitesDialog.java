@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
@@ -31,6 +32,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -51,15 +53,24 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 
 import java.util.Arrays;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class AddonSitesDialog extends Dialog {
 
-    private boolean mChanged;
+    /**
+     * Min Y location for dialog. Need to deal with the menu bar on mac os.
+     */
+    private final static int MIN_Y = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ?
+            20 : 0;
+
+
+    /** Last dialog size for this session. */
+    private static Point sLastSize;
+
     private final UpdaterData mUpdaterData;
+    private boolean mChanged;
 
     private Shell mShell;
     private Table mTable;
@@ -89,6 +100,7 @@ public class AddonSitesDialog extends Dialog {
      */
     public boolean open() {
         createContents();
+        positionShell();
         postCreate();
         mShell.open();
         mShell.layout();
@@ -201,6 +213,39 @@ public class AddonSitesDialog extends Dialog {
                 column0.setWidth(r.width * 100 / 100); // 100%
             }
         });
+    }
+
+    /**
+     * Centers the dialog in its parent shell.
+     */
+    private void positionShell() {
+        // Centers the dialog in its parent shell
+        Shell child = mShell;
+        Shell parent = getParent();
+        if (child != null && parent != null) {
+
+            // get the parent client area with a location relative to the display
+            Rectangle parentArea = parent.getClientArea();
+            Point parentLoc = parent.getLocation();
+            int px = parentLoc.x;
+            int py = parentLoc.y;
+            int pw = parentArea.width;
+            int ph = parentArea.height;
+
+            // Reuse the last size if there's one, otherwise use the default
+            Point childSize = sLastSize != null ? sLastSize : child.getSize();
+            int cw = childSize.x;
+            int ch = childSize.y;
+
+            int x = px + (pw - cw) / 2;
+            if (x < 0) x = 0;
+
+            int y = py + (ph - ch) / 2;
+            if (y < MIN_Y) y = MIN_Y;
+
+            child.setLocation(x, y);
+            child.setSize(cw, ch);
+        }
     }
 
     private void newOrEdit(final boolean isEdit) {

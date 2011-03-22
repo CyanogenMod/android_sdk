@@ -94,6 +94,10 @@ public class ImageFactory {
             return null;
         }
 
+        if (object instanceof Image) {
+            return (Image) object;
+        }
+
         String clz = object.getClass().getSimpleName();
         if (clz.endsWith(Package.class.getSimpleName())) {
             String name = clz.replaceFirst(Package.class.getSimpleName(), "").toLowerCase() + //$NON-NLS-1$
