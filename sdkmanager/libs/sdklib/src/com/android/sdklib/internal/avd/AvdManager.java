@@ -308,12 +308,28 @@ public final class AvdManager {
 
             // Start with base name of the emulator
             path = path + SdkConstants.FN_EMULATOR;
+
             // If not using ARM, add processor type to emulator command line
-            if (!getAbiType().equalsIgnoreCase(SdkConstants.ABI_ARMEABI)) {
+            boolean useAbi = !getAbiType().equalsIgnoreCase(SdkConstants.ABI_ARMEABI);
+
+            if (useAbi) {
                 path = path + "-" + getAbiType();
             }
             // Add OS appropriate emulator extension (e.g., .exe on windows)
             path = path + SdkConstants.FN_EMULATOR_EXTENSION;
+
+            // HACK: The AVD manager should look for "emulator" or for "emulator-abi" (if not arm).
+            // However this is a transition period and we don't have that unified "emulator" binary
+            // in AOSP so if we can't find the generic one, look for an abi-specific one with the
+            // special case that the armeabi one is actually named emulator-arm.
+            // TODO remove this kludge once no longer necessary.
+            if (!useAbi && !(new File(path).isFile())) {
+                path = sdkPath + SdkConstants.OS_SDK_TOOLS_FOLDER;
+                path = path + SdkConstants.FN_EMULATOR;
+                path = path + "-" + getAbiType().replace(SdkConstants.ABI_ARMEABI, "arm"); //$NON-NLS-1$
+                path = path + SdkConstants.FN_EMULATOR_EXTENSION;
+            }
+
             return path;
         }
 
