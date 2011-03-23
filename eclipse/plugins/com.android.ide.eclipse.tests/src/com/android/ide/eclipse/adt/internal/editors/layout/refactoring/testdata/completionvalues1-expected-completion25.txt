@@ -1,0 +1,6 @@
+Code completion in completionvalues1.xml for textColor">^@color/title_color</item>:
+@android:
+@drawable/
+@layout/
+@string/
+@style/

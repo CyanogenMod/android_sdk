@@ -481,6 +481,12 @@ public class SelectionManager implements ISelectionProvider {
      * @param xmlNode The Node whose element we want to select.
      */
     /* package */ void select(Node xmlNode) {
+        if (xmlNode == null) {
+            return;
+        } else if (xmlNode.getNodeType() == Node.TEXT_NODE) {
+            xmlNode = xmlNode.getParentNode();
+        }
+
         CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoFor(xmlNode);
         if (vi != null && !vi.isRoot()) {
             selectSingle(vi);

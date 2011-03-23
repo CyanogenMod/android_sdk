@@ -155,6 +155,7 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
                     // for example have a typo, completion will show your current (wrong)
                     // value as a valid completion.
                 } else if (replacement.contains("Namespace")  //$NON-NLS-1$
+                        || replacement.startsWith("XSL ")  //$NON-NLS-1$
                         || replacement.contains("Schema")) {  //$NON-NLS-1$
                     // Eclipse adds in a number of namespace and schema related completions which
                     // are not usually applicable in our files.

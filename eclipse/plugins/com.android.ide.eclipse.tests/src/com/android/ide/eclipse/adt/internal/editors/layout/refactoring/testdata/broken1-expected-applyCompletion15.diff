@@ -1,4 +1,4 @@
 Code completion in broken1.xml for android:textColorHigh^ selecting android:textColorHighlight:
-<         android:textColorHigh
+<         android:textColorHigh^
 ---
 >         android:textColorHighlight="^"

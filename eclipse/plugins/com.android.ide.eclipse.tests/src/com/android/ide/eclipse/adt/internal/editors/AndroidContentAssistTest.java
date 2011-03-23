@@ -1,4 +1,5 @@
 /*
+
  * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
@@ -19,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesContentAssist;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.Document;
@@ -174,6 +176,93 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         // char is NOT a <) - should not complete with end tags
         checkLayoutCompletion("completion4.xml", "<Button^");
     }
+
+    // Test completion in style files
+
+    public void testCompletion23() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "android:textS^ize");
+    }
+
+    public void testCompletion24() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "17^sp");
+    }
+
+    public void testCompletion25() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "textColor\">^@color/title_color</item>");
+    }
+
+    public void testCompletion26() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:shadowColor\">@an^</item>");
+    }
+
+    public void testCompletion27() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:gravity\">^  </item>");
+    }
+
+    public void testCompletion28() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:gravity\">  ^</item>");
+    }
+
+    public void testCompletion29() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "<item name=\"gr^\">");
+    }
+
+    public void testCompletion30() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "<item name=\"an^\">");
+    }
+
+    public void testCompletion31() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "<item ^></item>");
+    }
+
+    public void testCompletion32() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "<item name=\"^\"></item>");
+    }
+
+    public void testCompletion33() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:allowSingleTap\">^</item>");
+    }
+
+    public void testCompletion34() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">^  false  </item>");
+    }
+
+    public void testCompletion35() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">  ^false  </item>");
+    }
+
+    public void testCompletion36() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">  f^alse  </item>");
+    }
+
+    public void testCompletion37() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:orientation\">h^</item>");
+    }
+
+    public void testCompletion38() throws Exception {
+        checkResourceCompletion("completionvalues1.xml",
+                "           c^");
+    }
+
+    public void testCompletion39() throws Exception {
+        // If you are at the end of a closing quote (but with no space), completion should
+        // include a separating space.
+        checkLayoutCompletion("completion1.xml", "marginBottom=\"50\"^");
+    }
+
+    public void testCompletion40() throws Exception {
+        // Same as test 39 but with single quote
+        checkLayoutCompletion("completion5.xml",  "android:id='@+id/button2'^");
+    }
+
 
     // ---- Test *applying* code completion ----
 
@@ -346,6 +435,100 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkApplyLayoutCompletion("completion7.xml", "android:orientation=\"^", "horizontal");
     }
 
+    // Test completion in style files
+
+    public void testApplyCompletion24a() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "android:textS^ize",
+                "android:textSelectHandleLeft");
+    }
+
+    public void testApplyCompletion24b() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "17^sp", "17mm");
+    }
+
+    public void testApplyCompletion25() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "textColor\">^@color/title_color</item>", "@android:");
+    }
+
+    public void testApplyCompletion26() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:shadowColor\">@an^</item>", "@android:");
+    }
+
+    public void testApplyCompletion27() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:gravity\">^  </item>", "center_vertical");
+    }
+
+    public void testApplyCompletion28() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:gravity\">  ^</item>", "left");
+    }
+
+    public void testApplyCompletion29() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "<item name=\"gr^\">",
+                "android:gravity");
+    }
+
+    public void testApplyCompletion30() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "<item name=\"an^\">",
+                "android:animateOnClick");
+    }
+
+    public void testApplyCompletion31() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "<item ^></item>", "name");
+    }
+
+    public void testApplyCompletion32() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "<item name=\"^\"></item>",
+                "android:background");
+    }
+
+    public void testApplyCompletion33() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:allowSingleTap\">^</item>", "true");
+    }
+
+    public void testApplyCompletion34() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">^  false  </item>", "true");
+    }
+
+    public void testApplyCompletion35() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">  ^false  </item>", "true");
+    }
+
+    public void testApplyCompletion36() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:alwaysDrawnWithCache\">  f^alse  </item>", "false");
+    }
+
+    public void testApplyCompletion37() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "<item name=\"android:orientation\">h^</item>", "horizontal");
+    }
+
+    public void testApplyCompletion38() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml",
+                "           c^", "center");
+    }
+
+    public void testApplyCompletion39() throws Exception {
+        // If you are at the end of a closing quote (but with no space), completion should
+        // include a separating space.
+        checkApplyLayoutCompletion("completion1.xml", "marginBottom=\"50\"^", " android:maxEms");
+    }
+
+    public void testApplyCompletion40() throws Exception {
+        // If you are at the end of a closing quote (but with no space), completion should
+        // include a separating space.
+        checkApplyLayoutCompletion("completion5.xml",  "android:id='@+id/button2'^",
+                " android:maxWidth");
+    }
+
+
     // --- Code Completion test infrastructure ----
 
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
@@ -366,6 +549,17 @@ public class AndroidContentAssistTest extends AdtProjectTest {
             String match) throws Exception {
         checkApplyCompletion(name, getLayoutFile(getProject(), name), caretLocation,
                 new LayoutContentAssist(), match);
+    }
+
+    private void checkResourceCompletion(String name, String caretLocation) throws Exception {
+        checkCompletion(name, getValueFile(getProject(), name), caretLocation,
+                new ResourcesContentAssist());
+    }
+
+    private void checkApplyResourceCompletion(String name, String caretLocation,
+            String match) throws Exception {
+        checkApplyCompletion(name, getValueFile(getProject(), name), caretLocation,
+                new ResourcesContentAssist(), match);
     }
 
     private ICompletionProposal[] complete(IFile file, String caretLocation,
@@ -417,11 +611,18 @@ public class AndroidContentAssistTest extends AdtProjectTest {
 
         String actual = document.get();
 
-        String diff = getDiff(fileContent, actual);
-        assertTrue(diff.length() > 0 || fileContent.equals(actual));
+        int offset = getCaretOffset(fileContent, caretLocation);
+        String beforeWithCaret = fileContent.substring(0, offset) + CARET
+                + fileContent.substring(offset);
+
+        String diff = getDiff(beforeWithCaret, actual);
+        assertTrue(diff + " versus " + actual, diff.length() > 0 || beforeWithCaret.equals(actual));
 
         StringBuilder summary = new StringBuilder();
         summary.append("Code completion in " + basename + " for " + caretLocation + " selecting " + match + ":\n");
+        if (diff.length() == 0) {
+            diff = "No changes";
+        }
         summary.append(diff);
 
         //assertEqualsGolden(basename, actual);
@@ -434,6 +635,7 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         StringBuilder sb = new StringBuilder(1000);
         sb.append("Code completion in " + basename + " for " + caretLocation + ":\n");
         for (ICompletionProposal proposal : proposals) {
+            // TODO: assertNotNull(proposal.getImage());
             sb.append(proposal.getDisplayString());
             String help = proposal.getAdditionalProposalInfo();
             if (help != null && help.trim().length() > 0) {

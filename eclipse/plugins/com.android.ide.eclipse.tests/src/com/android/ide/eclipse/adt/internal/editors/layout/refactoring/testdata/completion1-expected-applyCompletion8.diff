@@ -1,4 +1,2 @@
 Code completion in completion1.xml for layout_width^="fill_parent" selecting android:layout_width:
-<         android:layout_width="fill_parent"
----
->         android:layout_width^="fill_parent"
+No changes

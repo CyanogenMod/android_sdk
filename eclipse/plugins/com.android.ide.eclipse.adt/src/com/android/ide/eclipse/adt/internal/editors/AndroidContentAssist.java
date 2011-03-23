@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
 
 import com.android.ide.common.api.IAttributeInfo;
@@ -49,13 +50,10 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.graphics.Image;
-import org.w3c.dom.Element;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -71,12 +69,6 @@ import java.util.regex.Pattern;
  * <p>
  * Remaining corner cases:
  * <ul>
- * <li>If you are inside quotes, and you complete a value, then (after inserting the new
- *   value inside the quotes) the cursor should be moved outside the quotes and a space
- *   added.
- * <li>If you are at the end of a closing quote (but with no space), completion currently
- *   offers full attribute completion. However, the completion items should include a
- *   separating space.
  * <li>Completion does not work right if there is a space between the = and the opening
  *   quote.
  * <li>Replacement completion does not work right if the caret is to the left of the
@@ -84,6 +76,7 @@ import java.util.regex.Pattern;
  *   double quotes.
  * </ul>
  */
+@SuppressWarnings("restriction") // XML model
 public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
     /** Regexp to detect a full attribute after an element tag.
@@ -111,7 +104,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
     private final int mDescriptorId;
 
-    private AndroidXmlEditor mEditor;
+    protected AndroidXmlEditor mEditor;
 
     /**
      * Constructor for AndroidContentAssist
@@ -138,6 +131,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
      */
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
+        String wordPrefix = extractElementPrefix(viewer, offset);
 
         if (mEditor == null) {
             mEditor = AndroidXmlEditor.getAndroidXmlEditor(viewer);
@@ -148,87 +142,80 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             }
         }
 
-        UiElementNode rootUiNode = mEditor.getUiRootNode();
+        // List of proposals, in the order presented to the user.
+        List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(80);
 
-        Object[] choices = null; /* An array of ElementDescriptor, or AttributeDescriptor
-                                    or String or null */
-        String parent = "";      //$NON-NLS-1$
-        String wordPrefix = extractElementPrefix(viewer, offset);
-        char needTag = 0;
-        boolean isElement = false;
-        boolean isAttribute = false;
-
-        Node currentNode = getNode(viewer, offset);
-        if (currentNode == null)
-            return null;
-
-        // check to see if we can find a UiElementNode matching this XML node
-        UiElementNode currentUiNode =
-            rootUiNode == null ? null : rootUiNode.findXmlNode(currentNode);
-
-        if (currentNode == null) {
-            // Should not happen (an XML doc always has at least a doc node). Just give up.
+        // Look up the caret context - where in an element, or between elements, or
+        // within an element's children, is the given caret offset located?
+        Pair<Node, Node> context = DomUtilities.getNodeContext(viewer.getDocument(), offset);
+        if (context == null) {
             return null;
         }
+        Node parentNode = context.getFirst();
+        Node currentNode = context.getSecond();
+        assert parentNode != null || currentNode != null;
 
-        boolean isNew = true;
-        int replaceLength = 0;
-        if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-            parent = currentNode.getNodeName();
-
-            // We're not editing the current node name, so we might be editing its
-            // attributes instead...
+        UiElementNode rootUiNode = mEditor.getUiRootNode();
+        if (currentNode == null || currentNode.getNodeType() == Node.TEXT_NODE) {
+             UiElementNode parentUiNode =
+                 rootUiNode == null ? null : rootUiNode.findXmlNode(parentNode);
+             computeTextValues(proposals, offset, parentNode, currentNode, parentUiNode,
+                    wordPrefix);
+        } else if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
+            String parent = currentNode.getNodeName();
             AttribInfo info = parseAttributeInfo(viewer, offset, offset - wordPrefix.length());
             char nextChar = extractChar(viewer, offset);
             if (info != null) {
-                isAttribute = true;
-                // We're editing attributes in an element node (either the attributes' names
-                // or their values).
-                choices = getChoicesForAttribute(parent, currentNode, currentUiNode, info);
-
-                replaceLength = info.replaceLength;
-                if (info.correctedPrefix != null) {
-                    wordPrefix = info.correctedPrefix;
-                }
-                needTag = info.needTag;
-                // Look to the right and see if we're followed by whitespace
-                isNew = replaceLength == 0
-                    && (Character.isWhitespace(nextChar) || nextChar == '>' || nextChar == '/');
-            } else if (parent.startsWith(wordPrefix)) {
-                // We are still editing the element's tag name, not the attributes
-                // (the element's tag name may not even be complete)
-                isElement = true;
-                choices = getChoicesForElement(parent, currentNode);
-                replaceLength = parent.length() - wordPrefix.length();
-                isNew = replaceLength == 0 && nextNonspaceChar(viewer, offset) == '<';
-                // Special case: if we are right before the beginning of a new
-                // element, wipe out the replace length such that we insert before it,
-                // we don't edit the current element.
-                if (wordPrefix.length() == 0 && nextChar == '<') {
-                    replaceLength = 0;
-                    isNew = true;
-                }
+                // check to see if we can find a UiElementNode matching this XML node
+                UiElementNode currentUiNode = rootUiNode == null
+                    ? null : rootUiNode.findXmlNode(currentNode);
+                computeAttributeProposals(proposals, viewer, offset, wordPrefix, currentUiNode,
+                        parentNode, currentNode, parent, info, nextChar);
+            } else {
+                computeNonAttributeProposals(viewer, offset, wordPrefix, proposals, parentNode,
+                        currentNode, parent, nextChar);
             }
-        } else if (currentNode.getNodeType() == Node.TEXT_NODE) {
-            isElement = true;
-            // Examine the parent of the text node.
-            choices = getChoicesForTextNode(currentNode);
         }
 
-        // Abort if we can't recognize the context or there are no completion choices
-        if (choices == null || choices.length == 0) return null;
+        return proposals.toArray(new ICompletionProposal[proposals.size()]);
+    }
 
-        if (isElement) {
+    private void computeNonAttributeProposals(ITextViewer viewer, int offset, String wordPrefix,
+            List<ICompletionProposal> proposals, Node parentNode, Node currentNode, String parent,
+            char nextChar) {
+        if (parent.startsWith(wordPrefix)) {
+            // We are still editing the element's tag name, not the attributes
+            // (the element's tag name may not even be complete)
+
+            Object[] choices = getChoicesForElement(parent, currentNode);
+            if (choices == null || choices.length == 0) {
+                return;
+            }
+
+            int selectionLength = getSelectionLength(viewer);
+            int replaceLength = parent.length() - wordPrefix.length();
+            boolean isNew = replaceLength == 0 && nextNonspaceChar(viewer, offset) == '<';
+            // Special case: if we are right before the beginning of a new
+            // element, wipe out the replace length such that we insert before it,
+            // we don't edit the current element.
+            if (wordPrefix.length() == 0 && nextChar == '<') {
+                replaceLength = 0;
+                isNew = true;
+            }
+
             // If we found some suggestions, do we need to add an opening "<" bracket
             // for the element? We don't if the cursor is right after "<" or "</".
             // Per XML Spec, there's no whitespace between "<" or "</" and the tag name.
-            int offset2 = offset - wordPrefix.length() - 1;
-            char c1 = extractChar(viewer, offset2);
-            if (!((c1 == '<') || (c1 == '/' && extractChar(viewer, offset2 - 1) == '<'))) {
-                needTag = '<';
-            }
-        }
+            char needTag = computeElementNeedTag(viewer, offset, wordPrefix);
 
+            addMatchingProposals(proposals, choices, offset,
+                    parentNode != null ? parentNode : null, wordPrefix, needTag,
+                    false /* isAttribute */, isNew, false /*isComplete*/,
+                    selectionLength + replaceLength);
+        }
+    }
+
+    private int getSelectionLength(ITextViewer viewer) {
         // get the selection length
         int selectionLength = 0;
         ISelection selection = viewer.getSelectionProvider().getSelection();
@@ -236,9 +223,66 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             TextSelection textSelection = (TextSelection) selection;
             selectionLength = textSelection.getLength();
         }
+        return selectionLength;
+    }
 
-        return computeProposals(offset, currentNode, choices, wordPrefix, needTag,
-                isAttribute, isNew, selectionLength + replaceLength);
+    private void computeAttributeProposals(List<ICompletionProposal> proposals, ITextViewer viewer,
+            int offset, String wordPrefix, UiElementNode currentUiNode, Node parentNode,
+            Node currentNode, String parent, AttribInfo info, char nextChar) {
+        // We're editing attributes in an element node (either the attributes' names
+        // or their values).
+
+        if (info.isInValue) {
+            computeAttributeValues(proposals, offset, parent, info.name, currentNode,
+                    wordPrefix, info.skipEndTag, info.replaceLength);
+        }
+
+        // Look up attribute proposals based on descriptors
+        Object[] choices = getChoicesForAttribute(parent, currentNode, currentUiNode,
+                info, wordPrefix);
+        if (choices == null || choices.length == 0) {
+            return;
+        }
+
+        int selectionLength = getSelectionLength(viewer);
+        int replaceLength = info.replaceLength;
+        if (info.correctedPrefix != null) {
+            wordPrefix = info.correctedPrefix;
+        }
+        char needTag = info.needTag;
+        // Look to the right and see if we're followed by whitespace
+        boolean isNew = replaceLength == 0
+            && (Character.isWhitespace(nextChar) || nextChar == '>' || nextChar == '/');
+
+        addMatchingProposals(proposals, choices, offset, parentNode != null ? parentNode : null,
+                wordPrefix, needTag, true /* isAttribute */, isNew, info.skipEndTag,
+                selectionLength + replaceLength);
+    }
+
+    private char computeElementNeedTag(ITextViewer viewer, int offset, String wordPrefix) {
+        char needTag = 0;
+        int offset2 = offset - wordPrefix.length() - 1;
+        char c1 = extractChar(viewer, offset2);
+        if (!((c1 == '<') || (c1 == '/' && extractChar(viewer, offset2 - 1) == '<'))) {
+            needTag = '<';
+        }
+        return needTag;
+    }
+
+    protected int computeTextReplaceLength(Node currentNode, int offset) {
+        if (currentNode == null) {
+            return 0;
+        }
+
+        assert currentNode != null && currentNode.getNodeType() == Node.TEXT_NODE;
+
+        String nodeValue = currentNode.getNodeValue();
+        int relativeOffset = offset - ((IndexedRegion) currentNode).getStartOffset();
+        int lineEnd = nodeValue.indexOf('\n', relativeOffset);
+        if (lineEnd == -1) {
+            lineEnd = nodeValue.length();
+        }
+        return lineEnd - relativeOffset;
     }
 
     /**
@@ -250,7 +294,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *              e.g. {@link SdkConstants#NS_RESOURCES}
      * @return The first prefix declared or the default "android" prefix.
      */
-    private String lookupNamespacePrefix(Node node, String nsUri) {
+    private static String lookupNamespacePrefix(Node node, String nsUri) {
         // Note: Node.lookupPrefix is not implemented in wst/xml/core NodeImpl.java
         // The following emulates this:
         //   String prefix = node.lookupPrefix(SdkConstants.NS_RESOURCES);
@@ -341,8 +385,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *         a String[] if the user is editing an attribute value with some known values,
      *         or null if nothing is known about the context.
      */
-    private Object[] getChoicesForAttribute(String parent,
-            Node currentNode, UiElementNode currentUiNode, AttribInfo attrInfo) {
+    private Object[] getChoicesForAttribute(
+            String parent, Node currentNode, UiElementNode currentUiNode, AttribInfo attrInfo,
+            String wordPrefix) {
         Object[] choices = null;
         if (attrInfo.isInValue) {
             // Editing an attribute's value... Get the attribute name and then the
@@ -376,37 +421,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 }
 
                 if (currAttrNode != null) {
-                    choices = currAttrNode.getPossibleValues(value);
-
-                    if (currAttrNode instanceof UiFlagAttributeNode) {
-                        // A "flag" can consist of several values separated by "or" (|).
-                        // If the correct prefix contains such a pipe character, we change
-                        // it so that only the currently edited value is completed.
-                        pos = value.lastIndexOf('|');
-                        if (pos >= 0) {
-                            attrInfo.correctedPrefix = value = value.substring(pos + 1);
-                            attrInfo.needTag = 0;
-                        }
-                    }
-
-                    // Should we do suffix completion on dimension units etc?
-                    choices = completeSuffix(choices, value, currAttrNode);
-
-                    // Check to see if the user is attempting resource completion
-                    AttributeDescriptor attributeDescriptor = currAttrNode.getDescriptor();
-                    IAttributeInfo attributeInfo = attributeDescriptor.getAttributeInfo();
-                    if (value.startsWith("@")  //$NON-NLS-1$
-                            && !Format.REFERENCE.in(attributeInfo.getFormats())) {
-                        // Special case: If the attribute value looks like a reference to a
-                        // resource, offer to complete it, since in many cases our metadata
-                        // does not correctly state whether a resource value is allowed. We don't
-                        // offer these for an empty completion context, but if the user has
-                        // actually typed "@", in that case list resource matches.
-                        // For example, for android:minHeight this makes completion on @dimen/
-                        // possible.
-                        choices = UiResourceAttributeNode.computeResourceStringMatches(
-                                currentUiNode, attributeDescriptor, value);
-                    }
+                    choices = getAttributeValueChoices(currAttrNode, attrInfo, value);
                 }
             }
 
@@ -443,6 +458,85 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return choices;
     }
 
+    protected Object[] getAttributeValueChoices(UiAttributeNode currAttrNode, AttribInfo attrInfo,
+            String value) {
+        Object[] choices;
+        int pos;
+        choices = currAttrNode.getPossibleValues(value);
+        if (choices != null && currAttrNode instanceof UiResourceAttributeNode) {
+            attrInfo.skipEndTag = false;
+        }
+
+        if (currAttrNode instanceof UiFlagAttributeNode) {
+            // A "flag" can consist of several values separated by "or" (|).
+            // If the correct prefix contains such a pipe character, we change
+            // it so that only the currently edited value is completed.
+            pos = value.lastIndexOf('|');
+            if (pos >= 0) {
+                attrInfo.correctedPrefix = value = value.substring(pos + 1);
+                attrInfo.needTag = 0;
+            }
+
+            attrInfo.skipEndTag = false;
+        }
+
+        // Should we do suffix completion on dimension units etc?
+        choices = completeSuffix(choices, value, currAttrNode);
+
+        // Check to see if the user is attempting resource completion
+        AttributeDescriptor attributeDescriptor = currAttrNode.getDescriptor();
+        IAttributeInfo attributeInfo = attributeDescriptor.getAttributeInfo();
+        if (value.startsWith(PREFIX_RESOURCE_REF)
+                && !Format.REFERENCE.in(attributeInfo.getFormats())) {
+            // Special case: If the attribute value looks like a reference to a
+            // resource, offer to complete it, since in many cases our metadata
+            // does not correctly state whether a resource value is allowed. We don't
+            // offer these for an empty completion context, but if the user has
+            // actually typed "@", in that case list resource matches.
+            // For example, for android:minHeight this makes completion on @dimen/
+            // possible.
+            choices = UiResourceAttributeNode.computeResourceStringMatches(
+                    mEditor, attributeDescriptor, value);
+            attrInfo.skipEndTag = false;
+        }
+
+        return choices;
+    }
+
+    protected void computeAttributeValues(List<ICompletionProposal> proposals, int offset,
+            String parentTagName, String attributeName, Node node, String wordPrefix,
+            boolean skipEndTag, int replaceLength) {
+    }
+
+    protected void computeTextValues(List<ICompletionProposal> proposals, int offset,
+            Node parentNode, Node currentNode, UiElementNode uiParent,
+            String wordPrefix) {
+
+       if (parentNode != null) {
+           // Examine the parent of the text node.
+           Object[] choices = getElementChoicesForTextNode(parentNode);
+           if (choices != null && choices.length > 0) {
+               ISourceViewer viewer = mEditor.getStructuredSourceViewer();
+               char needTag = computeElementNeedTag(viewer, offset, wordPrefix);
+
+               // get the selection length
+               int selectionLength = 0;
+               ISelection selection = viewer.getSelectionProvider().getSelection();
+               if (selection instanceof TextSelection) {
+                   TextSelection textSelection = (TextSelection) selection;
+                   selectionLength = textSelection.getLength();
+               }
+               int replaceLength = 0;
+               addMatchingProposals(proposals, choices,
+                       offset, parentNode != null ? parentNode : null, wordPrefix, needTag,
+                               false /* isAttribute */,
+                               false /*isNew*/,
+                               false /*isComplete*/,
+                               selectionLength + replaceLength);
+           }
+       }
+    }
+
     /**
      * Gets the choices when the user is editing an XML text node.
      * <p/>
@@ -452,19 +546,18 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * @return An ElementDescriptor[] or null.
      */
-    private Object[] getChoicesForTextNode(Node currentNode) {
+    private Object[] getElementChoicesForTextNode(Node parentNode) {
         Object[] choices = null;
         String parent;
-        Node parent_node = currentNode.getParentNode();
-        if (parent_node.getNodeType() == Node.ELEMENT_NODE) {
+        if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
             // We're editing a text node which parent is an element node. Limit
             // content assist to elements valid for the parent.
-            parent = parent_node.getNodeName();
+            parent = parentNode.getNodeName();
             ElementDescriptor desc = getDescriptor(parent);
             if (desc != null) {
                 choices = desc.getChildren();
             }
-        } else if (parent_node.getNodeType() == Node.DOCUMENT_NODE) {
+        } else if (parentNode.getNodeType() == Node.DOCUMENT_NODE) {
             // We're editing a text node at the first level (i.e. root node).
             // Limit content assist to the only valid root elements.
             choices = getRootDescriptor().getChildren();
@@ -472,8 +565,9 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return choices;
     }
 
-    /**
-     * Given a list of choices found, generates the proposals to be displayed to the user.
+     /**
+     * Given a list of choices, adds in any that match the current prefix into the
+     * proposals list.
      * <p/>
      * Choices is an object array. Items of the array can be:
      * - ElementDescriptor: a possible element descriptor which XML name should be completed.
@@ -482,13 +576,14 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *           values for a given attribute.
      * - Pair of Strings: the first value is the keyword to insert, and the second value
      *           is the tooltip/help for the value to be displayed in the documentation popup.
-     *
-     * @return The ICompletionProposal[] to display to the user.
      */
-    private ICompletionProposal[] computeProposals(int offset, Node currentNode,
-            Object[] choices, String wordPrefix, char needTag,
-            boolean isAttribute, boolean isNew, int replaceLength) {
-        List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+    protected void addMatchingProposals(List<ICompletionProposal> proposals, Object[] choices,
+            int offset, Node currentNode, String wordPrefix, char needTag,
+            boolean isAttribute, boolean isNew, boolean skipEndTag, int replaceLength) {
+        if (choices == null) {
+            return;
+        }
+
         Map<String, String> nsUriMap = new HashMap<String, String>();
 
         for (Object choice : choices) {
@@ -562,6 +657,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                             endTag = "/>";  //$NON-NLS-1$
                         }
                         keyword = needTag + keyword + ' ';
+                    } else if (needTag == ' ') {
+                        keyword = needTag + keyword;
                     }
                 } else if (!isAttribute && isNew) {
                     if (elementCanHaveChildren(choice)) {
@@ -572,40 +669,40 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     keyword = keyword + ' ';
                 }
 
-                final CompletionProposal proposal;
+                final String suffix;
+                int cursorPosition;
+                final String displayString;
+                if (choice instanceof AttributeDescriptor && isNew) {
+                    // Special case for attributes: insert ="" stuff and locate caret inside ""
+                    suffix = "=\"\""; //$NON-NLS-1$
+                    cursorPosition = keyword.length() + suffix.length() - 1;
+                    displayString = keyword + endTag; // don't include suffix;
+                } else {
+                    suffix = endTag;
+                    cursorPosition = keyword.length();
+                    displayString = null;
+                }
+
+                if (skipEndTag) {
+                    assert isAttribute;
+                    cursorPosition++;
+                }
 
                 // For attributes, automatically insert ns:attribute="" and place the cursor
                 // inside the quotes.
-                if (choice instanceof AttributeDescriptor && isNew) {
-                    // Special case for attributes: insert ="" stuff and locate caret inside ""
-                    String suffix = "=\"\""; //$NON-NLS-1$
-                    proposal = new CompletionProposal(
-                        keyword + suffix ,                  // String replacementString
-                        offset - wordPrefix.length(),       // int replacementOffset
-                        wordPrefix.length() + replaceLength,// int replacementLength
-                        keyword.length() + suffix.length() - 1, // cursorPosition
-                        icon,                               // Image image
-                        keyword,                            // displayString - don't include =""
-                        null,                               // IContextInformation contextInformation
-                        tooltip                             // String additionalProposalInfo
-                        );
-                } else {
-                    proposal = new CompletionProposal(
-                        keyword + endTag,                   // String replacementString
-                        offset - wordPrefix.length(),       // int replacementOffset
-                        wordPrefix.length() + replaceLength,// int replacementLength
-                        keyword.length(),                   // int cursorPosition (rel. to rplcmntOffset)
-                        icon,                               // Image image
-                        null,                               // String displayString
-                        null,                               // IContextInformation contextInformation
-                        tooltip                             // String additionalProposalInfo
-                        );
-                }
-                proposals.add(proposal);
+                // Special case for attributes: insert ="" stuff and locate caret inside ""
+                proposals.add(new CompletionProposal(
+                    keyword + suffix ,                  // String replacementString
+                    offset - wordPrefix.length(),       // int replacementOffset
+                    wordPrefix.length() + replaceLength,// int replacementLength
+                    cursorPosition,                     // cursorPosition
+                    icon,                               // Image image
+                    displayString,                      // displayString
+                    null,                               // IContextInformation contextInformation
+                    tooltip                             // String additionalProposalInfo
+                ));
             }
         }
-
-        return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
 
     /**
@@ -616,7 +713,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * @param prefix the prefix the word should start with
      * @return true if the given word starts with the given prefix
      */
-    static boolean startsWith(String word, String prefix) {
+    protected static boolean startsWith(String word, String prefix) {
         int prefixLength = prefix.length();
         int wordLength = word.length();
         if (wordLength < prefixLength) {
@@ -779,11 +876,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return 0;
     }
 
-
     /**
      * Information about the current edit of an attribute as reported by parseAttributeInfo.
      */
-    private class AttribInfo {
+    protected static class AttribInfo {
+        public AttribInfo() {
+        }
+
         /** True if the cursor is located in an attribute's value, false if in an attribute name */
         public boolean isInValue = false;
         /** The attribute name. Null when not set. */
@@ -800,6 +899,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         public char needTag = 0;
         /** Number of characters to replace after the prefix */
         public int replaceLength = 0;
+        /** Should the cursor advance through the end tag when inserted? */
+        public boolean skipEndTag = false;
     }
 
     /**
@@ -898,6 +999,17 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     }
 
                     info.replaceLength = info.name.length() - prefixLength;
+
+                    if (info.name.length() == 0 && originalOffset > 0) {
+                        // Ensure that attribute names are properly separated
+                        char prevChar = extractChar(viewer, originalOffset - 1);
+                        if (prevChar == '"' || prevChar == '\'') {
+                            // Ensure that the attribute is properly separated from the
+                            // previous element
+                            info.needTag = ' ';
+                        }
+                    }
+                    info.skipEndTag = false;
                 } else {
                     info.isInValue = true;
                     info.name = text.substring(0, posEqual).trim();
@@ -937,6 +1049,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                                 }
                             }
                             if (!isFirst) {
+                                info.skipEndTag = true;
                                 break;
                             }
                         }
@@ -957,14 +1070,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return null;
-    }
-
-
-    /**
-     * Returns the XML DOM node corresponding to the given offset of the given document.
-     */
-    public static Node getNode(ITextViewer viewer, int offset) {
-        return DomUtilities.getNode(viewer.getDocument(), offset);
     }
 
     /**

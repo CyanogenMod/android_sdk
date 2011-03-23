@@ -1,4 +1,4 @@
 Code completion in completion3.xml for <EditText ^/> selecting android:textColorHighlight:
-<     <EditText />
+<     <EditText ^/>
 ---
 >     <EditText android:textColorHighlight="^"/>

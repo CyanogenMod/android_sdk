@@ -34,7 +34,7 @@ import org.eclipse.swt.graphics.Image;
  * This is an abstract class. Derived classes must implement data description and return
  * the correct UiAttributeNode-derived class.
  */
-public abstract class AttributeDescriptor {
+public abstract class AttributeDescriptor implements Comparable<AttributeDescriptor> {
     public static final String ATTRIBUTE_ICON_FILENAME = "attribute"; //$NON-NLS-1$
 
     private final String mXmlLocalName;
@@ -54,6 +54,7 @@ public abstract class AttributeDescriptor {
      *              or attribute separator, all of which do not represent any real attribute.)
      */
     public AttributeDescriptor(String xmlLocalName, String nsUri, IAttributeInfo attrInfo) {
+        assert xmlLocalName != null;
         mXmlLocalName = xmlLocalName;
         mNsUri = nsUri;
         mAttrInfo = attrInfo;
@@ -111,4 +112,9 @@ public abstract class AttributeDescriptor {
      *         attribute has no user interface.
      */
     public abstract UiAttributeNode createUiNode(UiElementNode uiParent);
+
+    // Implements Comparable<AttributeDescriptor>
+    public int compareTo(AttributeDescriptor other) {
+        return mXmlLocalName.compareTo(other.mXmlLocalName);
+    }
 }

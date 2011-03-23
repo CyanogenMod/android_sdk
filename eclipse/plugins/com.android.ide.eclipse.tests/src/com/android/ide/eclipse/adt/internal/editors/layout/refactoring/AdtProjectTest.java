@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
+import static com.android.AndroidConstants.FD_RES_VALUES;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -61,6 +62,14 @@ import java.lang.reflect.InvocationTargetException;
 
 @SuppressWarnings("restriction")
 public class AdtProjectTest extends SdkTestCase {
+    /** Update golden files if different from the actual results */
+    private static final boolean UPDATE_DIFFERENT_FILES = false;
+    /** Create golden files if missing */
+    private static final boolean UPDATE_MISSING_FILES = true;
+    private static final String TEST_DATA_REL_PATH =
+        "eclipse/plugins/com.android.ide.eclipse.tests/src/com/android/ide/eclipse/adt/"
+        + "internal/editors/layout/refactoring/testdata";
+
     /**
      * Individual tests don't share an instance of the TestCase so we stash the test
      * project in a static field such that we don't need to keep recreating it -- should
@@ -91,6 +100,10 @@ public class AdtProjectTest extends SdkTestCase {
 
     protected IFile getLayoutFile(IProject project, String name) throws Exception {
         return getTestDataFile(project, name, FD_RES + "/" + FD_RES_LAYOUT + "/" + name);
+    }
+
+    protected IFile getValueFile(IProject project, String name) throws Exception {
+        return getTestDataFile(project, name, FD_RES + "/" + FD_RES_VALUES + "/" + name);
     }
 
     protected IFile getTestDataFile(IProject project, String sourceName,
@@ -197,6 +210,12 @@ public class AdtProjectTest extends SdkTestCase {
         assertTrue(caretLocation, caretLocation.contains("^"));
 
         String fileContent = AdtPlugin.readFile(file);
+        return getCaretOffset(fileContent, caretLocation);
+    }
+
+    protected int getCaretOffset(String fileContent, String caretLocation) {
+        assertTrue(caretLocation, caretLocation.contains("^"));
+
         int caretDelta = caretLocation.indexOf("^");
         assertTrue(caretLocation, caretDelta != -1);
         String caretContext = caretLocation.substring(0, caretDelta)
@@ -359,7 +378,8 @@ public class AdtProjectTest extends SdkTestCase {
                 + "-expected-" + testName + '.' + newExtension;
         String expected = readTestFile(expectedName, false);
         if (expected == null) {
-            File expectedPath = new File(getTempDir(), expectedName);
+            File expectedPath = new File(
+                    UPDATE_MISSING_FILES ? getTargetDir() : getTempDir(), expectedName);
             AdtPlugin.writeFile(expectedPath, actual);
             System.out.println("Expected - written to " + expectedPath + ":\n");
             System.out.println(actual);
@@ -370,14 +390,40 @@ public class AdtProjectTest extends SdkTestCase {
                 File expectedPath = new File(getTempDir(), expectedName);
                 File actualPath = new File(getTempDir(),
                         expectedName.replace("expected", "actual"));
-               AdtPlugin.writeFile(expectedPath, expected);
+                AdtPlugin.writeFile(expectedPath, expected);
                 AdtPlugin.writeFile(actualPath, actual);
-                System.out.println("The files differ - see " + expectedPath + " versus "
+                // Also update data dir with the current value
+                if (UPDATE_DIFFERENT_FILES) {
+                    AdtPlugin.writeFile( new File(getTargetDir(), expectedName), actual);
+                }
+                System.out.println("The files differ: diff " + expectedPath + " "
                         + actualPath);
                 assertEquals("The files differ - see " + expectedPath + " versus " + actualPath,
                         expected, actual);
             }
         }
+    }
+
+    /** Get the location to write missing golden files to */
+    protected File getTargetDir() {
+        // Set $ADT_SDK_SOURCE_PATH to point to your git "sdk" directory; if done, then
+        // if you run a unit test which refers to a golden file which does not exist, it
+        // will be created directly into the test data directory and you can rerun the
+        // test
+        // and it should pass (after you verify that the golden file contains the correct
+        // result of course).
+        String sdk = System.getenv("ADT_SDK_SOURCE_PATH");
+        if (sdk != null) {
+            File sdkPath = new File(sdk);
+            if (sdkPath.exists()) {
+                File testData = new File(sdkPath, TEST_DATA_REL_PATH.replace('/',
+                        File.separatorChar));
+                if (testData.exists()) {
+                    return testData;
+                }
+            }
+        }
+        return getTempDir();
     }
 
     protected File getTempDir() {
