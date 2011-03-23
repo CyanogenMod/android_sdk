@@ -129,3 +129,4 @@ external/proguard/src/proguard/ant/task.properties            tools/proguard/ant
 ##############################################################################
 
 sdk/testapps            tests/testapps
+framework/ddmlib-tests.jar tests/libtests/ddmlib-tests.jar
