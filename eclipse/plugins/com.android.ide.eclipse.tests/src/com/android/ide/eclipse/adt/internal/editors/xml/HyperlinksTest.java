@@ -41,7 +41,13 @@ import org.eclipse.wst.xml.ui.internal.tabletree.XMLMultiPageEditorPart;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+@SuppressWarnings("restriction")
 public class HyperlinksTest extends AdtProjectTest {
+    @Override
+    protected boolean testNeedsUniqueProject() {
+        return true;
+    }
+
     public void testFqnRegexp() throws Exception {
         assertTrue(Hyperlinks.CLASS_PATTERN.matcher("com.android.Foo").matches());
         assertTrue(Hyperlinks.CLASS_PATTERN.matcher("com.android.pk_g.Foo_Bar1").
@@ -156,7 +162,6 @@ public class HyperlinksTest extends AdtProjectTest {
     // class attributes
     // Test that the correct file is actually opened!
 
-    @SuppressWarnings("restriction")
     private void checkXmlNavigation(String basename, String targetPath,
             String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), basename, targetPath, true);

@@ -84,7 +84,7 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
             int expectedModifiedFileCount, String... ids) throws Exception {
         assertTrue(ids.length > 0);
 
-        IFile file = getLayoutFile(sProject, basename);
+        IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
         List<Element> selectedElements = getElements(info.mElement, ids);

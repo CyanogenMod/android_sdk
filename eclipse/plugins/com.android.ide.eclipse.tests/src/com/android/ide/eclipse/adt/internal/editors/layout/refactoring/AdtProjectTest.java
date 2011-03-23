@@ -59,6 +59,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("restriction")
 public class AdtProjectTest extends SdkTestCase {
@@ -69,29 +71,65 @@ public class AdtProjectTest extends SdkTestCase {
     private static final String TEST_DATA_REL_PATH =
         "eclipse/plugins/com.android.ide.eclipse.tests/src/com/android/ide/eclipse/adt/"
         + "internal/editors/layout/refactoring/testdata";
+    private static final String PROJECTNAME_PREFIX = "testproject-";
+    private static final long TESTS_START_TIME = System.currentTimeMillis();
 
     /**
-     * Individual tests don't share an instance of the TestCase so we stash the test
-     * project in a static field such that we don't need to keep recreating it -- should
-     * be much faster.
+     * We don't stash the project used by each test case as a field such that test cases
+     * can share a single project instance (which is typically much faster).
+     * However, see {@link #getProjectName()} for exceptions to this sharing scheme.
      */
-    protected static IProject sProject;
+    private static Map<String, IProject> sProjectMap = new HashMap<String, IProject>();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
-        if (sProject == null) {
-            IProject project = null;
-            String projectName = "testproject-" + System.currentTimeMillis();
-            project = createProject(projectName);
-            assertNotNull(project);
-            sProject = project;
+        getProject();
+    }
+
+    /** Set to true if the subclass test case should use a per-instance project rather
+     * than a shared project. This is needed by projects which modify the project in such
+     * a way that it affects what other tests see (for example, the quickfix resource creation
+     * tests will add in new resources, which the code completion tests will then list as
+     * possible matches if the code completion test is run after the quickfix test.)
+     * @return true to create a per-instance project instead of the default shared project
+     */
+    protected boolean testCaseNeedsUniqueProject() {
+        return false;
+    }
+
+    protected boolean testNeedsUniqueProject() {
+        return false;
+    }
+
+    /** Returns a name to use for the project used in this test. Subclasses do not need to
+     * override this if they can share a project with others - which is the case if they do
+     * not modify the project in a way that does not affect other tests. For example
+     * the resource quickfix test will create new resources which affect what shows up
+     * in the code completion results, so the quickfix tests will override this method
+     * to produce a unique project for its own tests.
+     */
+    private String getProjectName() {
+        if (testNeedsUniqueProject()) {
+            return PROJECTNAME_PREFIX + getClass().getSimpleName() + "-" + getName();
+        } else if (testCaseNeedsUniqueProject()) {
+            return PROJECTNAME_PREFIX + getClass().getSimpleName();
+        } else {
+            return PROJECTNAME_PREFIX + TESTS_START_TIME;
         }
     }
 
     protected IProject getProject() {
-        return sProject;
+        String projectName = getProjectName();
+        IProject project = sProjectMap.get(projectName);
+        if (project == null) {
+            project = createProject(projectName);
+            assertNotNull(project);
+            sProjectMap.put(projectName, project);
+        }
+
+        return project;
     }
 
     protected IFile getTestDataFile(IProject project, String name) throws Exception {
