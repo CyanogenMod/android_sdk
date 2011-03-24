@@ -17,19 +17,20 @@
 package com.android.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.Log;
-import com.android.ddmlib.SyncException;
-import com.android.ddmlib.SyncService;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
 import com.android.ddmlib.ClientData.MethodProfilingStatus;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.SyncException;
+import com.android.ddmlib.SyncService;
 import com.android.ddmuilib.AllocationPanel;
 import com.android.ddmuilib.DevicePanel;
+import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.EmulatorControlPanel;
 import com.android.ddmuilib.HeapPanel;
 import com.android.ddmuilib.ITableFocusListener;
@@ -40,7 +41,6 @@ import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.SysinfoPanel;
 import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ThreadPanel;
-import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.actions.ToolItemAction;
 import com.android.ddmuilib.explorer.DeviceExplorer;
 import com.android.ddmuilib.handler.BaseFileHandler;
@@ -1508,9 +1508,19 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 deleteAction.item.setText("Delete"); //$NON-NLS-1$
             }
 
+            ToolItemAction createNewFolderAction = new ToolItemAction(toolBar, SWT.PUSH);
+            createNewFolderAction.item.setToolTipText("New Folder");
+            image = mDdmUiLibLoader.loadImage("add.png", mDisplay); //$NON-NLS-1$
+            if (image != null) {
+                createNewFolderAction.item.setImage(image);
+            } else {
+                // this is for debugging purpose when the icon is missing
+                createNewFolderAction.item.setText("New Folder"); //$NON-NLS-1$
+            }
+
             // device explorer
             mExplorer = new DeviceExplorer();
-            mExplorer.setActions(pushAction, pullAction, deleteAction);
+            mExplorer.setActions(pushAction, pullAction, deleteAction, createNewFolderAction);
 
             pullAction.item.addSelectionListener(new SelectionAdapter() {
                 @Override
@@ -1535,6 +1545,14 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 }
             });
             deleteAction.setEnabled(false);
+
+            createNewFolderAction.item.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    mExplorer.createNewFolderInSelection();
+                }
+            });
+            createNewFolderAction.setEnabled(false);
 
             Composite parent = new Composite(mExplorerShell, SWT.NONE);
             parent.setLayoutData(new GridData(GridData.FILL_BOTH));

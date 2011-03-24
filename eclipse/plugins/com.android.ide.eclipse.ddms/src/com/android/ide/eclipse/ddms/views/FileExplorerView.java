@@ -110,8 +110,18 @@ public class FileExplorerView extends ViewPart implements ISelectionListener {
         deleteAction.setImageDescriptor(loader.loadDescriptor("delete.png")); //$NON-NLS-1$
         deleteAction.setEnabled(false);
 
+        CommonAction createNewFolderAction = new CommonAction("New Folder") {
+            @Override
+            public void run() {
+                mExplorer.createNewFolderInSelection();
+            }
+        };
+        createNewFolderAction.setToolTipText("New Folder");
+        createNewFolderAction.setImageDescriptor(loader.loadDescriptor("add.png")); //$NON-NLS-1$
+        createNewFolderAction.setEnabled(false);
+
         // set up the actions in the explorer
-        mExplorer.setActions(pushAction, pullAction, deleteAction);
+        mExplorer.setActions(pushAction, pullAction, deleteAction, createNewFolderAction);
 
         // and in the ui
         IActionBars actionBars = getViewSite().getActionBars();
@@ -122,11 +132,15 @@ public class FileExplorerView extends ViewPart implements ISelectionListener {
         menuManager.add(pushAction);
         menuManager.add(new Separator());
         menuManager.add(deleteAction);
+        menuManager.add(new Separator());
+        menuManager.add(createNewFolderAction);
 
         toolBarManager.add(pullAction);
         toolBarManager.add(pushAction);
         toolBarManager.add(new Separator());
         toolBarManager.add(deleteAction);
+        toolBarManager.add(new Separator());
+        toolBarManager.add(createNewFolderAction);
 
         mExplorer.createPanel(parent);
 
