@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 
@@ -130,10 +131,49 @@ public final class AaptParser {
      * caused the error.
      * <p>
      * Example:
-     * Error: No resource found that matches the given name (at 'text' with value '@string/foo')
+     * error: No resource found that matches the given name (at 'text' with value '@string/foo')
      */
     private static final Pattern sValueRangePattern =
-        Pattern.compile("\\(at '(.+)' with value '(.+)'\\)"); //$NON-NLS-1$
+        Pattern.compile("\\(at '(.+)' with value '(.*)'\\)"); //$NON-NLS-1$
+
+
+    /**
+     * Portion of error message which points to the second occurrence of a repeated resource
+     * definition.
+     * <p>
+     * Example:
+     * error: Resource entry repeatedStyle1 already has bag item android:gravity.
+     */
+    private static final Pattern sRepeatedRangePattern =
+        Pattern.compile("Resource entry (.+) already has bag item (.+)\\."); //$NON-NLS-1$
+
+    /**
+     * Suffix of error message which points to the first occurrence of a repeated resource
+     * definition.
+     * Example:
+     * Originally defined here.
+     */
+    private static final String ORIGINALLY_DEFINED_MSG = "Originally defined here."; //$NON-NLS-1$
+
+    /**
+     * Portion of error message which points to the second occurrence of a repeated resource
+     * definition.
+     * <p>
+     * Example:
+     * error: Resource entry repeatedStyle1 already has bag item android:gravity.
+     */
+    private static final Pattern sNoResourcePattern =
+        Pattern.compile("No resource found that matches the given name: attr '(.+)'\\."); //$NON-NLS-1$
+
+    /**
+     * Portion of error message which points to a missing required attribute in a
+     * resource definition.
+     * <p>
+     * Example:
+     * error: error: A 'name' attribute is required for <style>
+     */
+    private static final Pattern sRequiredPattern =
+        Pattern.compile("A '(.+)' attribute is required for <(.+)>"); //$NON-NLS-1$
 
     /**
      * 2 line aapt error<br>
@@ -416,37 +456,10 @@ public final class AaptParser {
         int startOffset = -1;
         int endOffset = -1;
         if (f2 instanceof IFile) {
-            Matcher matcher = sValueRangePattern.matcher(message);
-            if (matcher.find()) {
-                String value = matcher.group(2);
-                IFile iFile = (IFile) f2;
-                IDocumentProvider provider = new TextFileDocumentProvider();
-                try {
-                    provider.connect(iFile);
-                    IDocument document = provider.getDocument(iFile);
-                    if (document != null) {
-                        IRegion lineInfo = document.getLineInformation(line - 1);
-                        int lineStartOffset = lineInfo.getOffset();
-                        // The aapt errors will be anchored on the line where the
-                        // element starts - which means that with formatting where
-                        // attributes end up on subsequent lines we don't find it on
-                        // the error line indicated by aapt.
-                        // Therefore, search forwards in the document.
-                        FindReplaceDocumentAdapter adapter =
-                            new FindReplaceDocumentAdapter(document);
-                        IRegion region = adapter.find(lineStartOffset, value,
-                                true /*forwardSearch*/, true /*caseSensitive*/,
-                                false /*wholeWord*/, false /*regExSearch*/);
-                        if (region != null) {
-                            startOffset = region.getOffset();
-                            endOffset = startOffset + value.length();
-                        }
-                    }
-                } catch (Exception e) {
-                    AdtPlugin.log(e, "Can't find range information for %1$s", location);
-                } finally {
-                    provider.disconnect(iFile);
-                }
+            IRegion region = findRange((IFile) f2, line, message);
+            if (region != null) {
+                startOffset = region.getOffset();
+                endOffset = startOffset + region.getLength();
             }
         }
 
@@ -499,6 +512,151 @@ public final class AaptParser {
         }
 
         return true;
+    }
+
+    /**
+     * Given an aapt error message in a given file and a given (initial) line number,
+     * return the corresponding offset range for the error, or null.
+     */
+    private static IRegion findRange(IFile file, int line, String message) {
+        Matcher matcher = sValueRangePattern.matcher(message);
+        if (matcher.find()) {
+            String property = matcher.group(1);
+            String value = matcher.group(2);
+
+            // First find the property. We can't just immediately look for the
+            // value, because there could be other attributes in this element
+            // earlier than the one in error, and we might accidentally pick
+            // up on a different occurrence of the value in a context where
+            // it is valid.
+            if (value.length() > 0) {
+                return findRange(file, line, property, value);
+            } else {
+                // Find first occurrence of property followed by '' or ""
+                IRegion region1 = findRange(file, line, property, "\"\""); //$NON-NLS-1$
+                IRegion region2 = findRange(file, line, property, "''");   //$NON-NLS-1$
+                if (region1 == null) {
+                    if (region2 == null) {
+                        // Highlight the property instead
+                        return findRange(file, line, property, null);
+                    }
+                    return region2;
+                } else if (region2 == null) {
+                    return region1;
+                } else if (region1.getOffset() < region2.getOffset()) {
+                    return region1;
+                } else {
+                    return region2;
+                }
+            }
+        }
+
+        matcher = sRepeatedRangePattern.matcher(message);
+        if (matcher.find()) {
+            String property = matcher.group(2);
+            return findRange(file, line, property, null);
+        }
+
+        matcher = sNoResourcePattern.matcher(message);
+        if (matcher.find()) {
+            String property = matcher.group(1);
+            return findRange(file, line, property, null);
+        }
+
+        matcher = sRequiredPattern.matcher(message);
+        if (matcher.find()) {
+            String elementName = matcher.group(2);
+            IRegion region = findRange(file, line, '<' + elementName, null);
+            if (region != null && region.getLength() > 1) {
+                // Skip the opening <
+                region = new Region(region.getOffset() + 1, region.getLength() - 1);
+            }
+            return region;
+        }
+
+        if (message.endsWith(ORIGINALLY_DEFINED_MSG)) {
+            return findLineTextRange(file, line);
+        }
+
+        return null;
+    }
+
+    /**
+     * Given a file and line number, return the range of the first match starting on the
+     * given line. If second is non null, also search for the second string starting at he
+     * location of the first string.
+     */
+    private static IRegion findRange(IFile file, int line, String first,
+            String second) {
+        IRegion region = null;
+        IDocumentProvider provider = new TextFileDocumentProvider();
+        try {
+            provider.connect(file);
+            IDocument document = provider.getDocument(file);
+            if (document != null) {
+                IRegion lineInfo = document.getLineInformation(line - 1);
+                int lineStartOffset = lineInfo.getOffset();
+                // The aapt errors will be anchored on the line where the
+                // element starts - which means that with formatting where
+                // attributes end up on subsequent lines we don't find it on
+                // the error line indicated by aapt.
+                // Therefore, search forwards in the document.
+                FindReplaceDocumentAdapter adapter =
+                    new FindReplaceDocumentAdapter(document);
+
+                region = adapter.find(lineStartOffset, first,
+                        true /*forwardSearch*/, true /*caseSensitive*/,
+                        false /*wholeWord*/, false /*regExSearch*/);
+                if (region != null && second != null) {
+                    region = adapter.find(region.getOffset() + first.length(), second,
+                            true /*forwardSearch*/, true /*caseSensitive*/,
+                            false /*wholeWord*/, false /*regExSearch*/);
+                }
+            }
+        } catch (Exception e) {
+            AdtPlugin.log(e, "Can't find range information for %1$s", file.getName());
+        } finally {
+            provider.disconnect(file);
+        }
+        return region;
+    }
+
+    /** Returns the non-whitespace line range at the given line number. */
+    private static IRegion findLineTextRange(IFile file, int line) {
+        IDocumentProvider provider = new TextFileDocumentProvider();
+        try {
+            provider.connect(file);
+            IDocument document = provider.getDocument(file);
+            if (document != null) {
+                IRegion lineInfo = document.getLineInformation(line - 1);
+                String lineContents = document.get(lineInfo.getOffset(), lineInfo.getLength());
+                int lineBegin = 0;
+                int lineEnd = lineContents.length()-1;
+
+                for (; lineEnd >= 0; lineEnd--) {
+                    char c = lineContents.charAt(lineEnd);
+                    if (!Character.isWhitespace(c)) {
+                        break;
+                    }
+                }
+                lineEnd++;
+                for (; lineBegin < lineEnd; lineBegin++) {
+                    char c = lineContents.charAt(lineBegin);
+                    if (!Character.isWhitespace(c)) {
+                        break;
+                    }
+                }
+                if (lineBegin < lineEnd) {
+                    return new Region(lineInfo.getOffset() + lineBegin, lineEnd - lineBegin);
+                }
+            }
+        } catch (Exception e) {
+            AdtPlugin.log(e, "Can't find range information for %1$s", file.getName());
+        } finally {
+            provider.disconnect(file);
+        }
+
+        return null;
     }
 
     /**

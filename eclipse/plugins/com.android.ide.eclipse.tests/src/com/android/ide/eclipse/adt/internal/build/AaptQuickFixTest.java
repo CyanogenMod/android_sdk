@@ -179,19 +179,7 @@ public class AaptQuickFixTest extends AdtProjectTest {
         String newFileContents = AdtPlugin.readFile(newFile);
 
         // Insert selection markers -- [ ] for the selection range, ^ for the caret
-        String newFileWithCaret;
-        int selectionBegin = selectedRange.x;
-        int selectionEnd = selectionBegin + selectedRange.y;
-        if (selectionBegin < selectionEnd) {
-            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "[^"
-                    + newFileContents.substring(selectionBegin, selectionEnd) + "]"
-                    + newFileContents.substring(selectionEnd);
-        } else {
-            // Selected range
-            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "^"
-                    + newFileContents.substring(selectionBegin);
-        }
-
+        String newFileWithCaret = addSelection(newFileContents, selectedRange);
         newFileWithCaret = removeSessionData(newFileWithCaret);
 
         assertEqualsGolden(name, newFileWithCaret);
