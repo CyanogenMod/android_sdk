@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.IWizardContainer;
 import org.eclipse.jface.wizard.IWizardPage;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkingSet;
@@ -204,6 +205,36 @@ public class AdtProjectTest extends SdkTestCase {
         assertTrue("Caret content " + caretContext + " not found in file",
                 caretContextIndex != -1);
         return caretContextIndex + caretDelta;
+    }
+
+    protected String addSelection(String newFileContents, Point selectedRange) {
+        int selectionBegin = selectedRange.x;
+        int selectionEnd = selectionBegin + selectedRange.y;
+        return addSelection(newFileContents, selectionBegin, selectionEnd);
+    }
+
+    protected String addSelection(String newFileContents, int selectionBegin, int selectionEnd) {
+        // Insert selection markers -- [ ] for the selection range, ^ for the caret
+        String newFileWithCaret;
+        if (selectionBegin < selectionEnd) {
+            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "[^"
+                    + newFileContents.substring(selectionBegin, selectionEnd) + "]"
+                    + newFileContents.substring(selectionEnd);
+        } else {
+            // Selected range
+            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "^"
+                    + newFileContents.substring(selectionBegin);
+        }
+
+        return newFileWithCaret;
+    }
+
+    protected String getCaretContext(String file, int offset) {
+        int windowSize = 20;
+        int begin = Math.max(0, offset - windowSize / 2);
+        int end = Math.min(file.length(), offset + windowSize / 2);
+
+        return "..." + file.substring(begin, offset) + "^" + file.substring(offset, end) + "...";
     }
 
     /**
