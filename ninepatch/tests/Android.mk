@@ -22,7 +22,9 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE := ninepatch-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := ninepatch junit
+LOCAL_JAVA_LIBRARIES := junit
+# bundle ninepatch inside the test jar for continuous tests
+LOCAL_STATIC_JAVA_LIBRARIES := ninepatch
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
