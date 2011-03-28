@@ -65,7 +65,7 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
     }
 
     private void checkRefactoring(String basename, boolean flatten) throws Exception {
-        IFile file = getLayoutFile(sProject, basename);
+        IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
         CanvasViewInfo rootView = info.mRootView;

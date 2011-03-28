@@ -49,6 +49,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AaptQuickFixTest extends AdtProjectTest {
+    @Override
+    protected boolean testCaseNeedsUniqueProject() {
+        // Make a separate test project for this test such that we don't pollute code assist
+        // tests with our new resources
+        return true;
+    }
+
     public void testQuickFix1() throws Exception {
         // Test adding a value into an existing file (res/values/strings.xml)
         checkFixes("quickfix1.xml", "android:text=\"@string/firs^tstring\"",
