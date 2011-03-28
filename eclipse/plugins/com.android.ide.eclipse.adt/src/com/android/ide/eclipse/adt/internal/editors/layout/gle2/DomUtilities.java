@@ -28,6 +28,10 @@ import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocumentRegion;
+import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegion;
+import org.eclipse.wst.xml.core.internal.regions.DOMRegionContext;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -74,6 +78,91 @@ public class DomUtilities {
         }
 
         return node;
+    }
+
+    /**
+     * Returns the editing context at the given offset, as a pair of parent node and child
+     * node. This is not the same as just calling {@link DomUtilities#getNode} and taking
+     * its parent node, because special care has to be taken to return content element
+     * positions.
+     * <p>
+     * For example, for the XML {@code <foo>^</foo>}, if the caret ^ is inside the foo
+     * element, between the opening and closing tags, then the foo element is the parent,
+     * and the child is null which represents a potential text node.
+     * <p>
+     * If the node is inside an element tag definition (between the opening and closing
+     * bracket) then the child node will be the element and whatever parent (element or
+     * document) will be its parent.
+     * <p>
+     * If the node is in a text node, then the text node will be the child and its parent
+     * element or document node its parent.
+     * <p>
+     * Finally, if the caret is on a boundary of a text node, then the text node will be
+     * considered the child, regardless of whether it is on the left or right of the
+     * caret. For example, in the XML {@code <foo>^ </foo>} and in the XML
+     * {@code <foo> ^</foo>}, in both cases the text node is preferred over the element.
+     *
+     * @param document the document to search in
+     * @param offset the offset to look up
+     * @return a pair of parent and child elements, where either the parent or the child
+     *         but not both can be null, and if non null the child.getParentNode() should
+     *         return the parent. Note that the method can also return null if no
+     *         document or model could be obtained or if the offset is invalid.
+     */
+    public static Pair<Node, Node> getNodeContext(IDocument document, int offset) {
+        Node node = null;
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        if (modelManager == null) {
+            return null;
+        }
+        try {
+            IStructuredModel model = modelManager.getExistingModelForRead(document);
+            if (model != null) {
+                try {
+                    for (; offset >= 0 && node == null; --offset) {
+                        IndexedRegion indexedRegion = model.getIndexedRegion(offset);
+                        if (indexedRegion != null) {
+                            node = (Node) indexedRegion;
+
+                            if (node.getNodeType() == Node.TEXT_NODE) {
+                                return Pair.of(node.getParentNode(), node);
+                            }
+
+                            // Look at the structured document to see if
+                            // we have the special case where the caret is pointing at
+                            // a -potential- text node, e.g. <foo>^</foo>
+                            IStructuredDocument doc = model.getStructuredDocument();
+                            IStructuredDocumentRegion region =
+                                doc.getRegionAtCharacterOffset(offset);
+
+                            ITextRegion subRegion = region.getRegionAtCharacterOffset(offset);
+                            String type = subRegion.getType();
+                            if (DOMRegionContext.XML_END_TAG_OPEN.equals(type)) {
+                                // Try to return the text node if it's on the left
+                                // of this element node, such that replace strings etc
+                                // can be computed.
+                                Node lastChild = node.getLastChild();
+                                if (lastChild != null) {
+                                    IndexedRegion previousRegion = (IndexedRegion) lastChild;
+                                    if (previousRegion.getEndOffset() == offset) {
+                                        return Pair.of(node, lastChild);
+                                    }
+                                }
+                                return Pair.of(node, null);
+                            }
+
+                            return Pair.of(node.getParentNode(), node);
+                        }
+                    }
+                } finally {
+                    model.releaseFromRead();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore exceptions.
+        }
+
+        return null;
     }
 
     /**

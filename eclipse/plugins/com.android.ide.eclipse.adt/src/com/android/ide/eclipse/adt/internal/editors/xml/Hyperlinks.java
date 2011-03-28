@@ -22,12 +22,14 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VIEW;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_CLASS;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ROOT_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
 import static com.android.sdklib.SdkConstants.FD_DOCS;
 import static com.android.sdklib.SdkConstants.FD_DOCS_REFERENCE;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
@@ -160,7 +162,6 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("restriction")
 public class Hyperlinks {
-    private static final String STYLE_ELEMENT = "style";                          //$NON-NLS-1$
     private static final String CATEGORY = "category";                            //$NON-NLS-1$
     private static final String ACTION = "action";                                //$NON-NLS-1$
     private static final String PERMISSION = "permission";                        //$NON-NLS-1$
@@ -1178,7 +1179,8 @@ public class Hyperlinks {
                     if (isStyleAttribute(context)) {
                         return getStyleLinks(context, range, attribute.getValue());
                     }
-                    if (attribute != null && attribute.getValue().startsWith("@")) { //$NON-NLS-1$
+                    if (attribute != null
+                            && attribute.getValue().startsWith(PREFIX_RESOURCE_REF)) {
                         // Instantly create links for resources since we can use the existing
                         // resolved maps for this and offer multiple choices for the user
 

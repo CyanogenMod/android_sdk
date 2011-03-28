@@ -35,10 +35,11 @@ public final class ResourcesDescriptors implements IDescriptorProvider {
 
     // Public attributes names, attributes descriptors and elements descriptors
 
-    public static final String ROOT_ELEMENT = "resources";  //$NON-NLS-1$
+    public static final String ROOT_ELEMENT = "resources"; //$NON-NLS-1$
     public static final String STRING_ELEMENT = "string";  //$NON-NLS-1$
+    public static final String STYLE_ELEMENT = "style";    //$NON-NLS-1$
 
-    public static final String ITEM_TAG = "item"; //$NON-NLS-1$
+    public static final String ITEM_TAG = "item";  //$NON-NLS-1$
     public static final String NAME_ATTR = "name"; //$NON-NLS-1$
     public static final String TYPE_ATTR = "type"; //$NON-NLS-1$
 

@@ -206,14 +206,13 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
      */
     @Override
     public String[] getPossibleValues(String prefix) {
-        return computeResourceStringMatches(getUiParent(), getDescriptor(), prefix);
+        return computeResourceStringMatches(getUiParent().getEditor(), getDescriptor(), prefix);
     }
 
-    public static String[] computeResourceStringMatches(UiElementNode uiNode,
+    public static String[] computeResourceStringMatches(AndroidXmlEditor editor,
             AttributeDescriptor attributeDescriptor, String prefix) {
         ResourceRepository repository = null;
         boolean isSystem = false;
-        AndroidXmlEditor editor = uiNode.getEditor();
 
         if (prefix == null || !prefix.regionMatches(1, ANDROID_PKG, 0, ANDROID_PKG.length())) {
             IProject project = editor.getProject();
@@ -295,7 +294,11 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             }
         }
 
-        sortAttributeChoices(attributeDescriptor, results);
+        if (attributeDescriptor != null) {
+            sortAttributeChoices(attributeDescriptor, results);
+        } else {
+            Collections.sort(results);
+        }
 
         return results.toArray(new String[results.size()]);
     }
