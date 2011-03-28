@@ -299,7 +299,6 @@ public class AdtProjectTest extends SdkTestCase {
      * (such as code completion apply-tests)
      */
     protected String getDiff(String before, String after) {
-
         // Do line by line analysis
         String[] beforeLines = before.split("\n");
         String[] afterLines = after.split("\n");
@@ -324,16 +323,42 @@ public class AdtProjectTest extends SdkTestCase {
             }
         }
 
+
+        boolean showBeforeWindow = firstDelta >= beforeLines.length - lastDelta;
+        boolean showAfterWindow = firstDelta >= afterLines.length - lastDelta;
+
         StringBuilder sb = new StringBuilder();
+        if (showAfterWindow && firstDelta > 0) {
+            sb.append("  ");
+            sb.append(afterLines[firstDelta - 1]);
+            sb.append('\n');
+        }
         for (int i = firstDelta; i < beforeLines.length - lastDelta; i++) {
             sb.append("< ");
             sb.append(beforeLines[i]);
             sb.append('\n');
         }
+        if (showAfterWindow && lastDelta < afterLines.length - 1) {
+            sb.append("  ");
+            sb.append(afterLines[afterLines.length - (lastDelta -1)]);
+            sb.append('\n');
+        }
+
         sb.append("---\n");
+
+        if (showBeforeWindow && firstDelta > 0) {
+            sb.append("  ");
+            sb.append(beforeLines[firstDelta - 1]);
+            sb.append('\n');
+        }
         for (int i = firstDelta; i < afterLines.length - lastDelta; i++) {
             sb.append("> ");
             sb.append(afterLines[i]);
+            sb.append('\n');
+        }
+        if (showBeforeWindow && lastDelta < beforeLines.length - 1) {
+            sb.append("  ");
+            sb.append(beforeLines[beforeLines.length - (lastDelta -1)]);
             sb.append('\n');
         }
 

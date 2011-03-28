@@ -1587,7 +1587,7 @@ public class GraphicalEditorPart extends EditorPart
         return null;
     }
 
-    ResourceResolver createResolver() {
+    public ResourceResolver createResolver() {
         String theme = mConfigComposite.getTheme();
         boolean isProjectTheme = mConfigComposite.isProjectTheme();
         Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes =

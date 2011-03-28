@@ -1,0 +1,13 @@
+<     <Button foo:text="Button"
+<         foo:layout_width="wrap_content" foo:layout_height="wrap_content"
+<         foo:textColor="#FF0000" foo:textSize="20pt"
+<         foo:id="@+id/button1" foo:layout_alignParentBottom="true"></Button>
+<     <Button foo:text="Button"
+<         foo:layout_width="wrap_content" foo:layout_height="fill_parent"
+<         foo:textColor="#00FF00" foo:textSize="20pt"
+---
+>     <Button style="@style/newstyle" foo:text="Button"
+>         foo:layout_width="wrap_content" foo:layout_height="wrap_content"
+>         foo:textColor="#FF0000" foo:id="@+id/button1" foo:layout_alignParentBottom="true"></Button>
+>     <Button style="@style/newstyle" foo:text="Button"
+>         foo:layout_width="wrap_content" foo:layout_height="fill_parent"

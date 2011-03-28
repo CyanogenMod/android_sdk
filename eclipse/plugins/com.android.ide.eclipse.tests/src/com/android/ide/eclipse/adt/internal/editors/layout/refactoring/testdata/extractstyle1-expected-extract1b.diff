@@ -1,0 +1,3 @@
+<     <Button android:text="Button"
+---
+>     <Button style="@style/newstyle" android:text="Button"

@@ -52,6 +52,7 @@ import java.io.UnsupportedEncodingException;
  * the resource folder, resource type and file name. It then creates the XML file.
  */
 public class NewXmlFileWizard extends Wizard implements INewWizard {
+    public static final String XML_HEADER_LINE = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"; //$NON-NLS-1$
 
     private static final String PROJECT_LOGO_LARGE = "android_large"; //$NON-NLS-1$
 
@@ -165,7 +166,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             createWsParentDirectory(file.getParent());
         }
 
-        StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");   //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder(XML_HEADER_LINE);
 
         sb.append('<').append(root);
         if (xmlns != null) {

@@ -178,7 +178,8 @@ public class AaptQuickFixTest extends AdtProjectTest {
              ((FileEditorInput) currentFile.getEditorInput()).getFile().getProjectRelativePath());
 
         // Look up caret offset
-        assertTrue(currentFile instanceof AndroidXmlEditor);
+        assertTrue(currentFile != null ? currentFile.getClass().getName() : "null",
+                currentFile instanceof AndroidXmlEditor);
         AndroidXmlEditor newEditor = (AndroidXmlEditor) currentFile;
         ISourceViewer newViewer = newEditor.getStructuredSourceViewer();
         Point selectedRange = newViewer.getSelectedRange();

@@ -686,6 +686,15 @@
                tooltip="Extracts Views as Included Layout">
          </action>
          <action
+               class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleAction"
+               definitionId="com.android.ide.eclipse.adt.refactoring.extract.style"
+               id="com.android.ide.eclipse.adt.actions.ExtractStyle"
+               label="Extract Style..."
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/com.android.ide.eclipse.adt.refactoring.menu/android"
+               style="push"
+               tooltip="Extracts Styles">
+         </action>
+         <action
                class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction"
                definitionId="com.android.ide.eclipse.adt.refactoring.wrapin"
                id="com.android.ide.eclipse.adt.actions.WrapIn"
@@ -829,6 +838,12 @@
       </command>
       <command
             categoryId="com.android.ide.eclipse.adt.refactoring.category"
+            description="Extract Styles"
+            id="com.android.ide.eclipse.adt.refactoring.extract.style"
+            name="Extract Styles">
+      </command>
+      <command
+            categoryId="com.android.ide.eclipse.adt.refactoring.category"
             description="Wraps Views in a New Container"
             id="com.android.ide.eclipse.adt.refactoring.wrapin"
             name="Wrap in Container">
@@ -855,6 +870,10 @@
       <contribution
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeContribution"
             id="com.android.ide.eclipse.adt.refactoring.extract.include">
+      </contribution>
+      <contribution
+            class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleContribution"
+            id="com.android.ide.eclipse.adt.refactoring.extract.style">
       </contribution>
       <contribution
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInContribution"
