@@ -73,4 +73,19 @@ public interface IProjectCallback {
      * @return an Integer containing the resource Id, or <code>null</code> if not found.
      */
     Integer getResourceId(ResourceType type, String name);
+
+    /**
+     * Returns the value of an item used by an adapter.
+     * @param adapterView The {@link ResourceReference} for the adapter view info.
+     * @param itemRef the {@link ResourceReference} for the layout used by the adapter item.
+     * @param fullPosition the position of the item in the full list.
+     * @param typePosition the position of the item if only items of the same type are considered.
+     *     If there is only one type of items, this is the same as <var>position</var>.
+     * @param viewRef The {@link ResourceReference} for the view we're trying to fill.
+     * @param viewClass the class name of the view we're trying to fill.
+     * @return the item value or null if there's no value.
+     */
+    String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
+            int fullPosition, int typePosition,
+            ResourceReference viewRef, String viewClass);
 }

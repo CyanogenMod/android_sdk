@@ -18,6 +18,12 @@ package com.android.ide.common.rendering.api;
 
 import com.android.resources.Density;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Rendering parameters for a {@link RenderSession}.
  */
@@ -46,10 +52,81 @@ public class SessionParams extends RenderParams {
         }
     }
 
+    /**
+     * An AdapterItemReference. On top of being a {@link ResourceReference}, it contains how many
+     * items of this type the data binding should display.
+     */
+    public static class AdapterItemReference extends ResourceReference {
+        private final int mCount;
+
+        public AdapterItemReference(String name, boolean platformLayout, int count) {
+            super(name, platformLayout);
+            mCount = count;
+        }
+
+        public AdapterItemReference(String name, boolean platformLayout) {
+            this(name, platformLayout, 1);
+        }
+
+        public AdapterItemReference(String name) {
+            this(name, false /*platformLayout*/, 1);
+        }
+
+        public int getCount() {
+            return mCount;
+        }
+    }
+
+    /**
+     * Describe the content of the dynamic android.widget.Adapter used to fill
+     * android.widget.AdapterView
+     */
+    public static class AdapterBinding {
+        private final List<ResourceReference> mHeaders = new ArrayList<ResourceReference>();
+        private final List<AdapterItemReference> mItems = new ArrayList<AdapterItemReference>();
+        private final List<ResourceReference> mFooters = new ArrayList<ResourceReference>();
+
+        public void addHeader(ResourceReference layoutInfo) {
+            mHeaders.add(layoutInfo);
+        }
+
+        public int getHeaderCount() {
+            return mHeaders.size();
+        }
+
+        public ResourceReference getHeaderAt(int index) {
+            return mHeaders.get(index);
+        }
+
+        public void addItem(AdapterItemReference itemInfo) {
+            mItems.add(itemInfo);
+        }
+
+        public int getItemCount() {
+            return mItems.size();
+        }
+
+        public AdapterItemReference getItemAt(int index) {
+            return mItems.get(index);
+        }
+
+        public void addFooter(ResourceReference layoutInfo) {
+            mFooters.add(layoutInfo);
+        }
+
+        public int getFooterCount() {
+            return mFooters.size();
+        }
+
+        public ResourceReference getFooterAt(int index) {
+            return mFooters.get(index);
+        }
+    }
 
     private final ILayoutPullParser mLayoutDescription;
     private final RenderingMode mRenderingMode;
     private boolean mLayoutOnly = false;
+    private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
 
     /**
      *
@@ -99,6 +176,10 @@ public class SessionParams extends RenderParams {
         super(params);
         mLayoutDescription = params.mLayoutDescription;
         mRenderingMode = params.mRenderingMode;
+        if (params.mAdapterBindingMap != null) {
+            mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>(
+                    params.mAdapterBindingMap);
+        }
     }
 
     public ILayoutPullParser getLayoutDescription() {
@@ -115,5 +196,21 @@ public class SessionParams extends RenderParams {
 
     public boolean isLayoutOnly() {
         return mLayoutOnly;
+    }
+
+    public void addAdapterBinding(ResourceReference reference, AdapterBinding data) {
+        if (mAdapterBindingMap == null) {
+            mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>();
+        }
+
+        mAdapterBindingMap.put(reference, data);
+    }
+
+    public Map<ResourceReference, AdapterBinding> getAdapterBindings() {
+        if (mAdapterBindingMap == null) {
+            return Collections.emptyMap();
+        }
+
+        return Collections.unmodifiableMap(mAdapterBindingMap);
     }
 }

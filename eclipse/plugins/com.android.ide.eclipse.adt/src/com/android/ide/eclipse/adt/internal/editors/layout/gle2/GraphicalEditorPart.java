@@ -1499,7 +1499,7 @@ public class GraphicalEditorPart extends EditorPart
             params.setForceNoDecor();
         }
 
-        // FIXME make persistent and only reload when the manifest (or at least resources) chanage.
+        // FIXME make persistent and only reload when the manifest (or at least resources) changes.
         IFolderWrapper projectFolder = new IFolderWrapper(getProject());
         IAbstractFile manifest = AndroidManifest.getManifest(projectFolder);
         if (manifest != null) {
@@ -1526,6 +1526,16 @@ public class GraphicalEditorPart extends EditorPart
 
         // set the Image Overlay as the image factory.
         params.setImageFactory(getCanvasControl().getImageOverlay());
+
+        // ---------------------------------------
+        // Data binding DEBUG
+//        AdapterBinding binding = new AdapterBinding();
+//        binding.addHeader(new ResourceReference("header", false));
+//        binding.addFooter(new ResourceReference("footer", false));
+//        binding.addItem(new AdapterItemReference("listitem", false, 3));
+//        binding.addItem(new AdapterItemReference("separator"));
+//        params.addAdapterBinding(new ResourceReference("listview"), binding);
+        // ---------------------------------------
 
         try {
             mProjectCallback.setLogger(logger);

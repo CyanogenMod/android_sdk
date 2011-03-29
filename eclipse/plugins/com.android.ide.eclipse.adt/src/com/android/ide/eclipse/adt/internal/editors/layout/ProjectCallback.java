@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -335,5 +336,14 @@ public final class ProjectCallback extends LegacyCallback {
 
         constructor.setAccessible(true);
         return constructor.newInstance(constructorParameters);
+    }
+
+    public String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
+            int fullPosition, int typePosition, ResourceReference viewRef, String viewClass) {
+        if (viewClass.contains("TextView")) {
+            return viewRef.getName() + " " + typePosition;
+        }
+
+        return null;
     }
 }

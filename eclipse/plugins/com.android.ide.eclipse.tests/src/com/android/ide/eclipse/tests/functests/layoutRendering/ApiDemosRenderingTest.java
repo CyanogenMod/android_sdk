@@ -21,6 +21,7 @@ import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.RenderSession;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
@@ -127,6 +128,10 @@ public class ApiDemosRenderingTest extends SdkTestCase {
             return null;
         }
 
+        public String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
+                int fullPosition, int typePosition, ResourceReference viewRef, String viewClass) {
+            return null;
+        }
     }
 
     public void testApiDemos() throws IOException, XmlPullParserException {

@@ -24,41 +24,41 @@ public enum Capability {
     /** Ability to render at full size, as required by the layout, and unbound by the screen */
     UNBOUND_RENDERING,
     /** Ability to override the background of the rendering with transparency using
-     * {@link SceneParams#setCustomBackgroundColor(int)} */
+     * {@link SessionParams#setCustomBackgroundColor(int)} */
     CUSTOM_BACKGROUND_COLOR,
-    /** Ability to call {@link LayoutScene#render()} and {@link LayoutScene#render(long)}. */
+    /** Ability to call {@link RenderSession#render()} and {@link RenderSession#render(long)}. */
     RENDER,
     /** Ability to ask for a layout only with no rendering through
      * {@link SessionParams#setLayoutOnly()}
      */
     LAYOUT_ONLY,
     /**
-     * Ability to control embedded layout parsers through {@link IXmlPullParser#getParser(String)}
+     * Ability to control embedded layout parsers through {@link ILayoutPullParser#getParser(String)}
      */
     EMBEDDED_LAYOUT,
     /** Ability to call<br>
-     * {@link LayoutScene#insertChild(Object, IXmlPullParser, int, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
-     * {@link LayoutScene#moveChild(Object, Object, int, java.util.Map, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
-     * {@link LayoutScene#removeChild(Object, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
-     * {@link LayoutScene#setProperty(Object, String, String)}<br>
+     * {@link RenderSession#insertChild(Object, ILayoutPullParser, int, IAnimationListener)}<br>
+     * {@link RenderSession#moveChild(Object, Object, int, java.util.Map, IAnimationListener)}<br>
+     * {@link RenderSession#setProperty(Object, String, String)}<br>
      * The method that receives an animation listener can only use it if the
      * ANIMATED_VIEW_MANIPULATION, or FULL_ANIMATED_VIEW_MANIPULATION is also supported.
      * */
     VIEW_MANIPULATION,
     /** Ability to play animations with<br>
-     * {@link LayoutScene#animate(Object, String, boolean, com.android.layoutlib.api.LayoutScene.IAnimationListener)}
+     * {@link RenderSession#animate(Object, String, boolean, IAnimationListener)}
      */
     PLAY_ANIMATION,
     /**
      * Ability to manipulate views with animation, as long as the view does not change parent.
-     * {@link LayoutScene#insertChild(Object, IXmlPullParser, int, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
-     * {@link LayoutScene#moveChild(Object, Object, int, java.util.Map, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
-     * {@link LayoutScene#removeChild(Object, com.android.layoutlib.api.LayoutScene.IAnimationListener)}<br>
+     * {@link RenderSession#insertChild(Object, ILayoutPullParser, int, IAnimationListener)}<br>
+     * {@link RenderSession#moveChild(Object, Object, int, java.util.Map, IAnimationListener)}<br>
+     * {@link RenderSession#removeChild(Object, IAnimationListener)}<br>
      */
     ANIMATED_VIEW_MANIPULATION,
     /**
      * Ability to move views (even into a different ViewGroup) with animation.
-     * see {@link LayoutScene#moveChild(Object, Object, int, java.util.Map, com.android.layoutlib.api.LayoutScene.IAnimationListener)}
+     * see {@link RenderSession#moveChild(Object, Object, int, java.util.Map, IAnimationListener)}
      */
-    FULL_ANIMATED_VIEW_MANIPULATION;
+    FULL_ANIMATED_VIEW_MANIPULATION,
+    ADAPTER_BINDING;
 }
