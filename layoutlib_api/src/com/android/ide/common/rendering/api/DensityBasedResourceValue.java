@@ -41,6 +41,7 @@ public class DensityBasedResourceValue extends ResourceValue implements IDensity
     /** Legacy method, do not call
      * @deprecated use {@link #getResourceDensity()} instead.
      */
+    @Deprecated
     public Density getDensity() {
         return Density.getEnum(mDensity.getDpiValue());
     }
@@ -50,5 +51,36 @@ public class DensityBasedResourceValue extends ResourceValue implements IDensity
         return "DensityBasedResourceValue ["
                 + getResourceType() + "/" + getName() + " = " + getValue()
                 + " (density:" + mDensity +", framework:" + isFramework() + ")]";
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((mDensity == null) ? 0 : mDensity.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DensityBasedResourceValue other = (DensityBasedResourceValue) obj;
+        if (mDensity == null) {
+            if (other.mDensity != null)
+                return false;
+        } else if (!mDensity.equals(other.mDensity))
+            return false;
+        return true;
     }
 }

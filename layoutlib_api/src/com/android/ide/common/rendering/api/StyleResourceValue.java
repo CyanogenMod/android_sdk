@@ -75,8 +75,8 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
      * Legacy method.
      * @deprecated use {@link #getValue()}
      */
+    @Deprecated
     public IResourceValue findItem(String name) {
         return mItems.get(name);
     }
-
 }

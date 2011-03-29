@@ -23,23 +23,19 @@ import com.android.resources.ResourceType;
  * Represents an android resource with a name and a string value.
  */
 @SuppressWarnings("deprecation")
-public class ResourceValue implements IResourceValue {
+public class ResourceValue extends ResourceReference implements IResourceValue {
     private final ResourceType mType;
-    private final String mName;
     private String mValue = null;
-    private final boolean mIsFramework;
 
     public ResourceValue(ResourceType type, String name, boolean isFramework) {
+        super(name, isFramework);
         mType = type;
-        mName = name;
-        mIsFramework = isFramework;
     }
 
     public ResourceValue(ResourceType type, String name, String value, boolean isFramework) {
+        super(name, isFramework);
         mType = type;
-        mName = name;
         mValue = value;
-        mIsFramework = isFramework;
     }
 
     public ResourceType getResourceType() {
@@ -56,25 +52,10 @@ public class ResourceValue implements IResourceValue {
     }
 
     /**
-     * Returns the name of the resource, as defined in the XML.
-     */
-    public final String getName() {
-        return mName;
-    }
-
-    /**
      * Returns the value of the resource, as defined in the XML. This can be <code>null</code>
      */
     public final String getValue() {
         return mValue;
-    }
-
-    /**
-     * Returns whether the resource is a framework resource (<code>true</code>) or a project
-     * resource (<code>false</false>).
-     */
-    public final boolean isFramework() {
-        return mIsFramework;
     }
 
     /**
@@ -95,9 +76,44 @@ public class ResourceValue implements IResourceValue {
 
     @Override
     public String toString() {
-        return "ResourceValue [" + mType + "/" + mName + " = " + mValue  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                + " (framework:" + mIsFramework + ")]"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "ResourceValue [" + mType + "/" + getName() + " = " + mValue  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                + " (framework:" + isFramework() + ")]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((mType == null) ? 0 : mType.hashCode());
+        result = prime * result + ((mValue == null) ? 0 : mValue.hashCode());
+        return result;
+    }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ResourceValue other = (ResourceValue) obj;
+        if (mType == null) {
+            if (other.mType != null)
+                return false;
+        } else if (!mType.equals(other.mType))
+            return false;
+        if (mValue == null) {
+            if (other.mValue != null)
+                return false;
+        } else if (!mValue.equals(other.mValue))
+            return false;
+        return true;
+    }
 }
