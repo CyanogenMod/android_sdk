@@ -214,6 +214,11 @@ public class LayoutCanvas extends Canvas {
     private final GestureManager mGestureManager = new GestureManager(this);
 
     /**
+     * When set, performs a zoom-to-fit when the next rendering image arrives.
+     */
+    private boolean mZoomFitNextImage;
+
+    /**
      * Native clipboard support.
      */
     private ClipboardSupport mClipboardSupport;
@@ -244,6 +249,8 @@ public class LayoutCanvas extends Canvas {
                 } catch (NumberFormatException nfe) {
                     // Ignore - use zoom=100%
                 }
+            } else {
+                mZoomFitNextImage = true;
             }
         }
 
@@ -559,6 +566,16 @@ public class LayoutCanvas extends Canvas {
             if (image != null) {
                 mHScale.setSize(image.getImageData().width, getClientArea().width);
                 mVScale.setSize(image.getImageData().height, getClientArea().height);
+                if (mZoomFitNextImage) {
+                    mZoomFitNextImage = false;
+                    // Must be run asynchronously because getClientArea() returns 0 bounds
+                    // when the editor is being initialized
+                    getDisplay().asyncExec(new Runnable() {
+                        public void run() {
+                            setFitScale(true);
+                        }
+                    });
+                }
             }
         }
 
