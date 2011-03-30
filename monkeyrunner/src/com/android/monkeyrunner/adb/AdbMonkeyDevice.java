@@ -29,6 +29,7 @@ import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.MonkeyManager;
 import com.android.monkeyrunner.adb.LinearInterpolator.Point;
+import com.android.monkeyrunner.easy.HierarchyViewer;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -79,6 +80,11 @@ public class AdbMonkeyDevice extends MonkeyDevice {
             LOG.log(Level.SEVERE, "Error getting the manager to quit", e);
         }
         manager = null;
+    }
+
+    @Override
+    public HierarchyViewer getHierarchyViewer() {
+        return new HierarchyViewer(device);
     }
 
     private void executeAsyncCommand(final String command,

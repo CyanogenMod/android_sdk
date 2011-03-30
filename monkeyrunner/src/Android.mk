@@ -24,7 +24,9 @@ LOCAL_JAVA_LIBRARIES := \
 	jython \
 	guavalib \
 	jsilver \
-        sdklib
+	sdklib \
+	hierarchyviewerlib \
+	swt
 
 LOCAL_JAVA_RESOURCE_DIRS := resources
 

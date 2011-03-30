@@ -23,9 +23,11 @@ import java.text.BreakIterator;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -482,5 +484,21 @@ public final class JythonUtils {
         }
         lines.add(currentLine.toString());
         return lines;
+    }
+
+    /**
+     * Obtain the set of method names available from Python.
+     *
+     * @param clazz Class to inspect.
+     * @return set of method names annotated with {@code MonkeyRunnerExported}.
+     */
+    public static Set<String> getMethodNames(Class<?> clazz) {
+        HashSet<String> methodNames = new HashSet<String>();
+        for (Method m: clazz.getMethods()) {
+            if (m.isAnnotationPresent(MonkeyRunnerExported.class)) {
+                methodNames.add(m.getName());
+            }
+        }
+        return methodNames;
     }
 }

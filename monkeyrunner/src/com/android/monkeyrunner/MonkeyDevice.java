@@ -31,6 +31,8 @@ import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
+import com.android.monkeyrunner.easy.HierarchyViewer;
+
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -81,6 +83,18 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
      *  NOTE: This is not part of the jython API.
      */
     public abstract void dispose();
+
+    /**
+     * @return hierarchy viewer implementation for querying state of the view
+     * hierarchy.
+     */
+    public abstract HierarchyViewer getHierarchyViewer();
+
+    @MonkeyRunnerExported(doc = "Get the HierarchyViewer object for the device.",
+            returns = "A HierarchyViewer object")
+    public HierarchyViewer getHierarchyViewer(PyObject[] args, String[] kws) {
+        return getHierarchyViewer();
+    }
 
     @MonkeyRunnerExported(doc =
     "Gets the device's screen buffer, yielding a screen capture of the entire display.",
