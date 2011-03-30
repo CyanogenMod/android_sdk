@@ -82,9 +82,18 @@ public class SessionParams extends RenderParams {
      * android.widget.AdapterView
      */
     public static class AdapterBinding {
+        private final int mRepeatCount;
         private final List<ResourceReference> mHeaders = new ArrayList<ResourceReference>();
         private final List<AdapterItemReference> mItems = new ArrayList<AdapterItemReference>();
         private final List<ResourceReference> mFooters = new ArrayList<ResourceReference>();
+
+        public AdapterBinding(int repeatCount) {
+            mRepeatCount = repeatCount;
+        }
+
+        public int getRepeatCount() {
+            return mRepeatCount;
+        }
 
         public void addHeader(ResourceReference layoutInfo) {
             mHeaders.add(layoutInfo);
