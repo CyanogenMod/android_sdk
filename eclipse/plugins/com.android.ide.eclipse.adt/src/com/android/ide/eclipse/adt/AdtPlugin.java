@@ -1810,7 +1810,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
-     * Opens the given file and shows the given (optional) region
+     * Opens the given file and shows the given (optional) region in the editor (or
+     * if no region is specified, opens the editor tab.)
      *
      * @param file the file to be opened
      * @param region an optional region which if set will be selected and shown to the
@@ -1818,6 +1819,20 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * @throws PartInitException if something goes wrong
      */
     public static void openFile(IFile file, IRegion region) throws PartInitException {
+        openFile(file, region, true);
+    }
+
+    /**
+     * Opens the given file and shows the given (optional) region
+     *
+     * @param file the file to be opened
+     * @param region an optional region which if set will be selected and shown to the
+     *            user
+     * @param showEditorTab if true, front the editor tab after opening the file
+     * @throws PartInitException if something goes wrong
+     */
+    public static void openFile(IFile file, IRegion region, boolean showEditorTab)
+            throws PartInitException {
         IWorkbench workbench = PlatformUI.getWorkbench();
         if (workbench == null) {
             return;
@@ -1835,7 +1850,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
             if (region != null) {
                 editor.show(region.getOffset(), region.getLength());
-            } else {
+            } else if (showEditorTab) {
                 editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
             }
         }
