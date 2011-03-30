@@ -1053,7 +1053,7 @@ public class GraphicalEditorPart extends EditorPart
                         new StaticRenderSession(
                                 Result.Status.SUCCESS.createResult(),
                                 null /*rootViewInfo*/, null /*image*/),
-                        null /*explodeNodes*/);
+                        null /*explodeNodes*/, true /* layoutlib5 */);
                 return;
             }
 
@@ -1339,7 +1339,8 @@ public class GraphicalEditorPart extends EditorPart
                 explodeNodes, null /*custom background*/, false /*no decorations*/, logger,
                 mIncludedWithin, renderingMode);
 
-        canvas.setSession(session, explodeNodes);
+        boolean layoutlib5 = layoutLib.supports(Capability.EMBEDDED_LAYOUT);
+        canvas.setSession(session, explodeNodes, layoutlib5);
 
         // update the UiElementNode with the layout info.
         if (session != null && session.getResult().isSuccess() == false) {

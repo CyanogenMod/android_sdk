@@ -53,7 +53,7 @@ public class SelectionManagerTest extends TestCase {
                 "android.widget.Button", false);
         ViewInfo child2 = new ViewInfo("Button2", child2Node, 0, 20, 70, 25);
         root.setChildren(Arrays.asList(child1, child2));
-        CanvasViewInfo rootView = CanvasViewInfo.create(root).getFirst();
+        CanvasViewInfo rootView = CanvasViewInfo.create(root, true /* layoutlib5 */).getFirst();
         assertNotNull(rootView);
 
         manager.selectMultiple(Arrays.asList(rootView, rootView.getChildren().get(0), rootView
@@ -104,7 +104,7 @@ public class SelectionManagerTest extends TestCase {
                 "android.widget.Button", false);
         ViewInfo child2 = new ViewInfo("Button2", child2Node, 0, 20, 70, 25);
         root.setChildren(Arrays.asList(child1, child2));
-        CanvasViewInfo rootView = CanvasViewInfo.create(root).getFirst();
+        CanvasViewInfo rootView = CanvasViewInfo.create(root, true /* layoutlib5 */).getFirst();
         assertNotNull(rootView);
 
         manager.selectMultiple(Arrays.asList(rootView.getChildren().get(0)));

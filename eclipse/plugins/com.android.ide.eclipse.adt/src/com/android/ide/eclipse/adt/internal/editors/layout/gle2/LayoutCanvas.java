@@ -553,11 +553,12 @@ public class LayoutCanvas extends Canvas {
      *            {@link #showInvisibleViews(boolean)}) where individual invisible nodes
      *            are padded during certain interactions.
      */
-    /* package */ void setSession(RenderSession session, Set<UiElementNode> explodedNodes) {
+    /* package */ void setSession(RenderSession session, Set<UiElementNode> explodedNodes,
+            boolean layoutlib5) {
         // disable any hover
         clearHover();
 
-        mViewHierarchy.setSession(session, explodedNodes);
+        mViewHierarchy.setSession(session, explodedNodes, layoutlib5);
         if (mViewHierarchy.isValid() && session != null) {
             Image image = mImageOverlay.setImage(session.getImage(), session.isAlphaChannelImage());
 
