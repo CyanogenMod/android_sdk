@@ -111,11 +111,10 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             return false;
         } else {
             IFile file = created.getFirst();
-            IRegion region = created.getSecond();
 
-            // Open the file in an editor
+            // Open the file
             try {
-                AdtPlugin.openFile(file, region);
+                AdtPlugin.openFile(file, null, false /* showEditorTab */);
             } catch (PartInitException e) {
                 AdtPlugin.log(e, "Failed to create %1$s: missing type",  //$NON-NLS-1$
                         file.getFullPath().toString());
