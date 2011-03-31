@@ -516,6 +516,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
             public void start(Point point) {
                 try {
                     manager.touchDown(point.getX(), point.getY());
+                    manager.touchMove(point.getX(), point.getY());
                 } catch (IOException e) {
                     LOG.log(Level.SEVERE, "Error sending drag start event", e);
                 }
@@ -529,6 +530,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
 
             public void end(Point point) {
                 try {
+                    manager.touchMove(point.getX(), point.getY());
                     manager.touchUp(point.getX(), point.getY());
                 } catch (IOException e) {
                     LOG.log(Level.SEVERE, "Error sending drag end event", e);
