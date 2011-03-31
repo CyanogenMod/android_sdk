@@ -28,6 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeAction;
+import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction;
 
 import org.eclipse.jface.action.Action;
@@ -219,6 +220,7 @@ import java.util.regex.Pattern;
         // or on an included view, or on a non-contiguous selection
         mMenuManager.insertBefore(endId, new Separator());
         mMenuManager.insertBefore(endId, ExtractIncludeAction.create(mEditor));
+        mMenuManager.insertBefore(endId, ExtractStyleAction.create(mEditor));
         mMenuManager.insertBefore(endId, WrapInAction.create(mEditor));
         if (selection.size() == 1 && (selection.get(0).isLayout() ||
                 selection.get(0).getViewInfo().getName().equals(FQCN_GESTURE_OVERLAY_VIEW))) {

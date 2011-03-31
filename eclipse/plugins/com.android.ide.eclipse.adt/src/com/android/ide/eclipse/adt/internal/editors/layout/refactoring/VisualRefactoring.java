@@ -113,6 +113,10 @@ public abstract class VisualRefactoring extends Refactoring {
     protected final List<Element> mElements;
     protected final ITreeSelection mTreeSelection;
     protected final ITextSelection mSelection;
+    /** Same as {@link #mSelectionStart} but not adjusted to element edges */
+    protected int mOriginalSelectionStart = -1;
+    /** Same as {@link #mSelectionEnd} but not adjusted to element edges */
+    protected int mOriginalSelectionEnd = -1;
 
     protected final Map<Element, String> mGeneratedIdMap = new HashMap<Element, String>();
     protected final Set<String> mGeneratedIds = new HashSet<String>();
@@ -132,6 +136,8 @@ public abstract class VisualRefactoring extends Refactoring {
         mFile = (IFile) ResourcesPlugin.getWorkspace().getRoot().findMember(path);
         mSelectionStart = Integer.parseInt(arguments.get(KEY_SEL_START));
         mSelectionEnd = Integer.parseInt(arguments.get(KEY_SEL_END));
+        mOriginalSelectionStart = mSelectionStart;
+        mOriginalSelectionEnd = mSelectionEnd;
         mEditor = null;
         mElements = null;
         mSelection = null;
@@ -147,6 +153,8 @@ public abstract class VisualRefactoring extends Refactoring {
         mProject = editor != null ? editor.getProject() : null;
         mSelectionStart = 0;
         mSelectionEnd = 0;
+        mOriginalSelectionStart = 0;
+        mOriginalSelectionEnd = 0;
         mSelection = null;
         mTreeSelection = null;
 
@@ -162,6 +170,8 @@ public abstract class VisualRefactoring extends Refactoring {
         if (start >= 0) {
             mSelectionStart = start;
             mSelectionEnd = end;
+            mOriginalSelectionStart = start;
+            mOriginalSelectionEnd = end;
         }
     }
 
@@ -199,11 +209,19 @@ public abstract class VisualRefactoring extends Refactoring {
             if (start >= 0) {
                 mSelectionStart = start;
                 mSelectionEnd = end;
+                mOriginalSelectionStart = mSelectionStart;
+                mOriginalSelectionEnd = mSelectionEnd;
+            }
+            if (selection != null) {
+                mOriginalSelectionStart = selection.getOffset();
+                mOriginalSelectionEnd = mOriginalSelectionStart + selection.getLength();
             }
         } else if (selection != null) {
             // TODO: update selection to boundaries!
             mSelectionStart = selection.getOffset();
             mSelectionEnd = mSelectionStart + selection.getLength();
+            mOriginalSelectionStart = mSelectionStart;
+            mOriginalSelectionEnd = mSelectionEnd;
         }
 
         mElements = initElements();
@@ -663,6 +681,8 @@ public abstract class VisualRefactoring extends Refactoring {
         } else if (mSelection != null) {
             mSelectionStart = mSelection.getOffset();
             mSelectionEnd = mSelectionStart + mSelection.getLength();
+            mOriginalSelectionStart = mSelectionStart;
+            mOriginalSelectionEnd = mSelectionEnd;
 
             // Figure out the range of selected nodes from the document offsets
             IStructuredDocument doc = mEditor.getStructuredDocument();
@@ -919,7 +939,11 @@ public abstract class VisualRefactoring extends Refactoring {
     private void addAttributeDeclaration(MultiTextEdit rootEdit, int offset,
             String attributePrefix, String attributeName, String attributeValue) {
         StringBuilder sb = new StringBuilder();
-        sb.append(' ').append(attributePrefix).append(':');
+        sb.append(' ');
+
+        if (attributePrefix != null) {
+            sb.append(attributePrefix).append(':');
+        }
         sb.append(attributeName).append('=').append('"');
         sb.append(attributeValue).append('"');
 
@@ -942,7 +966,8 @@ public abstract class VisualRefactoring extends Refactoring {
 
             int valueStart = -1;
             boolean useNextValue = false;
-            String targetName = attributePrefix + ':' + attributeName;
+            String targetName = attributePrefix != null
+                ? attributePrefix + ':' + attributeName : attributeName;
 
             // Look at all attribute values and look for an id reference match
             for (int j = 0; j < region.getNumberOfRegions(); j++) {
@@ -984,15 +1009,21 @@ public abstract class VisualRefactoring extends Refactoring {
             String attributeName) {
         if (element.hasAttributeNS(uri, attributeName)) {
             Attr attribute = element.getAttributeNodeNS(uri, attributeName);
-            IndexedRegion region = getRegion(attribute);
-            if (region != null) {
-                int startOffset = region.getStartOffset();
-                int endOffset = region.getEndOffset();
-                DeleteEdit deletion = new DeleteEdit(startOffset, endOffset - startOffset);
-                rootEdit.addChild(deletion);
-            }
+            removeAttribute(rootEdit, attribute);
         }
     }
+
+    /** Strips out the given attribute, if defined */
+    protected void removeAttribute(MultiTextEdit rootEdit, Attr attribute) {
+        IndexedRegion region = getRegion(attribute);
+        if (region != null) {
+            int startOffset = region.getStartOffset();
+            int endOffset = region.getEndOffset();
+            DeleteEdit deletion = new DeleteEdit(startOffset, endOffset - startOffset);
+            rootEdit.addChild(deletion);
+        }
+    }
+
 
     /**
      * Removes the given element's opening and closing tags (including all of its

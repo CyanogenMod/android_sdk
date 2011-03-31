@@ -1,0 +1,6 @@
+<     <Button android:text="Button"
+<         android:layout_width="wrap_content" android:layout_height="fill_parent"
+<         android:textColor="#FF00FF" android:textSize="20pt"
+---
+>     <Button style="@style/newstyle" android:text="Button"
+>         android:layout_width="wrap_content" android:layout_height="fill_parent"

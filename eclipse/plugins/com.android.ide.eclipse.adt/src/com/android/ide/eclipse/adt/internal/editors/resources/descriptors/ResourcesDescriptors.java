@@ -42,6 +42,7 @@ public final class ResourcesDescriptors implements IDescriptorProvider {
     public static final String ITEM_TAG = "item";  //$NON-NLS-1$
     public static final String NAME_ATTR = "name"; //$NON-NLS-1$
     public static final String TYPE_ATTR = "type"; //$NON-NLS-1$
+    public static final String PARENT_ATTR = "parent"; //$NON-NLS-1$
 
     private static final ResourcesDescriptors sThis = new ResourcesDescriptors();
 

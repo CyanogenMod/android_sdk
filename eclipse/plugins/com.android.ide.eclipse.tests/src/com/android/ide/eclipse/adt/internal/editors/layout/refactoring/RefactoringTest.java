@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -107,8 +108,12 @@ public class RefactoringTest extends AdtProjectTest {
     }
 
     protected void checkEdits(List<Change> changes,
-            Map<IPath, String> fileToGoldenName) throws BadLocationException,
-            IOException {
+            Map<IPath, String> fileToGoldenName) throws BadLocationException {
+        checkEdits(changes, fileToGoldenName, false);
+    }
+
+    protected void checkEdits(List<Change> changes,
+            Map<IPath, String> fileToGoldenName, boolean createDiffs) throws BadLocationException {
         for (Change change : changes) {
             if (change instanceof TextFileChange) {
                 TextFileChange tf = (TextFileChange) change;
@@ -125,6 +130,8 @@ public class RefactoringTest extends AdtProjectTest {
                 IDocument document = new Document();
                 document.set(xml);
 
+                String before = document.get();
+
                 TextEdit edit = tf.getEdit();
                 if (edit instanceof MultiTextEdit) {
                     MultiTextEdit edits = (MultiTextEdit) edit;
@@ -134,6 +141,17 @@ public class RefactoringTest extends AdtProjectTest {
                 }
 
                 String actual = document.get();
+
+                if (createDiffs) {
+                    // Use a diff as the golden file instead of the after
+                    actual = getDiff(before, actual);
+                    if (goldenName.endsWith(DOT_XML)) {
+                        goldenName = goldenName.substring(0,
+                                goldenName.length() - DOT_XML.length())
+                                + ".diff";
+                    }
+                }
+
                 assertEqualsGolden(goldenName, actual);
             } else {
                 System.out.println("Ignoring non-textfilechange in refactoring result");

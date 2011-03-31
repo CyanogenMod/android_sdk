@@ -71,7 +71,7 @@ public class RefactoringAssistantTest extends AdtProjectTest {
         final int offset = caretContextIndex + caretDelta;
 
 
-        RefactoringAssistant aaptQuickFix = new RefactoringAssistant();
+        RefactoringAssistant refactoringAssistant = new RefactoringAssistant();
 
         // Open file
         IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -94,7 +94,7 @@ public class RefactoringAssistantTest extends AdtProjectTest {
                 return viewer;
             }
         };
-        ICompletionProposal[] proposals = aaptQuickFix
+        ICompletionProposal[] proposals = refactoringAssistant
                 .computeQuickAssistProposals(invocationContext);
 
         if (proposals != null) {

@@ -81,6 +81,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
 
         boolean isValue = false;
         boolean isTagName = false;
+        boolean isAttributeName = false;
         IStructuredModel model = null;
         try {
             model = xmlEditor.getModelForRead();
@@ -100,6 +101,9 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                         || type.equals(DOMRegionContext.XML_TAG_OPEN)
                         || type.equals(DOMRegionContext.XML_TAG_CLOSE)) {
                     isTagName = true;
+                } else if (type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_NAME)
+                        || type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_EQUALS)) {
+                    isAttributeName = true;
                 }
             }
         } finally {
@@ -108,7 +112,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             }
         }
 
-        if (isValue || isTagName) {
+        if (isValue || isTagName || isAttributeName) {
             StructuredTextEditor structuredEditor = xmlEditor.getStructuredTextEditor();
             ISelectionProvider provider = structuredEditor.getSelectionProvider();
             ISelection selection = provider.getSelection();
@@ -117,14 +121,41 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
 
                 // These operations currently do not work on ranges
                 if (textSelection.getLength() > 0) {
+                    // ...except for Extract Style where the actual attributes overlapping
+                    // the selection is going to be the set of eligible attributes
+                    if (isAttributeName && xmlEditor instanceof LayoutEditor) {
+                        LayoutEditor editor = (LayoutEditor) xmlEditor;
+                        return new ICompletionProposal[] {
+                                new RefactoringProposal(editor,
+                                    new ExtractStyleRefactoring(file, editor, textSelection, null))
+                        };
+                    }
                     return null;
                 }
 
-                if (isValue) {
+                if (isAttributeName && xmlEditor instanceof LayoutEditor) {
+                    LayoutEditor editor = (LayoutEditor) xmlEditor;
                     return new ICompletionProposal[] {
+                            new RefactoringProposal(editor,
+                                new ExtractStyleRefactoring(file, editor, textSelection, null)),
+                    };
+                } else if (isValue) {
+                    if (xmlEditor instanceof LayoutEditor) {
+                        LayoutEditor editor = (LayoutEditor) xmlEditor;
+                        return new ICompletionProposal[] {
+                                new RefactoringProposal(xmlEditor,
+                                        new ExtractStringRefactoring(file, xmlEditor,
+                                                textSelection)),
+                                new RefactoringProposal(editor,
+                                        new ExtractStyleRefactoring(file, editor,
+                                                textSelection, null)),
+                        };
+                    } else {
+                        return new ICompletionProposal[] {
                             new RefactoringProposal(xmlEditor,
                                     new ExtractStringRefactoring(file, xmlEditor, textSelection))
-                    };
+                        };
+                    }
                 } else if (xmlEditor instanceof LayoutEditor) {
                     LayoutEditor editor = (LayoutEditor) xmlEditor;
                     return new ICompletionProposal[] {
@@ -134,6 +165,8 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                             new ChangeViewRefactoring(file, editor, textSelection, null)),
                         new RefactoringProposal(editor,
                             new ChangeLayoutRefactoring(file, editor, textSelection, null)),
+                        new RefactoringProposal(editor,
+                            new ExtractStyleRefactoring(file, editor, textSelection, null)),
                         new RefactoringProposal(editor,
                             new ExtractIncludeRefactoring(file, editor, textSelection, null)),
                     };
