@@ -18,10 +18,8 @@ package com.android.ide.common.rendering.api;
 
 import com.android.resources.Density;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,86 +47,6 @@ public class SessionParams extends RenderParams {
 
         public boolean isVertExpand() {
             return mVertExpand;
-        }
-    }
-
-    /**
-     * An AdapterItemReference. On top of being a {@link ResourceReference}, it contains how many
-     * items of this type the data binding should display.
-     */
-    public static class AdapterItemReference extends ResourceReference {
-        private final int mCount;
-
-        public AdapterItemReference(String name, boolean platformLayout, int count) {
-            super(name, platformLayout);
-            mCount = count;
-        }
-
-        public AdapterItemReference(String name, boolean platformLayout) {
-            this(name, platformLayout, 1);
-        }
-
-        public AdapterItemReference(String name) {
-            this(name, false /*platformLayout*/, 1);
-        }
-
-        public int getCount() {
-            return mCount;
-        }
-    }
-
-    /**
-     * Describe the content of the dynamic android.widget.Adapter used to fill
-     * android.widget.AdapterView
-     */
-    public static class AdapterBinding {
-        private final int mRepeatCount;
-        private final List<ResourceReference> mHeaders = new ArrayList<ResourceReference>();
-        private final List<AdapterItemReference> mItems = new ArrayList<AdapterItemReference>();
-        private final List<ResourceReference> mFooters = new ArrayList<ResourceReference>();
-
-        public AdapterBinding(int repeatCount) {
-            mRepeatCount = repeatCount;
-        }
-
-        public int getRepeatCount() {
-            return mRepeatCount;
-        }
-
-        public void addHeader(ResourceReference layoutInfo) {
-            mHeaders.add(layoutInfo);
-        }
-
-        public int getHeaderCount() {
-            return mHeaders.size();
-        }
-
-        public ResourceReference getHeaderAt(int index) {
-            return mHeaders.get(index);
-        }
-
-        public void addItem(AdapterItemReference itemInfo) {
-            mItems.add(itemInfo);
-        }
-
-        public int getItemCount() {
-            return mItems.size();
-        }
-
-        public AdapterItemReference getItemAt(int index) {
-            return mItems.get(index);
-        }
-
-        public void addFooter(ResourceReference layoutInfo) {
-            mFooters.add(layoutInfo);
-        }
-
-        public int getFooterCount() {
-            return mFooters.size();
-        }
-
-        public ResourceReference getFooterAt(int index) {
-            return mFooters.get(index);
         }
     }
 
