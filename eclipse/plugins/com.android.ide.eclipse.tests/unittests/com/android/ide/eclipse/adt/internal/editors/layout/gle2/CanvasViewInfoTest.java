@@ -18,9 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.MergeCookie;
-import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.common.rendering.api.SessionParams.AdapterItemReference;
+import com.android.ide.common.rendering.api.AdapterBinding.AdapterItemReference;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -676,7 +675,7 @@ public class CanvasViewInfoTest extends TestCase {
         UiViewElementNode childNode = createNode(rootNode, "ListView", false);
         /*UiViewElementNode grandChildNode =*/ createNode(childNode, "LinearLayout", false);
         /*UiViewElementNode greatGrandChildNode =*/ createNode(childNode, "TextView", false);
-        AdapterItemReference adapterItem = new SessionParams.AdapterItemReference("foo");
+        AdapterItemReference adapterItem = new AdapterItemReference("foo");
 
         ViewInfo root = new ViewInfo("FrameLayout", rootNode, 0, 50, 320, 480);
         ViewInfo child = new ViewInfo("ListView", childNode, 0, 0, 320, 430);
