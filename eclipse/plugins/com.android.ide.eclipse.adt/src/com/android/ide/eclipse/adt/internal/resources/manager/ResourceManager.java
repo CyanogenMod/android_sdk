@@ -16,8 +16,6 @@
 
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.common.resources.FrameworkResources;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
@@ -32,9 +30,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonit
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.FolderWrapper;
-import com.android.io.IAbstractFile;
-import com.android.io.IAbstractFolder;
-import com.android.io.IAbstractResource;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -49,7 +44,6 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -417,7 +411,7 @@ public final class ResourceManager {
             FrameworkResources resources = new FrameworkResources();
 
             try {
-                loadResources(resources, frameworkRes);
+                resources.loadResources(frameworkRes);
                 resources.loadPublicResources(frameworkRes, AdtPlugin.getDefault());
                 return resources;
             } catch (IOException e) {
@@ -427,51 +421,6 @@ public final class ResourceManager {
         }
 
         return null;
-    }
-
-    /**
-     * Loads the resources from a folder, and fills the given {@link ResourceRepository}.
-     * <p/>
-     * This is mostly a utility method that should not be used to process actual Eclipse projects
-     * (Those are loaded with {@link #createProject(IProject)} for new project or
-     * {@link #processFolder(IAbstractFolder, ProjectResources)} and
-     * {@link #processFile(IAbstractFile, ResourceFolder)} for folder/file modifications)<br>
-     * This method will process files/folders with implementations of {@link IAbstractFile} and
-     * {@link IAbstractFolder} based on {@link File} instead of {@link IFile} and {@link IFolder}
-     * respectively. This is not proper for handling {@link IProject}s.
-     * </p>
-     * This is used to load the framework resources, or to do load project resources when
-     * setting rendering tests.
-     *
-     *
-     * @param resources The {@link ResourceRepository} files to fill.
-     *       This is filled up with the content of the folder.
-     * @param rootFolder The folder to read the resources from. This is the top level
-     * resource folder (res/)
-     * @throws IOException
-     */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public void loadResources(ResourceRepository resources, IAbstractFolder rootFolder)
-            throws IOException {
-        IAbstractResource[] files = rootFolder.listMembers();
-        for (IAbstractResource file : files) {
-            if (file instanceof IAbstractFolder) {
-                IAbstractFolder folder = (IAbstractFolder) file;
-                ResourceFolder resFolder = resources.processFolder(folder);
-
-                if (resFolder != null) {
-                    // now we process the content of the folder
-                    IAbstractResource[] children = folder.listMembers();
-
-                    for (IAbstractResource childRes : children) {
-                        if (childRes instanceof IAbstractFile) {
-                            resFolder.processFile((IAbstractFile) childRes,
-                                    ResourceHelper.getResourceDeltaKind(IResourceDelta.ADDED));
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**

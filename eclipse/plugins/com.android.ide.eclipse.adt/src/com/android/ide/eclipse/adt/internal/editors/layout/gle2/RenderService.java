@@ -46,8 +46,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.Density;
 
 import org.eclipse.core.resources.IProject;
@@ -270,12 +268,6 @@ public class RenderService {
 
         if (mResourceResolver == null) {
             // Abort the rendering if the resources are not found.
-            return null;
-        }
-
-        ProjectResources projectRes = ResourceManager.getInstance().getProjectResources(mProject);
-        if (projectRes == null) {
-            mLogger.error(null, "Missing project resources.", null);
             return null;
         }
 
