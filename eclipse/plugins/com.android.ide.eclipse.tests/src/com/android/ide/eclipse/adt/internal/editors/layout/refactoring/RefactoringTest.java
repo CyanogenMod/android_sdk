@@ -258,7 +258,7 @@ public class RefactoringTest extends AdtProjectTest {
 
         UiViewElementNode model = createModel(null, element);
         ViewInfo info = createInfos(model, relativePath);
-        CanvasViewInfo rootView = CanvasViewInfo.create(info).getFirst();
+        CanvasViewInfo rootView = CanvasViewInfo.create(info, true /* layoutlib5 */).getFirst();
         TestLayoutEditor layoutEditor = new TestLayoutEditor(file, structuredDocument, null);
 
         TestContext testInfo = createTestContext();

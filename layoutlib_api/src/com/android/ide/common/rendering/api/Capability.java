@@ -24,7 +24,7 @@ public enum Capability {
     /** Ability to render at full size, as required by the layout, and unbound by the screen */
     UNBOUND_RENDERING,
     /** Ability to override the background of the rendering with transparency using
-     * {@link SessionParams#setCustomBackgroundColor(int)} */
+     * {@link SessionParams#setOverrideBgColor(int)} */
     CUSTOM_BACKGROUND_COLOR,
     /** Ability to call {@link RenderSession#render()} and {@link RenderSession#render(long)}. */
     RENDER,

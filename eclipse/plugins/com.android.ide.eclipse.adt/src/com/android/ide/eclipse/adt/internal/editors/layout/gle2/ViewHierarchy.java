@@ -136,7 +136,8 @@ public class ViewHierarchy {
      *            {@link LayoutCanvas#showInvisibleViews}) where individual invisible
      *            nodes are padded during certain interactions.
      */
-    /* package */ void setSession(RenderSession session, Set<UiElementNode> explodedNodes) {
+    /* package */ void setSession(RenderSession session, Set<UiElementNode> explodedNodes,
+            boolean layoutlib5) {
         // replace the previous scene, so the previous scene must be disposed.
         if (mSession != null) {
             mSession.dispose();
@@ -157,7 +158,7 @@ public class ViewHierarchy {
                 // via drag & drop, etc.
                 if (hasMergeRoot()) {
                     ViewInfo mergeRoot = createMergeInfo(session);
-                    infos = CanvasViewInfo.create(mergeRoot);
+                    infos = CanvasViewInfo.create(mergeRoot, layoutlib5);
                 } else {
                     infos = null;
                 }
@@ -165,11 +166,12 @@ public class ViewHierarchy {
                 if (rootList.size() > 1 && hasMergeRoot()) {
                     ViewInfo mergeRoot = createMergeInfo(session);
                     mergeRoot.setChildren(rootList);
-                    infos = CanvasViewInfo.create(mergeRoot);
+                    infos = CanvasViewInfo.create(mergeRoot, layoutlib5);
                 } else {
                     ViewInfo root = rootList.get(0);
+
                     if (root != null) {
-                        infos = CanvasViewInfo.create(root);
+                        infos = CanvasViewInfo.create(root, layoutlib5);
                         if (DUMP_INFO) {
                             dump(root, 0);
                         }

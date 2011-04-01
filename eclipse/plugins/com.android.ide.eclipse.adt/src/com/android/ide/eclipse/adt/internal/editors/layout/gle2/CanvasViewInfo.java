@@ -526,19 +526,41 @@ public class CanvasViewInfo implements IPropertySource {
      * This method will build up a set of {@link CanvasViewInfo} that corresponds to the
      * actual <b>selectable</b> views (which are also shown in the Outline).
      *
+     * @param layoutlib5 if true, the {@link ViewInfo} hierarchy was created by layoutlib
+     *    version 5 or higher, which means this algorithm can make certain assumptions
+     *    (for example that {@code <merge>} siblings will provide {@link MergeCookie}
+     *    references, so we don't have to search for them.)
      * @param root the root {@link ViewInfo} to build from
      * @return a {@link CanvasViewInfo} hierarchy
      */
-    public static Pair<CanvasViewInfo,List<Rectangle>> create(ViewInfo root) {
-        return new Builder().create(root);
+    public static Pair<CanvasViewInfo,List<Rectangle>> create(ViewInfo root, boolean layoutlib5) {
+        return new Builder(layoutlib5).create(root);
     }
 
     /** Builder object which walks over a tree of {@link ViewInfo} objects and builds
      * up a corresponding {@link CanvasViewInfo} hierarchy. */
     private static class Builder {
-        private Map<UiViewElementNode,List<CanvasViewInfo>> mMergeNodeMap;
+        public Builder(boolean layoutlib5) {
+            mLayoutLib5 = layoutlib5;
+        }
 
-        public Pair<CanvasViewInfo,List<Rectangle>> create(ViewInfo root) {
+        /**
+         * The mapping from nodes that have a {@code <merge>} as a parent in the node
+         * model to their corresponding views
+         */
+        private Map<UiViewElementNode, List<CanvasViewInfo>> mMergeNodeMap;
+
+        /**
+         * Whether the ViewInfos are provided by a layout library that is version 5 or
+         * later, since that will allow us to take several shortcuts
+         */
+        private boolean mLayoutLib5;
+
+        /**
+         * Creates a hierarchy of {@link CanvasViewInfo} objects and merge bounding
+         * rectangles from the given {@link ViewInfo} hierarchy
+         */
+        private Pair<CanvasViewInfo,List<Rectangle>> create(ViewInfo root) {
             Object cookie = root.getCookie();
             if (cookie == null) {
                 // Special case: If the root-most view does not have a view cookie,
@@ -717,10 +739,24 @@ public class CanvasViewInfo implements IPropertySource {
             parentX += viewInfo.getLeft();
             parentY += viewInfo.getTop();
 
+            List<ViewInfo> children = viewInfo.getChildren();
+
+            if (mLayoutLib5) {
+                for (ViewInfo child : children) {
+                    Object cookie = child.getCookie();
+                    if (cookie instanceof UiViewElementNode || cookie instanceof MergeCookie) {
+                        CanvasViewInfo childView = createSubtree(view, child,
+                                parentX, parentY);
+                        view.addChild(childView);
+                    } // else: null cookies, adapter item references, etc: No child views.
+                }
+
+                return view;
+            }
+
             // See if we have any missing keys at this level
             int missingNodes = 0;
             int mergeNodes = 0;
-            List<ViewInfo> children = viewInfo.getChildren();
             for (ViewInfo child : children) {
                 // Only use children which have a ViewKey of the correct type.
                 // We can't interact with those when they have a null key or
@@ -751,7 +787,9 @@ public class CanvasViewInfo implements IPropertySource {
                 // embedded_layout rendering, or we are including a view with a <merge>
                 // as the root element.
 
-                String containerName = view.getUiViewNode().getDescriptor().getXmlLocalName();
+                UiViewElementNode uiViewNode = view.getUiViewNode();
+                String containerName = uiViewNode != null
+                    ? uiViewNode.getDescriptor().getXmlLocalName() : ""; //$NON-NLS-1$
                 if (containerName.equals(LayoutDescriptors.VIEW_INCLUDE)) {
                     // This is expected -- we don't WANT to get node keys for the content
                     // of an include since it's in a different file and should be treated
@@ -764,9 +802,11 @@ public class CanvasViewInfo implements IPropertySource {
                     // that there are <merge> tags which are doing surprising things
                     // to the view hierarchy
                     LinkedList<UiViewElementNode> unused = new LinkedList<UiViewElementNode>();
-                    for (UiElementNode child : view.getUiViewNode().getUiChildren()) {
-                        if (child instanceof UiViewElementNode) {
-                            unused.addLast((UiViewElementNode) child);
+                    if (uiViewNode != null) {
+                        for (UiElementNode child : uiViewNode.getUiChildren()) {
+                            if (child instanceof UiViewElementNode) {
+                                unused.addLast((UiViewElementNode) child);
+                            }
                         }
                     }
                     for (ViewInfo child : children) {
