@@ -146,12 +146,13 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
         String attrs = type.getDefaultAttrs(mMainPage.getProject());
 
-        return createXmlFile(file, xmlns, root, attrs);
+        String child = type.getChild(mMainPage.getProject(), root);
+        return createXmlFile(file, xmlns, root, attrs, child);
     }
 
     /** Creates a new file using the given root element, namespace and root attributes */
     private static Pair<IFile, IRegion> createXmlFile(IFile file, String xmlns,
-            String root, String rootAttributes) {
+            String root, String rootAttributes, String child) {
         String name = file.getFullPath().toString();
         boolean need_delete = false;
 
@@ -179,6 +180,10 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         }
 
         sb.append(">\n");                            //$NON-NLS-1$
+
+        if (child != null) {
+            sb.append(child);
+        }
 
         // The insertion line
         sb.append("    ");                           //$NON-NLS-1$
@@ -239,7 +244,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             root = type.getRootSeed().toString();
         }
         String attrs = type.getDefaultAttrs(project);
-        return createXmlFile(file, xmlns, root, attrs);
+        return createXmlFile(file, xmlns, root, attrs, null);
     }
 
     private static boolean createWsParentDirectory(IContainer wsPath) {

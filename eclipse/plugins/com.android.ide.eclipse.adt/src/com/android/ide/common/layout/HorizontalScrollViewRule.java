@@ -23,9 +23,15 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 
+import com.android.ide.common.api.DrawingStyle;
+import com.android.ide.common.api.DropFeedback;
+import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
+import com.android.ide.common.api.Point;
+import com.android.ide.common.api.Rect;
 
 /**
  * An {@link IViewRule} for android.widget.HorizontalScrollView.
@@ -55,4 +61,32 @@ public class HorizontalScrollViewRule extends FrameLayoutRule {
         }
     }
 
+    @Override
+    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
+            DropFeedback feedback, Point p) {
+        DropFeedback f = super.onDropMove(targetNode, elements, feedback, p);
+
+        // HorizontalScrollViews only allow a single child
+        if (targetNode.getChildren().length > 0) {
+            f.invalidTarget = true;
+        }
+        return f;
+    }
+
+    @Override
+    protected void drawFeedback(
+            IGraphics gc,
+            INode targetNode,
+            IDragElement[] elements,
+            DropFeedback feedback) {
+        if (targetNode.getChildren().length > 0) {
+            Rect b = targetNode.getBounds();
+            if (b.isValid()) {
+                gc.useStyle(DrawingStyle.DROP_RECIPIENT);
+                gc.drawRect(b);
+            }
+        } else {
+            super.drawFeedback(gc, targetNode, elements, feedback);
+        }
+    }
 }
