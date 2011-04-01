@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceReference;
@@ -344,6 +345,10 @@ public final class ProjectCallback extends LegacyCallback {
             return viewRef.getName() + " " + typePosition;
         }
 
+        return null;
+    }
+
+    public AdapterBinding getAdapterBinding(ResourceReference adapterView) {
         return null;
     }
 }

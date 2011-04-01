@@ -88,4 +88,14 @@ public interface IProjectCallback {
     String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
             int fullPosition, int typePosition,
             ResourceReference viewRef, String viewClass);
+
+    /**
+     * Returns an adapter binding for a given adapter view.
+     * This is only called if {@link SessionParams} does not have an {@link AdapterBinding} for
+     * the given {@link ResourceReference} already.
+     *
+     * @param adapterView the adapter view to return the adapter binding for.
+     * @return an adapter binding for the given view or null if there's no data.
+     */
+    AdapterBinding getAdapterBinding(ResourceReference adapterView);
 }

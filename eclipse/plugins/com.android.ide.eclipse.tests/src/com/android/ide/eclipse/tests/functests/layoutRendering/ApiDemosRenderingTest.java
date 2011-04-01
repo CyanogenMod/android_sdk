@@ -18,6 +18,7 @@ package com.android.ide.eclipse.tests.functests.layoutRendering;
 
 import com.android.AndroidConstants;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.RenderSession;
@@ -130,6 +131,10 @@ public class ApiDemosRenderingTest extends SdkTestCase {
 
         public String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
                 int fullPosition, int typePosition, ResourceReference viewRef, String viewClass) {
+            return null;
+        }
+
+        public AdapterBinding getAdapterBinding(ResourceReference adapterView) {
             return null;
         }
     }
