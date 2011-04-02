@@ -16,21 +16,34 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtDrawingStyle.HOVER;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtDrawingStyle.HOVER_SELECTION;
+
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+
+import java.util.List;
 
 /**
  * The {@link HoverOverlay} paints an optional hover on top of the layout,
  * highlighting the currently hovered view.
  */
 public class HoverOverlay extends Overlay {
+    private final LayoutCanvas mCanvas;
+
     /** Hover border color. Must be disposed, it's NOT a system color. */
     private Color mHoverStrokeColor;
 
     /** Hover fill color. Must be disposed, it's NOT a system color. */
     private Color mHoverFillColor;
+
+    /** Hover border select color. Must be disposed, it's NOT a system color. */
+    private Color mHoverSelectStrokeColor;
+
+    /** Hover fill select color. Must be disposed, it's NOT a system color. */
+    private Color mHoverSelectFillColor;
 
     /** Vertical scaling & scrollbar information. */
     private CanvasTransform mVScale;
@@ -48,13 +61,14 @@ public class HoverOverlay extends Overlay {
     /**
      * Constructs a new {@link HoverOverlay} linked to the given view hierarchy.
      *
+     * @param canvas the associated canvas
      * @param hScale The {@link CanvasTransform} to use to transfer horizontal layout
      *            coordinates to screen coordinates.
      * @param vScale The {@link CanvasTransform} to use to transfer vertical layout
      *            coordinates to screen coordinates.
      */
-    public HoverOverlay(CanvasTransform hScale, CanvasTransform vScale) {
-        super();
+    public HoverOverlay(LayoutCanvas canvas, CanvasTransform hScale, CanvasTransform vScale) {
+        mCanvas = canvas;
         this.mHScale = hScale;
         this.mVScale = vScale;
     }
@@ -66,6 +80,15 @@ public class HoverOverlay extends Overlay {
         }
         if (SwtDrawingStyle.HOVER.getFillColor() != null) {
             mHoverFillColor = new Color(device, SwtDrawingStyle.HOVER.getFillColor());
+        }
+
+        if (SwtDrawingStyle.HOVER_SELECTION.getStrokeColor() != null) {
+            mHoverSelectStrokeColor = new Color(device,
+                    SwtDrawingStyle.HOVER_SELECTION.getStrokeColor());
+        }
+        if (SwtDrawingStyle.HOVER_SELECTION.getFillColor() != null) {
+            mHoverSelectFillColor = new Color(device,
+                    SwtDrawingStyle.HOVER_SELECTION.getFillColor());
         }
     }
 
@@ -79,6 +102,16 @@ public class HoverOverlay extends Overlay {
         if (mHoverFillColor != null) {
             mHoverFillColor.dispose();
             mHoverFillColor = null;
+        }
+
+        if (mHoverSelectStrokeColor != null) {
+            mHoverSelectStrokeColor.dispose();
+            mHoverSelectStrokeColor = null;
+        }
+
+        if (mHoverSelectFillColor != null) {
+            mHoverSelectFillColor.dispose();
+            mHoverSelectFillColor = null;
         }
     }
 
@@ -117,19 +150,35 @@ public class HoverOverlay extends Overlay {
             int w = mHScale.scale(mHoverRect.width);
             int h = mVScale.scale(mHoverRect.height);
 
-            if (mHoverStrokeColor != null) {
+
+            boolean hoverIsSelected = false;
+            List<SelectionItem> selections = mCanvas.getSelectionManager().getSelections();
+            for (SelectionItem item : selections) {
+                if (mHoverRect.equals(item.getViewInfo().getSelectionRect())) {
+                    hoverIsSelected = true;
+                    break;
+                }
+            }
+
+            Color stroke = hoverIsSelected ? mHoverSelectStrokeColor : mHoverStrokeColor;
+            Color fill = hoverIsSelected ? mHoverSelectFillColor : mHoverFillColor;
+
+            if (stroke != null) {
                 int oldAlpha = gc.getAlpha();
-                gc.setForeground(mHoverStrokeColor);
-                gc.setLineStyle(SwtDrawingStyle.HOVER.getLineStyle());
-                gc.setAlpha(SwtDrawingStyle.HOVER.getStrokeAlpha());
+                gc.setForeground(stroke);
+                gc.setLineStyle(hoverIsSelected ?
+                        HOVER_SELECTION.getLineStyle() : HOVER.getLineStyle());
+                gc.setAlpha(hoverIsSelected ?
+                        HOVER_SELECTION.getStrokeAlpha() : HOVER.getStrokeAlpha());
                 gc.drawRectangle(x, y, w, h);
                 gc.setAlpha(oldAlpha);
             }
 
-            if (mHoverFillColor != null) {
+            if (fill != null) {
                 int oldAlpha = gc.getAlpha();
-                gc.setAlpha(SwtDrawingStyle.HOVER.getFillAlpha());
-                gc.setBackground(mHoverFillColor);
+                gc.setAlpha(hoverIsSelected ?
+                        HOVER_SELECTION.getFillAlpha() : HOVER.getFillAlpha());
+                gc.setBackground(fill);
                 gc.fillRectangle(x, y, w, h);
                 gc.setAlpha(oldAlpha);
             }
