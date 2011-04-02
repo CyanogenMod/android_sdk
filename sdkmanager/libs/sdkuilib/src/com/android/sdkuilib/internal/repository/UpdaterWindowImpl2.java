@@ -18,24 +18,34 @@ package com.android.sdkuilib.internal.repository;
 
 
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
+import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.IUpdaterWindow;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
+
+import java.util.ArrayList;
 
 /**
  * This is the private implementation of the UpdateWindow
@@ -43,8 +53,21 @@ import org.eclipse.swt.widgets.Shell;
  * <p/>
  * This window features only one embedded page, the combined installed+available package list.
  */
-public class UpdaterWindowImpl2 extends UpdaterWindowImpl {
+public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
+    private final Shell mParentShell;
+    /** Internal data shared between the window and its pages. */
+    private final UpdaterData mUpdaterData;
+    /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
+     *  the string title and the Composite class to instantiate to create the page. */
+    private ArrayList<Object[]> mExtraPages;
+    /** Sets whether the auto-update wizard will be shown when opening the window. */
+    private boolean mRequestAutoUpdate;
+
+    // --- UI members ---
+
+    protected Shell mShell;
+    private PackagesPage mPkgPage;
     private ProgressBar mProgressBar;
     private Label mStatusText;
     private ImgDisabledButton mButtonStop;
@@ -58,29 +81,62 @@ public class UpdaterWindowImpl2 extends UpdaterWindowImpl {
      * @param osSdkRoot The OS path to the SDK root.
      */
     public UpdaterWindowImpl2(Shell parentShell, ISdkLog sdkLog, String osSdkRoot) {
-        super(parentShell, sdkLog, osSdkRoot);
+        mParentShell = parentShell;
+        mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }
 
     /**
+     * Opens the window.
      * @wbp.parser.entryPoint
      */
-    @Override
     public void open() {
-        super.open();
+        if (mParentShell == null) {
+            Display.setAppName("Android"); //$hide$ (hide from SWT designer)
+        }
+
+        createShell();
+        preCreateContent();
+        createContents();
+        mShell.open();
+        mShell.layout();
+
+        if (postCreateContent()) {    //$hide$ (hide from SWT designer)
+            Display display = Display.getDefault();
+            while (!mShell.isDisposed()) {
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
+            }
+        }
+
+        dispose();  //$hide$
     }
 
-    @Override
-    protected void createContents() {
+    private void createShell() {
+        mShell = new Shell(mParentShell, SWT.SHELL_TRIM);
+        mShell.addDisposeListener(new DisposeListener() {
+            public void widgetDisposed(DisposeEvent e) {
+                onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
+            }
+        });
+
+        GridLayout glShell = new GridLayout(2, false);
+        glShell.verticalSpacing = 0;
+        glShell.horizontalSpacing = 0;
+        glShell.marginWidth = 0;
+        glShell.marginHeight = 0;
+        mShell.setLayout(glShell);
+
+        mShell.setMinimumSize(new Point(500, 300));
+        mShell.setSize(700, 500);
+        mShell.setText("Android SDK and AVD Manager");
+    }
+
+    private void createContents() {
         mShell.setText("Android SDK Manager");
 
-        Composite root = new Composite(mShell, SWT.NONE);
-        GridLayout gl = new GridLayout(1, false);
-        //gl.marginHeight = gl.marginRight = 0;
-        root.setLayout(gl);
-        root.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-
-        createPagesRoot(root);
-        getPagesRootComposite().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mPkgPage = new PackagesPage(mShell, mUpdaterData);
+        mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
         Composite composite1 = new Composite(mShell, SWT.NONE);
         composite1.setLayout(new GridLayout(1, false));
@@ -116,9 +172,8 @@ public class UpdaterWindowImpl2 extends UpdaterWindowImpl {
     }
 
     private Image getImage(String filename) {
-        UpdaterData updaterData = getUpdaterData();
-        if (updaterData != null) {
-            ImageFactory imgFactory = updaterData.getImageFactory();
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
                 return imgFactory.getImageByName(filename);
             }
@@ -133,25 +188,161 @@ public class UpdaterWindowImpl2 extends UpdaterWindowImpl {
 
     // --- Public API -----------
 
+
+    /**
+     * Registers an extra page for the updater window.
+     * <p/>
+     * Pages must derive from {@link Composite} and implement a constructor that takes
+     * a single parent {@link Composite} argument.
+     * <p/>
+     * All pages must be registered before the call to {@link #open()}.
+     *
+     * @param title The title of the page.
+     * @param pageClass The {@link Composite}-derived class that will implement the page.
+     */
+    public void registerPage(String title, Class<? extends Composite> pageClass) {
+        if (mExtraPages == null) {
+            mExtraPages = new ArrayList<Object[]>();
+        }
+        mExtraPages.add(new Object[]{ title, pageClass });
+    }
+
+    /**
+     * Indicate the initial page that should be selected when the window opens.
+     * This must be called before the call to {@link #open()}.
+     * If null or if the page class is not found, the first page will be selected.
+     */
+    public void setInitialPage(Class<? extends Composite> pageClass) {
+        // Unused in this case. This window display only one page.
+    }
+
+    /**
+     * Sets whether the auto-update wizard will be shown when opening the window.
+     * <p/>
+     * This must be called before the call to {@link #open()}.
+     */
+    public void setRequestAutoUpdate(boolean requestAutoUpdate) {
+        mRequestAutoUpdate = requestAutoUpdate;
+    }
+
+    /**
+     * Adds a new listener to be notified when a change is made to the content of the SDK.
+     */
+    public void addListener(ISdkChangeListener listener) {
+        mUpdaterData.addListeners(listener);
+    }
+
+    /**
+     * Removes a new listener to be notified anymore when a change is made to the content of
+     * the SDK.
+     */
+    public void removeListener(ISdkChangeListener listener) {
+        mUpdaterData.removeListener(listener);
+    }
+
     // --- Internals & UI Callbacks -----------
 
-    @Override
-    protected boolean postCreateContent() {
-        // Override the base task factory with the new one
-        UpdaterData updaterData = getUpdaterData();
+    /**
+     * Called before the UI is created.
+     */
+    private void preCreateContent() {
+        mUpdaterData.setWindowShell(mShell);
+        mUpdaterData.setImageFactory(new ImageFactory(mShell.getDisplay()));
+        // Note: we can't create the TaskFactory yet because we need the UI
+        // to be created first. And the UI needs the ImageFactory to be set.
+    }
+
+    /**
+     * Once the UI has been created, initializes the content.
+     * This creates the pages, selects the first one, setup sources and scan for local folders.
+     *
+     * Returns true if we should show the window.
+     */
+    private boolean postCreateContent() {
         ProgressViewFactory factory = new ProgressViewFactory();
         factory.setProgressView(new ProgressView(
                 mStatusText, mProgressBar, mButtonStop));
-        updaterData.setTaskFactory(factory);
+        mUpdaterData.setTaskFactory(factory);
 
-        return super.postCreateContent();
+        setWindowImage(mShell);
+
+        setupSources();
+        initializeSettings();
+
+        if (mUpdaterData.checkIfInitFailed()) {
+            return false;
+        }
+
+        mUpdaterData.broadcastOnSdkLoaded();
+
+        if (mRequestAutoUpdate) {
+            mUpdaterData.updateOrInstallAll_WithGUI(
+                    null /*selectedArchives*/,
+                    false /* includeObsoletes */);
+        }
+
+        // Tell the one page its the selected one
+        mPkgPage.onPageSelected();
+
+        return true;
     }
 
-    @Override
-    protected void createPages() {
-        PackagesPage pkgPage = new PackagesPage(getPagesRootComposite(), getUpdaterData());
-        addPage(pkgPage, "Packages List");
-        addExtraPages();
+    /**
+     * Creates the icon of the window shell.
+     */
+    private void setWindowImage(Shell androidSdkUpdater) {
+        String imageName = "android_icon_16.png"; //$NON-NLS-1$
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            imageName = "android_icon_128.png"; //$NON-NLS-1$
+        }
+
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                mShell.setImage(imgFactory.getImageByName(imageName));
+            }
+        }
+    }
+
+    /**
+     * Called by the main loop when the window has been disposed.
+     */
+    private void dispose() {
+        mUpdaterData.getSources().saveUserAddons(mUpdaterData.getSdkLog());
+    }
+
+    /**
+     * Callback called when the window shell is disposed.
+     */
+    private void onAndroidSdkUpdaterDispose() {
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                imgFactory.dispose();
+            }
+        }
+    }
+
+    /**
+     * Used to initialize the sources.
+     */
+    private void setupSources() {
+        mUpdaterData.setupDefaultSources();
+    }
+
+    /**
+     * Initializes settings.
+     * This must be called after addExtraPages(), which created a settings page.
+     * Iterate through all the pages to find the first (and supposedly unique) setting page,
+     * and use it to load and apply these settings.
+     */
+    private void initializeSettings() {
+        SettingsController c = mUpdaterData.getSettingsController();
+        c.loadSettings();
+        c.applySettings();
+
+        // TODO give access to a settings dialog somehow (+about dialog)
+        // TODO c.setSettingsPage(settingsPage);
     }
 
     private void onToggleDetails() {

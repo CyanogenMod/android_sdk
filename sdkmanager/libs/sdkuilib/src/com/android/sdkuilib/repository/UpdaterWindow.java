@@ -28,9 +28,9 @@ import org.eclipse.swt.widgets.Shell;
  *
  * This is the public interface for using the window.
  */
-public class UpdaterWindow {
+public class UpdaterWindow implements IUpdaterWindow {
 
-    private UpdaterWindowImpl mWindow;
+    private IUpdaterWindow mWindow;
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -61,7 +61,7 @@ public class UpdaterWindow {
      * @param pageClass The {@link Composite}-derived class that will implement the page.
      */
     public void registerPage(String title, Class<? extends Composite> pageClass) {
-        mWindow.registerExtraPage(title, pageClass);
+        mWindow.registerPage(title, pageClass);
     }
 
     /**
