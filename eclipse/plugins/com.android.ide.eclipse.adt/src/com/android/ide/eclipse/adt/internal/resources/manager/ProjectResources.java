@@ -51,9 +51,10 @@ import java.util.Map.Entry;
  *</ul>
  */
 public class ProjectResources extends ResourceRepository {
-    private final static int DYNAMIC_ID_SEED_START = 0; // this should not conflict with any
-                                                        // project IDs that start at a much higher
-                                                        // value
+    // project resources are defined as 0x7FXX#### where XX is the resource type (layout, drawable,
+    // etc...). Using FF as the type allows for 255 resource types before we get a collision
+    // which should be fine.
+    private final static int DYNAMIC_ID_SEED_START = 0x7fff0000;
 
     /** Map of (name, id) for resources of type {@link ResourceType#ID} coming from R.java */
     private Map<ResourceType, Map<String, Integer>> mResourceValueMap;
