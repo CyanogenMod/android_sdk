@@ -49,6 +49,39 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         assertFalse(AndroidContentAssist.startsWith("", "ABc"));
     }
 
+    public void testNameStartsWith() {
+        String fullWord = "android:marginTop";
+        for (int i = 0; i < fullWord.length(); i++) {
+            assertTrue(i + ":" + fullWord.substring(0, i),
+                    AndroidContentAssist.nameStartsWith(
+                    "android:layout_marginTop", fullWord.substring(0, i), "android:"));
+        }
+
+        fullWord = "android:layout_marginTop";
+        for (int i = 0; i < fullWord.length(); i++) {
+            assertTrue(i + ":" + fullWord.substring(0, i),
+                    AndroidContentAssist.nameStartsWith("android:layout_marginTop", fullWord
+                    .substring(0, i), "android:"));
+        }
+
+        fullWord = "layout_marginTop";
+        for (int i = 0; i < fullWord.length(); i++) {
+            assertTrue(i + ":" + fullWord.substring(0, i),
+                    AndroidContentAssist.nameStartsWith("android:layout_marginTop", fullWord
+                    .substring(0, i), "android:"));
+        }
+
+        fullWord = "marginTop";
+        for (int i = 0; i < fullWord.length(); i++) {
+            assertTrue(i + ":" + fullWord.substring(0, i),
+                    AndroidContentAssist.nameStartsWith("android:layout_marginTop", fullWord
+                    .substring(0, i), "android:"));
+        }
+
+        assertFalse(AndroidContentAssist.nameStartsWith("ab", "ABc", null));
+        assertFalse(AndroidContentAssist.nameStartsWith("", "ABc", null));
+    }
+
     public void testCompletion1() throws Exception {
         // Change attribute name completion
         checkLayoutCompletion("completion1.xml", "layout_w^idth=\"fill_parent\"");
@@ -263,6 +296,25 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("completion5.xml",  "android:id='@+id/button2'^");
     }
 
+    public void testCompletion41() throws Exception {
+        // Test prefix matching on layout_ with namespace prefix
+        checkLayoutCompletion("completion8.xml",  "android:mar^=\"50dp\"");
+    }
+
+    public void testCompletion42() throws Exception {
+        // Test prefix matching on layout_ with namespace prefix
+        checkLayoutCompletion("completion8.xml",  "android:w^i=\"100\"");
+    }
+
+    public void testCompletion43() throws Exception {
+        // Test prefix matching on layout_ without namespace prefix
+        checkLayoutCompletion("completion8.xml",  "mar^=\"60dp\"");
+    }
+
+    public void testCompletion44() throws Exception {
+        // Test prefix matching on layout_ without namespace prefix
+        checkLayoutCompletion("completion8.xml",  "android:layo^ut_width=\"fill_parent\"");
+    }
 
     // ---- Test *applying* code completion ----
 
@@ -528,6 +580,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 " android:maxWidth");
     }
 
+    public void testApplyCompletion41() throws Exception {
+        // Test prefix matching on layout_ with namespace prefix
+        checkApplyLayoutCompletion("completion8.xml",  "android:mar^=\"50dp\"",
+                "android:layout_marginRight");
+    }
 
     // --- Code Completion test infrastructure ----
 
