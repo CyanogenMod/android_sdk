@@ -54,7 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 class ExtractStyleWizard extends VisualRefactoringWizard {
     public ExtractStyleWizard(ExtractStyleRefactoring ref, LayoutEditor editor) {
@@ -86,6 +85,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
         private String mParentStyle;
         private Set<Attr> mInSelection;
         private List<Attr> mAllAttributes;
+        private int mElementCount;
         private Map<Attr, Integer> mFrequencyCount;
         private Set<Attr> mShown;
         private List<Attr> mInitialChecked;
@@ -153,10 +153,8 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             mTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 2));
             ((GridData) mTable.getLayoutData()).heightHint = 200;
 
-            Object[] children = mAllAttributes.toArray();
-
-            mCheckedView.setContentProvider(new ArgumentContentProvider(mRoot, children));
-            mCheckedView.setLabelProvider(new ArgumentLabelProvider(mFrequencyCount));
+            mCheckedView.setContentProvider(new ArgumentContentProvider());
+            mCheckedView.setLabelProvider(new ArgumentLabelProvider());
             mCheckedView.setInput(mRoot);
             final Object[] initialSelection = mInitialChecked.toArray();
             mCheckedView.setCheckedElements(initialSelection);
@@ -215,6 +213,8 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
 
         private void initialize() {
             ExtractStyleRefactoring ref = (ExtractStyleRefactoring) getRefactoring();
+
+            mElementCount = ref.getElements().size();
 
             mParentStyle = ref.getParentStyle();
 
@@ -375,57 +375,50 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             setPageComplete(ok);
             return ok;
         }
-    }
 
-    private static class ArgumentLabelProvider extends StyledCellLabelProvider {
-        public ArgumentLabelProvider(Map<Attr, Integer> frequencyCount) {
-            mFrequencyCount = frequencyCount;
-        }
-
-        private Map<Attr, Integer> mFrequencyCount =
-            new HashMap<Attr, Integer>();
-
-        @Override
-        public void update(ViewerCell cell) {
-            Object element = cell.getElement();
-            Attr attribute = (Attr) element;
-
-            StyledString styledString = new StyledString();
-            styledString.append(attribute.getLocalName());
-            styledString.append(" = ", QUALIFIER_STYLER);
-            styledString.append(attribute.getValue());
-
-            Integer f = mFrequencyCount.get(attribute);
-            if (f != null) {
-                styledString.append(String.format(" (%d)", f.intValue()), DECORATIONS_STYLER);
-            }
-            cell.setText(styledString.toString());
-            cell.setStyleRanges(styledString.getStyleRanges());
-            super.update(cell);
-        }
-    }
-
-    private static class ArgumentContentProvider implements IStructuredContentProvider {
-        private Object[] mChildren;
-        private List<Entry<String, List<Attr>>> mRoot;
-
-        public ArgumentContentProvider(List<Entry<String, List<Attr>>> root, Object[] children) {
-            mRoot = root;
-            mChildren = children;
-        }
-
-        public Object[] getElements(Object inputElement) {
-            if (inputElement == mRoot) {
-                return mChildren;
+        private class ArgumentLabelProvider extends StyledCellLabelProvider {
+            public ArgumentLabelProvider() {
             }
 
-            return new Object[0];
+            @Override
+            public void update(ViewerCell cell) {
+                Object element = cell.getElement();
+                Attr attribute = (Attr) element;
+
+                StyledString styledString = new StyledString();
+                styledString.append(attribute.getLocalName());
+                styledString.append(" = ", QUALIFIER_STYLER);
+                styledString.append(attribute.getValue());
+
+                if (mElementCount > 1) {
+                    Integer f = mFrequencyCount.get(attribute);
+                    String s = String.format(" (in %d/%d elements)",
+                            f != null ? f.intValue(): 1, mElementCount);
+                    styledString.append(s, DECORATIONS_STYLER);
+                }
+                cell.setText(styledString.toString());
+                cell.setStyleRanges(styledString.getStyleRanges());
+                super.update(cell);
+            }
         }
 
-        public void dispose() {
-        }
+        private class ArgumentContentProvider implements IStructuredContentProvider {
+            public ArgumentContentProvider() {
+            }
 
-        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            public Object[] getElements(Object inputElement) {
+                if (inputElement == mRoot) {
+                    return mAllAttributes.toArray();
+                }
+
+                return new Object[0];
+            }
+
+            public void dispose() {
+            }
+
+            public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            }
         }
     }
 }
