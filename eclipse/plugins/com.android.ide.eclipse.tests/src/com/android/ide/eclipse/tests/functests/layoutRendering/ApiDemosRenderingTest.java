@@ -129,12 +129,14 @@ public class ApiDemosRenderingTest extends SdkTestCase {
             return null;
         }
 
-        public String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
-                int fullPosition, int typePosition, ResourceReference viewRef, String viewClass) {
+        public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
+                ResourceReference itemRef, int fullPosition, int typePosition,
+                ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue) {
             return null;
         }
 
-        public AdapterBinding getAdapterBinding(ResourceReference adapterView) {
+        public AdapterBinding getAdapterBinding(ResourceReference adapterView,
+                Object adapterCookie) {
             return null;
         }
     }

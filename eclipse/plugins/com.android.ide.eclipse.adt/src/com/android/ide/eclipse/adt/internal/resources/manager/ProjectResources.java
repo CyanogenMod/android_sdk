@@ -265,7 +265,7 @@ public class ProjectResources extends ResourceRepository {
         synchronized (mDynamicIds) {
             Integer value = mDynamicIds.get(name);
             if (value == null) {
-                value = new Integer(++mDynamicSeed);
+                value = Integer.valueOf(++mDynamicSeed);
                 mDynamicIds.put(name, value);
                 mRevDynamicIds.put(value, name);
             }
