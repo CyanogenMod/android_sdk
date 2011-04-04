@@ -170,4 +170,10 @@ public class ResourceHelperTest extends TestCase {
         assertFalse(ResourceHelper.canCreateResource("@android:dimen/foo"));
         assertFalse(ResourceHelper.canCreateResource("@android:color/foo"));
     }
+
+    public void testStyleToTheme() throws Exception {
+        assertEquals("Foo", ResourceHelper.styleToTheme("Foo"));
+        assertEquals("Theme", ResourceHelper.styleToTheme("@android:style/Theme"));
+        assertEquals("LocalTheme", ResourceHelper.styleToTheme("@style/LocalTheme"));
+    }
 }

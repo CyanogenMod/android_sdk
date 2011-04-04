@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
@@ -408,5 +410,37 @@ public class ResourceHelper {
             AdtPlugin.displayError("New Android XML File", error);
         }
         return null;
+    }
+
+    /**
+     * Returns the theme name to be shown for theme styles, e.g. for "@style/Theme" it
+     * returns "Theme"
+     *
+     * @param style a theme style string
+     * @return the user visible theme name
+     */
+    public static String styleToTheme(String style) {
+        if (style.startsWith(PREFIX_STYLE)) {
+            style = style.substring(PREFIX_STYLE.length());
+        } else if (style.startsWith(PREFIX_ANDROID_STYLE)) {
+            style = style.substring(PREFIX_ANDROID_STYLE.length());
+        }
+        return style;
+    }
+
+    /**
+     * Returns the layout resource name for the given layout file, e.g. for
+     * /res/layout/foo.xml returns foo.
+     *
+     * @param layoutFile the layout file whose name we want to look up
+     * @return the layout name
+     */
+    public static String getLayoutName(IFile layoutFile) {
+        String layoutName = layoutFile.getName();
+        int dotIndex = layoutName.indexOf('.');
+        if (dotIndex != -1) {
+            layoutName = layoutName.substring(0, dotIndex);
+        }
+        return layoutName;
     }
 }

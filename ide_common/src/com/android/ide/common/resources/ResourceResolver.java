@@ -28,13 +28,23 @@ import java.util.Map;
 
 public class ResourceResolver extends RenderResources {
 
+    /** The constant {@code style/} */
     public final static String REFERENCE_STYLE = ResourceType.STYLE.getName() + "/";
+    /** The constant {@code @android:} */
     public final static String PREFIX_ANDROID_RESOURCE_REF = "@android:";
+    /** The constant {@code @} */
     public final static String PREFIX_RESOURCE_REF = "@";
+    /** The constant {@code ?android:} */
     public final static String PREFIX_ANDROID_THEME_REF = "?android:";
+    /** The constant {@code ?} */
     public final static String PREFIX_THEME_REF = "?";
+    /** The constant {@code android:} */
     public final static String PREFIX_ANDROID = "android:";
-
+    /** The constant {@code @style/} */
+    public static final String PREFIX_STYLE = PREFIX_RESOURCE_REF + REFERENCE_STYLE;
+    /** The constant {@code @android:style/} */
+    public static final String PREFIX_ANDROID_STYLE = PREFIX_ANDROID_RESOURCE_REF
+            + REFERENCE_STYLE;
 
     private final Map<ResourceType, Map<String, ResourceValue>> mProjectResources;
     private final Map<ResourceType, Map<String, ResourceValue>> mFrameworkResources;

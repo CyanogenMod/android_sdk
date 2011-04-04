@@ -594,7 +594,6 @@ public class GraphicalEditorPart extends EditorPart
             return null;
         }
 
-
         public ProjectResources getProjectResources() {
             if (mEditedFile != null) {
                 ResourceManager manager = ResourceManager.getInstance();
@@ -731,6 +730,10 @@ public class GraphicalEditorPart extends EditorPart
             if (mActionBar.isZoomingAllowed()) {
                 getCanvasControl().setFitScale(true);
             }
+        }
+
+        public String getIncludedWithin() {
+            return mIncludedWithin != null ? mIncludedWithin.getName() : null;
         }
     }
 

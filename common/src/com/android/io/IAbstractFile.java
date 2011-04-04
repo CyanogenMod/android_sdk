@@ -50,4 +50,9 @@ public interface IAbstractFile extends IAbstractResource {
      * Returns the preferred mode to write into the file.
      */
     PreferredWriteMode getPreferredWriteMode();
+
+    /**
+     * Returns the last modification timestamp
+     */
+    long getModificationStamp();
 }

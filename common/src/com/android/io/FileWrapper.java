@@ -137,6 +137,10 @@ public class FileWrapper extends File implements IAbstractFile {
         return isFile();
     }
 
+    public long getModificationStamp() {
+        return lastModified();
+    }
+
     public IAbstractFolder getParentFolder() {
         String p = this.getParent();
         if (p == null) {

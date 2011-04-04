@@ -76,6 +76,7 @@ public final class AndroidManifest {
     public final static String ATTRIBUTE_REQ_HARDKEYBOARD = "reqHardKeyboard";
     public final static String ATTRIBUTE_REQ_KEYBOARDTYPE = "reqKeyboardType";
     public final static String ATTRIBUTE_REQ_TOUCHSCREEN = "reqTouchScreen";
+    public static final String ATTRIBUTE_THEME = "theme";
 
     /**
      * Returns an {@link IAbstractFile} object representing the manifest for the given project.
