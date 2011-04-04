@@ -339,16 +339,17 @@ public final class ProjectCallback extends LegacyCallback {
         return constructor.newInstance(constructorParameters);
     }
 
-    public String getAdapterItemValue(ResourceReference adapterView, ResourceReference itemRef,
-            int fullPosition, int typePosition, ResourceReference viewRef, String viewClass) {
-        if (viewClass.contains("TextView")) {
+    public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
+            ResourceReference itemRef, int fullPosition, int typePosition,
+            ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue) {
+        if (viewAttribute == ViewAttribute.TEXT && ((String) defaultValue).length() == 0) {
             return viewRef.getName() + " " + typePosition;
         }
 
         return null;
     }
 
-    public AdapterBinding getAdapterBinding(ResourceReference adapterView) {
+    public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie) {
         return null;
     }
 }
