@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
 
@@ -183,7 +184,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     private void computeNonAttributeProposals(ITextViewer viewer, int offset, String wordPrefix,
             List<ICompletionProposal> proposals, Node parentNode, Node currentNode, String parent,
             char nextChar) {
-        if (parent.startsWith(wordPrefix)) {
+        if (startsWith(parent, wordPrefix)) {
             // We are still editing the element's tag name, not the attributes
             // (the element's tag name may not even be complete)
 
@@ -639,12 +640,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
             String nsKeyword = nsPrefix == null ? keyword : (nsPrefix + keyword);
 
-            if (startsWith(keyword, wordPrefix) ||
-                    (nsPrefix != null && startsWith(keyword, nsPrefix)) ||
-                    (nsPrefix != null && startsWith(nsKeyword, wordPrefix))) {
-                if (nsPrefix != null) {
-                    keyword = nsPrefix + keyword;
-                }
+            if (nameStartsWith(nsKeyword, wordPrefix, nsPrefix)) {
+                keyword = nsKeyword;
                 String endTag = ""; //$NON-NLS-1$
                 if (needTag != 0) {
                     if (needTag == '"') {
@@ -728,6 +725,78 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         }
 
         return true;
+    }
+
+    /**
+     * This method performs a prefix match for the given word and prefix, with a couple of
+     * Android code completion specific twists:
+     * <ol>
+     * <li> The match is not case sensitive, so {word="fOo",prefix="FoO"} is a match.
+     * <li>If the word to be matched has a namespace prefix, the typed prefix doesn't have
+     * to match it. So {word="android:foo", prefix="foo"} is a match.
+     * <li>If the attribute name part starts with "layout_" it can be omitted. So
+     * {word="android:layout_marginTop",prefix="margin"} is a match, as is
+     * {word="android:layout_marginTop",prefix="android:margin"}.
+     * </ol>
+     *
+     * @param word the full word to be matched, including namespace if any
+     * @param prefix the prefix to check
+     * @param nsPrefix the namespace prefix (android: or local definition of android
+     *            namespace prefix)
+     * @return true if the prefix matches for code completion
+     */
+    protected static boolean nameStartsWith(String word, String prefix, String nsPrefix) {
+        if (nsPrefix == null) {
+            nsPrefix = ""; //$NON-NLS-1$
+        }
+
+        int wordStart = nsPrefix.length();
+        int prefixStart = 0;
+
+        if (startsWith(prefix, nsPrefix)) {
+            // Already matches up through the namespace prefix:
+            prefixStart = wordStart;
+        } else if (startsWith(nsPrefix, prefix)) {
+            return true;
+        }
+
+        int prefixLength = prefix.length();
+        int wordLength = word.length();
+
+        if (wordLength - wordStart < prefixLength - prefixStart) {
+            return false;
+        }
+
+        boolean matches = true;
+        for (int i = prefixStart, j = wordStart; i < prefixLength; i++, j++) {
+            char c1 = Character.toLowerCase(prefix.charAt(i));
+            char c2 = Character.toLowerCase(word.charAt(j));
+            if (c1 != c2) {
+                matches = false;
+                break;
+            }
+        }
+
+        if (!matches && word.startsWith(ATTR_LAYOUT_PREFIX, wordStart)
+                && !prefix.startsWith(ATTR_LAYOUT_PREFIX, prefixStart)) {
+            wordStart += ATTR_LAYOUT_PREFIX.length();
+
+            if (wordLength - wordStart < prefixLength - prefixStart) {
+                return false;
+            }
+
+            for (int i = prefixStart, j = wordStart; i < prefixLength; i++, j++) {
+                char c1 = Character.toLowerCase(prefix.charAt(i));
+                char c2 = Character.toLowerCase(word.charAt(j));
+                if (c1 != c2) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return matches;
     }
 
     /**
@@ -1168,7 +1237,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                     }
 
                     // Allow "dip" completion but don't offer it ("dp" is preferred)
-                    if (suffix.startsWith("di") || suffix.startsWith("dip")) { //$NON-NLS-1$ //$NON-NLS-2$
+                    if (startsWith(suffix, "di") || startsWith(suffix, "dip")) { //$NON-NLS-1$ //$NON-NLS-2$
                         suffixes.add(Pair.of(number + "dip", "Alternative name for \"dp\"")); //$NON-NLS-1$
                     }
                 }
