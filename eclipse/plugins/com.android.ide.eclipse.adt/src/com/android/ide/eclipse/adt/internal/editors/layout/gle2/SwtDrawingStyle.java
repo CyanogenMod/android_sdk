@@ -44,7 +44,12 @@ public enum SwtDrawingStyle {
     /**
      * The style definition corresponding to {@link DrawingStyle#HOVER}
      */
-    HOVER(null, 0, new RGB(0xFF, 0xFF, 0xFF), 64, 1, SWT.LINE_DOT),
+    HOVER(null, 0, new RGB(0xFF, 0xFF, 0xFF), 40, 1, SWT.LINE_DOT),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#HOVER}
+     */
+    HOVER_SELECTION(null, 0, new RGB(0xFF, 0xFF, 0xFF), 10, 1, SWT.LINE_DOT),
 
     /**
      * The style definition corresponding to {@link DrawingStyle#ANCHOR}
@@ -199,6 +204,8 @@ public enum SwtDrawingStyle {
                 return GUIDELINE;
             case HOVER:
                 return HOVER;
+            case HOVER_SELECTION:
+                return HOVER_SELECTION;
             case ANCHOR:
                 return ANCHOR;
             case OUTLINE:

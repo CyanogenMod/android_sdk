@@ -44,6 +44,12 @@ public enum DrawingStyle {
     HOVER,
 
     /**
+     * The style used for hovered views (e.g. when the mouse is directly on top
+     * of the view), when the hover happens to be the same object as the selection
+     */
+    HOVER_SELECTION,
+
+    /**
      * The style used to draw anchors (lines to the other views the given view
      * is anchored to)
      */
