@@ -69,6 +69,7 @@ public class ProjectResources extends ResourceRepository {
      * layout files that are not saved yet).
      */
     private final Map<String, Integer> mDynamicIds = new HashMap<String, Integer>();
+    private final Map<Integer, String> mRevDynamicIds = new HashMap<Integer, String>();
     private int mDynamicSeed = DYNAMIC_ID_SEED_START;
 
     private final IProject mProject;
@@ -178,11 +179,19 @@ public class ProjectResources extends ResourceRepository {
      * @return a {@link Pair} of 2 strings { name, type } or null if the id could not be resolved
      */
     public Pair<ResourceType, String> resolveResourceId(int id) {
+        Pair<ResourceType, String> result = null;
         if (mResIdValueToNameMap != null) {
-            return mResIdValueToNameMap.get(id);
+            result = mResIdValueToNameMap.get(id);
         }
 
-        return null;
+        if (result == null) {
+            String name = mRevDynamicIds.get(id);
+            if (name != null) {
+                result = Pair.of(ResourceType.ID, name);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -233,6 +242,7 @@ public class ProjectResources extends ResourceRepository {
     public void resetDynamicIds() {
         synchronized (mDynamicIds) {
             mDynamicIds.clear();
+            mRevDynamicIds.clear();
             mDynamicSeed = DYNAMIC_ID_SEED_START;
         }
     }
@@ -257,6 +267,7 @@ public class ProjectResources extends ResourceRepository {
             if (value == null) {
                 value = new Integer(++mDynamicSeed);
                 mDynamicIds.put(name, value);
+                mRevDynamicIds.put(value, name);
             }
 
             return value;
