@@ -240,18 +240,27 @@ public class SwtUtilsTest extends TestCase {
                     scale, alpha);
 
         assertNotNull(result);
-        ImageData data = result.getImageData();
-        byte[] alphaData = data.alphaData;
-        assertNotNull(alphaData);
-        assertEquals(20, data.width);
-        assertEquals(20, data.height);
+        ImageData outData = result.getImageData();
+        assertEquals(20, outData.width);
+        assertEquals(20, outData.height);
+
+        PaletteData outPalette = outData.palette;
+        assertNotNull(outPalette);
+
+        byte[] outAlphaData = outData.alphaData;
+        assertNotNull(outAlphaData);
+
         for (int y = 0; y < 20; y++) {
             for (int x = 0; x < 20; x++) {
                 int r = y + 60;
                 int g = x + 30;
-                int expected = r << 16 | g << 8;
-                assertEquals(expected, data.getPixel(x, y));
-                assertEquals(alpha, alphaData[y*20+x]);
+
+                RGB expected = new RGB(r, g, 0);
+                RGB actual = outPalette.getRGB(outData.getPixel(x, y));
+                assertEquals(expected, actual);
+
+                byte actualAlpha = outAlphaData[y*20+x];
+                assertEquals(alpha, actualAlpha);
             }
         }
     }
@@ -270,30 +279,41 @@ public class SwtUtilsTest extends TestCase {
                     scale, alpha);
 
         assertNotNull(result);
-        ImageData data = result.getImageData();
-        byte[] alphaData = data.alphaData;
-        assertNotNull(alphaData);
-        assertEquals(120, data.width);
-        assertEquals(90, data.height);
+        ImageData outData = result.getImageData();
+        assertEquals(120, outData.width);
+        assertEquals(90, outData.height);
+
+        PaletteData outPalette = outData.palette;
+        assertNotNull(outPalette);
+
+        byte[] outAlphaData = outData.alphaData;
+        assertNotNull(outAlphaData);
+
         for (int y = 0; y < 20; y++) {
             for (int x = 0; x < 20; x++) {
                 int r = y + 10;
                 int g = x + 10;
-                int expected = r << 16 | g << 8;
-                assertEquals(expected, data.getPixel(x, y));
-                assertEquals(alpha, alphaData[y*120+x]);
+
+                RGB expected = new RGB(r, g, 0);
+                RGB actual = outPalette.getRGB(outData.getPixel(x, y));
+                assertEquals(expected, actual);
+
+                assertEquals(alpha, outAlphaData[y*120+x]);
             }
         }
         for (int y = 70; y < 90; y++) {
             for (int x = 100; x < 120; x++) {
                 int r = y + 10;
                 int g = x + 10;
-                int expected = r << 16 | g << 8;
-                assertEquals(expected, data.getPixel(x, y));
-                assertEquals(alpha, alphaData[y*120+x]);
+
+                RGB expected = new RGB(r, g, 0);
+                RGB actual = outPalette.getRGB(outData.getPixel(x, y));
+                assertEquals(expected, actual);
+
+                assertEquals(alpha, outAlphaData[y*120+x]);
             }
         }
-        assertEquals(0, alphaData[40]);
+        assertEquals(0, outAlphaData[40]);
     }
 
     /**
