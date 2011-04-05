@@ -150,7 +150,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         super.configureShell(shell);
         shell.setText("Hierarchy Viewer");
         ImageLoader imageLoader = ImageLoader.getLoader(HierarchyViewerDirector.class);
-        Image image = imageLoader.loadImage("load-view-hierarchy.png", Display.getDefault()); //$NON-NLS-1$
+        Image image = imageLoader.loadImage("sdk-hierarchyviewer-128.png", Display.getDefault()); //$NON-NLS-1$
         shell.setImage(image);
     }
 

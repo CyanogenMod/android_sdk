@@ -22,6 +22,7 @@ import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -34,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Properties;
@@ -64,6 +66,13 @@ public class MainWindow extends ApplicationWindow {
     protected void configureShell(Shell shell) {
         super.configureShell(shell);
         shell.setText("Traceview: " + mTraceName);
+
+        InputStream in = getClass().getClassLoader().getResourceAsStream(
+                "icons/traceview128.png");
+        if (in != null) {
+            shell.setImage(new Image(shell.getDisplay(), in));
+        }
+
         shell.setBounds(100, 10, 1282, 900);
     }
 
