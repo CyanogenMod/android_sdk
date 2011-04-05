@@ -185,6 +185,7 @@ public class SelectionManager implements ISelectionProvider {
                     if (!mSelections.isEmpty()) {
                         mSelections.clear();
                         mAltSelection = null;
+                        updateActionsFromSelection();
                         redraw();
                     }
                     return;
@@ -238,7 +239,7 @@ public class SelectionManager implements ISelectionProvider {
                 }
                 if (changed) {
                     redraw();
-                    updateMenuActions();
+                    updateActionsFromSelection();
                 }
 
             }
@@ -703,17 +704,25 @@ public class SelectionManager implements ISelectionProvider {
                 }
             });
 
-            LayoutEditor editor = mCanvas.getLayoutEditor();
-            if (editor != null) {
-                // Update menu actions that depend on the selection
-                updateMenuActions();
-
-                // Update the layout actions bar
-                LayoutActionBar layoutActionBar = editor.getGraphicalEditor().getLayoutActionBar();
-                layoutActionBar.updateSelection();
-            }
+            updateActionsFromSelection();
         } finally {
             mInsideUpdateSelection = false;
+        }
+    }
+
+    /**
+     * Updates menu actions and the layout action bar after a selection change - these are
+     * actions that depend on the selection
+     */
+    private void updateActionsFromSelection() {
+        LayoutEditor editor = mCanvas.getLayoutEditor();
+        if (editor != null) {
+            // Update menu actions that depend on the selection
+            updateMenuActions();
+
+            // Update the layout actions bar
+            LayoutActionBar layoutActionBar = editor.getGraphicalEditor().getLayoutActionBar();
+            layoutActionBar.updateSelection();
         }
     }
 
