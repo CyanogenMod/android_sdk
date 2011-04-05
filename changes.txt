@@ -1,5 +1,10 @@
 Change log for Android SDK Tools.
 
+Revision 10:
+- The tools now automatically generate Java Programming Language
+  source files (in the gen directory) and bytecode (in the res/raw
+  directory) from your native .rs files
+
 Revision 9:
 - Fix packaging issue that broke draw9patch
 - Ant build rules will now check the Ant version and fail if it's older than 1.8

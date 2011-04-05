@@ -1,3 +1,35 @@
+10.0.1
+- Temporary work-around to resolve the rare cases in which the layout
+  editor will not open.
+- Fix issue in which ADT 10.0.0 would install on Eclipse 3.4 and
+  lower, even though ADT requires Eclipse 3.5 or higher (as of
+  10.0.0).
+
+10.0.0
+- The tools now automatically generate Java Programming Language
+  source files (in the gen/ directory) and bytecode (in the res/raw/
+  directory) from your .rs files.
+- A Binary XML editor has been added.
+- Traceview is now integrated into the Eclipse UI.
+- The "Go To Declaration" feature for XML and .java files quickly show
+  all the matches in the project and allows you jump to specific items
+  such as string translations or onClick handlers.
+- The Resource Chooser can create items such as dimensions, integers,
+  ids, and booleans.
+- Improvements to the Visual Layout Editor:
+  - A new Palette with categories and rendering previews.
+  - A Layout Actions bar that provides quick access to common layout
+    operations.
+  - When the Android 3.0 rendering library is selected, layouts render
+    more like they do on devices. This includes rendering of status
+    and title bars to more accurately reflect the actual screen space
+    available to applications.
+  - Zoom improvements such as fit to view, persistent scale, and
+    keyboard access..
+  - Further improvements to <merge> layouts, as well as layouts with
+    gesture overlays.
+  - Improved rendering error diagnostics.
+
 9.0.0
 - Visual Layout Editor
     - Empty layouts with 0,0 size are now automatically expanded when
