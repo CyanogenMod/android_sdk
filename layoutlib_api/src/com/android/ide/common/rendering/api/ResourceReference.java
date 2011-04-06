@@ -19,6 +19,7 @@ package com.android.ide.common.rendering.api;
 /**
  * A resource reference. This contains the String ID of the resource and whether this is a framework
  * reference.
+ * This is an immutable class.
  *
  */
 public class ResourceReference {
