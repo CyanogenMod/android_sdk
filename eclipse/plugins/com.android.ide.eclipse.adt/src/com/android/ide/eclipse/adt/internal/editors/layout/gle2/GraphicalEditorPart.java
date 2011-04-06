@@ -1533,11 +1533,13 @@ public class GraphicalEditorPart extends EditorPart
 
         // ---------------------------------------
         // Data binding DEBUG
-//        AdapterBinding binding = new AdapterBinding();
+//        AdapterBinding binding = new AdapterBinding(3);
 //        binding.addHeader(new ResourceReference("header", false));
 //        binding.addFooter(new ResourceReference("footer", false));
-//        binding.addItem(new AdapterItemReference("listitem", false, 3));
-//        binding.addItem(new AdapterItemReference("separator"));
+//        DataBindingItem item = new DataBindingItem("groupitem", false, 3);
+//        binding.addItem(item);
+//        item.addChild(new DataBindingItem("separator", false, 1));
+//        item.addChild(new DataBindingItem("listitem", false, 3));
 //        params.addAdapterBinding(new ResourceReference("listview"), binding);
         // ---------------------------------------
 

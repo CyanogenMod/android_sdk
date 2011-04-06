@@ -17,42 +17,18 @@
 package com.android.ide.common.rendering.api;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Describe the content of the dynamic android.widget.Adapter used to fill
  * android.widget.AdapterView
  */
-public class AdapterBinding {
-
-    /**
-     * An AdapterItemReference. On top of being a {@link ResourceReference}, it contains how many
-     * items of this type the data binding should display.
-     */
-    public static class AdapterItemReference extends ResourceReference {
-        private final int mCount;
-
-        public AdapterItemReference(String name, boolean platformLayout, int count) {
-            super(name, platformLayout);
-            mCount = count;
-        }
-
-        public AdapterItemReference(String name, boolean platformLayout) {
-            this(name, platformLayout, 1);
-        }
-
-        public AdapterItemReference(String name) {
-            this(name, false /*platformLayout*/, 1);
-        }
-
-        public int getCount() {
-            return mCount;
-        }
-    }
+public class AdapterBinding implements Iterable<DataBindingItem> {
 
     private final int mRepeatCount;
     private final List<ResourceReference> mHeaders = new ArrayList<ResourceReference>();
-    private final List<AdapterItemReference> mItems = new ArrayList<AdapterItemReference>();
+    private final List<DataBindingItem> mItems = new ArrayList<DataBindingItem>();
     private final List<ResourceReference> mFooters = new ArrayList<ResourceReference>();
 
     public AdapterBinding(int repeatCount) {
@@ -75,15 +51,15 @@ public class AdapterBinding {
         return mHeaders.get(index);
     }
 
-    public void addItem(AdapterItemReference itemInfo) {
-        mItems.add(itemInfo);
+    public void addItem(DataBindingItem item) {
+        mItems.add(item);
     }
 
     public int getItemCount() {
         return mItems.size();
     }
 
-    public AdapterItemReference getItemAt(int index) {
+    public DataBindingItem getItemAt(int index) {
         return mItems.get(index);
     }
 
@@ -97,5 +73,9 @@ public class AdapterBinding {
 
     public ResourceReference getFooterAt(int index) {
         return mFooters.get(index);
+    }
+
+    public Iterator<DataBindingItem> iterator() {
+        return mItems.iterator();
     }
 }
