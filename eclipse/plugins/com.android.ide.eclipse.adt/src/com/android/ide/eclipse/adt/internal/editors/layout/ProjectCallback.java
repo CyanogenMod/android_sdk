@@ -340,7 +340,8 @@ public final class ProjectCallback extends LegacyCallback {
     }
 
     public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
-            ResourceReference itemRef, int fullPosition, int typePosition,
+            ResourceReference itemRef,
+            int fullPosition, int typePosition, int fullChildPosition, int typeChildPosition,
             ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue) {
         if (viewAttribute == ViewAttribute.TEXT && ((String) defaultValue).length() == 0) {
             return viewRef.getName() + " " + typePosition;
@@ -349,7 +350,8 @@ public final class ProjectCallback extends LegacyCallback {
         return null;
     }
 
-    public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie) {
+    public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie,
+            Object viewObject) {
         return null;
     }
 }

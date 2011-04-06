@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.rendering.api.Capability;
+import com.android.ide.common.rendering.api.DataBindingItem;
 import com.android.ide.common.rendering.api.MergeCookie;
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.common.rendering.api.AdapterBinding.AdapterItemReference;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -675,12 +675,12 @@ public class CanvasViewInfoTest extends TestCase {
         UiViewElementNode childNode = createNode(rootNode, "ListView", false);
         /*UiViewElementNode grandChildNode =*/ createNode(childNode, "LinearLayout", false);
         /*UiViewElementNode greatGrandChildNode =*/ createNode(childNode, "TextView", false);
-        AdapterItemReference adapterItem = new AdapterItemReference("foo");
+        DataBindingItem dataBindingItem = new DataBindingItem("foo");
 
         ViewInfo root = new ViewInfo("FrameLayout", rootNode, 0, 50, 320, 480);
         ViewInfo child = new ViewInfo("ListView", childNode, 0, 0, 320, 430);
         root.setChildren(Collections.singletonList(child));
-        ViewInfo grandChild = new ViewInfo("LinearLayout", adapterItem, 0, 0, 320, 17);
+        ViewInfo grandChild = new ViewInfo("LinearLayout", dataBindingItem, 0, 0, 320, 17);
         child.setChildren(Collections.singletonList(grandChild));
         ViewInfo greatGrandChild = new ViewInfo("Button", null, 0, 0, 73, 17);
         grandChild.setChildren(Collections.singletonList(greatGrandChild));

@@ -17,6 +17,8 @@
 package com.android.ide.common.rendering.api;
 
 
+import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
+
 import com.android.ide.common.rendering.api.Result.Status;
 
 import java.awt.image.BufferedImage;
@@ -108,5 +110,28 @@ public abstract class Bridge {
      */
     public void clearCaches(Object projectKey) {
 
+    }
+
+    /**
+     * Utility method returning the parent of a given view object.
+     *
+     * @param viewObject the object for which to return the parent.
+     *
+     * @return a {@link Result} indicating the status of the action, and if success, the parent
+     *      object in {@link Result#getData()}
+     */
+    public Result getViewParent(Object viewObject) {
+        return NOT_IMPLEMENTED.createResult();
+    }
+
+    /**
+     * Utility method returning the index of a given view in its parent.
+     * @param viewObject the object for which to return the index.
+     *
+     * @return a {@link Result} indicating the status of the action, and if success, the index in
+     *      the parent in {@link Result#getData()}
+     */
+    public Result getViewIndex(Object viewObject) {
+        return NOT_IMPLEMENTED.createResult();
     }
 }
