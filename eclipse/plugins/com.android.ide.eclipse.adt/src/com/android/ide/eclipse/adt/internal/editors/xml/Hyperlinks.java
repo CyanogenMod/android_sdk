@@ -400,7 +400,11 @@ public class Hyperlinks {
         File docs = new File(sdkLocation, FD_DOCS + File.separator + FD_DOCS_REFERENCE);
         try {
             if (docs.exists()) {
-                return new URL(docs.toURI().toURL().toExternalForm() + '/' + relative);
+                String s = docs.toURI().toURL().toExternalForm();
+                if (!s.endsWith("/")) { //$NON-NLS-1$
+                    s += "/";           //$NON-NLS-1$
+                }
+                return new URL(s + relative);
             }
             // If not, fallback to the online documentation
             return new URL("http://developer.android.com/reference/" + relative); //$NON-NLS-1$

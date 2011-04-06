@@ -44,7 +44,7 @@ import java.lang.reflect.Method;
 @SuppressWarnings("restriction")
 public class HyperlinksTest extends AdtProjectTest {
     @Override
-    protected boolean testNeedsUniqueProject() {
+    protected boolean testCaseNeedsUniqueProject() {
         return true;
     }
 
@@ -195,7 +195,7 @@ public class HyperlinksTest extends AdtProjectTest {
                 sb.append("\n    ");
                 ResourceFile resourceFile = resourceLink.getFile();
                 String desc = resourceFile.toString();
-                desc.replace('\\', '/');
+                desc = desc.replace('\\', '/');
                 // For files in the SDK folder, strip out file prefix
                 int dataRes = desc.indexOf("data/res");
                 if (dataRes != -1) {
@@ -243,7 +243,7 @@ public class HyperlinksTest extends AdtProjectTest {
             if (index != -1) {
                 initialUrl = initialUrl.substring(index);
             }
-            initialUrl.replace('\\', '/');
+            initialUrl = initialUrl.replace('\\', '/');
             sb.append("\n\nAfter open, a browser is shown with this URL:\n");
             sb.append("  ");
             sb.append(initialUrl);

@@ -3,4 +3,4 @@ Open XML Declaration :  [android.permission.ACCESS_NETWORK_STATE]
 
 
 After open, a browser is shown with this URL:
-  reference//android/Manifest.permission.html#ACCESS_NETWORK_STATE
+  reference/android/Manifest.permission.html#ACCESS_NETWORK_STATE

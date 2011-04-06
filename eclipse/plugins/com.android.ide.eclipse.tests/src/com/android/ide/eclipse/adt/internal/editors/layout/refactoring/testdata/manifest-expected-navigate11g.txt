@@ -3,4 +3,4 @@ Open XML Declaration :  [android.intent.category.LAUNCHER]
 
 
 After open, a browser is shown with this URL:
-  reference//android/content/Intent.html#CATEGORY_LAUNCHER
+  reference/android/content/Intent.html#CATEGORY_LAUNCHER
