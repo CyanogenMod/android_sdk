@@ -131,12 +131,13 @@ public class ApiDemosRenderingTest extends SdkTestCase {
 
         public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
                 ResourceReference itemRef, int fullPosition, int typePosition,
+                int fullChildPosition, int typeChildPosition,
                 ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue) {
             return null;
         }
 
         public AdapterBinding getAdapterBinding(ResourceReference adapterView,
-                Object adapterCookie) {
+                Object adapterCookie, Object viewObject) {
             return null;
         }
     }

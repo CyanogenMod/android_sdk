@@ -16,6 +16,8 @@
 
 package com.android.ide.common.rendering;
 
+import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
+
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.rendering.api.Bridge;
 import com.android.ide.common.rendering.api.Capability;
@@ -321,6 +323,38 @@ public class LayoutLibrary {
         }
     }
 
+    /**
+     * Utility method returning the parent of a given view object.
+     *
+     * @param viewObject the object for which to return the parent.
+     *
+     * @return a {@link Result} indicating the status of the action, and if success, the parent
+     *      object in {@link Result#getData()}
+     */
+    public Result getViewParent(Object viewObject) {
+        if (mBridge != null) {
+            return mBridge.getViewParent(viewObject);
+        }
+
+        return NOT_IMPLEMENTED.createResult();
+    }
+
+    /**
+     * Utility method returning the index of a given view in its parent.
+     * @param viewObject the object for which to return the index.
+     *
+     * @return a {@link Result} indicating the status of the action, and if success, the index in
+     *      the parent in {@link Result#getData()}
+     */
+    public Result getViewIndex(Object viewObject) {
+        if (mBridge != null) {
+            return mBridge.getViewIndex(viewObject);
+        }
+
+        return NOT_IMPLEMENTED.createResult();
+    }
+
+
     // ------ Implementation
 
     private LayoutLibrary(Bridge bridge, ILayoutBridge legacyBridge, ClassLoader classLoader,
@@ -462,7 +496,7 @@ public class LayoutLibrary {
         for (Entry<ResourceType, Map<String, ResourceValue>> entry : map.entrySet()) {
             // ugly case but works.
             result.put(entry.getKey().getName(),
-                    (Map<String, IResourceValue>)(Map) entry.getValue());
+                    (Map) entry.getValue());
         }
 
         return result;

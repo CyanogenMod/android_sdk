@@ -100,7 +100,12 @@ public interface IProjectCallback {
      * @param itemRef the {@link ResourceReference} for the layout used by the adapter item.
      * @param fullPosition the position of the item in the full list.
      * @param typePosition the position of the item if only items of the same type are considered.
-     *     If there is only one type of items, this is the same as <var>position</var>.
+     *     If there is only one type of items, this is the same as <var>fullPosition</var>.
+     * @param fullChildPosition the position of the item in the full children list. This is only
+     *     valid if the adapter view is an ExpandableListView.
+     * @param typeChildPosition the position of the child item if only items of the same type are
+     *     considered. This is only valid if the adapter view is an ExpandableListView.
+     *     If there is only one type of items, this is the same as <var>fullChildPosition</var>.
      * @param viewRef The {@link ResourceReference} for the view we're trying to fill.
      * @param ViewAttribute the attribute being queried.
      * @param defaultValue the default value for this attribute. The object class matches the
@@ -110,7 +115,9 @@ public interface IProjectCallback {
      * @see ViewAttribute#getAttributeClass()
      */
     Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
-            ResourceReference itemRef, int fullPosition, int typePosition,
+            ResourceReference itemRef,
+            int fullPosition, int typePosition,
+            int fullChildPosition, int typeChildPosition,
             ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue);
 
     /**
@@ -118,9 +125,11 @@ public interface IProjectCallback {
      * This is only called if {@link SessionParams} does not have an {@link AdapterBinding} for
      * the given {@link ResourceReference} already.
      *
-     * @param adapterView the adapter view to return the adapter binding for.
+     * @param adapterViewRef the reference of adapter view to return the adapter binding for.
      * @param adapterCookie the view cookie for this particular view.
+     * @param viewObject the view object for the adapter.
      * @return an adapter binding for the given view or null if there's no data.
      */
-    AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie);
+    AdapterBinding getAdapterBinding(ResourceReference adapterViewRef, Object adapterCookie,
+            Object viewObject);
 }
