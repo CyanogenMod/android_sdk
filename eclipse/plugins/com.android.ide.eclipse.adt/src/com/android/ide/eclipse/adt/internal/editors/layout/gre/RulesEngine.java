@@ -37,11 +37,11 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
@@ -940,26 +940,8 @@ public class RulesEngine {
 
         public String displayIncludeSourceInput() {
             AndroidXmlEditor editor = mEditor.getLayoutEditor();
-            IProject project = editor.getProject();
-            if (project != null) {
-                IncludeFinder includeFinder = IncludeFinder.get(project);
-                final Collection<String> invalid =
-                    includeFinder.getInvalidIncludes(editor.getInputFile());
-                IInputValidator validator = new IInputValidator() {
-                    public String isValid(String newText) {
-                        if (invalid.contains(newText)) {
-                            return String.format(
-                                    "Cyclic include, not valid",
-                                    newText);
-                        }
-                        return null;
-                    }
-                };
-
-                return displayResourceInput(ResourceType.LAYOUT.getName(), null, validator);
-            }
-
-            return null;
+            IInputValidator validator = CyclicDependencyValidator.create(editor.getInputFile());
+            return displayResourceInput(ResourceType.LAYOUT.getName(), null, validator);
         }
 
         public void select(final Collection<INode> nodes) {

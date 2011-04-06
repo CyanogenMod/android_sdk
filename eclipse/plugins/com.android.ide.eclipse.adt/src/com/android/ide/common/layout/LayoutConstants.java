@@ -16,6 +16,8 @@
 
 package com.android.ide.common.layout;
 
+import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+
 import com.android.sdklib.SdkConstants;
 
 /**
@@ -40,6 +42,7 @@ public class LayoutConstants {
     public static final String ABSOLUTE_LAYOUT = "AbsoluteLayout";      //$NON-NLS-1$
     public static final String TABLE_LAYOUT = "TableLayout";            //$NON-NLS-1$
     public static final String TABLE_ROW = "TableRow";                  //$NON-NLS-1$
+    public static final String CALENDAR_VIEW = "CalendarView";          //$NON-NLS-1$
     public static final String LIST_VIEW = "ListView";                  //$NON-NLS-1$
     public static final String EDIT_TEXT = "EditText";                  //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                     //$NON-NLS-1$
@@ -152,6 +155,11 @@ public class LayoutConstants {
      * files)
      */
     public static final String ANDROID_WIDGET_PREFIX = "android.widget."; //$NON-NLS-1$
+
+    /**
+     * The top level android package as a prefix, "android.".
+     */
+    public static final String ANDROID_PKG_PREFIX = ANDROID_PKG + '.';
 
     /** The fully qualified class name of an EditText view */
     public static final String FQCN_EDIT_TEXT = "android.widget.EditText"; //$NON-NLS-1$

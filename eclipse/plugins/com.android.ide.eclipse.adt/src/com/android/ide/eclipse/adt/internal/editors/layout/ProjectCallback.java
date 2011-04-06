@@ -16,10 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.CALENDAR_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
+
+import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
+import com.android.ide.common.rendering.api.DataBindingItem;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.ide.common.rendering.api.Result;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -56,16 +64,19 @@ public final class ProjectCallback extends LegacyCallback {
     private String mNamespace;
     private ProjectClassLoader mLoader = null;
     private LayoutLog mLogger;
+    private LayoutLibrary mLayoutLib;
 
     /**
      * Creates a new {@link ProjectCallback} to be used with the layout lib.
      *
-     * @param classLoader The class loader that was used to load layoutlib.jar
+     * @param layoutLib The layout library this callback is going to be invoked from
      * @param projectRes the {@link ProjectResources} for the project.
      * @param project the project.
      */
-    public ProjectCallback(ClassLoader classLoader, ProjectResources projectRes, IProject project) {
-        mParentClassLoader = classLoader;
+    public ProjectCallback(LayoutLibrary layoutLib,
+            ProjectResources projectRes, IProject project) {
+        mLayoutLib = layoutLib;
+        mParentClassLoader = layoutLib.getClassLoader();
         mProjectRes = projectRes;
         mProject = project;
     }
@@ -343,15 +354,118 @@ public final class ProjectCallback extends LegacyCallback {
             ResourceReference itemRef,
             int fullPosition, int typePosition, int fullChildPosition, int typeChildPosition,
             ResourceReference viewRef, ViewAttribute viewAttribute, Object defaultValue) {
+
+        // Special case for the palette preview
+        if (viewAttribute == ViewAttribute.TEXT
+                && adapterView.getName().startsWith("android_widget_")) { //$NON-NLS-1$
+            String name = adapterView.getName();
+            if (viewRef.getName().equals("text2")) { //$NON-NLS-1$
+                return "Sub Item";
+            }
+            if (fullPosition == 0) {
+                String viewName = name.substring("android_widget_".length());
+                if (viewName.equals(EXPANDABLE_LIST_VIEW)) {
+                    return "ExpandableList"; // ExpandableListView is too wide, character-wraps
+                }
+                return viewName;
+            } else {
+                return "Next Item";
+            }
+        }
+
+        if (itemRef.isFramework()) {
+            // Special case for list_view_item_2 and friends
+            if (viewRef.getName().equals("text2")) { //$NON-NLS-1$
+                return "Sub Item " + (fullPosition + 1);
+            }
+        }
+
         if (viewAttribute == ViewAttribute.TEXT && ((String) defaultValue).length() == 0) {
-            return viewRef.getName() + " " + typePosition;
+            return "Item " + (fullPosition + 1);
         }
 
         return null;
     }
 
+    /**
+     * For the given class, finds and returns the nearest super class which is a ListView
+     * or an ExpandableListView, or returns null.
+     */
+    private static String getListViewFqcn(Class<?> clz) {
+        String fqcn = clz.getName();
+        if (fqcn.endsWith(LIST_VIEW)) { // including EXPANDABLE_LIST_VIEW
+            return fqcn;
+        } else if (fqcn.startsWith(ANDROID_PKG_PREFIX)) {
+            return null;
+        }
+        Class<?> superClass = clz.getSuperclass();
+        if (superClass != null) {
+            return getListViewFqcn(superClass);
+        } else {
+            // Should not happen; we would have encountered android.view.View first,
+            // and it should have been covered by the ANDROID_PKG_PREFIX case above.
+            return null;
+        }
+    }
+
+    /**
+     * Looks at the parent-chain of the view and if it finds a custom view, or a
+     * CalendarView, within the given distance then it returns true. A ListView within a
+     * CalendarView should not be assigned a custom list view type because it sets its own
+     * and then attempts to cast the layout to its own type which would fail if the normal
+     * default list item binding is used.
+     */
+    private boolean isWithinIllegalParent(Object viewObject, int depth) {
+        String fqcn = viewObject.getClass().getName();
+        if (fqcn.endsWith(CALENDAR_VIEW) || !fqcn.startsWith(ANDROID_PKG_PREFIX)) {
+            return true;
+        }
+
+        if (depth > 0) {
+            Result result = mLayoutLib.getViewParent(viewObject);
+            if (result.isSuccess()) {
+                Object parent = result.getData();
+                if (parent != null) {
+                    return isWithinIllegalParent(parent, depth -1);
+                }
+            }
+        }
+
+        return false;
+    }
+
     public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie,
             Object viewObject) {
-        return null;
+        if (viewObject == null) {
+            return null;
+        }
+
+        // Is this a ListView or ExpandableListView? If so, return its fully qualified
+        // class name, otherwise return null. This is used to filter out other types
+        // of AdapterViews (such as Spinners) where we don't want to use the list item
+        // binding.
+        String listFqcn = getListViewFqcn(viewObject.getClass());
+        if (listFqcn == null) {
+            return null;
+        }
+
+        // Is this ListView nested within an "illegal" container, such as a CalendarView?
+        // If so, don't change the bindings below. Some views, such as CalendarView, and
+        // potentially some custom views, might be doing specific things with the ListView
+        // that could break if we add our own list binding, so for these leave the list
+        // alone.
+        if (isWithinIllegalParent(viewObject, 2)) {
+            return null;
+        }
+
+        AdapterBinding binding = new AdapterBinding(20);
+        if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
+            binding.addItem(new DataBindingItem("simple_expandable_list_item_2", //$NON-NLS-1$
+                    true /* isFramework */, 1));
+        } else {
+            binding.addItem(new DataBindingItem("simple_list_item_2", //$NON-NLS-1$
+                    true /* isFramework */, 1));
+        }
+        return binding;
     }
 }
