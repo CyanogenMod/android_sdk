@@ -59,6 +59,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -357,12 +359,31 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         if (grandparent != null) {
             for (ElementDescriptor e : grandparent.getChildren()) {
                 if (e.getXmlName().startsWith(parent)) {
-                    return grandparent.getChildren();
+                    return sort(grandparent.getChildren());
                 }
             }
         }
 
         return null;
+    }
+
+    /** Non-destructively sort a list of ElementDescriptors and return the result */
+    private static ElementDescriptor[] sort(ElementDescriptor[] elements) {
+        if (elements != null && elements.length > 1) {
+            // Sort alphabetically. Must make copy to not destroy original.
+            ElementDescriptor[] copy = new ElementDescriptor[elements.length];
+            System.arraycopy(elements, 0, copy, 0, elements.length);
+
+            Arrays.sort(copy, new Comparator<ElementDescriptor>() {
+                public int compare(ElementDescriptor e1, ElementDescriptor e2) {
+                    return e1.getXmlLocalName().compareTo(e2.getXmlLocalName());
+                }
+            });
+
+            return copy;
+        }
+
+        return elements;
     }
 
     /**
@@ -556,13 +577,14 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             parent = parentNode.getNodeName();
             ElementDescriptor desc = getDescriptor(parent);
             if (desc != null) {
-                choices = desc.getChildren();
+                choices = sort(desc.getChildren());
             }
         } else if (parentNode.getNodeType() == Node.DOCUMENT_NODE) {
             // We're editing a text node at the first level (i.e. root node).
             // Limit content assist to the only valid root elements.
-            choices = getRootDescriptor().getChildren();
+            choices = sort(getRootDescriptor().getChildren());
         }
+
         return choices;
     }
 

@@ -1,34 +1,6 @@
 Code completion in completion1.xml for ^<TextView:
 <AbsoluteLayout ></AbsoluteLayout>
 <AdapterViewFlipper ></AdapterViewFlipper>
-<DialerFilter ></DialerFilter>
-<ExpandableListView ></ExpandableListView>
-<FrameLayout ></FrameLayout>
-<GridView ></GridView>
-<HorizontalScrollView ></HorizontalScrollView>
-<ImageSwitcher ></ImageSwitcher>
-<LinearLayout ></LinearLayout>
-<ListView ></ListView>
-<MediaController ></MediaController>
-<RadioGroup ></RadioGroup>
-<RelativeLayout ></RelativeLayout>
-<ScrollView ></ScrollView>
-<SearchView ></SearchView>
-<SlidingDrawer ></SlidingDrawer> : SlidingDrawer specific attributes.
-<StackView ></StackView>
-<TabHost ></TabHost>
-<TabWidget ></TabWidget>
-<TableLayout ></TableLayout>
-<TableRow ></TableRow>
-<TextSwitcher ></TextSwitcher>
-<ViewAnimator ></ViewAnimator>
-<ViewFlipper ></ViewFlipper>
-<ViewSwitcher ></ViewSwitcher>
-<GestureOverlayView /> : GestureOverlayView specific attributes.
-<SurfaceView />
-<View /> : Attributes that can be used with android.view.View or any of its subclasses.
-<ViewStub /> : A android.view.ViewStub lets you lazily include other XML layouts inside your application  at runtime.
-<WebView />
 <AnalogClock />
 <AutoCompleteTextView />
 <Button />
@@ -37,24 +9,52 @@ Code completion in completion1.xml for ^<TextView:
 <CheckedTextView />
 <Chronometer />
 <DatePicker />
+<DialerFilter ></DialerFilter>
 <DigitalClock />
 <EditText />
+<ExpandableListView ></ExpandableListView>
+<FrameLayout ></FrameLayout>
 <Gallery />
+<GestureOverlayView /> : GestureOverlayView specific attributes.
+<GridView ></GridView>
+<HorizontalScrollView ></HorizontalScrollView>
 <ImageButton />
+<ImageSwitcher ></ImageSwitcher>
 <ImageView />
+<LinearLayout ></LinearLayout>
+<ListView ></ListView>
+<MediaController ></MediaController>
 <MultiAutoCompleteTextView />
 <NumberPicker />
 <ProgressBar />
 <QuickContactBadge />
 <RadioButton />
+<RadioGroup ></RadioGroup>
 <RatingBar />
+<RelativeLayout ></RelativeLayout>
+<ScrollView ></ScrollView>
+<SearchView ></SearchView>
 <SeekBar />
+<SlidingDrawer ></SlidingDrawer> : SlidingDrawer specific attributes.
 <Spinner />
+<StackView ></StackView>
+<SurfaceView />
+<TabHost ></TabHost>
+<TabWidget ></TabWidget>
+<TableLayout ></TableLayout>
+<TableRow ></TableRow>
+<TextSwitcher ></TextSwitcher>
 <TextView />
 <TimePicker />
 <ToggleButton />
 <TwoLineListItem />
 <VideoView />
+<View /> : Attributes that can be used with android.view.View or any of its subclasses.
+<ViewAnimator ></ViewAnimator>
+<ViewFlipper ></ViewFlipper>
+<ViewStub /> : A android.view.ViewStub lets you lazily include other XML layouts inside your application  at runtime.
+<ViewSwitcher ></ViewSwitcher>
+<WebView />
 <ZoomButton />
 <ZoomControls />
 <include /> : Lets you statically include XML layouts inside other XML layouts.
