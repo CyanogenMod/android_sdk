@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -26,12 +28,14 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -48,12 +52,15 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -77,13 +84,12 @@ public class PackagesPage extends Composite
 
     private Button mCheckSortSource;
     private Button mCheckSortApi;
-    private Button mCheckFilterObsolete;
+    private Button mCheckFilterDetails;
     private Button mCheckFilterInstalled;
     private Button mCheckFilterNew;
     private Composite mGroupOptions;
     private Composite mGroupSdk;
     private Group mGroupPackages;
-    private Composite mGroupButtons;
     private Button mButtonDelete;
     private Button mButtonInstall;
     private Tree mTree;
@@ -96,13 +102,13 @@ public class PackagesPage extends Composite
     private Color mColorNew;
     private Font mTreeFontItalic;
     private Button mButtonReload;
-    private Button mButtonAddonSites;
 
     public PackagesPage(Composite parent, UpdaterData updaterData) {
-        super(parent, SWT.BORDER);
+        super(parent, SWT.NONE);
 
         mUpdaterData = updaterData;
         createContents(this);
+
         postCreate();  //$hide$
     }
 
@@ -114,10 +120,13 @@ public class PackagesPage extends Composite
     }
 
     protected void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(1, false));
+        GridLayout gridLayout = new GridLayout(2, false);
+        gridLayout.marginWidth = 0;
+        gridLayout.marginHeight = 0;
+        parent.setLayout(gridLayout);
 
         mGroupSdk = new Composite(parent, SWT.NONE);
-        mGroupSdk.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        mGroupSdk.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mGroupSdk.setLayout(new GridLayout(2, false));
 
         Label label1 = new Label(mGroupSdk, SWT.NONE);
@@ -128,28 +137,38 @@ public class PackagesPage extends Composite
         mTextSdkOsPath.setEnabled(false);
 
         mGroupPackages = new Group(parent, SWT.NONE);
-        mGroupPackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mGroupPackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
         mGroupPackages.setText("Packages");
         mGroupPackages.setLayout(new GridLayout(1, false));
 
         mTreeViewer = new CheckboxTreeViewer(mGroupPackages, SWT.BORDER);
+
+        mTreeViewer.addCheckStateListener(new ICheckStateListener() {
+            public void checkStateChanged(CheckStateChangedEvent event) {
+                onTreeCheckStateChanged(event); //$hide$
+            }
+        });
+
         mTree = mTreeViewer.getTree();
+        mTree.setLinesVisible(true);
         mTree.setHeaderVisible(true);
         mTree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mColumnName = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn1 = mColumnName.getColumn();
-        treeColumn1.setImage(getImage("platform_pkg_16.png"));  //$NON-NLS-1$
-        treeColumn1.setWidth(290);
+        treeColumn1.setImage(getImage("platform_pkg_16.png"));      //$NON-NLS-1$
+        treeColumn1.setWidth(340);
         treeColumn1.setText("Name");
 
         mColumnApi = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn2 = mColumnApi.getColumn();
+        treeColumn2.setAlignment(SWT.CENTER);
         treeColumn2.setWidth(50);
         treeColumn2.setText("API");
 
         mColumnRevision = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn3 = mColumnRevision.getColumn();
+        treeColumn3.setAlignment(SWT.CENTER);
         treeColumn3.setWidth(50);
         treeColumn3.setText("Rev.");
         treeColumn3.setToolTipText("Revision currently installed");
@@ -157,41 +176,16 @@ public class PackagesPage extends Composite
 
         mColumnStatus = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn4 = mColumnStatus.getColumn();
-        treeColumn4.setWidth(88);
+        treeColumn4.setAlignment(SWT.LEAD);
+        treeColumn4.setWidth(190);
         treeColumn4.setText("Status");
 
         mGroupOptions = new Composite(mGroupPackages, SWT.NONE);
         mGroupOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mGroupOptions.setLayout(new GridLayout(8, false));
-
-        Label label2 = new Label(mGroupOptions, SWT.NONE);
-        label2.setText("Sort by");
-
-        mCheckSortSource = new Button(mGroupOptions, SWT.RADIO);
-        mCheckSortSource.setToolTipText("Sort by Source");
-        mCheckSortSource.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                sortPackages();
-            }
-        });
-        mCheckSortSource.setImage(getImage("source_icon16.png"));  //$NON-NLS-1$
-        mCheckSortSource.setText("Source");
-
-        mCheckSortApi = new Button(mGroupOptions, SWT.RADIO);
-        mCheckSortApi.setToolTipText("Sort by API level");
-        mCheckSortApi.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                sortPackages();
-            }
-        });
-        mCheckSortApi.setImage(getImage("platform_pkg_16.png"));  //$NON-NLS-1$
-        mCheckSortApi.setText("API level");
-        mCheckSortApi.setSelection(true);
-
-        Label expandPlaceholder = new Label(mGroupOptions, SWT.NONE);
-        expandPlaceholder.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridLayout gl_GroupOptions = new GridLayout(7, false);
+        gl_GroupOptions.marginWidth = 0;
+        gl_GroupOptions.marginHeight = 0;
+        mGroupOptions.setLayout(gl_GroupOptions);
 
         Label label3 = new Label(mGroupOptions, SWT.NONE);
         label3.setText("Show:");
@@ -204,7 +198,7 @@ public class PackagesPage extends Composite
                 sortPackages();
             }
         });
-        mCheckFilterNew.setImage(getImage("reject_icon16.png"));
+        mCheckFilterNew.setImage(getImage("reject_icon16.png"));        //$NON-NLS-1$
         mCheckFilterNew.setSelection(true);
         mCheckFilterNew.setText("Updates/New");
 
@@ -220,66 +214,99 @@ public class PackagesPage extends Composite
         mCheckFilterInstalled.setSelection(true);
         mCheckFilterInstalled.setText("Installed");
 
-        mCheckFilterObsolete = new Button(mGroupOptions, SWT.CHECK);
-        mCheckFilterObsolete.setToolTipText("Show everything including obsolete packages and all archives)");
-        mCheckFilterObsolete.addSelectionListener(new SelectionAdapter() {
+        mCheckFilterDetails = new Button(mGroupOptions, SWT.CHECK);
+        mCheckFilterDetails.setToolTipText("Show everything including obsolete packages and all archives)");
+        mCheckFilterDetails.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 sortPackages();
             }
         });
-        mCheckFilterObsolete.setImage(getImage("nopkg_icon16.png"));  //$NON-NLS-1$
-        mCheckFilterObsolete.setSelection(false);
-        mCheckFilterObsolete.setText("Details");
+        mCheckFilterDetails.setImage(getImage("nopkg_icon16.png"));  //$NON-NLS-1$
+        mCheckFilterDetails.setSelection(false);
+        mCheckFilterDetails.setText("Details");
 
-        mGroupButtons = new Composite(parent, SWT.NONE);
-        mGroupButtons.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-                false, 1, 1));
-        mGroupButtons.setLayout(new GridLayout(7, false));
-
-        mButtonAddonSites = new Button(mGroupButtons, SWT.NONE);
-        mButtonAddonSites.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onButtonAddonSites(e);
-            }
-        });
-        mButtonAddonSites.setToolTipText("Manage the list of add-on sites");
-        mButtonAddonSites.setText("Add-on Sites...");
-
-        Label label6 = new Label(mGroupButtons, SWT.NONE);
-        label6.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        mButtonReload = new Button(mGroupButtons, SWT.NONE);
+        mButtonReload = new Button(mGroupOptions, SWT.NONE);
+        mButtonReload.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mButtonReload.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                onButtonReload(e);
+                onButtonReload();
             }
         });
         mButtonReload.setToolTipText("Reload the package list");
         mButtonReload.setText("Reload");
 
-        Label label5 = new Label(mGroupButtons, SWT.NONE);
-        label5.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        Label placeholder2 = new Label(mGroupOptions, SWT.NONE);
+        placeholder2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-        mButtonDelete = new Button(mGroupButtons, SWT.NONE);
+        mButtonInstall = new Button(mGroupOptions, SWT.NONE);
+        mButtonInstall.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        mButtonInstall.setToolTipText("Install all the selected packages");
+        mButtonInstall.setText("Install Selected...");
+        mButtonInstall.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onButtonInstall();  //$hide$
+            }
+        });
+
+        Label label2 = new Label(mGroupOptions, SWT.NONE);
+        label2.setText("Sort by:");
+
+        mCheckSortApi = new Button(mGroupOptions, SWT.RADIO);
+        mCheckSortApi.setToolTipText("Sort by API level");
+        mCheckSortApi.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                sortPackages();
+            }
+        });
+        mCheckSortApi.setImage(getImage("platform_pkg_16.png"));  //$NON-NLS-1$
+        mCheckSortApi.setText("API level");
+        mCheckSortApi.setSelection(true);
+
+        mCheckSortSource = new Button(mGroupOptions, SWT.RADIO);
+        mCheckSortSource.setToolTipText("Sort by Source");
+        mCheckSortSource.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                sortPackages();
+            }
+        });
+        mCheckSortSource.setImage(getImage("source_icon16.png"));  //$NON-NLS-1$
+        mCheckSortSource.setText("Source");
+
+        Link link = new Link(mGroupOptions, SWT.NONE);
+        link.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onButtonAddonSites();
+            }
+        });
+        link.setToolTipText("Manage the list of add-on sites");
+        link.setText("<a>Manage Sources</a>");
+
+        new Label(mGroupOptions, SWT.NONE);
+        new Label(mGroupOptions, SWT.NONE);
+
+        mButtonDelete = new Button(mGroupOptions, SWT.NONE);
+        mButtonDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mButtonDelete.setToolTipText("Delete an installed package");
         mButtonDelete.setText("Delete...");
-
-        Label label4 = new Label(mGroupButtons, SWT.NONE);
-        label4.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        mButtonInstall = new Button(mGroupButtons, SWT.NONE);
-        mButtonInstall.setToolTipText("Install all the selected packages");
-        mButtonInstall.setText("Install Selected");
+        mButtonDelete.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onButtonDelete();  //$hide$
+            }
+        });
     }
 
     private Image getImage(String filename) {
         if (mUpdaterData != null) {
-            ImageFactory imgFact = mUpdaterData.getImageFactory();
-            if (imgFact != null) {
-                imgFact.getImageByName(filename);
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                return imgFactory.getImageByName(filename);
             }
         }
         return null;
@@ -296,13 +323,15 @@ public class PackagesPage extends Composite
         }
 
         mTreeViewer.setContentProvider(new PkgContentProvider());
-        //--mTreeViewer.setLabelProvider(new PkgLabelProvider());
 
-
-        mColumnApi.setLabelProvider(new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnApi)));
-        mColumnName.setLabelProvider(new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnName)));
-        mColumnStatus.setLabelProvider(new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnStatus)));
-        mColumnRevision.setLabelProvider(new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnRevision)));
+        mColumnApi.setLabelProvider(
+                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnApi)));
+        mColumnName.setLabelProvider(
+                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnName)));
+        mColumnStatus.setLabelProvider(
+                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnStatus)));
+        mColumnRevision.setLabelProvider(
+                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnRevision)));
 
         FontData fontData = mTree.getFont().getFontData()[0];
         fontData.setStyle(SWT.ITALIC);
@@ -328,51 +357,74 @@ public class PackagesPage extends Composite
             return;
         }
 
-        mPackages.clear();
+        try {
+            enableUi(mGroupPackages, false);
 
-        // get local packages
-        for (Package pkg : mUpdaterData.getInstalledPackages()) {
-            PkgItem pi = new PkgItem(pkg, PkgState.INSTALLED);
-            mPackages.add(pi);
-        }
+            mPackages.clear();
 
-        // get remote packages
-        final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
-        mUpdaterData.loadRemoteAddonsList();
-        mUpdaterData.getTaskFactory().start("Loading Source", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                for (SdkSource source : mUpdaterData.getSources().getAllSources()) {
-                    Package[] pkgs = source.getPackages();
-                    if (pkgs == null) {
-                        source.load(monitor, forceHttp);
-                        pkgs = source.getPackages();
-                    }
-                    if (pkgs == null) {
-                        continue;
-                    }
-
-                    nextPkg: for(Package pkg : pkgs) {
-                        boolean isUpdate = false;
-                        for (PkgItem pi: mPackages) {
-                            if (pi.isSameAs(pkg)) {
-                                continue nextPkg;
-                            }
-                            if (pi.isUpdatedBy(pkg)) {
-                                isUpdate = true;
-                                break;
-                            }
-                        }
-
-                        if (!isUpdate) {
-                            PkgItem pi = new PkgItem(pkg, PkgState.NEW_AVAILABLE);
-                            mPackages.add(pi);
-                        }
-                    }
-                }
+            // get local packages
+            for (Package pkg : mUpdaterData.getInstalledPackages()) {
+                PkgItem pi = new PkgItem(pkg, PkgState.INSTALLED);
+                mPackages.add(pi);
             }
-        });
 
-        sortPackages();
+            // get remote packages
+            final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+            mUpdaterData.loadRemoteAddonsList();
+            mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
+                public void run(ITaskMonitor monitor) {
+                    SdkSource[] sources = mUpdaterData.getSources().getAllSources();
+                    for (SdkSource source : sources) {
+                        Package[] pkgs = source.getPackages();
+                        if (pkgs == null) {
+                            source.load(monitor, forceHttp);
+                            pkgs = source.getPackages();
+                        }
+                        if (pkgs == null) {
+                            continue;
+                        }
+
+                        nextPkg: for(Package pkg : pkgs) {
+                            boolean isUpdate = false;
+                            for (PkgItem pi: mPackages) {
+                                if (pi.isSameAs(pkg)) {
+                                    continue nextPkg;
+                                }
+                                if (pi.isUpdatedBy(pkg)) {
+                                    isUpdate = true;
+                                    break;
+                                }
+                            }
+
+                            if (!isUpdate) {
+                                PkgItem pi = new PkgItem(pkg, PkgState.NEW_AVAILABLE);
+                                mPackages.add(pi);
+                            }
+                        }
+                    }
+
+                    monitor.setDescription("Done loading %1$d packages from %2$d sources",
+                            mPackages.size(),
+                            sources.length);
+                }
+            });
+
+            sortPackages();
+        } finally {
+            enableUi(mGroupPackages, true);
+            updateButtonsState();
+        }
+    }
+
+    private void enableUi(Composite root, boolean enabled) {
+        root.setEnabled(enabled);
+        for (Control child : root.getChildren()) {
+            if (child instanceof Composite) {
+                enableUi((Composite) child, enabled);
+            } else {
+                child.setEnabled(enabled);
+            }
+        }
     }
 
     private void sortPackages() {
@@ -381,8 +433,12 @@ public class PackagesPage extends Composite
         } else {
             sortBySource();
         }
+        updateButtonsState();
     }
 
+    /**
+     * Recompute the tree by sorting all the packages by API.
+     */
     private void sortByAPI() {
         mCategories.clear();
 
@@ -400,9 +456,12 @@ public class PackagesPage extends Composite
             }
         });
 
+        ImageFactory imgFactory = mUpdaterData.getImageFactory();
+
         for (Integer api : apis) {
-            String name = api == -1 ? "Other" : "API " + api.toString();
-            Object iconRef = null;
+            String name = api > 0 ? "API " + api.toString() : "Other";
+            Object iconRef = imgFactory.getImageByName(
+                    api > 0 ? "pkgcat_16.png" :"pkgcat_other_16.png");  //$NON-NLS-1$ //$NON-NLS-2$
 
             List<PkgItem> items = new ArrayList<PkgItem>();
             for (PkgItem item : mPackages) {
@@ -414,7 +473,6 @@ public class PackagesPage extends Composite
                         if (p instanceof PlatformPackage) {
                             String vn = ((PlatformPackage) p).getVersionName();
                             name = String.format("%1$s (Android %2$s)", name, vn);
-                            iconRef = p;
                         }
                     }
                 }
@@ -430,9 +488,12 @@ public class PackagesPage extends Composite
         mTreeViewer.setInput(mCategories);
 
         // expand all items by default
-        expandItem(mCategories);
+        expandInitial(mCategories);
     }
 
+    /**
+     * Recompute the tree by sorting all packages by source.
+     */
     private void sortBySource() {
         mCategories.clear();
 
@@ -460,6 +521,9 @@ public class PackagesPage extends Composite
 
         for (SdkSource source : sources) {
             Object key = source != null ? source : "Installed Packages";
+            Object iconRef = source != null ? source :
+                        mUpdaterData.getImageFactory().getImageByName(
+                                "pkg_installed_16.png"); //$NON-NLS-1$
 
             List<PkgItem> items = new ArrayList<PkgItem>();
             for (PkgItem item : mPackages) {
@@ -470,7 +534,7 @@ public class PackagesPage extends Composite
 
             PkgCategory cat = new PkgCategory(
                     key,
-                    key,
+                    iconRef,
                     items.toArray(new PkgItem[items.size()]));
             mCategories.add(cat);
         }
@@ -478,11 +542,14 @@ public class PackagesPage extends Composite
         mTreeViewer.setInput(mCategories);
 
         // expand all items by default
-        expandItem(mCategories);
+        expandInitial(mCategories);
     }
 
+    /**
+     * Decide whether to keep an item in the current tree based on user-choosen filter options.
+     */
     private boolean keepItem(PkgItem item) {
-        if (!mCheckFilterObsolete.getSelection()) {
+        if (!mCheckFilterDetails.getSelection()) {
             if (item.isObsolete()) {
                 return false;
             }
@@ -504,15 +571,264 @@ public class PackagesPage extends Composite
         return true;
     }
 
-    private void expandItem(Object elem) {
-        //if (elem instanceof SdkSource || elem instanceof SdkSourceCategory) {
-            mTreeViewer.setExpandedState(elem, true);
-            for (Object pkg :
-                    ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
-                mTreeViewer.setChecked(pkg, true);
-                expandItem(pkg);
+    /**
+     * Performs the initial expansion of the tree. The expands categories that contains
+     * at least one installed item and collapses the ones with nothing installed.
+     */
+    private void expandInitial(Object elem) {
+        mTreeViewer.setExpandedState(elem, true);
+        for (Object pkg :
+                ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
+            if (pkg instanceof PkgCategory) {
+                PkgCategory cat = (PkgCategory) pkg;
+                for (PkgItem item : cat.getItems()) {
+                    if (item.getState() == PkgState.INSTALLED
+                            || item.getState() == PkgState.UPDATE_AVAILABLE) {
+                        expandInitial(pkg);
+                        break;
+                    }
+                }
             }
-        //}
+        }
+    }
+
+    /**
+     * Handle checking and unchecking of the tree items.
+     *
+     * When unchecking, all sub-tree items checkboxes are cleared too.
+     * When checking a source, all of its packages are checked too.
+     * When checking a package, only its compatible archives are checked.
+     */
+    private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
+        boolean b = event.getChecked();
+        Object elem = event.getElement();
+
+        assert event.getSource() == mTreeViewer;
+
+        // when deselecting, we just deselect all children too
+        if (b == false) {
+            mTreeViewer.setSubtreeChecked(elem, b);
+            updateButtonsState();
+            return;
+        }
+
+        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+
+        // When selecting, we want to only select compatible archives and expand the super nodes.
+        checkExpandItem(elem, provider);
+
+        updateButtonsState();
+    }
+
+    private void checkExpandItem(Object elem, ITreeContentProvider provider) {
+        if (elem instanceof PkgCategory || elem instanceof PkgItem) {
+            mTreeViewer.setExpandedState(elem, true);
+            for (Object pkg : provider.getChildren(elem)) {
+                mTreeViewer.setChecked(pkg, true);
+                checkExpandItem(pkg, provider);
+            }
+        } else if (elem instanceof Package) {
+            selectCompatibleArchives(elem, provider);
+        }
+    }
+
+    private void selectCompatibleArchives(Object pkg, ITreeContentProvider provider) {
+        for (Object archive : provider.getChildren(pkg)) {
+            if (archive instanceof Archive) {
+                mTreeViewer.setChecked(archive, ((Archive) archive).isCompatible());
+            }
+        }
+    }
+
+    private void updateButtonsState() {
+        boolean canInstall = false;
+
+        if (mCheckFilterDetails.getSelection()) {
+            // In detail mode, we display archives so we can install if at
+            // least one archive is selected.
+
+            Object[] checked = mTreeViewer.getCheckedElements();
+            if (checked != null) {
+                for (Object c : checked) {
+                    if (c instanceof Archive) {
+                        if (((Archive) c).isCompatible()) {
+                            canInstall = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            // In non-detail mode, we need to check if there are any packages
+            // or pkgitems selected with at least one compatible archive to be
+            // installed.
+
+            Object[] checked = mTreeViewer.getCheckedElements();
+            if (checked != null) {
+                for (Object c : checked) {
+                    if (c instanceof Package) {
+                        // This is an update package
+                        if (((Package) c).hasCompatibleArchive()) {
+                            canInstall = true;
+                            break;
+                        }
+                    } else if (c instanceof PkgItem) {
+                        if (((PkgItem) c).getPackage().hasCompatibleArchive()) {
+                            canInstall = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        mButtonInstall.setEnabled(canInstall);
+
+        // We can only delete local archives
+        boolean canDelete = false;
+        Object[] checked = mTreeViewer.getCheckedElements();
+        if (checked != null) {
+            for (Object c : checked) {
+                if (c instanceof PkgItem) {
+                    if (((PkgItem) c).getState() == PkgState.INSTALLED) {
+                        canDelete = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        mButtonDelete.setEnabled(canDelete);
+    }
+
+    protected void onButtonReload() {
+        loadPackages();
+    }
+
+    protected void onButtonAddonSites() {
+        AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
+        if (d.open()) {
+            loadPackages();
+        }
+    }
+
+    protected void onButtonInstall() {
+        ArrayList<Archive> archives = new ArrayList<Archive>();
+
+        boolean showDetails = mCheckFilterDetails.getSelection();
+        if (showDetails) {
+            // In detail mode, we display archives so we can install only the
+            // archives that are actually selected.
+
+            Object[] checked = mTreeViewer.getCheckedElements();
+            if (checked != null) {
+                for (Object c : checked) {
+                    if (c instanceof Archive) {
+                        if (((Archive) c).isCompatible()) {
+                            archives.add((Archive) c);
+                        }
+                    }
+                }
+            }
+        } else {
+            // In non-detail mode, we install all the compatible archives
+            // found in the selected pkg items or update packages.
+
+            Object[] checked = mTreeViewer.getCheckedElements();
+            if (checked != null) {
+                for (Object c : checked) {
+                    Package p = null;
+                    if (c instanceof Package) {
+                        // This is an update package
+                        p = (Package) c;
+                    } else if (c instanceof PkgItem) {
+                        p = ((PkgItem) c).getPackage();
+                    }
+                    if (p != null) {
+                        for (Archive a : p.getArchives()) {
+                            if (a.isCompatible()) {
+                                archives.add(a);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (mUpdaterData != null) {
+            try {
+                enableUi(mGroupPackages, false);
+
+                mUpdaterData.updateOrInstallAll_WithGUI(
+                    archives,
+                    showDetails /* includeObsoletes */);
+            } finally {
+                // loadPackages will also re-enable the UI
+                loadPackages();
+            }
+        }
+    }
+
+    protected void onButtonDelete() {
+        // Find selected local packages to be delete
+        Object[] checked = mTreeViewer.getCheckedElements();
+        if (checked == null) {
+            // This should not happen since the button should be disabled
+            return;
+        }
+
+        String title = "Delete SDK Package";
+        String msg = "Are you sure you want to delete:";
+        final List<Archive> archives = new ArrayList<Archive>();
+
+        for (Object c : checked) {
+            if (c instanceof PkgItem && ((PkgItem) c).getState() == PkgState.INSTALLED) {
+                Package p = ((PkgItem) c).getPackage();
+
+                Archive[] as = p.getArchives();
+                if (as.length == 1 && as[0] != null && as[0].isLocal()) {
+                    Archive archive = as[0];
+                    String osPath = archive.getLocalOsPath();
+
+                    File dir = new File(osPath);
+                    if (dir.isDirectory()) {
+                        msg += "\n - " + p.getShortDescription();
+                        archives.add(archive);
+                    }
+                }
+            }
+        }
+
+        if (!archives.isEmpty()) {
+            msg += "\n" + "This cannot be undone.";
+            if (MessageDialog.openQuestion(getShell(), title, msg)) {
+                try {
+                    enableUi(mGroupPackages, false);
+
+                    mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
+                        public void run(ITaskMonitor monitor) {
+                            monitor.setProgressMax(archives.size() + 1);
+                            for (Archive a : archives) {
+                                monitor.setDescription("Deleting '%1$s' (%2$s)",
+                                        a.getParentPackage().getShortDescription(),
+                                        a.getLocalOsPath());
+                                a.deleteLocal();
+                                monitor.incProgress(1);
+                                if (monitor.isCancelRequested()) {
+                                    break;
+                                }
+                            }
+
+                            monitor.incProgress(1);
+                            monitor.setDescription("Done");
+                        }
+                    });
+                } finally {
+                    // loadPackages will also re-enable the UI
+                    loadPackages();
+                }
+            }
+        }
     }
 
     // ----------------------
@@ -529,44 +845,59 @@ public class PackagesPage extends Composite
 
         @Override
         public String getText(Object element) {
-            if (element instanceof PkgCategory) {
-                if (mColumn == mColumnName) {
+
+            if (mColumn == mColumnName) {
+
+                if (element instanceof PkgCategory) {
                     return ((PkgCategory) element).getLabel();
+                } else if (element instanceof PkgItem) {
+                    return ((PkgItem) element).getName();
+                } else if (element instanceof IDescription) {
+                    return ((IDescription) element).getShortDescription();
                 }
-            } else if (element instanceof PkgItem) {
-                PkgItem pkg = (PkgItem) element;
 
-                if (mColumn == mColumnName) {
-                    return pkg.getName();
+            } else if (mColumn == mColumnApi) {
 
-                } else if (mColumn == mColumnApi) {
-                    int api = pkg.getApi();
-                    if (api < 1) {
-                        return "";  //$NON-NLS-1$
-                    } else {
-                        return Integer.toString(api);
-                    }
-                } else if (mColumn == mColumnRevision) {
+                int api = -1;
+                if (element instanceof PkgItem) {
+                    api = ((PkgItem) element).getApi();
+                }
+                if (api >= 1) {
+                    return Integer.toString(api);
+                }
+
+            } else if (mColumn == mColumnRevision) {
+
+                if (element instanceof PkgItem) {
+                    PkgItem pkg = (PkgItem) element;
+
                     if (pkg.getState() == PkgState.INSTALLED ||
                             pkg.getState() == PkgState.UPDATE_AVAILABLE) {
                         return Integer.toString(pkg.getRevision());
                     }
+                }
 
-                } else if (mColumn == mColumnStatus) {
+            } else if (mColumn == mColumnStatus) {
+
+                if (element instanceof PkgItem) {
+                    PkgItem pkg = (PkgItem) element;
+
                     switch(pkg.getState()) {
                     case INSTALLED:
                         return "Installed";
                     case UPDATE_AVAILABLE:
-                        return "Rev. " + Integer.toString(pkg.getUpdateRev());
+                        return "Update available";
                     case NEW_AVAILABLE:
-                        return "New rev. " + Integer.toString(pkg.getRevision());
+                        return "Not installed. New revision " + Integer.toString(pkg.getRevision());
                     case LOCKED_NO_INSTALL:
                         return "Locked";
                     }
                     return pkg.getState().toString();
+
+                } else if (element instanceof Package) {
+                    // This is an update package.
+                    return "New revision " + Integer.toString(((Package) element).getRevision());
                 }
-            } else if (element instanceof Package) {
-                return ((Package) element).getShortDescription();
             }
 
             return "";  //$NON-NLS-1$
@@ -580,18 +911,21 @@ public class PackagesPage extends Composite
                 if (mColumn == mColumnName) {
                     if (element instanceof PkgCategory) {
                         return imgFactory.getImageForObject(((PkgCategory) element).getIconRef());
+                    } else if (element instanceof PkgItem) {
+                        return imgFactory.getImageForObject(((PkgItem) element).getPackage());
                     }
                     return imgFactory.getImageForObject(element);
 
                 } else if (mColumn == mColumnStatus && element instanceof PkgItem) {
                     switch(((PkgItem) element).getState()) {
                     case INSTALLED:
-                        return imgFactory.getImageByName("accept_icon16.png");
+                        return imgFactory.getImageByName("pkg_installed_16.png");   //$NON-NLS-1$
                     case UPDATE_AVAILABLE:
+                        return imgFactory.getImageByName("pkg_update_16.png");      //$NON-NLS-1$
                     case NEW_AVAILABLE:
-                        return imgFactory.getImageByName("reject_icon16.png");
+                        return imgFactory.getImageByName("pkg_new_16.png");         //$NON-NLS-1$
                     case LOCKED_NO_INSTALL:
-                        return imgFactory.getImageByName("broken_pkg_16.png");
+                        return imgFactory.getImageByName("broken_pkg_16.png");      //$NON-NLS-1$
                     }
                 }
             }
@@ -605,6 +939,9 @@ public class PackagesPage extends Composite
                 if (((PkgItem) element).getState() != PkgState.INSTALLED) {
                     return mTreeFontItalic;
                 }
+            } else if (element instanceof Package) {
+                // update package
+                return mTreeFontItalic;
             }
             return super.getFont(element);
         }
@@ -614,7 +951,8 @@ public class PackagesPage extends Composite
         public Color getBackground(Object element, int columnIndex) {
             if (element instanceof PkgItem) {
                 if (((PkgItem) element).getState() == PkgState.NEW_AVAILABLE) {
-                    return mColorNew;
+                    // Disabled. Current color scheme is unpretty.
+                    // return mColorNew;
                 } else if (((PkgItem) element).getState() == PkgState.UPDATE_AVAILABLE) {
                         return mColorUpdate;
                 }
@@ -628,26 +966,7 @@ public class PackagesPage extends Composite
         }
     }
 
-    public class PkgLabelProvider extends LabelProvider {
-
-        @Override
-        public String getText(Object element) {
-            return super.getText(element);
-        }
-
-        @Override
-        public Image getImage(Object element) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
-
-            if (imgFactory != null) {
-                return imgFactory.getImageForObject(element);
-            }
-            return super.getImage(element);
-        }
-
-    }
-
-    public static class PkgContentProvider implements ITreeContentProvider {
+    private class PkgContentProvider implements ITreeContentProvider {
 
         public Object[] getChildren(Object parentElement) {
 
@@ -662,6 +981,16 @@ public class PackagesPage extends Composite
                 if (pkgs != null) {
                     return pkgs.toArray();
                 }
+
+                if (mCheckFilterDetails.getSelection()) {
+                    return ((PkgItem) parentElement).getArchives();
+                }
+
+            } else if (parentElement instanceof Package) {
+                if (mCheckFilterDetails.getSelection()) {
+                    return ((Package) parentElement).getArchives();
+                }
+
             }
 
             return new Object[0];
@@ -684,6 +1013,15 @@ public class PackagesPage extends Composite
                 if (pkgs != null) {
                     return !pkgs.isEmpty();
                 }
+
+                if (mCheckFilterDetails.getSelection()) {
+                    Archive[] archives = ((PkgItem) parentElement).getArchives();
+                    return archives.length > 0;
+                }
+            } else if (parentElement instanceof Package) {
+                if (mCheckFilterDetails.getSelection()) {
+                    return ((Package) parentElement).getArchives().length > 0;
+                }
             }
 
             return false;
@@ -694,18 +1032,16 @@ public class PackagesPage extends Composite
         }
 
         public void dispose() {
-            // TODO Auto-generated method stub
+            // unused
 
         }
 
         public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
-            // TODO Auto-generated method stub
-
+            // unused
         }
-
     }
 
-    public static class PkgCategory {
+    private static class PkgCategory {
         private final Object mKey;
         private final PkgItem[] mItems;
         private final Object mIconRef;
@@ -736,7 +1072,6 @@ public class PackagesPage extends Composite
     public static class PkgItem {
         private final Package mPkg;
         private PkgState mState;
-        private int mUpdateRev;
         private List<Package> mUpdatePkgs;
 
         public PkgItem(Package pkg, PkgState state) {
@@ -804,12 +1139,12 @@ public class PackagesPage extends Composite
                         -1;
         }
 
-        public int getUpdateRev() {
-            return mUpdateRev;
-        }
-
         public List<Package> getUpdatePkgs() {
             return mUpdatePkgs;
+        }
+
+        public Archive[] getArchives() {
+            return mPkg.getArchives();
         }
     }
 
@@ -835,15 +1170,4 @@ public class PackagesPage extends Composite
 
     // --- End of hiding from SWT Designer ---
     //$hide<<$
-
-    protected void onButtonReload(SelectionEvent e) {
-        loadPackages();
-    }
-
-    protected void onButtonAddonSites(SelectionEvent e) {
-        AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
-        if (d.open()) {
-            loadPackages();
-        }
-    }
 }

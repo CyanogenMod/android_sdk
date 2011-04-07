@@ -760,7 +760,7 @@ class UpdaterData implements IUpdaterData {
                 // with the dash or with the next letter capitalized.
                 int dash = name.indexOf('-');
                 if (dash > 0) {
-                    name = name.replaceFirst("-", "");
+                    name = name.replaceFirst("-", "");                   //$NON-NLS-1$ //$NON-NLS-2$
                 }
 
                 for (int alternatives = 0; alternatives < 2; alternatives++) {
@@ -919,19 +919,19 @@ class UpdaterData implements IUpdaterData {
         //
         // Since SDK_TEST_URLS can contain many such URLs, we take the first one that
         // matches our criteria.
-        String url = System.getenv("SDK_TEST_URLS");
+        String url = System.getenv("SDK_TEST_URLS");    //$NON-NLS-1$
 
         if (url == null) {
             // No override, use the canonical URL.
             url = SdkAddonsListConstants.URL_ADDON_LIST;
         } else {
-            String[] urls = url.split(";");
+            String[] urls = url.split(";");             //$NON-NLS-1$
             url = null;
             for (String u : urls) {
                 u = u.trim();
                 // This is an URL that comes from the env var. We expect it to either
                 // end with a / or the canonical name, otherwise we don't use it.
-                if (u.endsWith("/")) {
+                if (u.endsWith("/")) {                  //$NON-NLS-1$
                     url = u + SdkAddonsListConstants.URL_DEFAULT_FILENAME;
                     break;
                 } else if (u.endsWith(SdkAddonsListConstants.URL_DEFAULT_FILENAME)) {
@@ -959,6 +959,8 @@ class UpdaterData implements IUpdaterData {
                 mStateFetchRemoteAddonsList = 1;
             }
         }
+
+        monitor.setDescription("Fetched Add-ons List successfully");
     }
 
     /**

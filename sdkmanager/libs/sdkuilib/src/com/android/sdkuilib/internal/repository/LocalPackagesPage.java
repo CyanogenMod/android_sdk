@@ -43,7 +43,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import java.io.File;
 
 /**
- * Page that display all locally installed packages from the current SDK.
+ * Page that displays all locally installed packages from the current SDK.
  */
 public class LocalPackagesPage extends Composite implements ISdkChangeListener {
 

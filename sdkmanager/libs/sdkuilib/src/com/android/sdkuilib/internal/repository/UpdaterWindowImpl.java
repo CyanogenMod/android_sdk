@@ -31,7 +31,8 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
@@ -41,7 +42,12 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 /**
- * This is the private implementation of the UpdateWindow.
+ * This is the private implementation of the UpdateWindow for the
+ * first version of the SDK Manager.
+ * <p/>
+ * This window has a sash, with a list of available pages on the left
+ * (AVD list, settings, about, installed packages, available packages)
+ * and the corresponding page on the right.
  */
 public class UpdaterWindowImpl {
 
@@ -65,13 +71,11 @@ public class UpdaterWindowImpl {
 
     // --- UI members ---
 
-    protected Shell mAndroidSdkUpdater;
-    private SashForm mSashForm;
+    protected Shell mShell;
     private List mPageList;
     private Composite mPagesRootComposite;
     private AvdManagerPage mAvdManagerPage;
     private StackLayout mStackLayout;
-    private PackagesPage mPackagesPage;
     private LocalPackagesPage mLocalPackagePage;
     private RemotePackagesPage mRemotePackagesPage;
 
@@ -87,6 +91,14 @@ public class UpdaterWindowImpl {
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }
 
+    protected UpdaterData getUpdaterData() {
+        return mUpdaterData;
+    }
+
+    protected Composite getPagesRootComposite() {
+        return mPagesRootComposite;
+    }
+
     /**
      * Open the window.
      * @wbp.parser.entryPoint
@@ -96,13 +108,15 @@ public class UpdaterWindowImpl {
             Display.setAppName("Android"); //$hide$ (hide from SWT designer)
         }
 
+        createShell();
+        preCreateContent();
         createContents();
-        mAndroidSdkUpdater.open();
-        mAndroidSdkUpdater.layout();
+        mShell.open();
+        mShell.layout();
 
-        if (postCreate()) {    //$hide$ (hide from SWT designer)
+        if (postCreateContent()) {    //$hide$ (hide from SWT designer)
             Display display = Display.getDefault();
-            while (!mAndroidSdkUpdater.isDisposed()) {
+            while (!mShell.isDisposed()) {
                 if (!display.readAndDispatch()) {
                     display.sleep();
                 }
@@ -112,33 +126,34 @@ public class UpdaterWindowImpl {
         dispose();  //$hide$
     }
 
-    /**
-     * Create contents of the window.
-     */
-    protected void createContents() {
-        mAndroidSdkUpdater = new Shell(mParentShell, SWT.SHELL_TRIM);
-        mAndroidSdkUpdater.addDisposeListener(new DisposeListener() {
+    private void createShell() {
+        mShell = new Shell(mParentShell, SWT.SHELL_TRIM);
+        mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
             }
         });
 
-        mUpdaterData.setWindowShell(mAndroidSdkUpdater);
-        mTaskFactory = new ProgressTaskFactory(mAndroidSdkUpdater);
-        mUpdaterData.setTaskFactory(mTaskFactory);
-        mUpdaterData.setImageFactory(new ImageFactory(mAndroidSdkUpdater.getDisplay()));
+        GridLayout glShell = new GridLayout(2, false);
+        glShell.verticalSpacing = 0;
+        glShell.horizontalSpacing = 0;
+        glShell.marginWidth = 0;
+        glShell.marginHeight = 0;
+        mShell.setLayout(glShell);
 
+        mShell.setMinimumSize(new Point(500, 300));
+        mShell.setSize(700, 500);
+        mShell.setText("Android SDK and AVD Manager");
+    }
 
-        FillLayout fl;
-        mAndroidSdkUpdater.setLayout(fl = new FillLayout(SWT.HORIZONTAL));
-        fl.marginHeight = fl.marginWidth = 5;
-        mAndroidSdkUpdater.setMinimumSize(new Point(200, 50));
-        mAndroidSdkUpdater.setSize(745, 433);
-        mAndroidSdkUpdater.setText("Android SDK and AVD Manager");
+    /**
+     * Create contents of the window.
+     */
+    protected void createContents() {
+        SashForm sashForm = new SashForm(mShell, SWT.NONE);
+        sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
-        mSashForm = new SashForm(mAndroidSdkUpdater, SWT.NONE);
-
-        mPageList = new List(mSashForm, SWT.BORDER);
+        mPageList = new List(sashForm, SWT.BORDER);
         mPageList.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -146,13 +161,15 @@ public class UpdaterWindowImpl {
             }
         });
 
-        mPagesRootComposite = new Composite(mSashForm, SWT.NONE);
+        createPagesRoot(sashForm);
+
+        sashForm.setWeights(new int[] {150, 576});
+    }
+
+    protected void createPagesRoot(Composite parent) {
+        mPagesRootComposite = new Composite(parent, SWT.NONE);
         mStackLayout = new StackLayout();
         mPagesRootComposite.setLayout(mStackLayout);
-
-        createPages();
-
-        mSashForm.setWeights(new int[] {150, 576});
     }
 
     // -- Start of internal part ----------
@@ -215,25 +232,22 @@ public class UpdaterWindowImpl {
 
     // --- Internals & UI Callbacks -----------
 
-
     /**
-     * Called by {@link #createContents()} to generate the pages that can be
+     * Called by {@link #postCreateContent()} to generate the pages that can be
      * displayed in the window.
-     * <p/>
-     * Implementation detail: This is extracted from {@link #createContents()}
-     * so that we can skip it when using WindowsBuilder, since {@link #mUpdaterData}
-     * will then be null.
      */
-    private void createPages() {
+    protected void createPages() {
         mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, mUpdaterData);
 
-        // TODO right now the new PackagesPage is experimental and not enabled by default
-        if (System.getenv("EXPERIMENTAL") != null) {  //$NON-NLS-1$
-            mPackagesPage = new PackagesPage(mPagesRootComposite, mUpdaterData);
-        } else {
-            mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
-            mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
-        }
+        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
+        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
+
+        addPage(mAvdManagerPage, "Virtual devices");
+
+        addPage(mLocalPackagePage,   "Installed packages");
+        addPage(mRemotePackagesPage, "Available packages");
+
+        addExtraPages();
     }
 
     /**
@@ -260,9 +274,19 @@ public class UpdaterWindowImpl {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mAndroidSdkUpdater.setImage(imgFactory.getImageByName(imageName));
+                mShell.setImage(imgFactory.getImageByName(imageName));
             }
         }
+    }
+
+    /**
+     * Called before the UI is created.
+     */
+    protected void preCreateContent() {
+        mUpdaterData.setWindowShell(mShell);
+        mTaskFactory = new ProgressTaskFactory(mShell);
+        mUpdaterData.setTaskFactory(mTaskFactory);
+        mUpdaterData.setImageFactory(new ImageFactory(mShell.getDisplay()));
     }
 
     /**
@@ -271,34 +295,13 @@ public class UpdaterWindowImpl {
      *
      * Returns true if we should show the window.
      */
-    private boolean postCreate() {
-        setWindowImage(mAndroidSdkUpdater);
-
-        addPage(mAvdManagerPage,     "Virtual devices");
-
-        if (mPackagesPage != null) {  // TODO remove test when experimental is finalized
-            addPage(mPackagesPage,      "Packages List");
-        } else {
-            addPage(mLocalPackagePage,   "Installed packages");
-            addPage(mRemotePackagesPage, "Available packages");
-        }
-
-        addExtraPages();
-
-        int pageIndex = 0;
-        int i = 0;
-        for (Composite p : mPages) {
-            if (p.getClass().equals(mInitialPage)) {
-                pageIndex = i;
-                break;
-            }
-            i++;
-        }
+    protected boolean postCreateContent() {
+        setWindowImage(mShell);
+        createPages();
 
         setupSources();
         initializeSettings();
-        displayPage(pageIndex);
-        mPageList.setSelection(pageIndex);
+        selectInitialPage();
 
         if (mUpdaterData.checkIfInitFailed()) {
             return false;
@@ -330,10 +333,12 @@ public class UpdaterWindowImpl {
      * Each page is a {@link Composite}. The title of the page is stored in the
      * {@link Composite#getData()} field.
      */
-    private void addPage(Composite page, String title) {
+    protected void addPage(Composite page, String title) {
         page.setData(title);
         mPages.add(page);
-        mPageList.add(title);
+        if (mPageList != null) {
+            mPageList.add(title);
+        }
     }
 
     /**
@@ -342,7 +347,7 @@ public class UpdaterWindowImpl {
      * to the page list.
      */
     @SuppressWarnings("unchecked")
-    private void addExtraPages() {
+    protected void addExtraPages() {
         if (mExtraPages == null) {
             return;
         }
@@ -378,7 +383,7 @@ public class UpdaterWindowImpl {
      * If this is not an internal page change, displays the given page.
      */
     private void onPageListSelected() {
-        if (mInternalPageChange == false) {
+        if (mInternalPageChange == false && mPageList != null) {
             int index = mPageList.getSelectionIndex();
             if (index >= 0) {
                 displayPage(index);
@@ -397,7 +402,7 @@ public class UpdaterWindowImpl {
             mStackLayout.topControl = page;
             mPagesRootComposite.layout(true);
 
-            if (!mInternalPageChange) {
+            if (!mInternalPageChange && mPageList != null) {
                 mInternalPageChange = true;
                 mPageList.setSelection(index);
                 mInternalPageChange = false;
@@ -434,6 +439,28 @@ public class UpdaterWindowImpl {
                 c.setSettingsPage(settingsPage);
                 break;
             }
+        }
+    }
+
+    /**
+     * Select and show the initial page.
+     * This will be either the page which class matches {@link #mInitialPage} or the
+     * first one in the list.
+     */
+    private void selectInitialPage() {
+        int pageIndex = 0;
+        int i = 0;
+        for (Composite p : mPages) {
+            if (p.getClass().equals(mInitialPage)) {
+                pageIndex = i;
+                break;
+            }
+            i++;
+        }
+
+        displayPage(pageIndex);
+        if (mPageList != null) {
+            mPageList.setSelection(pageIndex);
         }
     }
 
