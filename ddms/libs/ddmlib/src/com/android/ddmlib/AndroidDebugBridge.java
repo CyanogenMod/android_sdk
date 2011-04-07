@@ -200,7 +200,7 @@ public final class AndroidDebugBridge {
     /**
      * Terminates the ddm library. This must be called upon application termination.
      */
-    public static void terminate() {
+    public static synchronized void terminate() {
         // kill the monitoring services
         if (sThis != null && sThis.mDeviceMonitor != null) {
             sThis.mDeviceMonitor.stop();
@@ -211,6 +211,8 @@ public final class AndroidDebugBridge {
         if (monitorThread != null) {
             monitorThread.quit();
         }
+
+        sInitialized = false;
     }
 
     /**
