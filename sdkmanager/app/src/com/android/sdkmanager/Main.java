@@ -39,6 +39,7 @@ import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.internal.repository.PackagesPage;
 import com.android.sdkuilib.internal.repository.UpdateNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
+import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import org.eclipse.swt.widgets.Display;
@@ -299,7 +300,7 @@ public class Main {
                     Display.getCurrent(),
                     true /*logErrorsOnly*/);
 
-            UpdaterWindow window = new UpdaterWindow(
+            IUpdaterWindow window = new UpdaterWindow(
                     null /* parentShell */,
                     errorLogger,
                     mOsSdkFolder);

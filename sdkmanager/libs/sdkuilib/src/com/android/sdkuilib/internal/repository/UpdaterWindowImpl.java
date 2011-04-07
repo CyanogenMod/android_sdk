@@ -22,6 +22,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.IUpdaterWindow;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -49,7 +50,7 @@ import java.util.ArrayList;
  * (AVD list, settings, about, installed packages, available packages)
  * and the corresponding page on the right.
  */
-public class UpdaterWindowImpl {
+public class UpdaterWindowImpl implements IUpdaterWindow {
 
     private final Shell mParentShell;
     /** Internal data shared between the window and its pages. */
@@ -91,16 +92,8 @@ public class UpdaterWindowImpl {
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }
 
-    protected UpdaterData getUpdaterData() {
-        return mUpdaterData;
-    }
-
-    protected Composite getPagesRootComposite() {
-        return mPagesRootComposite;
-    }
-
     /**
-     * Open the window.
+     * Opens the window.
      * @wbp.parser.entryPoint
      */
     public void open() {
@@ -149,7 +142,7 @@ public class UpdaterWindowImpl {
     /**
      * Create contents of the window.
      */
-    protected void createContents() {
+    private void createContents() {
         SashForm sashForm = new SashForm(mShell, SWT.NONE);
         sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
@@ -166,7 +159,7 @@ public class UpdaterWindowImpl {
         sashForm.setWeights(new int[] {150, 576});
     }
 
-    protected void createPagesRoot(Composite parent) {
+    private void createPagesRoot(Composite parent) {
         mPagesRootComposite = new Composite(parent, SWT.NONE);
         mStackLayout = new StackLayout();
         mPagesRootComposite.setLayout(mStackLayout);
@@ -190,7 +183,7 @@ public class UpdaterWindowImpl {
      * @param title The title of the page.
      * @param pageClass The {@link Composite}-derived class that will implement the page.
      */
-    public void registerExtraPage(String title, Class<? extends Composite> pageClass) {
+    public void registerPage(String title, Class<? extends Composite> pageClass) {
         if (mExtraPages == null) {
             mExtraPages = new ArrayList<Object[]>();
         }
@@ -282,7 +275,7 @@ public class UpdaterWindowImpl {
     /**
      * Called before the UI is created.
      */
-    protected void preCreateContent() {
+    private void preCreateContent() {
         mUpdaterData.setWindowShell(mShell);
         mTaskFactory = new ProgressTaskFactory(mShell);
         mUpdaterData.setTaskFactory(mTaskFactory);
@@ -295,7 +288,7 @@ public class UpdaterWindowImpl {
      *
      * Returns true if we should show the window.
      */
-    protected boolean postCreateContent() {
+    private boolean postCreateContent() {
         setWindowImage(mShell);
         createPages();
 

@@ -28,6 +28,7 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
+import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.sdkuilib.repository.UpdaterWindow;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -1008,7 +1009,7 @@ public final class AvdSelector {
             log = new MessageBoxLog("Result of SDK Manager", display, true /*logErrorsOnly*/);
         }
 
-        UpdaterWindow window = new UpdaterWindow(
+        IUpdaterWindow window = new UpdaterWindow(
                 mTable.getShell(),
                 log,
                 mAvdManager.getSdkManager().getLocation());
