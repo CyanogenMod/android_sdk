@@ -32,6 +32,7 @@ import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.ViewRule;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -461,6 +462,52 @@ public class RulesEngine {
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onPaste() failed: %s",
                         rule.getClass().getSimpleName(),
+                        e.toString());
+            }
+        }
+    }
+
+    // ---- Resize operations ----
+
+    public DropFeedback callOnResizeBegin(NodeProxy child, NodeProxy parent, Point where,
+            Rect newBounds) {
+        IViewRule rule = loadRule(parent.getNode());
+
+        if (rule != null) {
+            try {
+                return rule.onResizeBegin(child, parent);
+            } catch (Exception e) {
+                AdtPlugin.log(e, "%s.onResizeBegin() failed: %s", rule.getClass().getSimpleName(),
+                        e.toString());
+            }
+        }
+
+        return null;
+    }
+
+    public void callOnResizeUpdate(DropFeedback feedback, NodeProxy child,
+            NodeProxy parent, Point where, Rect newBounds) {
+        IViewRule rule = loadRule(parent.getNode());
+
+        if (rule != null) {
+            try {
+                rule.onResizeUpdate(feedback, child, parent, newBounds);
+            } catch (Exception e) {
+                AdtPlugin.log(e, "%s.onResizeUpdate() failed: %s", rule.getClass().getSimpleName(),
+                        e.toString());
+            }
+        }
+    }
+
+    public void callOnResizeEnd(DropFeedback feedback, NodeProxy child, NodeProxy parent,
+            Point where, Rect newBounds) {
+        IViewRule rule = loadRule(parent.getNode());
+
+        if (rule != null) {
+            try {
+                rule.onResizeEnd(feedback, child, parent, newBounds);
+            } catch (Exception e) {
+                AdtPlugin.log(e, "%s.onResizeEnd() failed: %s", rule.getClass().getSimpleName(),
                         e.toString());
             }
         }

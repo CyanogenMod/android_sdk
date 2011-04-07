@@ -16,8 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.Rect;
+import com.android.util.Pair;
 
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
@@ -33,11 +36,14 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.TypedEvent;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorSite;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,6 +114,15 @@ public class GestureManager {
      * {@link DropTargetListener#dragEnter} before another gesture begins.
      */
     private DropGesture mZombieGesture;
+
+    /**
+     * Flag tracking whether we've set a message or error message on the global status
+     * line (since we only want to clear that message if we have set it ourselves).
+     * This is the actual message rather than a boolean such that (if we can get our
+     * hands on the global message) we can check to see if the current message is the
+     * one we set and only in that case clear it when it is no longer applicable.
+     */
+    private String mDisplayingMessage;
 
     /**
      * Constructs a new {@link GestureManager} for the given
@@ -290,6 +305,88 @@ public class GestureManager {
             mCurrentGesture = null;
             mZombieGesture = null;
             mLastStateMask = 0;
+            updateMessage(null);
+            updateCursor(mousePos);
+        }
+    }
+
+    /**
+     * Update the cursor to show the type of operation we expect on a mouse press:
+     * <ul>
+     * <li>Over a selection handle, show a directional cursor depending on the position of
+     * the selection handle
+     * <li>Over a widget, show a move (hand) cursor
+     * <li>Otherwise, show the default arrow cursor
+     * </ul>
+     */
+    void updateCursor(ControlPoint controlPoint) {
+        // We don't hover on the root since it's not a widget per see and it is always there.
+        SelectionManager selectionManager = mCanvas.getSelectionManager();
+
+        if (!selectionManager.isEmpty()) {
+            Display display = mCanvas.getDisplay();
+            Pair<SelectionItem, SelectionHandle> handlePair =
+                selectionManager.findHandle(controlPoint);
+            if (handlePair != null) {
+                SelectionHandle handle = handlePair.getSecond();
+                int cursorType = handle.getSwtCursorType();
+                Cursor cursor = display.getSystemCursor(cursorType);
+                if (cursor != mCanvas.getCursor()) {
+                    mCanvas.setCursor(cursor);
+                }
+                return;
+            }
+
+            // See if it's over a selected view
+            LayoutPoint layoutPoint = controlPoint.toLayout();
+            for (SelectionItem item : selectionManager.getSelections()) {
+                if (item.getRect().contains(layoutPoint.x, layoutPoint.y)
+                        && !item.isRoot()) {
+                    Cursor cursor = display.getSystemCursor(SWT.CURSOR_HAND);
+                    if (cursor != mCanvas.getCursor()) {
+                        mCanvas.setCursor(cursor);
+                    }
+                    return;
+                }
+            }
+        }
+
+        if (mCanvas.getCursor() != null) {
+            mCanvas.setCursor(null);
+        }
+    }
+
+    /**
+     * Update the Eclipse status message with any feedback messages from the given
+     * {@link DropFeedback} object, or clean up if there is no more feedback to process
+     *
+     * @param feedback the feedback whose message we want to display, or null to clear the
+     *            message if previously set
+     */
+    void updateMessage(DropFeedback feedback) {
+        IEditorSite editorSite = mCanvas.getLayoutEditor().getEditorSite();
+        IStatusLineManager status = editorSite.getActionBars().getStatusLineManager();
+        if (feedback == null) {
+            if (mDisplayingMessage != null) {
+                status.setMessage(null);
+                status.setErrorMessage(null);
+                mDisplayingMessage = null;
+            }
+        } else if (feedback.errorMessage != null) {
+            if (!feedback.errorMessage.equals(mDisplayingMessage)) {
+                mDisplayingMessage = feedback.errorMessage;
+                status.setErrorMessage(mDisplayingMessage);
+            }
+        } else if (feedback.message != null) {
+            if (!feedback.message.equals(mDisplayingMessage)) {
+                mDisplayingMessage = feedback.message;
+                status.setMessage(mDisplayingMessage);
+            }
+        } else if (mDisplayingMessage != null) {
+            // TODO: Can we check the existing message and only clear it if it's the
+            // same as the one we set?
+            mDisplayingMessage = null;
+            status.setMessage(null);
         }
     }
 
@@ -313,6 +410,7 @@ public class GestureManager {
                     mCanvas.redraw();
                 }
             } else {
+                updateCursor(ControlPoint.create(mCanvas, e));
                 mCanvas.hover(e);
             }
         }
@@ -320,11 +418,20 @@ public class GestureManager {
         // --- MouseListener ---
 
         public void mouseUp(MouseEvent e) {
+            ControlPoint mousePos = ControlPoint.create(mCanvas, e);
             if (mCurrentGesture == null) {
                 // Just a click, select
-                mCanvas.getSelectionManager().select(e);
+                Pair<SelectionItem, SelectionHandle> handlePair =
+                    mCanvas.getSelectionManager().findHandle(mousePos);
+                if (handlePair == null) {
+                    mCanvas.getSelectionManager().select(e);
+                }
             }
-            finishGesture(ControlPoint.create(mCanvas, e), false);
+            if (mCurrentGesture == null) {
+                updateCursor(mousePos);
+            } else {
+                finishGesture(mousePos, false);
+            }
             mCanvas.redraw();
         }
 
@@ -354,18 +461,15 @@ public class GestureManager {
         // --- KeyListener ---
 
         public void keyPressed(KeyEvent e) {
+            if (e.keyCode == SWT.ESC) {
+                ControlPoint controlPoint = ControlPoint.create(mCanvas,
+                        mLastMouseX, mLastMouseY);
+                finishGesture(controlPoint, true);
+                return;
+            }
+
             if (mCurrentGesture != null) {
                 mCurrentGesture.keyPressed(e);
-            } else {
-                if (e.keyCode == SWT.ESC) {
-                    // It appears that SWT does NOT (on the Mac) pass any
-                    // key strokes other than modifier keys when the mouse
-                    // button is pressed!!
-                    ControlPoint controlPoint = ControlPoint.create(mCanvas,
-                            mLastMouseX, mLastMouseY);
-                    finishGesture(controlPoint, true);
-                    return;
-                }
             }
         }
 
@@ -374,7 +478,6 @@ public class GestureManager {
                 mCurrentGesture.keyReleased(e);
             }
         }
-
     }
 
     /** Listener for Drag &amp; Drop events. */
@@ -491,6 +594,21 @@ public class GestureManager {
          */
         public void dragStart(DragSourceEvent e) {
             LayoutPoint p = LayoutPoint.create(mCanvas, e);
+            ControlPoint controlPoint = ControlPoint.create(mCanvas, e);
+            SelectionManager selectionManager = mCanvas.getSelectionManager();
+
+            // See if the mouse is over a selection handle; if so, start a resizing
+            // gesture.
+            Pair<SelectionItem, SelectionHandle> handle =
+                selectionManager.findHandle(controlPoint);
+            if (handle != null) {
+                startGesture(controlPoint, new ResizeGesture(mCanvas, handle.getFirst(),
+                        handle.getSecond()), mLastStateMask);
+                e.detail = DND.DROP_NONE;
+                e.doit = false;
+                mCanvas.redraw();
+                return;
+            }
 
             // We need a selection (simple or multiple) to do any transfer.
             // If there's a selection *and* the cursor is over this selection,
@@ -499,7 +617,7 @@ public class GestureManager {
             // element, *change* the selection to match the element under the
             // cursor and use that. If nothing can be selected, abort the drag
             // operation.
-            List<SelectionItem> selections = mCanvas.getSelectionManager().getSelections();
+            List<SelectionItem> selections = selectionManager.getSelections();
             mDragSelection.clear();
 
             if (!selections.isEmpty()) {
@@ -516,7 +634,7 @@ public class GestureManager {
                 if (!insideSelection) {
                     CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
                     if (vi != null && !vi.isRoot()) {
-                        mCanvas.getSelectionManager().selectSingle(vi);
+                        selectionManager.selectSingle(vi);
                         insideSelection = true;
                     }
                 }
@@ -547,7 +665,7 @@ public class GestureManager {
             if (mDragSelection.isEmpty()) {
                 CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
                 if (vi != null && !vi.isRoot()) {
-                    mCanvas.getSelectionManager().selectSingle(vi);
+                    selectionManager.selectSingle(vi);
                     mDragSelection.addAll(selections);
                 }
             }
@@ -572,14 +690,14 @@ public class GestureManager {
             // selection
             if (!e.doit || (imageCount == 1 && mDragSelection.get(0).isRoot())) {
                 boolean toggle = (mLastStateMask & (SWT.CTRL | SWT.SHIFT | SWT.COMMAND)) != 0;
-                startGesture(ControlPoint.create(mCanvas, e),
+                startGesture(controlPoint,
                         new MarqueeGesture(mCanvas, toggle), mLastStateMask);
                 e.detail = DND.DROP_NONE;
                 e.doit = false;
             } else {
                 // Otherwise, the drag means you are moving something
                 mCanvas.showInvisibleViews(true);
-                startGesture(ControlPoint.create(mCanvas, e), new MoveGesture(mCanvas), 0);
+                startGesture(controlPoint, new MoveGesture(mCanvas), 0);
 
                 // Render drag-images: Copy portions of the full screen render.
                 Image image = mCanvas.getImageOverlay().getImage();

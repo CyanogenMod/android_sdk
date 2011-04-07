@@ -29,7 +29,7 @@ import com.android.ide.common.api.InsertType;
  * This is the "root" rule, that is used whenever there is not more specific
  * rule to apply.
  */
-public class ListViewRule extends BaseViewRule {
+public class ListViewRule extends AdapterViewRule {
 
     @Override
     public void onCreate(INode node, INode parent, InsertType insertType) {

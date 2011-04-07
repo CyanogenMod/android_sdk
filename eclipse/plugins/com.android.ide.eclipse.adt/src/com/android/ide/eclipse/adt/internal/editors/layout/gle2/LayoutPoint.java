@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.ide.common.api.Point;
+
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -111,6 +113,15 @@ public final class LayoutPoint {
         int cy = mCanvas.getVerticalTransform().translate(y);
 
         return ControlPoint.create(mCanvas, cx, cy);
+    }
+
+    /**
+     * Returns this {@link LayoutPoint} as a {@link Point}, in the same coordinate space.
+     *
+     * @return a new {@link Point} in the same coordinate space
+     */
+    public Point toPoint() {
+        return new Point(x, y);
     }
 
     @Override

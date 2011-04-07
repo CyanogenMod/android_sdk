@@ -23,6 +23,8 @@ import com.android.ide.common.api.Rect;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 
+import org.eclipse.swt.graphics.GC;
+
 import java.util.List;
 
 /**
@@ -46,10 +48,11 @@ public class SelectionOverlay extends Overlay {
      * @param selectionManager The {@link SelectionManager} holding the
      *            selection.
      * @param gcWrapper The graphics context wrapper for the layout rules to use.
+     * @param gc The SWT graphics object
      * @param rulesEngine The {@link RulesEngine} holding the rules.
      */
     public void paint(SelectionManager selectionManager, GCWrapper gcWrapper,
-            RulesEngine rulesEngine) {
+            GC gc, RulesEngine rulesEngine) {
         List<SelectionItem> selections = selectionManager.getSelections();
         int n = selections.size();
         if (n > 0) {
@@ -62,7 +65,7 @@ public class SelectionOverlay extends Overlay {
 
                 NodeProxy node = s.getNode();
                 if (node != null) {
-                    paintSelection(gcWrapper, s.getViewInfo(), node, isMultipleSelection);
+                    paintSelection(gcWrapper, gc, s, isMultipleSelection);
                 }
             }
 
@@ -111,19 +114,19 @@ public class SelectionOverlay extends Overlay {
     }
 
     /** Called by the canvas when a view is being selected. */
-    private void paintSelection(IGraphics gc, CanvasViewInfo view, INode selectedNode,
+    private void paintSelection(IGraphics gc, GC swtGc, SelectionItem item,
             boolean isMultipleSelection) {
+        NodeProxy selectedNode = item.getNode();
         Rect r = selectedNode.getBounds();
-
         if (!r.isValid()) {
             return;
         }
 
         gc.useStyle(DrawingStyle.SELECTION);
-        gc.fillRect(r);
         gc.drawRect(r);
 
         // Paint sibling rectangles, if applicable
+        CanvasViewInfo view = item.getViewInfo();
         List<CanvasViewInfo> siblings = view.getNodeSiblings();
         if (siblings != null) {
             for (CanvasViewInfo sibling : siblings) {
@@ -135,18 +138,21 @@ public class SelectionOverlay extends Overlay {
             }
         }
 
-        /* Label hidden pending selection visual design
-        if (displayName == null || isMultipleSelection) {
-            return;
-        }
+        // Paint selection handles. These are painted in control coordinates on the
+        // real SWT GC object rather than in layout coordinates on the GCWrapper,
+        // since we want them to have a fixed size that is independent of the
+        // screen zoom.
+        CanvasTransform horizontalTransform = mCanvas.getHorizontalTransform();
+        CanvasTransform verticalTransform = mCanvas.getVerticalTransform();
+        int radius = SelectionHandle.PIXEL_RADIUS;
+        int doubleRadius = 2 * radius;
+        for (SelectionHandle handle : item.getSelectionHandles()) {
+            int cx = horizontalTransform.translate(handle.centerX);
+            int cy = verticalTransform.translate(handle.centerY);
 
-        int xs = r.x + 2;
-        int ys = r.y - gc.getFontHeight() - 4;
-        if (ys < 0) {
-            ys = r.y + r.h + 3;
+            SwtDrawingStyle style = SwtDrawingStyle.of(DrawingStyle.SELECTION);
+            gc.setAlpha(style.getStrokeAlpha());
+            swtGc.fillRectangle(cx - radius, cy - radius, doubleRadius, doubleRadius);
         }
-        gc.useStyle(DrawingStyle.HELP);
-        gc.drawBoxedStrings(xs, ys, Collections.singletonList(displayName));
-        */
     }
 }

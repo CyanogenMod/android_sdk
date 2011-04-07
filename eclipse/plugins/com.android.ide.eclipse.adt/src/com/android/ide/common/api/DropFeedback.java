@@ -124,4 +124,15 @@ public class DropFeedback {
         this.requestPaint = painter != null;
         this.captureArea = null;
     }
+
+    /**
+     * A message to be displayed to the user, if any. Should not contain line separators.
+     */
+    public String message;
+
+    /**
+     * An error message to be displayed to the user, if any. Should not contain line
+     * separators.
+     */
+    public String errorMessage;
 }

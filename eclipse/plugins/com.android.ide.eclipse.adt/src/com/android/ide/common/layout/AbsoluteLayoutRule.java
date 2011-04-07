@@ -17,6 +17,8 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 
 import com.android.ide.common.api.DrawingStyle;
@@ -59,13 +61,15 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
             return null;
         }
 
-        return new DropFeedback(null, new IFeedbackPainter() {
+        DropFeedback df = new DropFeedback(null, new IFeedbackPainter() {
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 // Paint callback for the AbsoluteLayout.
                 // This is called by the canvas when a draw is needed.
                 drawFeedback(gc, node, elements, feedback);
             }
         });
+        df.errorMessage = "AbsoluteLayout is deprecated.";
+        return df;
     }
 
     void drawFeedback(
@@ -189,9 +193,9 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
                         y *= scale;
                     }
 
-                    newChild.setAttribute(ANDROID_URI, "layout_x", //$NON-NLS-1$
+                    newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_X,
                             String.format(VALUE_N_DP, x));
-                    newChild.setAttribute(ANDROID_URI, "layout_y", //$NON-NLS-1$
+                    newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_Y,
                             String.format(VALUE_N_DP, y));
 
                     addInnerElements(newChild, element, idMap);
@@ -199,4 +203,39 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
             }
         });
     }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Overridden in this layout in order to let the top left coordinate be affected by
+     * the resize operation too. In other words, dragging the top left corner to resize a
+     * widget will not only change the size of the widget, it will also move it (though in
+     * this case, the bottom right corner will stay fixed).
+     */
+    @Override
+    protected void setNewSizeBounds(INode node, Rect previousBounds, Rect newBounds) {
+        super.setNewSizeBounds(node, previousBounds, newBounds);
+        if (newBounds.x != previousBounds.x) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_X,
+                    String.format(VALUE_N_DP, newBounds.x -node.getParent().getBounds().x));
+        }
+        if (newBounds.y != previousBounds.y) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_Y,
+                    String.format(VALUE_N_DP, newBounds.y - node.getParent().getBounds().y));
+        }
+    }
+
+    // Overridden so we can change the drag feedback message; the super implementation
+    // only shows the width and height, and we want to include the new position as well
+    @Override
+    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent,
+            Rect newBounds) {
+        super.onResizeUpdate(feedback, child, parent, newBounds);
+        Rect parentBounds = parent.getBounds();
+        feedback.message = String.format("Set bounds to (x = %d, y = %d, width = %d, height = %d)",
+                newBounds.x - parentBounds.x, newBounds.y - parentBounds.y,
+                newBounds.w, newBounds.h);
+    }
+
+
 }

@@ -16,10 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
-import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 
 import org.eclipse.swt.graphics.Rectangle;
@@ -33,6 +33,9 @@ import java.util.List;
  */
 class SelectionItem {
 
+    /** The associated {@link LayoutCanvas} */
+    private LayoutCanvas mCanvas;
+
     /** Current selected view info. Can be null. */
     private final CanvasViewInfo mCanvasViewInfo;
 
@@ -42,18 +45,21 @@ class SelectionItem {
     /** The node proxy for drawing the selection. Null when mCanvasViewInfo is null. */
     private final NodeProxy mNodeProxy;
 
+    /** The resize policy for this selection item */
+    private ResizePolicy mResizePolicy;
+
+    /** The selection handles for this item */
+    private SelectionHandles mHandles;
+
     /**
      * Creates a new {@link SelectionItem} object.
+     * @param canvas the associated canvas
      * @param canvasViewInfo The view info being selected. Must not be null.
-     * @param gre the rules engine
-     * @param nodeFactory the node factory
      */
-    public SelectionItem(CanvasViewInfo canvasViewInfo,
-            RulesEngine gre,
-            NodeFactory nodeFactory) {
-
+    public SelectionItem(LayoutCanvas canvas, CanvasViewInfo canvasViewInfo) {
         assert canvasViewInfo != null;
 
+        mCanvas = canvas;
         mCanvasViewInfo = canvasViewInfo;
 
         if (canvasViewInfo == null) {
@@ -62,7 +68,7 @@ class SelectionItem {
         } else {
             Rectangle r = canvasViewInfo.getSelectionRect();
             mRect = new Rectangle(r.x, r.y, r.width, r.height);
-            mNodeProxy = nodeFactory.create(canvasViewInfo);
+            mNodeProxy = mCanvas.getNodeFactory().create(canvasViewInfo);
         }
     }
 
@@ -77,21 +83,24 @@ class SelectionItem {
 
     /**
      * Returns the selected view info. Cannot be null.
+     *
+     * @return the selected view info. Cannot be null.
      */
     public CanvasViewInfo getViewInfo() {
         return mCanvasViewInfo;
     }
 
     /**
-     * Returns the selection border rectangle.
-     * Cannot be null.
+     * Returns the selection border rectangle. Cannot be null.
+     *
+     * @return the selection border rectangle, never null
      */
     public Rectangle getRect() {
         return mRect;
     }
 
     /** Returns the node associated with this selection (may be null) */
-    /* package */ NodeProxy getNode() {
+    NodeProxy getNode() {
         return mNodeProxy;
     }
 
@@ -101,7 +110,7 @@ class SelectionItem {
      * Gets the XML text from the given selection for a text transfer.
      * The returned string can be empty but not null.
      */
-    /* package */ static String getAsText(LayoutCanvas canvas, List<SelectionItem> selection) {
+    static String getAsText(LayoutCanvas canvas, List<SelectionItem> selection) {
         StringBuilder sb = new StringBuilder();
 
         LayoutEditor layoutEditor = canvas.getLayoutEditor();
@@ -127,7 +136,7 @@ class SelectionItem {
      * @param items Items to wrap in elements
      * @return An array of wrapper elements. Never null.
      */
-    /* package */ static SimpleElement[] getAsElements(List<SelectionItem> items) {
+    static SimpleElement[] getAsElements(List<SelectionItem> items) {
         ArrayList<SimpleElement> elements = new ArrayList<SimpleElement>();
 
         for (SelectionItem cs : items) {
@@ -152,5 +161,31 @@ class SelectionItem {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns the {@link SelectionHandles} for this {@link SelectionItem}. Never null.
+     *
+     * @return the {@link SelectionHandles} for this {@link SelectionItem}, never null
+     */
+    public SelectionHandles getSelectionHandles() {
+        if (mHandles == null) {
+            mHandles = new SelectionHandles(this);
+        }
+
+        return mHandles;
+    }
+
+    /**
+     * Returns the {@link ResizePolicy} for this item
+     *
+     * @return the {@link ResizePolicy} for this item, never null
+     */
+    public ResizePolicy getResizePolicy() {
+        if (mResizePolicy == null) {
+            mResizePolicy = ViewMetadataRepository.get().getResizePolicy(mNodeProxy.getFqcn());
+        }
+
+        return mResizePolicy;
     }
 }
