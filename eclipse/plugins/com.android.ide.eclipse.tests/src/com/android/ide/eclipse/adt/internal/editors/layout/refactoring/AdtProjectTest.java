@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCreationPage;
@@ -86,6 +87,9 @@ public class AdtProjectTest extends SdkTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
+        // Prevent preview icon computation during plugin test to make test faster
+        AdtPrefs.getPrefs().setPaletteModes("ICON_TEXT"); //$NON-NLS-1$
 
         getProject();
     }
