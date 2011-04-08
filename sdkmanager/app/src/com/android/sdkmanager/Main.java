@@ -16,6 +16,8 @@
 
 package com.android.sdkmanager;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
@@ -32,6 +34,7 @@ import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
@@ -41,6 +44,7 @@ import com.android.sdkuilib.internal.repository.UpdateNoWindow;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.sdkuilib.repository.UpdaterWindow;
+import com.android.util.Pair;
 
 import org.eclipse.swt.widgets.Display;
 import org.xml.sax.InputSource;
@@ -53,6 +57,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
@@ -221,6 +227,15 @@ public class Main {
             } else if (SdkCommandLine.OBJECT_AVD.equals(directObject)) {
                 displayAvdList();
 
+            } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
+                // We don't support a specific GUI for this.
+                // If the user forces a gui mode to see this list, simply launch the regular GUI.
+                if (!mSdkCommandLine.getFlagNoUI(verb)) {
+                    showMainWindow(false /*autoUpdate*/);
+                } else {
+                    displayRemoteSdkListNoUI();
+                }
+
             } else {
                 displayTargetList();
                 displayAvdList();
@@ -260,7 +275,7 @@ public class Main {
                 updateExportProject();
 
             } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
-                if (mSdkCommandLine.getFlagNoUI()) {
+                if (mSdkCommandLine.getFlagNoUI(verb)) {
                     updateSdkNoUI();
                 } else {
                     showMainWindow(true /*autoUpdate*/);
@@ -319,6 +334,18 @@ public class Main {
         }
     }
 
+    private void displayRemoteSdkListNoUI() {
+        boolean force = mSdkCommandLine.getFlagForce();
+        boolean useHttp = mSdkCommandLine.getFlagNoHttps();
+        boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        String proxyHost = mSdkCommandLine.getParamProxyHost();
+        String proxyPort = mSdkCommandLine.getParamProxyPort();
+
+        UpdateNoWindow upd = new UpdateNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
+                force, useHttp, proxyHost, proxyPort);
+        upd.listRemotePackages(obsolete);
+    }
+
     /**
      * Updates the whole SDK without any UI, just using console output.
      */
@@ -327,40 +354,76 @@ public class Main {
         boolean useHttp = mSdkCommandLine.getFlagNoHttps();
         boolean dryMode = mSdkCommandLine.getFlagDryMode();
         boolean obsolete = mSdkCommandLine.getFlagObsolete();
-        String proxyHost = mSdkCommandLine.getProxyHost();
-        String proxyPort = mSdkCommandLine.getProxyPort();
+        String proxyHost = mSdkCommandLine.getParamProxyHost();
+        String proxyPort = mSdkCommandLine.getParamProxyPort();
 
         // Check filter types.
-        ArrayList<String> pkgFilter = new ArrayList<String>();
-        String filter = mSdkCommandLine.getParamFilter();
-        if (filter != null && filter.length() > 0) {
-            for (String t : filter.split(",")) {    //$NON-NLS-1$
-                if (t != null) {
-                    t = t.trim();
-                    if (t.length() > 0) {
-                        boolean found = false;
-                        for (String t2 : SdkRepoConstants.NODES) {
-                            if (t2.equals(t)) {
-                                pkgFilter.add(t2);
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            errorAndExit(
-                                "Unknown package filter type '%1$s'.\nAccepted values are: %2$s",
-                                t,
-                                Arrays.toString(SdkRepoConstants.NODES));
-                            return;
-                        }
-                    }
-                }
-            }
+        Pair<String, ArrayList<String>> filterResult =
+            checkFilterValues(mSdkCommandLine.getParamFilter());
+        if (filterResult.getFirst() != null) {
+            // We got an error.
+            errorAndExit(filterResult.getFirst());
         }
 
         UpdateNoWindow upd = new UpdateNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
                 force, useHttp, proxyHost, proxyPort);
-        upd.updateAll(pkgFilter, obsolete, dryMode);
+        upd.updateAll(filterResult.getSecond(), obsolete, dryMode);
+    }
+
+    /**
+     * Checks the values from the filter parameter and returns a tuple
+     * (error , accepted values). Either error is null and accepted values is not,
+     * or the reverse.
+     * <p/>
+     * Note that this is a quick sanity check of the --filter parameter *before* we
+     * start loading the remote repository sources. Loading the remotes takes a while
+     * so it's worth doing a quick sanity check before hand.
+     *
+     * @param filter A comma-separated list of keywords
+     * @return A pair <error string, usable values>, only one must be null and the other non-null.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    Pair<String, ArrayList<String>> checkFilterValues(String filter) {
+        ArrayList<String> pkgFilter = new ArrayList<String>();
+
+        if (filter != null && filter.length() > 0) {
+            // Available types
+            Set<String> filterTypes = new TreeSet<String>();
+            filterTypes.addAll(Arrays.asList(SdkRepoConstants.NODES));
+            filterTypes.addAll(Arrays.asList(SdkAddonConstants.NODES));
+
+            for (String t : filter.split(",")) {    //$NON-NLS-1$
+                if (t == null) {
+                    continue;
+                }
+                t = t.trim();
+                if (t.length() <= 0) {
+                    continue;
+                }
+
+                if (t.replaceAll("[0-9]+", "").length() == 0) { //$NON-NLS-1$ //$NON-NLS-2$
+                    // If the filter argument *only* contains digits, accept it.
+                    // It's probably an index for the remote repository list,
+                    // which we can't validate yet.
+                    pkgFilter.add(t);
+                    continue;
+                }
+
+                if (filterTypes.contains(t)) {
+                    pkgFilter.add(t);
+                    continue;
+                }
+
+                return Pair.of(
+                    String.format(
+                       "Unknown package filter type '%1$s'.\nAccepted values are: %2$s",
+                       t,
+                       Arrays.toString(filterTypes.toArray())),
+                    null);
+            }
+        }
+
+        return Pair.of(null, pkgFilter);
     }
 
     /**

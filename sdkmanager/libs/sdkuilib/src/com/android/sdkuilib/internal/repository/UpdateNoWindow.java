@@ -28,11 +28,6 @@ import java.util.Properties;
 
 /**
  * Performs an update using only a non-interactive console output with no GUI.
- * <p/>
- * TODO: It may be useful in the future to let the filter specify packages names
- * rather than package types, typically to let the user upgrade to a new platform.
- * This can be achieved easily by simply allowing package names in the pkgFilter
- * argument.
  */
 public class UpdateNoWindow {
 
@@ -111,6 +106,15 @@ public class UpdateNoWindow {
         mUpdaterData.updateOrInstallAll_NoGUI(pkgFilter, includeObsoletes, dryMode);
     }
 
+    /**
+     * Lists remote packages available for install using 'android update sdk --no-ui'.
+     *
+     * @param includeObsoletes True to also list and install obsolete packages.
+     */
+    public void listRemotePackages(boolean includeObsoletes) {
+        mUpdaterData.listRemotePackages_NoGUI(includeObsoletes);
+    }
+
     // -----
 
     /**
@@ -173,18 +177,18 @@ public class UpdateNoWindow {
         public void setDescription(String descriptionFormat, Object...args) {
 
             String last = mLastDesc;
-            String line = String.format("  " + descriptionFormat, args);
+            String line = String.format("  " + descriptionFormat, args);            //$NON-NLS-1$
 
             // If the description contains a %, it generally indicates a recurring
             // progress so we want a \r at the end.
             if (line.indexOf('%') > -1) {
                 if (mLastProgressBase != null && line.startsWith(mLastProgressBase)) {
-                    line = "    " + line.substring(mLastProgressBase.length());
+                    line = "    " + line.substring(mLastProgressBase.length());     //$NON-NLS-1$
                 }
-                line += "\r";
+                line += '\r';
             } else {
                 mLastProgressBase = line;
-                line += "\n";
+                line += '\n';
             }
 
             // Skip line if it's the same as the last one.
@@ -198,10 +202,10 @@ public class UpdateNoWindow {
             if (last != null &&
                     last.endsWith("\r") &&
                     !line.endsWith("\r")) {
-                line = "\n" + line;
+                line = '\n' + line;
             }
 
-            mSdkLog.printf("%s", line);
+            mSdkLog.printf("%s", line);                                             //$NON-NLS-1$
         }
 
         /**

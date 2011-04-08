@@ -104,6 +104,8 @@ class SdkCommandLine extends CommandLineProcessor {
             { VERB_LIST, OBJECT_TARGET,
                 "Lists existing targets.",
                 OBJECT_TARGETS },
+            { VERB_LIST, OBJECT_SDK,
+                "Lists remote SDK repository." },
 
             { VERB_CREATE, OBJECT_AVD,
                 "Creates a new Android Virtual Device." },
@@ -195,6 +197,31 @@ class SdkCommandLine extends CommandLineProcessor {
                 VERB_UPDATE, OBJECT_AVD, "n", KEY_NAME,
                 "Name of the AVD to update", null);
 
+        // --- list sdk ---
+
+        define(Mode.BOOLEAN, false,
+                VERB_LIST, OBJECT_SDK, "u", KEY_NO_UI,
+                "Displays list result on console (no GUI)", true);
+
+        define(Mode.BOOLEAN, false,
+                VERB_LIST, OBJECT_SDK, "s", KEY_NO_HTTPS,
+                "Uses HTTP instead of HTTPS (the default) for downloads", false);
+
+        define(Mode.STRING, false,
+                VERB_LIST, OBJECT_SDK, "", KEY_PROXY_PORT,
+                "HTTP/HTTPS proxy port (overrides settings if defined)",
+                null);
+
+        define(Mode.STRING, false,
+                VERB_LIST, OBJECT_SDK, "", KEY_PROXY_HOST,
+                "HTTP/HTTPS proxy host (overrides settings if defined)",
+                null);
+
+        define(Mode.BOOLEAN, false,
+                VERB_LIST, OBJECT_SDK, "o", KEY_OBSOLETE,
+                "Installs obsolete packages",
+                false);
+
         // --- update sdk ---
 
         define(Mode.BOOLEAN, false,
@@ -273,7 +300,8 @@ class SdkCommandLine extends CommandLineProcessor {
                 "Project name", null);
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_TEST_PROJECT, "m", KEY_MAIN_PROJECT,
-                "Path to directory of the app under test, relative to the test project directory", null);
+                "Path to directory of the app under test, relative to the test project directory",
+                null);
 
         // --- create lib-project ---
 
@@ -327,7 +355,8 @@ class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_PROJECT,
                 "l", KEY_LIBRARY,
-                "Directory of an Android library to add, relative to this project's directory", null);
+                "Directory of an Android library to add, relative to this project's directory",
+                null);
 
         // --- update test project ---
 
@@ -464,9 +493,9 @@ class SdkCommandLine extends CommandLineProcessor {
 
     // -- some helpers for update sdk flags
 
-    /** Helper to retrieve the --force flag. */
-    public boolean getFlagNoUI() {
-        return ((Boolean) getValue(null, null, KEY_NO_UI)).booleanValue();
+    /** Helper to retrieve the --no-ui flag. */
+    public boolean getFlagNoUI(String verb) {
+        return ((Boolean) getValue(verb, null, KEY_NO_UI)).booleanValue();
     }
 
     /** Helper to retrieve the --no-https flag. */
@@ -490,12 +519,12 @@ class SdkCommandLine extends CommandLineProcessor {
     }
 
     /** Helper to retrieve the --proxy-host value. */
-    public String getProxyHost() {
+    public String getParamProxyHost() {
         return ((String) getValue(null, null, KEY_PROXY_HOST));
     }
 
     /** Helper to retrieve the --proxy-port value. */
-    public String getProxyPort() {
+    public String getParamProxyPort() {
         return ((String) getValue(null, null, KEY_PROXY_PORT));
     }
 }

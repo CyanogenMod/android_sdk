@@ -161,7 +161,7 @@ public class ArchiveInstaller {
         // if the file exists, check its checksum & size. Use it if complete
         if (tmpFile.exists()) {
             if (tmpFile.length() == archive.getSize()) {
-                String chksum = "";
+                String chksum = "";                             //$NON-NLS-1$
                 try {
                     chksum = fileChecksum(archive.getChecksumType().getMessageDigest(),
                                           tmpFile,

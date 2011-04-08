@@ -17,15 +17,20 @@
 package com.android.sdkmanager;
 
 
-import static java.io.File.createTempFile;
-
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.mock.MockLog;
-import com.android.sdklib.SdkConstants;
+import com.android.sdklib.repository.SdkAddonConstants;
+import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.util.Pair;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 
 import junit.framework.TestCase;
 
@@ -42,7 +47,8 @@ public class MainTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         mLog = new MockLog();
-        fakeSdkDir = createTempFile(this.getClass().getSimpleName() + "_" + this.getName(), null);
+        fakeSdkDir = File.createTempFile(
+                this.getClass().getSimpleName() + '_' + this.getName(), null);
         mFakeSdk = SdkManagerTestUtil.makeFakeSdk(fakeSdkDir);
         mSdkManager = SdkManager.createManager(mFakeSdk.getAbsolutePath(), mLog);
         assertNotNull("sdkManager location was invalid", mSdkManager);
@@ -57,7 +63,7 @@ public class MainTest extends TestCase {
         SdkManagerTestUtil.deleteDir(mFakeSdk);
     }
 
-    public void txestDisplayEmptyAvdList() {
+    public void testDisplayEmptyAvdList() {
         Main main = new Main();
         main.setLogger(mLog);
         mLog.clear();
@@ -121,5 +127,82 @@ public class MainTest extends TestCase {
                 + ", P Snapshot: true\n"
                 + "]",
                 mLog.toString());
+    }
+
+    public void testCheckFilterValues() {
+        // These are the values we expect checkFilterValues() to match.
+        String[] expectedValues = {
+                "platform",
+                "tool",
+                "platform-tool",
+                "doc",
+                "sample",
+                "add-on",
+                "extra"
+        };
+
+        Set<String> expectedSet = new TreeSet<String>(Arrays.asList(expectedValues));
+
+        // First check the values are actually defined in the proper arrays
+        // in the Sdk*Constants.NODES
+        for (String node : SdkRepoConstants.NODES) {
+            assertTrue(
+                String.format(
+                    "Error: value '%1$s' from SdkRepoConstants.NODES should be used in unit-test",
+                    node),
+                expectedSet.contains(node));
+        }
+        for (String node : SdkAddonConstants.NODES) {
+            assertTrue(
+                String.format(
+                    "Error: value '%1$s' from SdkAddonConstants.NODES should be used in unit-test",
+                    node),
+                expectedSet.contains(node));
+        }
+
+        // Now check none of these values are NOT present in the NODES arrays
+        for (String node : SdkRepoConstants.NODES) {
+            expectedSet.remove(node);
+        }
+        for (String node : SdkAddonConstants.NODES) {
+            expectedSet.remove(node);
+        }
+        assertTrue(
+            String.format(
+                    "Error: values %1$s are missing from Sdk[Repo|Addons]Constants.NODES",
+                    Arrays.toString(expectedSet.toArray())),
+            expectedSet.isEmpty());
+
+        // We're done with expectedSet now
+        expectedSet = null;
+
+        // Finally check that checkFilterValues accepts all these values, one by one.
+        Main main = new Main();
+        main.setLogger(mLog);
+
+        for (int step = 0; step < 3; step++) {
+            for (String value : expectedValues) {
+                switch(step) {
+                // step 0: use value as-is
+                case 1:
+                    // add some whitespace before and after
+                    value = "  " + value + "   ";
+                    break;
+                case 2:
+                    // same with some empty arguments that should get ignored
+                    value = "  ," + value + " ,  ";
+                    break;
+                    }
+
+                Pair<String, ArrayList<String>> result = main.checkFilterValues(value);
+                assertNull(
+                        String.format("Expected error to be null for value '%1$s', got: %2$s",
+                                value, result.getFirst()),
+                        result.getFirst());
+                assertEquals(
+                        String.format("[%1$s]", value.replace(',', ' ').trim()),
+                        Arrays.toString(result.getSecond().toArray()));
+            }
+        }
     }
 }
