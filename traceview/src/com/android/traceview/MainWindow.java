@@ -43,7 +43,6 @@ import java.util.Properties;
 public class MainWindow extends ApplicationWindow {
 
     private final static String PING_NAME = "Traceview";
-    private final static String PING_VERSION = "1.0";
 
     private TraceReader mReader;
     private String mTraceName;
@@ -68,7 +67,7 @@ public class MainWindow extends ApplicationWindow {
         shell.setText("Traceview: " + mTraceName);
 
         InputStream in = getClass().getClassLoader().getResourceAsStream(
-                "icons/traceview128.png");
+                "icons/traceview-128.png");
         if (in != null) {
             shell.setImage(new Image(shell.getDisplay(), in));
         }

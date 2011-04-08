@@ -18,8 +18,8 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -197,7 +197,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             DRAWABLE_HDPI_DIRECTORY, DRAWABLE_MDPI_DIRECTORY, DRAWABLE_LDPI_DIRECTORY,
             LAYOUT_DIRECTORY, VALUES_DIRECTORY };
 
-    private static final String PROJECT_LOGO_LARGE = "icons/android_large.png"; //$NON-NLS-1$
+    private static final String PROJECT_LOGO_LARGE = "icons/android-64.png"; //$NON-NLS-1$
     private static final String JAVA_ACTIVITY_TEMPLATE = "java_file.template";  //$NON-NLS-1$
     private static final String LAYOUT_TEMPLATE = "layout.template";            //$NON-NLS-1$
     private static final String MAIN_LAYOUT_XML = "main.xml";                   //$NON-NLS-1$

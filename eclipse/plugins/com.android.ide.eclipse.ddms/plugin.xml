@@ -60,7 +60,7 @@
             allowMultiple="false"
             category="com.android.ide.eclipse.ddms.views.category"
             class="com.android.ide.eclipse.ddms.views.EmulatorControlView"
-            icon="icons/emulator.png"
+            icon="icons/emulator-16.png"
             id="com.android.ide.eclipse.ddms.views.EmulatorControlView"
             name="Emulator Control"/>
       <view
@@ -75,7 +75,7 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             class="com.android.ide.eclipse.ddms.Perspective"
-            icon="icons/android.png"
+            icon="icons/ddms-16.png"
             id="com.android.ide.eclipse.ddms.Perspective"
             name="DDMS"/>
    </extension>

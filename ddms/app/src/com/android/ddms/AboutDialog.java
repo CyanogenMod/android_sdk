@@ -64,7 +64,7 @@ public class AboutDialog extends Dialog {
         Shell shell = new Shell(parent, getStyle());
         shell.setText("About...");
 
-        logoImage = loadImage(shell, "ddms-logo.png"); //$NON-NLS-1$
+        logoImage = loadImage(shell, "ddms-128.png"); //$NON-NLS-1$
         createContents(shell);
         shell.pack();
 

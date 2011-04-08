@@ -17,20 +17,19 @@
 package com.android.ddms;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.ClientData.IHprofDumpHandler;
-import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.Log.ILogOutput;
-import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
+import com.android.ddmlib.Log.ILogOutput;
+import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.AllocationPanel;
 import com.android.ddmuilib.DevicePanel;
-import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.EmulatorControlPanel;
 import com.android.ddmuilib.HeapPanel;
 import com.android.ddmuilib.ITableFocusListener;
@@ -41,6 +40,7 @@ import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.SysinfoPanel;
 import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ThreadPanel;
+import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.actions.ToolItemAction;
 import com.android.ddmuilib.explorer.DeviceExplorer;
 import com.android.ddmuilib.handler.BaseFileHandler;
@@ -425,7 +425,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         mDdmUiLibLoader = ImageLoader.getDdmUiLibLoader();
 
         shell.setImage(ImageLoader.getLoader(this.getClass()).loadImage(mDisplay,
-                "ddms-icon.png", //$NON-NLS-1$
+                "ddms-128.png", //$NON-NLS-1$
                 100, 50, null));
 
         Log.setLogOutput(new ILogOutput() {
