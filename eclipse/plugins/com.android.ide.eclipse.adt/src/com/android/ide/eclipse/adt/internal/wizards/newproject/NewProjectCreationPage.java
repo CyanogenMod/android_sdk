@@ -22,8 +22,8 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -31,8 +31,8 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCre
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
@@ -77,6 +77,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
@@ -532,7 +535,11 @@ public class NewProjectCreationPage extends WizardPage {
 
         new Label(samples_group, SWT.NONE).setText("Samples:");
 
-        mSamplesCombo = new Combo(samples_group, SWT.DROP_DOWN | SWT.READ_ONLY);
+        if (Platform.getWS().equals(Platform.WS_GTK)) {
+            mSamplesCombo = new Combo(samples_group, SWT.SIMPLE | SWT.READ_ONLY);
+        } else {
+            mSamplesCombo = new Combo(samples_group, SWT.DROP_DOWN | SWT.READ_ONLY);
+        }
         mSamplesCombo.setEnabled(false);
         mSamplesCombo.select(0);
         mSamplesCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -1201,6 +1208,8 @@ public class NewProjectCreationPage extends WizardPage {
                 mSamplesCombo.add("This target has no samples. Please select another target.");
                 mSamplesCombo.select(0);
                 return;
+            } else {
+                Collections.sort(mSamplesPaths);
             }
 
             // Recompute the description of each sample (the relative path
@@ -1208,6 +1217,7 @@ public class NewProjectCreationPage extends WizardPage {
             int selIndex = 0;
             int i = 0;
             int n = samplesRootPath.length();
+            Set<String> paths = new TreeSet<String>();
             for (String path : mSamplesPaths) {
                 if (path.length() > n) {
                     path = path.substring(n);
@@ -1224,10 +1234,10 @@ public class NewProjectCreationPage extends WizardPage {
                     selIndex = i;
                 }
 
-                mSamplesCombo.add(path);
+                paths.add(path);
                 i++;
             }
-
+            mSamplesCombo.setItems(paths.toArray(new String[0]));
             mSamplesCombo.select(selIndex);
 
         } else {
