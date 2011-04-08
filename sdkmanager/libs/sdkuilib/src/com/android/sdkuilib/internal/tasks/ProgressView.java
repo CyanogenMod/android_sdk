@@ -51,21 +51,22 @@ public final class ProgressView implements IProgressUiProvider {
 
     // UI fields
     private final Label mLabel;
+    private final Control mStopButton;
     private final ProgressBar mProgressBar;
-    private final Control mStateButton;
     private final StringBuffer mResultText = new StringBuffer();
 
 
     /**
-     * TODO javadoc
+     * Creates a new {@link ProgressView} object, a simple "holder" for the various
+     * widgets used to display and update a progress + status bar.
      */
-    public ProgressView(Label label, ProgressBar progressBar, Control stateButton) {
+    public ProgressView(Label label, ProgressBar progressBar, Control stopButton) {
         mLabel = label;
         mProgressBar = progressBar;
         mProgressBar.setEnabled(false);
 
-        mStateButton = stateButton;
-        mStateButton.addListener(SWT.Selection, new Listener() {
+        mStopButton = stopButton;
+        mStopButton.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 if (mState == State.ACTIVE) {
                     changeState(State.STOP_PENDING);
@@ -125,9 +126,9 @@ public final class ProgressView implements IProgressUiProvider {
             mState = state;
         }
 
-        syncExec(mStateButton, new Runnable() {
+        syncExec(mStopButton, new Runnable() {
             public void run() {
-                mStateButton.setEnabled(mState == State.ACTIVE);
+                mStopButton.setEnabled(mState == State.ACTIVE);
             }
         });
 

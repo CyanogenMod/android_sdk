@@ -23,10 +23,13 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
+import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -63,9 +66,13 @@ import org.eclipse.swt.widgets.TreeColumn;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -76,15 +83,24 @@ import java.util.Set;
 public class PackagesPage extends Composite
         implements ISdkChangeListener, IPageListener {
 
+    private static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
+    private static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
+    private static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
+    private static final String ICON_COLUMN_NAME    = "platform_pkg_16.png";    //$NON-NLS-1$
+    private static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
+    private static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
+    private static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
+
     private final List<PkgItem> mPackages = new ArrayList<PkgItem>();
     private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
     private final UpdaterData mUpdaterData;
 
-    private Text mTextSdkOsPath;
+    private boolean mDisplayArchives = false;   // TODO: toggle via a menu item
 
+    private Text mTextSdkOsPath;
     private Button mCheckSortSource;
     private Button mCheckSortApi;
-    private Button mCheckFilterDetails;
+    private Button mCheckFilterObsolete;
     private Button mCheckFilterInstalled;
     private Button mCheckFilterNew;
     private Composite mGroupOptions;
@@ -99,7 +115,6 @@ public class PackagesPage extends Composite
     private TreeViewerColumn mColumnRevision;
     private TreeViewerColumn mColumnStatus;
     private Color mColorUpdate;
-    private Color mColorNew;
     private Font mTreeFontItalic;
     private Button mButtonReload;
 
@@ -156,7 +171,7 @@ public class PackagesPage extends Composite
 
         mColumnName = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn1 = mColumnName.getColumn();
-        treeColumn1.setImage(getImage("platform_pkg_16.png"));      //$NON-NLS-1$
+        treeColumn1.setImage(getImage(ICON_COLUMN_NAME));
         treeColumn1.setWidth(340);
         treeColumn1.setText("Name");
 
@@ -195,10 +210,10 @@ public class PackagesPage extends Composite
         mCheckFilterNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sortPackages();
+                sortPackages(true /*updateButtons*/);
             }
         });
-        mCheckFilterNew.setImage(getImage("reject_icon16.png"));        //$NON-NLS-1$
+        mCheckFilterNew.setImage(getImage(ICON_PKG_NEW));
         mCheckFilterNew.setSelection(true);
         mCheckFilterNew.setText("Updates/New");
 
@@ -207,24 +222,23 @@ public class PackagesPage extends Composite
         mCheckFilterInstalled.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sortPackages();
+                sortPackages(true /*updateButtons*/);
             }
         });
-        mCheckFilterInstalled.setImage(getImage("accept_icon16.png"));  //$NON-NLS-1$
+        mCheckFilterInstalled.setImage(getImage(ICON_PKG_INSTALLED));
         mCheckFilterInstalled.setSelection(true);
         mCheckFilterInstalled.setText("Installed");
 
-        mCheckFilterDetails = new Button(mGroupOptions, SWT.CHECK);
-        mCheckFilterDetails.setToolTipText("Show everything including obsolete packages and all archives)");
-        mCheckFilterDetails.addSelectionListener(new SelectionAdapter() {
+        mCheckFilterObsolete = new Button(mGroupOptions, SWT.CHECK);
+        mCheckFilterObsolete.setToolTipText("Also show obsolete packages");
+        mCheckFilterObsolete.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sortPackages();
+                sortPackages(true /*updateButtons*/);
             }
         });
-        mCheckFilterDetails.setImage(getImage("nopkg_icon16.png"));  //$NON-NLS-1$
-        mCheckFilterDetails.setSelection(false);
-        mCheckFilterDetails.setText("Details");
+        mCheckFilterObsolete.setSelection(false);
+        mCheckFilterObsolete.setText("Obsolete");
 
         mButtonReload = new Button(mGroupOptions, SWT.NONE);
         mButtonReload.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
@@ -259,10 +273,12 @@ public class PackagesPage extends Composite
         mCheckSortApi.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sortPackages();
+                sortPackages(true /*updateButtons*/);
+                // Reset the expanded state when changing sort algorithm
+                expandInitial(mCategories);
             }
         });
-        mCheckSortApi.setImage(getImage("platform_pkg_16.png"));  //$NON-NLS-1$
+        mCheckSortApi.setImage(getImage(ICON_COLUMN_NAME));
         mCheckSortApi.setText("API level");
         mCheckSortApi.setSelection(true);
 
@@ -271,10 +287,12 @@ public class PackagesPage extends Composite
         mCheckSortSource.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                sortPackages();
+                sortPackages(true /*updateButtons*/);
+                // Reset the expanded state when changing sort algorithm
+                expandInitial(mCategories);
             }
         });
-        mCheckSortSource.setImage(getImage("source_icon16.png"));  //$NON-NLS-1$
+        mCheckSortSource.setImage(getImage(ICON_SORT_BY_SOURCE));
         mCheckSortSource.setText("Source");
 
         Link link = new Link(mGroupOptions, SWT.NONE);
@@ -338,16 +356,13 @@ public class PackagesPage extends Composite
         mTreeFontItalic = new Font(mTree.getDisplay(), fontData);
 
         mColorUpdate = new Color(mTree.getDisplay(), 0xff, 0xff, 0xcc);
-        mColorNew = new Color(mTree.getDisplay(), 0xff, 0xee, 0xcc);
 
         mTree.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 mTreeFontItalic.dispose();
                 mColorUpdate.dispose();
-                mColorNew.dispose();
                 mTreeFontItalic = null;
                 mColorUpdate = null;
-                mColorNew = null;
             }
         });
     }
@@ -360,6 +375,7 @@ public class PackagesPage extends Composite
         try {
             enableUi(mGroupPackages, false);
 
+            boolean firstLoad = mPackages.size() == 0;
             mPackages.clear();
 
             // get local packages
@@ -397,10 +413,19 @@ public class PackagesPage extends Composite
                             }
 
                             if (!isUpdate) {
-                                PkgItem pi = new PkgItem(pkg, PkgState.NEW_AVAILABLE);
+                                PkgItem pi = new PkgItem(pkg, PkgState.NEW);
                                 mPackages.add(pi);
                             }
                         }
+
+                        // Dynamically update the table while we load after each source.
+                        // Since the official Android source gets loaded first, it makes the
+                        // window look non-empty a lot sooner.
+                        mGroupPackages.getDisplay().syncExec(new Runnable() {
+                            public void run() {
+                                sortPackages(true /*updateButtons*/);
+                            }
+                        });
                     }
 
                     monitor.setDescription("Done loading %1$d packages from %2$d sources",
@@ -409,7 +434,11 @@ public class PackagesPage extends Composite
                 }
             });
 
-            sortPackages();
+            if (firstLoad) {
+                // set the initial expanded state
+                expandInitial(mCategories);
+            }
+
         } finally {
             enableUi(mGroupPackages, true);
             updateButtonsState();
@@ -427,68 +456,156 @@ public class PackagesPage extends Composite
         }
     }
 
-    private void sortPackages() {
+    private void sortPackages(boolean updateButtons) {
         if (mCheckSortApi != null && !mCheckSortApi.isDisposed() && mCheckSortApi.getSelection()) {
             sortByAPI();
         } else {
             sortBySource();
         }
-        updateButtonsState();
+        if (updateButtons) {
+            updateButtonsState();
+        }
     }
 
     /**
      * Recompute the tree by sorting all the packages by API.
+     * This does an update in-place of the mCategories list so that the table
+     * can preserve its state (checked / expanded / selected) properly.
      */
     private void sortByAPI() {
-        mCategories.clear();
-
-        Set<Integer> apiSet = new HashSet<Integer>();
-        for (PkgItem item : mPackages) {
-            if (keepItem(item)) {
-                apiSet.add(item.getApi());
-            }
-        }
-
-        Integer[] apis = apiSet.toArray(new Integer[apiSet.size()]);
-        Arrays.sort(apis, new Comparator<Integer>() {
-            public int compare(Integer o1, Integer o2) {
-                return o2.compareTo(o1);
-            }
-        });
 
         ImageFactory imgFactory = mUpdaterData.getImageFactory();
 
-        for (Integer api : apis) {
-            String name = api > 0 ? "API " + api.toString() : "Other";
-            Object iconRef = imgFactory.getImageByName(
-                    api > 0 ? "pkgcat_16.png" :"pkgcat_other_16.png");  //$NON-NLS-1$ //$NON-NLS-2$
+        // keep a map of the initial state so that we can detect which items or categories are
+        // no longer being used, so that we can removed them at the end of the in-place update.
+        final Map<Integer, Pair<PkgCategory, HashSet<PkgItem>> > unusedItemsMap =
+            new HashMap<Integer, Pair<PkgCategory, HashSet<PkgItem>> >();
+        final Set<PkgCategory> unusedCatSet = new HashSet<PkgCategory>();
 
-            List<PkgItem> items = new ArrayList<PkgItem>();
-            for (PkgItem item : mPackages) {
-                if (item.getApi() == api) {
-                    items.add(item);
+        // get existing categories
+        for (PkgCategory cat : mCategories) {
+            unusedCatSet.add(cat);
+            unusedItemsMap.put(cat.getKey(), Pair.of(cat, new HashSet<PkgItem>(cat.getItems())));
+        }
 
-                    if (api != -1) {
-                        Package p = item.getPackage();
-                        if (p instanceof PlatformPackage) {
-                            String vn = ((PlatformPackage) p).getVersionName();
-                            name = String.format("%1$s (Android %2$s)", name, vn);
-                        }
-                    }
-                }
-            }
-
+        // always add the tools & extras categories, even if empty (unlikely anyway)
+        if (!unusedItemsMap.containsKey(PkgCategory.KEY_TOOLS)) {
             PkgCategory cat = new PkgCategory(
-                    name,
-                    iconRef,
-                    items.toArray(new PkgItem[items.size()]));
+                    PkgCategory.KEY_TOOLS,
+                    "Tools",
+                    imgFactory.getImageByName(ICON_CAT_OTHER));
+            unusedItemsMap.put(PkgCategory.KEY_TOOLS, Pair.of(cat, new HashSet<PkgItem>()));
             mCategories.add(cat);
         }
 
-        mTreeViewer.setInput(mCategories);
+        if (!unusedItemsMap.containsKey(PkgCategory.KEY_EXTRA)) {
+            PkgCategory cat = new PkgCategory(
+                    PkgCategory.KEY_EXTRA,
+                    "Add-ons & Extras",
+                    imgFactory.getImageByName(ICON_CAT_OTHER));
+            unusedItemsMap.put(PkgCategory.KEY_EXTRA, Pair.of(cat, new HashSet<PkgItem>()));
+            mCategories.add(cat);
+        }
 
-        // expand all items by default
-        expandInitial(mCategories);
+        for (PkgItem item : mPackages) {
+            if (!keepItem(item)) {
+                continue;
+            }
+
+            int apiKey = item.getApi();
+
+            if (apiKey < 1) {
+                Package p = item.getPackage();
+                if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
+                    apiKey = PkgCategory.KEY_TOOLS;
+                } else {
+                    apiKey = PkgCategory.KEY_EXTRA;
+                }
+            }
+
+            Pair<PkgCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
+
+            if (mapEntry == null) {
+                // This is a new category. Create it and add it to the map.
+                // We need a label for the category. Use null right now and set it later.
+                PkgCategory cat = new PkgCategory(
+                        apiKey,
+                        null /*label*/,
+                        imgFactory.getImageByName(ICON_CAT_PLATFORM));
+                mapEntry = Pair.of(cat, new HashSet<PkgItem>());
+                unusedItemsMap.put(apiKey, mapEntry);
+                mCategories.add(0, cat);
+            }
+            PkgCategory cat = mapEntry.getFirst();
+            assert cat != null;
+            unusedCatSet.remove(cat);
+
+            HashSet<PkgItem> unusedItemsSet = mapEntry.getSecond();
+            unusedItemsSet.remove(item);
+            if (!cat.getItems().contains(item)) {
+                cat.getItems().add(item);
+            }
+
+            if (apiKey != -1 && cat.getLabel() == null) {
+                // Check whether we can get the actual platform version name (e.g. "1.5")
+                // from the first Platform package we find in this category.
+                Package p = item.getPackage();
+                if (p instanceof PlatformPackage) {
+                    String vn = ((PlatformPackage) p).getVersionName();
+                    String name = String.format("Android %1$s (API %2$d)", vn, apiKey);
+                    cat.setLabel(name);
+                }
+            }
+        }
+
+        for (Iterator<PkgCategory> iterCat = mCategories.iterator(); iterCat.hasNext(); ) {
+            PkgCategory cat = iterCat.next();
+
+            // Remove any unused categories.
+            if (unusedCatSet.contains(cat)) {
+                iterCat.remove();
+                continue;
+            }
+
+            // Remove any unused items in the category.
+            Integer apikey = cat.getKey();
+            Pair<PkgCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apikey);
+            assert mapEntry != null;
+            HashSet<PkgItem> unusedItems = mapEntry.getSecond();
+            for (Iterator<PkgItem> iterItem = cat.getItems().iterator(); iterItem.hasNext(); ) {
+                PkgItem item = iterItem.next();
+                if (unusedItems.contains(item)) {
+                    iterItem.remove();
+                }
+            }
+
+            // Sort the items
+            Collections.sort(cat.getItems());
+
+            // Fix the category name for any API where we might not have found a platform package.
+            if (cat.getLabel() == null) {
+                int api = cat.getKey().intValue();
+                String name = String.format("API %1$d", api);
+                cat.setLabel(name);
+            }
+        }
+
+        // Sort the categories list in decreasing order
+        Collections.sort(mCategories, new Comparator<PkgCategory>() {
+            public int compare(PkgCategory cat1, PkgCategory cat2) {
+                // compare in descending order (o2-o1)
+                return cat2.getKey().compareTo(cat1.getKey());
+            }
+        });
+
+        if (mTreeViewer.getInput() != mCategories) {
+            // set initial input
+            mTreeViewer.setInput(mCategories);
+        } else {
+            // refresh existing, which preserves the expanded state, the selection
+            // and the checked state.
+            mTreeViewer.refresh();
+        }
     }
 
     /**
@@ -522,34 +639,32 @@ public class PackagesPage extends Composite
         for (SdkSource source : sources) {
             Object key = source != null ? source : "Installed Packages";
             Object iconRef = source != null ? source :
-                        mUpdaterData.getImageFactory().getImageByName(
-                                "pkg_installed_16.png"); //$NON-NLS-1$
+                        mUpdaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED);
 
-            List<PkgItem> items = new ArrayList<PkgItem>();
+            PkgCategory cat = new PkgCategory(
+                    key.hashCode(),
+                    key.toString(),
+                    iconRef);
+
             for (PkgItem item : mPackages) {
                 if (item.getSource() == source) {
-                    items.add(item);
+                    cat.getItems().add(item);
                 }
             }
 
-            PkgCategory cat = new PkgCategory(
-                    key,
-                    iconRef,
-                    items.toArray(new PkgItem[items.size()]));
             mCategories.add(cat);
         }
 
+        // We don't support in-place incremental updates so the table gets reset
+        // each time we load when sorted by source.
         mTreeViewer.setInput(mCategories);
-
-        // expand all items by default
-        expandInitial(mCategories);
     }
 
     /**
      * Decide whether to keep an item in the current tree based on user-choosen filter options.
      */
     private boolean keepItem(PkgItem item) {
-        if (!mCheckFilterDetails.getSelection()) {
+        if (!mCheckFilterObsolete.getSelection()) {
             if (item.isObsolete()) {
                 return false;
             }
@@ -562,8 +677,8 @@ public class PackagesPage extends Composite
         }
 
         if (!mCheckFilterNew.getSelection()) {
-            if (item.getState() == PkgState.NEW_AVAILABLE ||
-                    item.getState() == PkgState.UPDATE_AVAILABLE) {
+            if (item.getState() == PkgState.NEW ||
+                    item.getState() == PkgState.HAS_UPDATE) {
                 return false;
             }
         }
@@ -583,7 +698,7 @@ public class PackagesPage extends Composite
                 PkgCategory cat = (PkgCategory) pkg;
                 for (PkgItem item : cat.getItems()) {
                     if (item.getState() == PkgState.INSTALLED
-                            || item.getState() == PkgState.UPDATE_AVAILABLE) {
+                            || item.getState() == PkgState.HAS_UPDATE) {
                         expandInitial(pkg);
                         break;
                     }
@@ -643,7 +758,7 @@ public class PackagesPage extends Composite
     private void updateButtonsState() {
         boolean canInstall = false;
 
-        if (mCheckFilterDetails.getSelection()) {
+        if (mDisplayArchives) {
             // In detail mode, we display archives so we can install if at
             // least one archive is selected.
 
@@ -715,8 +830,7 @@ public class PackagesPage extends Composite
     protected void onButtonInstall() {
         ArrayList<Archive> archives = new ArrayList<Archive>();
 
-        boolean showDetails = mCheckFilterDetails.getSelection();
-        if (showDetails) {
+        if (mDisplayArchives) {
             // In detail mode, we display archives so we can install only the
             // archives that are actually selected.
 
@@ -761,7 +875,7 @@ public class PackagesPage extends Composite
 
                 mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
-                    showDetails /* includeObsoletes */);
+                    mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
                 // loadPackages will also re-enable the UI
                 loadPackages();
@@ -872,7 +986,7 @@ public class PackagesPage extends Composite
                     PkgItem pkg = (PkgItem) element;
 
                     if (pkg.getState() == PkgState.INSTALLED ||
-                            pkg.getState() == PkgState.UPDATE_AVAILABLE) {
+                            pkg.getState() == PkgState.HAS_UPDATE) {
                         return Integer.toString(pkg.getRevision());
                     }
                 }
@@ -885,12 +999,10 @@ public class PackagesPage extends Composite
                     switch(pkg.getState()) {
                     case INSTALLED:
                         return "Installed";
-                    case UPDATE_AVAILABLE:
+                    case HAS_UPDATE:
                         return "Update available";
-                    case NEW_AVAILABLE:
+                    case NEW:
                         return "Not installed. New revision " + Integer.toString(pkg.getRevision());
-                    case LOCKED_NO_INSTALL:
-                        return "Locked";
                     }
                     return pkg.getState().toString();
 
@@ -919,13 +1031,11 @@ public class PackagesPage extends Composite
                 } else if (mColumn == mColumnStatus && element instanceof PkgItem) {
                     switch(((PkgItem) element).getState()) {
                     case INSTALLED:
-                        return imgFactory.getImageByName("pkg_installed_16.png");   //$NON-NLS-1$
-                    case UPDATE_AVAILABLE:
-                        return imgFactory.getImageByName("pkg_update_16.png");      //$NON-NLS-1$
-                    case NEW_AVAILABLE:
-                        return imgFactory.getImageByName("pkg_new_16.png");         //$NON-NLS-1$
-                    case LOCKED_NO_INSTALL:
-                        return imgFactory.getImageByName("broken_pkg_16.png");      //$NON-NLS-1$
+                        return imgFactory.getImageByName(ICON_PKG_INSTALLED);
+                    case HAS_UPDATE:
+                        return imgFactory.getImageByName(ICON_PKG_UPDATE);
+                    case NEW:
+                        return imgFactory.getImageByName(ICON_PKG_NEW);
                     }
                 }
             }
@@ -936,7 +1046,7 @@ public class PackagesPage extends Composite
 
         public Font getFont(Object element, int columnIndex) {
             if (element instanceof PkgItem) {
-                if (((PkgItem) element).getState() != PkgState.INSTALLED) {
+                if (((PkgItem) element).getState() == PkgState.NEW) {
                     return mTreeFontItalic;
                 }
             } else if (element instanceof Package) {
@@ -950,11 +1060,8 @@ public class PackagesPage extends Composite
 
         public Color getBackground(Object element, int columnIndex) {
             if (element instanceof PkgItem) {
-                if (((PkgItem) element).getState() == PkgState.NEW_AVAILABLE) {
-                    // Disabled. Current color scheme is unpretty.
-                    // return mColorNew;
-                } else if (((PkgItem) element).getState() == PkgState.UPDATE_AVAILABLE) {
-                        return mColorUpdate;
+                if (((PkgItem) element).getState() == PkgState.HAS_UPDATE) {
+                    return mColorUpdate;
                 }
             }
             return null;
@@ -974,7 +1081,7 @@ public class PackagesPage extends Composite
                 return ((ArrayList<?>) parentElement).toArray();
 
             } else if (parentElement instanceof PkgCategory) {
-                return ((PkgCategory) parentElement).getItems();
+                return ((PkgCategory) parentElement).getItems().toArray();
 
             } else if (parentElement instanceof PkgItem) {
                 List<Package> pkgs = ((PkgItem) parentElement).getUpdatePkgs();
@@ -982,12 +1089,12 @@ public class PackagesPage extends Composite
                     return pkgs.toArray();
                 }
 
-                if (mCheckFilterDetails.getSelection()) {
+                if (mDisplayArchives) {
                     return ((PkgItem) parentElement).getArchives();
                 }
 
             } else if (parentElement instanceof Package) {
-                if (mCheckFilterDetails.getSelection()) {
+                if (mDisplayArchives) {
                     return ((Package) parentElement).getArchives();
                 }
 
@@ -1014,12 +1121,12 @@ public class PackagesPage extends Composite
                     return !pkgs.isEmpty();
                 }
 
-                if (mCheckFilterDetails.getSelection()) {
+                if (mDisplayArchives) {
                     Archive[] archives = ((PkgItem) parentElement).getArchives();
                     return archives.length > 0;
                 }
             } else if (parentElement instanceof Package) {
-                if (mCheckFilterDetails.getSelection()) {
+                if (mDisplayArchives) {
                     return ((Package) parentElement).getArchives().length > 0;
                 }
             }
@@ -1042,34 +1149,64 @@ public class PackagesPage extends Composite
     }
 
     private static class PkgCategory {
-        private final Object mKey;
-        private final PkgItem[] mItems;
+        private final Integer mKey;
         private final Object mIconRef;
+        private final List<PkgItem> mItems = new ArrayList<PkgItem>();
+        private String mLabel;
 
-        public PkgCategory(Object key, Object iconRef, PkgItem[] items) {
+        // When storing by API, key is the API level (>=1), except 0 is tools and 1 is extra/addons.
+        // When sorting by Source, key is the hash of the source's name.
+        public final static Integer KEY_TOOLS = Integer.valueOf(0);
+        public final static Integer KEY_EXTRA = Integer.valueOf(-1);
+
+        public PkgCategory(Integer key, String label, Object iconRef) {
             mKey = key;
+            mLabel = label;
             mIconRef = iconRef;
-            mItems = items;
+        }
+
+        public Integer getKey() {
+            return mKey;
         }
 
         public String getLabel() {
-            return mKey.toString();
+            return mLabel;
+        }
+
+        public void setLabel(String label) {
+            mLabel = label;
         }
 
         public Object getIconRef() {
             return mIconRef;
         }
 
-        public PkgItem[] getItems() {
+        public List<PkgItem> getItems() {
             return mItems;
         }
     }
 
     public enum PkgState {
-        INSTALLED, UPDATE_AVAILABLE, NEW_AVAILABLE, LOCKED_NO_INSTALL
+        /**
+         * Package is locally installed and has no update available on remote sites.
+         */
+        INSTALLED,
+
+        /**
+         * Package is installed and has an update available.
+         * In this case, {@link PkgItem#getUpdatePkgs()} provides the list of 1 or more
+         * packages that can update this {@link PkgItem}.
+         */
+        HAS_UPDATE,
+
+        /**
+         * There's a new package available on the remote site that isn't
+         * installed locally.
+         */
+        NEW
     }
 
-    public static class PkgItem {
+    public static class PkgItem implements Comparable<PkgItem> {
         private final Package mPkg;
         private PkgState mState;
         private List<Package> mUpdatePkgs;
@@ -1077,6 +1214,7 @@ public class PackagesPage extends Composite
         public PkgItem(Package pkg, PkgState state) {
             mPkg = pkg;
             mState = state;
+            assert mPkg != null;
         }
 
         public boolean isObsolete() {
@@ -1098,7 +1236,7 @@ public class PackagesPage extends Composite
                     mUpdatePkgs = new ArrayList<Package>();
                 }
                 mUpdatePkgs.add(pkg);
-                mState = PkgState.UPDATE_AVAILABLE;
+                mState = PkgState.HAS_UPDATE;
                 return true;
             }
 
@@ -1126,7 +1264,7 @@ public class PackagesPage extends Composite
         }
 
         public SdkSource getSource() {
-            if (mState == PkgState.NEW_AVAILABLE) {
+            if (mState == PkgState.NEW) {
                 return mPkg.getParentSource();
             } else {
                 return null;
@@ -1145,6 +1283,10 @@ public class PackagesPage extends Composite
 
         public Archive[] getArchives() {
             return mPkg.getArchives();
+        }
+
+        public int compareTo(PkgItem pkg) {
+            return getPackage().compareTo(pkg.getPackage());
         }
     }
 
