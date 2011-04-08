@@ -54,7 +54,7 @@ import java.io.UnsupportedEncodingException;
 public class NewXmlFileWizard extends Wizard implements INewWizard {
     public static final String XML_HEADER_LINE = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"; //$NON-NLS-1$
 
-    private static final String PROJECT_LOGO_LARGE = "android_large"; //$NON-NLS-1$
+    private static final String PROJECT_LOGO_LARGE = "android-64"; //$NON-NLS-1$
 
     protected static final String MAIN_PAGE_NAME = "newAndroidXmlFilePage"; //$NON-NLS-1$
 

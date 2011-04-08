@@ -77,7 +77,7 @@
             name="Pixel Perfect"/>
       <perspective
             class="com.android.ide.eclipse.hierarchyviewer.TreeViewPerspective"
-            icon="icons/tree-view.png"
+            icon="icons/hierarchyviewer-16.png"
             id="com.android.ide.eclipse.hierarchyviewer.TreeViewPerspective"
             name="Hierarchy View"/>
    </extension>

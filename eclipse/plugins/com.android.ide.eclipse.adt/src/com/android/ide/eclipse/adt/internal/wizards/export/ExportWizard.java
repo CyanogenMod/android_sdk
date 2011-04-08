@@ -59,7 +59,7 @@ import java.util.List;
  */
 public final class ExportWizard extends Wizard implements IExportWizard {
 
-    private static final String PROJECT_LOGO_LARGE = "icons/android_large.png"; //$NON-NLS-1$
+    private static final String PROJECT_LOGO_LARGE = "icons/android-64.png"; //$NON-NLS-1$
 
     private static final String PAGE_PROJECT_CHECK = "Page_ProjectCheck"; //$NON-NLS-1$
     private static final String PAGE_KEYSTORE_SELECTION = "Page_KeystoreSelection"; //$NON-NLS-1$
