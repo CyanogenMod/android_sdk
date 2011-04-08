@@ -55,6 +55,7 @@ import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.util.SparseIntArray;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
@@ -984,15 +985,28 @@ public class ConfigurationComposite extends Composite {
      * Note: this comparator imposes orderings that are inconsistent with equals.
      */
     private static class PhoneConfigComparator implements Comparator<ConfigMatch> {
+
+        private SparseIntArray mDensitySort = new SparseIntArray(4);
+
+        public PhoneConfigComparator() {
+            // put the sort order for the density.
+            mDensitySort.put(Density.HIGH.getDpiValue(),   1);
+            mDensitySort.put(Density.MEDIUM.getDpiValue(), 2);
+            mDensitySort.put(Density.XHIGH.getDpiValue(),  3);
+            mDensitySort.put(Density.LOW.getDpiValue(),    4);
+        }
+
         public int compare(ConfigMatch o1, ConfigMatch o2) {
             int dpi1 = Density.DEFAULT_DENSITY;
             if (o1.testConfig.getPixelDensityQualifier() != null) {
                 dpi1 = o1.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+                dpi1 = mDensitySort.get(dpi1, 100 /* valueIfKeyNotFound*/);
             }
 
             int dpi2 = Density.DEFAULT_DENSITY;
             if (o2.testConfig.getPixelDensityQualifier() != null) {
                 dpi2 = o2.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+                dpi2 = mDensitySort.get(dpi2, 100 /* valueIfKeyNotFound*/);
             }
 
             if (dpi1 == dpi2) {
