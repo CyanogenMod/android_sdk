@@ -217,7 +217,7 @@ public class RectTest extends TestCase {
     public final void testToString() {
         Rect r = new Rect(3, 4, 20, 30);
 
-        assertEquals("Rect [3x4 - 20x30]", r.toString());
+        assertEquals("Rect [(3,4)-(23,34): 20x30]", r.toString());
     }
 
     public final void testEqualsObject() {
@@ -255,4 +255,18 @@ public class RectTest extends TestCase {
     }
 
 
+    public final void testCenter() {
+        Rect r = new Rect(10, 20, 30, 40);
+        Point center = r.center();
+        assertEquals(25, center.x);
+        assertEquals(40, center.y);
+        assertEquals(25, r.centerX());
+        assertEquals(40, r.centerY());
+    }
+
+    public final void testX2Y2() {
+        Rect r = new Rect(1, 2, 3, 4);
+        assertEquals(4, r.x2());
+        assertEquals(6, r.y2());
+    }
 }

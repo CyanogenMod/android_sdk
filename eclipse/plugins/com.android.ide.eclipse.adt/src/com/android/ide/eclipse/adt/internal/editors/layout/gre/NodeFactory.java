@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import com.android.ide.common.api.INode;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 
@@ -33,8 +34,10 @@ public class NodeFactory {
 
     private final HashMap<UiViewElementNode, NodeProxy> mNodeMap =
         new HashMap<UiViewElementNode, NodeProxy>();
+    private LayoutCanvas mCanvas;
 
-    public NodeFactory() {
+    public NodeFactory(LayoutCanvas canvas) {
+        mCanvas = canvas;
     }
 
     /**
@@ -56,6 +59,10 @@ public class NodeFactory {
 
     public void clear() {
         mNodeMap.clear();
+    }
+
+    public LayoutCanvas getCanvas() {
+        return mCanvas;
     }
 
     //----

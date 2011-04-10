@@ -20,12 +20,11 @@ package com.android.ide.common.api;
 import com.android.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * A Client Rules Engine is a set of methods that {@link IViewRule}s can use to
- * access the client public API of the Rules Engine. Rules can access it via
- * the property "_rules_engine" which is dynamically added to {@link IViewRule}
- * instances on creation.
+ * access the client public API of the Rules Engine.
  * <p>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
@@ -160,5 +159,56 @@ public interface IClientRulesEngine {
      * @param nodes the nodes to be selected, never null
      */
     void select(Collection<INode> nodes);
+
+    /**
+     * Triggers a redraw
+     */
+    void redraw();
+
+    /**
+     * Triggers a layout refresh and redraw
+     */
+    void layout();
+
+    /**
+     * Converts a pixel to a dp (device independent pixel) for the current screen density
+     *
+     * @param px the pixel dimension
+     * @return the corresponding dp dimension
+     */
+    public int pxToDp(int px);
+
+    /**
+     * Measure the preferred or actual ("wrap_content") size of the given nodes.
+     *
+     * @param parent the parent whose children should be measured
+     * @param filter a filter to change attributes in the process of measuring, for
+     *            example forcing the layout_width to wrap_content or the layout_weight to
+     *            unset
+     * @return the corresponding bounds of the nodes
+     */
+    Map<INode, Rect> measureChildren(INode parent, AttributeFilter filter);
+
+    /**
+     * The {@link AttributeFilter} allows a client of
+     * {@link IClientRulesEngine#measureChildren} to modify the actual XML values of the
+     * nodes being rendered, for example to force width and height values to wrap_content
+     * when measuring preferred size.
+     */
+    public interface AttributeFilter {
+        /**
+         * Returns the attribute value for the given node and attribute name. This filter
+         * allows a client to adjust the attribute values that a node presents to the
+         * layout library.
+         * <p>
+         * Return "" to unset an attribute. Return null to return the unfiltered value.
+         *
+         * @param node the node for which the attribute value should be returned
+         * @param namespace the attribute namespace
+         * @param localName the attribute local name
+         * @return an override value, or null to return the unfiltered value
+         */
+        String getAttribute(INode node, String namespace, String localName);
+    }
 }
 

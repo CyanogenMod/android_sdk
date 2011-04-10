@@ -17,13 +17,14 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.DropFeedback;
-import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.ResizePolicy;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.Position;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.GC;
 
 import java.util.Collections;
@@ -47,6 +48,8 @@ public class ResizeGesture extends Gesture {
     private NodeProxy mChildNode;
     private DropFeedback mFeedback;
     private ResizePolicy mResizePolicy;
+    private SegmentType mHorizontalEdge;
+    private SegmentType mVerticalEdge;
 
     /**
      * Creates a new marquee selection (selection swiping).
@@ -62,26 +65,45 @@ public class ResizeGesture extends Gesture {
         mChildNode = item.getNode();
         mParentNode = (NodeProxy) mChildNode.getParent();
         mResizePolicy = item.getResizePolicy();
+        mHorizontalEdge = getHorizontalEdgeType(mHandle);
+        mVerticalEdge = getVerticalEdgeType(mHandle);
     }
 
     @Override
     public void begin(ControlPoint pos, int startMask) {
         super.begin(pos, startMask);
 
+        mCanvas.getSelectionOverlay().setHidden(true);
+
         RulesEngine rulesEngine = mCanvas.getRulesEngine();
-        Point where = pos.toLayout().toPoint();
         Rect newBounds = getNewBounds(pos);
-        mFeedback = rulesEngine.callOnResizeBegin(mChildNode, mParentNode, where, newBounds);
+        mFeedback = rulesEngine.callOnResizeBegin(mChildNode, mParentNode, newBounds,
+                mHorizontalEdge, mVerticalEdge);
         mCanvas.getGestureManager().updateMessage(mFeedback);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        update(mCanvas.getGestureManager().getCurrentControlPoint());
+        mCanvas.redraw();
+        return true;
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        update(mCanvas.getGestureManager().getCurrentControlPoint());
+        mCanvas.redraw();
+        return true;
     }
 
     @Override
     public void update(ControlPoint pos) {
         super.update(pos);
         RulesEngine rulesEngine = mCanvas.getRulesEngine();
-        Point where = pos.toLayout().toPoint();
         Rect newBounds = getNewBounds(pos);
-        rulesEngine.callOnResizeUpdate(mFeedback, mChildNode, mParentNode, where, newBounds);
+        int modifierMask = mCanvas.getGestureManager().getRuleModifierMask();
+        rulesEngine.callOnResizeUpdate(mFeedback, mChildNode, mParentNode, newBounds,
+                modifierMask);
         mCanvas.getGestureManager().updateMessage(mFeedback);
     }
 
@@ -91,10 +113,11 @@ public class ResizeGesture extends Gesture {
 
         if (!canceled) {
             RulesEngine rulesEngine = mCanvas.getRulesEngine();
-            Point where = pos.toLayout().toPoint();
             Rect newBounds = getNewBounds(pos);
-            rulesEngine.callOnResizeEnd(mFeedback, mChildNode, mParentNode, where, newBounds);
+            rulesEngine.callOnResizeEnd(mFeedback, mChildNode, mParentNode, newBounds);
         }
+
+        mCanvas.getSelectionOverlay().setHidden(false);
     }
 
     /**
@@ -184,6 +207,43 @@ public class ResizeGesture extends Gesture {
 
         return new Rect(x, y, w, h);
     }
+
+    private static SegmentType getHorizontalEdgeType(SelectionHandle handle) {
+        switch (handle.getPosition()) {
+            case BOTTOM_LEFT:
+            case BOTTOM_RIGHT:
+            case BOTTOM_MIDDLE:
+                return SegmentType.BOTTOM;
+            case LEFT_MIDDLE:
+            case RIGHT_MIDDLE:
+                return null;
+            case TOP_LEFT:
+            case TOP_MIDDLE:
+            case TOP_RIGHT:
+                return SegmentType.TOP;
+            default: assert false : handle.getPosition();
+        }
+        return null;
+    }
+
+    private static SegmentType getVerticalEdgeType(SelectionHandle handle) {
+        switch (handle.getPosition()) {
+            case TOP_LEFT:
+            case LEFT_MIDDLE:
+            case BOTTOM_LEFT:
+                return SegmentType.LEFT;
+            case BOTTOM_MIDDLE:
+            case TOP_MIDDLE:
+                return null;
+            case TOP_RIGHT:
+            case RIGHT_MIDDLE:
+            case BOTTOM_RIGHT:
+                return SegmentType.RIGHT;
+            default: assert false : handle.getPosition();
+        }
+        return null;
+    }
+
 
     @Override
     public List<Overlay> createOverlays() {

@@ -740,16 +740,14 @@ public class PaletteControl extends Composite {
 
             createDragImage(e);
             if (mImage != null && !mIsPlaceholder) {
-                int imageWidth = mImageLayoutBounds.width;
-                int imageHeight = mImageLayoutBounds.height;
+                int width = mImageLayoutBounds.width;
+                int height = mImageLayoutBounds.height;
                 assert mImageLayoutBounds.x == 0;
                 assert mImageLayoutBounds.y == 0;
-                LayoutCanvas canvas = mEditor.getCanvasControl();
-                double scale = canvas.getScale();
-                int x = -imageWidth / 2;
-                int y = -imageHeight / 2;
-                int width = (int) (imageWidth / scale);
-                int height = (int) (imageHeight / scale);
+                double scale = mEditor.getCanvasControl().getScale();
+
+                int x = (int) (-scale * width / 2);
+                int y = (int) (-scale * height / 2);
                 bounds = new Rect(0, 0, width, height);
                 dragBounds = new Rect(x, y, width, height);
             }
@@ -773,6 +771,8 @@ public class PaletteControl extends Composite {
                     null /* canvas */,
                     null /* removeSource */);
             dragInfo.setDragBounds(dragBounds);
+            dragInfo.setDragBaseline(mBaseline);
+
 
             e.doit = true;
         }
@@ -813,12 +813,13 @@ public class PaletteControl extends Composite {
         private static final int MAX_RENDER_WIDTH = 500;
 
         /** Amount of alpha to multiply into the image (divided by 256) */
-        private static final int IMG_ALPHA = 216;
+        private static final int IMG_ALPHA = 128;
 
         /** The image shown during the drag */
         private Image mImage;
         /** The non-effect bounds of the drag image */
         private Rectangle mImageLayoutBounds;
+        private int mBaseline = -1;
 
         /**
          * If true, the image is a preview of the view, and if not it is a "fallback"
@@ -827,6 +828,7 @@ public class PaletteControl extends Composite {
         private boolean mIsPlaceholder;
 
         private void createDragImage(DragSourceEvent event) {
+            mBaseline = -1;
             Pair<Image, Rectangle> preview = renderPreview();
             if (preview != null) {
                 mImage = preview.getFirst();
@@ -872,11 +874,9 @@ public class PaletteControl extends Composite {
             if (!mIsPlaceholder) {
                 // Shift the drag feedback image up such that it's centered under the
                 // mouse pointer
-
-                Rectangle imageBounds = mImage.getBounds();
-                event.offsetX = imageBounds.width / 2;
-                event.offsetY = imageBounds.height / 2;
-
+                double scale = mEditor.getCanvasControl().getScale();
+                event.offsetX = (int) (scale * mImageLayoutBounds.width / 2);
+                event.offsetY = (int) (scale * mImageLayoutBounds.height / 2);
             }
         }
 
@@ -1003,6 +1003,7 @@ public class PaletteControl extends Composite {
 
                         if (viewInfoList != null && viewInfoList.size() > 0) {
                             viewInfo = viewInfoList.get(0);
+                            mBaseline = viewInfo.getBaseLine();
                         }
 
                         if (viewInfo != null) {

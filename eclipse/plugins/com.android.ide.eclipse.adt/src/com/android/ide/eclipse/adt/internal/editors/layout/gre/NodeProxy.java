@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -28,8 +29,10 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleAttribute;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
@@ -46,7 +49,7 @@ import java.util.List;
  *
  */
 public class NodeProxy implements INode {
-
+    private static final Margins NO_MARGINS = new Margins(0, 0, 0, 0);
     private final UiViewElementNode mNode;
     private final Rect mBounds;
     private final NodeFactory mFactory;
@@ -80,6 +83,26 @@ public class NodeProxy implements INode {
         return mBounds;
     }
 
+    public Margins getMargins() {
+        ViewHierarchy viewHierarchy = mFactory.getCanvas().getViewHierarchy();
+        CanvasViewInfo view = viewHierarchy.findViewInfoFor(this);
+        if (view != null) {
+            return view.getMargins();
+        }
+
+        return NO_MARGINS;
+    }
+
+
+    public int getBaseline() {
+        ViewHierarchy viewHierarchy = mFactory.getCanvas().getViewHierarchy();
+        CanvasViewInfo view = viewHierarchy.findViewInfoFor(this);
+        if (view != null) {
+            return view.getBaseline();
+        }
+
+        return -1;
+    }
 
     /**
      * Updates the bounds of this node proxy. Bounds cannot be null, but it can be invalid.
@@ -101,9 +124,11 @@ public class NodeProxy implements INode {
     }
 
     public String getFqcn() {
-        ElementDescriptor desc = mNode.getDescriptor();
-        if (desc instanceof ViewElementDescriptor) {
-            return ((ViewElementDescriptor) desc).getFullClassName();
+        if (mNode != null) {
+            ElementDescriptor desc = mNode.getDescriptor();
+            if (desc instanceof ViewElementDescriptor) {
+                return ((ViewElementDescriptor) desc).getFullClassName();
+            }
         }
         return null;
     }
@@ -359,6 +384,10 @@ public class NodeProxy implements INode {
 
     }
 
+    @Override
+    public String toString() {
+        return "NodeProxy [node=" + mNode + ", bounds=" + mBounds + "]";
+    }
 
     // --- internal helpers ---
 

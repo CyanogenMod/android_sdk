@@ -25,10 +25,14 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_WEIGHT_SUM;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
+import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IFeedbackPainter;
 import com.android.ide.common.api.IGraphics;
@@ -41,14 +45,18 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.MenuAction.OrderedChoices;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.sdklib.SdkConstants;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An {@link IViewRule} for android.widget.LinearLayout and all its derived
@@ -213,12 +221,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
                                 } else {
                                     share = sum / numTargets;
                                 }
-                                String value;
-                                if (share != (int) share) {
-                                    value = String.format("%.2f", (float) share); //$NON-NLS-1$
-                                } else {
-                                    value = Integer.toString((int) share);
-                                }
+                                String value = formatFloatAttribute((float) share);
                                 for (INode target : targets) {
                                     target.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
                                 }
@@ -679,6 +682,256 @@ public class LinearLayoutRule extends BaseLayoutRule {
          */
         public boolean isLastPosition() {
             return mInsertPos == mNumPositions - 1;
+        }
+    }
+
+    @Override
+    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        return super.onResizeBegin(child, parent, horizontalEdge, verticalEdge);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Overridden in this layout in order to make resizing affect the layout_weight
+     * attribute instead of the layout_width (for horizontal LinearLayouts) or
+     * layout_height (for vertical LinearLayouts).
+     */
+    @Override
+    protected void setNewSizeBounds(ResizeState resizeState, INode node, INode layout,
+            Rect previousBounds, Rect newBounds, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        final Rect oldBounds = node.getBounds();
+        if (oldBounds.equals(newBounds)) {
+            return;
+        }
+        // Handle resizing in the opposite dimension of the layout
+        boolean isVertical = isVertical(layout);
+        if (!isVertical && horizontalEdge != null) {
+            if (newBounds.h != oldBounds.h || resizeState.wrapHeight) {
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
+                        resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
+                            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h)));
+            }
+            if (verticalEdge == null) {
+                return;
+            }
+            // else: fall through to compute a dynamic weight
+        }
+        if (isVertical && verticalEdge != null) {
+            if (newBounds.w != oldBounds.w || resizeState.wrapWidth) {
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
+                        resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
+                            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w)));
+            }
+            if (horizontalEdge == null) {
+                return;
+            }
+        }
+
+        // If we're setting the width/height to wrap_content in the dimension of the
+        // linear layout, then just apply wrap_content and clear weights.
+        if (!isVertical && verticalEdge != null) {
+            if (resizeState.wrapWidth) {
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
+                // Clear weight
+                if (getWeight(node) > 0.0f) {
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
+                }
+                return;
+            }
+            if (newBounds.w == oldBounds.w) {
+                return;
+            }
+        }
+
+        if (isVertical && horizontalEdge != null) {
+            if (resizeState.wrapHeight) {
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
+                // Clear weight
+                if (getWeight(node) > 0.0f) {
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
+                }
+                return;
+            }
+            if (newBounds.h == oldBounds.h) {
+                return;
+            }
+        }
+
+        float sum = getWeightSum(layout);
+        if (sum <= 0.0f) {
+            sum = 1.0f;
+            layout.setAttribute(ANDROID_URI, ATTR_WEIGHT_SUM, formatFloatAttribute(sum));
+        }
+
+        Map<INode, Rect> sizes = mRulesEngine.measureChildren(layout,
+                new IClientRulesEngine.AttributeFilter() {
+                    public String getAttribute(INode n, String namespace, String localName) {
+                        // Clear out layout weights; we need to measure the unweighted sizes
+                        // of the children
+                        if (ATTR_LAYOUT_WEIGHT.equals(localName)
+                                && SdkConstants.NS_RESOURCES.equals(namespace)) {
+                            return ""; //$NON-NLS-1$
+                        }
+
+                        return null;
+                    }
+                });
+        int totalLength = 0;
+        for (Map.Entry<INode, Rect> entry : sizes.entrySet()) {
+            Rect preferredSize = entry.getValue();
+            if (isVertical) {
+                totalLength += preferredSize.h;
+            } else {
+                totalLength += preferredSize.w;
+            }
+        }
+
+        Rect layoutBounds = layout.getBounds();
+        int remaining = (isVertical ? layoutBounds.h : layoutBounds.w) - totalLength;
+        Rect nodeBounds = sizes.get(node);
+        if (nodeBounds == null) {
+            super.setNewSizeBounds(resizeState, node, layout, oldBounds, newBounds, horizontalEdge,
+                    verticalEdge);
+            return;
+        }
+        assert nodeBounds != null;
+
+        if (remaining > 0) {
+            int missing = 0;
+            if (isVertical) {
+                if (newBounds.h > nodeBounds.h) {
+                    missing = newBounds.h - nodeBounds.h;
+                } else if (newBounds.h > resizeState.wrapBounds.h) {
+                    // The weights concern how much space to ADD to the view.
+                    // What if we have resized it to a size *smaller* than its current
+                    // size without the weight delta? This can happen if you for example
+                    // have set a hardcoded size, such as 500dp, and then size it to some
+                    // smaller size.
+                    missing = newBounds.h - resizeState.wrapBounds.h;
+                    remaining += nodeBounds.h - resizeState.wrapBounds.h;
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
+                }
+            } else {
+                if (newBounds.w > nodeBounds.w) {
+                    missing = newBounds.w - nodeBounds.w;
+                } else if (newBounds.w > resizeState.wrapBounds.w) {
+                    missing = newBounds.w - resizeState.wrapBounds.w;
+                    remaining += nodeBounds.w - resizeState.wrapBounds.w;
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
+                }
+            }
+            if (missing > 0) {
+                // (weight / weightSum) * remaining = missing, so
+                // weight = missing * weightSum / remaining
+                float weight = missing * sum / remaining;
+                String value = weight > 0 ? formatFloatAttribute(weight) : null;
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
+            }
+        } else {
+            // TODO: This algorithm should be refined.
+            // One possible solution is to clear the weights and sizes of all children
+            // to the left or right of the resized node (depending on whether the right
+            // or left edge was resized - the key point being that the other edge should
+            // not move).
+
+            // There is no leftover space after adding up the wrap-content sizes of the
+            // children. In that case, just make the weight of this child the same proportion
+            // of the sum-of-weights as its new size is out of the parent size.
+
+            // Use actual sum of weights, not the declared sum on the parent layout,
+            // to get the proportions right
+            float otherSum = 0.0f;
+            for (INode child : layout.getChildren()) {
+                if (child != node) {
+                    otherSum += getWeight(child);
+                }
+            }
+
+            float newSize = isVertical ? newBounds.h : newBounds.w;
+            float totalSize = isVertical ? layoutBounds.h : layoutBounds.w;
+            float weight;
+            if (newSize >= totalSize) {
+                // The new view was resized to something larger than the layout itself;
+                // that obviously can't be achieved with layout weights, so just pick
+                // something large to give it a lot of space but not all.
+                weight = 10 * otherSum;
+            } else {
+                weight = newSize * otherSum / (totalSize - newSize);
+            }
+            String value = weight > 0 ? formatFloatAttribute(weight) : null;
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
+            String fill = getFillParentValueName();
+            node.setAttribute(ANDROID_URI, isVertical ? ATTR_LAYOUT_WEIGHT : ATTR_LAYOUT_WIDTH,
+                    fill);
+        }
+    }
+
+    @Override
+    protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
+            Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
+        return super.getResizeUpdateMessage(resizeState, child, parent, newBounds,
+                horizontalEdge, verticalEdge);
+        // TODO: Change message to display the current layout weight instead
+    }
+
+    /**
+     * Returns the layout weight of of the given child of a LinearLayout, or 0.0 if it
+     * does not define a weight
+     */
+    private static float getWeight(INode linearLayoutChild) {
+        String weight = linearLayoutChild.getStringAttr(ANDROID_URI, ATTR_LAYOUT_WEIGHT);
+        if (weight != null && weight.length() > 0) {
+            try {
+                return Float.parseFloat(weight);
+            } catch (NumberFormatException nfe) {
+                AdtPlugin.log(nfe, "Invalid weight %1$s", weight);
+            }
+        }
+
+        return 0.0f;
+    }
+
+    /**
+     * Returns the sum of all the layout weights of the children in the given LinearLayout
+     *
+     * @param linearLayout the layout to compute the total sum for
+     * @return the total sum of all the layout weights in the given layout
+     */
+    private static float getWeightSum(INode linearLayout) {
+        String weightSum = linearLayout.getStringAttr(ANDROID_URI,
+                ATTR_WEIGHT_SUM);
+        float sum = -1.0f;
+        if (weightSum != null) {
+            // Distribute
+            try {
+                sum = Float.parseFloat(weightSum);
+                return sum;
+            } catch (NumberFormatException nfe) {
+                // Just keep using the default
+            }
+        }
+
+        return getSumOfWeights(linearLayout);
+    }
+
+    private static float getSumOfWeights(INode linearLayout) {
+        float sum = 0.0f;
+        for (INode child : linearLayout.getChildren()) {
+            sum += getWeight(child);
+        }
+
+        return sum;
+    }
+
+    @VisibleForTesting
+    static String formatFloatAttribute(float value) {
+        if (value != (int) value) {
+            return String.format("%.2f", value); //$NON-NLS-1$
+        } else {
+            return Integer.toString((int) value);
         }
     }
 }

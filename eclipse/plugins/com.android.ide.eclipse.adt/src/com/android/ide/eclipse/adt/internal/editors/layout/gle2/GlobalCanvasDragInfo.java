@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Rect;
 
 
@@ -46,6 +47,7 @@ final class GlobalCanvasDragInfo {
     private Object mSourceCanvas = null;
     private Runnable mRemoveSourceHandler;
     private Rect mDragBounds;
+    private int mDragBaseline = -1;
 
     /** Private constructor. Use {@link #getInstance()} to retrieve the singleton. */
     private GlobalCanvasDragInfo() {
@@ -148,5 +150,23 @@ final class GlobalCanvasDragInfo {
      */
     public void setDragBounds(Rect dragBounds) {
         mDragBounds = dragBounds;
+    }
+
+    /**
+     * Returns the baseline of the drag, or -1 if not applicable
+     *
+     * @return the current SWT modifier key mask as an {@link IViewRule} modifier mask
+     */
+    public int getDragBaseline() {
+        return mDragBaseline;
+    }
+
+    /**
+     * Sets the baseline of the drag
+     *
+     * @param baseline the new baseline
+     */
+    public void setDragBaseline(int baseline) {
+        mDragBaseline = baseline;
     }
 }

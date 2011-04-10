@@ -143,12 +143,12 @@ public class UiElementNode implements IPropertySource {
 
     @Override
     public String toString() {
-        return String.format("%s [desc: %s, parent: %s, children: %d]",         //$NON-NLS-1$
-                this.getClass().getSimpleName(),
-                mDescriptor,
-                mUiParent != null ? mUiParent.toString() : "none",              //$NON-NLS-1$
-                mUiChildren != null ? mUiChildren.size() : 0
-                );
+      return String.format("%s [desc: %s, parent: %s, children: %d]",         //$NON-NLS-1$
+              this.getClass().getSimpleName(),
+              mDescriptor,
+              mUiParent != null ? mUiParent.toString() : "none",              //$NON-NLS-1$
+                      mUiChildren != null ? mUiChildren.size() : 0
+      );
     }
 
     /**

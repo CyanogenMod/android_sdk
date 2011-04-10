@@ -264,12 +264,13 @@ public class PreviewIconFactory {
             model.loadFromXmlNode(document);
 
             RenderSession session = null;
+            NodeList childNodes = documentElement.getChildNodes();
             try {
                 LayoutLog logger = new RenderLogger("palette");
                 // Important to get these sizes large enough for clients that don't support
                 // RenderMode.FULL_EXPAND such as 1.6
                 int width = 200;
-                int height = documentElement.getChildNodes().getLength() == 1 ? 400 : 1600;
+                int height = childNodes.getLength() == 1 ? 400 : 1600;
                 Set<UiElementNode> expandNodes = Collections.<UiElementNode>emptySet();
                 RenderingMode renderingMode = RenderingMode.FULL_EXPAND;
 
@@ -343,6 +344,23 @@ public class PreviewIconFactory {
                         }
                     }
                 } else {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                        Node node = childNodes.item(i);
+                        if (node instanceof Element) {
+                            Element e = (Element) node;
+                            String fqn = repository.getFullClassName(e);
+                            fqn = fqn.substring(fqn.lastIndexOf('.') + 1);
+                            if (sb.length() > 0) {
+                                sb.append(", "); //$NON-NLS-1$
+                            }
+                            sb.append(fqn);
+                        }
+                    }
+                    AdtPlugin.log(IStatus.WARNING, "Failed to render set of icons for %1$s",
+                            sb.toString());
+                    System.out.println(sb.toString());
+
                     if (session.getResult().getException() != null) {
                         AdtPlugin.log(session.getResult().getException(),
                                 session.getResult().getErrorMessage());

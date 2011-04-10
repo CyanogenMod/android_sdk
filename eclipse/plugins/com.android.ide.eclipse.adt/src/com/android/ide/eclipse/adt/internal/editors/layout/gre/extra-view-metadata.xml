@@ -90,7 +90,8 @@
             resize="horizontal"
             fill="width_in_vertical" />
         <view
-            class="android.widget.QuickContactBadge" />
+            class="android.widget.QuickContactBadge"
+            resize="scaled" />
         <view
             class="android.widget.RadioGroup" />
         <view
@@ -103,7 +104,7 @@
             class="android.widget.EditText"
             name="Plain Text"
             init=""
-            resize="horizontal"
+            resize="full"
             relatedTo="Spinner,TextView,AutoCompleteTextView,MultiAutoCompleteTextView"
             fill="width_in_vertical">
             <view

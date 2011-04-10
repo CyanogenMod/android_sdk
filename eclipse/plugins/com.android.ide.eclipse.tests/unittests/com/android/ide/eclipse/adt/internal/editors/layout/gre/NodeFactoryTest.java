@@ -34,7 +34,7 @@ public class NodeFactoryTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        m = new NodeFactory();
+        m = new NodeFactory(null);
 
     }
 

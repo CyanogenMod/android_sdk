@@ -25,13 +25,18 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 
 import org.eclipse.swt.graphics.GC;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The {@link SelectionOverlay} paints the current selection as an overlay.
  */
 public class SelectionOverlay extends Overlay {
     private final LayoutCanvas mCanvas;
+    private boolean mHidden;
 
     /**
      * Constructs a new {@link SelectionOverlay} tied to the given canvas.
@@ -40,6 +45,17 @@ public class SelectionOverlay extends Overlay {
      */
     public SelectionOverlay(LayoutCanvas canvas) {
         mCanvas = canvas;
+    }
+
+    /**
+     * Set whether the selection overlay should be hidden. This is done during some
+     * gestures like resize where the new bounds could be confused with the current
+     * selection bounds.
+     *
+     * @param hidden when true, hide the selection bounds, when false, unhide.
+     */
+    public void setHidden(boolean hidden) {
+        mHidden = hidden;
     }
 
     /**
@@ -53,9 +69,14 @@ public class SelectionOverlay extends Overlay {
      */
     public void paint(SelectionManager selectionManager, GCWrapper gcWrapper,
             GC gc, RulesEngine rulesEngine) {
+        if (mHidden) {
+            return;
+        }
+
         List<SelectionItem> selections = selectionManager.getSelections();
         int n = selections.size();
         if (n > 0) {
+            List<NodeProxy> selectedNodes = new ArrayList<NodeProxy>();
             boolean isMultipleSelection = n > 1;
             for (SelectionItem s : selections) {
                 if (s.isRoot()) {
@@ -66,6 +87,18 @@ public class SelectionOverlay extends Overlay {
                 NodeProxy node = s.getNode();
                 if (node != null) {
                     paintSelection(gcWrapper, gc, s, isMultipleSelection);
+                    selectedNodes.add(node);
+                }
+            }
+
+            if (selectedNodes.size() > 0) {
+                paintSelectionFeedback(gcWrapper, selectedNodes, rulesEngine);
+            } else {
+                CanvasViewInfo root = mCanvas.getViewHierarchy().getRoot();
+                if (root != null) {
+                    NodeProxy parent = mCanvas.getNodeFactory().create(root);
+                    rulesEngine.callPaintSelectionFeedback(gcWrapper,
+                            parent, Collections.<INode>emptyList());
                 }
             }
 
@@ -74,6 +107,13 @@ public class SelectionOverlay extends Overlay {
                 if (node != null) {
                     paintHints(gcWrapper, node, rulesEngine);
                 }
+            }
+        } else {
+            CanvasViewInfo root = mCanvas.getViewHierarchy().getRoot();
+            if (root != null) {
+                NodeProxy parent = mCanvas.getNodeFactory().create(root);
+                rulesEngine.callPaintSelectionFeedback(gcWrapper,
+                        parent, Collections.<INode>emptyList());
             }
         }
     }
@@ -110,6 +150,32 @@ public class SelectionOverlay extends Overlay {
                 }
                 gcWrapper.drawBoxedStrings(x, y, infos);
             }
+        }
+    }
+
+    private void paintSelectionFeedback(GCWrapper gcWrapper, List<NodeProxy> nodes,
+            RulesEngine rulesEngine) {
+        // Add fastpath for n=1
+
+        // Group nodes into parent/child groups
+        Set<INode> parents = new HashSet<INode>();
+        for (INode node : nodes) {
+            INode parent = node.getParent();
+            if (/*parent == null || */parent instanceof NodeProxy) {
+                NodeProxy parentNode = (NodeProxy) parent;
+                parents.add(parentNode);
+            }
+        }
+        for (INode parent : parents) {
+            List<INode> children = new ArrayList<INode>();
+            for (INode node : nodes) {
+                INode nodeParent = node.getParent();
+                if (nodeParent == parent) {
+                    children.add(node);
+                }
+            }
+            rulesEngine.callPaintSelectionFeedback(gcWrapper,
+                    (NodeProxy) parent, children);
         }
     }
 

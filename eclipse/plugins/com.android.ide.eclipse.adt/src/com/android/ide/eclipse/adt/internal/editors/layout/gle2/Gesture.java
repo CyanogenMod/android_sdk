@@ -124,15 +124,19 @@ public abstract class Gesture {
      * user is holding the key for several seconds.
      *
      * @param event The SWT event for the key press,
+     * @return true if this gesture consumed the key press, otherwise return false
      */
-    public void keyPressed(KeyEvent event) {
+    public boolean keyPressed(KeyEvent event) {
+        return false;
     }
 
     /**
      * Handles a key release during the gesture.
      *
      * @param event The SWT event for the key release,
+     * @return true if this gesture consumed the key press, otherwise return false
      */
-    public void keyReleased(KeyEvent event) {
+    public boolean keyReleased(KeyEvent event) {
+        return false;
     }
 }

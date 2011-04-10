@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -257,6 +258,23 @@ public class LayoutTestBase extends TestCase {
         public String displayFragmentSourceInput() {
             fail("Not supported in tests yet");
             return null;
+        }
+
+        public void layout() {
+            fail("Not supported in tests yet");
+        }
+
+        public void redraw() {
+            fail("Not supported in tests yet");
+        }
+
+        public Map<INode, Rect> measureChildren(INode parent, AttributeFilter filter) {
+            return null;
+        }
+
+        public int pxToDp(int px) {
+            fail("Not supported in tests yet");
+            return px;
         }
     }
 

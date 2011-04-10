@@ -123,6 +123,16 @@ public interface IViewRule {
      */
     List<String> getSelectionHint(INode parentNode, INode childNode);
 
+    /**
+     * Paints any layout-specific selection feedback for the given parent layout.
+     *
+     * @param graphics the graphics context to paint into
+     * @param parentNode the parent layout node
+     * @param childNodes the child nodes selected in the parent layout
+     */
+    void paintSelectionFeedback(IGraphics graphics, INode parentNode,
+            List<? extends INode> childNodes);
+
     // ==== Drag'n'drop support ====
 
     /**
@@ -218,17 +228,20 @@ public interface IViewRule {
      */
     void onChildInserted(INode child, INode parent, InsertType insertType);
 
-
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This
-     * is called once at the beginning of the resizing operation.
+     * is called once at the beginning of the resizing operation. A horizontal edge,
+     * or a vertical edge, or both, can be resized simultaneously.
      *
      * @param child the widget being resized
      * @param parent the layout containing the child
+     * @param horizEdge The horizontal edge being resized, or null
+     * @param verticalEdge the vertical edge being resized, or null
      * @return a {@link DropFeedback} object which performs an update painter callback
      *         etc.
      */
-    DropFeedback onResizeBegin(INode child, INode parent);
+    DropFeedback onResizeBegin(INode child, INode parent,
+            SegmentType horizEdge, SegmentType verticalEdge);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This
@@ -241,8 +254,12 @@ public interface IViewRule {
      * @param parent the layout containing the child
      * @param newBounds the new bounds the user has chosen to resize the widget to,
      *    in absolute coordinates
+     * @param modifierMask The modifier keys currently pressed by the user, as a bitmask
+     *    of the constants {@link DropFeedback#MODIFIER1}, {@link DropFeedback#MODIFIER2}
+     *    and {@link DropFeedback#MODIFIER3}.
      */
-    void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds);
+    void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
+            int modifierMask);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This

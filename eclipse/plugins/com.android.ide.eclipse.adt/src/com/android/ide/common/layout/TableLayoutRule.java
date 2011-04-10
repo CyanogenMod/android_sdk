@@ -17,6 +17,7 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_ROW;
 
+import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
@@ -24,6 +25,7 @@ import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.SegmentType;
 
 import java.net.URL;
 import java.util.Collections;
@@ -174,5 +176,24 @@ public class TableLayoutRule extends LinearLayoutRule {
                 node.appendChild(FQCN_TABLE_ROW);
             }
         }
+    }
+
+    @Override
+    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        // Children of a table layout cannot set their widths (it is controlled by column
+        // settings on the table). They can set their heights (though for TableRow, the
+        // height is always wrap_content).
+        if (horizontalEdge == null) { // Widths are edited by vertical edges.
+            // The user is not editing a vertical height so don't allow resizing at all
+            return null;
+        }
+        if (child.getFqcn().equals(FQCN_TABLE_ROW)) {
+            // TableRows are always WRAP_CONTENT
+            return null;
+        }
+
+        // Allow resizing heights only
+        return super.onResizeBegin(child, parent, horizontalEdge, null /*verticalEdge*/);
     }
 }

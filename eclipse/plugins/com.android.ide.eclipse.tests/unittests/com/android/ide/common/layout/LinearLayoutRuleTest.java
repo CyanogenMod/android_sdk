@@ -367,6 +367,19 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "seStyle(DROP_PREVIEW), drawRect(Rect[0,381,100,80])");
     }
 
+
+    public void testFormatFloatValue() throws Exception {
+        assertEquals("1", LinearLayoutRule.formatFloatAttribute(1.0f));
+        assertEquals("2", LinearLayoutRule.formatFloatAttribute(2.0f));
+        assertEquals("1.50", LinearLayoutRule.formatFloatAttribute(1.5f));
+        assertEquals("1.50", LinearLayoutRule.formatFloatAttribute(1.50f));
+        assertEquals("1.51", LinearLayoutRule.formatFloatAttribute(1.51f));
+        assertEquals("1.51", LinearLayoutRule.formatFloatAttribute(1.514542f));
+        assertEquals("1.52", LinearLayoutRule.formatFloatAttribute(1.516542f));
+        assertEquals("-1.51", LinearLayoutRule.formatFloatAttribute(-1.51f));
+        assertEquals("-1", LinearLayoutRule.formatFloatAttribute(-1f));
+    }
+
     // Left to test:
     // Check inserting at last pos with multiple children
     // Check inserting with no bounds rectangle for dragged element

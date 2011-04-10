@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
  * <p/>
  * This pull parser generates {@link ViewInfo}s which key is a {@link UiElementNode}.
  */
-public final class UiElementPullParser extends BasePullParser {
+public class UiElementPullParser extends BasePullParser {
     private final static String ATTR_PADDING = "padding"; //$NON-NLS-1$
     private final static Pattern FLOAT_PATTERN = Pattern.compile("(-?[0-9]+(?:\\.[0-9]+)?)(.*)"); //$NON-NLS-1$
 
@@ -104,7 +104,7 @@ public final class UiElementPullParser extends BasePullParser {
      *            (without padding) would be invisible. This parameter can be null, in which case
      *            nodes are not individually exploded (but they may all be exploded with the
      *            explodeRendering parameter.
-     * @param densityValue the density factor for the screen.
+     * @param density the density factor for the screen.
      * @param xdpi the screen actual dpi in X
      * @param project Project containing this layout.
      */
@@ -127,7 +127,7 @@ public final class UiElementPullParser extends BasePullParser {
         push(mRoot);
     }
 
-    private UiElementNode getCurrentNode() {
+    protected UiElementNode getCurrentNode() {
         if (mNodeStack.size() > 0) {
             return mNodeStack.get(mNodeStack.size()-1);
         }

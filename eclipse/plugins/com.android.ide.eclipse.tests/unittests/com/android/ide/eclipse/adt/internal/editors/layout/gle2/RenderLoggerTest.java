@@ -30,7 +30,7 @@ public class RenderLoggerTest extends TestCase {
         l.fidelityWarning(null, "No perspective Transforms", null, null);
         l.fidelityWarning(null, "No GPS", null, null);
         assertTrue(l.hasProblems());
-        assertEquals("The graphics preview may not be accurate:\n"
+        assertEquals("The graphics preview in the layout editor may not be accurate:\n"
                 + "* No perspective Transforms\n" + "* No GPS\n", l.getProblems());
         assertFalse(l.seenTag("foo"));
         assertFalse(l.seenTag(null));

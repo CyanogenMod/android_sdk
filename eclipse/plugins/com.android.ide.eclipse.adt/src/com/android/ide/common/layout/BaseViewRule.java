@@ -25,15 +25,12 @@ import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
-import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
-import com.android.ide.common.api.IFeedbackPainter;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
@@ -44,6 +41,7 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.api.IAttributeInfo.Format;
 
 import java.util.ArrayList;
@@ -298,7 +296,7 @@ public class BaseViewRule implements IViewRule {
                         defaultValue = "";
                     }
                     String value = mRulesEngine.displayInput(
-                            "Set custom layout attribute value (example: 50dip)",
+                            "Set custom layout attribute value (example: 50dp)",
                             defaultValue, null);
                     if (value != null && value.trim().length() > 0) {
                         return value.trim();
@@ -665,10 +663,12 @@ public class BaseViewRule implements IViewRule {
     }
 
     public static String stripIdPrefix(String id) {
-        if (id.startsWith(NEW_ID_PREFIX)) {
-            id = id.substring(NEW_ID_PREFIX.length());
+        if (id == null) {
+            return ""; //$NON-NLS-1$
+        } else if (id.startsWith(NEW_ID_PREFIX)) {
+            return id.substring(NEW_ID_PREFIX.length());
         } else if (id.startsWith(ID_PREFIX)) {
-            id = id.substring(ID_PREFIX.length());
+            return id.substring(ID_PREFIX.length());
         }
         return id;
     }
@@ -680,53 +680,22 @@ public class BaseViewRule implements IViewRule {
         return value;
     }
 
+    public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
+            List<? extends INode> childNodes) {
+    }
+
     // ---- Resizing ----
 
-    public DropFeedback onResizeBegin(INode child, INode parent) {
-        return new DropFeedback(null,  new IFeedbackPainter() {
-            public void paint(IGraphics gc, INode node, DropFeedback feedback) {
-                Rect r = (Rect) feedback.userData;
-                if (r != null) {
-                    gc.useStyle(DrawingStyle.DROP_PREVIEW);
-                    gc.drawRect(r);
-                }
-            }
-        });
+    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        return null;
     }
 
-    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent,
-            Rect newBounds) {
-        feedback.userData = newBounds;
-        feedback.message = String.format("Resize to %d x %d dip", newBounds.w, newBounds.h);
-
-        // TODO: Guidelines
+    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
+            int modifierMask) {
     }
 
-    public void onResizeEnd(DropFeedback feedback, INode child, INode parent,
+    public void onResizeEnd(DropFeedback feedback, INode child, final INode parent,
             final Rect newBounds) {
-        final Rect oldBounds = child.getBounds();
-        if (oldBounds.w != newBounds.w || oldBounds.h != newBounds.h) {
-            child.editXml("Resize", new INodeHandler() {
-                public void handle(INode n) {
-                    setNewSizeBounds(n, oldBounds, newBounds);
-                }
-            });
-        }
-    }
-
-    /**
-     * Performs the edit on the node to complete a resizing operation. The actual edit
-     * part is pulled out such that subclasses can change/add to the edits and be part of
-     * the same undo event
-     */
-    protected void setNewSizeBounds(INode node, Rect oldBounds, Rect newBounds) {
-        if (newBounds.w != oldBounds.w) {
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
-                    String.format(VALUE_N_DP, newBounds.w));
-        }
-        if (newBounds.h != oldBounds.h) {
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
-                    String.format(VALUE_N_DP, newBounds.h));
-        }
     }
 }

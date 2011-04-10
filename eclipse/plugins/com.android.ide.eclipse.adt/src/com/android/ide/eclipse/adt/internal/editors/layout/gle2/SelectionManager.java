@@ -686,7 +686,7 @@ public class SelectionManager implements ISelectionProvider {
     }
 
     /** Sync the selection with an updated view info tree */
-    /* package */ void sync(CanvasViewInfo lastValidViewInfoRoot) {
+    /* package */ void sync() {
         // Check if the selection is still the same (based on the object keys)
         // and eventually recompute their bounds.
         for (ListIterator<SelectionItem> it = mSelections.listIterator(); it.hasNext(); ) {
@@ -694,8 +694,8 @@ public class SelectionManager implements ISelectionProvider {
 
             // Check if the selected object still exists
             ViewHierarchy viewHierarchy = mCanvas.getViewHierarchy();
-            Object key = s.getViewInfo().getUiViewNode();
-            CanvasViewInfo vi = viewHierarchy.findViewInfoKey(key, lastValidViewInfoRoot);
+            UiViewElementNode key = s.getViewInfo().getUiViewNode();
+            CanvasViewInfo vi = viewHierarchy.findViewInfoFor(key);
 
             // Remove the previous selection -- if the selected object still exists
             // we need to recompute its bounds in case it moved so we'll insert a new one
@@ -905,7 +905,7 @@ public class SelectionManager implements ISelectionProvider {
             boolean haveSelection = selections.size() > 0;
 
             Action a;
-            a = selectionManager.new SelectAction("Select Parent", SELECT_PARENT);
+            a = selectionManager.new SelectAction("Select Parent\tEsc", SELECT_PARENT);
             new ActionContributionItem(a).fill(menu, -1);
             a.setEnabled(notRoot);
             a.setAccelerator(SWT.ESC);
