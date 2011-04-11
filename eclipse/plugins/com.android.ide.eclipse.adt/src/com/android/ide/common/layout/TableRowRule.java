@@ -15,9 +15,14 @@
  */
 package com.android.ide.common.layout;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_LAYOUT;
+
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
+import com.android.ide.common.api.MenuAction;
+
+import java.util.List;
 
 /**
  * An {@link IViewRule} for android.widget.TableRow.
@@ -40,4 +45,17 @@ public class TableRowRule extends LinearLayoutRule {
         // respectively.
     }
 
+    @Override
+    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+            final List<? extends INode> children) {
+        super.addLayoutActions(actions, parentNode, children);
+
+        // Also apply table-specific actions on the table row such that you can
+        // select something in a table row and still get offered actions on the surrounding
+        // table.
+        INode grandParent = parentNode.getParent();
+        if (grandParent != null && grandParent.getFqcn().equals(FQCN_TABLE_LAYOUT)) {
+            TableLayoutRule.addTableLayoutActions(actions, grandParent, children);
+        }
+    }
 }
