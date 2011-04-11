@@ -19,8 +19,8 @@ import com.google.common.collect.Lists;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.MonkeyRunnerBackend;
+import com.android.monkeyrunner.core.IMonkeyBackend;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 import com.android.sdklib.SdkConstants;
 
 import java.io.File;
@@ -32,12 +32,11 @@ import java.util.regex.Pattern;
 /**
  * Backend implementation that works over ADB to talk to the device.
  */
-public class AdbBackend implements MonkeyRunnerBackend {
+public class AdbBackend implements IMonkeyBackend {
     private static Logger LOG = Logger.getLogger(AdbBackend.class.getCanonicalName());
     // How long to wait each time we check for the device to be connected.
     private static final int CONNECTION_ITERATION_TIMEOUT_MS = 200;
-    private final List<AdbMonkeyDevice> devices = Lists.newArrayList();
-
+    private final List<IMonkeyDevice> devices = Lists.newArrayList();
     private final AndroidDebugBridge bridge;
 
     public AdbBackend() {
@@ -87,18 +86,20 @@ public class AdbBackend implements MonkeyRunnerBackend {
         return null;
     }
 
-    public MonkeyDevice waitForConnection() {
+    @Override
+    public IMonkeyDevice waitForConnection() {
         return waitForConnection(Integer.MAX_VALUE, ".*");
     }
 
-    public MonkeyDevice waitForConnection(long timeoutMs, String deviceIdRegex) {
+    @Override
+    public IMonkeyDevice waitForConnection(long timeoutMs, String deviceIdRegex) {
         do {
             IDevice device = findAttacedDevice(deviceIdRegex);
             // Only return the device when it is online
             if (device != null && device.getState() == IDevice.DeviceState.ONLINE) {
-                AdbMonkeyDevice amd = new AdbMonkeyDevice(device);
-                devices.add(amd);
-                return amd;
+                IMonkeyDevice monkeyDevice = new AdbMonkeyDevice(device);
+                devices.add(monkeyDevice);
+                return monkeyDevice;
             }
 
             try {
@@ -113,8 +114,9 @@ public class AdbBackend implements MonkeyRunnerBackend {
         return null;
     }
 
+    @Override
     public void shutdown() {
-        for (AdbMonkeyDevice device : devices) {
+        for (IMonkeyDevice device : devices) {
             device.dispose();
         }
         AndroidDebugBridge.terminate();

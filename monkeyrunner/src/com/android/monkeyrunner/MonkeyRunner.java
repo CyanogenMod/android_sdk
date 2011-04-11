@@ -19,6 +19,10 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
+import com.android.monkeyrunner.core.IMonkeyBackend;
+import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.MonkeyImageBase;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.python.core.ArgParser;
@@ -38,7 +42,7 @@ import javax.swing.JOptionPane;
 @MonkeyRunnerExported(doc = "Main entry point for MonkeyRunner")
 public class MonkeyRunner extends PyObject implements ClassDictInit {
     private static final Logger LOG = Logger.getLogger(MonkeyRunner.class.getCanonicalName());
-    private static MonkeyRunnerBackend backend;
+    private static IMonkeyBackend backend;
 
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyRunner.class, dict);
@@ -49,7 +53,7 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
      *
      * @param backend the backend to use.
      */
-    /* package */ static void setBackend(MonkeyRunnerBackend backend) {
+    /* package */ static void setBackend(IMonkeyBackend backend) {
         MonkeyRunner.backend = backend;
     }
 
@@ -71,8 +75,10 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
             timeoutMs = Long.MAX_VALUE;
         }
 
-        return backend.waitForConnection(timeoutMs,
+        IMonkeyDevice device = backend.waitForConnection(timeoutMs,
                 ap.getString(1, ".*"));
+        MonkeyDevice monkeyDevice = new MonkeyDevice(device);
+        return monkeyDevice;
     }
 
     @MonkeyRunnerExported(doc = "Pause the currently running program for the specified " +
@@ -185,8 +191,8 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String path = ap.getString(0);
-
-        return MonkeyImage.loadImageFromFile(path);
+        IMonkeyImage image = MonkeyImageBase.loadImageFromFile(path);
+        return new MonkeyImage(image);
     }
 
     /**

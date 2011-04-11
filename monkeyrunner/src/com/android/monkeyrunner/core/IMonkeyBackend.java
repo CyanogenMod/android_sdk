@@ -13,13 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.monkeyrunner.core;
+
+import com.android.monkeyrunner.MonkeyDevice;
 
 /**
  * Interface between MonkeyRunner common code and the MonkeyRunner backend.  The backend is
  * responsible for communicating between the host and the device.
  */
-public interface MonkeyRunnerBackend {
+public interface IMonkeyBackend {
+    /**
+     * Wait for a default device to connect to the backend.
+     *
+     * @return the connected device (or null if timeout);
+     */
+    IMonkeyDevice waitForConnection();
+
     /**
      * Wait for a device to connect to the backend.
      *
@@ -27,7 +36,7 @@ public interface MonkeyRunnerBackend {
      * @param deviceIdRegex the regular expression to specify which device to wait for.
      * @return the connected device (or null if timeout);
      */
-    MonkeyDevice waitForConnection(long timeoutMs, String deviceIdRegex);
+    IMonkeyDevice waitForConnection(long timeoutMs, String deviceIdRegex);
 
     /**
      * Shutdown the backend and cleanup any resources it was using.

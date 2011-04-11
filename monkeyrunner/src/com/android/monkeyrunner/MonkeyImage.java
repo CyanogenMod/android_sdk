@@ -17,6 +17,7 @@ package com.android.monkeyrunner;
 
 import com.google.common.base.Preconditions;
 
+import com.android.monkeyrunner.core.IMonkeyImage;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.python.core.ArgParser;
@@ -25,60 +26,30 @@ import org.python.core.PyInteger;
 import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 
 /**
  * Jython object to encapsulate images that have been taken.
  */
 @MonkeyRunnerExported(doc = "An image")
-public abstract class MonkeyImage extends PyObject implements ClassDictInit {
+public class MonkeyImage extends PyObject implements ClassDictInit {
     private static Logger LOG = Logger.getLogger(MonkeyImage.class.getCanonicalName());
 
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyImage.class, dict);
     }
 
-    /**
-     * Convert the MonkeyImage into a BufferedImage.
-     *
-     * @return a BufferedImage for this MonkeyImage.
-     */
-    public abstract BufferedImage createBufferedImage();
+    private IMonkeyImage impl;
 
-    // Cache the BufferedImage so we don't have to generate it every time.
-    private WeakReference<BufferedImage> cachedBufferedImage = null;
-
-    /**
-     * Utility method to handle getting the BufferedImage and managing the cache.
-     *
-     * @return the BufferedImage for this image.
-     */
-    private BufferedImage getBufferedImage() {
-        // Check the cache first
-        if (cachedBufferedImage != null) {
-            BufferedImage img = cachedBufferedImage.get();
-            if (img != null) {
-                return img;
-            }
-        }
-
-        // Not in the cache, so create it and cache it.
-        BufferedImage img = createBufferedImage();
-        cachedBufferedImage = new WeakReference<BufferedImage>(img);
-        return img;
+    public MonkeyImage(IMonkeyImage impl) {
+        this.impl = impl;
     }
+
+    public IMonkeyImage getImpl() {
+        return impl;
+    }
+
 
     @MonkeyRunnerExported(doc = "Converts the MonkeyImage into a particular format and returns " +
                                 "the result as a String. Use this to get access to the raw" +
@@ -93,16 +64,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
       Preconditions.checkNotNull(ap);
 
       String format = ap.getString(0, "png");
-
-      BufferedImage argb = convertSnapshot();
-
-      ByteArrayOutputStream os = new ByteArrayOutputStream();
-      try {
-          ImageIO.write(argb, format, os);
-      } catch (IOException e) {
-          return new byte[0];
-      }
-      return os.toByteArray();
+      return impl.convertToBytes(format);
     }
 
     @MonkeyRunnerExported(doc = "Write the MonkeyImage to a file.  If no " +
@@ -120,38 +82,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
 
         String path = ap.getString(0);
         String format = ap.getString(1, null);
-
-        if (format != null) {
-            return writeToFile(path, format);
-        }
-        int offset = path.lastIndexOf('.');
-        if (offset < 0) {
-            return writeToFile(path, "png");
-        }
-        String ext = path.substring(offset + 1);
-        Iterator<ImageWriter> writers = ImageIO.getImageWritersBySuffix(ext);
-        if (!writers.hasNext()) {
-            return writeToFile(path, "png");
-        }
-        ImageWriter writer = writers.next();
-        BufferedImage image = convertSnapshot();
-        try {
-            File f = new File(path);
-            f.delete();
-
-            ImageOutputStream outputStream = ImageIO.createImageOutputStream(f);
-            writer.setOutput(outputStream);
-
-            try {
-                writer.write(image);
-            } finally {
-                writer.dispose();
-                outputStream.flush();
-            }
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
+        return impl.writeToFile(path, format);
     }
 
     @MonkeyRunnerExported(doc = "Get a single ARGB (alpha, red, green, blue) pixel at location " +
@@ -167,7 +98,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
 
         int x = ap.getInt(0);
         int y = ap.getInt(1);
-        int pixel = getPixel(x, y);
+        int pixel = impl.getPixel(x, y);
         PyInteger a = new PyInteger((pixel & 0xFF000000) >> 24);
         PyInteger r = new PyInteger((pixel & 0x00FF0000) >> 16);
         PyInteger g = new PyInteger((pixel & 0x0000FF00) >> 8);
@@ -188,35 +119,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
 
         int x = ap.getInt(0);
         int y = ap.getInt(1);
-        return getPixel(x, y);
-    }
-
-    private int getPixel(int x, int y) {
-        BufferedImage image = getBufferedImage();
-        return image.getRGB(x, y);
-    }
-
-    private BufferedImage convertSnapshot() {
-        BufferedImage image = getBufferedImage();
-
-        // Convert the image to ARGB so ImageIO writes it out nicely
-        BufferedImage argb = new BufferedImage(image.getWidth(), image.getHeight(),
-                BufferedImage.TYPE_INT_ARGB);
-        Graphics g = argb.createGraphics();
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-        return argb;
-    }
-
-    public boolean writeToFile(String path, String format) {
-        BufferedImage argb = convertSnapshot();
-
-        try {
-            ImageIO.write(argb, format, new File(path));
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
+        return impl.getPixel(x, y);
     }
 
     @MonkeyRunnerExported(doc = "Compare this MonkeyImage object to aother MonkeyImage object.",
@@ -231,72 +134,13 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         PyObject otherObject = ap.getPyObject(0);
-        MonkeyImage other = (MonkeyImage) otherObject.__tojava__(MonkeyImage.class);
+        // TODO: check if this conversion wortks
+        IMonkeyImage other = (IMonkeyImage) otherObject.__tojava__(
+                IMonkeyImage.class);
 
         double percent = JythonUtils.getFloat(ap, 1, 1.0);
 
-        BufferedImage otherImage = other.getBufferedImage();
-        BufferedImage myImage = getBufferedImage();
-
-        // Easy size check
-        if (otherImage.getWidth() != myImage.getWidth()) {
-            return false;
-        }
-        if (otherImage.getHeight() != myImage.getHeight()) {
-            return false;
-        }
-
-        int[] otherPixel = new int[1];
-        int[] myPixel = new int[1];
-
-        int width = myImage.getWidth();
-        int height = myImage.getHeight();
-
-        int numDiffPixels = 0;
-        // Now, go through pixel-by-pixel and check that the images are the same;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (myImage.getRGB(x, y) != otherImage.getRGB(x, y)) {
-                    numDiffPixels++;
-                }
-            }
-        }
-        double numberPixels = (height * width);
-        double diffPercent = numDiffPixels / numberPixels;
-        return percent <= 1.0 - diffPercent;
-    }
-
-    private static class BufferedImageMonkeyImage extends MonkeyImage {
-        private final BufferedImage image;
-
-        public BufferedImageMonkeyImage(BufferedImage image) {
-            this.image = image;
-        }
-
-        @Override
-        public BufferedImage createBufferedImage() {
-            return image;
-        }
-    }
-
-    /* package */ static MonkeyImage loadImageFromFile(String path) {
-        File f = new File(path);
-        if (f.exists() && f.canRead()) {
-            try {
-                BufferedImage bufferedImage = ImageIO.read(new File(path));
-                if (bufferedImage == null) {
-                    LOG.log(Level.WARNING, "Cannot decode file %s", path);
-                    return null;
-                }
-                return new BufferedImageMonkeyImage(bufferedImage);
-            } catch (IOException e) {
-                LOG.log(Level.WARNING, "Exception trying to decode image", e);
-                return null;
-            }
-        } else {
-            LOG.log(Level.WARNING, "Cannot read file %s", path);
-            return null;
-        }
+        return impl.sameAs(other, percent);
     }
 
     @MonkeyRunnerExported(doc = "Copy a rectangular region of the image.",
@@ -315,7 +159,7 @@ public abstract class MonkeyImage extends PyObject implements ClassDictInit {
         int w = rect.__getitem__(2).asInt();
         int h = rect.__getitem__(3).asInt();
 
-        BufferedImage image = getBufferedImage();
-        return new BufferedImageMonkeyImage(image.getSubimage(x, y, w, h));
+        IMonkeyImage image = impl.getSubImage(x, y, w, h);
+        return new MonkeyImage(image);
     }
 }

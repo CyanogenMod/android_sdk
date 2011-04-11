@@ -25,10 +25,10 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.MonkeyManager;
 import com.android.monkeyrunner.adb.LinearInterpolator.Point;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 import com.android.monkeyrunner.easy.HierarchyViewer;
 
 import java.io.IOException;
@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-public class AdbMonkeyDevice extends MonkeyDevice {
+public class AdbMonkeyDevice implements IMonkeyDevice {
     private static final Logger LOG = Logger.getLogger(AdbMonkeyDevice.class.getName());
 
     private static final String[] ZERO_LENGTH_STRING_ARRAY = new String[0];
@@ -90,6 +90,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
     private void executeAsyncCommand(final String command,
             final LoggingOutputReceiver logger) {
         executor.submit(new Runnable() {
+            @Override
             public void run() {
                 try {
                     device.executeShellCommand(command, logger);
@@ -190,7 +191,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
     }
 
     @Override
-    public MonkeyImage takeSnapshot() {
+    public IMonkeyImage takeSnapshot() {
         try {
             return new AdbMonkeyImage(device.getScreenshot());
         } catch (TimeoutException e) {
@@ -505,6 +506,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
         LinearInterpolator.Point start = new LinearInterpolator.Point(startx, starty);
         LinearInterpolator.Point end = new LinearInterpolator.Point(endx, endy);
         lerp.interpolate(start, end, new LinearInterpolator.Callback() {
+            @Override
             public void step(Point point) {
                 try {
                     manager.touchMove(point.getX(), point.getY());
@@ -519,6 +521,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 }
             }
 
+            @Override
             public void start(Point point) {
                 try {
                     manager.touchDown(point.getX(), point.getY());
@@ -534,6 +537,7 @@ public class AdbMonkeyDevice extends MonkeyDevice {
                 }
             }
 
+            @Override
             public void end(Point point) {
                 try {
                     manager.touchMove(point.getX(), point.getY());

@@ -16,9 +16,11 @@
 package com.android.monkeyrunner.adb.image;
 
 import com.android.ddmlib.RawImage;
-import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.adb.AdbBackend;
 import com.android.monkeyrunner.adb.AdbMonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyBackend;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -94,13 +96,13 @@ public class CaptureRawAndConvertedImage {
     }
 
     public static void main(String[] args) throws IOException {
-        AdbBackend backend = new AdbBackend();
-        MonkeyDevice device = backend.waitForConnection();
-        AdbMonkeyImage snapshot = (AdbMonkeyImage) device.takeSnapshot();
+        IMonkeyBackend backend = new AdbBackend();
+        IMonkeyDevice device = backend.waitForConnection();
+        IMonkeyImage snapshot = (IMonkeyImage) device.takeSnapshot();
 
         // write out to a file
         snapshot.writeToFile("output.png", "png");
-        writeOutImage(snapshot.getRawImage(), "output.raw");
+        writeOutImage(((AdbMonkeyImage)snapshot).getRawImage(), "output.raw");
         System.exit(0);
     }
 }

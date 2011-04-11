@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 /**
  * All actions that can be recorded must implement this interface.
@@ -41,5 +41,5 @@ public interface Action {
      *
      * @param device the device to execute the action on.
      */
-    void execute(MonkeyDevice device) throws Exception;
+    void execute(IMonkeyDevice device) throws Exception;
 }

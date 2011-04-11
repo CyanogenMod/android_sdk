@@ -15,8 +15,9 @@
  */
 package com.android.monkeyrunner.controller;
 
-import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.adb.AdbBackend;
+import com.android.monkeyrunner.core.IMonkeyBackend;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -36,9 +37,10 @@ public class MonkeyController extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
-                AdbBackend adb = new AdbBackend();
-                final MonkeyDevice device = adb.waitForConnection();
+                IMonkeyBackend adb = new AdbBackend();
+                final IMonkeyDevice device = adb.waitForConnection();
                 MonkeyControllerFrame mf = new MonkeyControllerFrame(device);
                 mf.setVisible(true);
                 mf.addWindowListener(new WindowAdapter() {

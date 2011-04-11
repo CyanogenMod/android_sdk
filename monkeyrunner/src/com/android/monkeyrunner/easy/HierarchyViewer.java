@@ -121,4 +121,38 @@ public class HierarchyViewer {
         return new Point(
                 point.x + (node.width / 2), point.y + (node.height / 2));
     }
+
+    /**
+     * Gets the visibility of a given element.
+     *
+     * @param selector selector for the view.
+     * @return True if the element is visible.
+     */
+    public boolean visible(By selector) {
+        ViewNode node = findView(selector);
+        boolean ret = (node != null)
+                && node.namedProperties.containsKey("getVisibility()")
+                && "VISIBLE".equalsIgnoreCase(
+                        node.namedProperties.get("getVisibility()").value);
+        return ret;
+
+    }
+
+    /**
+     * Gets the text of a given element.
+     *
+     * @param selector selector for the view.
+     * @return the text of the given element.
+     */
+    public String getText(By selector) {
+        ViewNode node = findView(selector);
+        if (node == null) {
+            throw new RuntimeException("Node not found");
+        }
+        ViewNode.Property textProperty = node.namedProperties.get("text:mText");
+        if (textProperty == null) {
+            throw new RuntimeException("No text property on node");
+        }
+        return textProperty.value;
+    }
 }

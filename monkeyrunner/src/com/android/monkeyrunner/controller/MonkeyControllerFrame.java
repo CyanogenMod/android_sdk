@@ -15,10 +15,10 @@
  */
 package com.android.monkeyrunner.controller;
 
-import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.MonkeyManager;
 import com.android.monkeyrunner.PhysicalButton;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -61,7 +61,7 @@ public class MonkeyControllerFrame extends JFrame {
         }
     });
 
-    private final MonkeyDevice device;
+    private final IMonkeyDevice device;
 
     private class PressAction extends AbstractAction {
         private final PhysicalButton button;
@@ -85,7 +85,7 @@ public class MonkeyControllerFrame extends JFrame {
         return button;
     }
 
-    public MonkeyControllerFrame(MonkeyDevice device) {
+    public MonkeyControllerFrame(IMonkeyDevice device) {
         super("MonkeyController");
         this.device = device;
 
@@ -155,7 +155,7 @@ public class MonkeyControllerFrame extends JFrame {
     }
 
     private void updateScreen() {
-        MonkeyImage snapshot = device.takeSnapshot();
+        IMonkeyImage snapshot = device.takeSnapshot();
         currentImage = snapshot.createBufferedImage();
         imageLabel.setIcon(new ImageIcon(currentImage));
 

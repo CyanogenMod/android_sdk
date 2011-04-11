@@ -22,7 +22,7 @@ import com.android.hierarchyviewerlib.device.ViewNode;
 import com.android.hierarchyviewerlib.device.ViewNode.Property;
 import com.android.monkeyrunner.JythonUtils;
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.MonkeyDevice.TouchPressType;
+import com.android.monkeyrunner.core.IMonkeyDevice.TouchPressType;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.eclipse.swt.graphics.Point;
@@ -32,6 +32,7 @@ import org.python.core.Py;
 import org.python.core.PyException;
 import org.python.core.PyInteger;
 import org.python.core.PyObject;
+import org.python.core.PyString;
 import org.python.core.PyTuple;
 
 import java.util.Set;
@@ -61,7 +62,7 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
             argDocs = { "MonkeyDevice to extend." })
     public EasyMonkeyDevice(MonkeyDevice device) {
         this.mDevice = device;
-        this.mHierarchyViewer = device.getHierarchyViewer();
+        this.mHierarchyViewer = device.getImpl().getHierarchyViewer();
     }
 
     @MonkeyRunnerExported(doc = "Sends a touch event to the selected object.",
@@ -74,19 +75,16 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         By selector = getSelector(ap, 0);
-        ViewNode node = mHierarchyViewer.findView(selector);
-        if (node == null) {
-            throw new PyException(Py.ValueError,
-                    String.format("View not found: %s", selector));
-        }
-        Point p = HierarchyViewer.getAbsoluteCenterOfView(node);
+        String tmpType = ap.getString(1);
+        TouchPressType type = MonkeyDevice.TOUCH_NAME_TO_ENUM.get(tmpType);
+        if (type == null) type = TouchPressType.DOWN_AND_UP;
+        // TODO: try catch rethrow PyExc
+        touch(selector, type);
+    }
 
-        PyObject[] otherArgs = new PyObject[3];
-        otherArgs[0] = new PyInteger(p.x);
-        otherArgs[1] = new PyInteger(p.y);
-        otherArgs[2] = args[1];
-
-        mDevice.touch(otherArgs, kws);
+    public void touch(By selector, TouchPressType type) {
+        Point p = getElementCenter(selector);
+        mDevice.getImpl().touch(p.x, p.y, type);
     }
 
     @MonkeyRunnerExported(doc = "Types a string into the specified object.",
@@ -100,16 +98,13 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
 
         By selector = getSelector(ap, 0);
         String text = ap.getString(1);
+        type(selector, text);
+    }
 
-        ViewNode node = mHierarchyViewer.findView(selector);
-        if (node == null) {
-            throw new PyException(Py.ValueError,
-                    String.format("View not found: %s", selector));
-        }
-
-        Point p = HierarchyViewer.getAbsoluteCenterOfView(node);
-        mDevice.touch(p.x, p.y, TouchPressType.DOWN_AND_UP);
-        mDevice.type(text);
+    public void type(By selector, String text) {
+        Point p = getElementCenter(selector);
+        mDevice.getImpl().touch(p.x, p.y, TouchPressType.DOWN_AND_UP);
+        mDevice.getImpl().type(text);
     }
 
     @MonkeyRunnerExported(doc = "Locates the coordinates of the selected object.",
@@ -141,7 +136,10 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         By selector = getSelector(ap, 0);
+        return exists(selector);
+    }
 
+    public boolean exists(By selector) {
         ViewNode node = mHierarchyViewer.findView(selector);
         return node != null;
     }
@@ -155,13 +153,11 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         By selector = getSelector(ap, 0);
+        return visible(selector);
+    }
 
-        ViewNode node = mHierarchyViewer.findView(selector);
-        boolean ret = (node != null)
-                && node.namedProperties.containsKey("getVisibility()")
-                && "VISIBLE".equalsIgnoreCase(
-                        node.namedProperties.get("getVisibility()").value);
-        return ret;
+    public boolean visible(By selector) {
+        return mHierarchyViewer.visible(selector);
     }
 
     @MonkeyRunnerExported(doc = "Obtain the text in the selected input box.",
@@ -173,21 +169,20 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         By selector = getSelector(ap, 0);
+        return getText(selector);
+    }
 
-        ViewNode node = mHierarchyViewer.findView(selector);
-        if (node == null) {
-            throw new RuntimeException("Node not found");
-        }
-        Property textProperty = node.namedProperties.get("text:mText");
-        if (textProperty == null) {
-            throw new RuntimeException("No text property on node");
-        }
-        return textProperty.value;
+    public String getText(By selector) {
+        return mHierarchyViewer.getText(selector);
     }
 
     @MonkeyRunnerExported(doc = "Gets the id of the focused window.",
             returns = "The symbolic id of the focused window or None.")
     public String getFocusedWindowId(PyObject[] args, String[] kws) {
+        return getFocusedWindowId();
+    }
+
+    public String getFocusedWindowId() {
         return mHierarchyViewer.getFocusedWindowName();
     }
 
@@ -210,6 +205,24 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
      * @return selector object.
      */
     private By getSelector(ArgParser ap, int i) {
-        return (By)ap.getPyObject(0).__tojava__(By.class);
+        return (By)ap.getPyObject(i).__tojava__(By.class);
     }
+
+    /**
+     * Get the coordinates of the element's center.
+     *
+     * @param selector the element selector
+     * @return the (x,y) coordinates of the center
+     */
+    private Point getElementCenter(By selector) {
+        ViewNode node = mHierarchyViewer.findView(selector);
+        if (node == null) {
+            throw new PyException(Py.ValueError,
+                    String.format("View not found: %s", selector));
+        }
+
+        Point p = HierarchyViewer.getAbsoluteCenterOfView(node);
+        return p;
+    }
+
 }

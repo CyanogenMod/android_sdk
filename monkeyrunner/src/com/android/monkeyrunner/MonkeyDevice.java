@@ -20,8 +20,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.python.core.ArgParser;
 import org.python.core.ClassDictInit;
 import org.python.core.Py;
@@ -30,6 +28,8 @@ import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
+import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyImage;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 import com.android.monkeyrunner.easy.HierarchyViewer;
 
@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableMap;
  * implementation of this class.
  */
 @MonkeyRunnerExported(doc = "Represents a device attached to the system.")
-public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
+public class MonkeyDevice extends PyObject implements ClassDictInit {
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyDevice.class, dict);
     }
@@ -57,49 +57,41 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
     @MonkeyRunnerExported(doc = "Sends a DOWN event, immediately followed by an UP event when used with touch() or press()")
     public static final String DOWN_AND_UP = "downAndUp";
 
+    // TODO: This may not be accessible from jython; if so, remove it.
     public enum TouchPressType {
         DOWN, UP, DOWN_AND_UP,
     }
 
-    public static final Map<String, TouchPressType> TOUCH_NAME_TO_ENUM =
-        ImmutableMap.of(MonkeyDevice.DOWN, TouchPressType.DOWN,
-                MonkeyDevice.UP, TouchPressType.UP,
-                MonkeyDevice.DOWN_AND_UP, TouchPressType.DOWN_AND_UP);
+    public static final Map<String, IMonkeyDevice.TouchPressType> TOUCH_NAME_TO_ENUM =
+        ImmutableMap.of(DOWN, IMonkeyDevice.TouchPressType.DOWN,
+                UP, IMonkeyDevice.TouchPressType.UP,
+                DOWN_AND_UP, IMonkeyDevice.TouchPressType.DOWN_AND_UP);
 
     private static final Set<String> VALID_DOWN_UP_TYPES = TOUCH_NAME_TO_ENUM.keySet();
 
-    /**
-     * Create a MonkeyMananger for talking to this device.
-     *
-     * NOTE: This is not part of the jython API.
-     *
-     * @return the MonkeyManager
-     */
-    public abstract MonkeyManager getManager();
+    private IMonkeyDevice impl;
 
-    /**
-     * Dispose of any native resoureces this device may have taken hold of.
-     *
-     *  NOTE: This is not part of the jython API.
-     */
-    public abstract void dispose();
+    public MonkeyDevice(IMonkeyDevice impl) {
+        this.impl = impl;
+    }
 
-    /**
-     * @return hierarchy viewer implementation for querying state of the view
-     * hierarchy.
-     */
-    public abstract HierarchyViewer getHierarchyViewer();
+    public IMonkeyDevice getImpl() {
+        return impl;
+    }
 
     @MonkeyRunnerExported(doc = "Get the HierarchyViewer object for the device.",
             returns = "A HierarchyViewer object")
     public HierarchyViewer getHierarchyViewer(PyObject[] args, String[] kws) {
-        return getHierarchyViewer();
+        return impl.getHierarchyViewer();
     }
 
     @MonkeyRunnerExported(doc =
     "Gets the device's screen buffer, yielding a screen capture of the entire display.",
             returns = "A MonkeyImage object (a bitmap wrapper)")
-    public abstract MonkeyImage takeSnapshot();
+    public MonkeyImage takeSnapshot() {
+        IMonkeyImage image = impl.takeSnapshot();
+        return new MonkeyImage(image);
+    }
 
     @MonkeyRunnerExported(doc = "Given the name of a variable on the device, " +
             "returns the variable's value",
@@ -111,7 +103,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
 
-        return getProperty(ap.getString(0));
+        return impl.getProperty(ap.getString(0));
     }
 
     @MonkeyRunnerExported(doc = "Synonym for getProperty()",
@@ -121,7 +113,8 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
     public String getSystemProperty(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
-        return getSystemProperty(ap.getString(0));
+
+        return impl.getSystemProperty(ap.getString(0));
     }
 
     @MonkeyRunnerExported(doc = "Sends a touch event at the specified location",
@@ -150,7 +143,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
             // bad stuff was passed in, just use the already specified default value
             type = MonkeyDevice.DOWN_AND_UP;
         }
-        touch(x, y, TOUCH_NAME_TO_ENUM.get(type));
+        impl.touch(x, y, TOUCH_NAME_TO_ENUM.get(type));
     }
 
     @MonkeyRunnerExported(doc = "Simulates dragging (touch, hold, and move) on the device screen.",
@@ -185,7 +178,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
 
         int steps = ap.getInt(3, 10);
 
-        drag(startx, starty, endx, endy, steps, ms);
+        impl.drag(startx, starty, endx, endy, steps, ms);
     }
 
     @MonkeyRunnerExported(doc = "Send a key event to the specified key",
@@ -213,7 +206,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
             // bad stuff was passed in, just use the already specified default value
             type = MonkeyDevice.DOWN_AND_UP;
         }
-        press(name, TOUCH_NAME_TO_ENUM.get(type));
+        impl.press(name, TOUCH_NAME_TO_ENUM.get(type));
     }
 
     @MonkeyRunnerExported(doc = "Types the specified string on the keyboard. This is " +
@@ -225,7 +218,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String message = ap.getString(0);
-        type(message);
+        impl.type(message);
     }
 
     @MonkeyRunnerExported(doc = "Executes an adb shell command and returns the result, if any.",
@@ -237,7 +230,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String cmd = ap.getString(0);
-        return shell(cmd);
+        return impl.shell(cmd);
     }
 
     @MonkeyRunnerExported(doc = "Reboots the specified device into a specified bootloader.",
@@ -249,7 +242,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
 
         String into = ap.getString(0, null);
 
-        reboot(into);
+        impl.reboot(into);
     }
 
     @MonkeyRunnerExported(doc = "Installs the specified Android package (.apk file) " +
@@ -262,7 +255,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String path = ap.getString(0);
-        return installPackage(path);
+        return impl.installPackage(path);
     }
 
     @MonkeyRunnerExported(doc = "Deletes the specified package from the device, including its " +
@@ -275,7 +268,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String packageName = ap.getString(0);
-        return removePackage(packageName);
+        return impl.removePackage(packageName);
     }
 
     @MonkeyRunnerExported(doc = "Starts an Activity on the device by sending an Intent " +
@@ -308,7 +301,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         String component = ap.getString(6, null);
         int flags = ap.getInt(7, 0);
 
-        startActivity(uri, action, data, mimetype, categories, extras, component, flags);
+        impl.startActivity(uri, action, data, mimetype, categories, extras, component, flags);
     }
 
     @MonkeyRunnerExported(doc = "Sends a broadcast intent to the device.",
@@ -340,7 +333,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         String component = ap.getString(6, null);
         int flags = ap.getInt(7, 0);
 
-        broadcastIntent(uri, action, data, mimetype, categories, extras, component, flags);
+        impl.broadcastIntent(uri, action, data, mimetype, categories, extras, component, flags);
     }
 
     @MonkeyRunnerExported(doc = "Run the specified package with instrumentation and return " +
@@ -368,7 +361,7 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
             instrumentArgs = Collections.emptyMap();
         }
 
-        Map<String, Object> result = instrument(packageName, instrumentArgs);
+        Map<String, Object> result = impl.instrument(packageName, instrumentArgs);
         return JythonUtils.convertMapToDict(result);
     }
 
@@ -377,34 +370,6 @@ public abstract class MonkeyDevice extends PyObject implements ClassDictInit {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
 
-        wake();
+        impl.wake();
     }
-
-    /**
-     * Reboot the device.
-     *
-     * @param into which bootloader to boot into.  Null means default reboot.
-     */
-    public abstract void reboot(@Nullable String into);
-
-    public abstract String getProperty(String key);
-    public abstract String getSystemProperty(String key);
-    public abstract void touch(int x, int y, TouchPressType type);
-    public abstract void press(String keyName, TouchPressType type);
-    public abstract void drag(int startx, int starty, int endx, int endy, int steps, long ms);
-    public abstract void type(String string);
-    public abstract String shell(String cmd);
-    public abstract boolean installPackage(String path);
-    public abstract boolean removePackage(String packageName);
-    public abstract void startActivity(@Nullable String uri, @Nullable String action,
-            @Nullable String data, @Nullable String mimetype,
-            Collection<String> categories, Map<String, Object> extras, @Nullable String component,
-            int flags);
-    public abstract void broadcastIntent(@Nullable String uri, @Nullable String action,
-            @Nullable String data, @Nullable String mimetype,
-            Collection<String> categories, Map<String, Object> extras, @Nullable String component,
-            int flags);
-    public abstract Map<String, Object> instrument(String packageName,
-            Map<String, Object> args);
-    public abstract void wake();
 }

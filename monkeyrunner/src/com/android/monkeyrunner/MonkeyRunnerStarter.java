@@ -20,6 +20,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
 import com.android.monkeyrunner.adb.AdbBackend;
+import com.android.monkeyrunner.core.IMonkeyBackend;
 import com.android.monkeyrunner.stub.StubBackend;
 
 import org.python.util.PythonInterpreter;
@@ -50,7 +51,7 @@ public class MonkeyRunnerStarter {
     private static final Logger LOG = Logger.getLogger(MonkeyRunnerStarter.class.getName());
     private static final String MONKEY_RUNNER_MAIN_MANIFEST_NAME = "MonkeyRunnerStartupRunner";
 
-    private final MonkeyRunnerBackend backend;
+    private final IMonkeyBackend backend;
     private final MonkeyRunnerOptions options;
 
     public MonkeyRunnerStarter(MonkeyRunnerOptions options) {
@@ -68,7 +69,7 @@ public class MonkeyRunnerStarter {
      * @param backendName the name of the backend to create
      * @return the new backend, or null if none were found.
      */
-    public static MonkeyRunnerBackend createBackendByName(String backendName) {
+    public static IMonkeyBackend createBackendByName(String backendName) {
         if ("adb".equals(backendName)) {
             return new AdbBackend();
         } else if ("stub".equals(backendName)) {

@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 /**
  * Action to drag the "finger" across the device.
@@ -77,7 +77,7 @@ public class DragAction implements Action {
     }
 
     @Override
-    public void execute(MonkeyDevice device) {
+    public void execute(IMonkeyDevice device) {
         device.drag(startx, starty, endx, endy, steps, timeMs);
     }
 }

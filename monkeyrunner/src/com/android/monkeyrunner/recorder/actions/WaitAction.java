@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 /**
  * Action that specifies to wait for a certain amount of time.
@@ -27,19 +27,16 @@ public class WaitAction implements Action {
         this.howLongSeconds = howLongSeconds;
     }
 
-    @Override
     public String getDisplayName() {
         return String.format("Wait for %g seconds", this.howLongSeconds);
     }
 
-    @Override
     public String serialize() {
         String pydict = PyDictUtilBuilder.newBuilder().add("seconds", howLongSeconds).build();
         return "WAIT|" + pydict;
     }
 
-    @Override
-    public void execute(MonkeyDevice device) throws Exception {
+    public void execute(IMonkeyDevice device) throws Exception {
         long ms = (long) (1000.0f * howLongSeconds);
         Thread.sleep(ms);
     }
