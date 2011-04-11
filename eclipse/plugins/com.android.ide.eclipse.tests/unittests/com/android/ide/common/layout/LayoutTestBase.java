@@ -249,6 +249,10 @@ public class LayoutTestBase extends TestCase {
             fail("Not supported in tests yet");
             return null;
         }
+
+        public void select(Collection<INode> nodes) {
+            fail("Not supported in tests yet");
+        }
     }
 
     public void testDummy() {

@@ -659,7 +659,7 @@ public class BaseViewRule implements IViewRule {
     public void onChildInserted(INode node, INode parent, InsertType insertType) {
     }
 
-    private static String stripIdPrefix(String id) {
+    public static String stripIdPrefix(String id) {
         if (id.startsWith(NEW_ID_PREFIX)) {
             id = id.substring(NEW_ID_PREFIX.length());
         } else if (id.startsWith(ID_PREFIX)) {

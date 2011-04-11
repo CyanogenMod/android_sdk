@@ -161,7 +161,7 @@ public class FrameLayoutRule extends BaseLayoutRule {
         super.addLayoutActions(actions, parentNode, children);
         actions.add(MenuAction.createSeparator(25));
         actions.add(createMarginAction(parentNode, children));
-        if (children.size() > 0) {
+        if (children != null && children.size() > 0) {
             actions.add(createGravityAction(children, ATTR_LAYOUT_GRAVITY));
         }
     }
