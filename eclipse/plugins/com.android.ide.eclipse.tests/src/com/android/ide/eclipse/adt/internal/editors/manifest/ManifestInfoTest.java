@@ -21,6 +21,8 @@ import static com.android.resources.ScreenSize.XLARGE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -44,9 +46,9 @@ public class ManifestInfoTest extends AdtProjectTest {
         Map<String, String> map = info.getActivityThemes();
         assertEquals(map.toString(), 0, map.size());
         assertEquals("com.android.unittest", info.getPackage());
-        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(NORMAL)));
-        assertEquals("@android:style/Theme", info.getDefaultTheme(null));
-        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(XLARGE)));
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, NORMAL)));
+        assertEquals("@android:style/Theme", info.getDefaultTheme(null, null));
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, XLARGE)));
     }
 
     public void testGetActivityThemes2() throws Exception {
@@ -58,8 +60,9 @@ public class ManifestInfoTest extends AdtProjectTest {
         Map<String, String> map = info.getActivityThemes();
         assertEquals(map.toString(), 0, map.size());
         assertEquals("com.android.unittest", info.getPackage());
-        assertEquals("Theme.Holo", ResourceHelper.styleToTheme(info.getDefaultTheme(XLARGE)));
-        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(LARGE)));
+        assertEquals("Theme.Holo", ResourceHelper.styleToTheme(info.getDefaultTheme(null,
+                XLARGE)));
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, LARGE)));
     }
 
     public void testGetActivityThemes3() throws Exception {
@@ -71,8 +74,9 @@ public class ManifestInfoTest extends AdtProjectTest {
         Map<String, String> map = info.getActivityThemes();
         assertEquals(map.toString(), 0, map.size());
         assertEquals("com.android.unittest", info.getPackage());
-        assertEquals("Theme.Holo", ResourceHelper.styleToTheme(info.getDefaultTheme(XLARGE)));
-        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(NORMAL)));
+        assertEquals("Theme.Holo", ResourceHelper.styleToTheme(info.getDefaultTheme(null,
+                XLARGE)));
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, NORMAL)));
     }
 
     public void testGetActivityThemes4() throws Exception {
@@ -97,7 +101,7 @@ public class ManifestInfoTest extends AdtProjectTest {
                 ""
                 );
         assertEquals("com.android.unittest", info.getPackage());
-        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(XLARGE)));
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, XLARGE)));
 
         Map<String, String> map = info.getActivityThemes();
         assertEquals(map.toString(), 1, map.size());
@@ -129,17 +133,40 @@ public class ManifestInfoTest extends AdtProjectTest {
                 ""
                 );
 
-        assertEquals("@style/NoBackground", info.getDefaultTheme(XLARGE));
-        assertEquals("@style/NoBackground", info.getDefaultTheme(NORMAL));
-        assertEquals("NoBackground", ResourceHelper.styleToTheme(info.getDefaultTheme(NORMAL)));
+        assertEquals("@style/NoBackground", info.getDefaultTheme(null, XLARGE));
+        assertEquals("@style/NoBackground", info.getDefaultTheme(null, NORMAL));
+        assertEquals("NoBackground", ResourceHelper.styleToTheme(info.getDefaultTheme(null,
+                NORMAL)));
 
         Map<String, String> map = info.getActivityThemes();
         assertEquals(map.toString(), 1, map.size());
         assertNull(map.get("com.android.unittest.prefs.PrefsActivity"));
         assertEquals("@android:style/Theme.Dialog",
                 map.get("com.android.unittest.app.IntroActivity"));
+    }
+
+    public void testGetActivityThemes6() throws Exception {
+        // Ensures that when the *rendering* target is less than version 11, we don't
+        // use Holo even though the manifest SDK version calls for it.
+        ManifestInfo info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <uses-sdk android:minSdkVersion='3' android:targetSdkVersion='11'/>\n" +
+                "</manifest>\n");
+        Map<String, String> map = info.getActivityThemes();
+        assertEquals(map.toString(), 0, map.size());
+        assertEquals("com.android.unittest", info.getPackage());
+        assertEquals("Theme.Holo", ResourceHelper.styleToTheme(info.getDefaultTheme(null,
+                XLARGE)));
+
+        // Here's the check
+        IAndroidTarget olderVersion = new TestAndroidTarget(4);
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(olderVersion,
+                XLARGE)));
 
     }
+
+
 
     private ManifestInfo getManifestInfo(String manifestContents) throws Exception {
         InputStream bstream = new ByteArrayInputStream(
@@ -152,5 +179,117 @@ public class ManifestInfoTest extends AdtProjectTest {
             file.create(bstream, false /* force */, new NullProgressMonitor());
         }
         return ManifestInfo.get(getProject());
+    }
+
+    private static class TestAndroidTarget implements IAndroidTarget {
+        private final int mApiLevel;
+
+        public TestAndroidTarget(int apiLevel) {
+            mApiLevel = apiLevel;
+        }
+
+        public boolean canRunOn(IAndroidTarget target) {
+            return false;
+        }
+
+        public String[] getAbiList() {
+            return null;
+        }
+
+        public String getClasspathName() {
+            return null;
+        }
+
+        public String getDefaultSkin() {
+            return null;
+        }
+
+        public String getDescription() {
+            return null;
+        }
+
+        public String getFullName() {
+            return null;
+        }
+
+        public String getImagePath(String abiType) {
+            return null;
+        }
+
+        public String getLocation() {
+            return null;
+        }
+
+        public String getName() {
+            return null;
+        }
+
+        public IOptionalLibrary[] getOptionalLibraries() {
+            return null;
+        }
+
+        public IAndroidTarget getParent() {
+            return null;
+        }
+
+        public String getPath(int pathId) {
+            return null;
+        }
+
+        public String[] getPlatformLibraries() {
+            return null;
+        }
+
+        public Map<String, String> getProperties() {
+            return null;
+        }
+
+        public String getProperty(String name) {
+            return null;
+        }
+
+        public Integer getProperty(String name, Integer defaultValue) {
+            return null;
+        }
+
+        public Boolean getProperty(String name, Boolean defaultValue) {
+            return null;
+        }
+
+        public int getRevision() {
+            return 0;
+        }
+
+        public String[] getSkins() {
+            return null;
+        }
+
+        public int getUsbVendorId() {
+            return 0;
+        }
+
+        public String getVendor() {
+            return null;
+        }
+
+        public AndroidVersion getVersion() {
+            return new AndroidVersion(mApiLevel, null);
+        }
+
+        public String getVersionName() {
+            return null;
+        }
+
+        public String hashString() {
+            return null;
+        }
+
+        public boolean isPlatform() {
+            return false;
+        }
+
+        public int compareTo(IAndroidTarget o) {
+            return 0;
+        }
     }
 }

@@ -93,11 +93,11 @@ public class ManifestInfo {
 
     private final IProject mProject;
     private String mPackage;
-    private String mDefaultTheme;
-    private String mLargeDefaultTheme;
+    private String mManifestTheme;
     private Map<String, String> mActivityThemes;
     private IAbstractFile mManifestFile;
     private long mLastModified;
+    private int mTargetSdk;
 
     /**
      * Qualified name for the per-project non-persistent property storing the
@@ -164,10 +164,10 @@ public class ManifestInfo {
         mLastModified = fileModified;
 
         mActivityThemes = new HashMap<String, String>();
-        mDefaultTheme = PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$
-        mLargeDefaultTheme = mDefaultTheme;
-
+        mManifestTheme = null;
+        mTargetSdk = 1; // Default when not specified
         mPackage = ""; //$NON-NLS-1$
+
         Document document = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -227,17 +227,11 @@ public class ManifestInfo {
                             }
                         }
 
-                        if (apiLevel >= 11) {
-                            mLargeDefaultTheme = PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
-                        }
-                        // When Holo works everywhere:
-                        // if (apiLevel >= N) {
-                        //    mDefaultTheme = PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
-                        // }
+                        mTargetSdk = apiLevel;
                     }
                 }
             } else {
-                mDefaultTheme = mLargeDefaultTheme = defaultTheme;
+                mManifestTheme = defaultTheme;
             }
         } catch (SAXException e) {
             AdtPlugin.log(e, "Malformed manifest");
@@ -269,18 +263,31 @@ public class ManifestInfo {
 
     /**
      * Returns the default theme for this project, by looking at the manifest default
-     * theme registration, target SDK, etc.
+     * theme registration, target SDK, rendering target, etc.
      *
+     * @param renderingTarget the rendering target use to render the theme, or null
      * @param screenSize the screen size to obtain a default theme for, or null if unknown
      * @return the theme to use for this project, never null
      */
-    public String getDefaultTheme(ScreenSize screenSize) {
+    public String getDefaultTheme(IAndroidTarget renderingTarget, ScreenSize screenSize) {
         sync();
 
-        if (screenSize == ScreenSize.XLARGE) {
-            return mLargeDefaultTheme;
+        if (mManifestTheme != null) {
+            return mManifestTheme;
+        }
+
+        int renderingTargetSdk = mTargetSdk;
+        if (renderingTarget != null) {
+            renderingTargetSdk = renderingTarget.getVersion().getApiLevel();
+        }
+
+        int apiLevel = Math.min(mTargetSdk, renderingTargetSdk);
+        // For now this theme works only on XLARGE screens. When it works for all sizes,
+        // add that new apiLevel to this check.
+        if (apiLevel >= 11 && screenSize == ScreenSize.XLARGE) {
+            return PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
         } else {
-            return mDefaultTheme;
+            return PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$
         }
     }
 

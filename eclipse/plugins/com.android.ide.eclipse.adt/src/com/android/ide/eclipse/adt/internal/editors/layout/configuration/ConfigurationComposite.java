@@ -1401,7 +1401,7 @@ public class ConfigurationComposite extends Composite {
                 // Look up the default/fallback theme to use for this project (which
                 // depends on the screen size when no particular theme is specified
                 // in the manifest)
-                String defaultTheme = manifest.getDefaultTheme(screenSize);
+                String defaultTheme = manifest.getDefaultTheme(mState.target, screenSize);
 
                 Map<String, String> activityThemes = manifest.getActivityThemes();
                 String pkg = manifest.getPackage();
