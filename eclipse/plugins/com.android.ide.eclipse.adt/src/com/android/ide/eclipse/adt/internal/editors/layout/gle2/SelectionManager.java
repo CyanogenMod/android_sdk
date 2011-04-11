@@ -477,6 +477,17 @@ public class SelectionManager implements ISelectionProvider {
         redraw();
     }
 
+    public void select(Collection<INode> nodes) {
+        List<CanvasViewInfo> infos = new ArrayList<CanvasViewInfo>(nodes.size());
+        for (INode node : nodes) {
+            CanvasViewInfo info = mCanvas.getViewHierarchy().findViewInfoFor(node);
+            if (info != null) {
+                infos.add(info);
+            }
+        }
+        selectMultiple(infos);
+    }
+
     /**
      * Selects the visual element corresponding to the given XML node
      * @param xmlNode The Node whose element we want to select.

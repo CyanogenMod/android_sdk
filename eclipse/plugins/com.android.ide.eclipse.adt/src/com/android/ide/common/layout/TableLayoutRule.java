@@ -17,6 +17,7 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_ROW;
 
+import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
@@ -25,6 +26,7 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,8 +71,8 @@ public class TableLayoutRule extends LinearLayoutRule {
         IMenuCallback addTab = new IMenuCallback() {
             public void action(MenuAction action, final String valueId, Boolean newValue) {
                 final INode node = selectedNode;
-                node.appendChild(FQCN_TABLE_ROW);
-
+                INode newRow = node.appendChild(FQCN_TABLE_ROW);
+                mRulesEngine.select(Collections.singletonList(newRow));
             }
         };
         return concatenate(super.getContextMenu(selectedNode),
@@ -82,13 +84,14 @@ public class TableLayoutRule extends LinearLayoutRule {
     public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
-        addTableLayoutActions(actions, parentNode, children);
+        addTableLayoutActions(mRulesEngine, actions, parentNode, children);
     }
 
     /**
      * Adds layout actions to add and remove toolbar items
      */
-    static void addTableLayoutActions(List<MenuAction> actions, final INode parentNode,
+    static void addTableLayoutActions(final IClientRulesEngine rulesEngine,
+            List<MenuAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         IMenuCallback actionCallback = new IMenuCallback() {
             public void action(final MenuAction action, final String valueId,
@@ -96,7 +99,36 @@ public class TableLayoutRule extends LinearLayoutRule {
                 parentNode.editXml("Add/Remove Table Row", new INodeHandler() {
                     public void handle(INode n) {
                         if (action.getId().equals(ACTION_ADD_ROW)) {
-                            parentNode.appendChild(FQCN_TABLE_ROW);
+                            // Determine the index of the selection, if any; if there is
+                            // a selection, insert the row before the current row, otherwise
+                            // append it to the table.
+                            int index = -1;
+                            INode[] rows = parentNode.getChildren();
+                            if (children != null) {
+                                findTableIndex:
+                                for (INode child : children) {
+                                    // Find direct child of table layout
+                                    while (child != null && child.getParent() != parentNode) {
+                                        child = child.getParent();
+                                    }
+                                    if (child != null) {
+                                        // Compute index of direct child of table layout
+                                        for (int i = 0; i < rows.length; i++) {
+                                            if (rows[i] == child) {
+                                                index = i;
+                                                break findTableIndex;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            INode newRow;
+                            if (index == -1) {
+                                newRow = parentNode.appendChild(FQCN_TABLE_ROW);
+                            } else {
+                                newRow = parentNode.insertChildAt(FQCN_TABLE_ROW, index);
+                            }
+                            rulesEngine.select(Collections.singletonList(newRow));
                         } else if (action.getId().equals(ACTION_REMOVE_ROW)) {
                             // Find the direct children of the TableLayout to delete;
                             // this is necessary since TableRow might also use

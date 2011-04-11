@@ -38,6 +38,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -958,6 +960,20 @@ public class RulesEngine {
             }
 
             return null;
+        }
+
+        public void select(final Collection<INode> nodes) {
+            LayoutCanvas layoutCanvas = mEditor.getCanvasControl();
+            final SelectionManager selectionManager = layoutCanvas.getSelectionManager();
+            selectionManager.select(nodes);
+            // ALSO run an async select since immediately after nodes are created they
+            // may not be selectable. We can't ONLY run an async exec since
+            // code may depend on operating on the selection.
+            layoutCanvas.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    selectionManager.select(nodes);
+                }
+            });
         }
     }
 }

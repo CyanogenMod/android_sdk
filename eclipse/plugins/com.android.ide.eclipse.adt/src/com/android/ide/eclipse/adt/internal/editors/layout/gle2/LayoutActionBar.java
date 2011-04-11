@@ -15,10 +15,14 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.MenuAction.OrderedChoices;
 import com.android.ide.common.api.MenuAction.Separator;
 import com.android.ide.common.api.MenuAction.Toggle;
+import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
@@ -116,25 +120,58 @@ public class LayoutActionBar extends Composite {
         }
         List<MenuAction> actions = new ArrayList<MenuAction>();
         engine.callAddLayoutActions(actions, parent, selectedNodes);
-        addActions(actions);
+
+        // Place actions in the correct order (the actions may come from different
+        // rules and should be merged properly via sorting keys)
+        Collections.sort(actions);
+
+        // Add in actions for the child as well, if there is exactly one.
+        // These are not merged into the parent list of actions; they are appended
+        // at the end.
+        int index = -1;
+        String label = null;
+        if (selectedNodes.size() == 1) {
+            List<MenuAction> itemActions = new ArrayList<MenuAction>();
+            NodeProxy selectedNode = selectedNodes.get(0);
+            engine.callAddLayoutActions(itemActions, selectedNode, null);
+            if (itemActions.size() > 0) {
+                Collections.sort(itemActions);
+
+                if (!(itemActions.get(0) instanceof MenuAction.Separator)) {
+                    actions.add(MenuAction.createSeparator(0));
+                }
+                label = selectedNode.getStringAttr(ANDROID_URI, ATTR_ID);
+                if (label != null) {
+                    label = BaseViewRule.stripIdPrefix(label);
+                    index = actions.size();
+                }
+                actions.addAll(itemActions);
+            }
+        }
+
+        addActions(actions, index, label);
 
         mLayoutToolBar.pack();
         mLayoutToolBar.layout();
     }
 
-    private void addActions(List<MenuAction> actions) {
+    private void addActions(List<MenuAction> actions, int labelIndex, String label) {
         if (actions.size() > 0) {
-            // Place actions in the correct order (the actions may come from different
-            // rules and should be merged properly via sorting keys)
-            Collections.sort(actions);
-
             // Flag used to indicate that if there are any actions -after- this, it
             // should be separated from this current action (we don't unconditionally
             // add a separator at the end of these groups in case there are no more
             // actions at the end so that we don't have a trailing separator)
             boolean needSeparator = false;
 
-            for (final MenuAction action : actions) {
+            int index = 0;
+            for (MenuAction action : actions) {
+                if (index == labelIndex) {
+                    final ToolItem button = new ToolItem(mLayoutToolBar, SWT.PUSH);
+                    button.setText(label);
+                    needSeparator = false;
+                }
+                index++;
+
                 if (action instanceof Separator) {
                     addSeparator(mLayoutToolBar);
                     needSeparator = false;
@@ -145,7 +182,7 @@ public class LayoutActionBar extends Composite {
                 }
 
                 if (action instanceof MenuAction.OrderedChoices) {
-                    final MenuAction.OrderedChoices choices = (OrderedChoices) action;
+                    MenuAction.OrderedChoices choices = (OrderedChoices) action;
                     if (!choices.isRadio()) {
                         addDropdown(choices);
                     } else {

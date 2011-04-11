@@ -53,9 +53,12 @@ public class TableRowRule extends LinearLayoutRule {
         // Also apply table-specific actions on the table row such that you can
         // select something in a table row and still get offered actions on the surrounding
         // table.
-        INode grandParent = parentNode.getParent();
-        if (grandParent != null && grandParent.getFqcn().equals(FQCN_TABLE_LAYOUT)) {
-            TableLayoutRule.addTableLayoutActions(actions, grandParent, children);
+        if (children != null) {
+            INode grandParent = parentNode.getParent();
+            if (grandParent != null && grandParent.getFqcn().equals(FQCN_TABLE_LAYOUT)) {
+                TableLayoutRule.addTableLayoutActions(mRulesEngine, actions, grandParent,
+                        children);
+            }
         }
     }
 }

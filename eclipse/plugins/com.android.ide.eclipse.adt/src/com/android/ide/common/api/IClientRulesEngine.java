@@ -19,6 +19,8 @@ package com.android.ide.common.api;
 
 import com.android.annotations.Nullable;
 
+import java.util.Collection;
+
 /**
  * A Client Rules Engine is a set of methods that {@link IViewRule}s can use to
  * access the client public API of the Rules Engine. Rules can access it via
@@ -143,5 +145,12 @@ public interface IClientRulesEngine {
      * @return the layout resource to include
      */
     String displayIncludeSourceInput();
+
+    /**
+     * Select the given nodes
+     *
+     * @param nodes the nodes to be selected, never null
+     */
+    void select(Collection<INode> nodes);
 }
 
