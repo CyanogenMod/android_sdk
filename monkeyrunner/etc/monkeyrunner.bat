@@ -43,4 +43,21 @@ if exist %frameworkdir%%jarfile% goto JarFileOk
 
 set jarpath=%frameworkdir%%jarfile%
 
-call %java_exe% -Xmx512m -Djava.ext.dirs=%frameworkdir% -Dcom.android.monkeyrunner.bindir=..\framework -jar %jarpath% %*
+if not defined ANDROID_SWT goto QueryArch
+    set swt_path=%ANDROID_SWT%
+    goto SwtDone
+
+:QueryArch
+
+    for /f %%a in ('%java_exe% -jar %frameworkdir%archquery.jar') do set swt_path=%frameworkdir%%%a
+
+:SwtDone
+
+if exist %swt_path% goto SetPath
+    echo SWT folder '%swt_path%' does not exist.
+    echo Please set ANDROID_SWT to point to the folder containing swt.jar for your platform.
+    exit /B
+
+:SetPath
+
+call %java_exe% -Xmx512m -Djava.ext.dirs=%frameworkdir%;%swt_path% -Dcom.android.monkeyrunner.bindir=..\framework -jar %jarpath% %*
