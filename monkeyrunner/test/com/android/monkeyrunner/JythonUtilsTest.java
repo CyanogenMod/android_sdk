@@ -23,6 +23,7 @@ import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 import junit.framework.TestCase;
 
 import org.python.core.ArgParser;
+import org.python.core.ClassDictInit;
 import org.python.core.PyDictionary;
 import org.python.core.PyException;
 import org.python.core.PyObject;
@@ -30,6 +31,7 @@ import org.python.core.PyString;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Unit tests for the JythonUtils class.
@@ -37,6 +39,7 @@ import java.util.Map;
 public class JythonUtilsTest extends TestCase {
     private static final String PACKAGE_NAME = JythonUtilsTest.class.getPackage().getName();
     private static final String CLASS_NAME = JythonUtilsTest.class.getSimpleName();
+    private static final String EXECUTABLE_PATH = "string";
 
     private static boolean called = false;
     private static double floatValue = 0.0;
@@ -102,7 +105,7 @@ public class JythonUtilsTest extends TestCase {
         }
         sb.append(")");
 
-        return ScriptRunner.runStringAndGet(sb.toString(), "result").get("result");
+        return ScriptRunner.runStringAndGet(EXECUTABLE_PATH, sb.toString(), "result").get("result");
     }
 
     public void testSimpleCall() {
@@ -220,5 +223,35 @@ public class JythonUtilsTest extends TestCase {
         PyObject doublePyObject = result.__getitem__(new PyString("double"));
         double d = (Double) doublePyObject.__tojava__(Double.class);
         assertEquals(3.14, d);
+    }
+
+    /**
+     * Base class to test overridden methods.
+     */
+    static class PythonMethodsClass extends PyObject implements ClassDictInit {
+        public static void classDictInit(PyObject dict) {
+            JythonUtils.convertDocAnnotationsForClass(PythonMethodsClass.class, dict);
+        }
+
+        @MonkeyRunnerExported(doc = "The first method.")
+        public void firstMethod(PyObject[] args, String[] kws) {
+        }
+
+        @MonkeyRunnerExported(doc = "The second method.")
+        public void secondMethod(PyObject[] args, String[] kws) {
+        }
+
+        public void unattributedMethod() {
+        }
+    }
+
+    public void testGetPythonMethods() {
+        Set<String> methods = JythonUtils.getMethodNames(PythonMethodsClass.class);
+        assertEquals(2, methods.size());
+        assertTrue(methods.contains("firstMethod"));
+        assertTrue(methods.contains("secondMethod"));
+
+        // Make sure it works on non-Jython objects.
+        assertTrue(JythonUtils.getMethodNames(String.class).isEmpty());
     }
 }
