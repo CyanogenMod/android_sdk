@@ -228,4 +228,7 @@ public class LayoutConstants {
 
     /** Prefix for resources that reference Android strings */
     public static String ANDROID_STRING_PREFIX = "@android:string/"; //$NON-NLS-1$
+
+    /** Prefix for resources that reference Android layouts */
+    public static String ANDROID_LAYOUT_PREFIX = "@android:layout/"; //$NON-NLS-1$
 }

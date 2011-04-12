@@ -964,7 +964,8 @@ public class LayoutCanvas extends Canvas {
 
     /**
      * Returns the layout resource name of this layout
-     * @return
+     *
+     * @return the layout resource name of this layout
      */
     public String getLayoutResourceName() {
         GraphicalEditorPart graphicalEditor = mLayoutEditor.getGraphicalEditor();

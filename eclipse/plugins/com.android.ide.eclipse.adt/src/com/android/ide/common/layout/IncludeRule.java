@@ -33,7 +33,8 @@ public class IncludeRule extends BaseViewRule {
             if (include != null) {
                 node.editXml("Include Layout",
                     // Note -- the layout attribute is NOT in the Android namespace!
-                    new PropertySettingNodeHandler(null, ATTR_LAYOUT, include));
+                    new PropertySettingNodeHandler(null, ATTR_LAYOUT,
+                            include.length() > 0 ? include : null));
             } else {
                 // Remove the view; the insertion was canceled
                 parent.removeChild(node);

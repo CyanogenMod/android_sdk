@@ -64,6 +64,10 @@ import java.util.regex.Pattern;
  * A dialog to let the user select a resource based on a resource type.
  */
 public class ResourceChooser extends AbstractElementListSelectionDialog {
+    /** The return code from the dialog for the user choosing "Clear" */
+    public static final int CLEAR_RETURN_CODE = -5;
+    /** The dialog button ID for the user choosing "Clear" */
+    private static final int CLEAR_BUTTON_ID = CLEAR_RETURN_CODE;
 
     private Pattern mProjectResourcePattern;
     private ResourceType mResourceType;
@@ -105,6 +109,23 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",
                 mResourceType.getDisplayName().toLowerCase()));
+    }
+
+    @Override
+    protected void createButtonsForButtonBar(Composite parent) {
+        createButton(parent, CLEAR_BUTTON_ID, "Clear", false /*defaultButton*/);
+        super.createButtonsForButtonBar(parent);
+    }
+
+    @Override
+    protected void buttonPressed(int buttonId) {
+        super.buttonPressed(buttonId);
+
+        if (buttonId == CLEAR_BUTTON_ID) {
+            assert CLEAR_RETURN_CODE != Window.OK && CLEAR_RETURN_CODE != Window.CANCEL;
+            setReturnCode(CLEAR_RETURN_CODE);
+            close();
+        }
     }
 
     public void setCurrentResource(String resource) {

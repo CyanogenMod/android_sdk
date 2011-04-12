@@ -189,7 +189,7 @@ public class BaseViewRule implements IViewRule {
                     String newText = mRulesEngine.displayResourceInput("string", oldText); //$NON-NLS-1$
                     if (newText != null) {
                         node.editXml("Change Text", new PropertySettingNodeHandler(ANDROID_URI,
-                                ATTR_TEXT, newText));
+                                ATTR_TEXT, newText.length() > 0 ? newText : null));
                     }
                 }
 
