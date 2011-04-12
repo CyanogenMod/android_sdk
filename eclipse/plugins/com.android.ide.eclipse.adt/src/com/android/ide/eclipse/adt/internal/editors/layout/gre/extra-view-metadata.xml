@@ -181,16 +181,11 @@
         <view
             class="android.widget.ListView"
             relatedTo="ExpandableListView"
-            fill="width_in_vertical"
-            render="skip" />
+            fill="width_in_vertical" />
         <view
             class="android.widget.ExpandableListView"
             relatedTo="ListView"
-            fill="width_in_vertical"
-            render="skip" />
-        <view
-            class="android.widget.TwoLineListItem"
-            render="skip" />
+            fill="width_in_vertical" />
         <view
             class="android.widget.GridView"
             fill="opposite"
@@ -254,9 +249,11 @@
             render="alone" />
         <view
             class="android.widget.CalendarView"
+            fill="both"
             relatedTo="TimePicker,DatePicker" />
         <view
-            class="android.widget.Chronometer" />
+            class="android.widget.Chronometer"
+            render="skip" />
         <view
             class="android.widget.AnalogClock"
             relatedTo="DigitalClock" />
@@ -328,6 +325,9 @@
         <view
             class="android.widget.DialerFilter"
             fill="width_in_vertical"
+            render="skip" />
+        <view
+            class="android.widget.TwoLineListItem"
             render="skip" />
         <view
             class="android.widget.AbsoluteLayout"

@@ -17,6 +17,7 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 
 import com.android.ide.common.api.INode;
@@ -24,17 +25,18 @@ import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 
 /**
- * An {@link IViewRule} for android.widget.ListView and all its derived classes such
- * as ExpandableListView.
- * This is the "root" rule, that is used whenever there is not more specific
- * rule to apply.
+ * An {@link IViewRule} for android.widget.CalendarView.
  */
-public class ListViewRule extends BaseViewRule {
+public class CalendarViewRule extends BaseViewRule {
 
     @Override
     public void onCreate(INode node, INode parent, InsertType insertType) {
         super.onCreate(node, parent, insertType);
 
+        // CalendarViews need a lot of space, and the wrapping doesn't seem to work
+        // well anyway; it reports a much-to-small size than actually accommodates its
+        // content.
         node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, getFillParentValueName());
+        node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, getFillParentValueName());
     }
 }

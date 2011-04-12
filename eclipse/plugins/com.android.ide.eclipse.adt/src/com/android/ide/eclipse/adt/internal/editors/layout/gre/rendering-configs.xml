@@ -39,12 +39,14 @@
         android:layout_height="wrap_content"
         android:layout_width="wrap_content">
     </CheckedTextView>
+    <!--
     <Chronometer
         android:text="Chronometer"
         android:id="@+id/android_widget_Chronometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </Chronometer>
+     -->
     <DigitalClock
         android:text="DigitalClock"
         android:id="@+id/android_widget_DigitalClock"
@@ -245,6 +247,22 @@
         android:layout_width="200dip"
         android:progress="30">
     </SeekBar>
+    <ListView
+        android:id="@+id/android_widget_ListView"
+        android:layout_width="200dip"
+        android:layout_height="60dip"
+        android:divider="#333333"
+        android:dividerHeight="1px"
+        >
+    </ListView>
+    <ExpandableListView
+        android:id="@+id/android_widget_ExpandableListView"
+        android:layout_width="200dip"
+        android:layout_height="60dip"
+        android:divider="#333333"
+        android:dividerHeight="1px"
+        >
+    </ExpandableListView>
     <Spinner
         android:layout_height="wrap_content"
         android:id="@+id/android_widget_Spinner"
@@ -284,6 +302,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </DatePicker>
+    <CalendarView
+        android:id="@+id/android_widget_CalendarView"
+        android:layout_width="200dip"
+        android:layout_height="200dip">
+    </CalendarView>
     <RadioGroup
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"

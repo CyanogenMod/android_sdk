@@ -1414,8 +1414,7 @@ public class GraphicalEditorPart extends EditorPart
 
         // Lazily create the project callback the first time we need it
         if (mProjectCallback == null) {
-            mProjectCallback = new ProjectCallback(
-                    layoutLib.getClassLoader(), projectRes, iProject);
+            mProjectCallback = new ProjectCallback(layoutLib, projectRes, iProject);
         } else {
             // Also clears the set of missing/broken classes prior to rendering
             mProjectCallback.getMissingClasses().clear();
@@ -1574,8 +1573,7 @@ public class GraphicalEditorPart extends EditorPart
         float ydpi = mConfigComposite.getYDpi();
         ResourceManager resManager = ResourceManager.getInstance();
         ProjectResources projectRes = resManager.getProjectResources(project);
-        ProjectCallback projectCallback = new ProjectCallback(
-                layoutLibrary.getClassLoader(), projectRes, project);
+        ProjectCallback projectCallback = new ProjectCallback(layoutLibrary, projectRes, project);
         LayoutLog silentLogger = new LayoutLog();
         DrawableParams params = new DrawableParams(drawableResourceValue, project,
                 width, height,

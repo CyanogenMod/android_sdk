@@ -124,7 +124,8 @@ public class PlayAnimationMenu extends SubmenuAction {
                 new ActionContributionItem(sub).fill(menu, -1);
             }
         } else {
-            addDisabledMessageItem("Not supported on platform");
+            addDisabledMessageItem(
+                    "Not supported for this SDK version; try changing the Render Target");
         }
     }
 
