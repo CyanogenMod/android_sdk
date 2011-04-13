@@ -24,6 +24,9 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TransferData;
@@ -118,6 +121,15 @@ public class MoveGesture extends DropGesture {
     public List<Overlay> createOverlays() {
         mOverlay = new MoveOverlay();
         return Collections.<Overlay> singletonList(mOverlay);
+    }
+
+    @Override
+    public void end(ControlPoint pos, boolean canceled) {
+        super.end(pos, canceled);
+
+        // Ensure that the outline is back to showing the current selection, since during
+        // a drag gesture we temporarily set it to show the current target node instead.
+        mCanvas.getSelectionManager().syncOutlineSelection();
     }
 
     /*
@@ -657,6 +669,26 @@ public class MoveGesture extends DropGesture {
 
         if (needRedraw || (mFeedback != null && mFeedback.requestPaint)) {
             mCanvas.redraw();
+        }
+
+        // Update outline to show the target node there
+        OutlinePage outline = mCanvas.getOutlinePage();
+        TreeSelection newSelection = TreeSelection.EMPTY;
+        if (mCurrentView != null) {
+            // Find the view corresponding to the target node. The current view can be a leaf
+            // view whereas the target node is always a parent layout.
+            if (mCurrentView.getUiViewNode() != mTargetNode.getNode()) {
+                mCurrentView = mCurrentView.getParent();
+            }
+            if (mCurrentView != null && mCurrentView.getUiViewNode() == mTargetNode.getNode()) {
+                TreePath treePath = SelectionManager.getTreePath(mCurrentView);
+                newSelection = new TreeSelection(treePath);
+            }
+        }
+
+        ISelection currentSelection = outline.getSelection();
+        if (currentSelection == null || !currentSelection.equals(newSelection)) {
+            outline.setSelection(newSelection);
         }
     }
 

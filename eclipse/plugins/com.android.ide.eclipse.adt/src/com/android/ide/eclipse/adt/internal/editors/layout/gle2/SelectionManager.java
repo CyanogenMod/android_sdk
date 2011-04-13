@@ -143,16 +143,27 @@ public class SelectionManager implements ISelectionProvider {
         for (SelectionItem cs : mSelections) {
             CanvasViewInfo vi = cs.getViewInfo();
             if (vi != null) {
-                ArrayList<Object> segments = new ArrayList<Object>();
-                while (vi != null) {
-                    segments.add(0, vi);
-                    vi = vi.getParent();
-                }
-                paths.add(new TreePath(segments.toArray()));
+                paths.add(getTreePath(vi));
             }
         }
 
         return new TreeSelection(paths.toArray(new TreePath[paths.size()]));
+    }
+
+    /**
+     * Create a {@link TreePath} from the given view info
+     *
+     * @param viewInfo the view info to look up a tree path for
+     * @return a {@link TreePath} for the given view info
+     */
+    public static TreePath getTreePath(CanvasViewInfo viewInfo) {
+        ArrayList<Object> segments = new ArrayList<Object>();
+        while (viewInfo != null) {
+            segments.add(0, viewInfo);
+            viewInfo = viewInfo.getParent();
+        }
+
+        return new TreePath(segments.toArray());
     }
 
     /**
@@ -811,19 +822,26 @@ public class SelectionManager implements ISelectionProvider {
      * Update the outline selection to select the given nodes, asynchronously.
      * @param nodes The nodes to be selected
      */
-    public void updateOutlineSelection(final List<INode> nodes) {
+    public void setOutlineSelection(final List<INode> nodes) {
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
                 selectDropped(nodes);
-                OutlinePage outlinePage = mCanvas.getOutlinePage();
-                IWorkbenchPartSite site = outlinePage.getEditor().getSite();
-                ISelectionProvider selectionProvider = site.getSelectionProvider();
-                ISelection selection = selectionProvider.getSelection();
-                if (selection != null) {
-                    outlinePage.setSelection(selection);
-                }
+                syncOutlineSelection();
             }
         });
+    }
+
+    /**
+     * Syncs the current selection to the outline, synchronously.
+     */
+    public void syncOutlineSelection() {
+        OutlinePage outlinePage = mCanvas.getOutlinePage();
+        IWorkbenchPartSite site = outlinePage.getEditor().getSite();
+        ISelectionProvider selectionProvider = site.getSelectionProvider();
+        ISelection selection = selectionProvider.getSelection();
+        if (selection != null) {
+            outlinePage.setSelection(selection);
+        }
     }
 
     private void updateMenuActions() {
@@ -943,7 +961,7 @@ public class SelectionManager implements ISelectionProvider {
             for (SelectionItem item : getSelections()) {
                 nodes.add(item.getNode());
             }
-            updateOutlineSelection(nodes);
+            setOutlineSelection(nodes);
         }
     }
 }

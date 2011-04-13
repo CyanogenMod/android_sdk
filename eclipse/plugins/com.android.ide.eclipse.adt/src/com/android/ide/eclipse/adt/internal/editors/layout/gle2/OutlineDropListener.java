@@ -155,7 +155,7 @@ import java.util.Set;
         }
         // Select the newly dropped nodes
         final SelectionManager selectionManager = canvas.getSelectionManager();
-        selectionManager.updateOutlineSelection(added);
+        selectionManager.setOutlineSelection(added);
 
         canvas.redraw();
 

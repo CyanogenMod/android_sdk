@@ -806,7 +806,7 @@ public class OutlinePage extends ContentOutlinePage
                         }
                     }
 
-                    selectionManager.updateOutlineSelection(added);
+                    selectionManager.setOutlineSelection(added);
                 }
             }
         }
