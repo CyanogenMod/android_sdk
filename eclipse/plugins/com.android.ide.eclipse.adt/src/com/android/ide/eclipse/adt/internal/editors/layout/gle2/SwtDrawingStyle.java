@@ -64,7 +64,7 @@ public enum SwtDrawingStyle {
     /**
      * The style definition corresponding to {@link DrawingStyle#DROP_RECIPIENT}
      */
-    DROP_RECIPIENT(new RGB(0xFF, 0x99, 0x00), 255, new RGB(0xFF, 0x99, 0x00), 160, 1,
+    DROP_RECIPIENT(new RGB(0xFF, 0x99, 0x00), 255, new RGB(0xFF, 0x99, 0x00), 160, 2,
             SWT.LINE_SOLID),
 
     /**
