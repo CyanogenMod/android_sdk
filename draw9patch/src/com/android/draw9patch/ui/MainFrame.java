@@ -164,6 +164,7 @@ public class MainFrame extends JFrame {
         protected void done() {
             try {
                 showImageEditor(get(), file.getAbsolutePath());
+                MainFrame.this.setTitle(String.format("Draw 9-patch: %s", file.getAbsolutePath()));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
