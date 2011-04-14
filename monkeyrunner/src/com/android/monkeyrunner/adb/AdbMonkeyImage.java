@@ -16,15 +16,15 @@
 package com.android.monkeyrunner.adb;
 
 import com.android.ddmlib.RawImage;
-import com.android.monkeyrunner.MonkeyImage;
 import com.android.monkeyrunner.adb.image.ImageUtils;
+import com.android.monkeyrunner.core.MonkeyImageBase;
 
 import java.awt.image.BufferedImage;
 
 /**
  * ADB implementation of the MonkeyImage class.
  */
-public class AdbMonkeyImage extends MonkeyImage {
+public class AdbMonkeyImage extends MonkeyImageBase {
     private final RawImage image;
 
     /**

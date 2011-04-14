@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 /**
  * Action to type in a string on the device.
@@ -34,12 +34,13 @@ public class TypeAction implements Action {
 
     @Override
     public String serialize() {
-        String pydict = PyDictUtilBuilder.newBuilder().add("message", whatToType).build();
+        String pydict = PyDictUtilBuilder.newBuilder()
+                .add("message", whatToType).build();
         return "TYPE|" + pydict;
     }
 
     @Override
-    public void execute(MonkeyDevice device) {
+    public void execute(IMonkeyDevice device) {
         device.type(whatToType);
     }
 }

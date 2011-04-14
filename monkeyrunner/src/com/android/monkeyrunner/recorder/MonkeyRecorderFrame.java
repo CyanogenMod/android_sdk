@@ -16,7 +16,8 @@
 package com.android.monkeyrunner.recorder;
 
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.MonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 import com.android.monkeyrunner.recorder.actions.Action;
 import com.android.monkeyrunner.recorder.actions.DragAction;
 import com.android.monkeyrunner.recorder.actions.DragAction.Direction;
@@ -60,7 +61,7 @@ public class MonkeyRecorderFrame extends JFrame {
     private static final Logger LOG =
         Logger.getLogger(MonkeyRecorderFrame.class.getName());
 
-    private final MonkeyDevice device;
+    private final IMonkeyDevice device;
 
     private static final long serialVersionUID = 1L;
     private JPanel jContentPane = null;
@@ -83,6 +84,7 @@ public class MonkeyRecorderFrame extends JFrame {
     private ActionListModel actionListModel;
 
     private final Timer refreshTimer = new Timer(1000, new ActionListener() {
+        @Override
         public void actionPerformed(ActionEvent e) {
             refreshDisplay();  //  @jve:decl-index=0:
         }
@@ -91,7 +93,7 @@ public class MonkeyRecorderFrame extends JFrame {
     /**
      * This is the default constructor
      */
-    public MonkeyRecorderFrame(MonkeyDevice device) {
+    public MonkeyRecorderFrame(IMonkeyDevice device) {
         this.device = device;
         initialize();
     }
@@ -110,7 +112,7 @@ public class MonkeyRecorderFrame extends JFrame {
     }
 
     private void refreshDisplay() {
-        MonkeyImage snapshot = device.takeSnapshot();
+        IMonkeyImage snapshot = device.takeSnapshot();
         currentImage = snapshot.createBufferedImage();
 
         Graphics2D g = scaledImage.createGraphics();
@@ -200,6 +202,7 @@ public class MonkeyRecorderFrame extends JFrame {
             waitButton = new JButton();
             waitButton.setText("Wait");
             waitButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     String howLongStr = JOptionPane.showInputDialog("How many seconds to wait?");
                     if (howLongStr != null) {
@@ -222,6 +225,7 @@ public class MonkeyRecorderFrame extends JFrame {
             pressButton = new JButton();
             pressButton.setText("Press a Button");
             pressButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     JPanel panel = new JPanel();
                     JLabel text = new JLabel("What button to press?");
@@ -255,6 +259,7 @@ public class MonkeyRecorderFrame extends JFrame {
             typeButton = new JButton();
             typeButton.setText("Type Something");
             typeButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     String whatToType = JOptionPane.showInputDialog("What to type?");
                     if (whatToType != null) {
@@ -276,6 +281,7 @@ public class MonkeyRecorderFrame extends JFrame {
             flingButton = new JButton();
             flingButton.setText("Fling");
             flingButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -358,6 +364,7 @@ public class MonkeyRecorderFrame extends JFrame {
             exportActionButton = new JButton();
             exportActionButton.setText("Export Actions");
             exportActionButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent ev) {
                     JFileChooser fc = new JFileChooser();
                     if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -383,6 +390,7 @@ public class MonkeyRecorderFrame extends JFrame {
             refreshButton = new JButton();
             refreshButton.setText("Refresh Display");
             refreshButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     refreshDisplay();
                 }

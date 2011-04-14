@@ -19,6 +19,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 
 import com.android.monkeyrunner.MonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyDevice;
 
 /**
  * Action to press a certain button.
@@ -60,7 +61,7 @@ public class PressAction implements Action {
     }
 
     @Override
-    public void execute(MonkeyDevice device) {
+    public void execute(IMonkeyDevice device) {
         device.press(key,
                 MonkeyDevice.TOUCH_NAME_TO_ENUM.get(downUpFlag));
     }

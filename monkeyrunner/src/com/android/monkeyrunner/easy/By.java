@@ -39,6 +39,7 @@ import org.python.core.PyObject;
  * without notice.
  *
  * TODO: Implement other selectors, like classid, hash, and so on.
+ * TODO: separate java-only core from jython wrapper
  */
 public class By extends PyObject implements ClassDictInit {
     public static void classDictInit(PyObject dict) {
@@ -59,6 +60,10 @@ public class By extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String id = ap.getString(0);
+        return new By(id);
+    }
+
+    public static By id(String id) {
         return new By(id);
     }
 
