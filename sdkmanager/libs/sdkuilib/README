@@ -1,11 +1,39 @@
-Using the Eclipse projects for ddmuilib.
+Using the Eclipse project SdkUiLib
+----------------------------------
 
-ddmuilib requires SWT to compile.
+1- sdkuilib requires SWT to compile.
 
-SWT is available in the depot under prebuild/<platform>/swt
+SWT is available in the tree under prebuild/<platform>/swt
 
 Because the build path cannot contain relative path that are not inside the project directory,
 the .classpath file references a user library called ANDROID_SWT.
 
-In order to compile the project, make a user library called ANDROID_SWT containing the jar
-available at prebuild/<platform>/swt.
+In order to compile the project:
+- Open Preferences > Java > Build Path > User Libraries
+- Create a new user library named ANDROID_SWT
+- Add the following 4 JAR files:
+
+  - prebuild/<platform>/swt/swt.jar
+  - prebuilt/common/eclipse/org.eclipse.core.commands_3.*.jar
+  - prebuilt/common/eclipse/org.eclipse.equinox.common_3.*.jar
+  - prebuilt/common/eclipse/org.eclipse.jface_3.*.jar
+
+
+2- sdkuilib also requires the compiled swtmenubar library.
+
+Build the swtmenubar library:
+$ cd $TOP (top of Android tree)
+$ . build/envsetup.sh && lunch sdk-eng
+$ sdk/eclipse/scripts/create_sdkman_symlinks.sh
+
+Define a classpath variable in Eclipse:
+- Open Preferences > Java > Build Path > Classpath Variables
+- Create a new classpath variable named ANDROID_OUT_FRAMEWORK
+- Set its folder value to <Android tree>/out/host/<platform>/framework
+
+You might need to clean the SdkUiLib project (Project > Clean...) after
+you add the new classpath variable, otherwise previous errors might not
+go away automatically.
+
+--
+EOF

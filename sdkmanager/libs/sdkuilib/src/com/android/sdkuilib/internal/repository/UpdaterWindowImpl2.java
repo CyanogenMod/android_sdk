@@ -17,15 +17,17 @@
 package com.android.sdkuilib.internal.repository;
 
 
+import com.android.menubar.IMenuBarCallback;
+import com.android.menubar.MenuBarEnhancer;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.IUpdaterWindow;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
@@ -42,6 +44,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
@@ -55,6 +59,7 @@ import java.util.ArrayList;
  */
 public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
+    private static final String APP_NAME = "Android SDK Manager";
     private final Shell mParentShell;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
@@ -91,10 +96,11 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      */
     public void open() {
         if (mParentShell == null) {
-            Display.setAppName("Android"); //$hide$ (hide from SWT designer)
+            Display.setAppName(APP_NAME); //$hide$ (hide from SWT designer)
         }
 
         createShell();
+        createMenuBar();
         preCreateContent();
         createContents();
         mShell.open();
@@ -129,11 +135,10 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
         mShell.setMinimumSize(new Point(500, 300));
         mShell.setSize(700, 500);
-        mShell.setText("Android SDK and AVD Manager");
+        mShell.setText(APP_NAME);
     }
 
     private void createContents() {
-        mShell.setText("Android SDK Manager");
 
         mPkgPage = new PackagesPage(mShell, mUpdaterData);
         mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
@@ -167,6 +172,73 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         mButtonDetails.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 onToggleDetails();
+            }
+        });
+    }
+
+    private void createMenuBar() {
+
+        Menu menuBar = new Menu(mShell, SWT.BAR);
+        mShell.setMenuBar(menuBar);
+
+        MenuItem menuBarPackages = new MenuItem(menuBar, SWT.CASCADE);
+        menuBarPackages.setText("Packages");
+
+        Menu menuPkgs = new Menu(menuBarPackages);
+        menuBarPackages.setMenu(menuPkgs);
+
+        MenuItem ShowUpdatesnew = new MenuItem(menuPkgs, SWT.NONE);
+        ShowUpdatesnew.setText("Show Updates/New Packages");
+
+        MenuItem ShowInstalled = new MenuItem(menuPkgs, SWT.NONE);
+        ShowInstalled.setText("Show Installed Packages");
+
+        MenuItem ShowObsoletePackages = new MenuItem(menuPkgs, SWT.NONE);
+        ShowObsoletePackages.setText("Show Obsolete Packages");
+
+        MenuItem ShowArchives = new MenuItem(menuPkgs, SWT.NONE);
+        ShowArchives.setText("Show Archives");
+
+        new MenuItem(menuPkgs, SWT.SEPARATOR);
+
+        MenuItem sortByApi = new MenuItem(menuPkgs, SWT.NONE);
+        sortByApi.setText("Sort by API Level");
+
+        MenuItem sortBySource = new MenuItem(menuPkgs, SWT.NONE);
+        sortBySource.setText("Sort by Source");
+
+        new MenuItem(menuPkgs, SWT.SEPARATOR);
+
+        MenuItem reload = new MenuItem(menuPkgs, SWT.NONE);
+        reload.setText("Reload");
+
+        MenuItem menuBarTools = new MenuItem(menuBar, SWT.CASCADE);
+        menuBarTools.setText("Tools");
+
+        Menu menuTools = new Menu(menuBarTools);
+        menuBarTools.setMenu(menuTools);
+
+        MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
+        manageAvds.setText("Manage AVDs...");
+
+        MenuItem manageSources = new MenuItem(menuTools, SWT.NONE);
+        manageSources.setText("Manage Sources...");
+
+        MenuBarEnhancer.setupMenu(APP_NAME, menuTools, new IMenuBarCallback() {
+            public void onPreferencesMenuSelected() {
+                // TODO: plug settings page here
+                MessageDialog.openInformation(mShell, "test", "on prefs");
+            }
+
+            public void onAboutMenuSelected() {
+                // TODO: plug about page here
+                MessageDialog.openInformation(mShell, "test", "on about");
+            }
+
+            public void printError(String format, Object... args) {
+                if (mUpdaterData != null) {
+                    mUpdaterData.getSdkLog().warning(format, args);
+                }
             }
         });
     }
@@ -247,9 +319,10 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      */
     private void preCreateContent() {
         mUpdaterData.setWindowShell(mShell);
+        // We need the UI factory to create the UI
         mUpdaterData.setImageFactory(new ImageFactory(mShell.getDisplay()));
         // Note: we can't create the TaskFactory yet because we need the UI
-        // to be created first. And the UI needs the ImageFactory to be set.
+        // to be created first, so this is done in postCreateContent().
     }
 
     /**
