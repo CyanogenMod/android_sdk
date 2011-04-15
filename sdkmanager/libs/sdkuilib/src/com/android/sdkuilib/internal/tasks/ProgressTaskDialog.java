@@ -283,10 +283,10 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
     }
 
     /**
-     * Sets the description in the current task dialog.
+     * Adds to the log in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setResult(final String result) {
+    public void log(final String info) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
                 public void run() {
@@ -295,15 +295,23 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
                         String lastText = mResultText.getText();
                         if (lastText != null &&
                                 lastText.length() > 0 &&
-                                !lastText.endsWith("\n") &&
-                                !result.startsWith("\n")) {
-                            mResultText.append("\n");
+                                !lastText.endsWith("\n") &&     //$NON-NLS-1$
+                                !info.startsWith("\n")) {       //$NON-NLS-1$
+                            mResultText.append("\n");           //$NON-NLS-1$
                         }
-                        mResultText.append(result);
+                        mResultText.append(info);
                     }
                 }
             });
         }
+    }
+
+    public void logError(String info) {
+        log(info);
+    }
+
+    public void logVerbose(String info) {
+        log(info);
     }
 
     /**

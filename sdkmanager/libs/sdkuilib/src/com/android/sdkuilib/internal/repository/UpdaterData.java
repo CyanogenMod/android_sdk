@@ -438,14 +438,14 @@ class UpdaterData implements IUpdaterData {
                                     // This archive depends on a missing archive.
                                     // We shouldn't get here.
                                     // Skip it.
-                                    monitor.setResult("Skipping '%1$s'; it depends on a missing package.",
+                                    monitor.log("Skipping '%1$s'; it depends on a missing package.",
                                             archive.getParentPackage().getShortDescription());
                                     continue nextArchive;
                                 } else if (!installedArchives.contains(na)) {
                                     // This archive depends on another one that was not installed.
                                     // We shouldn't get here.
                                     // Skip it.
-                                    monitor.setResult("Skipping '%1$s'; it depends on '%2$s' which was not installed.",
+                                    monitor.logError("Skipping '%1$s'; it depends on '%2$s' which was not installed.",
                                             archive.getParentPackage().getShortDescription(),
                                             adep.getShortDescription());
                                     continue nextArchive;
@@ -500,7 +500,7 @@ class UpdaterData implements IUpdaterData {
                                     baos.toString());
                         }
 
-                        monitor.setResult(msg);
+                        monitor.log(msg);
                         mSdkLog.error(t, msg);
                     } finally {
 
@@ -515,10 +515,10 @@ class UpdaterData implements IUpdaterData {
                     // Update the USB vendor ids for adb
                     try {
                         mSdkManager.updateAdb();
-                        monitor.setResult("Updated ADB to support the USB devices declared in the SDK add-ons.");
+                        monitor.log("Updated ADB to support the USB devices declared in the SDK add-ons.");
                     } catch (Exception e) {
                         mSdkLog.error(e, "Update ADB failed");
-                        monitor.setResult("failed to update adb to support the USB devices declared in the SDK add-ons.");
+                        monitor.logError("failed to update adb to support the USB devices declared in the SDK add-ons.");
                     }
                 }
 
@@ -941,6 +941,7 @@ class UpdaterData implements IUpdaterData {
                 }
 
                 SdkSource[] sources = mSources.getAllSources();
+                monitor.setDescription("Refresh Sources");
                 monitor.setProgressMax(monitor.getProgress() + sources.length);
                 for (SdkSource source : sources) {
                     if (forceFetching ||

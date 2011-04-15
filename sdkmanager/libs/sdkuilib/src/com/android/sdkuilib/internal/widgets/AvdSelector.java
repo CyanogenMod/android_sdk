@@ -1073,7 +1073,8 @@ public final class AvdSelector {
                     new ITask() {
                         public void run(ITaskMonitor monitor) {
                             try {
-                                monitor.setDescription("Starting emulator for AVD '%1$s'",
+                                monitor.setDescription(
+                                        "Starting emulator for AVD '%1$s'",
                                         avdName);
                                 int n = 10;
                                 monitor.setProgressMax(n);
@@ -1095,7 +1096,7 @@ public final class AvdSelector {
                                     }
                                 }
                             } catch (IOException e) {
-                                monitor.setResult("Failed to start emulator: %1$s",
+                                monitor.logError("Failed to start emulator: %1$s",
                                         e.getMessage());
                             }
                         }
@@ -1122,7 +1123,7 @@ public final class AvdSelector {
                     while (true) {
                         String line = errReader.readLine();
                         if (line != null) {
-                            monitor.setResult("%1$s", line);    //$NON-NLS-1$
+                            monitor.logError("%1$s", line);    //$NON-NLS-1$
                         } else {
                             break;
                         }
@@ -1143,7 +1144,7 @@ public final class AvdSelector {
                     while (true) {
                         String line = outReader.readLine();
                         if (line != null) {
-                            monitor.setResult("%1$s", line);    //$NON-NLS-1$
+                            monitor.log("%1$s", line);    //$NON-NLS-1$
                         } else {
                             break;
                         }

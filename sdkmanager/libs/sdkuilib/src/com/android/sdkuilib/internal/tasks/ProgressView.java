@@ -53,7 +53,13 @@ public final class ProgressView implements IProgressUiProvider {
     private final Label mLabel;
     private final Control mStopButton;
     private final ProgressBar mProgressBar;
-    private final StringBuffer mResultText = new StringBuffer();
+
+    /**
+     * Accumulated log text. This is intended to be displayed in a scrollable
+     * text area. The various methods that append to the log might not be called
+     * from the UI thread, so accesses should be synchronized on the builder.
+     */
+    private final StringBuilder mLogText = new StringBuilder();
 
 
     /**
@@ -150,15 +156,40 @@ public final class ProgressView implements IProgressUiProvider {
                 mLabel.setText(description);
             }
         });
-        mResultText.append("** ").append(description);
+        synchronized (mLogText) {
+            mLogText.append("** ").append(description);
+        }
     }
 
     /**
-     * Sets the description in the current task dialog.
+     * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
-    public void setResult(final String result) {
-        mResultText.append("=> ").append(result);
+    public void log(String log) {
+        synchronized (mLogText) {
+            mLogText.append("=> ").append(log);
+        }
+    }
+
+    /**
+     * Logs an "error" information line.
+     * This method can be invoked from a non-UI thread.
+     */
+    public void logError(String log) {
+        synchronized (mLogText) {
+            mLogText.append("=> ").append(log);
+        }
+    }
+
+    /**
+     * Logs a "verbose" information line, that is extra details which are typically
+     * not that useful for the end-user and might be hidden until explicitly shown.
+     * This method can be invoked from a non-UI thread.
+     */
+    public void logVerbose(String log) {
+        synchronized (mLogText) {
+            mLogText.append("=> ").append(log);
+        }
     }
 
     /**

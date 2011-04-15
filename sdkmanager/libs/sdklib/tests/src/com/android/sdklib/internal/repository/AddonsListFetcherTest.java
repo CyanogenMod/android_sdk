@@ -104,7 +104,9 @@ public class AddonsListFetcherTest extends TestCase {
         Site[] result = mFetcher._parseAddonsList(doc, uri, monitor);
 
         assertEquals("", monitor.getCapturedDescriptions());
-        assertEquals("", monitor.getCapturedResults());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+        assertEquals("", monitor.getCapturedVerboseLog());
 
         // check the sites we found...
         assertEquals(3, result.length);
