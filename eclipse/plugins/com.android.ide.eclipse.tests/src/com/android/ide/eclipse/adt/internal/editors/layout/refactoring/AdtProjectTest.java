@@ -411,7 +411,7 @@ public class AdtProjectTest extends SdkTestCase {
             return null;
         }
 
-        assertNotNull(stream);
+        assertNotNull(relativePath + " does not exist", stream);
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         String xml = AdtPlugin.readFile(reader);

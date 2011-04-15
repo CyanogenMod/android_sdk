@@ -121,7 +121,7 @@ public class RefactoringTest extends AdtProjectTest {
                 assertNotNull(file);
                 IPath path = file.getProjectRelativePath();
                 String goldenName = fileToGoldenName.get(path);
-                assertNotNull(goldenName);
+                assertNotNull("Not found: " + path.toString(), goldenName);
 
                 String xml = readTestFile(goldenName, false);
                 if (xml == null) { // New file

@@ -227,7 +227,7 @@ public abstract class VisualRefactoring extends Refactoring {
         mElements = initElements();
     }
 
-    protected abstract List<Change> computeChanges();
+    protected abstract List<Change> computeChanges(IProgressMonitor monitor);
 
     @Override
     public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException,
@@ -241,7 +241,7 @@ public abstract class VisualRefactoring extends Refactoring {
             // and forth in the refactoring wizard
             mGeneratedIdMap.clear();
             mGeneratedIds.clear();
-            List<Change> changes = computeChanges();
+            List<Change> changes = computeChanges(monitor);
             mChanges.addAll(changes);
 
             monitor.worked(1);

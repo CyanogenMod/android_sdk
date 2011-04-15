@@ -170,7 +170,7 @@ public class WrapInRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges() {
+    protected List<Change> computeChanges(IProgressMonitor monitor) {
         // (1) Insert the new container in front of the beginning of the
         //      first wrapped view
         // (2) If the container is the new root, transfer namespace declarations

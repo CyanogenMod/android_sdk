@@ -19,6 +19,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.w3c.dom.Element;
 
@@ -52,7 +53,7 @@ public class WrapInRefactoringTest extends RefactoringTest {
         WrapInRefactoring refactoring = new WrapInRefactoring(selectedElements,
                 layoutEditor);
         refactoring.setType(fqcn);
-        List<Change> changes = refactoring.computeChanges();
+        List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
         checkEdits(basename, changes);
     }
 }

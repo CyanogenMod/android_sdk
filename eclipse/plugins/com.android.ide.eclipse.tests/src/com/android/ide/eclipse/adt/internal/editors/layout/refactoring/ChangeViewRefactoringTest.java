@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RADIO_BUTTON;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.w3c.dom.Element;
 
@@ -52,7 +53,7 @@ public class ChangeViewRefactoringTest extends RefactoringTest {
                 layoutEditor);
         refactoring.setType(newType);
 
-        List<Change> changes = refactoring.computeChanges();
+        List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
         checkEdits(basename, changes);
     }
 }

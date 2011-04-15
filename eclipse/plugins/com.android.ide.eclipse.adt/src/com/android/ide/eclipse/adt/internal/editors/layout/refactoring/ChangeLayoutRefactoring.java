@@ -197,7 +197,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges() {
+    protected List<Change> computeChanges(IProgressMonitor monitor) {
         String name = getViewClass(mTypeFqcn);
 
         IFile file = mEditor.getInputFile();
