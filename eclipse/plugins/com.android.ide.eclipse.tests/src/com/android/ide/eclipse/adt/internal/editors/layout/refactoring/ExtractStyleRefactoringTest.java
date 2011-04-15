@@ -19,6 +19,7 @@ import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -206,7 +207,7 @@ public class ExtractStyleRefactoringTest extends RefactoringTest {
         }
         refactoring.setChosenAttributes(chosenAttributes);
 
-        List<Change> changes = refactoring.computeChanges();
+        List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
         assertEquals(expectedModifiedFileCount, changes.size());
 
         Map<IPath,String> fileToGolden = new HashMap<IPath,String>();

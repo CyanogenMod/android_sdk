@@ -30,8 +30,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import java.util.List;
-
 class ExtractIncludeWizard extends VisualRefactoringWizard {
     public ExtractIncludeWizard(ExtractIncludeRefactoring ref, LayoutEditor editor) {
         super(ref, editor);
@@ -78,11 +76,8 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
                     false, false, 2, 1));
             mReplaceAllOccurrences.setText(
                     "Replace occurrences in all layouts with include to new layout");
-            List<IFile> variations =
-                ExtractIncludeRefactoring.getConfigurationVariations(mSourceFile);
-            boolean enabled = variations.size() > 0;
-            mReplaceAllOccurrences.setEnabled(enabled);
-            mReplaceAllOccurrences.setSelection(enabled);
+            mReplaceAllOccurrences.setEnabled(true);
+            mReplaceAllOccurrences.setSelection(true);
             mReplaceAllOccurrences.addSelectionListener(mSelectionValidateListener);
 
             // Initialize UI:

@@ -19,6 +19,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.w3c.dom.Element;
@@ -28,21 +29,28 @@ import java.util.List;
 import java.util.Map;
 
 public class ExtractIncludeRefactoringTest extends RefactoringTest {
+    @Override
+    protected boolean testCaseNeedsUniqueProject() {
+        // Because some of these tests look at ALL layouts in the project
+        // to identify matches
+        return true;
+    }
 
     public void testExtract1() throws Exception {
         // Basic: Extract a single button
-        checkRefactoring("sample3.xml", "newlayout1", false, null, 2, "@+id/button2");
+        checkRefactoring("sample3.xml", "newlayout1", false, null, 2, false /* diffs */,
+                "@+id/button2");
     }
 
     public void testExtract2() throws Exception {
         // Extract a couple of elements
-        checkRefactoring("sample3.xml", "newlayout2",  false, null, 2,
+        checkRefactoring("sample3.xml", "newlayout2",  false, null, 2, false /* diffs */,
                 "@+id/button2", "@+id/android_logo");
     }
 
     public void testExtract3() throws Exception {
         // Test to make sure layout attributes are updated
-        checkRefactoring("sample2.xml", "newlayout3", false, null, 2,
+        checkRefactoring("sample2.xml", "newlayout3", false, null, 2, false /* diffs */,
                 "@+id/button3");
     }
 
@@ -59,7 +67,7 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
                 "res/layout-xlarge-land/sample3.xml").getProjectRelativePath(),
                 "sample3-variation2.xml");
 
-        checkRefactoring("sample3.xml", "newlayout3", true, extraFiles, 4,
+        checkRefactoring("sample3.xml", "newlayout3", true, extraFiles, 4, false /* diffs */,
                 "@+id/android_logo");
     }
 
@@ -75,13 +83,32 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
                 "res/layout-xlarge-land/sample3.xml").getProjectRelativePath(),
                 "sample3-variation2.xml");
 
-        checkRefactoring("sample3.xml", "newlayout3", true, extraFiles, 4,
+        checkRefactoring("sample3.xml", "newlayout3", true, extraFiles, 4,  false /* diffs */,
                 "@+id/android_logo", "@+id/button1");
     }
 
+    public void testExtract6() throws Exception {
+        // Tests extracting from multiple files where the layouts are completely
+        // different/unrelated files
+
+        // Create the duplicate files
+        Map<IPath, String> extraFiles = new HashMap<IPath, String>();
+        extraFiles.put(getTestDataFile(getProject(), "sample1a.xml",
+                "res/layout/sample1a.xml").getProjectRelativePath(),
+                "sample1a.xml");
+        extraFiles.put(getTestDataFile(getProject(), "sample7.xml", "res/layout/sample7.xml")
+                .getProjectRelativePath(), "sample7.xml");
+        extraFiles.put(getTestDataFile(getProject(), "sample8.xml", "res/layout/sample8.xml")
+                .getProjectRelativePath(), "sample8.xml");
+
+        checkRefactoring("sample7.xml", "newlayout6", true, extraFiles, 4, true /* diffs */,
+                "@+id/linearLayout4");
+    }
+
+
     private void checkRefactoring(String basename, String layoutName,
             boolean replaceOccurrences, Map<IPath,String> extraFiles,
-            int expectedModifiedFileCount, String... ids) throws Exception {
+            int expectedModifiedFileCount, boolean createDiffs, String... ids) throws Exception {
         assertTrue(ids.length > 0);
 
         IFile file = getLayoutFile(getProject(), basename);
@@ -93,7 +120,7 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
                 layoutEditor);
         refactoring.setLayoutName(layoutName);
         refactoring.setReplaceOccurrences(replaceOccurrences);
-        List<Change> changes = refactoring.computeChanges();
+        List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
 
         assertTrue(changes.size() >= 3);
 
@@ -106,7 +133,7 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
             fileToGolden.putAll(extraFiles);
         }
 
-        checkEdits(changes, fileToGolden);
+        checkEdits(changes, fileToGolden, createDiffs);
 
         int modifiedFileCount = 0;
         for (Change change : changes) {

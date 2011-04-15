@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.w3c.dom.Element;
 
@@ -78,7 +79,7 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         refactoring.setType(FQCN_RELATIVE_LAYOUT);
         refactoring.setRootView(rootView);
 
-        List<Change> changes = refactoring.computeChanges();
+        List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
         checkEdits(basename, changes);
     }
 }

@@ -33,6 +33,7 @@ import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttr
 import static com.android.resources.ResourceType.LAYOUT;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
+import com.android.AndroidConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -42,9 +43,11 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -209,7 +212,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     // ---- Actual implementation of Extract as Include modification computation ----
 
     @Override
-    protected List<Change> computeChanges() {
+    protected List<Change> computeChanges(IProgressMonitor monitor) {
         String extractedText = getExtractedText();
 
         String namespaceDeclarations = computeNamespaceDeclarations();
@@ -235,13 +238,20 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         // Also extract in other variations of the same file (landscape/portrait, etc)
         boolean haveVariations = false;
         if (mReplaceOccurrences) {
-            //String id = primary.getAttributeNS(ANDROID_URI, ATTR_ID);
-            List<IFile> variations = getConfigurationVariations(sourceFile);
-            for (IFile variation : variations) {
+            List<IFile> layouts = getOtherLayouts(sourceFile);
+            for (IFile file : layouts) {
                 IModelManager modelManager = StructuredModelManager.getModelManager();
                 IStructuredModel model = null;
+                // We could enhance this with a SubMonitor to make the progress bar move as
+                // well.
+                monitor.subTask(String.format("Looking for duplicates in %1$s",
+                        file.getProjectRelativePath()));
+                if (monitor.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
+
                 try {
-                    model = modelManager.getModelForRead(variation);
+                    model = modelManager.getModelForRead(file);
                     if (model instanceof IDOMModel) {
                         IDOMModel domModel = (IDOMModel) model;
                         IDOMDocument otherDocument = domModel.getDocument();
@@ -276,7 +286,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                                 end = Math.max(end, region.getEndOffset());
                                 begin = Math.min(begin, region.getStartOffset());
                             }
-                            handleIncludingFile(changes, variation, begin,
+                            handleIncludingFile(changes, file, begin,
                                     end, otherDocument, otherPrimary);
                             haveVariations = true;
                         }
@@ -357,33 +367,25 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
     }
 
     /**
-     * This method returns all the configuration variations of the given layout. For
-     * example, if you have both layout/foo.xml and layout-land/foo.xml and
-     * layout-xlarge/foo.xml, then calling this method on any of the three files will
-     * return the other two.
-     *
-     * @param file the file to find configuration variations of
-     * @return the other layout variations of the file
+     * Returns a list of all the other layouts (in all configurations) in the project other
+     * than the given source layout where the refactoring was initiated. Never null.
      */
-    public static List<IFile> getConfigurationVariations(IFile file) {
-        List<IFile> variations = new ArrayList<IFile>();
-
-        // This currently just searches the layout folders in the project for an exact
-        // resource name match. This could later use ProjectResources instead, but
-        // currently that's not done since it doesn't work from the tests.
-
-        String name = file.getName();
-        IContainer resFolder = file.getParent().getParent();
+    private List<IFile> getOtherLayouts(IFile sourceFile) {
+        List<IFile> layouts = new ArrayList<IFile>(100);
+        IPath sourcePath = sourceFile.getProjectRelativePath();
+        IFolder resources = mProject.getFolder(SdkConstants.FD_RESOURCES);
         try {
-            for (IResource member : resFolder.members()) {
-                if (member.getName().startsWith(FD_RES_LAYOUT)) {
-                    if (member instanceof IContainer) {
-                        IContainer container = (IContainer) member;
-                        IResource alternative = container.findMember(name);
-                        IPath relPath = file.getProjectRelativePath();
-                        if (alternative instanceof IFile
-                                && !alternative.getProjectRelativePath().equals(relPath)) {
-                            variations.add((IFile) alternative);
+            for (IResource folder : resources.members()) {
+                assert resources != null;
+                if (folder.getName().startsWith(AndroidConstants.FD_RES_LAYOUT) &&
+                        folder instanceof IFolder) {
+                    IFolder layoutFolder = (IFolder) folder;
+                    for (IResource file : layoutFolder.members()) {
+                        if (file.getName().endsWith(EXT_XML)
+                                && file instanceof IFile) {
+                            if (!file.getProjectRelativePath().equals(sourcePath)) {
+                                layouts.add((IFile) file);
+                            }
                         }
                     }
                 }
@@ -392,7 +394,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             AdtPlugin.log(e, null);
         }
 
-        return variations;
+        return layouts;
     }
 
     String getInitialName() {

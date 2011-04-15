@@ -295,7 +295,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
     }
 
     @Override
-    protected List<Change> computeChanges() {
+    protected List<Change> computeChanges(IProgressMonitor monitor) {
         List<Change> changes = new ArrayList<Change>();
         if (mChosenAttributes.size() == 0) {
             return changes;
