@@ -27,5 +27,7 @@ echo ; echo "### HIERARCHYVIEWER ###" ; echo
 $DEST/create_hierarchyviewer_symlinks.sh "$*"
 echo ; echo "### TRACEVIEW ###" ; echo
 $DEST/create_traceview_symlinks.sh "$*"
+echo ; echo "### SDKMANAGER ###" ; echo
+$DEST/create_sdkman_symlinks.sh "$*"
 
 echo "### $0 done"
