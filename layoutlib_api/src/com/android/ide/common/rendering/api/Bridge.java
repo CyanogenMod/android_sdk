@@ -134,4 +134,17 @@ public abstract class Bridge {
     public Result getViewIndex(Object viewObject) {
         return NOT_IMPLEMENTED.createResult();
     }
+
+    /**
+     * Utility method returning the baseline value for a given view object. This basically returns
+     * View.getBaseline().
+     *
+     * @param viewObject the object for which to return the index.
+     *
+     * @return the baseline value or -1 if not applicable to the view object or if this layout
+     *     library does not implement this method.
+     */
+    public int getViewBaseline(Object viewObject) {
+        return -1;
+    }
 }
