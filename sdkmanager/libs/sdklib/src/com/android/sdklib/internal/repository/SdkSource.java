@@ -258,7 +258,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             url = url.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        monitor.setDescription("Fetching %1$s", url);
+        monitor.setDescription("Fetching URL: %1$s", url);
         monitor.incProgress(1);
 
         mFetchError = null;
@@ -284,7 +284,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         }
 
         if (xml != null) {
-            monitor.setDescription("Validate XML");
+            monitor.setDescription(String.format("Validate XML: %1$s", url));
 
             for (int tryOtherUrl = 0; tryOtherUrl < 2; tryOtherUrl++) {
                 // Explore the XML to find the potential XML schema version
@@ -432,7 +432,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         monitor.incProgress(1);
 
         if (xml != null) {
-            monitor.setDescription("Parse XML");
+            monitor.setDescription(String.format("Parse XML:    %1$s", url));
             monitor.incProgress(1);
             parsePackages(validatedDoc, validatedUri, monitor);
             if (mPackages == null || mPackages.length == 0) {
@@ -748,7 +748,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
                         if (p != null) {
                             packages.add(p);
-                            monitor.setDescription("Found %1$s", p.getShortDescription());
+                            // TODO: change this to a monitor.print() in sdkman2. In between
+                            // simply remove this which isn't very useful since it hides
+                            // which source is being loaded in the progress dialog.
+                            // Note that this breaks unit tests that depend on this output.
+                            // monitor.setDescription("Found %1$s", p.getShortDescription());
                         }
                     } catch (Exception e) {
                         // Ignore invalid packages

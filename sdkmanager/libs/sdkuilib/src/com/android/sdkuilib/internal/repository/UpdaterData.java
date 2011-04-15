@@ -44,6 +44,7 @@ import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
@@ -709,6 +710,63 @@ class UpdaterData implements IUpdaterData {
     }
 
     /**
+     * Fetches all archives available on the known remote sources.
+     *
+     * Used by {@link UpdaterData#listRemotePackages_NoGUI} and
+     * {@link UpdaterData#updateOrInstallAll_NoGUI}.
+     *
+     * @param includeObsoletes True to also list obsolete packages.
+     * @return A list of potential {@link ArchiveInfo} to install.
+     */
+    private List<ArchiveInfo> getRemoteArchives_NoGUI(boolean includeObsoletes) {
+        refreshSources(true);
+        loadRemoteAddonsList();
+
+        UpdaterLogic ul = new UpdaterLogic(this);
+        List<ArchiveInfo> archives = ul.computeUpdates(
+                null /*selectedArchives*/,
+                getSources(),
+                getLocalSdkParser().getPackages(),
+                includeObsoletes);
+
+        ul.addNewPlatforms(
+                archives,
+                getSources(),
+                getLocalSdkParser().getPackages(),
+                includeObsoletes);
+
+        Collections.sort(archives);
+        return archives;
+    }
+
+    /**
+     * Lists remote packages available for install using
+     * {@link UpdaterData#updateOrInstallAll_NoGUI}.
+     *
+     * @param includeObsoletes True to also list obsolete packages.
+     */
+    public void listRemotePackages_NoGUI(boolean includeObsoletes) {
+
+        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeObsoletes);
+
+        mSdkLog.printf("Packages available for installation or update: %1$d\n", archives.size());
+
+        int index = 1;
+        for (ArchiveInfo ai : archives) {
+            Archive a = ai.getNewArchive();
+            if (a != null) {
+                Package p = a.getParentPackage();
+                if (p != null) {
+                    mSdkLog.printf("%1$ 4d- %2$s\n",
+                            index,
+                            p.getShortDescription());
+                    index++;
+                }
+            }
+        }
+    }
+
+    /**
      * Tries to update all the *existing* local packages.
      * This version is intended to run without a GUI and
      * only outputs to the current {@link ISdkLog}.
@@ -719,89 +777,40 @@ class UpdaterData implements IUpdaterData {
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
      */
-    @SuppressWarnings("unchecked")
     public void updateOrInstallAll_NoGUI(
             Collection<String> pkgFilter,
             boolean includeObsoletes,
             boolean dryMode) {
 
-        refreshSources(true);
-
-        UpdaterLogic ul = new UpdaterLogic(this);
-        List<ArchiveInfo> archives = ul.computeUpdates(
-                null /*selectedArchives*/,
-                getSources(),
-                getLocalSdkParser().getPackages(),
-                includeObsoletes);
-
-        loadRemoteAddonsList();
-        ul.addNewPlatforms(
-                archives,
-                getSources(),
-                getLocalSdkParser().getPackages(),
-                includeObsoletes);
-
-        Collections.sort(archives);
+        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeObsoletes);
 
         // Filter the selected archives to only keep the ones matching the filter
         if (pkgFilter != null && pkgFilter.size() > 0 && archives != null && archives.size() > 0) {
-            // Map filter types to an SdkRepository Package type.
+            // Map filter types to an SdkRepository Package type,
+            // e.g. create a map "platform" => PlatformPackage.class
             HashMap<String, Class<? extends Package>> pkgMap =
                 new HashMap<String, Class<? extends Package>>();
 
-            // Automatically find the classes matching the node names
-            ClassLoader classLoader = getClass().getClassLoader();
-            String basePackage = Package.class.getPackage().getName();
-            for (String node : SdkRepoConstants.NODES) {
-                // Capitalize the name
-                String name = node.substring(0, 1).toUpperCase() + node.substring(1);
+            mapFilterToPackageClass(pkgMap, SdkRepoConstants.NODES);
+            mapFilterToPackageClass(pkgMap, SdkAddonConstants.NODES);
 
-                // We can have one dash at most in a name. If it's present, we'll try
-                // with the dash or with the next letter capitalized.
-                int dash = name.indexOf('-');
-                if (dash > 0) {
-                    name = name.replaceFirst("-", "");                   //$NON-NLS-1$ //$NON-NLS-2$
-                }
+            // Now intersect this with the pkgFilter requested by the user, in order to
+            // only keep the classes that the user wants to install.
+            // We also create a set with the package indices requested by the user.
 
-                for (int alternatives = 0; alternatives < 2; alternatives++) {
-
-                    String fqcn = basePackage + "." + name + "Package";  //$NON-NLS-1$ //$NON-NLS-2$
-                    try {
-                        Class<? extends Package> clazz =
-                            (Class<? extends Package>) classLoader.loadClass(fqcn);
-                        if (clazz != null) {
-                            pkgMap.put(node, clazz);
-                            continue;
-                        }
-                    } catch (Throwable ignore) {
-                    }
-
-                    if (alternatives == 0 && dash > 0) {
-                        // Try an alternative where the next letter after the dash
-                        // is converted to an upper case.
-                        name = name.substring(0, dash) +
-                               name.substring(dash, dash + 1).toUpperCase() +
-                               name.substring(dash + 1);
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            if (SdkRepoConstants.NODES.length != pkgMap.size()) {
-                // Sanity check in case we forget to update this node array.
-                // We don't cancel the operation though.
-                mSdkLog.printf(
-                    "*** Filter Mismatch! ***\n" +
-                    "*** The package filter list has changed. Please report this.");
-            }
-
-            // Now make a set of the types that are allowed by the filter.
-            HashSet<Class<? extends Package>> allowedPkgSet =
+            HashSet<Class<? extends Package>> userFilteredClasses =
                 new HashSet<Class<? extends Package>>();
+            SparseIntArray userFilteredIndices = new SparseIntArray();
+
             for (String type : pkgFilter) {
-                if (pkgMap.containsKey(type)) {
-                    allowedPkgSet.add(pkgMap.get(type));
+                if (type.replaceAll("[0-9]+", "").length() == 0) { //$NON-NLS-1$ //$NON-NLS-2$
+                    // An all-digit number is a package index requested by the user.
+                    int index = Integer.parseInt(type);
+                    userFilteredIndices.put(index, index);
+
+                } else if (pkgMap.containsKey(type)) {
+                    userFilteredClasses.add(pkgMap.get(type));
+
                 } else {
                     // This should not happen unless there's a mismatch in the package map.
                     mSdkLog.error(null, "Ignoring unknown package filter '%1$s'", type);
@@ -811,15 +820,24 @@ class UpdaterData implements IUpdaterData {
             // we don't need the map anymore
             pkgMap = null;
 
-            Iterator<ArchiveInfo> it = archives.iterator();
-            while (it.hasNext()) {
+            // Now filter the remote archives list to keep:
+            // - any package which class matches userFilteredClasses
+            // - any package index which matches userFilteredIndices
+
+            int index = 1;
+            for (Iterator<ArchiveInfo> it = archives.iterator(); it.hasNext(); ) {
                 boolean keep = false;
                 ArchiveInfo ai = it.next();
                 Archive a = ai.getNewArchive();
                 if (a != null) {
                     Package p = a.getParentPackage();
-                    if (p != null && allowedPkgSet.contains(p.getClass())) {
-                        keep = true;
+                    if (p != null) {
+                        if (userFilteredClasses.contains(p.getClass()) ||
+                                userFilteredIndices.get(index) > 0) {
+                            keep = true;
+                        }
+
+                        index++;
                     }
                 }
 
@@ -853,6 +871,52 @@ class UpdaterData implements IUpdaterData {
             }
         } else {
             mSdkLog.printf("There is nothing to install or update.\n");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void mapFilterToPackageClass(
+            HashMap<String, Class<? extends Package>> inOutPkgMap,
+            String[] nodes) {
+
+        // Automatically find the classes matching the node names
+        ClassLoader classLoader = getClass().getClassLoader();
+        String basePackage = Package.class.getPackage().getName();
+
+        for (String node : nodes) {
+            // Capitalize the name
+            String name = node.substring(0, 1).toUpperCase() + node.substring(1);
+
+            // We can have one dash at most in a name. If it's present, we'll try
+            // with the dash or with the next letter capitalized.
+            int dash = name.indexOf('-');
+            if (dash > 0) {
+                name = name.replaceFirst("-", "");
+            }
+
+            for (int alternatives = 0; alternatives < 2; alternatives++) {
+
+                String fqcn = basePackage + '.' + name + "Package";  //$NON-NLS-1$
+                try {
+                    Class<? extends Package> clazz =
+                        (Class<? extends Package>) classLoader.loadClass(fqcn);
+                    if (clazz != null) {
+                        inOutPkgMap.put(node, clazz);
+                        continue;
+                    }
+                } catch (Throwable ignore) {
+                }
+
+                if (alternatives == 0 && dash > 0) {
+                    // Try an alternative where the next letter after the dash
+                    // is converted to an upper case.
+                    name = name.substring(0, dash) +
+                           name.substring(dash, dash + 1).toUpperCase() +
+                           name.substring(dash + 1);
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -943,7 +1007,7 @@ class UpdaterData implements IUpdaterData {
 
         if (url != null) {
             if (getSettingsController().getForceHttp()) {
-                url = url.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
+                url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
             }
 
             AddonsListFetcher fetcher = new AddonsListFetcher();
