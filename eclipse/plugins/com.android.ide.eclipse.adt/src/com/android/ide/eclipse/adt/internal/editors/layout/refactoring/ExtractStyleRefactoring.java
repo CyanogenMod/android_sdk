@@ -515,7 +515,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         if (types.size() == 1) {
             String view = DescriptorsUtils.getBasename(types.iterator().next());
 
-            ResourceResolver resolver = mEditor.getGraphicalEditor().createResolver();
+            ResourceResolver resolver = mEditor.getGraphicalEditor().getResourceResolver();
             // Look up the theme item name, which for a Button would be "buttonStyle", and so on.
             String n = Character.toLowerCase(view.charAt(0)) + view.substring(1)
                 + "Style"; //$NON-NLS-1$

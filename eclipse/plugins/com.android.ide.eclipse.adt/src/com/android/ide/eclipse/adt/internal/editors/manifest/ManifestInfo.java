@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.manifest;
 
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.sdklib.SdkConstants.NS_RESOURCES;
+import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_ICON;
+import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_LABEL;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_PACKAGE;
@@ -98,6 +100,8 @@ public class ManifestInfo {
     private IAbstractFile mManifestFile;
     private long mLastModified;
     private int mTargetSdk;
+    private String mApplicationIcon;
+    private String mApplicationLabel;
 
     /**
      * Qualified name for the per-project non-persistent property storing the
@@ -167,6 +171,8 @@ public class ManifestInfo {
         mManifestTheme = null;
         mTargetSdk = 1; // Default when not specified
         mPackage = ""; //$NON-NLS-1$
+        mApplicationIcon = null;
+        mApplicationLabel = null;
 
         Document document = null;
         try {
@@ -191,6 +197,18 @@ public class ManifestInfo {
                         name = mPackage + name;
                     }
                     mActivityThemes.put(name, theme);
+                }
+            }
+
+            NodeList applications = root.getElementsByTagName(AndroidManifest.NODE_APPLICATION);
+            if (applications.getLength() > 0) {
+                assert applications.getLength() == 1;
+                Element application = (Element) applications.item(0);
+                if (application.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_ICON)) {
+                    mApplicationIcon = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_ICON);
+                }
+                if (application.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL)) {
+                    mApplicationLabel = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL);
                 }
             }
 
@@ -289,6 +307,26 @@ public class ManifestInfo {
         } else {
             return PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$
         }
+    }
+
+    /**
+     * Returns the application icon, or null
+     *
+     * @return the application icon, or null
+     */
+    public String getApplicationIcon() {
+        sync();
+        return mApplicationIcon;
+    }
+
+    /**
+     * Returns the application label, or null
+     *
+     * @return the application label, or null
+     */
+    public String getApplicationLabel() {
+        sync();
+        return mApplicationLabel;
     }
 
     /**
