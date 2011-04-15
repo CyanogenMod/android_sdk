@@ -15,28 +15,27 @@
  */
 package com.android.monkeyrunner;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
+
+import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.monkeyrunner.core.TouchPressType;
+import com.android.monkeyrunner.doc.MonkeyRunnerExported;
+import com.android.monkeyrunner.easy.HierarchyViewer;
 
 import org.python.core.ArgParser;
 import org.python.core.ClassDictInit;
 import org.python.core.Py;
 import org.python.core.PyDictionary;
-import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
-import com.android.monkeyrunner.core.IMonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyImage;
-import com.android.monkeyrunner.doc.MonkeyRunnerExported;
-import com.android.monkeyrunner.easy.HierarchyViewer;
-
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.logging.Logger;
 
 /*
  * Abstract base class that represents a single connected Android
@@ -46,28 +45,20 @@ import com.google.common.collect.ImmutableMap;
  */
 @MonkeyRunnerExported(doc = "Represents a device attached to the system.")
 public class MonkeyDevice extends PyObject implements ClassDictInit {
+    private static final Logger LOG = Logger.getLogger(MonkeyDevice.class.getName());
+
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyDevice.class, dict);
     }
 
     @MonkeyRunnerExported(doc = "Sends a DOWN event when used with touch() or press().")
-    public static final String DOWN = "down";
+    public static final String DOWN = TouchPressType.DOWN.getIdentifier();
+
     @MonkeyRunnerExported(doc = "Sends an UP event when used with touch() or press().")
-    public static final String UP = "up";
+    public static final String UP = TouchPressType.UP.getIdentifier();
+
     @MonkeyRunnerExported(doc = "Sends a DOWN event, immediately followed by an UP event when used with touch() or press()")
-    public static final String DOWN_AND_UP = "downAndUp";
-
-    // TODO: This may not be accessible from jython; if so, remove it.
-    public enum TouchPressType {
-        DOWN, UP, DOWN_AND_UP,
-    }
-
-    public static final Map<String, IMonkeyDevice.TouchPressType> TOUCH_NAME_TO_ENUM =
-        ImmutableMap.of(DOWN, IMonkeyDevice.TouchPressType.DOWN,
-                UP, IMonkeyDevice.TouchPressType.UP,
-                DOWN_AND_UP, IMonkeyDevice.TouchPressType.DOWN_AND_UP);
-
-    private static final Set<String> VALID_DOWN_UP_TYPES = TOUCH_NAME_TO_ENUM.keySet();
+    public static final String DOWN_AND_UP = TouchPressType.DOWN_AND_UP.getIdentifier();
 
     private IMonkeyDevice impl;
 
@@ -129,21 +120,14 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
         int x = ap.getInt(0);
         int y = ap.getInt(1);
 
-        // Default
-        String type = MonkeyDevice.DOWN_AND_UP;
-        try {
-            String tmpType = ap.getString(1);
-            if (VALID_DOWN_UP_TYPES.contains(tmpType)) {
-                type = tmpType;
-            } else {
-                // not a valid type
-                type = MonkeyDevice.DOWN_AND_UP;
-            }
-        } catch (PyException e) {
-            // bad stuff was passed in, just use the already specified default value
-            type = MonkeyDevice.DOWN_AND_UP;
+        TouchPressType type = TouchPressType.fromIdentifier(ap.getString(2));
+        if (type == null) {
+            LOG.warning(String.format("Invalid TouchPressType specified (%s) default used instead",
+                    ap.getString(2)));
+            type = TouchPressType.DOWN_AND_UP;
         }
-        impl.touch(x, y, TOUCH_NAME_TO_ENUM.get(type));
+
+        impl.touch(x, y, type);
     }
 
     @MonkeyRunnerExported(doc = "Simulates dragging (touch, hold, and move) on the device screen.",
@@ -191,22 +175,14 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String name = ap.getString(0);
-
-        // Default
-        String type = MonkeyDevice.DOWN_AND_UP;
-        try {
-            String tmpType = ap.getString(1);
-            if (VALID_DOWN_UP_TYPES.contains(tmpType)) {
-                type = tmpType;
-            } else {
-                // not a valid type
-                type = MonkeyDevice.DOWN_AND_UP;
-            }
-        } catch (PyException e) {
-            // bad stuff was passed in, just use the already specified default value
-            type = MonkeyDevice.DOWN_AND_UP;
+        TouchPressType type = TouchPressType.fromIdentifier(ap.getString(1));
+        if (type == null) {
+            LOG.warning(String.format("Invalid TouchPressType specified (%s) default used instead",
+                    ap.getString(2)));
+            type = TouchPressType.DOWN_AND_UP;
         }
-        impl.press(name, TOUCH_NAME_TO_ENUM.get(type));
+
+        impl.press(name, type);
     }
 
     @MonkeyRunnerExported(doc = "Types the specified string on the keyboard. This is " +

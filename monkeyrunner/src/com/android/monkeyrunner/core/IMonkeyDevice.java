@@ -27,10 +27,6 @@ import javax.annotation.Nullable;
  * MonkeyDevice interface.
  */
 public interface IMonkeyDevice {
-    enum TouchPressType {
-        DOWN, UP, DOWN_AND_UP,
-    }
-
     /**
      * Create a MonkeyMananger for talking to this device.
      *

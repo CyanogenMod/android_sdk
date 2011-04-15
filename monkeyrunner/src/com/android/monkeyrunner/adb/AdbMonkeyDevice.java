@@ -29,6 +29,7 @@ import com.android.monkeyrunner.MonkeyManager;
 import com.android.monkeyrunner.adb.LinearInterpolator.Point;
 import com.android.monkeyrunner.core.IMonkeyImage;
 import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.monkeyrunner.core.TouchPressType;
 import com.android.monkeyrunner.easy.HierarchyViewer;
 
 import java.io.IOException;
