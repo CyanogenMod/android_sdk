@@ -242,7 +242,7 @@ public class LayoutCanvas extends Canvas {
             if (zoom != null) {
                 try {
                     double initialScale = Double.parseDouble(zoom);
-                    if (initialScale > 0.0) {
+                    if (initialScale > 0.1) {
                         mHScale.setScale(initialScale);
                         mVScale.setScale(initialScale);
                     }
@@ -593,6 +593,10 @@ public class LayoutCanvas extends Canvas {
     }
 
     /* package */ void setScale(double scale, boolean redraw) {
+        if (scale <= 0.0) {
+            scale = 1.0;
+        }
+
         if (scale == getScale()) {
             return;
         }
