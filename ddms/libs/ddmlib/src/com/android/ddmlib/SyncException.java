@@ -46,6 +46,8 @@ public class SyncException extends CanceledException {
         FILE_READ_ERROR("Reading local file failed!"),
         /** attempting to push a directory. */
         LOCAL_IS_DIRECTORY("Local path is a directory."),
+        /** attempting to push a non-existent file. */
+        NO_LOCAL_FILE("Local path doesn't exist."),
         /** when the target path of a multi file push is a file. */
         REMOTE_IS_FILE("Remote path is a file."),
         /** receiving too much data from the remove device at once */

@@ -23,7 +23,6 @@ import com.android.ddmlib.utils.ArrayHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -231,8 +230,6 @@ public final class SyncService {
      *      if the unique entry is a folder, this should be a folder.
      * @param monitor The progress monitor. Cannot be null.
      * @throws SyncException
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
      * @throws IOException
      * @throws TimeoutException
      *
@@ -240,7 +237,7 @@ public final class SyncService {
      * @see #getNullProgressMonitor()
      */
     public void pull(FileEntry[] entries, String localPath, ISyncProgressMonitor monitor)
-            throws SyncException, FileNotFoundException, IOException, TimeoutException {
+            throws SyncException, IOException, TimeoutException {
 
         // first we check the destination is a directory and exists
         File f = new File(localPath);
@@ -271,16 +268,15 @@ public final class SyncService {
      * @param localFilename The local destination.
      * @param monitor The progress monitor. Cannot be null.
      *
-     * @throws SyncException
-     * @throws IOException
-     * @throws FileNotFoundException
-     * @throws TimeoutException
+     * @throws IOException in case of an IO exception.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
+     * @throws SyncException in case of a sync exception.
      *
      * @see FileListingService.FileEntry
      * @see #getNullProgressMonitor()
      */
     public void pullFile(FileEntry remote, String localFilename, ISyncProgressMonitor monitor)
-            throws FileNotFoundException, IOException, SyncException, TimeoutException {
+            throws IOException, SyncException, TimeoutException {
         int total = remote.getSizeValue();
         monitor.start(total);
 
@@ -326,14 +322,12 @@ public final class SyncService {
      * @param local An array of loca files to push
      * @param remote the remote {@link FileEntry} representing a directory.
      * @param monitor The progress monitor. Cannot be null.
-     * @throws SyncException
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws TimeoutException
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     public void push(String[] local, FileEntry remote, ISyncProgressMonitor monitor)
-            throws SyncException, FileNotFoundException, IOException, TimeoutException {
+            throws SyncException, IOException, TimeoutException {
         if (remote.isDirectory() == false) {
             throw new SyncException(SyncError.REMOTE_IS_FILE);
         }
@@ -361,18 +355,15 @@ public final class SyncService {
      * @param remote The remote filepath.
      * @param monitor The progress monitor. Cannot be null.
      *
-     * @throws SyncException
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws TimeoutException
-     *
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     public void pushFile(String local, String remote, ISyncProgressMonitor monitor)
-            throws SyncException, FileNotFoundException, IOException, TimeoutException {
+            throws SyncException, IOException, TimeoutException {
         File f = new File(local);
         if (f.exists() == false) {
-            throw new FileNotFoundException();
+            throw new SyncException(SyncError.NO_LOCAL_FILE);
         }
 
         if (f.isDirectory()) {
@@ -439,16 +430,13 @@ public final class SyncService {
      * @param fileListingService a FileListingService object to browse through remote directories.
      * @param monitor the progress monitor. Must be started already.
      *
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws SyncException
-     * @throws TimeoutException
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     private void doPull(FileEntry[] entries, String localPath,
             FileListingService fileListingService,
-            ISyncProgressMonitor monitor) throws SyncException, FileNotFoundException, IOException,
-            TimeoutException {
+            ISyncProgressMonitor monitor) throws SyncException, IOException, TimeoutException {
 
         for (FileEntry e : entries) {
             // check if we're cancelled
@@ -484,15 +472,12 @@ public final class SyncService {
      * @param remotePath the remote file (length max is 1024)
      * @param localPath the local destination
      * @param monitor the monitor. The monitor must be started already.
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws SyncException
-     * @throws TimeoutException
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     private void doPullFile(String remotePath, String localPath,
-            ISyncProgressMonitor monitor) throws FileNotFoundException, IOException, SyncException,
-            TimeoutException {
+            ISyncProgressMonitor monitor) throws IOException, SyncException, TimeoutException {
         byte[] msg = null;
         byte[] pullResult = new byte[8];
 
@@ -581,14 +566,12 @@ public final class SyncService {
      * @param remotePath
      * @param monitor
      *
-     * @throws SyncException
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws TimeoutException
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     private void doPush(File[] fileArray, String remotePath, ISyncProgressMonitor monitor)
-            throws SyncException, FileNotFoundException, IOException, TimeoutException {
+            throws SyncException, IOException, TimeoutException {
         for (File f : fileArray) {
             // check if we're canceled
             if (monitor.isCanceled() == true) {
@@ -618,15 +601,12 @@ public final class SyncService {
      * @param remotePath the remote file (length max is 1024)
      * @param monitor the monitor. The monitor must be started already.
      *
-     * @throws SyncException
-     * @throws FileNotFoundException if the file exists but is a directory, does not exist but
-     *            cannot be created, or cannot be opened for any other reason.
-     * @throws IOException
-     * @throws TimeoutException
+     * @throws SyncException if file could not be pushed
+     * @throws IOException in case of I/O error on the connection.
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     private void doPushFile(String localPath, String remotePath,
-            ISyncProgressMonitor monitor) throws SyncException, FileNotFoundException, IOException,
-            TimeoutException {
+            ISyncProgressMonitor monitor) throws SyncException, IOException, TimeoutException {
         FileInputStream fis = null;
         byte[] msg;
 
@@ -712,7 +692,7 @@ public final class SyncService {
      * @param result the current adb result. Must contain both FAIL and the length of the message.
      * @param timeOut
      * @return
-     * @throws TimeoutException
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      * @throws IOException
      */
     private String readErrorMessage(byte[] result, final int timeOut) throws TimeoutException,
@@ -739,7 +719,7 @@ public final class SyncService {
      * @return an Integer containing the mode if all went well or null
      *      otherwise
      * @throws IOException
-     * @throws TimeoutException
+     * @throws TimeoutException in case of a timeout reading responses from the device.
      */
     private Integer readMode(String path) throws TimeoutException, IOException {
         // create the stat request message.
