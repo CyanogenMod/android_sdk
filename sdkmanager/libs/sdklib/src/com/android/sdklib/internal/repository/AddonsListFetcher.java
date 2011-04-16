@@ -142,11 +142,11 @@ public class AddonsListFetcher {
                 reason = String.format("Unknown (%1$s)", exception[0].getClass().getName());
             }
 
-            monitor.setResult("Failed to fetch URL %1$s, reason: %2$s", url, reason);
+            monitor.logError("Failed to fetch URL %1$s, reason: %2$s", url, reason);
         }
 
         if (validationError[0] != null) {
-            monitor.setResult("%s", validationError[0]);  //$NON-NLS-1$
+            monitor.logError("%s", validationError[0]);  //$NON-NLS-1$
         }
 
         // Stop here if we failed to validate the XML. We don't want to load it.
@@ -409,13 +409,13 @@ public class AddonsListFetcher {
 
             return doc;
         } catch (ParserConfigurationException e) {
-            monitor.setResult("Failed to create XML document builder");
+            monitor.logError("Failed to create XML document builder");
 
         } catch (SAXException e) {
-            monitor.setResult("Failed to parse XML document");
+            monitor.logError("Failed to parse XML document");
 
         } catch (IOException e) {
-            monitor.setResult("Failed to read XML document");
+            monitor.logError("Failed to read XML document");
         }
 
         return null;

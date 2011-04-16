@@ -55,18 +55,37 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
-    public void setDescription(String descriptionFormat, Object... args) {
-        final String text = String.format(descriptionFormat, args);
+    public void setDescription(String format, Object... args) {
+        final String text = String.format(format, args);
         mUi.setDescription(text);
     }
 
     /**
-     * Sets the result in the current task.
+     * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
-    public void setResult(String resultFormat, Object... args) {
-        String text = String.format(resultFormat, args);
-        mUi.setResult(text);
+    public void log(String format, Object... args) {
+        String text = String.format(format, args);
+        mUi.log(text);
+    }
+
+    /**
+     * Logs an "error" information line.
+     * This method can be invoked from a non-UI thread.
+     */
+    public void logError(String format, Object... args) {
+        String text = String.format(format, args);
+        mUi.logError(text);
+    }
+
+    /**
+     * Logs a "verbose" information line, that is extra details which are typically
+     * not that useful for the end-user and might be hidden until explicitly shown.
+     * This method can be invoked from a non-UI thread.
+     */
+    public void logVerbose(String format, Object... args) {
+        String text = String.format(format, args);
+        mUi.logVerbose(text);
     }
 
     /**
@@ -112,7 +131,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * This method can be invoked from a non-UI thread.
      */
     public int getProgress() {
-        assert mIncCoef > 0;
+        // mIncCoef is 0 if setProgressMax hasn't been used yet.
         return mIncCoef > 0 ? (int)(mUi.getProgress() / mIncCoef) : 0;
     }
 
@@ -181,12 +200,20 @@ class TaskMonitorImpl implements ITaskMonitor {
             return mRoot.isCancelRequested();
         }
 
-        public void setDescription(String descriptionFormat, Object... args) {
-            mRoot.setDescription(descriptionFormat, args);
+        public void setDescription(String format, Object... args) {
+            mRoot.setDescription(format, args);
         }
 
-        public void setResult(String resultFormat, Object... args) {
-            mRoot.setResult(resultFormat, args);
+        public void log(String format, Object... args) {
+            mRoot.log(format, args);
+        }
+
+        public void logError(String format, Object... args) {
+            mRoot.logError(format, args);
+        }
+
+        public void logVerbose(String format, Object... args) {
+            mRoot.logVerbose(format, args);
         }
 
         public void setProgressMax(int max) {

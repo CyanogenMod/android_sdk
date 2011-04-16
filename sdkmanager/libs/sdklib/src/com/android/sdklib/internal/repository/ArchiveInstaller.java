@@ -63,7 +63,7 @@ public class ArchiveInstaller {
         String name = pkg.getShortDescription();
 
         if (pkg instanceof ExtraPackage && !((ExtraPackage) pkg).isPathValid()) {
-            monitor.setResult("Skipping %1$s: %2$s is not a valid install path.",
+            monitor.log("Skipping %1$s: %2$s is not a valid install path.",
                     name,
                     ((ExtraPackage) pkg).getPath());
             return false;
@@ -71,14 +71,14 @@ public class ArchiveInstaller {
 
         if (archive.isLocal()) {
             // This should never happen.
-            monitor.setResult("Skipping already installed archive: %1$s for %2$s",
+            monitor.log("Skipping already installed archive: %1$s for %2$s",
                     name,
                     archive.getOsDescription());
             return false;
         }
 
         if (!archive.isCompatible()) {
-            monitor.setResult("Skipping incompatible archive: %1$s for %2$s",
+            monitor.log("Skipping incompatible archive: %1$s for %2$s",
                     name,
                     archive.getOsDescription());
             return false;
@@ -88,7 +88,7 @@ public class ArchiveInstaller {
         if (archiveFile != null) {
             // Unarchive calls the pre/postInstallHook methods.
             if (unarchive(archive, osSdkRoot, archiveFile, sdkManager, monitor)) {
-                monitor.setResult("Installed %1$s", name);
+                monitor.log("Installed %1$s", name);
                 // Delete the temp archive if it exists, only on success
                 OsHelper.deleteFileOrFolder(archiveFile);
                 return true;
@@ -110,7 +110,7 @@ public class ArchiveInstaller {
         String name = archive.getParentPackage().getShortDescription();
         String desc = String.format("Downloading %1$s", name);
         monitor.setDescription(desc);
-        monitor.setResult(desc);
+        monitor.log(desc);
 
         String link = archive.getUrl();
         if (!link.startsWith("http://")                          //$NON-NLS-1$
@@ -120,7 +120,7 @@ public class ArchiveInstaller {
             Package pkg = archive.getParentPackage();
             SdkSource src = pkg.getParentSource();
             if (src == null) {
-                monitor.setResult("Internal error: no source for archive %1$s", name);
+                monitor.logError("Internal error: no source for archive %1$s", name);
                 return null;
             }
 
@@ -152,7 +152,7 @@ public class ArchiveInstaller {
                 OsHelper.deleteFileOrFolder(tmpFolder);
             }
             if (!tmpFolder.mkdirs()) {
-                monitor.setResult("Failed to create directory %1$s", tmpFolder.getPath());
+                monitor.logError("Failed to create directory %1$s", tmpFolder.getPath());
                 return null;
             }
         }
@@ -214,10 +214,10 @@ public class ArchiveInstaller {
 
         } catch (FileNotFoundException e) {
             // The FNF message is just the URL. Make it a bit more useful.
-            monitor.setResult("File not found: %1$s", e.getMessage());
+            monitor.logError("File not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.setResult(e.getMessage());
+            monitor.logError(e.getMessage());
 
         } finally {
             if (is != null) {
@@ -327,14 +327,15 @@ public class ArchiveInstaller {
                 }
 
                 if (monitor.isCancelRequested()) {
-                    monitor.setResult("Download aborted by user at %1$d bytes.", total);
+                    monitor.log("Download aborted by user at %1$d bytes.", total);
                     return false;
                 }
 
             }
 
             if (total != size) {
-                monitor.setResult("Download finished with wrong size. Expected %1$d bytes, got %2$d bytes.",
+                monitor.logError(
+                        "Download finished with wrong size. Expected %1$d bytes, got %2$d bytes.",
                         size, total);
                 return false;
             }
@@ -343,7 +344,7 @@ public class ArchiveInstaller {
             String actual   = getDigestChecksum(digester);
             String expected = archive.getChecksum();
             if (!actual.equalsIgnoreCase(expected)) {
-                monitor.setResult("Download finished with wrong checksum. Expected %1$s, got %2$s.",
+                monitor.logError("Download finished with wrong checksum. Expected %1$s, got %2$s.",
                         expected, actual);
                 return false;
             }
@@ -352,10 +353,10 @@ public class ArchiveInstaller {
 
         } catch (FileNotFoundException e) {
             // The FNF message is just the URL. Make it a bit more useful.
-            monitor.setResult("File not found: %1$s", e.getMessage());
+            monitor.logError("File not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.setResult(e.getMessage());
+            monitor.logError(e.getMessage());
 
         } finally {
             if (os != null) {
@@ -391,7 +392,7 @@ public class ArchiveInstaller {
         String pkgName = pkg.getShortDescription();
         String pkgDesc = String.format("Installing %1$s", pkgName);
         monitor.setDescription(pkgDesc);
-        monitor.setResult(pkgDesc);
+        monitor.log(pkgDesc);
 
         // Ideally we want to always unzip in a temp folder which name depends on the package
         // type (e.g. addon, tools, etc.) and then move the folder to the destination folder.
@@ -432,12 +433,12 @@ public class ArchiveInstaller {
 
             if (destFolder == null) {
                 // this should not seriously happen.
-                monitor.setResult("Failed to compute installation directory for %1$s.", pkgName);
+                monitor.log("Failed to compute installation directory for %1$s.", pkgName);
                 return false;
             }
 
             if (!pkg.preInstallHook(archive, monitor, osSdkRoot, destFolder)) {
-                monitor.setResult("Skipping archive: %1$s", pkgName);
+                monitor.log("Skipping archive: %1$s", pkgName);
                 return false;
             }
 
@@ -450,14 +451,14 @@ public class ArchiveInstaller {
                 }
                 if (oldDestFolder == null) {
                     // this should not seriously happen.
-                    monitor.setResult("Failed to find a temp directory in %1$s.", osSdkRoot);
+                    monitor.logError("Failed to find a temp directory in %1$s.", osSdkRoot);
                     return false;
                 }
 
                 // Try to move the current dest dir to the temp/old one. Tell the user if it failed.
                 while(true) {
                     if (!moveFolder(destFolder, oldDestFolder)) {
-                        monitor.setResult("Failed to rename directory %1$s to %2$s.",
+                        monitor.logError("Failed to rename directory %1$s to %2$s.",
                                 destFolder.getPath(), oldDestFolder.getPath());
 
                         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
@@ -489,7 +490,7 @@ public class ArchiveInstaller {
             // -2- Unzip new content directly in place.
 
             if (!destFolder.mkdirs()) {
-                monitor.setResult("Failed to create directory %1$s", destFolder.getPath());
+                monitor.logError("Failed to create directory %1$s", destFolder.getPath());
                 return false;
             }
 
@@ -498,7 +499,7 @@ public class ArchiveInstaller {
             }
 
             if (!generateSourceProperties(archive, destFolder)) {
-                monitor.setResult("Failed to generate source.properties in directory %1$s",
+                monitor.logError("Failed to generate source.properties in directory %1$s",
                         destFolder.getPath());
                 return false;
             }
@@ -627,7 +628,7 @@ public class ArchiveInstaller {
                     // Create directory if it doesn't exist yet. This allows us to create
                     // empty directories.
                     if (!destFile.isDirectory() && !destFile.mkdirs()) {
-                        monitor.setResult("Failed to create temp directory %1$s",
+                        monitor.logError("Failed to create temp directory %1$s",
                                 destFile.getPath());
                         return false;
                     }
@@ -638,7 +639,7 @@ public class ArchiveInstaller {
                     File parentDir = destFile.getParentFile();
                     if (!parentDir.isDirectory()) {
                         if (!parentDir.mkdirs()) {
-                            monitor.setResult("Failed to create temp directory %1$s",
+                            monitor.logError("Failed to create temp directory %1$s",
                                     parentDir.getPath());
                             return false;
                         }
@@ -689,7 +690,7 @@ public class ArchiveInstaller {
             return true;
 
         } catch (IOException e) {
-            monitor.setResult("Unzip failed: %1$s", e.getMessage());
+            monitor.logError("Unzip failed: %1$s", e.getMessage());
 
         } finally {
             if (zipFile != null) {

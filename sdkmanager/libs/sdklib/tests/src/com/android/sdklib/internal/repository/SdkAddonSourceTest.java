@@ -176,8 +176,9 @@ public class SdkAddonSourceTest extends TestCase {
                      "Found G USB Driver package, revision 43 (Obsolete)\n" +
                      "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
                      "Found Unkown Extra package, revision 2 (Obsolete)\n",
-                monitor.getCapturedDescriptions());
-        assertEquals("", monitor.getCapturedResults());
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
 
         // check the packages we found... we expected to find 11 packages with each at least
         // one archive.

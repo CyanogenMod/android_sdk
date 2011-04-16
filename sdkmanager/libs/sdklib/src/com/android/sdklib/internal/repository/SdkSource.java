@@ -303,7 +303,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                         if (usingAlternateUrl && validatedDoc != null) {
                             // If the second tentative succeeded, indicate it in the console
                             // with the URL that worked.
-                            monitor.setResult("Repository found at %1$s", url);
+                            monitor.log("Repository found at %1$s", url);
 
                             // Keep the modified URL
                             mUrl = url;
@@ -388,11 +388,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                 reason = String.format("Unknown (%1$s)", exception[0].getClass().getName());
             }
 
-            monitor.setResult("Failed to fetch URL %1$s, reason: %2$s", url, reason);
+            monitor.logError("Failed to fetch URL %1$s, reason: %2$s", url, reason);
         }
 
         if (validationError[0] != null) {
-            monitor.setResult("%s", validationError[0]);  //$NON-NLS-1$
+            monitor.logError("%s", validationError[0]);  //$NON-NLS-1$
         }
 
         // Stop here if we failed to validate the XML. We don't want to load it.
@@ -748,16 +748,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
                         if (p != null) {
                             packages.add(p);
-                            // TODO: change this to a monitor.print() in sdkman2. In between
-                            // simply remove this which isn't very useful since it hides
-                            // which source is being loaded in the progress dialog.
-                            // Note that this breaks unit tests that depend on this output.
-                            // monitor.setDescription("Found %1$s", p.getShortDescription());
+                            monitor.logVerbose("Found %1$s", p.getShortDescription());
                         }
                     } catch (Exception e) {
                         // Ignore invalid packages
-                        monitor.setResult("Ignoring invalid %1$s element: %2$s",
-                                name, e.toString());
+                        monitor.logError("Ignoring invalid %1$s element: %2$s", name, e.toString());
                     }
                 }
             }
@@ -806,13 +801,13 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
             return doc;
         } catch (ParserConfigurationException e) {
-            monitor.setResult("Failed to create XML document builder");
+            monitor.logError("Failed to create XML document builder");
 
         } catch (SAXException e) {
-            monitor.setResult("Failed to parse XML document");
+            monitor.logError("Failed to parse XML document");
 
         } catch (IOException e) {
-            monitor.setResult("Failed to read XML document");
+            monitor.logError("Failed to read XML document");
         }
 
         return null;

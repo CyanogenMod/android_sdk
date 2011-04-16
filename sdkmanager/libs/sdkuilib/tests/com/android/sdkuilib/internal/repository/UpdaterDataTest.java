@@ -186,7 +186,7 @@ public class UpdaterDataTest extends TestCase {
             return false;
         }
 
-        public void setDescription(String descriptionFormat, Object... args) {
+        public void setDescription(String format, Object... args) {
             // ignore
         }
 
@@ -194,7 +194,15 @@ public class UpdaterDataTest extends TestCase {
             // ignore
         }
 
-        public void setResult(String resultFormat, Object... args) {
+        public void log(String format, Object... args) {
+            // ignore
+        }
+
+        public void logError(String format, Object... args) {
+            // ignore
+        }
+
+        public void logVerbose(String format, Object... args) {
             // ignore
         }
     }

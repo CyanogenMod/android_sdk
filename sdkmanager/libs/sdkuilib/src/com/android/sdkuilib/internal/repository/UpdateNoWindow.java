@@ -174,45 +174,52 @@ public class UpdateNoWindow {
         /**
          * Sets the description in the current task dialog.
          */
-        public void setDescription(String descriptionFormat, Object...args) {
+        public void setDescription(String format, Object...args) {
 
             String last = mLastDesc;
-            String line = String.format("  " + descriptionFormat, args);            //$NON-NLS-1$
+            String line = String.format("  " + format, args);                       //$NON-NLS-1$
 
             // If the description contains a %, it generally indicates a recurring
             // progress so we want a \r at the end.
-            if (line.indexOf('%') > -1) {
-                if (mLastProgressBase != null && line.startsWith(mLastProgressBase)) {
-                    line = "    " + line.substring(mLastProgressBase.length());     //$NON-NLS-1$
+            int pos = line.indexOf('%');
+            if (pos > -1) {
+                String base = line.trim();
+                if (mLastProgressBase != null && base.startsWith(mLastProgressBase)) {
+                    line = "    " + base.substring(mLastProgressBase.length());     //$NON-NLS-1$
                 }
                 line += '\r';
             } else {
-                mLastProgressBase = line;
+                mLastProgressBase = line.trim();
                 line += '\n';
             }
 
             // Skip line if it's the same as the last one.
-            if (last != null && last.equals(line)) {
+            if (last != null && last.equals(line.trim())) {
                 return;
             }
-            mLastDesc = line;
+            mLastDesc = line.trim();
 
             // If the last line terminated with a \r but the new one doesn't, we need to
             // insert a \n to avoid erasing the previous line.
             if (last != null &&
-                    last.endsWith("\r") &&
-                    !line.endsWith("\r")) {
+                    last.endsWith("\r") &&                                          //$NON-NLS-1$
+                    !line.endsWith("\r")) {                                         //$NON-NLS-1$
                 line = '\n' + line;
             }
 
             mSdkLog.printf("%s", line);                                             //$NON-NLS-1$
         }
 
-        /**
-         * Sets the description in the current task dialog.
-         */
-        public void setResult(String resultFormat, Object...args) {
-            setDescription(resultFormat, args);
+        public void log(String format, Object...args) {
+            setDescription("  " + format, args);                                    //$NON-NLS-1$
+        }
+
+        public void logError(String format, Object...args) {
+            setDescription(format, args);
+        }
+
+        public void logVerbose(String format, Object...args) {
+            // The ConsoleTask does not display verbose log messages.
         }
 
         /**
@@ -331,12 +338,20 @@ public class UpdateNoWindow {
             return mRoot.isCancelRequested();
         }
 
-        public void setDescription(String descriptionFormat, Object... args) {
-            mRoot.setDescription(descriptionFormat, args);
+        public void setDescription(String format, Object... args) {
+            mRoot.setDescription(format, args);
         }
 
-        public void setResult(String resultFormat, Object... args) {
-            mRoot.setResult(resultFormat, args);
+        public void log(String format, Object... args) {
+            mRoot.log(format, args);
+        }
+
+        public void logError(String format, Object... args) {
+            mRoot.logError(format, args);
+        }
+
+        public void logVerbose(String format, Object... args) {
+            mRoot.logVerbose(format, args);
         }
 
         public void setProgressMax(int max) {

@@ -54,7 +54,11 @@ public class AdbWrapper {
     }
 
     private void display(String format, Object...args) {
-        mMonitor.setResult(format, args);
+        mMonitor.log(format, args);
+    }
+
+    private void displayError(String format, Object...args) {
+        mMonitor.logError(format, args);
     }
 
     /**
@@ -63,7 +67,7 @@ public class AdbWrapper {
      */
     public synchronized boolean startAdb() {
         if (mAdbOsLocation == null) {
-            display("Error: missing path to ADB."); //$NON-NLS-1$
+            displayError("Error: missing path to ADB."); //$NON-NLS-1$
             return false;
         }
 
@@ -82,15 +86,15 @@ public class AdbWrapper {
                     false /* waitForReaders */);
 
         } catch (IOException ioe) {
-            display("Unable to run 'adb': %1$s.", ioe.getMessage()); //$NON-NLS-1$
+            displayError("Unable to run 'adb': %1$s.", ioe.getMessage()); //$NON-NLS-1$
             // we'll return false;
         } catch (InterruptedException ie) {
-            display("Unable to run 'adb': %1$s.", ie.getMessage()); //$NON-NLS-1$
+            displayError("Unable to run 'adb': %1$s.", ie.getMessage()); //$NON-NLS-1$
             // we'll return false;
         }
 
         if (status != 0) {
-            display("'adb start-server' failed."); //$NON-NLS-1$
+            displayError("'adb start-server' failed."); //$NON-NLS-1$
             return false;
         }
 
@@ -105,7 +109,7 @@ public class AdbWrapper {
      */
     public synchronized boolean stopAdb() {
         if (mAdbOsLocation == null) {
-            display("Error: missing path to ADB."); //$NON-NLS-1$
+            displayError("Error: missing path to ADB."); //$NON-NLS-1$
             return false;
         }
 
@@ -127,7 +131,7 @@ public class AdbWrapper {
         }
 
         if (status != 0) {
-            display("'adb kill-server' failed -- run manually if necessary."); //$NON-NLS-1$
+            displayError("'adb kill-server' failed -- run manually if necessary."); //$NON-NLS-1$
             return false;
         }
 
@@ -163,7 +167,7 @@ public class AdbWrapper {
                     while (true) {
                         String line = errReader.readLine();
                         if (line != null) {
-                            display("ADB Error: %1$s", line);
+                            displayError("ADB Error: %1$s", line);
                             errorOutput.add(line);
                         } else {
                             break;
@@ -185,7 +189,7 @@ public class AdbWrapper {
                     while (true) {
                         String line = outReader.readLine();
                         if (line != null) {
-                            display("ADB: %1$s", line);
+                            displayError("ADB: %1$s", line);
                             stdOutput.add(line);
                         } else {
                             break;

@@ -263,17 +263,17 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
             status = grabProcessOutput(proc, monitor, scriptName);
 
         } catch (Exception e) {
-            monitor.setResult("Exception: %s", e.toString());
+            monitor.logError("Exception: %s", e.toString());
         }
 
         if (status != 0) {
-            monitor.setResult("Failed to execute %s", scriptName);
+            monitor.logError("Failed to execute %s", scriptName);
             return;
         }
     }
 
     /**
-     * Get the stderr/stdout outputs of a process and return when the process is done.
+     * Gets the stderr/stdout outputs of a process and returns when the process is done.
      * Both <b>must</b> be read or the process will block on windows.
      * @param process The process to get the ouput from.
      * @param monitor The monitor where to output errors.
@@ -298,7 +298,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
                     while (true) {
                         String line = errReader.readLine();
                         if (line != null) {
-                            monitor.setResult("[%1$s] Error: %2$s", scriptName, line);
+                            monitor.logError("[%1$s] Error: %2$s", scriptName, line);
                         } else {
                             break;
                         }
@@ -319,7 +319,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
                     while (true) {
                         String line = outReader.readLine();
                         if (line != null) {
-                            monitor.setResult("[%1$s] %2$s", scriptName, line);
+                            monitor.log("[%1$s] %2$s", scriptName, line);
                         } else {
                             break;
                         }

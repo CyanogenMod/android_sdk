@@ -141,14 +141,15 @@ public class SdkRepoSourceTest extends TestCase {
 
         Document result = mSource._findAlternateToolsXml(xmlStream);
         assertNotNull(result);
-        MockMonitor mon = new MockMonitor();
-        assertTrue(mSource._parsePackages(result, SdkRepoConstants.NS_URI, mon));
+        MockMonitor monitor = new MockMonitor();
+        assertTrue(mSource._parsePackages(result, SdkRepoConstants.NS_URI, monitor));
 
         assertEquals("Found Android SDK Tools, revision 1\n" +
                      "Found Android SDK Tools, revision 42\n" +
                      "Found Android SDK Platform-tools, revision 3\n",
-                mon.getCapturedDescriptions());
-        assertEquals("", mon.getCapturedResults());
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
 
         // check the packages we found... we expected to find 2 tool packages and 1
         // platform-tools package, with at least 1 archive each.
@@ -199,8 +200,9 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Android SDK Tools, revision 42\n" +
                      "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
                      "Found Usb Driver package, revision 43\n",
-                monitor.getCapturedDescriptions());
-        assertEquals("", monitor.getCapturedResults());
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
 
         // check the packages we found... we expected to find 11 packages with each at least
         // one archive.
@@ -277,8 +279,9 @@ public class SdkRepoSourceTest extends TestCase {
                      "Found Usb Driver package, revision 43 (Obsolete)\n" +
                      "Found Extra API Dep package, revision 2 (Obsolete)\n" +
                      "Found Samples for SDK API 14, revision 24 (Obsolete)\n",
-                monitor.getCapturedDescriptions());
-        assertEquals("", monitor.getCapturedResults());
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
 
         // check the packages we found... we expected to find 13 packages with each at least
         // one archive.
@@ -353,8 +356,9 @@ public class SdkRepoSourceTest extends TestCase {
                     "Found A USB Driver package, revision 43 (Obsolete)\n" +
                     "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
                     "Found Samples for SDK API 14, revision 24 (Obsolete)\n",
-                monitor.getCapturedDescriptions());
-        assertEquals("", monitor.getCapturedResults());
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
 
         // check the packages we found... we expected to find 13 packages with each at least
         // one archive.

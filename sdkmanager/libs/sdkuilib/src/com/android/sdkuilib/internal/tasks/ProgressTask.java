@@ -47,6 +47,7 @@ public final class ProgressTask extends TaskMonitorImpl {
     /**
      * Creates a thread to run the task. The thread has not been started yet.
      * When the task completes, requests to close the dialog.
+     *
      * @return A new thread that will run the task. The thread has not been started yet.
      */
     private Thread createTaskThread(String title, final ITask task) {
@@ -67,12 +68,12 @@ public final class ProgressTask extends TaskMonitorImpl {
     }
 
     /**
-     * Sets the result in the current task dialog.
-     * Sets the dialog to not auto-close since we want the user to see the result.
+     * Sets the dialog to not auto-close since we want the user to see the error.
+     * {@inheritDoc}
      */
     @Override
-    public void setResult(String resultFormat, Object...args) {
+    public void logError(String format, Object...args) {
         mAutomaticallyCloseOnTaskCompletion = false;
-        super.setResult(resultFormat, args);
+        super.logError(format, args);
     }
 }

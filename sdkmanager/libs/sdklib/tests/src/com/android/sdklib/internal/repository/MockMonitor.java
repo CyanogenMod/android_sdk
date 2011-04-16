@@ -24,26 +24,44 @@ package com.android.sdklib.internal.repository;
  */
 public class MockMonitor implements ITaskMonitor {
 
-    String mCapturedResults = "";
-    String mCapturedDescriptions = "";
+    String mCapturedLog = "";                                           //$NON-NLS-1$
+    String mCapturedErrorLog = "";                                      //$NON-NLS-1$
+    String mCapturedVerboseLog = "";                                    //$NON-NLS-1$
+    String mCapturedDescriptions = "";                                  //$NON-NLS-1$
 
-    public String getCapturedResults() {
-        return mCapturedResults;
+    public String getCapturedLog() {
+        return mCapturedLog;
+    }
+
+    public String getCapturedErrorLog() {
+        return mCapturedErrorLog;
+    }
+
+    public String getCapturedVerboseLog() {
+        return mCapturedVerboseLog;
     }
 
     public String getCapturedDescriptions() {
         return mCapturedDescriptions;
     }
 
-    public void setResult(String resultFormat, Object... args) {
-        mCapturedResults += String.format(resultFormat, args) + "\n";
+    public void log(String format, Object... args) {
+        mCapturedLog += String.format(format, args) + "\n";             //$NON-NLS-1$
+    }
+
+    public void logError(String format, Object... args) {
+        mCapturedErrorLog += String.format(format, args) + "\n";        //$NON-NLS-1$
+    }
+
+    public void logVerbose(String format, Object... args) {
+        mCapturedVerboseLog += String.format(format, args) + "\n";      //$NON-NLS-1$
     }
 
     public void setProgressMax(int max) {
     }
 
-    public void setDescription(String descriptionFormat, Object... args) {
-        mCapturedDescriptions += String.format(descriptionFormat, args) + "\n";
+    public void setDescription(String format, Object... args) {
+        mCapturedDescriptions += String.format(format, args) + "\n";    //$NON-NLS-1$
     }
 
     public boolean isCancelRequested() {
