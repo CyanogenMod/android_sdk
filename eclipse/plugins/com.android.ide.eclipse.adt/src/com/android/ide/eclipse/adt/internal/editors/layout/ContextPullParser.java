@@ -22,6 +22,8 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
+import com.android.ide.common.rendering.api.IProjectCallback;
+import com.android.layoutlib.api.IXmlPullParser;
 import com.android.sdklib.SdkConstants;
 
 import org.kxml2.io.KXmlParser;
@@ -35,23 +37,22 @@ import org.kxml2.io.KXmlParser;
  */
 public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
 
-    private final String mName;
-    private final ILayoutPullParser mEmbeddedParser;
+    private final IProjectCallback mProjectCallback;
 
-    public ContextPullParser(String name, ILayoutPullParser embeddedParser) {
+    public ContextPullParser(IProjectCallback projectCallback) {
         super();
-        mName = name;
-        mEmbeddedParser = embeddedParser;
+        mProjectCallback = projectCallback;
     }
 
     // --- Layout lib API methods
 
+    /**
+     * this is deprecated but must still be implemented for older layout libraries.
+     * @deprecated use {@link IProjectCallback#getParser(String)}.
+     */
+    @Deprecated
     public ILayoutPullParser getParser(String layoutName) {
-        if (mName.equals(layoutName)) {
-            return mEmbeddedParser;
-        }
-
-        return null;
+        return mProjectCallback.getParser(layoutName);
     }
 
     public Object getViewCookie() {

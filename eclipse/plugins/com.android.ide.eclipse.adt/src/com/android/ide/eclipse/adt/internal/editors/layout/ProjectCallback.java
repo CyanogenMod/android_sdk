@@ -24,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
 import com.android.ide.common.rendering.api.DataBindingItem;
+import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceReference;
@@ -65,6 +66,10 @@ public final class ProjectCallback extends LegacyCallback {
     private ProjectClassLoader mLoader = null;
     private LayoutLog mLogger;
     private LayoutLibrary mLayoutLib;
+
+    private String mLayoutName;
+    private ILayoutPullParser mLayoutEmbeddedParser;
+
 
     /**
      * Creates a new {@link ProjectCallback} to be used with the layout lib.
@@ -348,6 +353,19 @@ public final class ProjectCallback extends LegacyCallback {
 
         constructor.setAccessible(true);
         return constructor.newInstance(constructorParameters);
+    }
+
+    public void setLayoutParser(String layoutName, ILayoutPullParser layoutParser) {
+        mLayoutName = layoutName;
+        mLayoutEmbeddedParser = layoutParser;
+    }
+
+    public ILayoutPullParser getParser(String layoutName) {
+        if (layoutName.equals(mLayoutName)) {
+            return mLayoutEmbeddedParser;
+        }
+
+        return null;
     }
 
     public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
