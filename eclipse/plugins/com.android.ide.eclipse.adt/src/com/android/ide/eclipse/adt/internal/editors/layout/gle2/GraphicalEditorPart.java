@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
@@ -55,6 +56,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutC
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -236,6 +238,7 @@ public class GraphicalEditorPart extends EditorPart
     private TargetListener mTargetListener;
 
     private ConfigListener mConfigListener;
+    private ResourceResolver mResourceResolver;
 
     private ReloadListener mReloadListener;
 
@@ -436,6 +439,7 @@ public class GraphicalEditorPart extends EditorPart
          */
         public void onConfigurationChange() {
             mConfiguredFrameworkRes = mConfiguredProjectRes = null;
+            mResourceResolver = null;
 
             if (mEditedFile == null || mConfigComposite.getEditedConfig() == null) {
                 return;
@@ -511,6 +515,7 @@ public class GraphicalEditorPart extends EditorPart
         public void onThemeChange() {
             // Store the state in the current file
             mConfigComposite.storeState();
+            mResourceResolver = null;
 
             recomputeLayout();
 
@@ -778,6 +783,7 @@ public class GraphicalEditorPart extends EditorPart
 
             // because the target changed we must reset the configured resources.
             mConfiguredFrameworkRes = mConfiguredProjectRes = null;
+            mResourceResolver = null;
 
             // make sure we remove the custom view loader, since its parent class loader is the
             // bridge class loader.
@@ -796,7 +802,7 @@ public class GraphicalEditorPart extends EditorPart
     /** Refresh the configured project resources associated with this editor */
     public void refreshProjectResources() {
         mConfiguredProjectRes = null;
-        mConfigListener.getConfiguredProjectResources();
+        mResourceResolver = null;
     }
 
     /**
@@ -1381,51 +1387,25 @@ public class GraphicalEditorPart extends EditorPart
         model.refreshUi();
     }
 
-    private RenderSession renderWithBridge(IProject iProject, UiDocumentNode model,
+    private RenderSession renderWithBridge(IProject project, UiDocumentNode model,
             LayoutLibrary layoutLib, int width, int height, Set<UiElementNode> explodeNodes,
             Integer overrideBgColor, boolean noDecor, LayoutLog logger, Reference includeWithin,
             RenderingMode renderingMode) {
         ResourceManager resManager = ResourceManager.getInstance();
 
-        ProjectResources projectRes = resManager.getProjectResources(iProject);
+        ProjectResources projectRes = resManager.getProjectResources(project);
         if (projectRes == null) {
             displayError("Missing project resources.");
             return null;
         }
 
-        // Get the resources of the file's project.
-        Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes =
-            mConfigListener.getConfiguredProjectResources();
-
-        // Get the framework resources
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
-            mConfigListener.getConfiguredFrameworkResources();
-
-        // Abort the rendering if the resources are not found.
-        if (configuredProjectRes == null) {
-            displayError("Missing project resources for current configuration.");
-            return null;
-        }
-
-        if (frameworkResources == null) {
-            displayError("Missing framework resources.");
-            return null;
-        }
-
         // Lazily create the project callback the first time we need it
         if (mProjectCallback == null) {
-            mProjectCallback = new ProjectCallback(layoutLib, projectRes, iProject);
+            mProjectCallback = new ProjectCallback(layoutLib, projectRes, project);
         } else {
             // Also clears the set of missing/broken classes prior to rendering
             mProjectCallback.getMissingClasses().clear();
             mProjectCallback.getUninstantiatableClasses().clear();
-        }
-
-        // get the selected theme
-        String theme = mConfigComposite.getTheme();
-        if (theme == null) {
-            displayError("Missing theme.");
-            return null;
         }
 
         if (mUseExplodeMode) {
@@ -1433,7 +1413,7 @@ public class GraphicalEditorPart extends EditorPart
             List<UiElementNode> children = model.getUiChildren();
             if (children.size() == 1) {
                 ExplodedRenderingHelper helper = new ExplodedRenderingHelper(
-                        children.get(0).getXmlNode(), iProject);
+                        children.get(0).getXmlNode(), project);
 
                 // there are 2 paddings for each view
                 // left and right, or top and bottom.
@@ -1447,10 +1427,9 @@ public class GraphicalEditorPart extends EditorPart
         Density density = mConfigComposite.getDensity();
         float xdpi = mConfigComposite.getXDpi();
         float ydpi = mConfigComposite.getYDpi();
-        boolean isProjectTheme = mConfigComposite.isProjectTheme();
 
         ILayoutPullParser modelParser = new UiElementPullParser(model,
-                mUseExplodeMode, explodeNodes, density, xdpi, iProject);
+                mUseExplodeMode, explodeNodes, density, xdpi, project);
         ILayoutPullParser topParser = modelParser;
 
         // Code to support editing included layout
@@ -1460,9 +1439,8 @@ public class GraphicalEditorPart extends EditorPart
             String contextLayoutName = includeWithin.getName();
 
             // Find the layout file.
-            Map<String, ResourceValue> layouts = configuredProjectRes.get(
-                    ResourceType.LAYOUT);
-            ResourceValue contextLayout = layouts.get(contextLayoutName);
+            ResourceValue contextLayout = getResourceResolver().findResValue(
+                    LAYOUT_PREFIX + contextLayoutName , false  /* forceFrameworkOnly*/);
             if (contextLayout != null) {
                 File layoutFile = new File(contextLayout.getValue());
                 if (layoutFile.isFile()) {
@@ -1482,15 +1460,16 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        // FIXME: make resource resolver persistent, and only update it when something changes.
-        ResourceResolver resolver = ResourceResolver.create(
-                configuredProjectRes, frameworkResources,
-                theme, isProjectTheme);
+        ResourceResolver resolver = getResourceResolver();
+        if (resolver == null) {
+            // Abort the rendering if the resources are not found.
+            return null;
+        }
 
         SessionParams params = new SessionParams(
                 topParser,
                 renderingMode,
-                iProject /* projectKey */,
+                project /* projectKey */,
                 width, height,
                 density, xdpi, ydpi,
                 resolver,
@@ -1500,19 +1479,11 @@ public class GraphicalEditorPart extends EditorPart
                 logger);
         if (noDecor) {
             params.setForceNoDecor();
-        }
-
-        // FIXME make persistent and only reload when the manifest (or at least resources) changes.
-        IFolderWrapper projectFolder = new IFolderWrapper(getProject());
-        IAbstractFile manifest = AndroidManifest.getManifest(projectFolder);
-        if (manifest != null) {
+        } else {
+            ManifestInfo manifestInfo = ManifestInfo.get(project);
             try {
-                params.setAppIcon(AndroidManifest.getApplicationIcon(manifest));
-            } catch (Exception e) {
-                // ignore.
-            }
-            try {
-                params.setAppLabel(AndroidManifest.getApplicationLabel(manifest));
+                params.setAppLabel(manifestInfo.getApplicationLabel());
+                params.setAppIcon(manifestInfo.getApplicationIcon());
             } catch (Exception e) {
                 // ignore.
             }
@@ -1529,18 +1500,6 @@ public class GraphicalEditorPart extends EditorPart
 
         // set the Image Overlay as the image factory.
         params.setImageFactory(getCanvasControl().getImageOverlay());
-
-        // ---------------------------------------
-        // Data binding DEBUG
-//        AdapterBinding binding = new AdapterBinding(3);
-//        binding.addHeader(new ResourceReference("header", false));
-//        binding.addFooter(new ResourceReference("footer", false));
-//        DataBindingItem item = new DataBindingItem("groupitem", false, 3);
-//        binding.addItem(item);
-//        item.addChild(new DataBindingItem("separator", false, 1));
-//        item.addChild(new DataBindingItem("listitem", false, 3));
-//        params.addAdapterBinding(new ResourceReference("listview"), binding);
-        // ---------------------------------------
 
         try {
             mProjectCallback.setLogger(logger);
@@ -1564,7 +1523,7 @@ public class GraphicalEditorPart extends EditorPart
      * @return the image, or null if something went wrong
      */
     BufferedImage renderThemeItem(String itemName, int width, int height) {
-        ResourceResolver resources = createResolver();
+        ResourceResolver resources = getResourceResolver();
         LayoutLibrary layoutLibrary = getLayoutLibrary();
         IProject project = getProject();
         ResourceValue drawableResourceValue = resources.findItemInTheme(itemName);
@@ -1591,19 +1550,44 @@ public class GraphicalEditorPart extends EditorPart
         return null;
     }
 
-    public ResourceResolver createResolver() {
-        String theme = mConfigComposite.getTheme();
-        boolean isProjectTheme = mConfigComposite.isProjectTheme();
-        Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes =
-            mConfigListener.getConfiguredProjectResources();
+    /**
+     * Returns the {@link ResourceResolver} for this editor
+     *
+     * @return the resolver used to resolve resources for the current configuration of
+     *         this editor, or null
+     */
+    public ResourceResolver getResourceResolver() {
+        if (mResourceResolver == null) {
+            String theme = mConfigComposite.getTheme();
+            if (theme == null) {
+                displayError("Missing theme.");
+                return null;
+            }
+            boolean isProjectTheme = mConfigComposite.isProjectTheme();
 
-        // Get the framework resources
-        Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
-            mConfigListener.getConfiguredFrameworkResources();
+            Map<ResourceType, Map<String, ResourceValue>> configuredProjectRes =
+                mConfigListener.getConfiguredProjectResources();
 
-        return ResourceResolver.create(
-                configuredProjectRes, frameworkResources,
-                theme, isProjectTheme);
+            // Get the framework resources
+            Map<ResourceType, Map<String, ResourceValue>> frameworkResources =
+                mConfigListener.getConfiguredFrameworkResources();
+
+            if (configuredProjectRes == null) {
+                displayError("Missing project resources for current configuration.");
+                return null;
+            }
+
+            if (frameworkResources == null) {
+                displayError("Missing framework resources.");
+                return null;
+            }
+
+            mResourceResolver = ResourceResolver.create(
+                    configuredProjectRes, frameworkResources,
+                    theme, isProjectTheme);
+        }
+
+        return mResourceResolver;
     }
 
     /**
@@ -1702,6 +1686,7 @@ public class GraphicalEditorPart extends EditorPart
 
                 // force a reparse in case a value XML file changed.
                 mConfiguredProjectRes = null;
+                mResourceResolver = null;
 
                 // clear the cache in the bridge in case a bitmap/9-patch changed.
                 LayoutLibrary layoutLib = getReadyLayoutLib(true /*displayError*/);

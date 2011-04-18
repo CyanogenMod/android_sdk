@@ -166,7 +166,40 @@ public class ManifestInfoTest extends AdtProjectTest {
 
     }
 
+    public void testGetApplicationLabelAndIcon() throws Exception {
+        ManifestInfo info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <application android:icon=\"@drawable/icon\"\n" +
+                "                 android:label=\"@string/app_name\">\n" +
+                "    </application>\n" +
+                "" +
+                "</manifest>\n");
+        Map<String, String> map = info.getActivityThemes();
+        assertEquals(map.toString(), 0, map.size());
+        assertEquals("com.android.unittest", info.getPackage());
 
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, NORMAL)));
+        assertEquals("@drawable/icon", info.getApplicationIcon());
+        assertEquals("@string/app_name", info.getApplicationLabel());
+    }
+
+    public void testGetApplicationNoLabelOrIcon() throws Exception {
+        ManifestInfo info = getManifestInfo(
+                "<manifest xmlns:android='http://schemas.android.com/apk/res/android'\n" +
+                "    package='com.android.unittest'>\n" +
+                "    <application>\n" +
+                "    </application>\n" +
+                "" +
+                "</manifest>\n");
+        Map<String, String> map = info.getActivityThemes();
+        assertEquals(map.toString(), 0, map.size());
+        assertEquals("com.android.unittest", info.getPackage());
+
+        assertEquals("Theme", ResourceHelper.styleToTheme(info.getDefaultTheme(null, NORMAL)));
+        assertNull(info.getApplicationIcon());
+        assertNull(info.getApplicationLabel());
+    }
 
     private ManifestInfo getManifestInfo(String manifestContents) throws Exception {
         InputStream bstream = new ByteArrayInputStream(

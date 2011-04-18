@@ -338,7 +338,7 @@ public class PreviewIconFactory {
         RGB background = null;
         RGB foreground = null;
 
-        ResourceResolver resources = mPalette.getEditor().createResolver();
+        ResourceResolver resources = mPalette.getEditor().getResourceResolver();
         StyleResourceValue theme = resources.getCurrentTheme();
         if (theme != null) {
             background = resolveThemeColor(resources, "windowBackground"); //$NON-NLS-1$
