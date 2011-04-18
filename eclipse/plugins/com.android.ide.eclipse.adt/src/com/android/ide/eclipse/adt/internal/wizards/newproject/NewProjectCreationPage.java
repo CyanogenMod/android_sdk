@@ -24,6 +24,7 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -31,8 +32,8 @@ import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCre
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
@@ -98,6 +99,8 @@ import java.util.regex.Pattern;
  * Do not derive from this class.
  */
 public class NewProjectCreationPage extends WizardPage {
+    /** Suffix added by default to activity names */
+    private static final String ACTIVITY_NAME_SUFFIX = "Activity"; //$NON-NLS-1$
 
     // constants
     private static final String MAIN_PAGE_NAME = "newAndroidProjectPage"; //$NON-NLS-1$
@@ -160,8 +163,11 @@ public class NewProjectCreationPage extends WizardPage {
     private boolean mInternalApplicationNameUpdate;
     private boolean mInternalCreateActivityUpdate;
     private boolean mInternalActivityNameUpdate;
+    private boolean mInternalMinSdkUpdate;
     private boolean mProjectNameModifiedByUser;
     private boolean mApplicationNameModifiedByUser;
+    private boolean mActivityNameModifiedByUser;
+    private boolean mMinSdkModifiedByUser;
 
     private final ArrayList<String> mSamplesPaths = new ArrayList<String>();
     private Combo mSamplesCombo;
@@ -436,14 +442,10 @@ public class NewProjectCreationPage extends WizardPage {
         mProjectNameField.setFont(parent.getFont());
         mProjectNameField.addListener(SWT.Modify, new Listener() {
             public void handleEvent(Event event) {
-                if (!mInternalProjectNameUpdate) {
-                    mProjectNameModifiedByUser = true;
-                }
-                updateLocationPathField(null);
+                onProjectFieldModified();
             }
         });
     }
-
 
     /**
      * Creates the group for the Project options:
@@ -640,9 +642,7 @@ public class NewProjectCreationPage extends WizardPage {
         mApplicationNameField.setFont(parent.getFont());
         mApplicationNameField.addListener(SWT.Modify, new Listener() {
            public void handleEvent(Event event) {
-               if (!mInternalApplicationNameUpdate) {
-                   mApplicationNameModifiedByUser = true;
-               }
+               onApplicationFieldModified();
            }
         });
 
@@ -703,6 +703,7 @@ public class NewProjectCreationPage extends WizardPage {
         mMinSdkVersionField.setFont(parent.getFont());
         mMinSdkVersionField.addListener(SWT.Modify, new Listener() {
             public void handleEvent(Event event) {
+                onMinSdkFieldUpdated();
                 validatePageComplete();
             }
         });
@@ -900,6 +901,54 @@ public class NewProjectCreationPage extends WizardPage {
         }
     }
 
+    private void onProjectFieldModified() {
+        if (!mInternalProjectNameUpdate) {
+            mProjectNameModifiedByUser = true;
+
+            if (!mApplicationNameModifiedByUser) {
+                String name = DescriptorsUtils.capitalize(mProjectNameField.getText());
+                try {
+                    mInternalApplicationNameUpdate = true;
+                    mApplicationNameField.setText(name);
+                } finally {
+                    mInternalApplicationNameUpdate = false;
+                }
+            }
+            if (!mActivityNameModifiedByUser) {
+                String name = DescriptorsUtils.capitalize(mProjectNameField.getText());
+                try {
+                    mInternalActivityNameUpdate = true;
+                    mActivityNameField.setText(name + ACTIVITY_NAME_SUFFIX);
+                } finally {
+                    mInternalActivityNameUpdate = false;
+                }
+
+            }
+        }
+        updateLocationPathField(null);
+    }
+
+    private void onMinSdkFieldUpdated() {
+        if (!mInternalMinSdkUpdate) {
+            mMinSdkModifiedByUser = true;
+        }
+    }
+
+    private void onApplicationFieldModified() {
+        if (!mInternalApplicationNameUpdate) {
+               mApplicationNameModifiedByUser = true;
+               if (!mActivityNameModifiedByUser) {
+                   String name = DescriptorsUtils.capitalize(mApplicationNameField.getText());
+                   try {
+                       mInternalActivityNameUpdate = true;
+                       mActivityNameField.setText(name + ACTIVITY_NAME_SUFFIX);
+                   } finally {
+                       mInternalActivityNameUpdate = false;
+                   }
+               }
+           }
+    }
+
     /**
      * The location path field is either modified internally (from updateLocationPathField)
      * or manually by the user when the custom_location mode is not set.
@@ -958,6 +1007,10 @@ public class NewProjectCreationPage extends WizardPage {
      * validate the page.
      */
     private void onActivityNameFieldModified() {
+        if (!mInternalActivityNameUpdate) {
+            mActivityNameModifiedByUser = true;
+        }
+
         if (mInfo.isNewProject() && !mInternalActivityNameUpdate) {
             mUserActivityName = mInfo.getActivityName();
             validatePageComplete();
@@ -972,6 +1025,40 @@ public class NewProjectCreationPage extends WizardPage {
      */
     private void onSdkTargetModified() {
         IAndroidTarget target = mInfo.getSdkTarget();
+
+        // Update the minimum SDK text field?
+        // We do if one of two conditions are met:
+        if (target != null) {
+            boolean setMinSdk = false;
+            int apiLevel = target.getVersion().getApiLevel();
+            // 1. Has the user not manually edited the SDK field yet? If so, keep
+            //    updating it to the selected value.
+            if (!mMinSdkModifiedByUser) {
+                setMinSdk = true;
+            } else {
+                // 2. Is the API level set to a higher level than the newly selected
+                //    target SDK? If so, change it down to the new lower value.
+                String s = mMinSdkVersionField.getText().trim();
+                if (s.length() > 0) {
+                    try {
+                        int currentApi = Integer.parseInt(s);
+                        if (currentApi > apiLevel) {
+                            setMinSdk = true;
+                        }
+                    } catch (NumberFormatException nfe) {
+                        // User may have typed something invalid -- ignore
+                    }
+                }
+            }
+            if (setMinSdk) {
+                try {
+                    mInternalMinSdkUpdate = true;
+                    mMinSdkVersionField.setText(Integer.toString(apiLevel));
+                } finally {
+                    mInternalMinSdkUpdate = false;
+                }
+            }
+        }
 
         loadSamplesForTarget(target);
         enableLocationWidgets();
@@ -1518,6 +1605,10 @@ public class NewProjectCreationPage extends WizardPage {
         String activityFieldContents = mInfo.getActivityName();
         if (activityFieldContents.length() == 0) {
             return setStatus("Activity name must be specified.", MSG_ERROR);
+        }
+
+        if (ACTIVITY_NAME_SUFFIX.equals(activityFieldContents)) {
+            return setStatus("Enter a valid activity name", MSG_ERROR);
         }
 
         // The activity field can actually contain part of a sub-package name
