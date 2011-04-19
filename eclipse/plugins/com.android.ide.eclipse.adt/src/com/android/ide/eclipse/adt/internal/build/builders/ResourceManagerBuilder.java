@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
@@ -191,7 +191,6 @@ public class ResourceManagerBuilder extends BaseBuilder {
                         "Creating 'gen' source folder for generated Java files");
                 genFolder.create(true /* force */, true /* local */,
                         new SubProgressMonitor(monitor, 10));
-                genFolder.setDerived(true);
             }
 
             // add it to the source folder list, if needed only (or it will throw)
