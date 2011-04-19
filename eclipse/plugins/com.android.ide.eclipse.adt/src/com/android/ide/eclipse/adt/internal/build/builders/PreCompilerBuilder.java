@@ -16,13 +16,13 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AidlProcessor;
-import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.RenderScriptProcessor;
+import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -526,6 +526,10 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // remove all the derived resources from the 'gen' source folder.
         if (mGenFolder != null) {
+            // gen folder should not be derived, but previous version could set it to derived
+            // so we make sure this isn't the case (or it'll get deleted by the clean)
+            mGenFolder.setDerived(false);
+
             removeDerivedResources(mGenFolder, monitor);
         }
 
