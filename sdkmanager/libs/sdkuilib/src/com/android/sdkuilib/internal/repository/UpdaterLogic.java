@@ -40,9 +40,12 @@ import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The logic to compute which packages to install, based on the choices
@@ -476,7 +479,7 @@ class UpdaterLogic {
         // - platform: *might* depends on tools of rev >= min-tools-rev
         // - extra: *might* depends on platform with api >= min-api-level
 
-        ArrayList<ArchiveInfo> list = new ArrayList<ArchiveInfo>();
+        Set<ArchiveInfo> aiFound = new HashSet<ArchiveInfo>();
 
         if (pkg instanceof IPlatformDependency) {
             ArchiveInfo ai = findPlatformDependency(
@@ -488,7 +491,7 @@ class UpdaterLogic {
                     localArchives);
 
             if (ai != null) {
-                list.add(ai);
+                aiFound.add(ai);
             }
         }
 
@@ -503,7 +506,7 @@ class UpdaterLogic {
                     localArchives);
 
             if (ai != null) {
-                list.add(ai);
+                aiFound.add(ai);
             }
         }
 
@@ -518,7 +521,7 @@ class UpdaterLogic {
                     localArchives);
 
             if (ai != null) {
-                list.add(ai);
+                aiFound.add(ai);
             }
         }
 
@@ -533,7 +536,7 @@ class UpdaterLogic {
                     localArchives);
 
             if (ai != null) {
-                list.add(ai);
+                aiFound.add(ai);
             }
         }
 
@@ -548,12 +551,14 @@ class UpdaterLogic {
                     localArchives);
 
             if (ai != null) {
-                list.add(ai);
+                aiFound.add(ai);
             }
         }
 
-        if (list.size() > 0) {
-            return list.toArray(new ArchiveInfo[list.size()]);
+        if (aiFound.size() > 0) {
+            ArchiveInfo[] result = aiFound.toArray(new ArchiveInfo[aiFound.size()]);
+            Arrays.sort(result);
+            return result;
         }
 
         return null;
