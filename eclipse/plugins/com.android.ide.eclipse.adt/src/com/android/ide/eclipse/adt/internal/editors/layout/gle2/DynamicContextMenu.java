@@ -16,7 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.IViewRule;
@@ -30,6 +32,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeVie
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -207,6 +210,7 @@ import java.util.regex.Pattern;
             }
         }
 
+        insertListPreviewType(endId);
         insertVisualRefactorings(endId);
     }
 
@@ -229,6 +233,24 @@ import java.util.regex.Pattern;
             mMenuManager.insertBefore(endId, ChangeViewAction.create(mEditor));
         }
         mMenuManager.insertBefore(endId, new Separator());
+    }
+
+    /** "Preview List Content" pull-right menu */
+    private void insertListPreviewType(String endId) {
+
+        List<SelectionItem> selection = mCanvas.getSelectionManager().getSelections();
+        if (selection.size() == 0) {
+            return;
+        }
+        for (SelectionItem item : selection) {
+            UiViewElementNode node = item.getViewInfo().getUiViewNode();
+            String name = node.getDescriptor().getXmlLocalName();
+            if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW)) {
+                mMenuManager.insertBefore(endId, new Separator());
+                mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas));
+                return;
+            }
+        }
     }
 
     /**

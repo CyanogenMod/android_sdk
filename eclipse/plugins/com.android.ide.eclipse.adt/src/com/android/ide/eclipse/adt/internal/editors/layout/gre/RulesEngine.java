@@ -910,7 +910,10 @@ public class RulesEngine {
 
                 dlg.setCurrentResource(currentValue);
 
-                if (dlg.open() == Window.OK) {
+                int result = dlg.open();
+                if (result == ResourceChooser.CLEAR_RETURN_CODE) {
+                    return ""; //$NON-NLS-1$
+                } else if (result == Window.OK) {
                     return dlg.getCurrentResource();
                 }
             }

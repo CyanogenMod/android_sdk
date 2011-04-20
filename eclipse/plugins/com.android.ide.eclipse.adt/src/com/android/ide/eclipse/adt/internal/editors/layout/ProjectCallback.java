@@ -32,6 +32,8 @@ import com.android.ide.common.rendering.api.Result;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectClassLoader;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -54,7 +56,6 @@ import java.util.TreeSet;
  * {@link ILegacyCallback}
  */
 public final class ProjectCallback extends LegacyCallback {
-
     private final HashMap<String, Class<?>> mLoadedClasses = new HashMap<String, Class<?>>();
     private final Set<String> mMissingClasses = new TreeSet<String>();
     private final Set<String> mBrokenClasses = new TreeSet<String>();
@@ -408,8 +409,12 @@ public final class ProjectCallback extends LegacyCallback {
     /**
      * For the given class, finds and returns the nearest super class which is a ListView
      * or an ExpandableListView, or returns null.
+     *
+     * @param clz the class of the view object
+     * @return the fully qualified class name of the list view ancestor, or null if there
+     *         is no list view ancestor
      */
-    private static String getListViewFqcn(Class<?> clz) {
+    public static String getListViewFqcn(Class<?> clz) {
         String fqcn = clz.getName();
         if (fqcn.endsWith(LIST_VIEW)) { // including EXPANDABLE_LIST_VIEW
             return fqcn;
@@ -454,6 +459,16 @@ public final class ProjectCallback extends LegacyCallback {
 
     public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie,
             Object viewObject) {
+        // Look for user-recorded preference for layout to be used for previews
+        if (adapterCookie instanceof UiViewElementNode) {
+            UiViewElementNode uiNode = (UiViewElementNode) adapterCookie;
+            LayoutMetadata metadata = LayoutMetadata.get();
+            AdapterBinding binding = metadata.getNodeBinding(viewObject, uiNode);
+            if (binding != null) {
+                return binding;
+            }
+        }
+
         if (viewObject == null) {
             return null;
         }
@@ -476,14 +491,15 @@ public final class ProjectCallback extends LegacyCallback {
             return null;
         }
 
-        AdapterBinding binding = new AdapterBinding(20);
+        AdapterBinding binding = new AdapterBinding(12);
         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
-            binding.addItem(new DataBindingItem("simple_expandable_list_item_2", //$NON-NLS-1$
+            binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_EXPANDABLE_LIST_ITEM,
                     true /* isFramework */, 1));
         } else {
-            binding.addItem(new DataBindingItem("simple_list_item_2", //$NON-NLS-1$
+            binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_LIST_ITEM,
                     true /* isFramework */, 1));
         }
+
         return binding;
     }
 }

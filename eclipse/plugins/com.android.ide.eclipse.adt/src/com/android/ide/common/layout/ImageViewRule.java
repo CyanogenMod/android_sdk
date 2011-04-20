@@ -37,7 +37,8 @@ public class ImageViewRule extends BaseViewRule {
             String src = mRulesEngine.displayResourceInput("drawable", ""); //$NON-NLS-1$ //$NON-NLS-2$
             if (src != null) {
                 node.editXml("Set Image",
-                    new PropertySettingNodeHandler(ANDROID_URI, ATTR_SRC, src));
+                    new PropertySettingNodeHandler(ANDROID_URI, ATTR_SRC,
+                            src.length() > 0 ? src : null));
                 return;
             }
         }
