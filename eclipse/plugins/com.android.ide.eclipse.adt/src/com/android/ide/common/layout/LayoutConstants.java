@@ -52,6 +52,7 @@ public class LayoutConstants {
     public static final String RADIO_GROUP = "RadioGroup";              //$NON-NLS-1$
     public static final String EXPANDABLE_LIST_VIEW = "ExpandableListView";//$NON-NLS-1$
     public static final String GESTURE_OVERLAY_VIEW = "GestureOverlayView";//$NON-NLS-1$
+    public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
 
     public static final String ATTR_TEXT = "text";                      //$NON-NLS-1$
     public static final String ATTR_HINT = "hint";                      //$NON-NLS-1$

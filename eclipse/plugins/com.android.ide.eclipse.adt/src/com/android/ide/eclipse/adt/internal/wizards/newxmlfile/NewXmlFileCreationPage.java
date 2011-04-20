@@ -17,6 +17,8 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
+import static com.android.ide.common.layout.LayoutConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 
@@ -208,6 +210,18 @@ class NewXmlFileCreationPage extends WizardPage {
         }
 
         /**
+         * When not null, represents an extra string that should be written inside
+         * the element when constructed
+         *
+         * @param project the project to get the child content for
+         * @param root the chosen root element
+         * @return a string to be written inside the root element, or null if nothing
+         */
+        String getChild(IProject project, String root) {
+            return null;
+        }
+
+        /**
          * The minimum API level required by the current SDK target to support this feature.
          *
          * @return the minimum API level
@@ -248,9 +262,20 @@ class NewXmlFileCreationPage extends WizardPage {
 
                     return String.format(
                             "android:orientation=\"vertical\"\n"       //$NON-NLS-1$
-                            + "android:layout_width=\"%1$s\"\n"            //$NON-NLS-1$
-                            + "android:layout_height=\"%1$s\"", //$NON-NLS-1$
+                            + "android:layout_width=\"%1$s\"\n"        //$NON-NLS-1$
+                            + "android:layout_height=\"%1$s\"",        //$NON-NLS-1$
                             fill, fill);
+                }
+
+                @Override
+                String getChild(IProject project, String root) {
+                    // Create vertical linear layouts inside new scroll views
+                    if (SCROLL_VIEW.equals(root) || HORIZONTAL_SCROLL_VIEW.equals(root)) {
+                        return "    <LinearLayout "         //$NON-NLS-1$
+                            + getDefaultAttrs(project).replace('\n', ' ')
+                            + "></LinearLayout>\n";         //$NON-NLS-1$
+                    }
+                    return null;
                 }
         },
         new TypeInfo("Values",                                              // UI name

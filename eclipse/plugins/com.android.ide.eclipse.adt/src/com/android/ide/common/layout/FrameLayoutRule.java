@@ -62,7 +62,7 @@ public class FrameLayoutRule extends BaseLayoutRule {
         });
     }
 
-    void drawFeedback(
+    protected void drawFeedback(
             IGraphics gc,
             INode targetNode,
             IDragElement[] elements,
