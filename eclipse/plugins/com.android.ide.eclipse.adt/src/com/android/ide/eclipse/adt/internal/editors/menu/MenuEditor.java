@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
@@ -104,6 +104,8 @@ public class MenuEditor extends AndroidXmlEditor {
         }
     }
 
+    private boolean mUpdatingModel;
+
     /**
      * Processes the new XML Model, which XML root node is given.
      *
@@ -111,33 +113,43 @@ public class MenuEditor extends AndroidXmlEditor {
      */
     @Override
     protected void xmlModelChanged(Document xml_doc) {
-        // init the ui root on demand
-        initUiRootNode(false /*force*/);
-
-        mUiRootNode.setXmlDocument(xml_doc);
-        if (xml_doc != null) {
-            ElementDescriptor root_desc = mUiRootNode.getDescriptor();
-            try {
-                XPath xpath = AndroidXPathFactory.newXPath();
-                Node node = (Node) xpath.evaluate("/" + root_desc.getXmlName(),  //$NON-NLS-1$
-                        xml_doc,
-                        XPathConstants.NODE);
-                if (node == null && root_desc.getMandatory() != Mandatory.NOT_MANDATORY) {
-                    // Create the root element if it doesn't exist yet (for empty new documents)
-                    node = mUiRootNode.createXmlNode();
-                }
-
-                // Refresh the manifest UI node and all its descendants
-                mUiRootNode.loadFromXmlNode(node);
-
-                // TODO ? startMonitoringMarkers();
-            } catch (XPathExpressionException e) {
-                AdtPlugin.log(e, "XPath error when trying to find '%s' element in XML.", //$NON-NLS-1$
-                        root_desc.getXmlName());
-            }
+        if (mUpdatingModel) {
+            return;
         }
 
-        super.xmlModelChanged(xml_doc);
+        try {
+            mUpdatingModel = true;
+
+            // init the ui root on demand
+            initUiRootNode(false /*force*/);
+
+            mUiRootNode.setXmlDocument(xml_doc);
+            if (xml_doc != null) {
+                ElementDescriptor root_desc = mUiRootNode.getDescriptor();
+                try {
+                    XPath xpath = AndroidXPathFactory.newXPath();
+                    Node node = (Node) xpath.evaluate("/" + root_desc.getXmlName(),  //$NON-NLS-1$
+                            xml_doc,
+                            XPathConstants.NODE);
+                    if (node == null && root_desc.getMandatory() != Mandatory.NOT_MANDATORY) {
+                        // Create the root element if it doesn't exist yet (for empty new documents)
+                        node = mUiRootNode.createXmlNode();
+                    }
+
+                    // Refresh the manifest UI node and all its descendants
+                    mUiRootNode.loadFromXmlNode(node);
+
+                    // TODO ? startMonitoringMarkers();
+                } catch (XPathExpressionException e) {
+                    AdtPlugin.log(e, "XPath error when trying to find '%s' element in XML.", //$NON-NLS-1$
+                            root_desc.getXmlName());
+                }
+            }
+
+            super.xmlModelChanged(xml_doc);
+        } finally {
+            mUpdatingModel = false;
+        }
     }
 
     /**
