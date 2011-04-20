@@ -94,6 +94,13 @@ public interface IProjectCallback {
     Integer getResourceId(ResourceType type, String name);
 
     /**
+     * Returns a custom parser for the layout of the given name.
+     * @param layoutName the name of the layout.
+     * @return returns a custom parser or null if no custom parsers are needed.
+     */
+    ILayoutPullParser getParser(String layoutName);
+
+    /**
      * Returns the value of an item used by an adapter.
      * @param adapterView The {@link ResourceReference} for the adapter view info.
      * @param adapterCookie the view cookie for this particular view.

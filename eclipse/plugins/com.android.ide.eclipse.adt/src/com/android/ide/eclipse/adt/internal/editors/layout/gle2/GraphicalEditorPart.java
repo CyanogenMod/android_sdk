@@ -1433,9 +1433,11 @@ public class GraphicalEditorPart extends EditorPart
         ILayoutPullParser topParser = modelParser;
 
         // Code to support editing included layout
+        // first reset the layout parser just in case.
+        mProjectCallback.setLayoutParser(null, null);
 
-        // Outer layout name:
         if (includeWithin != null) {
+            // Outer layout name:
             String contextLayoutName = includeWithin.getName();
 
             // Find the layout file.
@@ -1448,7 +1450,8 @@ public class GraphicalEditorPart extends EditorPart
                         // Get the name of the layout actually being edited, without the extension
                         // as it's what IXmlPullParser.getParser(String) will receive.
                         String queryLayoutName = getLayoutResourceName();
-                        topParser = new ContextPullParser(queryLayoutName, modelParser);
+                        mProjectCallback.setLayoutParser(queryLayoutName, modelParser);
+                        topParser = new ContextPullParser(mProjectCallback);
                         topParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                         topParser.setInput(new FileReader(layoutFile));
                     } catch (XmlPullParserException e) {

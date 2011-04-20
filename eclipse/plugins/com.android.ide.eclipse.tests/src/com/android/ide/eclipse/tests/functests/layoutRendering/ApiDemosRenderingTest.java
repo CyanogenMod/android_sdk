@@ -129,6 +129,10 @@ public class ApiDemosRenderingTest extends SdkTestCase {
             return null;
         }
 
+        public ILayoutPullParser getParser(String layoutName) {
+            return null;
+        }
+
         public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
                 ResourceReference itemRef, int fullPosition, int typePosition,
                 int fullChildPosition, int typeChildPosition,
