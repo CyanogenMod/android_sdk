@@ -1153,7 +1153,6 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      *         not be computed.
      */
     public static String getIndent(IStructuredDocument document, Node xmlNode) {
-        assert xmlNode.getNodeType() == Node.ELEMENT_NODE;
         if (xmlNode instanceof IndexedRegion) {
             IndexedRegion region = (IndexedRegion)xmlNode;
             int startOffset = region.getStartOffset();
