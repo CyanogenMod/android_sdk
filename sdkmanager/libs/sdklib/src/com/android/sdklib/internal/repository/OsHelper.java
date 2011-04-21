@@ -76,7 +76,7 @@ abstract class OsHelper {
     }
 
     /**
-     * Sets the executable Unix permission (0777) on a file or folder.
+     * Sets the executable Unix permission (+x) on a file or folder.
      * <p/>
      * This invokes a chmod exec, so there is no guarantee of it being fast.
      * Caller must make sure to not invoke this under Windows.
@@ -86,7 +86,7 @@ abstract class OsHelper {
      */
     static void setExecutablePermission(File file) throws IOException {
         Runtime.getRuntime().exec(new String[] {
-           "chmod", "777", file.getAbsolutePath()
+           "chmod", "+x", file.getAbsolutePath()
         });
     }
 
