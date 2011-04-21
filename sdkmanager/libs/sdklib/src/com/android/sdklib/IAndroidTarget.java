@@ -124,6 +124,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     String getClasspathName();
 
     /**
+     * Returns the name to be displayed when representing all the libraries this target contains.
+     */
+    String getShortClasspathName();
+
+    /**
      * Returns the description of the target.
      */
     String getDescription();
@@ -158,6 +163,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * {@link IAndroidTarget} interface can be used.
      */
     String getPath(int pathId);
+
+    /**
+     * Returns whether the target is able to render layouts.
+     */
+    boolean hasRenderingLibrary();
 
     /**
      * Returns the available skins for this target.

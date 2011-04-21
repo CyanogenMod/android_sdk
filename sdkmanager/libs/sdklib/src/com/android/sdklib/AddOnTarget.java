@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ArrayList;
 
 /**
  * Represents an add-on target in the SDK.
@@ -72,6 +71,9 @@ final class AddOnTarget implements IAndroidTarget {
     private final String mVendor;
     private final int mRevision;
     private final String mDescription;
+    private final boolean mHasRenderingLibrary;
+    private final boolean mHasRenderingResources;
+
     private String[] mSkins;
     private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
@@ -88,10 +90,14 @@ final class AddOnTarget implements IAndroidTarget {
      * @param abis list of supported abis
      * @param libMap A map containing the optional libraries. The map key is the fully-qualified
      * library name. The value is a 2 string array with the .jar filename, and the description.
+     * @param hasRenderingLibrary whether the addon has a custom layoutlib.jar
+     * @param hasRenderingResources whether the add has custom framework resources.
      * @param basePlatform the platform the add-on is extending.
      */
     AddOnTarget(String location, String name, String vendor, int revision, String description,
-            String[] abis, Map<String, String[]> libMap, PlatformTarget basePlatform) {
+            String[] abis, Map<String, String[]> libMap,
+            boolean hasRenderingLibrary, boolean hasRenderingResources,
+            PlatformTarget basePlatform) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
         }
@@ -101,6 +107,8 @@ final class AddOnTarget implements IAndroidTarget {
         mVendor = vendor;
         mRevision = revision;
         mDescription = description;
+        mHasRenderingLibrary = hasRenderingLibrary;
+        mHasRenderingResources = hasRenderingResources;
         mBasePlatform = basePlatform;
 
         //set compatibility mode
@@ -161,7 +169,11 @@ final class AddOnTarget implements IAndroidTarget {
     }
 
     public String getClasspathName() {
-        return String.format("%1$s [%2$s]", mName, mBasePlatform.getName());
+        return String.format("%1$s [%2$s]", mName, mBasePlatform.getClasspathName());
+    }
+
+    public String getShortClasspathName() {
+        return String.format("%1$s [%2$s]", mName, mBasePlatform.getVersionName());
     }
 
     public String getDescription() {
@@ -196,6 +208,28 @@ final class AddOnTarget implements IAndroidTarget {
             case DOCS:
                 return mLocation + SdkConstants.FD_DOCS + File.separator
                         + SdkConstants.FD_DOCS_REFERENCE;
+
+            case LAYOUT_LIB:
+                if (mHasRenderingLibrary) {
+                    return mLocation + SdkConstants.FD_DATA + File.separator
+                            + SdkConstants.FN_LAYOUTLIB_JAR;
+                }
+                return mBasePlatform.getPath(pathId);
+
+            case RESOURCES:
+                if (mHasRenderingResources) {
+                    return mLocation + SdkConstants.FD_DATA + File.separator
+                            + SdkConstants.FD_RES;
+                }
+                return mBasePlatform.getPath(pathId);
+
+            case FONTS:
+                if (mHasRenderingResources) {
+                    return mLocation + SdkConstants.FD_DATA + File.separator
+                            + SdkConstants.FD_FONTS;
+                }
+                return mBasePlatform.getPath(pathId);
+
             case SAMPLES:
                 // only return the add-on samples folder if there is actually a sample (or more)
                 File sampleLoc = new File(mLocation, SdkConstants.FD_SAMPLES);
@@ -210,10 +244,14 @@ final class AddOnTarget implements IAndroidTarget {
                         return sampleLoc.getAbsolutePath();
                     }
                 }
-                // INTENDED FALL-THROUGH
+                //$FALL-THROUGH$
             default :
                 return mBasePlatform.getPath(pathId);
         }
+    }
+
+    public boolean hasRenderingLibrary() {
+        return mHasRenderingLibrary || mHasRenderingResources;
     }
 
     public String[] getSkins() {

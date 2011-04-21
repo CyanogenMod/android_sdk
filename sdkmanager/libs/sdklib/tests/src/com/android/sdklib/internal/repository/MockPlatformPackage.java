@@ -86,7 +86,11 @@ public class MockPlatformPackage extends PlatformPackage {
         }
 
         public String getClasspathName() {
-            return null;
+            return getName();
+        }
+
+        public String getShortClasspathName() {
+            return getName();
         }
 
         public String getDefaultSkin() {
@@ -94,11 +98,11 @@ public class MockPlatformPackage extends PlatformPackage {
         }
 
         public String getDescription() {
-            return "mock platform target";
+            return getName();
         }
 
         public String getFullName() {
-            return "mock platform target";
+            return getName();
         }
 
         public String[] getAbiList() {
@@ -188,6 +192,10 @@ public class MockPlatformPackage extends PlatformPackage {
 
         public int compareTo(IAndroidTarget o) {
             throw new UnsupportedOperationException("Implement this as needed for tests");
+        }
+
+        public boolean hasRenderingLibrary() {
+            return false;
         }
     }
 }
