@@ -22,12 +22,29 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 
 /**
  * Helper methods used when dealing with archives installation.
  */
 abstract class OsHelper {
+
+    /**
+     * Reflection method for File.setExecutable(boolean, boolean). Only present in Java 6.
+     */
+    private static Method sFileSetExecutable = null;
+    /**
+     * Whether File.setExecutable was queried through reflection. This is to only
+     * attempt reflection once.
+     */
+    private static boolean sFileReflectionDone = false;
+    /**
+     * Parameters to call File.setExecutable through reflection.
+     */
+    private final static Object[] sFileSetExecutableParams = new Object[] {
+        Boolean.TRUE, Boolean.FALSE };
 
     /**
      * Helper to delete a file or a directory.
@@ -78,16 +95,47 @@ abstract class OsHelper {
     /**
      * Sets the executable Unix permission (+x) on a file or folder.
      * <p/>
-     * This invokes a chmod exec, so there is no guarantee of it being fast.
+     * This attempts to use {@link File#setExecutable(boolean, boolean)} through reflection if
+     * it's available.
+     * If this is not available, this invokes a chmod exec instead,
+     * so there is no guarantee of it being fast.
+     * <p/>
      * Caller must make sure to not invoke this under Windows.
      *
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
     static void setExecutablePermission(File file) throws IOException {
+        if (sFileReflectionDone == false) {
+            try {
+                sFileSetExecutable = File.class.getMethod("setExecutable", //$NON-NLS-1$
+                        boolean.class, boolean.class);
+
+            } catch (SecurityException e) {
+                // do nothing we'll use chdmod instead
+            } catch (NoSuchMethodException e) {
+                // do nothing we'll use chdmod instead
+            }
+
+            sFileReflectionDone = true;
+        }
+
+        if (sFileSetExecutable != null) {
+            try {
+                sFileSetExecutable.invoke(file, sFileSetExecutableParams);
+                return;
+            } catch (IllegalArgumentException e) {
+                // we'll run chmod below
+            } catch (IllegalAccessException e) {
+                // we'll run chmod below
+            } catch (InvocationTargetException e) {
+                // we'll run chmod below
+            }
+        }
+
         Runtime.getRuntime().exec(new String[] {
-           "chmod", "+x", file.getAbsolutePath()
-        });
+               "chmod", "+x", file.getAbsolutePath()  //$NON-NLS-1$ //$NON-NLS-2$
+            });
     }
 
     /**
