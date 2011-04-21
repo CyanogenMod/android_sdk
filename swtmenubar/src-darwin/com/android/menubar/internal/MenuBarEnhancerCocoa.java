@@ -100,6 +100,10 @@ public class MenuBarEnhancerCocoa implements IMenuBarEnhancer {
     public MenuBarEnhancerCocoa() {
     }
 
+    public MenuBarMode getMenuBarMode() {
+        return MenuBarMode.MAC_OS;
+    }
+
     /**
      * Setup the About and Preferences native menut items with the
      * given application name and links them to the callback.

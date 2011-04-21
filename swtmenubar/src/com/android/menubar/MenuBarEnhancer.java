@@ -89,18 +89,25 @@ public final class MenuBarEnhancer {
         // Default implementation for other platforms
         if (enhancer == null) {
             enhancer = new IMenuBarEnhancer() {
+
+                public MenuBarMode getMenuBarMode() {
+                    return MenuBarMode.GENERIC;
+                }
+
                 public void setupMenu(
                         String appName,
                         Menu menu,
                         final IMenuBarCallback callbacks) {
-                    new MenuItem(menu, SWT.SEPARATOR);
+                    if (menu.getItemCount() > 0) {
+                        new MenuItem(menu, SWT.SEPARATOR);
+                    }
 
                     // Note: we use "Preferences" on Mac and "Options" on Windows/Linux.
                     final MenuItem pref = new MenuItem(menu, SWT.NONE);
-                    pref.setText("Options...");
+                    pref.setText("&Options...");
 
                     final MenuItem about = new MenuItem(menu, SWT.NONE);
-                    about.setText("About...");
+                    about.setText("&About...");
 
                     pref.addSelectionListener(new SelectionAdapter() {
                         @Override

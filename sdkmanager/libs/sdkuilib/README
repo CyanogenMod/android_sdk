@@ -30,10 +30,16 @@ Define a classpath variable in Eclipse:
 - Open Preferences > Java > Build Path > Classpath Variables
 - Create a new classpath variable named ANDROID_OUT_FRAMEWORK
 - Set its folder value to <Android tree>/out/host/<platform>/framework
+- Create a new classpath variable named ANDROID_SRC
+- Set its folder value to <Android tree>
 
 You might need to clean the SdkUiLib project (Project > Clean...) after
 you add the new classpath variable, otherwise previous errors might not
 go away automatically.
+
+The ANDROID_SRC part should be optional. It allows you to have access to
+the SwtMenuBar generic parts from the Java editor.
+
 
 --
 EOF

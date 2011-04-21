@@ -34,14 +34,6 @@ SWT depends on OSGI, so we'll also create an ANDROID_OSGI library for that.
 In order to compile the project:
 - Open Preferences > Java > Build Path > User Libraries
 
-- Create a new user library named ANDROID_SWT
-- Add the following 4 JAR files:
-
-  - prebuild/<platform>/swt/swt.jar
-  - prebuilt/common/eclipse/org.eclipse.core.commands_3.*.jar
-  - prebuilt/common/eclipse/org.eclipse.equinox.common_3.*.jar
-  - prebuilt/common/eclipse/org.eclipse.jface_3.*.jar
-
 - Create a new user library named ANDROID_OSGI
 - Add the following JAR file:
 

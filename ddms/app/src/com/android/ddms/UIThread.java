@@ -50,6 +50,10 @@ import com.android.ddmuilib.logcat.LogColors;
 import com.android.ddmuilib.logcat.LogFilter;
 import com.android.ddmuilib.logcat.LogPanel;
 import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
+import com.android.menubar.IMenuBarCallback;
+import com.android.menubar.IMenuBarEnhancer;
+import com.android.menubar.IMenuBarEnhancer.MenuBarMode;
+import com.android.menubar.MenuBarEnhancer;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -84,7 +88,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
@@ -101,6 +104,8 @@ import java.util.ArrayList;
  * when {@link IDevice} / {@link Client} selection changes.
  */
 public class UIThread implements IUiSelectionListener, IClientChangeListener {
+    private static final String APP_NAME = "DDMS";
+
     /*
      * UI tab panel definitions. The constants here must match up with the array
      * indices in mPanels. PANEL_CLIENT_LIST is a "virtual" panel representing
@@ -414,10 +419,10 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
     /**
      * Create SWT objects and drive the user interface event loop.
-     * @param location location of the folder that contains ddms.
+     * @param ddmsParentLocation location of the folder that contains ddms.
      */
     public void runUI(String ddmsParentLocation) {
-        Display.setAppName("ddms");
+        Display.setAppName(APP_NAME);
         mDisplay = new Display();
         final Shell shell = new Shell(mDisplay);
 
@@ -435,11 +440,11 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 // dialog box only run in UI thread..
                 mDisplay.asyncExec(new Runnable() {
                     public void run() {
-                        Shell shell = mDisplay.getActiveShell();
+                        Shell activeShell = mDisplay.getActiveShell();
                         if (logLevel == LogLevel.ERROR) {
-                            MessageDialog.openError(shell, tag, message);
+                            MessageDialog.openError(activeShell, tag, message);
                         } else {
-                            MessageDialog.openWarning(shell, tag, message);
+                            MessageDialog.openWarning(activeShell, tag, message);
                         }
                     }
                 });
@@ -556,20 +561,20 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         shell.addControlListener(new ControlListener() {
             public void controlMoved(ControlEvent e) {
                 // get the new x/y
-                Rectangle rect = shell.getBounds();
+                Rectangle controlBounds = shell.getBounds();
                 // store in pref file
-                PreferenceStore prefs = PrefsDialog.getStore();
-                prefs.setValue(PrefsDialog.SHELL_X, rect.x);
-                prefs.setValue(PrefsDialog.SHELL_Y, rect.y);
+                PreferenceStore currentPrefs = PrefsDialog.getStore();
+                currentPrefs.setValue(PrefsDialog.SHELL_X, controlBounds.x);
+                currentPrefs.setValue(PrefsDialog.SHELL_Y, controlBounds.y);
             }
 
             public void controlResized(ControlEvent e) {
                 // get the new w/h
-                Rectangle rect = shell.getBounds();
+                Rectangle controlBounds = shell.getBounds();
                 // store in pref file
-                PreferenceStore prefs = PrefsDialog.getStore();
-                prefs.setValue(PrefsDialog.SHELL_WIDTH, rect.width);
-                prefs.setValue(PrefsDialog.SHELL_HEIGHT, rect.height);
+                PreferenceStore currentPrefs = PrefsDialog.getStore();
+                currentPrefs.setValue(PrefsDialog.SHELL_WIDTH, controlBounds.width);
+                currentPrefs.setValue(PrefsDialog.SHELL_HEIGHT, controlBounds.height);
             }
         });
     }
@@ -624,41 +629,31 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         shell.addControlListener(new ControlListener() {
             public void controlMoved(ControlEvent e) {
                 // get the new x/y
-                Rectangle rect = shell.getBounds();
+                Rectangle controlBounds = shell.getBounds();
                 // store in pref file
-                PreferenceStore prefs = PrefsDialog.getStore();
-                prefs.setValue(PrefsDialog.EXPLORER_SHELL_X, rect.x);
-                prefs.setValue(PrefsDialog.EXPLORER_SHELL_Y, rect.y);
+                PreferenceStore currentPrefs = PrefsDialog.getStore();
+                currentPrefs.setValue(PrefsDialog.EXPLORER_SHELL_X, controlBounds.x);
+                currentPrefs.setValue(PrefsDialog.EXPLORER_SHELL_Y, controlBounds.y);
             }
 
             public void controlResized(ControlEvent e) {
                 // get the new w/h
-                Rectangle rect = shell.getBounds();
+                Rectangle controlBounds = shell.getBounds();
                 // store in pref file
-                PreferenceStore prefs = PrefsDialog.getStore();
-                prefs.setValue(PrefsDialog.EXPLORER_SHELL_WIDTH, rect.width);
-                prefs.setValue(PrefsDialog.EXPLORER_SHELL_HEIGHT, rect.height);
+                PreferenceStore currentPrefs = PrefsDialog.getStore();
+                currentPrefs.setValue(PrefsDialog.EXPLORER_SHELL_WIDTH, controlBounds.width);
+                currentPrefs.setValue(PrefsDialog.EXPLORER_SHELL_HEIGHT, controlBounds.height);
             }
         });
     }
 
     /*
-     * Set the confirm-before-close dialog. TODO: enable/disable in prefs. TODO:
-     * is there any point in having this?
+     * Set the confirm-before-close dialog.
      */
     private void setConfirmClose(final Shell shell) {
-        if (true)
-            return;
-
-        shell.addListener(SWT.Close, new Listener() {
-            public void handleEvent(Event event) {
-                int style = SWT.APPLICATION_MODAL | SWT.YES | SWT.NO;
-                MessageBox msgBox = new MessageBox(shell, style);
-                msgBox.setText("Confirm...");
-                msgBox.setMessage("Close DDM?");
-                event.doit = (msgBox.open() == SWT.YES);
-            }
-        });
+        // Note: there was some commented out code to display a confirmation box
+        // when closing. The feature seems unnecessary and the code was not being
+        // used, so it has been removed.
     }
 
     /*
@@ -677,8 +672,6 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         actionItem.setText("&Actions");
         MenuItem deviceItem = new MenuItem(menuBar, SWT.CASCADE);
         deviceItem.setText("&Device");
-        MenuItem helpItem = new MenuItem(menuBar, SWT.CASCADE);
-        helpItem.setText("&Help");
 
         // create top-level menus
         Menu fileMenu = new Menu(menuBar);
@@ -689,21 +682,10 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         actionItem.setMenu(actionMenu);
         Menu deviceMenu = new Menu(menuBar);
         deviceItem.setMenu(deviceMenu);
-        Menu helpMenu = new Menu(menuBar);
-        helpItem.setMenu(helpMenu);
 
         MenuItem item;
 
         // create File menu items
-        item = new MenuItem(fileMenu, SWT.NONE);
-        item.setText("&Preferences...");
-        item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                PrefsDialog.run(shell);
-            }
-        });
-
         item = new MenuItem(fileMenu, SWT.NONE);
         item.setText("&Static Port Configuration...");
         item.addSelectionListener(new SelectionAdapter() {
@@ -714,17 +696,35 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        new MenuItem(fileMenu, SWT.SEPARATOR);
+        IMenuBarEnhancer enhancer = MenuBarEnhancer.setupMenu(APP_NAME, fileMenu,
+                new IMenuBarCallback() {
+            public void printError(String format, Object... args) {
+                Log.e("DDMS Menu Bar", String.format(format, args));
+            }
 
-        item = new MenuItem(fileMenu, SWT.NONE);
-        item.setText("E&xit\tCtrl-Q");
-        item.setAccelerator('Q' | (Main.isMac() ? SWT.COMMAND : SWT.CONTROL));
-        item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                shell.close();
+            public void onPreferencesMenuSelected() {
+                PrefsDialog.run(shell);
+            }
+
+            public void onAboutMenuSelected() {
+                AboutDialog dlg = new AboutDialog(shell);
+                dlg.open();
             }
         });
+
+        if (enhancer.getMenuBarMode() == MenuBarMode.GENERIC) {
+            new MenuItem(fileMenu, SWT.SEPARATOR);
+
+            item = new MenuItem(fileMenu, SWT.NONE);
+            item.setText("E&xit\tCtrl-Q");
+            item.setAccelerator('Q' | (Main.isMac() ? SWT.COMMAND : SWT.CONTROL));
+            item.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    shell.close();
+                }
+            });
+        }
 
         // create edit menu items
         mCopyMenuItem = new MenuItem(editMenu, SWT.NONE);
@@ -900,32 +900,6 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
         });
 
-        // create Help menu items
-        item = new MenuItem(helpMenu, SWT.NONE);
-        item.setText("&Contents...");
-        item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                int style = SWT.APPLICATION_MODAL | SWT.OK;
-                MessageBox msgBox = new MessageBox(shell, style);
-                msgBox.setText("Help!");
-                msgBox.setMessage("Help wanted.");
-                msgBox.open();
-            }
-        });
-
-        new MenuItem(helpMenu, SWT.SEPARATOR);
-
-        item = new MenuItem(helpMenu, SWT.NONE);
-        item.setText("&About...");
-        item.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                AboutDialog dlg = new AboutDialog(shell);
-                dlg.open();
-            }
-        });
-
         // tell the shell to use this menu
         shell.setMenuBar(menuBar);
     }
@@ -1007,7 +981,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 e.y = Math.max(Math.min(e.y, bottom), 100);
                 if (e.y != sashRect.y) {
                     sashData.top = new FormAttachment(0, e.y);
-                    prefs.setValue(PREFERENCE_LOGSASH, e.y);
+                    if (prefs != null) {
+                        prefs.setValue(PREFERENCE_LOGSASH, e.y);
+                    }
                     panelArea.layout();
                 }
             }
@@ -1199,7 +1175,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 e.x = Math.max(Math.min(e.x, right), minPanelWidth);
                 if (e.x != sashRect.x) {
                     sashData.left = new FormAttachment(0, e.x);
-                    prefs.setValue(PREFERENCE_SASH, e.x);
+                    if (prefs != null) {
+                        prefs.setValue(PREFERENCE_SASH, e.x);
+                    }
                     comp.layout();
                 }
             }
@@ -1282,13 +1260,13 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     // disable the other actions and record current index
-                    for (int i = 0 ; i < mLogLevelActions.length; i++) {
-                        ToolItemAction a = mLogLevelActions[i];
+                    for (int k = 0 ; k < mLogLevelActions.length; k++) {
+                        ToolItemAction a = mLogLevelActions[k];
                         if (a == newAction) {
                             a.setChecked(true);
 
                             // set the log level
-                            mLogPanel.setCurrentFilterLogLevel(i+2);
+                            mLogPanel.setCurrentFilterLogLevel(k+2);
                         } else {
                             a.setChecked(false);
                         }

@@ -17,6 +17,7 @@ LOCAL_JAVA_LIBRARIES := \
 	ddmlib \
 	ddmuilib \
 	swt \
+	swtmenubar \
 	org.eclipse.jface_3.4.2.M20090107-0800 \
 	org.eclipse.equinox.common_3.4.0.v20080421-2006 \
 	org.eclipse.core.commands_3.4.0.I20080509-2000
