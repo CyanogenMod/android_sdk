@@ -256,7 +256,7 @@ public final class AttrsXmlParser {
                             if (parents != null) {
                                 String[] parentsArray =
                                     parseStyleableParents(parents, mStyleMap, unknownParents);
-                                style.setParents(parentsArray);  //$NON-NLS-1$
+                                style.setParents(parentsArray);
                             }
                             mStyleMap.put(name, style);
                             unknownParents.remove(name);
@@ -441,9 +441,9 @@ public final class AttrsXmlParser {
      * </ul>
      * The format may be one type or two types (e.g. "reference|color").
      * An extra format can be implied: "enum" or "flag" are not specified in the "format" attribute,
-     * they are implicitely stated by the presence of sub-nodes <enum> or <flag>.
+     * they are implicitly stated by the presence of sub-nodes <enum> or <flag>.
      * <p/>
-     * By design, <attr> nodes of the same name MUST have the same type.
+     * By design, attr nodes of the same name MUST have the same type.
      * Attribute nodes are thus cached by name and reused as much as possible.
      * When reusing a node, it is duplicated and its javadoc reassigned.
      */

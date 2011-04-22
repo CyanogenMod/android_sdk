@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescrip
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -106,6 +107,9 @@ public class ResourcesContentAssist extends AndroidContentAssist {
                         new HashMap<String, AttributeDescriptor>(180);
                     for (ElementDescriptor elementDesc : rootElementDescriptors) {
                         for (AttributeDescriptor desc : elementDesc.getAttributes()) {
+                            if (desc instanceof SeparatorAttributeDescriptor) {
+                                continue;
+                            }
                             String name = desc.getXmlLocalName();
                             if (startsWith(name, attributePrefix)) {
                                 matches.put(name, desc);

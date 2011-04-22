@@ -165,7 +165,6 @@ public class ResourceHelperTest extends TestCase {
         assertFalse(ResourceHelper.canCreateResource("@typo/foo")); // nonexistent type
         assertFalse(ResourceHelper.canCreateResource("@layout/foo bar")); // space
         assertFalse(ResourceHelper.canCreateResource("@layout/new")); // keyword
-        assertFalse(ResourceHelper.canCreateResource("@animator/foo")); // unsupported file type
         assertFalse(ResourceHelper.canCreateResource("@android:string/foo")); // framework
         assertFalse(ResourceHelper.canCreateResource("@android:dimen/foo"));
         assertFalse(ResourceHelper.canCreateResource("@android:color/foo"));

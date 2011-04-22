@@ -22,6 +22,10 @@ import com.android.ide.common.resources.platform.AttrsXmlParser;
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.common.resources.platform.ViewClassInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimatorDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
@@ -83,7 +87,7 @@ public final class AndroidTargetParser {
         try {
             SubMonitor progress = SubMonitor.convert(monitor,
                     String.format("Parsing SDK %1$s", mAndroidTarget.getName()),
-                    12);
+                    16);
 
             AndroidTargetData targetData = new AndroidTargetData(mAndroidTarget);
 
@@ -218,6 +222,39 @@ public final class AndroidTargetParser {
                     preferenceGroupsInfo);
             progress.worked(1);
 
+            if (progress.isCanceled()) {
+                return Status.CANCEL_STATUS;
+            }
+
+            DrawableDescriptors drawableDescriptors = new DrawableDescriptors();
+            Map<String, DeclareStyleableInfo> map = attrsXmlParser.getDeclareStyleableList();
+            drawableDescriptors.updateDescriptors(map);
+            progress.worked(1);
+
+            if (progress.isCanceled()) {
+                return Status.CANCEL_STATUS;
+            }
+
+            AnimatorDescriptors animatorDescriptors = new AnimatorDescriptors();
+            animatorDescriptors.updateDescriptors(map);
+            progress.worked(1);
+
+            if (progress.isCanceled()) {
+                return Status.CANCEL_STATUS;
+            }
+
+            AnimDescriptors animDescriptors = new AnimDescriptors();
+            animDescriptors.updateDescriptors(map);
+            progress.worked(1);
+
+            if (progress.isCanceled()) {
+                return Status.CANCEL_STATUS;
+            }
+
+            ColorDescriptors colorDescriptors = new ColorDescriptors();
+            colorDescriptors.updateDescriptors(map);
+            progress.worked(1);
+
             // load the framework resources.
             ResourceRepository frameworkResources =
                     ResourceManager.getInstance().loadFrameworkResources(mAndroidTarget);
@@ -236,6 +273,10 @@ public final class AndroidTargetParser {
                     layoutDescriptors,
                     menuDescriptors,
                     xmlDescriptors,
+                    drawableDescriptors,
+                    animatorDescriptors,
+                    animDescriptors,
+                    colorDescriptors,
                     enumValueMap,
                     permissionValues,
                     activity_actions.toArray(new String[activity_actions.size()]),

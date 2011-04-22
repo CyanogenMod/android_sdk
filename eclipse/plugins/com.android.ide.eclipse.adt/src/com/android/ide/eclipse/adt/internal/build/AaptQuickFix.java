@@ -16,9 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
@@ -31,6 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
@@ -45,12 +49,21 @@ import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Shared handler for both quick assist processors (Control key handler) and quick fix
  * marker resolution (Problem view handling), since there is a lot of overlap between
  * these two UI handlers.
  */
+@SuppressWarnings("restriction") // XML model
 public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistProcessor {
 
     public AaptQuickFix() {
@@ -59,6 +72,11 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
     /** Returns the error message from aapt that signals missing resources */
     private static String getTargetMarkerErrorMessage() {
         return "No resource found that matches the given name";
+    }
+
+    /** Returns the error message from aapt that signals a missing namespace declaration */
+    private static String getUnboundErrorMessage() {
+        return "Error parsing XML: unbound prefix";
     }
 
     // ---- Implements IMarkerResolution2 ----
@@ -71,12 +89,24 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
             AdtPlugin.log(e, null);
         }
 
-        return message != null && message.contains(getTargetMarkerErrorMessage());
+        return message != null
+                && (message.contains(getTargetMarkerErrorMessage())
+                        || message.contains(getUnboundErrorMessage()));
     }
 
     public IMarkerResolution[] getResolutions(IMarker marker) {
         IResource markerResource = marker.getResource();
         IProject project = markerResource.getProject();
+        try {
+            String message = (String) marker.getAttribute(IMarker.MESSAGE);
+            if (message.contains(getUnboundErrorMessage()) && markerResource instanceof IFile) {
+                return new IMarkerResolution[] {
+                        new CreateNamespaceFix((IFile) markerResource)
+                    };
+            }
+        } catch (CoreException e1) {
+            AdtPlugin.log(e1, null);
+        }
 
         int start = marker.getAttribute(IMarker.CHAR_START, 0);
         int end = marker.getAttribute(IMarker.CHAR_END, 0);
@@ -158,6 +188,10 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                                 };
                             }
                         }
+                    } else if (message.contains(getUnboundErrorMessage())) {
+                        return new ICompletionProposal[] {
+                            new CreateNamespaceFix(null)
+                        };
                     }
                 }
             } catch (CoreException e) {
@@ -172,6 +206,120 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
 
     public String getErrorMessage() {
         return null;
+    }
+
+    /** Quick fix to insert namespace binding when missing */
+    private final static class CreateNamespaceFix
+            implements ICompletionProposal, IMarkerResolution2 {
+        private IFile mFile;
+
+        public CreateNamespaceFix(IFile file) {
+            mFile = file;
+        }
+
+        private IndexedRegion perform(IDocument doc) {
+            IModelManager manager = StructuredModelManager.getModelManager();
+            IStructuredModel model = manager.getExistingModelForEdit(doc);
+            if (model != null) {
+                try {
+                    perform(model);
+                } finally {
+                    model.releaseFromEdit();
+                }
+            }
+
+            return null;
+        }
+
+        private IndexedRegion perform(IFile file) {
+            IModelManager manager = StructuredModelManager.getModelManager();
+            IStructuredModel model;
+            try {
+                model = manager.getModelForEdit(file);
+                if (model != null) {
+                    try {
+                        perform(model);
+                    } finally {
+                        model.releaseFromEdit();
+                    }
+                }
+            } catch (Exception e) {
+                AdtPlugin.log(e, "Can't look up XML model");
+            }
+
+            return null;
+        }
+
+        private IndexedRegion perform(IStructuredModel model) {
+            if (model instanceof IDOMModel) {
+                IDOMModel domModel = (IDOMModel) model;
+                Document document = domModel.getDocument();
+                Element element = document.getDocumentElement();
+                Attr attr = document.createAttributeNS(XmlnsAttributeDescriptor.XMLNS_URI,
+                        "xmlns:android"); //$NON-NLS-1$
+                attr.setValue(ANDROID_URI);
+                element.getAttributes().setNamedItemNS(attr);
+                return (IndexedRegion) attr;
+            }
+
+            return null;
+        }
+
+        // ---- Implements ICompletionProposal ----
+
+        public void apply(IDocument document) {
+            perform(document);
+        }
+
+        public String getAdditionalProposalInfo() {
+            return "Adds an Android namespace declaratiopn to the root element.";
+        }
+
+        public IContextInformation getContextInformation() {
+            return null;
+        }
+
+        public String getDisplayString() {
+            return "Insert namespace binding";
+        }
+
+        public Image getImage() {
+            return AdtPlugin.getAndroidLogo();
+        }
+
+        public Point getSelection(IDocument doc) {
+            return null;
+        }
+
+
+        // ---- Implements MarkerResolution2 ----
+
+        public String getLabel() {
+            return getDisplayString();
+        }
+
+        public void run(IMarker marker) {
+            try {
+                AdtPlugin.openFile(mFile, null);
+            } catch (PartInitException e) {
+                AdtPlugin.log(e, "Can't open file %1$s", mFile.getName());
+            }
+
+            IndexedRegion indexedRegion = perform(mFile);
+            if (indexedRegion != null) {
+                try {
+                    IRegion region =
+                        new Region(indexedRegion.getStartOffset(), indexedRegion.getLength());
+                    AdtPlugin.openFile(mFile, region);
+                } catch (PartInitException e) {
+                    AdtPlugin.log(e, "Can't open file %1$s", mFile.getName());
+                }
+            }
+        }
+
+        public String getDescription() {
+            return getAdditionalProposalInfo();
+        }
     }
 
     private static class CreateResourceProposal
