@@ -17,6 +17,7 @@
 package com.android.hierarchyviewerlib.models;
 
 import com.android.ddmlib.IDevice;
+import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
 import com.android.hierarchyviewerlib.device.Window;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.HashMap;
  */
 public class DeviceSelectionModel {
 
-    private final HashMap<IDevice, Window[]> mDeviceMap = new HashMap<IDevice, Window[]>();
+    private final HashMap<IDevice, DeviceInfo> mDeviceMap = new HashMap<IDevice, DeviceInfo>();
 
     private final HashMap<IDevice, Integer> mFocusedWindowHashes = new HashMap<IDevice, Integer>();
 
@@ -44,6 +45,15 @@ public class DeviceSelectionModel {
 
     private static DeviceSelectionModel sModel;
 
+    private static class DeviceInfo {
+        Window[] windows;
+        ViewServerInfo viewServerInfo;
+
+        private DeviceInfo(Window[] windows, ViewServerInfo viewServerInfo) {
+            this.windows = windows;
+            this.viewServerInfo = viewServerInfo;
+        }
+    }
     public static DeviceSelectionModel getModel() {
         if (sModel == null) {
             sModel = new DeviceSelectionModel();
@@ -57,9 +67,9 @@ public class DeviceSelectionModel {
         }
     }
 
-    public void addDevice(IDevice device, Window[] windows) {
+    public void addDevice(IDevice device, Window[] windows, ViewServerInfo info) {
         synchronized (mDeviceMap) {
-            mDeviceMap.put(device, windows);
+            mDeviceMap.put(device, new DeviceInfo(windows, info));
             mDeviceList.add(device);
         }
         notifyDeviceConnected(device);
@@ -88,7 +98,12 @@ public class DeviceSelectionModel {
     public void updateDevice(IDevice device, Window[] windows) {
         boolean selectionChanged = false;
         synchronized (mDeviceMap) {
-            mDeviceMap.put(device, windows);
+            DeviceInfo oldDeviceInfo = mDeviceMap.get(device);
+            ViewServerInfo oldViewServerInfo = null;
+            if (oldDeviceInfo != null) {
+                oldViewServerInfo = oldDeviceInfo.viewServerInfo;
+            }
+            mDeviceMap.put(device, new DeviceInfo(windows, oldViewServerInfo));
             // If the selected window no longer exists, we clear the selection.
             if (mSelectedDevice == device && mSelectedWindow != null) {
                 boolean windowStillExists = false;
@@ -214,9 +229,12 @@ public class DeviceSelectionModel {
     }
 
     public Window[] getWindows(IDevice device) {
-        Window[] windows;
+        Window[] windows = null;
         synchronized (mDeviceMap) {
-            windows = mDeviceMap.get(device);
+            DeviceInfo info = mDeviceMap.get(device);
+            if (info != null) {
+                windows = mDeviceMap.get(device).windows;
+            }
         }
         return windows;
     }
@@ -253,4 +271,15 @@ public class DeviceSelectionModel {
             return mSelectedWindow;
         }
     }
+
+    public ViewServerInfo getSelectedDeviceInfo() {
+        synchronized (mDeviceMap) {
+            ViewServerInfo viewServerInfo = null;
+            if (mSelectedDevice != null) {
+                return mDeviceMap.get(mSelectedDevice).viewServerInfo;
+            }
+            return null;
+        }
+    }
+
 }

@@ -643,4 +643,18 @@ public class DeviceBridge {
         }
     }
 
+    public static void outputDisplayList(ViewNode viewNode) {
+        DeviceConnection connection = null;
+        try {
+            connection = new DeviceConnection(viewNode.window.getDevice());
+            connection.sendCommand("OUTPUT_DISPLAYLIST " +
+                    viewNode.window.encode() + " " + viewNode); //$NON-NLS-1$
+        } catch (Exception e) {
+            Log.e(TAG, "Unable to dump displaylist for node " + viewNode + " in window "
+                    + viewNode.window + " on device " + viewNode.window.getDevice());
+        } finally {
+            connection.close();
+        }
+    }
+
 }
