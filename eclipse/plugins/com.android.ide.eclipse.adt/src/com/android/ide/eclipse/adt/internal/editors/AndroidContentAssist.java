@@ -1163,6 +1163,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return null;
     }
 
+    /** Returns the root descriptor id to use */
+    protected int getRootDescriptorId() {
+        return mDescriptorId;
+    }
+
     /**
      * Computes (if needed) and returns the root descriptor.
      */
@@ -1170,7 +1175,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         if (mRootDescriptor == null) {
             AndroidTargetData data = mEditor.getTargetData();
             if (data != null) {
-                IDescriptorProvider descriptorProvider = data.getDescriptorProvider(mDescriptorId);
+                IDescriptorProvider descriptorProvider =
+                    data.getDescriptorProvider(getRootDescriptorId());
 
                 if (descriptorProvider != null) {
                     mRootDescriptor = new ElementDescriptor("",     //$NON-NLS-1$

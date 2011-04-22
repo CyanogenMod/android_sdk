@@ -93,6 +93,10 @@ public abstract class SdkTestCase extends TestCase {
         return sdk;
     }
 
+    protected boolean validateSdk(IAndroidTarget target) {
+        return true;
+    }
+
     /**
      * Checks that the provided sdk contains one or more valid targets.
      * @param sdk the {@link Sdk} to validate.
@@ -100,6 +104,9 @@ public abstract class SdkTestCase extends TestCase {
     private void validateSdk(Sdk sdk) {
         assertTrue("sdk has no targets", sdk.getTargets().length > 0);
         for (IAndroidTarget target : sdk.getTargets()) {
+            if (!validateSdk(target)) {
+                continue;
+            }
             IStatus status = new AndroidTargetParser(target).run(new NullProgressMonitor());
             if (status.getCode() != IStatus.OK) {
                 fail("Failed to parse targets data");
