@@ -784,6 +784,18 @@ public class Main {
      * Displays the list of available Targets (Platforms and Add-ons)
      */
     private void displayTargetList() {
+
+        // Compact output, suitable for scripts.
+        if (mSdkCommandLine != null && mSdkCommandLine.getFlagCompact()) {
+            char eol = mSdkCommandLine.getFlagEolNull() ? '\0' : '\n';
+
+            for (IAndroidTarget target : mSdkManager.getTargets()) {
+                mSdkLog.printf("%1$s%2$c", target.hashString(), eol);
+            }
+
+            return;
+        }
+
         mSdkLog.printf("Available Android targets:\n");
 
         int index = 1;
@@ -862,9 +874,23 @@ public class Main {
      * @param avdManager
      */
     public void displayAvdList(AvdManager avdManager) {
-        mSdkLog.printf("Available Android Virtual Devices:\n");
 
         AvdInfo[] avds = avdManager.getValidAvds();
+
+        // Compact output, suitable for scripts.
+        if (mSdkCommandLine != null && mSdkCommandLine.getFlagCompact()) {
+            char eol = mSdkCommandLine.getFlagEolNull() ? '\0' : '\n';
+
+            for (int index = 0 ; index < avds.length ; index++) {
+                AvdInfo info = avds[index];
+                mSdkLog.printf("%1$s%2$c", info.getName(), eol);
+            }
+
+            return;
+        }
+
+        mSdkLog.printf("Available Android Virtual Devices:\n");
+
         for (int index = 0 ; index < avds.length ; index++) {
             AvdInfo info = avds[index];
             if (index > 0) {
