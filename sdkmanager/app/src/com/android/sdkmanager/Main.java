@@ -26,9 +26,9 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -897,7 +897,7 @@ public class Main {
                 mSdkLog.printf("---------\n");
             }
             mSdkLog.printf("    Name: %s\n", info.getName());
-            mSdkLog.printf("    Path: %s\n", info.getPath());
+            mSdkLog.printf("    Path: %s\n", info.getDataFolderPath());
 
             // get the target of the AVD
             IAndroidTarget target = info.getTarget();
@@ -946,7 +946,8 @@ public class Main {
                 mSdkLog.printf("---------\n");
             }
             mSdkLog.printf("    Name: %s\n", info.getName() == null ? "--" : info.getName());
-            mSdkLog.printf("    Path: %s\n", info.getPath() == null ? "--" : info.getPath());
+            mSdkLog.printf("    Path: %s\n",
+                    info.getDataFolderPath() == null ? "--" : info.getDataFolderPath());
 
             String error = info.getErrorMessage();
             mSdkLog.printf("   Error: %s\n", error == null ? "Uknown error" : error);
@@ -1013,7 +1014,7 @@ public class Main {
             if (paramFolderPath != null) {
                 avdFolder = new File(paramFolderPath);
             } else {
-                avdFolder = AvdManager.AvdInfo.getAvdFolder(avdName);
+                avdFolder = AvdInfo.getDefaultAvdFolder(avdManager, avdName);
             }
 
             // Validate skin is either default (empty) or NNNxMMM or a valid skin name.
@@ -1139,7 +1140,7 @@ public class Main {
                 // check if paths are the same. Use File methods to account for OS idiosyncrasies.
                 try {
                     File f1 = new File(paramFolderPath).getCanonicalFile();
-                    File f2 = new File(info.getPath()).getCanonicalFile();
+                    File f2 = new File(info.getDataFolderPath()).getCanonicalFile();
                     if (f1.equals(f2)) {
                         // same canonical path, so not actually a move
                         paramFolderPath = null;
@@ -1165,7 +1166,7 @@ public class Main {
                 File originalFolder = new File(
                         AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
                         info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
-                if (originalFolder.equals(info.getPath())) {
+                if (originalFolder.equals(info.getDataFolderPath())) {
                     try {
                         // The AVD is using the default data folder path based on the AVD name.
                         // That folder needs to be adjusted to use the new name.
@@ -1187,7 +1188,7 @@ public class Main {
                 }
 
                 File ini = info.getIniFile();
-                if (ini.equals(AvdInfo.getIniFile(newName))) {
+                if (ini.equals(AvdInfo.getDefaultIniFile(avdManager, newName))) {
                     errorAndExit("The AVD file '%s' is in the way.", ini.getCanonicalPath());
                     return;
                 }

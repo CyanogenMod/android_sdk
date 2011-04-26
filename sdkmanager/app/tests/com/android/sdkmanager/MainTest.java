@@ -19,9 +19,7 @@ package com.android.sdkmanager;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.SdkManager;
-import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.mock.MockLog;
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
@@ -32,49 +30,36 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
-import junit.framework.TestCase;
+public class MainTest extends SdkManagerTestCase {
 
-public class MainTest extends TestCase {
-
-    private File mFakeSdk;
-    private MockLog mLog;
-    private SdkManager mSdkManager;
-    private AvdManager mAvdManager;
-    private File mAvdFolder;
     private IAndroidTarget mTarget;
-    private File fakeSdkDir;
+    private File mAvdFolder;
 
     @Override
     public void setUp() throws Exception {
-        mLog = new MockLog();
-        fakeSdkDir = File.createTempFile(
-                this.getClass().getSimpleName() + '_' + this.getName(), null);
-        mFakeSdk = SdkManagerTestUtil.makeFakeSdk(fakeSdkDir);
-        mSdkManager = SdkManager.createManager(mFakeSdk.getAbsolutePath(), mLog);
-        assertNotNull("sdkManager location was invalid", mSdkManager);
+        super.setUp();
 
-        mAvdManager = new AvdManager(mSdkManager, mLog);
-        mAvdFolder = new File(mFakeSdk, "avdData");
-        mTarget = mSdkManager.getTargets()[0];
+        mTarget = getSdkManager().getTargets()[0];
+        mAvdFolder = AvdInfo.getDefaultAvdFolder(getAvdManager(), getName());
     }
 
     @Override
     public void tearDown() throws Exception {
-        SdkManagerTestUtil.deleteDir(mFakeSdk);
+        super.tearDown();
     }
 
     public void testDisplayEmptyAvdList() {
         Main main = new Main();
-        main.setLogger(mLog);
-        mLog.clear();
-        main.displayAvdList(mAvdManager);
-        assertEquals("P Available Android Virtual Devices:\n", mLog.toString());
+        main.setLogger(getLog());
+        getLog().clear();
+        main.displayAvdList(getAvdManager());
+        assertEquals("[P Available Android Virtual Devices:\n]", getLog().toString());
     }
 
     public void testDisplayAvdListOfOneNonSnapshot() {
         Main main = new Main();
-        main.setLogger(mLog);
-        mAvdManager.createAvd(
+        main.setLogger(getLog());
+        getAvdManager().createAvd(
                 mAvdFolder,
                 this.getName(),
                 mTarget,
@@ -85,10 +70,10 @@ public class MainTest extends TestCase {
                 false,  // createSnapshot
                 false,  // removePrevious
                 false,  // editExisting
-                mLog);
+                getLog());
 
-        mLog.clear();
-        main.displayAvdList(mAvdManager);
+        getLog().clear();
+        main.displayAvdList(getAvdManager());
         assertEquals(
                 "[P Available Android Virtual Devices:\n"
                 + ", P     Name: " + this.getName() + "\n"
@@ -96,14 +81,14 @@ public class MainTest extends TestCase {
                 + ", P   Target: Android 0.0 (API level 0)\n"
                 + ", P     Skin: HVGA\n"
                 + "]",
-                mLog.toString());
+                getLog().toString());
     }
 
     public void testDisplayAvdListOfOneSnapshot() {
         Main main = new Main();
-        main.setLogger(mLog);
+        main.setLogger(getLog());
 
-        mAvdManager.createAvd(
+        getAvdManager().createAvd(
                 mAvdFolder,
                 this.getName(),
                 mTarget,
@@ -114,10 +99,10 @@ public class MainTest extends TestCase {
                 true,  // createSnapshot
                 false,  // removePrevious
                 false,  // editExisting
-                mLog);
+                getLog());
 
-        mLog.clear();
-        main.displayAvdList(mAvdManager);
+        getLog().clear();
+        main.displayAvdList(getAvdManager());
         assertEquals(
                 "[P Available Android Virtual Devices:\n"
                 + ", P     Name: " + this.getName() + "\n"
@@ -126,7 +111,7 @@ public class MainTest extends TestCase {
                 + ", P     Skin: HVGA\n"
                 + ", P Snapshot: true\n"
                 + "]",
-                mLog.toString());
+                getLog().toString());
     }
 
     public void testCheckFilterValues() {
@@ -178,7 +163,7 @@ public class MainTest extends TestCase {
 
         // Finally check that checkFilterValues accepts all these values, one by one.
         Main main = new Main();
-        main.setLogger(mLog);
+        main.setLogger(getLog());
 
         for (int step = 0; step < 3; step++) {
             for (String value : expectedValues) {

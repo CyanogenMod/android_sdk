@@ -22,10 +22,10 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -1312,7 +1312,7 @@ final class AvdCreationDialog extends GridDialog {
 
         File avdFolder = null;
         try {
-            avdFolder = AvdManager.AvdInfo.getAvdFolder(avdName);
+            avdFolder = AvdInfo.getDefaultAvdFolder(mAvdManager, avdName);
         } catch (AndroidLocationException e) {
             return false;
         }

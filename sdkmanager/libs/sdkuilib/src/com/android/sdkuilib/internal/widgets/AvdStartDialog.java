@@ -16,8 +16,8 @@
 
 package com.android.sdkuilib.internal.widgets;
 
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.ui.GridDialog;
 
