@@ -237,7 +237,9 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
             public void printError(String format, Object... args) {
                 if (mUpdaterData != null) {
-                    mUpdaterData.getSdkLog().warning(format, args);
+                    // TODO: right now dump to stderr. Use sdklog later.
+                    //mUpdaterData.getSdkLog().error(null, format, args);
+                    System.err.printf(format, args);
                 }
             }
         });

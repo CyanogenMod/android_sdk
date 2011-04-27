@@ -57,9 +57,24 @@ Then add a variable to the Build Path of the target project:
 - Select swtmenubar.jar (which you previously built at step 1)
 
 
-Remember that if you then edit the SwtMenuBar project in Eclipse
-you will need to rebuild it using the command-line before the
-changes are propagated in the target applications that uses it.
+3- Tip for developing this library:
+
+Keep in mind that src-darwin folder must not be added to the
+source folder list, otherwise the library would not compile
+on Windows or Linux.
+
+If you change anything to IMenuBarCallback, make sure to test
+on a Mac to be sure you're not breaking the API.
+
+To work on this on a Mac, you can either:
+a- simply temporarily add src-darwin as a source folder to the
+   build path and remove it before submitting.
+b- or directly edit the java files and rebuild the library using
+   'make swtmenubar' from a shell.
+
+To test the library, use 'make swtmenubar'. This will build the
+library in out/... and the sdkmanager project is already setup
+to find it there.
 
 --
 EOF
