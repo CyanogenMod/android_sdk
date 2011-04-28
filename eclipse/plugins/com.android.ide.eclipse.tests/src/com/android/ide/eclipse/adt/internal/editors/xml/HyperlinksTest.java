@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.xml;
 
+import static com.android.sdklib.SdkConstants.FD_SOURCES;
+
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
@@ -22,6 +24,7 @@ import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks.ResourceLink;
 import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks.XmlResolver;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
@@ -157,6 +160,24 @@ public class HyperlinksTest extends AdtProjectTest {
                 "<my.Cust^omView></my.CustomView>");
     }
 
+    public void testNavigate13() throws Exception {
+        // Check jumping to classes pointed to by fragments
+
+        getTestDataFile(getProject(), "TestFragment.java.txt",
+                FD_SOURCES + "/" + TEST_PROJECT_PACKAGE.replace('.', '/') + "/TestFragment.java");
+        checkXmlNavigation("fragmentlayout.xml", "res/layout/fragmentlayout.xml",
+                "android:name=\"com.android.ecl^ipse.tests.TestFragment\"");
+    }
+
+    public void testNavigate14() throws Exception {
+        // Check jumping to classes pointed to by fragments
+
+        getTestDataFile(getProject(), "TestFragment.java.txt",
+                FD_SOURCES + "/" + TEST_PROJECT_PACKAGE.replace('.', '/') + "/TestFragment.java");
+        checkXmlNavigation("fragmentlayout.xml", "res/layout/fragmentlayout.xml",
+                "class=\"com.and^roid.eclipse.tests.TestFragment\"");
+    }
+
     // Left to test:
     // onClick handling
     // class attributes
@@ -248,6 +269,11 @@ public class HyperlinksTest extends AdtProjectTest {
             sb.append("  ");
             sb.append(initialUrl);
             sb.append("\n");
+        } else if (newEditor instanceof JavaEditor) {
+            JavaEditor javaEditor = (JavaEditor) newEditor;
+            document = javaEditor.getDocumentProvider().getDocument(javaEditor.getEditorInput());
+            IRegion range = javaEditor.getHighlightRange();
+            selection = new Point(range.getOffset(), range.getLength());
         } else {
             fail("Unhandled editor type: " + newEditor.getClass().getName());
             return;

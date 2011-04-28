@@ -67,6 +67,8 @@ import java.util.Map;
 @SuppressWarnings("restriction")
 public class AdtProjectTest extends SdkTestCase {
     private static final int TARGET_API_LEVEL = 11;
+    public static final String TEST_PROJECT_PACKAGE = "com.android.eclipse.tests"; //$NON-NLS-1$
+
     /** Update golden files if different from the actual results */
     private static final boolean UPDATE_DIFFERENT_FILES = false;
     /** Create golden files if missing */
@@ -689,7 +691,7 @@ public class AdtProjectTest extends SdkTestCase {
                 }
 
                 public String getPackageName() {
-                    return "com.android.eclipse.tests";
+                    return TEST_PROJECT_PACKAGE;
                 }
 
                 public String getActivityName() {
