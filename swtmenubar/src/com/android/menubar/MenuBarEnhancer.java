@@ -66,15 +66,16 @@ public final class MenuBarEnhancer {
         if ("carbon".equals(p)) {                                                 //$NON-NLS-1$
             className = "com.android.menubar.internal.MenuBarEnhancerCarbon";     //$NON-NLS-1$
         } else if ("cocoa".equals(p)) {                                           //$NON-NLS-1$
-            // Note: we have a Cocoa implementation that is currently disabled
-            // since the SWT.jar that we use only contain Carbon implementations.
-            //
-            // className = "com.android.menubar.internal.MenuBarEnhancerCocoa";   //$NON-NLS-1$
+            className = "com.android.menubar.internal.MenuBarEnhancerCocoa";      //$NON-NLS-1$
+        }
+
+        if (System.getenv("DEBUG_SWTMENUBAR") != null) {
+            callbacks.printError("DEBUG SwtMenuBar: SWT=%1$s, class=%2$s", p, className);
         }
 
         if (className != null) {
             try {
-                Class<?> clazz = p.getClass().forName(className);
+                Class<?> clazz = Class.forName(className);
                 enhancer = (IMenuBarEnhancer) clazz.newInstance();
             } catch (Exception e) {
                 // Log an error and fallback on the default implementation.
