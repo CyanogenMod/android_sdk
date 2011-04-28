@@ -294,7 +294,11 @@ public final class PrefsDialog {
         dlg.setPreferenceStore(mPrefStore);
 
         // run it
-        dlg.open();
+        try {
+            dlg.open();
+        } catch (Throwable t) {
+            Log.e("ddms", t);
+        }
 
         // save prefs
         try {
