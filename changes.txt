@@ -1,5 +1,8 @@
 Change log for Android SDK Tools.
 
+Revision 11:
+- See eclipse/changes.txt for ADT related changes.
+
 Revision 10:
 - The tools now automatically generate Java Programming Language
   source files (in the gen directory) and bytecode (in the res/raw
