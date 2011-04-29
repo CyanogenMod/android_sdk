@@ -17,7 +17,6 @@
 package com.android.sdkuilib.internal.repository;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
 import com.android.sdkuilib.repository.ISdkChangeListener;
@@ -58,7 +57,7 @@ public class AvdManagerPage extends Composite implements ISdkChangeListener {
         try {
             label.setText(String.format(
                     "List of existing Android Virtual Devices located at %s",
-                    AvdManager.getBaseAvdFolder()));
+                    mUpdaterData.getAvdManager().getBaseAvdFolder()));
         } catch (AndroidLocationException e) {
             label.setText(e.getMessage());
         }

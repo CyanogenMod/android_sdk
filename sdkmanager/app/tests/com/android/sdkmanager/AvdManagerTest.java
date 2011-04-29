@@ -16,49 +16,36 @@
 
 package com.android.sdkmanager;
 
-import static java.io.File.createTempFile;
-
 import com.android.io.FileWrapper;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkManager;
-import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.mock.MockLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.project.ProjectProperties;
 
 import java.io.File;
 import java.util.Map;
 
-import junit.framework.TestCase;
+public class AvdManagerTest extends SdkManagerTestCase {
 
-public class AvdManagerTest extends TestCase {
-
-    private AvdManager mAvdManager;
-    private SdkManager mSdkManager;
-    private MockLog mLog;
-    private File mFakeSdk;
-    private File mAvdFolder;
     private IAndroidTarget mTarget;
+    private File mAvdFolder;
 
     @Override
     public void setUp() throws Exception {
-        mLog = new MockLog();
-        mFakeSdk = SdkManagerTestUtil.makeFakeSdk(createTempFile(this.getClass().getSimpleName(), null));
-        mSdkManager = SdkManager.createManager(mFakeSdk.getAbsolutePath(), mLog);
-        assertNotNull("sdkManager location was invalid", mSdkManager);
+        super.setUp();
 
-        mAvdManager = new AvdManager(mSdkManager, mLog);
-        mAvdFolder = new File(mFakeSdk, "avdData");
-        mTarget = mSdkManager.getTargets()[0];
+        mTarget = getSdkManager().getTargets()[0];
+        mAvdFolder = AvdInfo.getDefaultAvdFolder(getAvdManager(), getName());
     }
 
     @Override
     public void tearDown() throws Exception {
-        SdkManagerTestUtil.deleteDir(mFakeSdk);
+        super.tearDown();
     }
 
     public void testCreateAvdWithoutSnapshot() {
-        mAvdManager.createAvd(
+
+        getAvdManager().createAvd(
                 mAvdFolder,
                 this.getName(),
                 mTarget,
@@ -69,17 +56,17 @@ public class AvdManagerTest extends TestCase {
                 false,  // createSnapshot
                 false,  // removePrevious
                 false,  // editExisting
-                mLog);
+                getLog());
 
         assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
-                mLog.toString());
+                getLog().toString());
         assertTrue("Expected config.ini in " + mAvdFolder,
                 new File(mAvdFolder, "config.ini").exists());
         Map<String, String> map = ProjectProperties.parsePropertyFile(
-                new FileWrapper(mAvdFolder, "config.ini"), mLog);
+                new FileWrapper(mAvdFolder, "config.ini"), getLog());
         assertEquals("HVGA", map.get("skin.name"));
-        assertEquals("platforms/v0_0/skins/HVGA", map.get("skin.path"));
-        assertEquals("platforms/v0_0/images/", map.get("image.sysdir.1"));
+        assertEquals("platforms/v0_0/skins/HVGA", map.get("skin.path").replace(File.separatorChar, '/'));
+        assertEquals("platforms/v0_0/images/", map.get("image.sysdir.1").replace(File.separatorChar, '/'));
         assertEquals(null, map.get("snapshot.present"));
         assertTrue("Expected userdata.img in " + mAvdFolder,
                 new File(mAvdFolder, "userdata.img").exists());
@@ -89,7 +76,7 @@ public class AvdManagerTest extends TestCase {
 
     public void testCreateAvdWithSnapshot() {
 
-        mAvdManager.createAvd(
+        getAvdManager().createAvd(
                 mAvdFolder,
                 this.getName(),
                 mTarget,
@@ -100,14 +87,14 @@ public class AvdManagerTest extends TestCase {
                 true,   // createSnapshot
                 false,  // removePrevious
                 false,  // editExisting
-                mLog);
+                getLog());
 
         assertEquals("[P Created AVD '" + this.getName() + "' based on Android 0.0, ARM (armeabi) processor\n]",
-                mLog.toString());
+                getLog().toString());
         assertTrue("Expected snapshots.img in " + mAvdFolder,
                 new File(mAvdFolder, "snapshots.img").exists());
         Map<String, String> map = ProjectProperties.parsePropertyFile(
-                new FileWrapper(mAvdFolder, "config.ini"), mLog);
+                new FileWrapper(mAvdFolder, "config.ini"), getLog());
         assertEquals("true", map.get("snapshot.present"));
     }
 }

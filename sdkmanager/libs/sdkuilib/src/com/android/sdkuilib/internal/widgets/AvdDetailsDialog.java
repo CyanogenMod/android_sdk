@@ -18,9 +18,9 @@ package com.android.sdkuilib.internal.widgets;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo;
-import com.android.sdklib.internal.avd.AvdManager.AvdInfo.AvdStatus;
+import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -103,7 +103,7 @@ final class AvdDetailsDialog extends Dialog {
             displayValue(c, "Name:", mAvdInfo.getName());
             displayValue(c, "ABI:", AvdInfo.getPrettyAbiType(mAvdInfo.getAbiType()));
 
-            displayValue(c, "Path:", mAvdInfo.getPath());
+            displayValue(c, "Path:", mAvdInfo.getDataFolderPath());
 
             if (mAvdInfo.getStatus() != AvdStatus.OK) {
                 displayValue(c, "Error:", mAvdInfo.getErrorMessage());
