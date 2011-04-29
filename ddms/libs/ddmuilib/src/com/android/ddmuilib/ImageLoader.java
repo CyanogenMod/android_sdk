@@ -140,13 +140,11 @@ public class ImageLoader {
 
             if (imageStream != null) {
                 img = new Image(display, imageStream);
-                if (img == null) {
-                    throw new NullPointerException("couldn't load " + tmp);
-                }
-
                 mLoadedImages.put(filename, img);
+            }
 
-                return img;
+            if (img == null) {
+                throw new RuntimeException("Failed to load " + tmp);
             }
         }
 
@@ -159,7 +157,6 @@ public class ImageLoader {
      * Extra parameters allows for creation of a replacement image of the
      * loading failed.
      *
-     * @param loader the image loader used.
      * @param display the Display object
      * @param fileName the file name
      * @param width optional width to create replacement Image. If -1, null be
