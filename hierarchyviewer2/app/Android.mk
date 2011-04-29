@@ -27,7 +27,8 @@ LOCAL_JAVA_LIBRARIES := \
     swt \
     org.eclipse.jface_3.4.2.M20090107-0800 \
     org.eclipse.core.commands_3.4.0.I20080509-2000 \
-    sdklib
+    sdklib \
+    swtmenubar
 
 LOCAL_MODULE := hierarchyviewer2
 

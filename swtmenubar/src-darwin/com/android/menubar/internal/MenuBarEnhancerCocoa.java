@@ -109,16 +109,15 @@ public class MenuBarEnhancerCocoa implements IMenuBarEnhancer {
      * given application name and links them to the callback.
      *
      * @param appName The application name.
-     * @param swtMenu The tools menu. Not used here.
+     * @param display The SWT display. Must not be null.
      * @param callbacks The callbacks invoked by the menus.
      */
     public void setupMenu(
             String appName,
-            Menu swtMenu,
+            Display display,
             IMenuBarCallback callbacks) {
 
         mAppName = appName;
-        final Display display = swtMenu.getDisplay();
 
         // This is our callback object whose 'actionProc' method will be called
         // when the About or Preferences menuItem is invoked.

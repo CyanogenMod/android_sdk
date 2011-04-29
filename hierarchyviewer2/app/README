@@ -1,27 +1,27 @@
-Using the Eclipse project DDMS
-------------------------------
+Using the Eclipse project HierarchyViewer
+-----------------------------------------
 
-DDMS requires some external libraries to compile.
-If you build DDMS using the makefile, you have nothing to configure.
-However if you want to develop on DDMS using Eclipse, you need to
-perform the following configuration.
+HierarchyViewer requires some external libraries to compile.
+If you build HierarchyViewer using the makefile, you have nothing
+to configure. However if you want to develop on HierarchyViewer
+using Eclipse, you need to perform the following configuration.
 
 
 -------
 1- Projects required in Eclipse
 -------
 
-To run DDMS from Eclipse, you need to import the following 5 projects:
+To run HierarchyViewer from Eclipse, you need to import the following 5 projects:
 
-  - sdk/androidpprefs:      project AndroidPrefs
-  - sdk/sdkstats:           project SdkStatsService
-  - sdk/ddms/app:           project Ddms
-  - sdk/ddms/libs/ddmlib:   project Ddmlib
-  - sdk/ddms/libs/ddmuilib: project Ddmuilib
+  - sdk/hierarchyviewer2/app
+  - sdk/hierarchyviewer2/libs/hierarchyviewerlib/
+  - sdk/ddms/libs/ddmlib
+  - sdk/ddms/libs/ddmuilib
+  - sdk/sdkmanager/libs/sdklib
 
 
 -------
-2- DDMS requires some SWT and OSGI JARs to compile.
+2- HierarchyViewer requires some SWT JARs to compile.
 -------
 
 SWT is available in the tree under prebuild/<platform>/swt
@@ -29,7 +29,6 @@ SWT is available in the tree under prebuild/<platform>/swt
 Because the build path cannot contain relative path that are not inside
 the project directory, the .classpath file references a user library
 called ANDROID_SWT.
-SWT depends on OSGI, so we'll also create an ANDROID_OSGI library for that.
 
 In order to compile the project:
 - Open Preferences > Java > Build Path > User Libraries
@@ -42,14 +41,9 @@ In order to compile the project:
   - prebuilt/common/eclipse/org.eclipse.equinox.common_3.*.jar
   - prebuilt/common/eclipse/org.eclipse.jface_3.*.jar
 
-- Create a new user library named ANDROID_OSGI
-- Add the following JAR file:
-
-  - prebuilt/common/osgi/osgi.jar
-
 
 -------
-3- DDMS also requires the compiled SwtMenuBar library.
+3- HierarchyViewer also requires the compiled SwtMenuBar library.
 -------
 
 Build the swtmenubar library:

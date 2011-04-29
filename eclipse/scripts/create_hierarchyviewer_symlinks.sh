@@ -60,10 +60,11 @@ DEST=$BASE/libs
 
 mkdir -p $DEST
 
-LIBS="hierarchyviewerlib "
+COPY_LIBS="hierarchyviewerlib"
+ALL_LIBS="$COPY_LIBS swtmenubar"
 echo "make java libs ..."
-make -j3 showcommands $LIBS || die "Hierarchy Viewer: Fail to build one of $LIBS."
+make -j3 showcommands $ALL_LIBS || die "Hierarchy Viewer: Fail to build one of $ALL_LIBS."
 
-for LIB in $LIBS; do
+for LIB in $COPY_LIBS; do
     cpfile $DEST out/host/$PLATFORM/framework/$LIB.jar
 done

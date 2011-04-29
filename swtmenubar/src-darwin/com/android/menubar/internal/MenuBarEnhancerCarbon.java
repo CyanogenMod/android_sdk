@@ -44,9 +44,8 @@ public final class MenuBarEnhancerCarbon implements IMenuBarEnhancer {
 
     public void setupMenu(
             String appName,
-            Menu swtMenu,
+            Display display,
             final IMenuBarCallback callbacks) {
-        final Display display = swtMenu.getDisplay();
 
         // Callback target
         Object target = new Object() {

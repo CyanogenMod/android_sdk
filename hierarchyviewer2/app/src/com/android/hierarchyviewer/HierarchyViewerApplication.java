@@ -53,11 +53,15 @@ import com.android.hierarchyviewerlib.ui.PropertyViewer;
 import com.android.hierarchyviewerlib.ui.TreeView;
 import com.android.hierarchyviewerlib.ui.TreeViewControls;
 import com.android.hierarchyviewerlib.ui.TreeViewOverview;
+import com.android.menubar.IMenuBarEnhancer;
+import com.android.menubar.MenuBarEnhancer;
+import com.android.menubar.IMenuBarEnhancer.MenuBarMode;
 
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionEvent;
@@ -81,6 +85,7 @@ import org.eclipse.swt.widgets.Shell;
 
 public class HierarchyViewerApplication extends ApplicationWindow {
 
+    private static final String APP_NAME = "Hierarchy Viewer";
     private static final int INITIAL_WIDTH = 1024;
     private static final int INITIAL_HEIGHT = 768;
 
@@ -148,7 +153,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     @Override
     protected void configureShell(Shell shell) {
         super.configureShell(shell);
-        shell.setText("Hierarchy Viewer");
+        shell.setText(APP_NAME);
         ImageLoader imageLoader = ImageLoader.getLoader(HierarchyViewerDirector.class);
         Image image = imageLoader.loadImage("sdk-hierarchyviewer-128.png", Display.getDefault()); //$NON-NLS-1$
         shell.setImage(image);
@@ -162,7 +167,14 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     public void run() {
         setBlockOnOpen(true);
 
-        open();
+        try {
+            open();
+        } catch (SWTException e) {
+         // Ignore "widget disposed" errors after we closed.
+            if (!getShell().isDisposed()) {
+                throw e;
+            }
+        }
 
         TreeViewModel.getModel().removeTreeChangeListener(mTreeChangeListener);
         PixelPerfectModel.getModel().removeImageChangeListener(mImageChangeListener);
@@ -581,12 +593,16 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         MenuManager mm = getMenuBarManager();
         mm.removeAll();
 
-        String os = System.getProperty("os.name"); //$NON-NLS-1$
-        if (os.startsWith("Mac OS") == false) { //$NON-NLS-1$
-            MenuManager file = new MenuManager("&File");
+        MenuManager file = new MenuManager("&File");
+        IMenuBarEnhancer enhancer = MenuBarEnhancer.setupMenuManager(
+                APP_NAME,
+                getShell().getDisplay(),
+                file,
+                AboutAction.getAction(getShell()),
+                null /*preferencesAction*/,
+                QuitAction.getAction());
+        if (enhancer.getMenuBarMode() == MenuBarMode.GENERIC) {
             mm.add(file);
-
-            file.add(QuitAction.getAction());
         }
 
         MenuManager device = new MenuManager("&Devices");
@@ -595,11 +611,6 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         device.add(RefreshWindowsAction.getAction());
         device.add(LoadViewHierarchyAction.getAction());
         device.add(InspectScreenshotAction.getAction());
-
-        MenuManager help = new MenuManager("&Help");
-        mm.add(help);
-
-        help.add(AboutAction.getAction(getShell()));
 
         mm.updateAll(true);
 
@@ -626,12 +637,16 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         MenuManager mm = getMenuBarManager();
         mm.removeAll();
 
-        String os = System.getProperty("os.name"); //$NON-NLS-1$
-        if (os.startsWith("Mac OS") == false) { //$NON-NLS-1$
-            MenuManager file = new MenuManager("&File");
+        MenuManager file = new MenuManager("&File");
+        IMenuBarEnhancer enhancer = MenuBarEnhancer.setupMenuManager(
+                APP_NAME,
+                getShell().getDisplay(),
+                file,
+                AboutAction.getAction(getShell()),
+                null /*preferencesAction*/,
+                QuitAction.getAction());
+        if (enhancer.getMenuBarMode() == MenuBarMode.GENERIC) {
             mm.add(file);
-
-            file.add(QuitAction.getAction());
         }
 
         MenuManager treeViewMenu = new MenuManager("&Tree View");
@@ -645,11 +660,6 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         treeViewMenu.add(new Separator());
         treeViewMenu.add(InvalidateAction.getAction());
         treeViewMenu.add(RequestLayoutAction.getAction());
-
-        MenuManager help = new MenuManager("&Help");
-        mm.add(help);
-
-        help.add(AboutAction.getAction(getShell()));
 
         mm.updateAll(true);
 
@@ -676,12 +686,16 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         MenuManager mm = getMenuBarManager();
         mm.removeAll();
 
-        String os = System.getProperty("os.name"); //$NON-NLS-1$
-        if (os.startsWith("Mac OS") == false) { //$NON-NLS-1$
-            MenuManager file = new MenuManager("&File");
+        MenuManager file = new MenuManager("&File");
+        IMenuBarEnhancer enhancer = MenuBarEnhancer.setupMenuManager(
+                APP_NAME,
+                getShell().getDisplay(),
+                file,
+                AboutAction.getAction(getShell()),
+                null /*preferencesAction*/,
+                QuitAction.getAction());
+        if (enhancer.getMenuBarMode() == MenuBarMode.GENERIC) {
             mm.add(file);
-
-            file.add(QuitAction.getAction());
         }
 
         MenuManager pixelPerfect = new MenuManager("&Pixel Perfect");
@@ -694,11 +708,6 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         pixelPerfect.add(ShowOverlayAction.getAction());
 
         mm.add(pixelPerfect);
-
-        MenuManager help = new MenuManager("&Help");
-        mm.add(help);
-
-        help.add(AboutAction.getAction(getShell()));
 
         mm.updateAll(true);
 

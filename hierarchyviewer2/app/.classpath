@@ -7,5 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmuilib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SdkLib"/>
+	<classpathentry kind="var" path="ANDROID_OUT_FRAMEWORK/swtmenubar.jar" sourcepath="/ANDROID_SRC/sdk/swtmenubar/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
