@@ -16,6 +16,7 @@
 
 package com.android.menubar;
 
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 
 
@@ -61,13 +62,12 @@ public interface IMenuBarEnhancer {
      * {@link MenuBarEnhancer#setupMenu} should be used instead.
      *
      * @param appName Name used for the About menu item and similar. Must not be null.
-     * @param swtMenu For non-mac platform this is the menu where the "About" and
-     *          the "Preferences" menu items are created. Must not be null.
+     * @param display The SWT display. Must not be null.
      * @param callbacks Callbacks called when "About" and "Preferences" menu items are invoked.
      *          Must not be null.
      */
     public void setupMenu(
             String appName,
-            Menu swtMenu,
+            Display display,
             IMenuBarCallback callbacks);
 }

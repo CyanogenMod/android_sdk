@@ -16,9 +16,13 @@
 
 package com.android.menubar;
 
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -57,36 +61,12 @@ public final class MenuBarEnhancer {
      */
     public static IMenuBarEnhancer setupMenu(
             String appName,
-            Menu swtMenu,
+            final Menu swtMenu,
             IMenuBarCallback callbacks) {
 
-        IMenuBarEnhancer enhancer = null;
-        String p = SWT.getPlatform();
-        String className = null;
-        if ("carbon".equals(p)) {                                                 //$NON-NLS-1$
-            className = "com.android.menubar.internal.MenuBarEnhancerCarbon";     //$NON-NLS-1$
-        } else if ("cocoa".equals(p)) {                                           //$NON-NLS-1$
-            className = "com.android.menubar.internal.MenuBarEnhancerCocoa";      //$NON-NLS-1$
-        }
+        IMenuBarEnhancer enhancer = getEnhancer(callbacks);
 
-        if (System.getenv("DEBUG_SWTMENUBAR") != null) {
-            callbacks.printError("DEBUG SwtMenuBar: SWT=%1$s, class=%2$s", p, className);
-        }
-
-        if (className != null) {
-            try {
-                Class<?> clazz = Class.forName(className);
-                enhancer = (IMenuBarEnhancer) clazz.newInstance();
-            } catch (Exception e) {
-                // Log an error and fallback on the default implementation.
-                callbacks.printError(
-                        "Failed to instantiate %1$s: %2$s",                       //$NON-NLS-1$
-                        className,
-                        e.toString());
-            }
-        }
-
-        // Default implementation for other platforms
+        // Default implementation for generic platforms
         if (enhancer == null) {
             enhancer = new IMenuBarEnhancer() {
 
@@ -96,17 +76,17 @@ public final class MenuBarEnhancer {
 
                 public void setupMenu(
                         String appName,
-                        Menu menu,
+                        Display display,
                         final IMenuBarCallback callbacks) {
-                    if (menu.getItemCount() > 0) {
-                        new MenuItem(menu, SWT.SEPARATOR);
+                    if (swtMenu.getItemCount() > 0) {
+                        new MenuItem(swtMenu, SWT.SEPARATOR);
                     }
 
                     // Note: we use "Preferences" on Mac and "Options" on Windows/Linux.
-                    final MenuItem pref = new MenuItem(menu, SWT.NONE);
+                    final MenuItem pref = new MenuItem(swtMenu, SWT.NONE);
                     pref.setText("&Options...");
 
-                    final MenuItem about = new MenuItem(menu, SWT.NONE);
+                    final MenuItem about = new MenuItem(swtMenu, SWT.NONE);
                     about.setText("&About...");
 
                     pref.addSelectionListener(new SelectionAdapter() {
@@ -138,8 +118,101 @@ public final class MenuBarEnhancer {
             };
         }
 
-        enhancer.setupMenu(appName, swtMenu, callbacks);
+        enhancer.setupMenu(appName, swtMenu.getDisplay(), callbacks);
         return enhancer;
     }
 
+
+    public static IMenuBarEnhancer setupMenuManager(
+            String appName,
+            Display display,
+            final IMenuManager menuManager,
+            final IAction aboutAction,
+            final IAction preferencesAction,
+            final IAction quitAction) {
+
+        IMenuBarCallback callbacks = new IMenuBarCallback() {
+            public void printError(String format, Object... args) {
+                System.err.println(String.format(format, args));
+            }
+
+            public void onPreferencesMenuSelected() {
+                if (preferencesAction != null) {
+                    preferencesAction.run();
+                }
+            }
+
+            public void onAboutMenuSelected() {
+                if (aboutAction != null) {
+                    aboutAction.run();
+                }
+            }
+        };
+
+        IMenuBarEnhancer enhancer = getEnhancer(callbacks);
+
+        // Default implementation for generic platforms
+        if (enhancer == null) {
+            enhancer = new IMenuBarEnhancer() {
+
+                public MenuBarMode getMenuBarMode() {
+                    return MenuBarMode.GENERIC;
+                }
+
+                public void setupMenu(
+                        String appName,
+                        Display display,
+                        final IMenuBarCallback callbacks) {
+                    if (!menuManager.isEmpty()) {
+                        menuManager.add(new Separator());
+                    }
+
+                    if (aboutAction != null) {
+                        menuManager.add(aboutAction);
+                    }
+                    if (preferencesAction != null) {
+                        menuManager.add(preferencesAction);
+                    }
+                    if (quitAction != null) {
+                        if (aboutAction != null || preferencesAction != null) {
+                            menuManager.add(new Separator());
+                        }
+                        menuManager.add(quitAction);
+                    }
+                }
+            };
+        }
+
+        enhancer.setupMenu(appName, display, callbacks);
+        return enhancer;
+    }
+
+    private static IMenuBarEnhancer getEnhancer(IMenuBarCallback callbacks) {
+        IMenuBarEnhancer enhancer = null;
+        String p = SWT.getPlatform();
+        String className = null;
+        if ("carbon".equals(p)) {                                                 //$NON-NLS-1$
+            className = "com.android.menubar.internal.MenuBarEnhancerCarbon";     //$NON-NLS-1$
+        } else if ("cocoa".equals(p)) {                                           //$NON-NLS-1$
+            className = "com.android.menubar.internal.MenuBarEnhancerCocoa";      //$NON-NLS-1$
+        }
+
+        if (System.getenv("DEBUG_SWTMENUBAR") != null) {
+            callbacks.printError("DEBUG SwtMenuBar: SWT=%1$s, class=%2$s", p, className);
+        }
+
+        if (className != null) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                enhancer = (IMenuBarEnhancer) clazz.newInstance();
+            } catch (Exception e) {
+                // Log an error and fallback on the default implementation.
+                callbacks.printError(
+                        "Failed to instantiate %1$s: %2$s",                       //$NON-NLS-1$
+                        className,
+                        e.toString());
+            }
+        }
+        return enhancer;
+    }
 }

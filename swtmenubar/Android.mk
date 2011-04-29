@@ -27,7 +27,10 @@ endif
 LOCAL_MODULE := swtmenubar
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := swt
+LOCAL_JAVA_LIBRARIES := \
+	swt \
+	org.eclipse.jface_3.4.2.M20090107-0800
+	
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
