@@ -25,6 +25,33 @@ import org.eclipse.swt.widgets.Menu;
  */
 public interface IMenuBarEnhancer {
 
+    /** Values that indicate how the menu bar is being handlded. */
+    public enum MenuBarMode {
+        /**
+         * The Mac-specific About and Preferences are being used.
+         * No File > Exit menu should be provided by the application.
+         */
+        MAC_OS,
+        /**
+         * The provided SWT {@link Menu} is being used for About and Options.
+         * The application should provide a File > Exit menu.
+         */
+        GENERIC
+    }
+
+    /**
+     * Returns a {@link MenuBarMode} enum that indicates how the menu bar is going to
+     * or has been modified. This is implementation specific and can be called before or
+     * after {@link #setupMenu}.
+     * <p/>
+     * Callers would typically call that to know if they need to hide or display
+     * menu items. For example when {@link MenuBarMode#MAC_OS} is used, an app
+     * would typically not need to provide any "File > Exit" menu item.
+     *
+     * @return One of the {@link MenuBarMode} values.
+     */
+    public MenuBarMode getMenuBarMode();
+
     /**
      * Updates the menu bar to provide an About menu item and a Preferences menu item.
      * Depending on the platform, the menu items might be decorated with the

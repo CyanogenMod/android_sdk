@@ -38,6 +38,10 @@ public final class MenuBarEnhancerCarbon implements IMenuBarEnhancer {
     public MenuBarEnhancerCarbon() {
     }
 
+    public MenuBarMode getMenuBarMode() {
+        return MenuBarMode.MAC_OS;
+    }
+
     public void setupMenu(
             String appName,
             Menu swtMenu,
