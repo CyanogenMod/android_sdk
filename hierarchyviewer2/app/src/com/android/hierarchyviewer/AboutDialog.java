@@ -41,8 +41,8 @@ public class AboutDialog extends Dialog {
     public AboutDialog(Shell shell) {
         super(shell);
         ImageLoader imageLoader = ImageLoader.getLoader(HierarchyViewerDirector.class);
-        mSmallImage = imageLoader.loadImage("load-view-hierarchy.png", Display.getDefault()); //$NON-NLS-1$
-        mAboutImage = imageLoader.loadImage("about.jpg", Display.getDefault()); //$NON-NLS-1$
+        mSmallImage = imageLoader.loadImage("sdk-hierarchyviewer-16.png", Display.getDefault()); //$NON-NLS-1$
+        mAboutImage = imageLoader.loadImage("sdk-hierarchyviewer-128.png", Display.getDefault()); //$NON-NLS-1$
     }
 
     @Override

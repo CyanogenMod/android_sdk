@@ -41,7 +41,7 @@ public class AboutAction extends Action implements ImageAction {
         this.mShell = shell;
         setAccelerator(SWT.MOD1 + 'A');
         ImageLoader imageLoader = ImageLoader.getLoader(HierarchyViewerDirector.class);
-        mImage = imageLoader.loadImage("about-small.jpg", Display.getDefault()); //$NON-NLS-1$
+        mImage = imageLoader.loadImage("sdk-hierarchyviewer-16.png", Display.getDefault()); //$NON-NLS-1$
         setImageDescriptor(ImageDescriptor.createFromImage(mImage));
         setToolTipText("Shows the about dialog");
     }
