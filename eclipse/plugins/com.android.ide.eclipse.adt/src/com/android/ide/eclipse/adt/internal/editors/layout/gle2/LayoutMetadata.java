@@ -86,11 +86,6 @@ public class LayoutMetadata {
         try {
             IModelManager modelManager = StructuredModelManager.getModelManager();
             model = modelManager.getExistingModelForRead(document);
-            if (model instanceof IDOMModel) {
-                IDOMModel domModel = (IDOMModel) model;
-                Document domDocument = domModel.getDocument();
-                assert domDocument == node.getOwnerDocument();
-            }
 
             Node comment = findComment(node);
             if (comment != null) {

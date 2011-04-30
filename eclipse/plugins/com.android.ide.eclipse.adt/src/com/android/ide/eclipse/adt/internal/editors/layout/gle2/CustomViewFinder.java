@@ -36,7 +36,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -189,6 +189,11 @@ public class CustomViewFinder {
         SearchRequestor requestor = new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
+                // Ignore matches in comments
+                if (match.isInsideDocComment()) {
+                    return;
+                }
+
                 Object element = match.getElement();
                 if (element instanceof ResolvedBinaryType) {
                     // Third party view
@@ -228,15 +233,16 @@ public class CustomViewFinder {
             IJavaProject javaProject = BaseProjectHelper.getJavaProject(mProject);
             if (javaProject != null) {
                 String className = layoutsOnly ? CLASS_VIEWGROUP : CLASS_VIEW;
-                IType activityType = javaProject.findType(className);
-                if (activityType != null) {
-                    IJavaSearchScope scope = SearchEngine.createHierarchyScope(activityType);
+                IType viewType = javaProject.findType(className);
+                if (viewType != null) {
+                    IJavaSearchScope scope = SearchEngine.createHierarchyScope(viewType);
                     SearchParticipant[] participants = new SearchParticipant[] {
                         SearchEngine.getDefaultSearchParticipant()
                     };
                     int matchRule = SearchPattern.R_PATTERN_MATCH | SearchPattern.R_CASE_SENSITIVE;
+
                     SearchPattern pattern = SearchPattern.createPattern("*",
-                            IJavaSearchConstants.CLASS, IJavaSearchConstants.DECLARATIONS,
+                            IJavaSearchConstants.CLASS, IJavaSearchConstants.IMPLEMENTORS,
                             matchRule);
                     SearchEngine engine = new SearchEngine();
                     engine.search(pattern, participants, scope, requestor,
@@ -261,16 +267,68 @@ public class CustomViewFinder {
      * list of custom views or third party views. It checks that the view is public and
      * not abstract for example.
      */
-    private static boolean isValidView(IMember member, boolean layoutsOnly)
+    private static boolean isValidView(IType type, boolean layoutsOnly)
             throws JavaModelException {
-        int flags = member.getFlags();
+        // Skip anonymous classes
+        if (type.isAnonymous()) {
+            return false;
+        }
+        int flags = type.getFlags();
         if (Flags.isAbstract(flags) || !Flags.isPublic(flags)) {
             return false;
         }
 
         // TODO: if (layoutsOnly) perhaps try to filter out AdapterViews and other ViewGroups
         // not willing to accept children via XML
-        return true;
+
+        // See if the class has one of the acceptable constructors
+        // needed for XML instantiation:
+        //    View(Context context)
+        //    View(Context context, AttributeSet attrs)
+        //    View(Context context, AttributeSet attrs, int defStyle)
+        // We don't simply do three direct checks via type.getMethod() because the types
+        // are not resolved, so we don't know for each parameter if we will get the
+        // fully qualified or the unqualified class names.
+        // Instead, iterate over the methods and look for a match.
+        String typeName = type.getElementName();
+        for (IMethod method : type.getMethods()) {
+            // Only care about constructors
+            if (!method.getElementName().equals(typeName)) {
+                continue;
+            }
+
+            String[] parameterTypes = method.getParameterTypes();
+            if (parameterTypes == null || parameterTypes.length < 1 || parameterTypes.length > 3) {
+                continue;
+            }
+
+            String first = parameterTypes[0];
+            // Look for the parameter type signatures -- produced by
+            // JDT's Signature.createTypeSignature("Context", false /*isResolved*/);.
+            // This is not a typo; they were copy/pasted from the actual parameter names
+            // observed in the debugger examining these data structures.
+            if (first.equals("QContext;")                                   //$NON-NLS-1$
+                    || first.equals("Qandroid.content.Context;")) {         //$NON-NLS-1$
+                if (parameterTypes.length == 1) {
+                    return true;
+                }
+                String second = parameterTypes[1];
+                if (second.equals("QAttributeSet;")                         //$NON-NLS-1$
+                        || second.equals("Qandroid.util.AttributeSet;")) {  //$NON-NLS-1$
+                    if (parameterTypes.length == 2) {
+                        return true;
+                    }
+                    String third = parameterTypes[2];
+                    if (third.equals("I")) {                                //$NON-NLS-1$
+                        if (parameterTypes.length == 3) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
