@@ -1118,9 +1118,11 @@ public class PaletteControl extends Composite {
         final static int TOGGLE_ALPHABETICAL = 2;
         final static int TOGGLE_AUTO_CLOSE = 3;
         final static int REFRESH = 4;
+        final static int RESET = 5;
 
         ToggleViewOptionAction(String title, int action, boolean checked) {
-            super(title, action == REFRESH ? IAction.AS_PUSH_BUTTON : IAction.AS_CHECK_BOX);
+            super(title, (action == REFRESH || action == RESET) ? IAction.AS_PUSH_BUTTON
+                    : IAction.AS_CHECK_BOX);
             mAction = action;
             if (checked) {
                 setChecked(checked);
@@ -1144,6 +1146,13 @@ public class PaletteControl extends Composite {
                     break;
                 case REFRESH:
                     mPreviewIconFactory.refresh();
+                    refreshPalette();
+                    break;
+                case RESET:
+                    mAlphabetical = false;
+                    mCategories = true;
+                    mAutoClose = true;
+                    mPaletteMode = PaletteMode.SMALL_PREVIEW;
                     refreshPalette();
                     break;
             }
@@ -1190,6 +1199,11 @@ public class PaletteControl extends Composite {
         manager.add(new ToggleViewOptionAction("Auto Close Previous",
                 ToggleViewOptionAction.TOGGLE_AUTO_CLOSE,
                 mAutoClose));
+        manager.add(new Separator());
+        manager.add(new ToggleViewOptionAction("Reset",
+                ToggleViewOptionAction.RESET,
+                false));
+
         Menu menu = manager.createContextMenu(PaletteControl.this);
         menu.setLocation(x, y);
         menu.setVisible(true);
