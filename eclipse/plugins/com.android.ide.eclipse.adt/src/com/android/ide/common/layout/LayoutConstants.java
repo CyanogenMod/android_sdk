@@ -29,7 +29,7 @@ import com.android.sdklib.SdkConstants;
  * </ul>
  */
 public class LayoutConstants {
-    /** The element name in a <code>&lt;view class="..."&gt;</code> element. */
+    /** The element name in a {@code <view class="...">} element. */
     public static final String VIEW = "view";                           //$NON-NLS-1$
 
     /** The attribute name in a {@code <view class="...">} element. */
