@@ -23,14 +23,14 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.MenuAction.Toggle;
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
-import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
+import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -562,6 +562,13 @@ public class PaletteControl extends Composite {
         for (final String fqcn : allViews) {
             CustomViewDescriptorService service = CustomViewDescriptorService.getInstance();
             ViewElementDescriptor desc = service.getDescriptor(mEditor.getProject(), fqcn);
+            if (desc == null) {
+                // The descriptor lookup performs validation steps of the class, and may
+                // in some cases determine that this is not a view and will return null;
+                // guard against that.
+                continue;
+            }
+
             Control item = createItem(parent, desc);
 
             // Add control-click listener on custom view items to you can warp to
