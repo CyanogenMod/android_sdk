@@ -29,10 +29,10 @@ import com.android.sdklib.SdkConstants;
  * </ul>
  */
 public class LayoutConstants {
-    /** The element name in a <code>&lt;view class="..."&gt;</code> element. */
+    /** The element name in a {@code <view class="...">} element. */
     public static final String VIEW = "view";                           //$NON-NLS-1$
 
-    /** The attribute name in a <code>&lt;view class="..."&gt;</code> element. */
+    /** The attribute name in a {@code <view class="...">} element. */
     public static final String ATTR_CLASS = "class";                    //$NON-NLS-1$
     public static final String ATTR_ON_CLICK = "onClick";               //$NON-NLS-1$
 
