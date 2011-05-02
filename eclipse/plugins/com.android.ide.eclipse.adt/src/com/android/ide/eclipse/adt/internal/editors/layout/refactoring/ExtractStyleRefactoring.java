@@ -21,7 +21,9 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREF
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
@@ -247,8 +249,12 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
 
                 String name = attribute.getLocalName();
                 if (name == null || name.equals(ATTR_ID) || name.startsWith(ATTR_STYLE)
-                        || name.startsWith(ATTR_LAYOUT_PREFIX) || name.equals(ATTR_TEXT)
-                        || name.equals(ATTR_HINT) || name.equals(ATTR_SRC)) {
+                        || (name.startsWith(ATTR_LAYOUT_PREFIX) &&
+                                !name.startsWith(ATTR_LAYOUT_MARGIN))
+                        || name.equals(ATTR_TEXT)
+                        || name.equals(ATTR_HINT)
+                        || name.equals(ATTR_SRC)
+                        || name.equals(ATTR_ON_CLICK)) {
                     // Don't offer to extract attributes that don't make sense in
                     // styles (like "id" or "style"), or attributes that the user
                     // probably does not want to define in styles (like layout

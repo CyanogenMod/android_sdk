@@ -886,10 +886,23 @@ public class LayoutCanvas extends Canvas {
     private void showInclude(String url) {
         GraphicalEditorPart graphicalEditor = mLayoutEditor.getGraphicalEditor();
         IPath filePath = graphicalEditor.findResourceFile(url);
+        if (filePath == null) {
+            // Should not be possible - if the URL had been bad, then we wouldn't
+            // have been able to render the scene and you wouldn't have been able
+            // to click on it
+            return;
+        }
+
+        // Save the including file, if necessary: without it, the "Show Included In"
+        // facility which is invoked automatically will not work properly if the <include>
+        // tag is not in the saved version of the file, since the outer file is read from
+        // disk rather than from memory.
+        IEditorSite editorSite = graphicalEditor.getEditorSite();
+        IWorkbenchPage page = editorSite.getPage();
+        page.saveEditor(mLayoutEditor, false);
 
         IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
         IPath workspacePath = workspace.getLocation();
-        IEditorSite editorSite = graphicalEditor.getEditorSite();
         if (workspacePath.isPrefixOf(filePath)) {
             IPath relativePath = filePath.makeRelativeTo(workspacePath);
             IResource xmlFile = workspace.findMember(relativePath);
@@ -944,7 +957,6 @@ public class LayoutCanvas extends Canvas {
                 IFileStore fileStore = EFS.getLocalFileSystem().getStore(filePath);
                 // fileStore = fileStore.getChild(names[i]);
                 if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
-                    IWorkbenchPage page = editorSite.getWorkbenchWindow().getActivePage();
                     try {
                         IDE.openEditorOnFileStore(page, fileStore);
                         return;
