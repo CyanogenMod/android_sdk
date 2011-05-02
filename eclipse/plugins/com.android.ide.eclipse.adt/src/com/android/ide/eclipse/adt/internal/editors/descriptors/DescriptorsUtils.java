@@ -32,6 +32,7 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -699,6 +700,12 @@ public final class DescriptorsUtils {
         // if this ui_node is a layout and we're adding it to a document, use match_parent for
         // both W/H. Otherwise default to wrap_layout.
         ElementDescriptor descriptor = node.getDescriptor();
+
+        if (descriptor.getXmlLocalName().equals(REQUEST_FOCUS)) {
+            // Don't add ids etc to <requestFocus>
+            return;
+        }
+
         boolean fill = descriptor.hasChildren() &&
                        node.getUiParent() instanceof UiDocumentNode;
         node.setAttributeValue(
