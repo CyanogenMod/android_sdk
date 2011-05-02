@@ -36,7 +36,7 @@ In order to compile the project:
 - Create a new user library named ANDROID_SWT
 - Add the following 4 JAR files:
 
-  - prebuild/<platform>/swt/swt.jar
+  - prebuilt/<platform>/swt/swt.jar
   - prebuilt/common/eclipse/org.eclipse.core.commands_3.*.jar
   - prebuilt/common/eclipse/org.eclipse.equinox.common_3.*.jar
   - prebuilt/common/eclipse/org.eclipse.jface_3.*.jar
