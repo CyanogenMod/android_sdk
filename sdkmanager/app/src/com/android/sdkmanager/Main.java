@@ -306,10 +306,6 @@ public class Main {
      */
     private void showMainWindow(boolean autoUpdate) {
         try {
-            // display a message talking about the command line version
-            System.out.printf("No command line parameters provided, launching UI.\n" +
-                    "See 'android --help' for operations from the command line.\n");
-
             MessageBoxLog errorLogger = new MessageBoxLog(
                     "SDK Manager",
                     Display.getCurrent(),
