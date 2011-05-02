@@ -48,15 +48,19 @@ import org.w3c.dom.Node;
 public class ListViewTypeMenu extends SubmenuAction {
     /** Associated canvas */
     private final LayoutCanvas mCanvas;
+    /** When true, this menu is for a grid rather than a simple list */
+    private boolean mGrid;
 
     /**
      * Creates a "Preview List Content" menu
      *
      * @param canvas associated canvas
+     * @param isGrid whether the menu is for a grid rather than a list
      */
-    public ListViewTypeMenu(LayoutCanvas canvas) {
-        super("Preview List Content");
+    public ListViewTypeMenu(LayoutCanvas canvas, boolean isGrid) {
+        super(isGrid ? "Preview Grid Content" : "Preview List Content");
         mCanvas = canvas;
+        mGrid = isGrid;
     }
 
     @Override
@@ -91,21 +95,22 @@ public class ListViewTypeMenu extends SubmenuAction {
             action = new SetListTypeAction("Multiple Choice List Item",
                     "simple_list_item_multiple_choice", //$NON-NLS-1$
                     selected);
-            new Separator().fill(menu, -1);
-            action = new SetListTypeAction("Simple Expandable List Item",
-                    "simple_expandable_list_item_1", selected); //$NON-NLS-1$
-            new ActionContributionItem(action).fill(menu, -1);
-            action = new SetListTypeAction("Simple 2-Line Expandable List Item",
-                    "simple_expandable_list_item_2", //$NON-NLS-1$
-                    selected);
-            new ActionContributionItem(action).fill(menu, -1);
+            if (!mGrid) {
+                new Separator().fill(menu, -1);
+                action = new SetListTypeAction("Simple Expandable List Item",
+                        "simple_expandable_list_item_1", selected); //$NON-NLS-1$
+                new ActionContributionItem(action).fill(menu, -1);
+                action = new SetListTypeAction("Simple 2-Line Expandable List Item",
+                        "simple_expandable_list_item_2", //$NON-NLS-1$
+                        selected);
+                new ActionContributionItem(action).fill(menu, -1);
 
-            new Separator().fill(menu, -1);
-            action = new PickLayoutAction("Choose Header...", KEY_LV_HEADER);
-            new ActionContributionItem(action).fill(menu, -1);
-            action = new PickLayoutAction("Choose Footer...", KEY_LV_FOOTER);
-            new ActionContributionItem(action).fill(menu, -1);
-
+                new Separator().fill(menu, -1);
+                action = new PickLayoutAction("Choose Header...", KEY_LV_HEADER);
+                new ActionContributionItem(action).fill(menu, -1);
+                action = new PickLayoutAction("Choose Footer...", KEY_LV_FOOTER);
+                new ActionContributionItem(action).fill(menu, -1);
+            }
         } else {
             // Should we just hide the menu item instead?
             addDisabledMessageItem(

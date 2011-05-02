@@ -16,7 +16,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_LAYOUT_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_NUM_COLUMNS;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LAYOUT_PREFIX;
 
 import com.android.ide.common.rendering.api.AdapterBinding;
@@ -32,6 +35,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -320,7 +324,22 @@ public class LayoutMetadata {
             String footer = getProperty(editor, xmlNode, KEY_LV_FOOTER);
             String layout = getProperty(editor, xmlNode, KEY_LV_ITEM);
             if (layout != null || header != null || footer != null) {
-                AdapterBinding binding = new AdapterBinding(12);
+                int count = 12;
+                // If we're dealing with a grid view, multiply the list item count
+                // by the number of columns to ensure we have enough items
+                if (xmlNode instanceof Element && xmlNode.getNodeName().endsWith(GRID_VIEW)) {
+                    Element element = (Element) xmlNode;
+                    String columns = element.getAttributeNS(ANDROID_URI, ATTR_NUM_COLUMNS);
+                    int multiplier = 2;
+                    if (columns != null && columns.length() > 0) {
+                        int c = Integer.parseInt(columns);
+                        if (c >= 1 && c <= 10) {
+                            multiplier = c;
+                        }
+                    }
+                    count *= multiplier;
+                }
+                AdapterBinding binding = new AdapterBinding(count);
 
                 if (header != null) {
                     boolean isFramework = header.startsWith(ANDROID_LAYOUT_PREFIX);
@@ -344,7 +363,7 @@ public class LayoutMetadata {
 
                     binding.addItem(new DataBindingItem(layout, isFramework, 1));
                 } else if (viewObject != null) {
-                    String listFqcn = ProjectCallback.getListViewFqcn(viewObject.getClass());
+                    String listFqcn = ProjectCallback.getListAdapterViewFqcn(viewObject.getClass());
                     if (listFqcn != null) {
                         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
                             binding.addItem(
