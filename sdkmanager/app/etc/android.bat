@@ -45,7 +45,7 @@ for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set swt_path=lib\%%a
 if "%1 %2"=="update sdk" goto StartUi
 if not "%1"=="" goto EndTempCopy
 :StartUi
-    echo [INFO] Starting Android SDK and AVD Manager
+    rem Starting Android SDK and AVD Manager UI
 
     rem We're now going to create a temp dir to hold all the Jar files needed
     rem to run the android tool, copy them in the temp dir and finally execute
