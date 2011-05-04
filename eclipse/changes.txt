@@ -1,3 +1,73 @@
+11.0.0
+- Visual Refactoring:
+  - The new "Extract Style" refactoring pulls out style constants and
+    defines them as style rules intead.
+  - The new "Wrap in Container" refactoring surrounds the selected
+    views with a new layout, and transfers namespace and layout
+    parameters to the new parent
+  - The new "Change Widget Type" refactoring changes the type of the
+    selected views to a new type. (Also, a new selection context menu
+    in the visual layout editor makes it easy to select siblings as
+    well as views anywhere in the layout that have the same type).
+  - The new "Change Layout" refactoring changes layouts from one type
+    to another, and can also flatten a layout hierarchy.
+  - The "Extract as Include" refactoring now finds identical fragments
+    in other layouts and offers to combine all into a single include.
+  - There is a new Refactoring Quick Assistant which can be invoked
+    from the XML editor (with Ctrl-1) to apply any of the above
+    refactorings (and Extract String) to the current selection.
+- Visual Layout Editor:
+  - Improved "rendering fidelity": The layout preview has been
+    improved and should more closely match the rendering on actual
+    devices.
+  - The visual editor now previews ListViews at designtime.  By
+    default, a two-line list item is shown, but with a context menu
+    you can pick any arbitrary layout to be used for the list items,
+    and you can also pick the header and footer layouts.
+  - The palette now supports "configurations" where a single view is
+    presented in various different configurations. For example, there
+    is a whole "Textfields" palette category where the EditText view
+    can be dragged in as a password field, an e-mail field, a phone
+    field, and so on. Similarly, TextViews are offered preconfigured
+    with large, normal and small theme sizes, and LinearLayouts are
+    offered both in horizontal and vertical configurations.
+  - The palette supports custom views, picking up any custom
+    implementations of the View class in your project source folders
+    or in included libraries, and these can be dragged into layouts.
+  - The layout editor automatically applies a "zoom to fit" for newly
+    opened files as well as on device size and orientation changes to
+    ensure that large layouts are always fully visible unless you
+    manually zoom in.
+  - You can drop an "include" tag from the palette, which will pop up
+    a layout chooser, and the chosen layout is added as an include.
+    Similarly, dropping images or image buttons will pop up image
+    resource choosers to initialize the new image with.
+  - The configuration chooser now applies the "Render Target" and
+    "Locale" settings project wide, making it trivial to check the
+    layouts for different languages or render targets without having
+    to configure these individually for each layout.
+  - The layout editor is smarter about picking a default theme to
+    render a layout with, consulting factors like theme registrations
+    in the manifest, the SDK version, etc.
+- XML editors:
+  - Code completion has been significantly improved. It now works
+    within <style> elements, it completes dimensional units,
+    it sorts resource paths in values based on the attribute name,
+    etc. There are also many fixes to handle text replacement.
+  - AAPT errors are handled better. They are now underlined for the
+    relevant range in the editor, and a new quickfix makes it trivial
+    to create missing resources.
+  - Code completion for drawable, animation and color XML files.
+- DDMS:
+  - "New Folder" action in the File Explorer
+  - The screenshot dialog will add timestamps to the filenames, and
+    preserve the orientation on snapshot refresh
+- TraceView: Mouse-wheel zoom support in the timeline
+- The New Android Project wizard now supports Eclipse working sets
+- Most of the tools have improved integration with the Mac OSX
+  system menu bar.
+- Most of the tools have new launcher icons.
+
 10.0.1
 - Temporary work-around to resolve the rare cases in which the layout
   editor will not open.
