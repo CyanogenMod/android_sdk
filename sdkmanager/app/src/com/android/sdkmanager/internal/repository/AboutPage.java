@@ -70,7 +70,7 @@ public class AboutPage extends Composite {
                 "Revision %1$s\n" +
                 "Add-on XML Schema #%2$d\n" +
                 "Repository XML Schema #%3$d\n" +
-                "Copyright (C) 2009-2010 The Android Open Source Project.",
+                "Copyright (C) 2009-2011 The Android Open Source Project.",
                 getRevision(),
                 SdkAddonConstants.NS_LATEST_VERSION,
                 SdkRepoConstants.NS_LATEST_VERSION));
