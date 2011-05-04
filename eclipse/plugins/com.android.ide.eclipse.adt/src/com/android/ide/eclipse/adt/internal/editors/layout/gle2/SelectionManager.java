@@ -594,10 +594,11 @@ public class SelectionManager implements ISelectionProvider {
     public void selectSameType() {
         // Find all
         if (mSelections.size() == 1) {
+            CanvasViewInfo viewInfo = mSelections.get(0).getViewInfo();
+            ElementDescriptor descriptor = viewInfo.getUiViewNode().getDescriptor();
             mSelections.clear();
             mAltSelection = null;
-            addSameType(mCanvas.getViewHierarchy().getRoot(),
-                    mSelections.get(0).getViewInfo().getUiViewNode().getDescriptor());
+            addSameType(mCanvas.getViewHierarchy().getRoot(), descriptor);
             fireSelectionChanged();
             redraw();
         }
