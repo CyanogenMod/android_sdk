@@ -66,6 +66,7 @@ import java.util.Map;
 
 @SuppressWarnings("restriction")
 public class AdtProjectTest extends SdkTestCase {
+    private static final int TARGET_API_LEVEL = 11;
     /** Update golden files if different from the actual results */
     private static final boolean UPDATE_DIFFERENT_FILES = false;
     /** Create golden files if missing */
@@ -110,6 +111,16 @@ public class AdtProjectTest extends SdkTestCase {
 
     protected boolean testNeedsUniqueProject() {
         return false;
+    }
+
+    @Override
+    protected boolean validateSdk(IAndroidTarget target) {
+        // Not quite working yet. When enabled will make tests run faster.
+        //if (target.getVersion().getApiLevel() < TARGET_API_LEVEL) {
+        //    return false;
+        //}
+
+        return true;
     }
 
     /** Returns a name to use for the project used in this test. Subclasses do not need to
@@ -207,7 +218,7 @@ public class AdtProjectTest extends SdkTestCase {
 
         IAndroidTarget[] targets = getSdk().getTargets();
         for (IAndroidTarget t : targets) {
-            if (t.getVersion().getApiLevel() >= 11) {
+            if (t.getVersion().getApiLevel() >= TARGET_API_LEVEL) {
                 target = t;
                 break;
             }
@@ -232,7 +243,7 @@ public class AdtProjectTest extends SdkTestCase {
 
         IAndroidTarget[] targets = getSdk().getTargets();
         for (IAndroidTarget t : targets) {
-            if (t.getVersion().getApiLevel() >= 11) {
+            if (t.getVersion().getApiLevel() >= TARGET_API_LEVEL) {
                 target = t;
                 break;
             }

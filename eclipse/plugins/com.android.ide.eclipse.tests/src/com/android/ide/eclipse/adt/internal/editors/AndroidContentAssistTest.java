@@ -16,7 +16,16 @@
  */
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static com.android.AndroidConstants.FD_RES_ANIM;
+import static com.android.AndroidConstants.FD_RES_ANIMATOR;
+import static com.android.AndroidConstants.FD_RES_COLOR;
+import static com.android.AndroidConstants.FD_RES_DRAWABLE;
+import static com.android.sdklib.SdkConstants.FD_RES;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimationContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.color.ColorContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestContentAssist;
@@ -316,7 +325,100 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("completion8.xml",  "android:layo^ut_width=\"fill_parent\"");
     }
 
+    public void testCompletion45() throws Exception {
+        // Test top level elements in colors
+        checkColorCompletion("color1.xml",  "^<selector");
+    }
+
+    public void testCompletion46a() throws Exception {
+        // Test children of selector: should offer item
+        checkColorCompletion("color1.xml",  "^<item android");
+    }
+
+    public void testCompletion46b() throws Exception {
+        // Test attribute matching in color files
+        checkColorCompletion("color1.xml",  "<item ^android:state_focused=\"true\"/>");
+    }
+
+    public void testCompletion47() throws Exception {
+        // Check root completion in drawables: should list all drawable root elements
+        checkDrawableCompletion("drawable1.xml",  "^<layer-list");
+    }
+
+    public void testCompletion48() throws Exception {
+        // Check attributes of the layer list
+        checkDrawableCompletion("drawable1.xml",  "^xmlns:android");
+    }
+
+    public void testCompletion49() throws Exception {
+        // Check attributes of the <item> element inside a <layer-list>
+        checkDrawableCompletion("drawable1.xml",  "<item ^></item>");
+    }
+
+    public void testCompletion50() throws Exception {
+        // Check elements nested inside the <item> in a layer list: can use any drawable again
+        checkDrawableCompletion("drawable1.xml",  "<item >^</item>");
+    }
+
+    public void testCompletion51() throws Exception {
+        // Check attributes of <shape> element
+        checkDrawableCompletion("drawable2.xml",  "^android:innerRadiusRatio=\"2\"");
+    }
+
+    public void testCompletion52() throws Exception {
+        // Check list of available elements inside a shape
+        checkDrawableCompletion("drawable2.xml",  "^<gradient");
+    }
+
+    public void testCompletion53() throws Exception {
+        // Check list of root anim elements
+        checkAnimCompletion("anim1.xml",  "^<set xmlns");
+    }
+
+    public void testCompletion54() throws Exception {
+        // Check that we can nest inside <set>'s
+        checkAnimCompletion("anim1.xml",  "^<translate android:id=");
+    }
+
+    public void testCompletion55() throws Exception {
+        // translate properties
+        checkAnimCompletion("anim1.xml",  "android:^fromXDelta=");
+    }
+
+    public void testCompletion56() throws Exception {
+        // alpha properties
+        checkAnimCompletion("anim1.xml",  "android:^fromAlpha=");
+    }
+
+    public void testCompletion57() throws Exception {
+        // Fractional properties
+        checkAnimCompletion("anim1.xml",  "android:fromXDelta=\"100^%p\"");
+    }
+
+    public void testCompletion58() throws Exception {
+        // Top level animator elements
+        checkAnimatorCompletion("animator1.xml",  "^<set xmlns");
+    }
+
+    public void testCompletion59() throws Exception {
+        // objectAnimator properties
+        checkAnimatorCompletion("animator1.xml",  "android:^duration=\"2000\"");
+    }
+
+    public void testCompletion60() throws Exception {
+        // propertyName completion
+        checkAnimatorCompletion("animator1.xml",  "android:propertyName=\"scal^eX\"/>");
+    }
+
+    public void testCompletion61() throws Exception {
+        // Interpolator completion
+        checkAnimatorCompletion("animator1.xml",
+                "android:interpolator=\"^@android:anim/bounce_interpolator\"");
+    }
+
     // ---- Test *applying* code completion ----
+
+
 
     // The following tests check -applying- a specific code completion
     // match - this verifies that the document is updated correctly, the
@@ -591,6 +693,34 @@ public class AndroidContentAssistTest extends AdtProjectTest {
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
         checkCompletion(name, getLayoutFile(getProject(), name), caretLocation,
                 new LayoutContentAssist());
+    }
+
+    private void checkColorCompletion(String name, String caretLocation) throws Exception {
+        IFile file = getTestDataFile(getProject(), name,
+                FD_RES + "/" + FD_RES_COLOR + "/" + name);
+        checkCompletion(name, file, caretLocation,
+                new ColorContentAssist());
+    }
+    private void checkAnimCompletion(String name, String caretLocation) throws Exception {
+        IFile file = getTestDataFile(getProject(), name,
+                FD_RES + "/" + FD_RES_ANIM + "/" + name);
+        checkCompletion(name, file, caretLocation,
+                new AnimationContentAssist());
+    }
+
+    private void checkAnimatorCompletion(String name, String caretLocation) throws Exception {
+        IFile file = getTestDataFile(getProject(), name,
+                FD_RES + "/" + FD_RES_ANIMATOR + "/" + name);
+        checkCompletion(name, file, caretLocation,
+                new AnimationContentAssist());
+    }
+
+
+    private void checkDrawableCompletion(String name, String caretLocation) throws Exception {
+        IFile file = getTestDataFile(getProject(), name,
+                FD_RES + "/" + FD_RES_DRAWABLE + "/" + name);
+        checkCompletion(name, file, caretLocation,
+                new DrawableContentAssist());
     }
 
     private void checkManifestCompletion(String name, String caretLocation) throws Exception {

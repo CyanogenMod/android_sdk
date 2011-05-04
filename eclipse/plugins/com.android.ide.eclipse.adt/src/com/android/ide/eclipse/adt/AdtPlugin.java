@@ -25,6 +25,9 @@ import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor;
+import com.android.ide.eclipse.adt.internal.editors.color.ColorEditor;
+import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor;
@@ -1511,11 +1514,17 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         AdtPlugin.log(IStatus.INFO, "   set default editor id to layout");
                     }
                     IDE.setDefaultEditor(file, LayoutEditor.ID);
-                } else if (type == ResourceFolderType.DRAWABLE
-                        || type == ResourceFolderType.VALUES) {
+                } else if (type == ResourceFolderType.VALUES) {
                     IDE.setDefaultEditor(file, ResourcesEditor.ID);
                 } else if (type == ResourceFolderType.MENU) {
                     IDE.setDefaultEditor(file, MenuEditor.ID);
+                } else if (type == ResourceFolderType.COLOR) {
+                    IDE.setDefaultEditor(file, ColorEditor.ID);
+                } else if (type == ResourceFolderType.DRAWABLE) {
+                    IDE.setDefaultEditor(file, DrawableEditor.ID);
+                } else if (type == ResourceFolderType.ANIMATOR
+                        || type == ResourceFolderType.ANIM) {
+                    IDE.setDefaultEditor(file, AnimationEditor.ID);
                 } else if (type == ResourceFolderType.XML) {
                     if (XmlEditor.canHandleFile(file)) {
                         if (DEBUG_XML_FILE_INIT) {

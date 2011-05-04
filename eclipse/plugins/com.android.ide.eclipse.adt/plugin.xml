@@ -533,6 +533,30 @@
             name="Android Xml Resources Editor">
       </editor>
       <editor
+            class="com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.animator.AnimationEditor"
+            name="Android Animation Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.drawable.DrawableEditor"
+            name="Android Drawable Editor">
+      </editor>
+      <editor
+            class="com.android.ide.eclipse.adt.internal.editors.color.ColorEditor"
+            default="false"
+            extensions="xml"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.color.ColorEditor"
+            name="Android Color Editor">
+      </editor>
+      <editor
             class="com.android.ide.eclipse.adt.internal.editors.binaryxml.BinaryXMLMultiPageEditorPart"
             contributorClass="org.eclipse.wst.xml.ui.internal.tabletree.XMLMultiPageEditorActionBarContributor"
             icon="$nl$/icons/android_file.png"
@@ -576,6 +600,18 @@
       <sourceViewerConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.xml.XmlSourceViewerConfig"
             target="com.android.ide.eclipse.editors.xml.XmlEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.adt.internal.editors.animator.AnimationSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.animator.AnimationEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.adt.internal.editors.drawable.DrawableSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.drawable.DrawableEditor">
+      </sourceViewerConfiguration>
+      <sourceViewerConfiguration
+            class="com.android.ide.eclipse.adt.internal.editors.color.ColorSourceViewerConfig"
+            target="com.android.ide.eclipse.editors.color.ColorEditor">
       </sourceViewerConfiguration>
       <provisionalConfiguration
                 type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"

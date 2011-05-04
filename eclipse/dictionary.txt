@@ -17,6 +17,7 @@ app
 apps
 arg
 async
+attr
 attrs
 avd
 avds
@@ -64,8 +65,10 @@ dex
 dexified
 diff
 diffs
+dir
 dirs
 ditto
+docs
 dpi
 drawable
 drawables
@@ -81,6 +84,7 @@ foreach
 fqcn
 framelayout
 gen
+git
 groovy
 guava
 hardcoded
@@ -101,6 +105,8 @@ inline
 instanceof
 instantiatable
 int
+interpolator
+interpolators
 iterable
 javac
 javadoc
@@ -124,6 +130,7 @@ malformed
 marquee
 metadata
 min
+mipmap
 monte
 ms
 msg
@@ -148,6 +155,7 @@ precompiler
 pref
 prefs
 preload
+preloaded
 preloads
 primordial
 printf
@@ -156,12 +164,14 @@ programmatically
 proguard
 proxies
 proxy
+quickfix
 recompilation
 rect
 redo
 refactor
 refactoring
 regexp
+regexps
 registry
 reindent
 remap
@@ -192,6 +202,8 @@ stderr
 stdout
 stretchiness
 struct
+styleable
+styleables
 subclassing
 submenu
 supertype
