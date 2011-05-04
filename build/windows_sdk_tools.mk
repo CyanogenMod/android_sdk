@@ -5,6 +5,8 @@
 
 WIN_SDK_TARGETS := \
 	emulator \
+	emulator-arm \
+	emulator-x86 \
 	mksdcard \
 	sdklauncher
 
