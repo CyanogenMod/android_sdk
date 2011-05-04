@@ -21,6 +21,7 @@ import com.android.menubar.IMenuBarCallback;
 import com.android.menubar.MenuBarEnhancer;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdkuilib.internal.repository.PackagesPage.MenuAction;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
@@ -100,9 +101,9 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         }
 
         createShell();
-        createMenuBar();
         preCreateContent();
         createContents();
+        createMenuBar();
         mShell.open();
         mShell.layout();
 
@@ -187,30 +188,58 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         Menu menuPkgs = new Menu(menuBarPackages);
         menuBarPackages.setMenu(menuPkgs);
 
-        MenuItem ShowUpdatesnew = new MenuItem(menuPkgs, SWT.NONE);
-        ShowUpdatesnew.setText("Show Updates/New Packages");
+        MenuItem showUpdatesNew = new MenuItem(menuPkgs,
+                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG.getMenuStyle());
+        showUpdatesNew.setText(
+                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG, showUpdatesNew);
 
-        MenuItem ShowInstalled = new MenuItem(menuPkgs, SWT.NONE);
-        ShowInstalled.setText("Show Installed Packages");
+        MenuItem showInstalled = new MenuItem(menuPkgs,
+                MenuAction.TOGGLE_SHOW_INSTALLED_PKG.getMenuStyle());
+        showInstalled.setText(
+                MenuAction.TOGGLE_SHOW_INSTALLED_PKG.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.TOGGLE_SHOW_INSTALLED_PKG, showInstalled);
 
-        MenuItem ShowObsoletePackages = new MenuItem(menuPkgs, SWT.NONE);
-        ShowObsoletePackages.setText("Show Obsolete Packages");
+        MenuItem showObsoletePackages = new MenuItem(menuPkgs,
+                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG.getMenuStyle());
+        showObsoletePackages.setText(
+                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG, showObsoletePackages);
 
-        MenuItem ShowArchives = new MenuItem(menuPkgs, SWT.NONE);
-        ShowArchives.setText("Show Archives");
+        MenuItem showArchives = new MenuItem(menuPkgs,
+                MenuAction.TOGGLE_SHOW_ARCHIVES.getMenuStyle());
+        showArchives.setText(
+                MenuAction.TOGGLE_SHOW_ARCHIVES.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.TOGGLE_SHOW_ARCHIVES, showArchives);
 
         new MenuItem(menuPkgs, SWT.SEPARATOR);
 
-        MenuItem sortByApi = new MenuItem(menuPkgs, SWT.NONE);
-        sortByApi.setText("Sort by API Level");
+        MenuItem sortByApi = new MenuItem(menuPkgs,
+                MenuAction.SORT_API_LEVEL.getMenuStyle());
+        sortByApi.setText(
+                MenuAction.SORT_API_LEVEL.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.SORT_API_LEVEL, sortByApi);
 
-        MenuItem sortBySource = new MenuItem(menuPkgs, SWT.NONE);
-        sortBySource.setText("Sort by Source");
+        MenuItem sortBySource = new MenuItem(menuPkgs,
+                MenuAction.SORT_SOURCE.getMenuStyle());
+        sortBySource.setText(
+                MenuAction.SORT_SOURCE.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.SORT_SOURCE, sortBySource);
 
         new MenuItem(menuPkgs, SWT.SEPARATOR);
 
-        MenuItem reload = new MenuItem(menuPkgs, SWT.NONE);
-        reload.setText("Reload");
+        MenuItem reload = new MenuItem(menuPkgs,
+                MenuAction.RELOAD.getMenuStyle());
+        reload.setText(
+                MenuAction.RELOAD.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.RELOAD, reload);
 
         MenuItem menuBarTools = new MenuItem(menuBar, SWT.CASCADE);
         menuBarTools.setText("Tools");
@@ -221,8 +250,12 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
         manageAvds.setText("Manage AVDs...");
 
-        MenuItem manageSources = new MenuItem(menuTools, SWT.NONE);
-        manageSources.setText("Manage Sources...");
+        MenuItem manageSources = new MenuItem(menuTools,
+                MenuAction.SHOW_ADDON_SITES.getMenuStyle());
+        manageSources.setText(
+                MenuAction.SHOW_ADDON_SITES.getMenuTitle());
+        mPkgPage.registerMenuAction(
+                MenuAction.SHOW_ADDON_SITES, manageSources);
 
         MenuBarEnhancer.setupMenu(APP_NAME, menuTools, new IMenuBarCallback() {
             public void onPreferencesMenuSelected() {

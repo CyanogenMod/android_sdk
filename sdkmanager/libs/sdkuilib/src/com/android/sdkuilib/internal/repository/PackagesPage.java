@@ -56,9 +56,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -74,6 +75,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Page that displays both locally installed packages as well as all known
@@ -86,16 +88,46 @@ public class PackagesPage extends Composite
     private static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
     private static final String ICON_CAT_PLATFORM   = "pkgcat_16.png";          //$NON-NLS-1$
     private static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
-    private static final String ICON_COLUMN_NAME    = "platform_pkg_16.png";    //$NON-NLS-1$
+    private static final String ICON_SORT_BY_API    = "platform_pkg_16.png";    //$NON-NLS-1$
     private static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
     private static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
     private static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
+
+    enum MenuAction {
+        RELOAD                      (SWT.NONE,  "Reload"),
+        SHOW_ADDON_SITES            (SWT.NONE,  "Manage Sources..."),
+        TOGGLE_SHOW_ARCHIVES        (SWT.CHECK, "Show Archives"),
+        TOGGLE_SHOW_INSTALLED_PKG   (SWT.CHECK, "Show Installed Packages"),
+        TOGGLE_SHOW_OBSOLETE_PKG    (SWT.CHECK, "Show Obsolete Packages"),
+        TOGGLE_SHOW_UPDATE_NEW_PKG  (SWT.CHECK, "Show Updates/New Packages"),
+        SORT_API_LEVEL              (SWT.RADIO, "Sort by API Level"),
+        SORT_SOURCE                 (SWT.RADIO, "Sort by Source")
+        ;
+
+        private final int mMenuStyle;
+        private final String mMenuTitle;
+
+        MenuAction(int menuStyle, String menuTitle) {
+            mMenuStyle = menuStyle;
+            mMenuTitle = menuTitle;
+        }
+
+        public int getMenuStyle() {
+            return mMenuStyle;
+        }
+
+        public String getMenuTitle() {
+            return mMenuTitle;
+        }
+    };
+
+    private final Map<MenuAction, MenuItem> mMenuActions = new HashMap<MenuAction, MenuItem>();
 
     private final List<PkgItem> mPackages = new ArrayList<PkgItem>();
     private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
     private final UpdaterData mUpdaterData;
 
-    private boolean mDisplayArchives = false;   // TODO: toggle via a menu item
+    private boolean mDisplayArchives = false;
 
     private Text mTextSdkOsPath;
     private Button mCheckSortSource;
@@ -116,7 +148,7 @@ public class PackagesPage extends Composite
     private TreeViewerColumn mColumnStatus;
     private Color mColorUpdate;
     private Font mTreeFontItalic;
-    private Button mButtonReload;
+    private TreeColumn mTreeColumnName;
 
     public PackagesPage(Composite parent, UpdaterData updaterData) {
         super(parent, SWT.NONE);
@@ -134,7 +166,7 @@ public class PackagesPage extends Composite
         }
     }
 
-    protected void createContents(Composite parent) {
+    private void createContents(Composite parent) {
         GridLayout gridLayout = new GridLayout(2, false);
         gridLayout.marginWidth = 0;
         gridLayout.marginHeight = 0;
@@ -169,11 +201,12 @@ public class PackagesPage extends Composite
         mTree.setHeaderVisible(true);
         mTree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
+        // column name icon is set in sortPackages() depending on the current filter type
+        // (e.g. API level or source)
         mColumnName = new TreeViewerColumn(mTreeViewer, SWT.NONE);
-        TreeColumn treeColumn1 = mColumnName.getColumn();
-        treeColumn1.setImage(getImage(ICON_COLUMN_NAME));
-        treeColumn1.setWidth(340);
-        treeColumn1.setText("Name");
+        mTreeColumnName = mColumnName.getColumn();
+        mTreeColumnName.setWidth(340);
+        mTreeColumnName.setText("Name");
 
         mColumnApi = new TreeViewerColumn(mTreeViewer, SWT.NONE);
         TreeColumn treeColumn2 = mColumnApi.getColumn();
@@ -197,7 +230,7 @@ public class PackagesPage extends Composite
 
         mGroupOptions = new Composite(mGroupPackages, SWT.NONE);
         mGroupOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        GridLayout gl_GroupOptions = new GridLayout(7, false);
+        GridLayout gl_GroupOptions = new GridLayout(6, false);
         gl_GroupOptions.marginWidth = 0;
         gl_GroupOptions.marginHeight = 0;
         mGroupOptions.setLayout(gl_GroupOptions);
@@ -213,7 +246,6 @@ public class PackagesPage extends Composite
                 sortPackages(true /*updateButtons*/);
             }
         });
-        mCheckFilterNew.setImage(getImage(ICON_PKG_NEW));
         mCheckFilterNew.setSelection(true);
         mCheckFilterNew.setText("Updates/New");
 
@@ -225,7 +257,6 @@ public class PackagesPage extends Composite
                 sortPackages(true /*updateButtons*/);
             }
         });
-        mCheckFilterInstalled.setImage(getImage(ICON_PKG_INSTALLED));
         mCheckFilterInstalled.setSelection(true);
         mCheckFilterInstalled.setText("Installed");
 
@@ -239,17 +270,6 @@ public class PackagesPage extends Composite
         });
         mCheckFilterObsolete.setSelection(false);
         mCheckFilterObsolete.setText("Obsolete");
-
-        mButtonReload = new Button(mGroupOptions, SWT.NONE);
-        mButtonReload.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mButtonReload.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onButtonReload();
-            }
-        });
-        mButtonReload.setToolTipText("Reload the package list");
-        mButtonReload.setText("Reload");
 
         Label placeholder2 = new Label(mGroupOptions, SWT.NONE);
         placeholder2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
@@ -278,7 +298,6 @@ public class PackagesPage extends Composite
                 expandInitial(mCategories);
             }
         });
-        mCheckSortApi.setImage(getImage(ICON_COLUMN_NAME));
         mCheckSortApi.setText("API level");
         mCheckSortApi.setSelection(true);
 
@@ -292,18 +311,7 @@ public class PackagesPage extends Composite
                 expandInitial(mCategories);
             }
         });
-        mCheckSortSource.setImage(getImage(ICON_SORT_BY_SOURCE));
         mCheckSortSource.setText("Source");
-
-        Link link = new Link(mGroupOptions, SWT.NONE);
-        link.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                onButtonAddonSites();
-            }
-        });
-        link.setToolTipText("Manage the list of add-on sites");
-        link.setText("<a>Manage Sources</a>");
 
         new Label(mGroupOptions, SWT.NONE);
         new Label(mGroupOptions, SWT.NONE);
@@ -334,6 +342,124 @@ public class PackagesPage extends Composite
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
     //$hide>>$
+
+
+    // --- menu interactions ---
+
+    public void registerMenuAction(final MenuAction action, MenuItem item) {
+        item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Button button = null;
+
+                switch (action) {
+                case RELOAD:
+                    loadPackages();
+                    break;
+                case SHOW_ADDON_SITES:
+                    AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
+                    if (d.open()) {
+                        loadPackages();
+                    }
+                    break;
+                case TOGGLE_SHOW_ARCHIVES:
+                    mDisplayArchives = !mDisplayArchives;
+                    sortPackages(true /*updateButtons*/);
+                    break;
+                case TOGGLE_SHOW_INSTALLED_PKG:
+                    button = mCheckFilterInstalled;
+                    break;
+                case TOGGLE_SHOW_OBSOLETE_PKG:
+                    button = mCheckFilterObsolete;
+                    break;
+                case TOGGLE_SHOW_UPDATE_NEW_PKG:
+                    button = mCheckFilterNew;
+                    break;
+                case SORT_API_LEVEL:
+                    button = mCheckSortApi;
+                    break;
+                case SORT_SOURCE:
+                    button = mCheckSortSource;
+                    break;
+                }
+
+                if (button != null && !button.isDisposed()) {
+                    // Toggle this button (radio or checkbox)
+
+                    boolean value = button.getSelection();
+
+                    // SWT doesn't automatically switch radio buttons when using the
+                    // Widget#setSelection method, so we'll do it here manually.
+                    if (!value && (button.getStyle() & SWT.RADIO) != 0) {
+                        // we'll be selecting this radio button, so deselect all ther other ones
+                        // in the parent group.
+                        for (Control child : button.getParent().getChildren()) {
+                            if (child instanceof Button &&
+                                    child != button &&
+                                    (child.getStyle() & SWT.RADIO) != 0) {
+                                ((Button) child).setSelection(value);
+                            }
+                        }
+                    }
+
+                    button.setSelection(!value);
+
+                    // SWT doesn't actually invoke the listeners when using Widget#setSelection
+                    // so let's run the actual action.
+                    button.notifyListeners(SWT.Selection, new Event());
+                }
+
+                updateMenuCheckmarks();
+            }
+        });
+
+        mMenuActions.put(action, item);
+    }
+
+    // --- internal methods ---
+
+    private void updateMenuCheckmarks() {
+
+        for (Entry<MenuAction, MenuItem> entry : mMenuActions.entrySet()) {
+            MenuAction action = entry.getKey();
+            MenuItem item = entry.getValue();
+
+            if (action.getMenuStyle() == SWT.NONE) {
+                continue;
+            }
+
+            boolean value = false;
+            Button button = null;
+
+            switch (action) {
+            case TOGGLE_SHOW_ARCHIVES:
+                value = mDisplayArchives;
+                break;
+            case TOGGLE_SHOW_INSTALLED_PKG:
+                button = mCheckFilterInstalled;
+                break;
+            case TOGGLE_SHOW_OBSOLETE_PKG:
+                button = mCheckFilterObsolete;
+                break;
+            case TOGGLE_SHOW_UPDATE_NEW_PKG:
+                button = mCheckFilterNew;
+                break;
+            case SORT_API_LEVEL:
+                button = mCheckSortApi;
+                break;
+            case SORT_SOURCE:
+                button = mCheckSortSource;
+                break;
+            }
+
+            if (button != null && !button.isDisposed()) {
+                value = button.getSelection();
+            }
+
+            item.setSelection(value);
+        }
+
+    }
 
     private void postCreate() {
         if (mUpdaterData != null) {
@@ -442,6 +568,7 @@ public class PackagesPage extends Composite
         } finally {
             enableUi(mGroupPackages, true);
             updateButtonsState();
+            updateMenuCheckmarks();
         }
     }
 
@@ -458,12 +585,13 @@ public class PackagesPage extends Composite
 
     private void sortPackages(boolean updateButtons) {
         if (mCheckSortApi != null && !mCheckSortApi.isDisposed() && mCheckSortApi.getSelection()) {
-            sortByAPI();
+            sortByApiLevel();
         } else {
             sortBySource();
         }
         if (updateButtons) {
             updateButtonsState();
+            updateMenuCheckmarks();
         }
     }
 
@@ -472,9 +600,13 @@ public class PackagesPage extends Composite
      * This does an update in-place of the mCategories list so that the table
      * can preserve its state (checked / expanded / selected) properly.
      */
-    private void sortByAPI() {
+    private void sortByApiLevel() {
 
         ImageFactory imgFactory = mUpdaterData.getImageFactory();
+
+        if (!mTreeColumnName.isDisposed()) {
+            mTreeColumnName.setImage(getImage(ICON_SORT_BY_API));
+        }
 
         // keep a map of the initial state so that we can detect which items or categories are
         // no longer being used, so that we can removed them at the end of the in-place update.
@@ -612,6 +744,11 @@ public class PackagesPage extends Composite
      * Recompute the tree by sorting all packages by source.
      */
     private void sortBySource() {
+
+        if (!mTreeColumnName.isDisposed()) {
+            mTreeColumnName.setImage(getImage(ICON_SORT_BY_SOURCE));
+        }
+
         mCategories.clear();
 
         Set<SdkSource> sourceSet = new HashSet<SdkSource>();
@@ -816,18 +953,7 @@ public class PackagesPage extends Composite
         mButtonDelete.setEnabled(canDelete);
     }
 
-    protected void onButtonReload() {
-        loadPackages();
-    }
-
-    protected void onButtonAddonSites() {
-        AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
-        if (d.open()) {
-            loadPackages();
-        }
-    }
-
-    protected void onButtonInstall() {
+    private void onButtonInstall() {
         ArrayList<Archive> archives = new ArrayList<Archive>();
 
         if (mDisplayArchives) {
@@ -883,7 +1009,7 @@ public class PackagesPage extends Composite
         }
     }
 
-    protected void onButtonDelete() {
+    private void onButtonDelete() {
         // Find selected local packages to be delete
         Object[] checked = mTreeViewer.getCheckedElements();
         if (checked == null) {
