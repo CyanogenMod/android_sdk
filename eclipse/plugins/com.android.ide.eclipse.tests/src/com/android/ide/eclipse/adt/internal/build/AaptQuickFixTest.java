@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.build;
 
+import static com.android.AndroidConstants.FD_RES_COLOR;
 import static com.android.AndroidConstants.FD_RES_LAYOUT;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
@@ -58,22 +59,28 @@ public class AaptQuickFixTest extends AdtProjectTest {
 
     public void testQuickFix1() throws Exception {
         // Test adding a value into an existing file (res/values/strings.xml)
-        checkFixes("quickfix1.xml", "android:text=\"@string/firs^tstring\"",
+        checkResourceFix("quickfix1.xml", "android:text=\"@string/firs^tstring\"",
                 "res/values/strings.xml");
     }
 
     public void testQuickFix2() throws Exception {
         // Test adding a value into a new file (res/values/dimens.xml, will be created)
-        checkFixes("quickfix1.xml", "android:layout_width=\"@dimen/^testdimen\"",
+        checkResourceFix("quickfix1.xml", "android:layout_width=\"@dimen/^testdimen\"",
                 "res/values/dimens.xml");
     }
 
     public void testQuickFix3() throws Exception {
         // Test adding a file based resource (uses new file wizard machinery)
-        checkFixes("quickfix1.xml", "layout=\"@layout/^testlayout\"", "res/layout/testlayout.xml");
+        checkResourceFix("quickfix1.xml", "layout=\"@layout/^testlayout\"",
+                "res/layout/testlayout.xml");
     }
 
-    private void checkFixes(String name, String caretLocation, String expectedNewPath)
+    public void testQuickFix4() throws Exception {
+        // Test adding a value into a new file (res/values/dimens.xml, will be created)
+        checkNamespaceFix("quickfix2.xml", "<c^olor");
+    }
+
+    private void checkResourceFix(String name, String caretLocation, String expectedNewPath)
             throws Exception {
         IProject project = getProject();
         IFile file = getTestDataFile(project, name, FD_RES + "/" + FD_RES_LAYOUT + "/" + name);
@@ -82,6 +89,10 @@ public class AaptQuickFixTest extends AdtProjectTest {
         final int offset = getCaretOffset(file, caretLocation);
 
 
+        String osRoot = project.getLocation().toOSString();
+        List<String> errors = new ArrayList<String>();
+        String fileRelativePath = file.getProjectRelativePath().toPortableString();
+        String filePath = osRoot + File.separator + fileRelativePath;
         // Run AaptParser such that markers are added...
         // When debugging these tests, the project gets a chance to build itself so
         // the real aapt errors are there. But when the test is run directly, aapt has
@@ -90,10 +101,6 @@ public class AaptQuickFixTest extends AdtProjectTest {
         // etc) so instead this test just hardcodes the aapt errors that should be
         // observed on quickfix1.xml.
         assertEquals("Unit test is hardcoded to errors for quickfix1.xml", "quickfix1.xml", name);
-        String osRoot = project.getLocation().toOSString();
-        List<String> errors = new ArrayList<String>();
-        String fileRelativePath = file.getProjectRelativePath().toPortableString();
-        String filePath = osRoot + File.separator + fileRelativePath;
         errors.add(filePath + ":7: error: Error: No resource found that matches the given name"
                 + " (at 'text' with value '@string/firststring').");
         errors.add(filePath + ":7: error: Error: No resource found that matches the given name"
@@ -191,5 +198,86 @@ public class AaptQuickFixTest extends AdtProjectTest {
         newFileWithCaret = removeSessionData(newFileWithCaret);
 
         assertEqualsGolden(name, newFileWithCaret);
+    }
+
+    private void checkNamespaceFix(String name, String caretLocation)
+            throws Exception {
+        IProject project = getProject();
+        IFile file = getTestDataFile(project, name, FD_RES + "/" + FD_RES_COLOR + "/" + name);
+
+        // Determine the offset
+        final int offset = getCaretOffset(file, caretLocation);
+
+        String osRoot = project.getLocation().toOSString();
+        List<String> errors = new ArrayList<String>();
+        String fileRelativePath = file.getProjectRelativePath().toPortableString();
+        String filePath = osRoot + File.separator + fileRelativePath;
+        assertEquals("Unit test is hardcoded to errors for quickfix2.xml", "quickfix2.xml", name);
+        errors.add(filePath + ":5: error: Error parsing XML: unbound prefix");
+        AaptParser.parseOutput(errors, project);
+
+        AaptQuickFix aaptQuickFix = new AaptQuickFix();
+
+        // Open file
+        IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        assertNotNull(page);
+        IEditorPart editor = IDE.openEditor(page, file);
+        assertTrue(editor instanceof AndroidXmlEditor);
+        AndroidXmlEditor layoutEditor = (AndroidXmlEditor) editor;
+        final ISourceViewer viewer = layoutEditor.getStructuredSourceViewer();
+
+        // Test marker resolution.
+        IMarker[] markers = file.findMarkers(AdtConstants.MARKER_AAPT_COMPILE, true,
+                IResource.DEPTH_ZERO);
+        assertEquals(1, markers.length);
+        IMarker marker = markers[0];
+        // Found the target marker. Now check the marker resolution of it.
+        assertTrue(aaptQuickFix.hasResolutions(marker));
+        IMarkerResolution[] resolutions = aaptQuickFix.getResolutions(marker);
+        assertNotNull(resolutions);
+        assertEquals(1, resolutions.length);
+        IMarkerResolution resolution = resolutions[0];
+        assertNotNull(resolution);
+        assertTrue(resolution.getLabel().contains("Insert namespace"));
+
+        // Next test quick assist.
+
+        IQuickAssistInvocationContext invocationContext = new IQuickAssistInvocationContext() {
+            public int getLength() {
+                return 0;
+            }
+
+            public int getOffset() {
+                return offset;
+            }
+
+            public ISourceViewer getSourceViewer() {
+                return viewer;
+            }
+        };
+        ICompletionProposal[] proposals = aaptQuickFix
+                .computeQuickAssistProposals(invocationContext);
+        assertNotNull(proposals);
+        assertTrue(proposals.length == 1);
+        ICompletionProposal proposal = proposals[0];
+
+        assertNotNull(proposal.getAdditionalProposalInfo());
+        assertNotNull(proposal.getImage());
+        assertTrue(proposal.getDisplayString().contains("Insert namespace"));
+
+        // Open the file to ensure we can get an XML model with getExistingModelForEdit:
+        AdtPlugin.openFile(file, null);
+        IEditorPart newEditor = Hyperlinks.getEditor();
+        assertTrue(newEditor instanceof AndroidXmlEditor);
+
+        AndroidXmlEditor xmlEditor = (AndroidXmlEditor) newEditor;
+        IDocument document = xmlEditor.getStructuredSourceViewer().getDocument();
+
+        // Apply quick fix
+        String before = document.get();
+        proposal.apply(document);
+        String after = document.get();
+        String diff = getDiff(before, after);
+        assertEqualsGolden(name, diff);
     }
 }

@@ -434,7 +434,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
      * <p/>
      * Capitalizes the first letter and replace non-alphabet by a space followed by a capital.
      */
-    private String getUiName(String xmlName) {
+    private static String getUiName(String xmlName) {
         StringBuilder sb = new StringBuilder();
 
         boolean capitalize = true;

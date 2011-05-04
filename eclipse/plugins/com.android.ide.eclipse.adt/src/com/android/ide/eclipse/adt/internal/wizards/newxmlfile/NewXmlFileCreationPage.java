@@ -27,6 +27,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
@@ -72,6 +73,11 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -287,12 +293,48 @@ class NewXmlFileCreationPage extends WizardPage {
                 null,                                                       // default attributes
                 1                                                           // target API level
                 ),
+        new TypeInfo("Drawable",                                            // UI name
+                "An XML file that describes a drawable.",                   // tooltip
+                ResourceFolderType.DRAWABLE,                                // folder type
+                AndroidTargetData.DESCRIPTOR_DRAWABLE,                      // root seed
+                null,                                                       // default root
+                SdkConstants.NS_RESOURCES,                                  // xmlns
+                null,                                                       // default attributes
+                1                                                           // target API level
+                ),
         new TypeInfo("Menu",                                                // UI name
                 "An XML file that describes an menu.",                      // tooltip
                 ResourceFolderType.MENU,                                    // folder type
                 MenuDescriptors.MENU_ROOT_ELEMENT,                          // root seed
                 null,                                                       // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
+                null,                                                       // default attributes
+                1                                                           // target API level
+                ),
+        new TypeInfo("Color List",                                          // UI name
+                "An XML file that describes a color state list.",           // tooltip
+                ResourceFolderType.COLOR,                                   // folder type
+                AndroidTargetData.DESCRIPTOR_COLOR,                         // root seed
+                null,                                                       // default root
+                SdkConstants.NS_RESOURCES,                                  // xmlns
+                null,                                                       // default attributes
+                1                                                           // target API level
+                ),
+        new TypeInfo("Animator",                                            // UI name
+                "An XML file that describes an animator.",                  // tooltip
+                ResourceFolderType.ANIMATOR,                                // folder type
+                AndroidTargetData.DESCRIPTOR_ANIMATOR,                      // root seed
+                "set",                                                      // default root
+                SdkConstants.NS_RESOURCES,                                  // xmlns
+                null,                                                       // default attributes
+                11                                                           // target API level
+                ),
+        new TypeInfo("Animation",                                           // UI name
+                "An XML file that describes an animation.",                 // tooltip
+                ResourceFolderType.ANIM,                                    // folder type
+                AndroidTargetData.DESCRIPTOR_ANIM,                          // root seed
+                "set",                                                      // default root
+                null,                                                       // xmlns
                 null,                                                       // default attributes
                 1                                                           // target API level
                 ),
@@ -320,22 +362,6 @@ class NewXmlFileCreationPage extends WizardPage {
                 AndroidTargetData.DESCRIPTOR_SEARCHABLE,                    // root seed
                 null,                                                       // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
-                null,                                                       // default attributes
-                1                                                           // target API level
-                ),
-        new TypeInfo("Animation",                                           // UI name
-                "An XML file that describes an animation.",                 // tooltip
-                ResourceFolderType.ANIM,                                    // folder type
-                // TODO reuse constants if we ever make an editor with descriptors for animations
-                new String[] {                                              // root seed
-                    "set",          //$NON-NLS-1$
-                    "alpha",        //$NON-NLS-1$
-                    "scale",        //$NON-NLS-1$
-                    "translate",    //$NON-NLS-1$
-                    "rotate"        //$NON-NLS-1$
-                    },
-                "set",              //$NON-NLS-1$                           // default root
-                null,                                                       // xmlns
                 null,                                                       // default attributes
                 1                                                           // target API level
                 ),
@@ -675,7 +701,7 @@ class NewXmlFileCreationPage extends WizardPage {
         };
 
         int n = sTypes.length;
-        int num_lines = (n + NUM_COL/2) / NUM_COL;
+        int num_lines = (n + (NUM_COL - 1)) / NUM_COL;
         for (int line = 0, k = 0; line < num_lines; line++) {
             for (int i = 0; i < NUM_COL; i++, k++) {
                 if (k < n) {
@@ -833,6 +859,25 @@ class NewXmlFileCreationPage extends WizardPage {
                 targetProject = pair.getFirst();
                 targetWsFolderPath = pair.getSecond();
                 targetFileName = "";
+            }
+        }
+
+        if (targetProject == null) {
+            // Try to figure out the project from the active editor
+            IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+            if (window != null) {
+                IWorkbenchPage page = window.getActivePage();
+                if (page != null) {
+                    IEditorPart activeEditor = page.getActiveEditor();
+                    if (activeEditor instanceof AndroidXmlEditor) {
+                        Object input = ((AndroidXmlEditor) activeEditor).getEditorInput();
+                        if (input instanceof FileEditorInput) {
+                            FileEditorInput fileInput = (FileEditorInput) input;
+                            targetScore = 1;
+                            targetProject = fileInput.getFile().getProject();
+                        }
+                    }
+                }
             }
         }
 
@@ -1070,19 +1115,6 @@ class NewXmlFileCreationPage extends WizardPage {
                     if (type.getResFolderName().equals(folderName)) {
                         matches.add(type);
                         selected |= type.getWidget().getSelection();
-                    }
-                }
-
-                // For now, treat a selection of /res/animator as /res/anim/,
-                // though we need to handle this better
-                // TODO: Properly support ANIMATOR templates!
-                if (!selected && folderName.equals(AndroidConstants.FD_RES_ANIMATOR)) {
-                    for (TypeInfo type : sTypes) {
-                        if (type.getResFolderType() == ResourceFolderType.ANIM) {
-                            matches.add(type);
-                            selected |= type.getWidget().getSelection();
-                            break;
-                        }
                     }
                 }
 

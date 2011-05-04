@@ -21,7 +21,11 @@ import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimatorDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
+import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
@@ -51,6 +55,10 @@ public class AndroidTargetData {
     public final static int DESCRIPTOR_SEARCHABLE = 6;
     public final static int DESCRIPTOR_PREFERENCES = 7;
     public final static int DESCRIPTOR_APPWIDGET_PROVIDER = 8;
+    public final static int DESCRIPTOR_DRAWABLE = 9;
+    public final static int DESCRIPTOR_ANIMATOR = 10;
+    public final static int DESCRIPTOR_ANIM = 11;
+    public final static int DESCRIPTOR_COLOR = 12;
 
     private final IAndroidTarget mTarget;
 
@@ -67,6 +75,10 @@ public class AndroidTargetData {
     private Hashtable<String, String[]> mAttributeValues = new Hashtable<String, String[]>();
 
     private AndroidManifestDescriptors mManifestDescriptors;
+    private DrawableDescriptors mDrawableDescriptors;
+    private AnimatorDescriptors mAnimatorDescriptors;
+    private AnimDescriptors mAnimDescriptors;
+    private ColorDescriptors mColorDescriptors;
     private LayoutDescriptors mLayoutDescriptors;
     private MenuDescriptors mMenuDescriptors;
     private XmlDescriptors mXmlDescriptors;
@@ -84,14 +96,16 @@ public class AndroidTargetData {
 
     /**
      * Creates an AndroidTargetData object.
-     * @param platformLibraries
-     * @param optionalLibraries
      */
     void setExtraData(
             AndroidManifestDescriptors manifestDescriptors,
             LayoutDescriptors layoutDescriptors,
             MenuDescriptors menuDescriptors,
             XmlDescriptors xmlDescriptors,
+            DrawableDescriptors drawableDescriptors,
+            AnimatorDescriptors animatorDescriptors,
+            AnimDescriptors animDescriptors,
+            ColorDescriptors colorDescriptors,
             Map<String, Map<String, Integer>> enumValueMap,
             String[] permissionValues,
             String[] activityIntentActionValues,
@@ -104,6 +118,10 @@ public class AndroidTargetData {
             LayoutLibrary layoutLibrary) {
 
         mManifestDescriptors = manifestDescriptors;
+        mDrawableDescriptors = drawableDescriptors;
+        mAnimatorDescriptors = animatorDescriptors;
+        mAnimDescriptors = animDescriptors;
+        mColorDescriptors = colorDescriptors;
         mLayoutDescriptors = layoutDescriptors;
         mMenuDescriptors = menuDescriptors;
         mXmlDescriptors = xmlDescriptors;
@@ -142,6 +160,14 @@ public class AndroidTargetData {
                 return mXmlDescriptors.getAppWidgetProvider();
             case DESCRIPTOR_SEARCHABLE:
                 return mXmlDescriptors.getSearchableProvider();
+            case DESCRIPTOR_DRAWABLE:
+                return mDrawableDescriptors;
+            case DESCRIPTOR_ANIMATOR:
+                return mAnimatorDescriptors;
+            case DESCRIPTOR_ANIM:
+                return mAnimDescriptors;
+            case DESCRIPTOR_COLOR:
+                return mColorDescriptors;
             default :
                  throw new IllegalArgumentException();
         }
@@ -152,6 +178,34 @@ public class AndroidTargetData {
      */
     public AndroidManifestDescriptors getManifestDescriptors() {
         return mManifestDescriptors;
+    }
+
+    /**
+     * Returns the drawable descriptors
+     */
+    public DrawableDescriptors getDrawableDescriptors() {
+        return mDrawableDescriptors;
+    }
+
+    /**
+     * Returns the animation descriptors
+     */
+    public AnimDescriptors getAnimDescriptors() {
+        return mAnimDescriptors;
+    }
+
+    /**
+     * Returns the color descriptors
+     */
+    public ColorDescriptors getColorDescriptors() {
+        return mColorDescriptors;
+    }
+
+    /**
+     * Returns the animator descriptors
+     */
+    public AnimatorDescriptors getAnimatorDescriptors() {
+        return mAnimatorDescriptors;
     }
 
     /**
