@@ -74,9 +74,10 @@ fi
 
 if [ "$OSTYPE" = "cygwin" ] ; then
     jarpath=`cygpath -w  "$frameworkdir/$jarfile"`
+    jarpath="$jarpath;"`cygpath -w  "$frameworkdir/swtmenubar.jar"`
     progdir=`cygpath -w  "$progdir"`
 else
-    jarpath="$frameworkdir/$jarfile"
+    jarpath="$frameworkdir/$jarfile:$frameworkdir/swtmenubar.jar"
 fi
 
 # Get the current content of java.ext.dirs so that we can add to it instead of replacing
@@ -106,4 +107,8 @@ if [ ! -d "$swtpath" ]; then
 fi
 
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
-exec "$java_cmd" -Xmx256M $os_opts $java_debug -Dcom.android.sdkmanager.toolsdir="$progdir" -classpath "$jarpath:$swtpath/swt.jar" com.android.sdkmanager.Main "$@"
+exec "$java_cmd" \
+    -Xmx256M $os_opts $java_debug \
+    -Dcom.android.sdkmanager.toolsdir="$progdir" \
+    -classpath "$jarpath:$swtpath/swt.jar" \
+    com.android.sdkmanager.Main "$@"

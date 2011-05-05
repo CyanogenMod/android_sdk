@@ -37,7 +37,7 @@ set java_exe=
 call lib\find_java.bat
 if not defined java_exe goto :EOF
 
-set jar_path=lib\sdkmanager.jar
+set jar_path=lib\sdkmanager.jar;lib\swtmenubar.jar
 
 rem Set SWT.Jar path based on current architecture (x86 or x86_64)
 for /f %%a in ('%java_exe% -jar lib\archquery.jar') do set swt_path=lib\%%a
