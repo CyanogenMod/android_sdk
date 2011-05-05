@@ -166,7 +166,7 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             return;
         }
         Window[] windows = DeviceBridge.loadWindows(device);
-        DeviceSelectionModel.getModel().addDevice(device, windows);
+        DeviceSelectionModel.getModel().addDevice(device, windows, viewServerInfo);
         if (viewServerInfo.protocolVersion >= 3) {
             WindowUpdater.startListenForWindowChanges(HierarchyViewerDirector.this, device);
             focusChanged(device);
@@ -581,6 +581,17 @@ public abstract class HierarchyViewerDirector implements IDeviceChangeListener,
             executeInBackground("Request layout", new Runnable() {
                 public void run() {
                     DeviceBridge.requestLayout(selectedNode.viewNode);
+                }
+            });
+        }
+    }
+
+    public void dumpDisplayListForCurrentNode() {
+        final DrawableViewNode selectedNode = TreeViewModel.getModel().getSelection();
+        if (selectedNode != null) {
+            executeInBackground("Dump displaylist", new Runnable() {
+                public void run() {
+                    DeviceBridge.outputDisplayList(selectedNode.viewNode);
                 }
             });
         }

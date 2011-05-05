@@ -73,4 +73,8 @@ public class ActionButton implements IPropertyChangeListener, SelectionListener 
     public void addSelectionListener(SelectionListener listener) {
         mButton.addSelectionListener(listener);
     }
+
+    public void setVisible(boolean visible) {
+        mButton.setVisible(visible);
+    }
 }

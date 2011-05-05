@@ -35,6 +35,10 @@ public class ViewManager {
         sendCommand("REQUEST_LAYOUT", device, window, params);
     }
 
+    public static void outputDisplayList(IDevice device, Window window, String params) {
+        sendCommand("OUTPUT_DISPLAYLIST", device, window, params);
+    }
+
     private static void sendCommand(String command, IDevice device, Window window, String params) {
         Socket socket = null;
         BufferedWriter out = null;

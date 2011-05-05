@@ -26,6 +26,7 @@ import com.android.hierarchyviewer.util.ActionButton;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
 import com.android.hierarchyviewerlib.actions.CapturePSDAction;
 import com.android.hierarchyviewerlib.actions.DisplayViewAction;
+import com.android.hierarchyviewerlib.actions.DumpDisplayListAction;
 import com.android.hierarchyviewerlib.actions.InspectScreenshotAction;
 import com.android.hierarchyviewerlib.actions.InvalidateAction;
 import com.android.hierarchyviewerlib.actions.LoadOverlayAction;
@@ -38,6 +39,8 @@ import com.android.hierarchyviewerlib.actions.RefreshWindowsAction;
 import com.android.hierarchyviewerlib.actions.RequestLayoutAction;
 import com.android.hierarchyviewerlib.actions.SavePixelPerfectAction;
 import com.android.hierarchyviewerlib.actions.SaveTreeViewAction;
+import com.android.hierarchyviewerlib.device.DeviceBridge.ViewServerInfo;
+import com.android.hierarchyviewerlib.models.DeviceSelectionModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel;
 import com.android.hierarchyviewerlib.models.TreeViewModel;
 import com.android.hierarchyviewerlib.models.PixelPerfectModel.IImageChangeListener;
@@ -86,8 +89,8 @@ import org.eclipse.swt.widgets.Shell;
 public class HierarchyViewerApplication extends ApplicationWindow {
 
     private static final String APP_NAME = "Hierarchy Viewer";
-    private static final int INITIAL_WIDTH = 1024;
-    private static final int INITIAL_HEIGHT = 768;
+    private static final int INITIAL_WIDTH = 1280;
+    private static final int INITIAL_HEIGHT = 800;
 
     private static HierarchyViewerApplication sMainWindow;
 
@@ -123,6 +126,8 @@ public class HierarchyViewerApplication extends ApplicationWindow {
     private LayoutViewer mLayoutViewer;
     private PixelPerfectLoupe mPixelPerfectLoupe;
     private Composite mTreeViewControls;
+
+    private ActionButton dumpDisplayList;
 
     private HierarchyViewerDirector mDirector;
 
@@ -366,7 +371,7 @@ public class HierarchyViewerApplication extends ApplicationWindow {
 
         Composite innerButtonPanel = new Composite(buttonPanel, SWT.NONE);
         innerButtonPanel.setLayoutData(new GridData(GridData.FILL_VERTICAL));
-        GridLayout innerButtonPanelLayout = new GridLayout(6, true);
+        GridLayout innerButtonPanelLayout = new GridLayout(7, true);
         innerButtonPanelLayout.marginWidth = innerButtonPanelLayout.marginHeight = 2;
         innerButtonPanelLayout.horizontalSpacing = innerButtonPanelLayout.verticalSpacing = 2;
         innerButtonPanel.setLayout(innerButtonPanelLayout);
@@ -393,6 +398,10 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         ActionButton requestLayout =
                 new ActionButton(innerButtonPanel, RequestLayoutAction.getAction());
         requestLayout.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+        dumpDisplayList =
+                new ActionButton(innerButtonPanel, DumpDisplayListAction.getAction());
+        dumpDisplayList.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         SashForm mainSash = new SashForm(mTreeViewPanel, SWT.HORIZONTAL | SWT.SMOOTH);
         mainSash.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -657,6 +666,14 @@ public class HierarchyViewerApplication extends ApplicationWindow {
         treeViewMenu.add(new Separator());
         treeViewMenu.add(RefreshViewAction.getAction());
         treeViewMenu.add(DisplayViewAction.getAction(getShell()));
+        // Only make the DumpDisplayList action visible if the protocol supports it.
+        ViewServerInfo info = DeviceSelectionModel.getModel().getSelectedDeviceInfo();
+        if (info != null && info.protocolVersion >= 4) {
+            treeViewMenu.add(DumpDisplayListAction.getAction());
+            dumpDisplayList.setVisible(true);
+        } else {
+            dumpDisplayList.setVisible(false);
+        }
         treeViewMenu.add(new Separator());
         treeViewMenu.add(InvalidateAction.getAction());
         treeViewMenu.add(RequestLayoutAction.getAction());
