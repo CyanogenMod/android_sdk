@@ -1030,8 +1030,8 @@
             commandId="com.android.ide.eclipse.adt.launch.LaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
    </extension>
-   <!-- NOTE: deactivated temporarily due to bug 15003.
-    extension point="org.eclipse.core.contenttype.contentTypes">
+
+   <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type
           describer="com.android.ide.eclipse.adt.internal.editors.binaryxml.BinaryXMLDescriber"
           file-extensions="xml"
@@ -1039,5 +1039,15 @@
           name="Android Binary XML"
           priority="high">
     </content-type>
-  </extension -->
+   </extension>
+
+   <!-- workaround for bug 15003. -->
+   <extension
+      point="org.eclipse.core.filebuffers.documentCreation"
+        id="binaryXmlfactories"
+        name="Binary XML Document Factory Extension">
+        <factory
+            contentTypeId="com.android.ide.eclipse.adt.binaryXml"
+            class="org.eclipse.wst.sse.core.internal.filebuffers.BasicStructuredDocumentFactory" />
+   </extension>
 </plugin>
