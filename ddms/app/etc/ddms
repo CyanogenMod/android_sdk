@@ -75,7 +75,7 @@ if [ `uname` = "Linux" ]; then
     export GDK_NATIVE_WINDOWS=true
 fi
 
-jarpath="$frameworkdir/$jarfile"
+jarpath="$frameworkdir/$jarfile:$frameworkdir/swtmenubar.jar"
 
 # Figure out the path to the swt.jar for the current architecture.
 # if ANDROID_SWT is defined, then just use this.
@@ -100,6 +100,8 @@ if [ ! -d "$swtpath" ]; then
     exit 1
 fi
 
-# need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
-# might need more memory, e.g. -Xmx128M
-exec "$javaCmd" -Xmx256M $os_opts $java_debug -Dcom.android.ddms.bindir="$progdir" -classpath "$jarpath:$swtpath/swt.jar" com.android.ddms.Main "$@"
+exec "$javaCmd" \
+    -Xmx256M $os_opts $java_debug \
+    -Dcom.android.ddms.bindir="$progdir" \
+    -classpath "$jarpath:$swtpath/swt.jar" \
+    com.android.ddms.Main "$@"

@@ -48,7 +48,7 @@ if debug NEQ "%1" goto NoDebug
     shift 1
 :NoDebug
 
-set jarpath=%frameworkdir%%jarfile%
+set jarpath=%frameworkdir%%jarfile%;%frameworkdir%swtmenubar.jar
 
 if not defined ANDROID_SWT goto QueryArch
     set swt_path=%ANDROID_SWT%

@@ -76,7 +76,7 @@ if [ `uname` = "Linux" ]; then
     export GDK_NATIVE_WINDOWS=true
 fi
 
-jarpath="$frameworkdir/$jarfile"
+jarpath="$frameworkdir/$jarfile:$frameworkdir/swtmenubar.jar"
 
 # Figure out the path to the swt.jar for the current architecture.
 # if ANDROID_SWT is defined, then just use this.
@@ -103,4 +103,8 @@ fi
 
 # need to use "java.ext.dirs" because "-jar" causes classpath to be ignored
 # might need more memory, e.g. -Xmx128M
-exec "$javaCmd" -Xmx512M $os_opts $java_debug -Dcom.android.hierarchyviewer.bindir="$progdir" -classpath "$jarpath:$swtpath/swt.jar" com.android.hierarchyviewer.HierarchyViewerApplication "$@"
+exec "$javaCmd" \
+    -Xmx512M $os_opts $java_debug \
+    -Dcom.android.hierarchyviewer.bindir="$progdir" \
+    -classpath "$jarpath:$swtpath/swt.jar" \
+    com.android.hierarchyviewer.HierarchyViewerApplication "$@"
