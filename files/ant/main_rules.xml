@@ -432,8 +432,15 @@
 
                 <!-- Set the android classpath Path object into a single property. It'll be
                      all the jar files separated by a platform path-separator.
+                     Each path must be quoted if it contains spaces.
                 -->
-                <property name="android.libraryjars" refid="android.target.classpath"/>
+                <pathconvert property="android.libraryjars" refid="android.target.classpath">
+                    <firstmatchmapper>
+                        <regexpmapper from='^([^ ]*)( .*)$$' to='"\1\2"'/>
+                        <identitymapper/>
+                    </firstmatchmapper>
+                </pathconvert>
+
                 <!-- Build a path object with all the jar files that must be obfuscated.
                      This include the project compiled source code and any 3rd party jar
                      files. -->
@@ -443,22 +450,29 @@
                 </path>
                 <!-- Set the project jar files Path object into a single property. It'll be
                      all the jar files separated by a platform path-separator.
+                     Each path must be quoted if it contains spaces.
                 -->
-                <property name="project.jars" refid="project.jars.ref" />
+                <pathconvert property="project.jars" refid="project.jars.ref">
+                    <firstmatchmapper>
+                        <regexpmapper from='^([^ ]*)( .*)$$' to='"\1\2"'/>
+                        <identitymapper/>
+                    </firstmatchmapper>
+                </pathconvert>
 
-                <mkdir dir="${obfuscate.absolute.dir}" />
+                <mkdir   dir="${obfuscate.absolute.dir}" />
                 <delete file="${preobfuscate.jar.file}"/>
                 <delete file="${obfuscated.jar.file}"/>
-                <jar basedir="${out.classes.dir}" destfile="${preobfuscate.jar.file}" />
+                <jar basedir="${out.classes.dir}"
+                    destfile="${preobfuscate.jar.file}" />
                 <proguard>
                     @${proguard.config}
-                    -injars ${project.jars}
-                    -outjars ${obfuscated.jar.file}
-                    -libraryjars ${android.libraryjars}
-                    -dump ${obfuscate.absolute.dir}/dump.txt
-                    -printseeds ${obfuscate.absolute.dir}/seeds.txt
-                    -printusage ${obfuscate.absolute.dir}/usage.txt
-                    -printmapping ${obfuscate.absolute.dir}/mapping.txt
+                    -injars       ${project.jars}
+                    -outjars      "${obfuscated.jar.file}"
+                    -libraryjars  ${android.libraryjars}
+                    -dump         "${obfuscate.absolute.dir}/dump.txt"
+                    -printseeds   "${obfuscate.absolute.dir}/seeds.txt"
+                    -printusage   "${obfuscate.absolute.dir}/usage.txt"
+                    -printmapping "${obfuscate.absolute.dir}/mapping.txt"
                 </proguard>
             </then>
         </if>
