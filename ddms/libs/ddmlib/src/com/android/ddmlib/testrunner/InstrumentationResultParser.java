@@ -201,10 +201,11 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     static final String NO_TEST_RESULTS_MSG = "No test results";
 
     /** Error message supplied when a test start bundle is parsed, but not the test end bundle. */
-    static final String INCOMPLETE_TEST_ERR_MSG_PREFIX = "Incomplete";
+    static final String INCOMPLETE_TEST_ERR_MSG_PREFIX = "Test failed to run to completion";
+    static final String INCOMPLETE_TEST_ERR_MSG_POSTFIX = "Check device logcat for details";
 
     /** Error message supplied when the test run is incomplete. */
-    static final String INCOMPLETE_RUN_ERR_MSG_PREFIX = "Test run incomplete";
+    static final String INCOMPLETE_RUN_ERR_MSG_PREFIX = "Test run failed to complete";
 
     /**
      * Creates the InstrumentationResultParser.
@@ -311,7 +312,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                     mInstrumentationResultBundle.put(mCurrentKey, statusValue);
                 } else if (mCurrentKey.equals(StatusKeys.SHORTMSG)) {
                     // test run must have failed
-                    handleTestRunFailed(statusValue);
+                    handleTestRunFailed(String.format("Instrumentation run failed due to '%1$s'",
+                            statusValue));
                 }
             } else {
                 TestResult testInfo = getCurrentTestInfo();
@@ -520,10 +522,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 float timeSeconds = Float.parseFloat(timeString);
                 mTestTime = (long) (timeSeconds * 1000);
             } catch (NumberFormatException e) {
-                Log.w(LOG_TAG, String.format("Unexpected time format %s", line));
+                Log.w(LOG_TAG, String.format("Unexpected time format %1$s", line));
             }
         } else {
-            Log.w(LOG_TAG, String.format("Unexpected time format %s", line));
+            Log.w(LOG_TAG, String.format("Unexpected time format %1$s", line));
         }
     }
 
@@ -532,7 +534,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      */
     void handleTestRunFailed(String errorMsg) {
         errorMsg = (errorMsg == null ? "Unknown error" : errorMsg);
-        Log.i(LOG_TAG, String.format("test run failed %s", errorMsg));
+        Log.i(LOG_TAG, String.format("test run failed: '%1$s'", errorMsg));
         if (mLastTestResult != null &&
             mLastTestResult.isComplete() &&
             StatusCodes.START == mLastTestResult.mCode) {
@@ -543,7 +545,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                     mLastTestResult.mTestName);
             for (ITestRunListener listener : mTestListeners) {
                 listener.testFailed(ITestRunListener.TestFailure.ERROR, testId,
-                    String.format("%s: %s", INCOMPLETE_TEST_ERR_MSG_PREFIX, errorMsg));
+                    String.format("%1$s. Reason: '%2$s'. %3$s", INCOMPLETE_TEST_ERR_MSG_PREFIX,
+                            errorMsg, INCOMPLETE_TEST_ERR_MSG_POSTFIX));
                 listener.testEnded(testId, getAndResetTestMetrics());
             }
         }
@@ -579,7 +582,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             handleTestRunFailed(NO_TEST_RESULTS_MSG);
         } else if (mNumTestsExpected > mNumTestsRun) {
             final String message =
-                String.format("%s. Expected %d tests, received %d",
+                String.format("%1$s. Expected %2$d tests, received %3$d",
                         INCOMPLETE_RUN_ERR_MSG_PREFIX, mNumTestsExpected, mNumTestsRun);
             handleTestRunFailed(message);
         } else {

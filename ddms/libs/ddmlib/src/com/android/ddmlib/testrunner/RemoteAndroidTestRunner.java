@@ -226,9 +226,9 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     public void run(Collection<ITestRunListener> listeners)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
-        final String runCaseCommandStr = String.format("am instrument -w -r %s %s",
+        final String runCaseCommandStr = String.format("am instrument -w -r %1$s %2$s",
             getArgsCommand(), getRunnerPath());
-        Log.i(LOG_TAG, String.format("Running %s on %s", runCaseCommandStr,
+        Log.i(LOG_TAG, String.format("Running %1$s on %2$s", runCaseCommandStr,
                 mRemoteDevice.getSerialNumber()));
         // TODO: allow run name to be configurable
         mParser = new InstrumentationResultParser(mPackageName, listeners);
@@ -236,26 +236,29 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
         try {
             mRemoteDevice.executeShellCommand(runCaseCommandStr, mParser, mMaxTimeToOutputResponse);
         } catch (IOException e) {
-            Log.w(LOG_TAG, String.format("IOException %s when running tests %s on %s",
+            Log.w(LOG_TAG, String.format("IOException %1$s when running tests %2$s on %3$s",
                     e.toString(), getPackageName(), mRemoteDevice.getSerialNumber()));
             // rely on parser to communicate results to listeners
             mParser.handleTestRunFailed(e.toString());
             throw e;
         } catch (ShellCommandUnresponsiveException e) {
             Log.w(LOG_TAG, String.format(
-                    "ShellCommandUnresponsiveException %s when running tests %s on %s",
+                    "ShellCommandUnresponsiveException %1$s when running tests %2$s on %3$s",
                     e.toString(), getPackageName(), mRemoteDevice.getSerialNumber()));
-            mParser.handleTestRunFailed(e.toString());
+            mParser.handleTestRunFailed(String.format(
+                    "Failed to receive adb shell test output within %1$d ms. " +
+                    "Test may have timed out, or adb connection to device became unresponsive",
+                    mMaxTimeToOutputResponse));
             throw e;
         } catch (TimeoutException e) {
             Log.w(LOG_TAG, String.format(
-                    "TimeoutException when running tests %s on %s", getPackageName(),
+                    "TimeoutException when running tests %1$s on %2$s", getPackageName(),
                     mRemoteDevice.getSerialNumber()));
             mParser.handleTestRunFailed(e.toString());
             throw e;
         } catch (AdbCommandRejectedException e) {
             Log.w(LOG_TAG, String.format(
-                    "AdbCommandRejectedException %s when running tests %s on %s",
+                    "AdbCommandRejectedException %1$s when running tests %2$s on %3$s",
                     e.toString(), getPackageName(), mRemoteDevice.getSerialNumber()));
             mParser.handleTestRunFailed(e.toString());
             throw e;
@@ -279,7 +282,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private String getArgsCommand() {
         StringBuilder commandBuilder = new StringBuilder();
         for (Entry<String, String> argPair : mArgMap.entrySet()) {
-            final String argCmd = String.format(" -e %s %s", argPair.getKey(),
+            final String argCmd = String.format(" -e %1$s %2$s", argPair.getKey(),
                     argPair.getValue());
             commandBuilder.append(argCmd);
         }
