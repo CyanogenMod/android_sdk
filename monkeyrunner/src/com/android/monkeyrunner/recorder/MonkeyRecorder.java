@@ -15,6 +15,7 @@
  */
 package com.android.monkeyrunner.recorder;
 
+import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.adb.AdbBackend;
 import com.android.monkeyrunner.core.IMonkeyBackend;
 import com.android.monkeyrunner.core.IMonkeyDevice;
@@ -45,7 +46,11 @@ public class MonkeyRecorder {
      *
      * @param device
      */
-    public static void start(final IMonkeyDevice device) {
+    public static void start(final MonkeyDevice device) {
+        start(device.getImpl());
+    }
+
+    /* package */static void start(final IMonkeyDevice device) {
         MonkeyRecorderFrame frame = new MonkeyRecorderFrame(device);
         // TODO: this is a hack until the window listener works.
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

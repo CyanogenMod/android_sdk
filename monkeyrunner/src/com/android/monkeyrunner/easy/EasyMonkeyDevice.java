@@ -19,10 +19,9 @@ package com.android.monkeyrunner.easy;
 import com.google.common.base.Preconditions;
 
 import com.android.hierarchyviewerlib.device.ViewNode;
-import com.android.hierarchyviewerlib.device.ViewNode.Property;
 import com.android.monkeyrunner.JythonUtils;
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyDevice.TouchPressType;
+import com.android.monkeyrunner.core.TouchPressType;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.eclipse.swt.graphics.Point;
@@ -32,7 +31,6 @@ import org.python.core.Py;
 import org.python.core.PyException;
 import org.python.core.PyInteger;
 import org.python.core.PyObject;
-import org.python.core.PyString;
 import org.python.core.PyTuple;
 
 import java.util.Set;
@@ -76,8 +74,8 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
 
         By selector = getSelector(ap, 0);
         String tmpType = ap.getString(1);
-        TouchPressType type = MonkeyDevice.TOUCH_NAME_TO_ENUM.get(tmpType);
-        if (type == null) type = TouchPressType.DOWN_AND_UP;
+        TouchPressType type = TouchPressType.fromIdentifier(tmpType);
+        Preconditions.checkNotNull(type, "Invalid touch type: " + tmpType);
         // TODO: try catch rethrow PyExc
         touch(selector, type);
     }

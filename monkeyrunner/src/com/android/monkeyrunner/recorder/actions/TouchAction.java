@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableBiMap;
 
 import com.android.monkeyrunner.MonkeyDevice;
 import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.monkeyrunner.core.TouchPressType;
 
 /**
  * Action to touch the touchscreen at a certain location.
@@ -48,8 +49,7 @@ public class TouchAction implements Action {
 
     @Override
     public void execute(IMonkeyDevice device) throws Exception {
-        device.touch(x, y,
-                MonkeyDevice.TOUCH_NAME_TO_ENUM.get(direction));
+        device.touch(x, y, TouchPressType.fromIdentifier(direction));
     }
 
     @Override
