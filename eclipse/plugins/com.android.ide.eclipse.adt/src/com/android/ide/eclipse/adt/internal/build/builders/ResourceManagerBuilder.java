@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -89,21 +90,24 @@ public class ResourceManagerBuilder extends BaseBuilder {
 
         // Check the compiler compliance level, displaying the error message
         // since this is the first builder.
-        int res = ProjectHelper.checkCompilerCompliance(project);
+        Pair<Integer, String> result = ProjectHelper.checkCompilerCompliance(project);
         String errorMessage = null;
-        switch (res) {
+        switch (result.getFirst().intValue()) {
             case ProjectHelper.COMPILER_COMPLIANCE_LEVEL:
-                errorMessage = Messages.Requires_Compiler_Compliance_5;
+                errorMessage = Messages.Requires_Compiler_Compliance_s;
                 break;
             case ProjectHelper.COMPILER_COMPLIANCE_SOURCE:
-                errorMessage = Messages.Requires_Source_Compatibility_5;
+                errorMessage = Messages.Requires_Source_Compatibility_s;
                 break;
             case ProjectHelper.COMPILER_COMPLIANCE_CODEGEN_TARGET:
-                errorMessage = Messages.Requires_Class_Compatibility_5;
+                errorMessage = Messages.Requires_Class_Compatibility_s;
                 break;
         }
 
         if (errorMessage != null) {
+            errorMessage = String.format(errorMessage,
+                    result.getSecond() == null ? "(no value)" : result.getSecond());
+
             markProject(AdtConstants.MARKER_ADT, errorMessage, IMarker.SEVERITY_ERROR);
             AdtPlugin.printErrorToConsole(project, errorMessage);
 
