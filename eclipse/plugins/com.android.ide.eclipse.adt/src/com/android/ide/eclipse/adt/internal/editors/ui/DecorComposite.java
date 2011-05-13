@@ -16,6 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.ui;
 
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.graphics.Image;
