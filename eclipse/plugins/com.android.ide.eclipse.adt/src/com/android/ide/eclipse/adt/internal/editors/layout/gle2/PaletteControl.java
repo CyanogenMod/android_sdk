@@ -23,14 +23,14 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction.Toggle;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.MenuAction.Toggle;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
-import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.rendering.api.ViewInfo;
+import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -572,9 +572,15 @@ public class PaletteControl extends Composite {
             Control item = createItem(parent, desc);
 
             // Add control-click listener on custom view items to you can warp to
+            // (and double click listener too -- the more discoverable, the better.)
             if (item instanceof IconTextItem) {
                 IconTextItem it = (IconTextItem) item;
                 it.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseDoubleClick(MouseEvent e) {
+                        AdtPlugin.openJavaClass(mEditor.getProject(), fqcn);
+                    }
+
                     @Override
                     public void mouseDown(MouseEvent e) {
                         if ((e.stateMask & SWT.MOD1) != 0) {
