@@ -343,13 +343,17 @@ public class ViewMetadataRepository {
                 String fqcn = view.getFcqn();
                 ViewElementDescriptor descriptor = fqcnToDescriptor.get(fqcn);
                 if (descriptor != null) {
+                    remaining.remove(descriptor);
+                    if (view.getSkip()) {
+                        continue;
+                    }
+
                     if (view.getDisplayName() != null || view.getInitString().length() > 0) {
                         categoryItems.add(new PaletteMetadataDescriptor(descriptor,
                                 view.getDisplayName(), view.getInitString(), view.getIconName()));
                     } else {
                         categoryItems.add(descriptor);
                     }
-                    remaining.remove(descriptor);
 
                     if (view.hasVariations()) {
                         for (ViewData variation : view.getVariations()) {

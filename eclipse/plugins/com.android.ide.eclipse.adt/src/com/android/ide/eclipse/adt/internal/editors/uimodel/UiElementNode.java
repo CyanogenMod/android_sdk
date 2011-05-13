@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
@@ -287,6 +288,17 @@ public class UiElementNode implements IPropertySource {
      */
     public StyledString getStyledDescription() {
         String uiName = mDescriptor.getUiName();
+
+        // Special case: for <view>, show the class attribute value instead.
+        // This is done here rather than in the descriptor since this depends on
+        // node instance data.
+        if (LayoutDescriptors.VIEW_VIEWTAG.equals(uiName) && mXmlNode instanceof Element) {
+            Element element = (Element) mXmlNode;
+            String cls = element.getAttribute(ATTR_CLASS);
+            if (cls != null) {
+                uiName = cls.substring(cls.lastIndexOf('.') + 1);
+            }
+        }
 
         StyledString styledString = new StyledString();
         String attr = getDescAttribute();
