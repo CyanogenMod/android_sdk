@@ -82,7 +82,7 @@ import java.util.Map.Entry;
  * remote available packages. This gives an overview of what is installed
  * vs what is available and allows the user to update or install packages.
  */
-public class PackagesPage extends Composite
+public class PackagesPage extends UpdaterPage
         implements ISdkChangeListener, IPageListener {
 
     private static final String ICON_CAT_OTHER      = "pkgcat_other_16.png";    //$NON-NLS-1$
@@ -150,8 +150,8 @@ public class PackagesPage extends Composite
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
 
-    public PackagesPage(Composite parent, UpdaterData updaterData) {
-        super(parent, SWT.NONE);
+    public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+        super(parent, swtStyle);
 
         mUpdaterData = updaterData;
         createContents(this);

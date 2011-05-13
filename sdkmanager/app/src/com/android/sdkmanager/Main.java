@@ -41,6 +41,7 @@ import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.internal.repository.PackagesPage;
 import com.android.sdkuilib.internal.repository.UpdateNoWindow;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.sdkuilib.repository.UpdaterWindow;
@@ -315,8 +316,8 @@ public class Main {
                     null /* parentShell */,
                     errorLogger,
                     mOsSdkFolder);
-            window.registerPage("Settings", SettingsPage.class);
-            window.registerPage("About", AboutPage.class);
+            window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
+            window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
             if (autoUpdate) {
                 window.setInitialPage(PackagesPage.class);
                 window.setRequestAutoUpdate(true);

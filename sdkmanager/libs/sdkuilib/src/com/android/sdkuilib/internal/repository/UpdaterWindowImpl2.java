@@ -22,13 +22,17 @@ import com.android.menubar.MenuBarEnhancer;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.internal.repository.PackagesPage.MenuAction;
+import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.IUpdaterWindow;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
+import com.android.sdkuilib.ui.SwtBaseDialog;
+import com.android.util.Pair;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
@@ -36,10 +40,13 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -66,7 +73,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     private final UpdaterData mUpdaterData;
     /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
      *  the string title and the Composite class to instantiate to create the page. */
-    private ArrayList<Object[]> mExtraPages;
+    private ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>> mExtraPages;
     /** Sets whether the auto-update wizard will be shown when opening the window. */
     private boolean mRequestAutoUpdate;
 
@@ -78,6 +85,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     private Label mStatusText;
     private ImgDisabledButton mButtonStop;
     private ToggleButton mButtonDetails;
+    private SettingsController mSettingsController;
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -141,7 +149,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     private void createContents() {
 
-        mPkgPage = new PackagesPage(mShell, mUpdaterData);
+        mPkgPage = new PackagesPage(mShell, SWT.NONE, mUpdaterData);
         mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
         Composite composite1 = new Composite(mShell, SWT.NONE);
@@ -259,13 +267,11 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
         MenuBarEnhancer.setupMenu(APP_NAME, menuTools, new IMenuBarCallback() {
             public void onPreferencesMenuSelected() {
-                // TODO: plug settings page here
-                MessageDialog.openInformation(mShell, "test", "on prefs");
+                showRegisteredPage(Purpose.SETTINGS);
             }
 
             public void onAboutMenuSelected() {
-                // TODO: plug about page here
-                MessageDialog.openInformation(mShell, "test", "on about");
+                showRegisteredPage(Purpose.ABOUT_BOX);
             }
 
             public void printError(String format, Object... args) {
@@ -304,14 +310,17 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * <p/>
      * All pages must be registered before the call to {@link #open()}.
      *
-     * @param title The title of the page.
      * @param pageClass The {@link Composite}-derived class that will implement the page.
+     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
      */
-    public void registerPage(String title, Class<? extends Composite> pageClass) {
+    @SuppressWarnings("unchecked")
+    public void registerPage(Class<? extends UpdaterPage> pageClass,
+            Purpose purpose) {
         if (mExtraPages == null) {
-            mExtraPages = new ArrayList<Object[]>();
+            mExtraPages = new ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>>();
         }
-        mExtraPages.add(new Object[]{ title, pageClass });
+        Pair<?, Purpose> value = Pair.of(pageClass, purpose);
+        mExtraPages.add((Pair<Class<? extends UpdaterPage>, Purpose>) value);
     }
 
     /**
@@ -397,8 +406,10 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     /**
      * Creates the icon of the window shell.
+     *
+     * @param shell The shell on which to put the icon
      */
-    private void setWindowImage(Shell androidSdkUpdater) {
+    private void setWindowImage(Shell shell) {
         String imageName = "android_icon_16.png"; //$NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
             imageName = "android_icon_128.png"; //$NON-NLS-1$
@@ -407,7 +418,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         if (mUpdaterData != null) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
             if (imgFactory != null) {
-                mShell.setImage(imgFactory.getImageByName(imageName));
+                shell.setImage(imgFactory.getImageByName(imageName));
             }
         }
     }
@@ -445,12 +456,9 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * and use it to load and apply these settings.
      */
     private void initializeSettings() {
-        SettingsController c = mUpdaterData.getSettingsController();
-        c.loadSettings();
-        c.applySettings();
-
-        // TODO give access to a settings dialog somehow (+about dialog)
-        // TODO c.setSettingsPage(settingsPage);
+        mSettingsController = mUpdaterData.getSettingsController();
+        mSettingsController.loadSettings();
+        mSettingsController.applySettings();
     }
 
     private void onToggleDetails() {
@@ -459,6 +467,26 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     private void onStopSelected() {
         // TODO
+    }
+
+    private void showRegisteredPage(Purpose purpose) {
+        if (mExtraPages == null) {
+            return;
+        }
+
+        Class<? extends UpdaterPage> clazz = null;
+
+        for (Pair<Class<? extends UpdaterPage>, Purpose> extraPage : mExtraPages) {
+            if (extraPage.getSecond() == purpose) {
+                clazz = extraPage.getFirst();
+                break;
+            }
+        }
+
+        if (clazz != null) {
+            PageDialog d = new PageDialog(mShell, clazz, purpose == Purpose.SETTINGS);
+            d.open();
+        }
     }
 
     // End of hiding from SWT Designer
@@ -581,6 +609,79 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         @Override
         public int getState() {
             return (isDisposed() || !isEnabled()) ? 1 : 0;
+        }
+    }
+
+    // -----
+
+    /**
+     * Dialog used to display either the About page or the Settings (aka Options) page
+     * with a "close" button.
+     */
+    private class PageDialog extends SwtBaseDialog {
+
+        private final Class<? extends UpdaterPage> mPageClass;
+        private final boolean mIsSettingsPage;
+
+        protected PageDialog(
+                Shell parentShell,
+                Class<? extends UpdaterPage> pageClass,
+                boolean isSettingsPage) {
+            super(parentShell, SWT.APPLICATION_MODAL, null /*title*/);
+            mPageClass = pageClass;
+            mIsSettingsPage = isSettingsPage;
+        }
+
+        @Override
+        protected void createContents() {
+            Shell shell = getShell();
+            setWindowImage(shell);
+
+            GridLayoutBuilder.create(shell).columns(2);
+
+            UpdaterPage content = UpdaterPage.newInstance(
+                    mPageClass,
+                    shell,
+                    SWT.NONE,
+                    mUpdaterData.getSdkLog());
+            GridDataBuilder.create(content).fill().grab().hSpan(2);
+            if (content.getLayout() instanceof GridLayout) {
+                GridLayout gl = (GridLayout) content.getLayout();
+                gl.marginHeight = gl.marginWidth = 0;
+            }
+
+            if (mIsSettingsPage && content instanceof ISettingsPage) {
+                mSettingsController.setSettingsPage((ISettingsPage) content);
+            }
+
+            getShell().setText(
+                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));  //$NON-NLS-1$
+
+            Label filler = new Label(shell, SWT.NONE);
+            GridDataBuilder.create(filler).hFill().hGrab();
+
+            Button close = new Button(shell, SWT.PUSH);
+            close.setText("Close");
+            GridDataBuilder.create(close);
+            close.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    close();
+                }
+            });
+        }
+
+        @Override
+        protected void postCreate() {
+            // pass
+        }
+
+        @Override
+        protected void close() {
+            if (mIsSettingsPage) {
+                mSettingsController.setSettingsPage(null);
+            }
+            super.close();
         }
     }
 }

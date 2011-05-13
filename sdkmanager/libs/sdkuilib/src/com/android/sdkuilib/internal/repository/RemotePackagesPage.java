@@ -56,7 +56,7 @@ import java.util.ArrayList;
  * Page that displays remote repository & add-ons sources and let the user
  * select packages for installation.
  */
-public class RemotePackagesPage extends Composite implements ISdkChangeListener {
+public class RemotePackagesPage extends UpdaterPage implements ISdkChangeListener {
 
     private final UpdaterData mUpdaterData;
 
@@ -79,8 +79,8 @@ public class RemotePackagesPage extends Composite implements ISdkChangeListener 
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}.
      */
-    RemotePackagesPage(Composite parent, UpdaterData updaterData) {
-        super(parent, SWT.BORDER);
+    RemotePackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+        super(parent, swtStyle);
 
         mUpdaterData = updaterData;
 

@@ -27,7 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
-public class AvdManagerPage extends Composite implements ISdkChangeListener {
+public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
 
     private AvdSelector mAvdSelector;
 
@@ -38,8 +38,8 @@ public class AvdManagerPage extends Composite implements ISdkChangeListener {
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}.
      */
-    public AvdManagerPage(Composite parent, UpdaterData updaterData) {
-        super(parent, SWT.BORDER);
+    public AvdManagerPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+        super(parent, swtStyle);
 
         mUpdaterData = updaterData;
         mUpdaterData.addListeners(this);

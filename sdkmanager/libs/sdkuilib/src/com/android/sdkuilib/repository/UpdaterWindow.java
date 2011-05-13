@@ -17,6 +17,7 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl2;
 
@@ -57,11 +58,12 @@ public class UpdaterWindow implements IUpdaterWindow {
      * <p/>
      * All pages must be registered before the call to {@link #open()}.
      *
-     * @param title The title of the page.
      * @param pageClass The {@link Composite}-derived class that will implement the page.
+     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
      */
-    public void registerPage(String title, Class<? extends Composite> pageClass) {
-        mWindow.registerPage(title, pageClass);
+    public void registerPage(Class<? extends UpdaterPage> pageClass,
+            UpdaterPage.Purpose purpose) {
+        mWindow.registerPage(pageClass, purpose);
     }
 
     /**

@@ -16,10 +16,12 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.SwtBaseDialog;
 
 import org.eclipse.jface.dialogs.IInputValidator;
@@ -86,10 +88,11 @@ public class AddonSitesDialog extends SwtBaseDialog {
         Shell shell = getShell();
         shell.setMinimumSize(new Point(450, 300));
         shell.setSize(450, 300);
+        setWindowImage(shell);
 
-        GridLayout gl_shell = new GridLayout();
-        gl_shell.numColumns = 2;
-        shell.setLayout(gl_shell);
+        GridLayout glShell = new GridLayout();
+        glShell.numColumns = 2;
+        shell.setLayout(glShell);
 
         mlabel = new Label(shell, SWT.NONE);
         mlabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
@@ -164,6 +167,25 @@ public class AddonSitesDialog extends SwtBaseDialog {
         mButtonClose.setText("Close");
 
         adjustColumnsWidth(mTable, mColumnUrl);
+    }
+
+    /**
+     * Creates the icon of the window shell.
+     *
+     * @param shell The shell on which to put the icon
+     */
+    private void setWindowImage(Shell shell) {
+        String imageName = "android_icon_16.png"; //$NON-NLS-1$
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            imageName = "android_icon_128.png"; //$NON-NLS-1$
+        }
+
+        if (mUpdaterData != null) {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            if (imgFactory != null) {
+                shell.setImage(imgFactory.getImageByName(imageName));
+            }
+        }
     }
 
     /**

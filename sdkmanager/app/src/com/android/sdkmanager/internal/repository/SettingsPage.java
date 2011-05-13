@@ -17,6 +17,7 @@
 package com.android.sdkmanager.internal.repository;
 
 import com.android.sdkuilib.internal.repository.ISettingsPage;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -34,7 +35,7 @@ import org.eclipse.swt.widgets.Text;
 import java.util.Properties;
 
 
-public class SettingsPage extends Composite implements ISettingsPage {
+public class SettingsPage extends UpdaterPage implements ISettingsPage {
 
     // data members
     private SettingsChangedCallback mSettingsChangedCallback;
@@ -66,10 +67,20 @@ public class SettingsPage extends Composite implements ISettingsPage {
      * Create the composite.
      * @param parent The parent of the composite.
      */
-    public SettingsPage(Composite parent) {
-        super(parent, SWT.BORDER);
+    public SettingsPage(Composite parent, int swtStyle) {
+        super(parent, swtStyle);
 
         createContents(this);
+        postCreate();  //$hide$
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "Settings";
+    }
+
+    private void createContents(Composite parent) {
+        parent.setLayout(new GridLayout(1, false));
 
         mProxySettingsGroup = new Group(this, SWT.NONE);
         mProxySettingsGroup.setText("Proxy Settings");
@@ -118,12 +129,6 @@ public class SettingsPage extends Composite implements ISettingsPage {
         mAskAdbRestartCheck.setToolTipText("When checked, the user will be asked for permission " +
                 "to restart ADB after updating an addon-on package or a tool package.");
         mAskAdbRestartCheck.addSelectionListener(mApplyOnSelected);
-
-        postCreate();  //$hide$
-    }
-
-    private void createContents(Composite parent) {
-        parent.setLayout(new GridLayout(1, false));
     }
 
     @Override
@@ -172,7 +177,8 @@ public class SettingsPage extends Composite implements ISettingsPage {
     }
 
     /**
-     * Callback invoked when user presses the "Save and Apply" button.
+     * Callback invoked when user touches one of the settings.
+     * There is no "Apply" button, settings are applied immediately as they are changed.
      * Notify the application that settings have changed.
      */
     private void applyNewSettings() {

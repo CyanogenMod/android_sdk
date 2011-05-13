@@ -70,11 +70,13 @@ public abstract class SwtBaseDialog extends Dialog {
      * Create the dialog.
      *
      * @param parent The parent's shell
-     * @param title The dialog title. Must not be null.
+     * @param title The dialog title. Can be null.
      */
     public SwtBaseDialog(Shell parent, int swtStyle, String title) {
         super(parent, swtStyle);
-        setText(title);
+        if (title != null) {
+            setText(title);
+        }
     }
 
     /**
@@ -110,7 +112,9 @@ public abstract class SwtBaseDialog extends Dialog {
         mShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE | SWT.APPLICATION_MODAL);
         mShell.setMinimumSize(new Point(450, 300));
         mShell.setSize(450, 300);
-        mShell.setText(getText());
+        if (getText() != null) {
+            mShell.setText(getText());
+        }
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 saveSize();

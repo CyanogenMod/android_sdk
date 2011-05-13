@@ -45,7 +45,7 @@ import java.io.File;
 /**
  * Page that displays all locally installed packages from the current SDK.
  */
-public class LocalPackagesPage extends Composite implements ISdkChangeListener {
+public class LocalPackagesPage extends UpdaterPage implements ISdkChangeListener {
 
     private final UpdaterData mUpdaterData;
 
@@ -68,8 +68,8 @@ public class LocalPackagesPage extends Composite implements ISdkChangeListener {
      * @param parent The parent of the composite.
      * @param updaterData An instance of {@link UpdaterData}.
      */
-    public LocalPackagesPage(Composite parent, UpdaterData updaterData) {
-        super(parent, SWT.BORDER);
+    public LocalPackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+        super(parent, swtStyle);
 
         mUpdaterData = updaterData;
 
