@@ -26,12 +26,15 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * jface-based dialog that properly sets up a {@link GridLayout} top composite with the proper
+ * JFace-based dialog that properly sets up a {@link GridLayout} top composite with the proper
  * margin.
- *
+ * <p/>
  * Implementing dialog must create the content of the dialog in
  * {@link #createDialogContent(Composite)}.
- *
+ * <p/>
+ * A JFace dialog is perfect if you want a typical "OK | cancel" workflow, with the OK and
+ * cancel things all handled for you using a predefined layout. If you want a different set
+ * of buttons or a different layout, consider {@link SwtBaseDialog} instead.
  */
 public abstract class GridDialog extends Dialog {
 

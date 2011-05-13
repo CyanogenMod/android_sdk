@@ -16,11 +16,11 @@
 
 package com.android.sdkuilib.internal.repository;
 
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdkuilib.ui.SwtBaseDialog;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -47,8 +47,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -57,22 +55,10 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import java.util.Arrays;
 
-public class AddonSitesDialog extends Dialog {
-
-    /**
-     * Min Y location for dialog. Need to deal with the menu bar on mac os.
-     */
-    private final static int MIN_Y = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN ?
-            20 : 0;
-
-
-    /** Last dialog size for this session. */
-    private static Point sLastSize;
+public class AddonSitesDialog extends SwtBaseDialog {
 
     private final UpdaterData mUpdaterData;
-    private boolean mChanged;
 
-    private Shell mShell;
     private Table mTable;
     private TableViewer mTableViewer;
     private Button mButtonNew;
@@ -88,45 +74,24 @@ public class AddonSitesDialog extends Dialog {
      * @param parent The parent's shell
      */
     public AddonSitesDialog(Shell parent, UpdaterData updaterData) {
-        super(parent, SWT.NONE);
+        super(parent, SWT.APPLICATION_MODAL, "Add-on Sites");
         mUpdaterData = updaterData;
-        setText("Add-on Sites");
-    }
-
-    /**
-     * Open the dialog.
-     *
-     * @return True if anything was changed.
-     */
-    public boolean open() {
-        createContents();
-        positionShell();
-        postCreate();
-        mShell.open();
-        mShell.layout();
-        Display display = getParent().getDisplay();
-        while (!mShell.isDisposed()) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
-            }
-        }
-
-        return mChanged;
     }
 
     /**
      * Create contents of the dialog.
      */
-    private void createContents() {
-        mShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE | SWT.APPLICATION_MODAL);
-        mShell.setMinimumSize(new Point(450, 300));
-        mShell.setSize(450, 300);
-        mShell.setText(getText());
+    @Override
+    protected void createContents() {
+        Shell shell = getShell();
+        shell.setMinimumSize(new Point(450, 300));
+        shell.setSize(450, 300);
+
         GridLayout gl_shell = new GridLayout();
         gl_shell.numColumns = 2;
-        mShell.setLayout(gl_shell);
+        shell.setLayout(gl_shell);
 
-        mlabel = new Label(mShell, SWT.NONE);
+        mlabel = new Label(shell, SWT.NONE);
         mlabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
         mlabel.setText(
             "This dialog lets you manage the URLs of external add-on sites to be used.\n" +
@@ -136,7 +101,7 @@ public class AddonSitesDialog extends Dialog {
             "Adding a URL here will not allow you to clone an official Android repository."
         );
 
-        mTableViewer = new TableViewer(mShell, SWT.BORDER | SWT.FULL_SELECTION);
+        mTableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION);
         mTableViewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 on_TableViewer_selectionChanged(event);
@@ -157,7 +122,7 @@ public class AddonSitesDialog extends Dialog {
         mColumnUrl.setWidth(100);
         mColumnUrl.setText("New Column");
 
-        mButtonNew = new Button(mShell, SWT.NONE);
+        mButtonNew = new Button(shell, SWT.NONE);
         mButtonNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -167,7 +132,7 @@ public class AddonSitesDialog extends Dialog {
         mButtonNew.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
         mButtonNew.setText("New...");
 
-        mButtonEdit = new Button(mShell, SWT.NONE);
+        mButtonEdit = new Button(shell, SWT.NONE);
         mButtonEdit.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -177,7 +142,7 @@ public class AddonSitesDialog extends Dialog {
         mButtonEdit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
         mButtonEdit.setText("Edit...");
 
-        mButtonDelete = new Button(mShell, SWT.NONE);
+        mButtonDelete = new Button(shell, SWT.NONE);
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -186,9 +151,9 @@ public class AddonSitesDialog extends Dialog {
         });
         mButtonDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
         mButtonDelete.setText("Delete...");
-        new Label(mShell, SWT.NONE);
+        new Label(shell, SWT.NONE);
 
-        mButtonClose = new Button(mShell, SWT.NONE);
+        mButtonClose = new Button(shell, SWT.NONE);
         mButtonClose.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -215,39 +180,6 @@ public class AddonSitesDialog extends Dialog {
         });
     }
 
-    /**
-     * Centers the dialog in its parent shell.
-     */
-    private void positionShell() {
-        // Centers the dialog in its parent shell
-        Shell child = mShell;
-        Shell parent = getParent();
-        if (child != null && parent != null) {
-
-            // get the parent client area with a location relative to the display
-            Rectangle parentArea = parent.getClientArea();
-            Point parentLoc = parent.getLocation();
-            int px = parentLoc.x;
-            int py = parentLoc.y;
-            int pw = parentArea.width;
-            int ph = parentArea.height;
-
-            // Reuse the last size if there's one, otherwise use the default
-            Point childSize = sLastSize != null ? sLastSize : child.getSize();
-            int cw = childSize.x;
-            int ch = childSize.y;
-
-            int x = px + (pw - cw) / 2;
-            if (x < 0) x = 0;
-
-            int y = py + (ph - ch) / 2;
-            if (y < MIN_Y) y = MIN_Y;
-
-            child.setLocation(x, y);
-            child.setSize(cw, ch);
-        }
-    }
-
     private void newOrEdit(final boolean isEdit) {
         SdkSources sources = mUpdaterData.getSources();
         final SdkSource[] knownSources = sources.getAllSources();
@@ -262,7 +194,12 @@ public class AddonSitesDialog extends Dialog {
             return;
         }
 
-        InputDialog dlg = new InputDialog(mShell, title, msg, initialValue, new IInputValidator() {
+        InputDialog dlg = new InputDialog(
+                getShell(),
+                title,
+                msg,
+                initialValue,
+                new IInputValidator() {
             public String isValid(String newText) {
 
                 newText = newText == null ? null : newText.trim();
@@ -318,7 +255,7 @@ public class AddonSitesDialog extends Dialog {
                 sources.add(
                         SdkSourceCategory.USER_ADDONS,
                         newSource);
-                mChanged = true;
+                setReturnValue(true);
                 loadList();
 
                 // select the new source
@@ -336,7 +273,7 @@ public class AddonSitesDialog extends Dialog {
             return;
         }
 
-        MessageBox mb = new MessageBox(mShell,
+        MessageBox mb = new MessageBox(getShell(),
                 SWT.YES | SWT.NO | SWT.ICON_QUESTION | SWT.APPLICATION_MODAL);
         mb.setText("Delete add-on site");
         mb.setMessage(String.format("Do you want to delete the URL %1$s?", selectedUrl));
@@ -345,7 +282,7 @@ public class AddonSitesDialog extends Dialog {
             for (SdkSource source : sources.getSources(SdkSourceCategory.USER_ADDONS)) {
                 if (selectedUrl.equals(source.getUrl())) {
                     sources.remove(source);
-                    mChanged = true;
+                    setReturnValue(true);
                     loadList();
                 }
             }
@@ -353,7 +290,7 @@ public class AddonSitesDialog extends Dialog {
     }
 
     private void on_ButtonClose_widgetSelected(SelectionEvent e) {
-        mShell.close();
+        close();
     }
 
     private void on_Table_mouseUp(MouseEvent e) {
@@ -370,7 +307,8 @@ public class AddonSitesDialog extends Dialog {
         mButtonEdit.setEnabled(!sel.isEmpty());
     }
 
-    private void postCreate() {
+    @Override
+    protected void postCreate() {
         // initialize the list
         mTableViewer.setLabelProvider(new LabelProvider());
         mTableViewer.setContentProvider(new SourcesContentProvider());
