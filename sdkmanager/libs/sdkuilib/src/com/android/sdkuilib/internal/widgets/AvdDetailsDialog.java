@@ -21,15 +21,12 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
+import com.android.sdkuilib.ui.SwtBaseDialog;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
@@ -40,55 +37,22 @@ import java.util.Set;
 /**
  * Dialog displaying the details of an AVD.
  */
-final class AvdDetailsDialog extends Dialog {
+final class AvdDetailsDialog extends SwtBaseDialog {
 
-    /** Last dialog size for this session. */
-    private static Point sLastSize;
-
-    private Shell mDialogShell;
     private final AvdInfo mAvdInfo;
-
     private Composite mRootComposite;
 
     public AvdDetailsDialog(Shell shell, AvdInfo avdInfo) {
-        super(shell, SWT.APPLICATION_MODAL);
+        super(shell, SWT.APPLICATION_MODAL, "AVD details");
         mAvdInfo = avdInfo;
-
-        setText("AVD details");
-    }
-
-    /**
-     * Open the dialog and blocks till it gets closed
-     */
-    public void open() {
-        createContents();
-        positionShell();            //$hide$ (hide from SWT designer)
-        mDialogShell.open();
-        mDialogShell.layout();
-
-        Display display = getParent().getDisplay();
-        while (!mDialogShell.isDisposed()) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
-            }
-        }
-
-        if (!mDialogShell.isDisposed()) {
-            sLastSize = mDialogShell.getSize();
-            mDialogShell.close();
-        }
     }
 
     /**
      * Create contents of the dialog.
      */
-    private void createContents() {
-        mDialogShell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
-        mDialogShell.setLayout(new GridLayout(1, false));
-        mDialogShell.setSize(450, 300);
-        mDialogShell.setText(getText());
-
-        mRootComposite = new Composite(mDialogShell, SWT.NONE);
+    @Override
+    protected void createContents() {
+        mRootComposite = new Composite(getShell(), SWT.NONE);
         mRootComposite.setLayout(new GridLayout(2, false));
         mRootComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
@@ -169,6 +133,12 @@ final class AvdDetailsDialog extends Dialog {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+
+    @Override
+    protected void postCreate() {
+        // pass
+    }
+
     /**
      * Displays a value with a label.
      *
@@ -185,33 +155,6 @@ final class AvdDetailsDialog extends Dialog {
         l = new Label(parent, SWT.NONE);
         l.setText(value);
         l.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
-    }
-
-    /**
-     * Centers the dialog in its parent shell.
-     */
-    private void positionShell() {
-        // Centers the dialog in its parent shell
-        Shell child = mDialogShell;
-        Shell parent = getParent();
-        if (child != null && parent != null) {
-
-            // get the parent client area with a location relative to the display
-            Rectangle parentArea = parent.getClientArea();
-            Point parentLoc = parent.getLocation();
-            int px = parentLoc.x;
-            int py = parentLoc.y;
-            int pw = parentArea.width;
-            int ph = parentArea.height;
-
-            // Reuse the last size if there's one, otherwise use the default
-            Point childSize = sLastSize != null ? sLastSize : child.getSize();
-            int cw = childSize.x;
-            int ch = childSize.y;
-
-            child.setLocation(px + (pw - cw) / 2, py + (ph - ch) / 2);
-            child.setSize(cw, ch);
-        }
     }
 
     // End of hiding from SWT Designer
