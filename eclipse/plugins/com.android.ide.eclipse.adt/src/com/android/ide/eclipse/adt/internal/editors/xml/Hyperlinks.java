@@ -18,7 +18,9 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
+import static com.android.ide.common.layout.LayoutConstants.FRAGMENT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VIEW;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
@@ -321,20 +323,25 @@ public class Hyperlinks {
         return false;
     }
 
-    /** Returns true if this represents a {@code <view class="foo.bar.Baz">} class attribute */
+    /** Returns true if this represents a style attribute */
     private static boolean isStyleAttribute(XmlContext context) {
         String tag = context.getElement().getTagName();
         return STYLE_ELEMENT.equals(tag);
     }
 
-    /** Returns true if this represents a {@code <view class="foo.bar.Baz">} class attribute */
+    /**
+     * Returns true if this represents a {@code <view class="foo.bar.Baz">} class
+     * attribute, or a {@code <fragment android:name="foo.bar.Baz">} class attribute
+     */
     private static boolean isClassAttribute(XmlContext context) {
         Attr attribute = context.getAttribute();
         if (attribute == null) {
             return false;
         }
         String tag = context.getElement().getTagName();
-        return ATTR_CLASS.equals(attribute.getLocalName()) && VIEW.equals(tag);
+        String attributeName = attribute.getLocalName();
+        return ATTR_CLASS.equals(attributeName) && (VIEW.equals(tag) || FRAGMENT.equals(tag))
+                || ATTR_NAME.equals(attributeName) && FRAGMENT.equals(tag);
     }
 
     /** Returns true if this represents an onClick attribute specifying a method handler */
