@@ -67,6 +67,7 @@ diff
 diffs
 dir
 dirs
+discoverable
 ditto
 docs
 dpi

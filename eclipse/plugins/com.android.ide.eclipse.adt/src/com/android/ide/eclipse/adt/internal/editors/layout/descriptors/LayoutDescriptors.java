@@ -63,6 +63,15 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     public static final String REQUEST_FOCUS = "requestFocus";//$NON-NLS-1$
 
     /**
+     * The XML name of the special {@code <view>} layout tag. This is used to add generic
+     * views with a class attribute to specify the view.
+     * <p>
+     * TODO: We should add a synthetic descriptor for this, similar to our descriptors for
+     * include, merge and requestFocus.
+     */
+    public static final String VIEW_VIEWTAG = "view";           //$NON-NLS-1$
+
+    /**
      * The attribute name of the include tag's url naming the resource to be inserted
      * <p>
      * <b>NOTE</b>: The layout attribute is NOT in the Android namespace!
@@ -353,7 +362,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     }
 
     /**
-     * Creates and return a new {@code <merge>} descriptor.
+     * Creates and returns a new {@code <merge>} descriptor.
      * @param knownLayouts  A list of all known layout view descriptors, used to find the
      *   FrameLayout descriptor and extract its layout attributes.
      */
@@ -379,9 +388,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     }
 
     /**
-     * Creates and return a new {@code <requestFocus>} descriptor.
-     * @param knownLayouts  A list of all known layout view descriptors, used to find the
-     *   FrameLayout descriptor and extract its layout attributes.
+     * Creates and returns a new {@code <requestFocus>} descriptor.
      */
     private ViewElementDescriptor createRequestFocus() {
         String xml_name = REQUEST_FOCUS;

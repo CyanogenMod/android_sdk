@@ -24,7 +24,7 @@ import com.android.ide.common.api.IViewRule;
  * apply.
  * <p/>
  * There is no customization here, everything that is common to all views is
- * simply implemented in BaseView.
+ * simply implemented in BaseViewRule.
  */
 public class ViewRule extends BaseViewRule {
 

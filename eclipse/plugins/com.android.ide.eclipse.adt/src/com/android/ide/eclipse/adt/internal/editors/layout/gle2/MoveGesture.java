@@ -674,7 +674,7 @@ public class MoveGesture extends DropGesture {
         // Update outline to show the target node there
         OutlinePage outline = mCanvas.getOutlinePage();
         TreeSelection newSelection = TreeSelection.EMPTY;
-        if (mCurrentView != null) {
+        if (mCurrentView != null && mTargetNode != null) {
             // Find the view corresponding to the target node. The current view can be a leaf
             // view whereas the target node is always a parent layout.
             if (mCurrentView.getUiViewNode() != mTargetNode.getNode()) {
