@@ -199,7 +199,8 @@ public final class AndroidTargetParser {
             }
 
             LayoutDescriptors layoutDescriptors = new LayoutDescriptors();
-            layoutDescriptors.updateDescriptors(layoutViewsInfo, layoutGroupsInfo);
+            layoutDescriptors.updateDescriptors(layoutViewsInfo, layoutGroupsInfo,
+                    attrsXmlParser.getDeclareStyleableList(), mAndroidTarget);
             progress.worked(1);
 
             if (progress.isCanceled()) {

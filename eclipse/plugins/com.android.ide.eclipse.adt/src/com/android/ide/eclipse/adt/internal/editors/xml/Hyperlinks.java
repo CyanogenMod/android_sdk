@@ -20,7 +20,6 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ON_CLICK;
-import static com.android.ide.common.layout.LayoutConstants.FRAGMENT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VIEW;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
@@ -29,6 +28,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_BASE;
 import static com.android.ide.eclipse.adt.AdtConstants.FN_RESOURCE_CLASS;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ROOT_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
@@ -340,8 +340,8 @@ public class Hyperlinks {
         }
         String tag = context.getElement().getTagName();
         String attributeName = attribute.getLocalName();
-        return ATTR_CLASS.equals(attributeName) && (VIEW.equals(tag) || FRAGMENT.equals(tag))
-                || ATTR_NAME.equals(attributeName) && FRAGMENT.equals(tag);
+        return ATTR_CLASS.equals(attributeName) && (VIEW.equals(tag) || VIEW_FRAGMENT.equals(tag))
+                || ATTR_NAME.equals(attributeName) && VIEW_FRAGMENT.equals(tag);
     }
 
     /** Returns true if this represents an onClick attribute specifying a method handler */

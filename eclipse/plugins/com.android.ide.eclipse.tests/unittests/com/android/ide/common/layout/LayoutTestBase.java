@@ -253,6 +253,11 @@ public class LayoutTestBase extends TestCase {
         public void select(Collection<INode> nodes) {
             fail("Not supported in tests yet");
         }
+
+        public String displayFragmentSourceInput() {
+            fail("Not supported in tests yet");
+            return null;
+        }
     }
 
     public void testDummy() {

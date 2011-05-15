@@ -32,12 +32,10 @@ public class LayoutConstants {
     /** The element name in a {@code <view class="...">} element. */
     public static final String VIEW = "view";                           //$NON-NLS-1$
 
-    /** The element name in a <code>&lt;fragment android:name="..."&gt;</code> element. */
-    public static final String FRAGMENT = "fragment";                   //$NON-NLS-1$
-
     /** The attribute name in a {@code <view class="...">} element. */
     public static final String ATTR_CLASS = "class";                    //$NON-NLS-1$
     public static final String ATTR_ON_CLICK = "onClick";               //$NON-NLS-1$
+    public static final String ATTR_TAG = "tag";                        //$NON-NLS-1$
 
     // Some common layout element names
     public static final String RELATIVE_LAYOUT = "RelativeLayout";      //$NON-NLS-1$
