@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
+import static com.android.sdklib.SdkConstants.CLASS_FRAGMENT;
+import static com.android.sdklib.SdkConstants.CLASS_V4_FRAGMENT;
 
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IClientRulesEngine;
@@ -41,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -54,12 +57,32 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.project.ProjectProperties;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.ui.IJavaElementSearchConstants;
+import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jdt.ui.dialogs.ITypeInfoFilterExtension;
+import org.eclipse.jdt.ui.dialogs.ITypeInfoRequestor;
+import org.eclipse.jdt.ui.dialogs.TypeSelectionExtension;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.dialogs.SelectionDialog;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -764,7 +787,6 @@ public class RulesEngine {
      * with a few methods they can use to use functionality from this {@link RulesEngine}.
      */
     private class ClientRulesEngineImpl implements IClientRulesEngine {
-
         private final String mFqcn;
 
         public ClientRulesEngineImpl(String fqcn) {
@@ -959,6 +981,105 @@ public class RulesEngine {
                     selectionManager.select(nodes);
                 }
             });
+        }
+
+        public String displayFragmentSourceInput() {
+            try {
+                // Compute a search scope: We need to merge all the subclasses
+                // android.app.Fragment and android.support.v4.app.Fragment
+                IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
+                IJavaProject javaProject = BaseProjectHelper.getJavaProject(mProject);
+                if (javaProject != null) {
+                    IType oldFragmentType = javaProject.findType(CLASS_V4_FRAGMENT);
+
+                    // First check to make sure fragments are available, and if not,
+                    // warn the user.
+                    IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
+                    if (target.getVersion().getApiLevel() < 11 && oldFragmentType == null) {
+                        // Compatibility library must be present
+                        Status status = new Status(IStatus.WARNING, AdtPlugin.PLUGIN_ID, 0,
+                            "Fragments require API level 11 or higher, or a compatibility "
+                                    + "library for older versions.\n\n"
+                                    + "Please install the \"Android Compatibility Package\" from "
+                                    + "the SDK manager and add its .jar file "
+                                    + "(extras/android/compatibility/v4/android-support-v4.jar) "
+                                    + "to the project's "
+                                    + " Java Build Path.", null);
+                        ErrorDialog.openError(Display.getCurrent().getActiveShell(),
+                                "Fragment Warning", null, status);
+
+                        // TODO: Offer to automatically perform configuration for the user;
+                        // either upgrade project to require API 11, or first install the
+                        // compatibility library via the SDK manager and then adding
+                        // ${SDK_HOME}/extras/android/compatibility/v4/android-support-v4.jar
+                        // to the project jar dependencies.
+                        return null;
+                    }
+
+                    // Look up sub-types of each (new fragment class and compatibility fragment
+                    // class, if any) and merge the two arrays - then create a scope from these
+                    // elements.
+                    IType[] fragmentTypes = new IType[0];
+                    IType[] oldFragmentTypes = new IType[0];
+                    if (oldFragmentType != null) {
+                        ITypeHierarchy hierarchy =
+                            oldFragmentType.newTypeHierarchy(new NullProgressMonitor());
+                        oldFragmentTypes = hierarchy.getAllSubtypes(oldFragmentType);
+                    }
+                    IType fragmentType = javaProject.findType(CLASS_FRAGMENT);
+                    if (fragmentType != null) {
+                        ITypeHierarchy hierarchy =
+                            fragmentType.newTypeHierarchy(new NullProgressMonitor());
+                        fragmentTypes = hierarchy.getAllSubtypes(fragmentType);
+                    }
+                    IType[] subTypes = new IType[fragmentTypes.length + oldFragmentTypes.length];
+                    System.arraycopy(fragmentTypes, 0, subTypes, 0, fragmentTypes.length);
+                    System.arraycopy(oldFragmentTypes, 0, subTypes, fragmentTypes.length,
+                            oldFragmentTypes.length);
+                    scope = SearchEngine.createJavaSearchScope(subTypes, IJavaSearchScope.SOURCES);
+                }
+
+                Shell parent = AdtPlugin.getDisplay().getActiveShell();
+                SelectionDialog dialog = JavaUI.createTypeDialog(
+                        parent,
+                        new ProgressMonitorDialog(parent),
+                        scope,
+                        IJavaElementSearchConstants.CONSIDER_CLASSES, false,
+                        // Use ? as a default filter to fill dialog with matches
+                        "?", //$NON-NLS-1$
+                        new TypeSelectionExtension() {
+                            @Override
+                            public ITypeInfoFilterExtension getFilterExtension() {
+                                return new ITypeInfoFilterExtension() {
+                                    public boolean select(ITypeInfoRequestor typeInfoRequestor) {
+                                        int modifiers = typeInfoRequestor.getModifiers();
+                                        if (!Flags.isPublic(modifiers)
+                                                || Flags.isInterface(modifiers)
+                                                || Flags.isEnum(modifiers)) {
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+                                };
+                            }
+                        });
+
+                dialog.setTitle("Choose Fragment Class");
+                dialog.setMessage("Select a Fragment class (? = any character, * = any string):");
+                if (dialog.open() == IDialogConstants.CANCEL_ID) {
+                    return null;
+                }
+
+                Object[] types = dialog.getResult();
+                if (types != null && types.length > 0) {
+                    return ((IType) types[0]).getFullyQualifiedName();
+                }
+            } catch (JavaModelException e) {
+                AdtPlugin.log(e, null);
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+            }
+            return null;
         }
     }
 }

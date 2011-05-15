@@ -134,7 +134,7 @@ public final class SdkConstants {
 
     /** emulator executable (_WITHOUT_ extension for the current OS) */
     public final static String FN_EMULATOR =
-            "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
+            "emulator"; //$NON-NLS-1$
 
     /** emulator executable extension for the current OS */
     public final static String FN_EMULATOR_EXTENSION = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
@@ -384,9 +384,12 @@ public final class SdkConstants {
         "android.preference." + CLASS_NAME_PREFERENCE_SCREEN; //$NON-NLS-1$
     public final static String CLASS_PREFERENCEGROUP = "android.preference.PreferenceGroup"; //$NON-NLS-1$
     public final static String CLASS_PARCELABLE = "android.os.Parcelable"; //$NON-NLS-1$
+    public static final String CLASS_FRAGMENT = "android.app.Fragment"; //$NON-NLS-1$
+    public static final String CLASS_V4_FRAGMENT = "android.support.v4.app.Fragment"; //$NON-NLS-1$
     /** MockView is part of the layoutlib bridge and used to display classes that have
      * no rendering in the graphical layout editor. */
     public final static String CLASS_MOCK_VIEW = "com.android.layoutlib.bridge.MockView"; //$NON-NLS-1$
+
 
 
     /** Returns the appropriate name for the 'android' command, which is 'android.bat' for

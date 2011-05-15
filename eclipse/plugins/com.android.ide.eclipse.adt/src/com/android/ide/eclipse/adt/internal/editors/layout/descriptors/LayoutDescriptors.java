@@ -16,8 +16,14 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_TAG;
+
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
+import com.android.ide.common.resources.platform.DeclareStyleableInfo;
 import com.android.ide.common.resources.platform.ViewClassInfo;
 import com.android.ide.common.resources.platform.ViewClassInfo.LayoutParamsInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -26,6 +32,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescript
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.ClassAttributeDescriptor;
+import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
 import java.util.ArrayList;
@@ -54,6 +62,13 @@ public final class LayoutDescriptors implements IDescriptorProvider {
      * returned by {@link #getViewDescriptors()}.
      */
     public static final String VIEW_MERGE = "merge";          //$NON-NLS-1$
+
+    /**
+     * The XML name of the special {@code <fragment>} layout tag.
+     * A synthetic element with that name is created as part of the view descriptors list
+     * returned by {@link #getViewDescriptors()}.
+     */
+    public static final String VIEW_FRAGMENT = "fragment";    //$NON-NLS-1$
 
     /**
      * The XML name of the special {@code <view>} layout tag. This is used to add generic
@@ -144,8 +159,11 @@ public final class LayoutDescriptors implements IDescriptorProvider {
      *
      * @param views The list of views in the framework.
      * @param layouts The list of layouts in the framework.
+     * @param styleMap A map from style names to style information provided by the SDK
+     * @param target The android target being initialized
      */
-    public synchronized void updateDescriptors(ViewClassInfo[] views, ViewClassInfo[] layouts) {
+    public synchronized void updateDescriptors(ViewClassInfo[] views, ViewClassInfo[] layouts,
+            Map<String, DeclareStyleableInfo> styleMap, IAndroidTarget target) {
 
         // This map links every ViewClassInfo to the ElementDescriptor we created.
         // It is filled by convertView() and used later to fix the super-class hierarchy.
@@ -172,6 +190,15 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             }
         }
 
+        // Find View and inherit all its layout attributes
+        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
+                SdkConstants.CLASS_FRAMELAYOUT, newLayouts);
+
+        if (target.getVersion().getApiLevel() >= 4) {
+            ViewElementDescriptor fragmentTag = createFragment(viewLayoutAttribs, styleMap);
+            newViews.add(fragmentTag);
+        }
+
         List<ElementDescriptor> newDescriptors = new ArrayList<ElementDescriptor>();
         newDescriptors.addAll(newLayouts);
         newDescriptors.addAll(newViews);
@@ -185,7 +212,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
 
         // The <merge> tag can only be a root tag, so it is added at the end.
         // It gets everything else as children but it is not made a child itself.
-        ViewElementDescriptor mergeTag = createMerge(newLayouts);
+        ViewElementDescriptor mergeTag = createMerge(viewLayoutAttribs);
         mergeTag.setChildren(newDescriptors);  // mergeTag makes a copy of the list
         newDescriptors.add(mergeTag);
         newLayouts.add(mergeTag);
@@ -352,15 +379,10 @@ public final class LayoutDescriptors implements IDescriptorProvider {
 
     /**
      * Creates and returns a new {@code <merge>} descriptor.
-     * @param knownLayouts  A list of all known layout view descriptors, used to find the
-     *   FrameLayout descriptor and extract its layout attributes.
+     * @param viewLayoutAttribs The layout attributes to use for the new descriptor
      */
-    private ViewElementDescriptor createMerge(List<ViewElementDescriptor> knownLayouts) {
+    private ViewElementDescriptor createMerge(AttributeDescriptor[] viewLayoutAttribs) {
         String xml_name = VIEW_MERGE;
-
-        // Find View and inherit all its layout attributes
-        AttributeDescriptor[] viewLayoutAttribs = findViewLayoutAttributes(
-                SdkConstants.CLASS_FRAMELAYOUT, knownLayouts);
 
         // Create the include descriptor
         ViewElementDescriptor desc = new ViewElementDescriptor(xml_name,  // xml_name
@@ -374,6 +396,82 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 false  /* mandatory */);
 
         return desc;
+    }
+
+    /**
+     * Creates and returns a new {@code <fragment>} descriptor.
+     * @param viewLayoutAttribs The layout attributes to use for the new descriptor
+     * @param styleMap The style map provided by the SDK
+     */
+    private ViewElementDescriptor createFragment(AttributeDescriptor[] viewLayoutAttribs,
+            Map<String, DeclareStyleableInfo> styleMap) {
+        String xml_name = VIEW_FRAGMENT;
+        final ViewElementDescriptor descriptor;
+
+        // First try to create the descriptor from metadata in attrs.xml:
+        DeclareStyleableInfo style = styleMap.get("Fragment"); //$NON-NLS-1$
+        String fragmentTooltip =
+            "A Fragment is a piece of an application's user interface or behavior that "
+            + "can be placed in an Activity";
+        String sdkUrl = "http://developer.android.com/guide/topics/fundamentals/fragments.html";
+        ClassAttributeDescriptor classAttribute = new ClassAttributeDescriptor(
+                // Should accept both CLASS_V4_FRAGMENT and CLASS_FRAGMENT
+                null /*superClassName*/,
+                ATTR_CLASS, ATTR_CLASS, null /* namespace */,
+                "Supply the name of the fragment class to instantiate",
+                new AttributeInfo(ATTR_CLASS, new Format[] { Format.STRING}),
+                true /*mandatory*/);
+
+        if (style != null) {
+            descriptor = new ViewElementDescriptor(
+                    VIEW_FRAGMENT, VIEW_FRAGMENT, VIEW_FRAGMENT,
+                    fragmentTooltip,  // tooltip
+                    sdkUrl, //,
+                    null /* attributes */,
+                    viewLayoutAttribs, // layout attributes
+                    null /*childrenElements*/,
+                    false /*mandatory*/);
+            ArrayList<AttributeDescriptor> descs = new ArrayList<AttributeDescriptor>();
+            // The class attribute is not included in the attrs.xml
+            descs.add(classAttribute);
+            DescriptorsUtils.appendAttributes(descs,
+                    null,   // elementName
+                    SdkConstants.NS_RESOURCES,
+                    style.getAttributes(),
+                    null,   // requiredAttributes
+                    null);  // overrides
+            //descriptor.setTooltip(style.getJavaDoc());
+            descriptor.setAttributes(descs.toArray(new AttributeDescriptor[descs.size()]));
+        } else {
+            // The above will only work on API 11 and up. However, fragments are *also* available
+            // on older platforms, via the fragment support library, so add in a manual
+            // entry if necessary.
+            descriptor = new ViewElementDescriptor(xml_name,  // xml_name
+                xml_name, // ui_name
+                xml_name, // "class name"; the GLE only treats this as an element tag
+                fragmentTooltip,
+                sdkUrl,
+                new AttributeDescriptor[] {
+                    new ClassAttributeDescriptor(
+                            null /*superClassName*/,
+                            ATTR_NAME, ATTR_NAME, ANDROID_URI,
+                            "Supply the name of the fragment class to instantiate",
+                            new AttributeInfo(ATTR_NAME, new Format[] { Format.STRING}),
+                            true /*mandatory*/),
+                    classAttribute,
+                    new ClassAttributeDescriptor(
+                            null /*superClassName*/,
+                            ATTR_TAG, ATTR_TAG, ANDROID_URI,
+                            "Supply a tag for the top-level view containing a String",
+                            new AttributeInfo(ATTR_TAG, new Format[] { Format.STRING}),
+                            true /*mandatory*/),
+                }, // attributes
+                viewLayoutAttribs,  // layout attributes
+                null,  // children
+                false  /* mandatory */);
+        }
+
+        return descriptor;
     }
 
     /**
