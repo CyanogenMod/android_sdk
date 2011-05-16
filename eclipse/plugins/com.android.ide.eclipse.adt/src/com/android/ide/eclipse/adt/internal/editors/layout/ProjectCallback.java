@@ -178,7 +178,13 @@ public final class ProjectCallback extends LegacyCallback {
             // Set the text of the mock view to the simplified name of the custom class
             Method m = view.getClass().getMethod("setText",
                                                  new Class<?>[] { CharSequence.class });
-            m.invoke(view, getShortClassName(className));
+            String label = getShortClassName(className);
+            if (label.equals(VIEW_FRAGMENT)) {
+                label = "<fragment>\n"
+                        + "Pick preview layout from the \"Fragment Layout\" context menu";
+            }
+
+            m.invoke(view, label);
 
             // Call MockView.setGravity(Gravity.CENTER) to get the text centered in
             // MockViews.

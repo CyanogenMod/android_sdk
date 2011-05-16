@@ -448,9 +448,9 @@ public class CanvasViewInfo implements IPropertySource {
     }
 
     /**
-     * Returns the layout url attribute value for the closest surrounding include element
-     * parent, or null if this {@link CanvasViewInfo} is not rendered as part of an
-     * include tag.
+     * Returns the layout url attribute value for the closest surrounding include or
+     * fragment element parent, or null if this {@link CanvasViewInfo} is not rendered as
+     * part of an include or fragment tag.
      *
      * @return the layout url attribute value for the surrounding include tag, or null if
      *         not applicable
@@ -460,14 +460,21 @@ public class CanvasViewInfo implements IPropertySource {
         while (curr != null) {
             if (curr.mUiViewNode != null) {
                 Node node = curr.mUiViewNode.getXmlNode();
-                if (node != null && node.getNamespaceURI() == null
-                        && node.getNodeType() == Node.ELEMENT_NODE
-                        && LayoutDescriptors.VIEW_INCLUDE.equals(node.getNodeName())) {
-                    // Note: the layout attribute is NOT in the Android namespace
-                    Element element = (Element) node;
-                    String url = element.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
-                    if (url.length() > 0) {
-                        return url;
+                if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
+                    String nodeName = node.getNodeName();
+                    if (node.getNamespaceURI() == null
+                            && LayoutDescriptors.VIEW_INCLUDE.equals(nodeName)) {
+                        // Note: the layout attribute is NOT in the Android namespace
+                        Element element = (Element) node;
+                        String url = element.getAttribute(LayoutDescriptors.ATTR_LAYOUT);
+                        if (url.length() > 0) {
+                            return url;
+                        }
+                    } else if (LayoutDescriptors.VIEW_FRAGMENT.equals(nodeName)) {
+                        String url = FragmentMenu.getFragmentLayout(node);
+                        if (url != null) {
+                            return url;
+                        }
                     }
                 }
             }
