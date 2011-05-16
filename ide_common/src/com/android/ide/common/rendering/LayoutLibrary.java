@@ -16,7 +16,7 @@
 
 package com.android.ide.common.rendering;
 
-import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
+import static com.android.ide.common.rendering.api.Result.Status.ERROR_REFLECTION;
 
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.rendering.api.Bridge;
@@ -48,11 +48,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -90,6 +92,16 @@ public class LayoutLibrary {
     private final String mLoadMessage;
     /** classloader used to load the jar file */
     private final ClassLoader mClassLoader;
+
+    // Reflection data for older Layout Libraries.
+    private Method mViewGetParentMethod;
+    private Method mViewGetBaselineMethod;
+    private Method mViewParentIndexOfChildMethod;
+    private Class<?> mMarginLayoutParamClass;
+    private Field mLeftMarginField;
+    private Field mTopMarginField;
+    private Field mRightMarginField;
+    private Field mBottomMarginField;
 
     /**
      * Returns the {@link LoadStatus} of the loading of the layoutlib jar file.
@@ -282,7 +294,18 @@ public class LayoutLibrary {
      */
     public RenderSession createSession(SessionParams params) {
         if (mBridge != null) {
-            return mBridge.createSession(params);
+            RenderSession session = mBridge.createSession(params);
+            if (params.getExtendedViewInfoMode() &&
+                    mBridge.getCapabilities().contains(Capability.EXTENDED_VIEWINFO) == false) {
+                // Extended view info was requested but the layoutlib does not support it.
+                // Add it manually.
+                List<ViewInfo> infoList = session.getRootViews();
+                for (ViewInfo info : infoList) {
+                    addExtendedViewInfo(info);
+                }
+            }
+
+            return session;
         } else if (mLegacyBridge != null) {
             return createLegacySession(params);
         }
@@ -333,10 +356,13 @@ public class LayoutLibrary {
      */
     public Result getViewParent(Object viewObject) {
         if (mBridge != null) {
-            return mBridge.getViewParent(viewObject);
+            Result r = mBridge.getViewParent(viewObject);
+            if (r.isSuccess()) {
+                return r;
+            }
         }
 
-        return NOT_IMPLEMENTED.createResult();
+        return getViewParentWithReflection(viewObject);
     }
 
     /**
@@ -348,29 +374,14 @@ public class LayoutLibrary {
      */
     public Result getViewIndex(Object viewObject) {
         if (mBridge != null) {
-            return mBridge.getViewIndex(viewObject);
+            Result r = mBridge.getViewIndex(viewObject);
+            if (r.isSuccess()) {
+                return r;
+            }
         }
 
-        return NOT_IMPLEMENTED.createResult();
+        return getViewIndexReflection(viewObject);
     }
-
-    /**
-     * Utility method returning the baseline value for a given view object. This basically returns
-     * View.getBaseline().
-     *
-     * @param viewObject the object for which to return the index.
-     *
-     * @return the baseline value or -1 if not applicable to the view object or if this layout
-     *     library does not implement this method.
-     */
-    public int getViewBaseline(Object viewObject) {
-        if (mBridge != null) {
-            return mBridge.getViewBaseline(viewObject);
-        }
-
-        return -1;
-    }
-
 
     // ------ Implementation
 
@@ -438,7 +449,6 @@ public class LayoutLibrary {
                 log.error(null, message, null /*data*/);
             }
         };
-
 
 
         // convert the map of ResourceValue into IResourceValue. Super ugly but works.
@@ -583,5 +593,130 @@ public class LayoutLibrary {
         } catch (Exception e) {
             // do nothing.
         }
+    }
+
+    private Result getViewParentWithReflection(Object viewObject) {
+        // default implementation using reflection.
+        try {
+            if (mViewGetParentMethod == null) {
+                Class<?> viewClass = Class.forName("android.view.View");
+                mViewGetParentMethod = viewClass.getMethod("getParent");
+            }
+
+            return Status.SUCCESS.createResult(mViewGetParentMethod.invoke(viewObject));
+        } catch (Exception e) {
+            // Catch all for the reflection calls.
+            return ERROR_REFLECTION.createResult(null, e);
+        }
+    }
+
+    /**
+     * Utility method returning the index of a given view in its parent.
+     * @param viewObject the object for which to return the index.
+     *
+     * @return a {@link Result} indicating the status of the action, and if success, the index in
+     *      the parent in {@link Result#getData()}
+     */
+    private Result getViewIndexReflection(Object viewObject) {
+        // default implementation using reflection.
+        try {
+            Class<?> viewClass = Class.forName("android.view.View");
+
+            if (mViewGetParentMethod == null) {
+                mViewGetParentMethod = viewClass.getMethod("getParent");
+            }
+
+            Object parentObject = mViewGetParentMethod.invoke(viewObject);
+
+            if (mViewParentIndexOfChildMethod == null) {
+                Class<?> viewParentClass = Class.forName("android.view.ViewParent");
+                mViewParentIndexOfChildMethod = viewParentClass.getMethod("indexOfChild",
+                        viewClass);
+            }
+
+            return Status.SUCCESS.createResult(
+                    mViewParentIndexOfChildMethod.invoke(parentObject, viewObject));
+        } catch (Exception e) {
+            // Catch all for the reflection calls.
+            return ERROR_REFLECTION.createResult(null, e);
+        }
+    }
+
+    private void addExtendedViewInfo(ViewInfo info) {
+        computeExtendedViewInfo(info);
+
+        List<ViewInfo> children = info.getChildren();
+        for (ViewInfo child : children) {
+            addExtendedViewInfo(child);
+        }
+    }
+
+    private void computeExtendedViewInfo(ViewInfo info) {
+        Object viewObject = info.getViewObject();
+        Object params = info.getLayoutParamsObject();
+
+        int baseLine = getViewBaselineReflection(viewObject);
+        int leftMargin = 0;
+        int topMargin = 0;
+        int rightMargin = 0;
+        int bottomMargin = 0;
+
+        try {
+            if (mMarginLayoutParamClass == null) {
+                mMarginLayoutParamClass = Class.forName(
+                        "android.view.ViewGroup$MarginLayoutParams");
+
+                mLeftMarginField = mMarginLayoutParamClass.getField("leftMargin");
+                mTopMarginField = mMarginLayoutParamClass.getField("topMargin");
+                mRightMarginField = mMarginLayoutParamClass.getField("rightMargin");
+                mBottomMarginField = mMarginLayoutParamClass.getField("bottomMargin");
+            }
+
+            if (mMarginLayoutParamClass.isAssignableFrom(params.getClass())) {
+
+                leftMargin = (Integer)mLeftMarginField.get(params);
+                topMargin = (Integer)mTopMarginField.get(params);
+                rightMargin = (Integer)mRightMarginField.get(params);
+                bottomMargin = (Integer)mBottomMarginField.get(params);
+            }
+
+        } catch (Exception e) {
+            // just use 'unknown' value.
+            leftMargin = Integer.MIN_VALUE;
+            topMargin = Integer.MIN_VALUE;
+            rightMargin = Integer.MIN_VALUE;
+            bottomMargin = Integer.MIN_VALUE;
+        }
+
+        info.setExtendedInfo(baseLine, leftMargin, topMargin, rightMargin, bottomMargin);
+    }
+
+    /**
+     * Utility method returning the baseline value for a given view object. This basically returns
+     * View.getBaseline().
+     *
+     * @param viewObject the object for which to return the index.
+     *
+     * @return the baseline value or -1 if not applicable to the view object or if this layout
+     *     library does not implement this method.
+     */
+    private int getViewBaselineReflection(Object viewObject) {
+        // default implementation using reflection.
+        try {
+            if (mViewGetBaselineMethod == null) {
+                Class<?> viewClass = Class.forName("android.view.View");
+                mViewGetBaselineMethod = viewClass.getMethod("getBaseline");
+            }
+
+            Object result = mViewGetBaselineMethod.invoke(viewObject);
+            if (result instanceof Integer) {
+                return ((Integer)result).intValue();
+            }
+
+        } catch (Exception e) {
+            // Catch all for the reflection calls.
+        }
+
+        return Integer.MIN_VALUE;
     }
 }

@@ -54,6 +54,7 @@ public class SessionParams extends RenderParams {
     private final RenderingMode mRenderingMode;
     private boolean mLayoutOnly = false;
     private Map<ResourceReference, AdapterBinding> mAdapterBindingMap;
+    private boolean mExtendedViewInfoMode = false;
 
     /**
      *
@@ -107,6 +108,7 @@ public class SessionParams extends RenderParams {
             mAdapterBindingMap = new HashMap<ResourceReference, AdapterBinding>(
                     params.mAdapterBindingMap);
         }
+        mExtendedViewInfoMode = params.mExtendedViewInfoMode;
     }
 
     public ILayoutPullParser getLayoutDescription() {
@@ -139,5 +141,13 @@ public class SessionParams extends RenderParams {
         }
 
         return Collections.unmodifiableMap(mAdapterBindingMap);
+    }
+
+    public void setExtendedViewInfoMode(boolean mode) {
+        mExtendedViewInfoMode = mode;
+    }
+
+    public boolean getExtendedViewInfoMode() {
+        return mExtendedViewInfoMode;
     }
 }
