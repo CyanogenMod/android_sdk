@@ -314,6 +314,26 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
         return mChildren.length > 0;
     }
 
+    /**
+     * Checks whether this descriptor can accept the given descriptor type
+     * as a direct child.
+     *
+     * @return True if this descriptor can accept children of the given descriptor type.
+     *   False if not accepted, no children allowed, or target is null.
+     */
+    public boolean acceptChild(ElementDescriptor target) {
+        if (target != null && mChildren.length > 0) {
+            String targetXmlName = target.getXmlName();
+            for (ElementDescriptor child : mChildren) {
+                if (child.getXmlName().equals(targetXmlName)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /** Sets the list of allowed children. */
     public void setChildren(ElementDescriptor[] newChildren) {
         mChildren = newChildren;
