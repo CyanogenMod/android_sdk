@@ -42,7 +42,7 @@ public enum Capability {
      * {@link RenderSession#setProperty(Object, String, String)}<br>
      * The method that receives an animation listener can only use it if the
      * ANIMATED_VIEW_MANIPULATION, or FULL_ANIMATED_VIEW_MANIPULATION is also supported.
-     * */
+     */
     VIEW_MANIPULATION,
     /** Ability to play animations with<br>
      * {@link RenderSession#animate(Object, String, boolean, IAnimationListener)}
@@ -60,5 +60,6 @@ public enum Capability {
      * see {@link RenderSession#moveChild(Object, Object, int, java.util.Map, IAnimationListener)}
      */
     FULL_ANIMATED_VIEW_MANIPULATION,
-    ADAPTER_BINDING;
+    ADAPTER_BINDING,
+    EXTENDED_VIEWINFO;
 }
