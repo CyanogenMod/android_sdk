@@ -95,7 +95,8 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      *  manipulated by this tree view. In general this is the manifest UI node. */
     private UiElementNode mUiRootNode;
     /** The descriptor of the elements to be displayed as root in this tree view. All elements
-     *  of the same type in the root will be displayed. */
+     *  of the same type in the root will be displayed. Can be null or empty to mean everything
+     *  can be displayed. */
     private ElementDescriptor[] mDescriptorFilters;
     /** The title for the master-detail part (displayed on the top "tab" on top of the tree) */
     private String mTitle;
@@ -700,7 +701,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         ISelection selection = mTreeViewer.getSelection();
         if (!selection.isEmpty() && selection instanceof ITreeSelection) {
             ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
-            mUiTreeActions.doUp(selected);
+            mUiTreeActions.doUp(selected, mDescriptorFilters);
         }
     }
 
@@ -713,7 +714,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     protected boolean canDoTreeUp(ISelection selection) {
         if (!selection.isEmpty() && selection instanceof ITreeSelection) {
             ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
-            return mUiTreeActions.canDoUp(selected);
+            return mUiTreeActions.canDoUp(selected, mDescriptorFilters);
         }
 
         return false;
@@ -729,7 +730,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
         ISelection selection = mTreeViewer.getSelection();
         if (!selection.isEmpty() && selection instanceof ITreeSelection) {
             ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
-            mUiTreeActions.doDown(selected);
+            mUiTreeActions.doDown(selected, mDescriptorFilters);
         }
     }
 
@@ -742,7 +743,7 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     protected boolean canDoTreeDown(ISelection selection) {
         if (!selection.isEmpty() && selection instanceof ITreeSelection) {
             ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
-            return mUiTreeActions.canDoDown(selected);
+            return mUiTreeActions.canDoDown(selected, mDescriptorFilters);
         }
 
         return false;

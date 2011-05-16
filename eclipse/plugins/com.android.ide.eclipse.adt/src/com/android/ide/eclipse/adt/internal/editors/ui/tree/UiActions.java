@@ -187,7 +187,9 @@ public abstract class UiActions implements ICommitXml {
      * If the tree has a selection, move it up, either in the child list or as the last child
      * of the previous parent.
      */
-    public void doUp(final List<UiElementNode> uiNodes) {
+    public void doUp(
+            final List<UiElementNode> uiNodes,
+            final ElementDescriptor[] descriptorFilters) {
         if (uiNodes == null || uiNodes.size() < 1) {
             return;
         }
@@ -201,7 +203,12 @@ public abstract class UiActions implements ICommitXml {
             public void run() {
                 for (int i = 0; i < uiNodes.size(); i++) {
                     UiElementNode uiNode = uiLastNode[0] = uiNodes.get(i);
-                    doUpInternal(uiNode, selectXmlNode, uiSearchRoot, false /*testOnly*/);
+                    doUpInternal(
+                            uiNode,
+                            descriptorFilters,
+                            selectXmlNode,
+                            uiSearchRoot,
+                            false /*testOnly*/);
                 }
             }
         });
@@ -229,7 +236,9 @@ public abstract class UiActions implements ICommitXml {
      *
      * @return True if the up action can be carried on *all* items.
      */
-    public boolean canDoUp(final List<UiElementNode> uiNodes) {
+    public boolean canDoUp(
+            List<UiElementNode> uiNodes,
+            ElementDescriptor[] descriptorFilters) {
         if (uiNodes == null || uiNodes.size() < 1) {
             return false;
         }
@@ -240,7 +249,12 @@ public abstract class UiActions implements ICommitXml {
         commitPendingXmlChanges();
 
         for (int i = 0; i < uiNodes.size(); i++) {
-            if (!doUpInternal(uiNodes.get(i), selectXmlNode, uiSearchRoot, true /*testOnly*/)) {
+            if (!doUpInternal(
+                    uiNodes.get(i),
+                    descriptorFilters,
+                    selectXmlNode,
+                    uiSearchRoot,
+                    true /*testOnly*/)) {
                 return false;
             }
         }
@@ -250,8 +264,9 @@ public abstract class UiActions implements ICommitXml {
 
     private boolean doUpInternal(
             UiElementNode uiNode,
-            final Node[] outSelectXmlNode,
-            final UiElementNode[] outUiSearchRoot,
+            ElementDescriptor[] descriptorFilters,
+            Node[] outSelectXmlNode,
+            UiElementNode[] outUiSearchRoot,
             boolean testOnly) {
         // the node will move either up to its parent or grand-parent
         outUiSearchRoot[0] = uiNode.getUiParent();
@@ -270,6 +285,14 @@ public abstract class UiActions implements ICommitXml {
         }
 
         UiElementNode uiPrev = uiNode.getUiPreviousSibling();
+
+        // Only accept a sibling that has an XML attached and
+        // is part of the allowed descriptor filters.
+        while (uiPrev != null &&
+                (uiPrev.getXmlNode() == null || !matchDescFilter(descriptorFilters, uiPrev))) {
+            uiPrev = uiPrev.getUiPreviousSibling();
+        }
+
         if (uiPrev != null && uiPrev.getXmlNode() != null) {
             // This node is not the first one of the parent.
             Node xmlPrev = uiPrev.getXmlNode();
@@ -321,13 +344,32 @@ public abstract class UiActions implements ICommitXml {
         return false;
     }
 
+    private boolean matchDescFilter(
+            ElementDescriptor[] descriptorFilters,
+            UiElementNode uiNode) {
+        if (descriptorFilters == null || descriptorFilters.length < 1) {
+            return true;
+        }
+
+        ElementDescriptor desc = uiNode.getDescriptor();
+
+        for (ElementDescriptor filter : descriptorFilters) {
+            if (filter.equals(desc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Called when the "Down" button is selected.
      *
      * If the tree has a selection, move it down, either in the same child list or as the
      * first child of the next parent.
      */
-    public void doDown(final List<UiElementNode> nodes) {
+    public void doDown(
+            final List<UiElementNode> nodes,
+            final ElementDescriptor[] descriptorFilters) {
         if (nodes == null || nodes.size() < 1) {
             return;
         }
@@ -341,7 +383,12 @@ public abstract class UiActions implements ICommitXml {
             public void run() {
                 for (int i = nodes.size() - 1; i >= 0; i--) {
                     final UiElementNode node = uiLastNode[0] = nodes.get(i);
-                    doDownInternal(node, selectXmlNode, uiSearchRoot, false /*testOnly*/);
+                    doDownInternal(
+                            node,
+                            descriptorFilters,
+                            selectXmlNode,
+                            uiSearchRoot,
+                            false /*testOnly*/);
                 }
             }
         });
@@ -369,7 +416,9 @@ public abstract class UiActions implements ICommitXml {
      *
      * @return True if the down action can be carried on *all* items.
      */
-    public boolean canDoDown(final List<UiElementNode> uiNodes) {
+    public boolean canDoDown(
+            List<UiElementNode> uiNodes,
+            ElementDescriptor[] descriptorFilters) {
         if (uiNodes == null || uiNodes.size() < 1) {
             return false;
         }
@@ -380,7 +429,12 @@ public abstract class UiActions implements ICommitXml {
         commitPendingXmlChanges();
 
         for (int i = 0; i < uiNodes.size(); i++) {
-            if (!doDownInternal(uiNodes.get(i), selectXmlNode, uiSearchRoot, true /*testOnly*/)) {
+            if (!doDownInternal(
+                    uiNodes.get(i),
+                    descriptorFilters,
+                    selectXmlNode,
+                    uiSearchRoot,
+                    true /*testOnly*/)) {
                 return false;
             }
         }
@@ -389,9 +443,10 @@ public abstract class UiActions implements ICommitXml {
     }
 
     private boolean doDownInternal(
-            final UiElementNode uiNode,
-            final Node[] outSelectXmlNode,
-            final UiElementNode[] outUiSearchRoot,
+            UiElementNode uiNode,
+            ElementDescriptor[] descriptorFilters,
+            Node[] outSelectXmlNode,
+            UiElementNode[] outUiSearchRoot,
             boolean testOnly) {
         // the node will move either down to its parent or grand-parent
         outUiSearchRoot[0] = uiNode.getUiParent();
@@ -411,6 +466,14 @@ public abstract class UiActions implements ICommitXml {
         }
 
         UiElementNode uiNext = uiNode.getUiNextSibling();
+
+        // Only accept a sibling that has an XML attached and
+        // is part of the allowed descriptor filters.
+        while (uiNext != null &&
+                (uiNext.getXmlNode() == null || !matchDescFilter(descriptorFilters, uiNext))) {
+            uiNext = uiNext.getUiNextSibling();
+        }
+
         if (uiNext != null && uiNext.getXmlNode() != null) {
             // This node is not the last one of the parent.
             Node xmlNext = uiNext.getXmlNode();
