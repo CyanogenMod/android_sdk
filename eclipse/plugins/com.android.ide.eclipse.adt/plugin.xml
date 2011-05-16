@@ -209,41 +209,6 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="com.android.ide.eclipse.adt.contribution1"
-            nameFilter="*"
-            objectClass="org.eclipse.core.resources.IProject"
-            adaptable="true">
-         <menu
-               id="com.android.ide.eclipse.adt.AndroidTools"
-               label="Android Tools"
-               path="additions">
-            <separator name="group1"/>
-         </menu>
-         <visibility>
-            <and>
-               <not>
-                  <objectState
-                      name="projectNature"
-                      value="com.android.ide.eclipse.adt.AndroidNature"/>
-               </not>
-               <not>
-                  <objectState
-                      name="projectNature"
-                      value="com.android.ide.eclipse.adt.AndroidExportNature"/>
-               </not>
-               <objectState
-                   name="open"
-                   value="true"/>
-            </and>
-         </visibility>
-         <action
-               class="com.android.ide.eclipse.adt.internal.actions.ConvertToAndroidAction"
-               enablesFor="1"
-               id="com.android.ide.eclipse.adt.ConvertToAndroidAction"
-               label="Convert To Android Project"
-               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1"/>
-      </objectContribution>
-      <objectContribution
             id="com.android.ide.eclipse.adt.contribution2"
             nameFilter="*"
             objectClass="org.eclipse.core.resources.IProject"
