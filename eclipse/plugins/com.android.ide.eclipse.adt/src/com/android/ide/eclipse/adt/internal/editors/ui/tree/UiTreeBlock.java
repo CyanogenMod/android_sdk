@@ -594,8 +594,8 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
      */
     private void adjustTreeButtons(ISelection selection) {
         mRemoveButton.setEnabled(!selection.isEmpty() && selection instanceof ITreeSelection);
-        mUpButton.setEnabled(!selection.isEmpty() && selection instanceof ITreeSelection);
-        mDownButton.setEnabled(!selection.isEmpty() && selection instanceof ITreeSelection);
+        mUpButton.setEnabled(canDoTreeUp(selection));
+        mDownButton.setEnabled(canDoTreeDown(selection));
     }
 
     /**
@@ -705,6 +705,21 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     }
 
     /**
+     * Checks whether the "up" action can be done on the current selection.
+     *
+     * @param selection The current tree selection.
+     * @return True if all the selected nodes can be moved up.
+     */
+    protected boolean canDoTreeUp(ISelection selection) {
+        if (!selection.isEmpty() && selection instanceof ITreeSelection) {
+            ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
+            return mUiTreeActions.canDoUp(selected);
+        }
+
+        return false;
+    }
+
+    /**
      * Called when the "Down" button is selected.
      *
      * If the tree has a selection, move it down, either in the same child list or as the
@@ -716,6 +731,21 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
             ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
             mUiTreeActions.doDown(selected);
         }
+    }
+
+    /**
+     * Checks whether the "down" action can be done on the current selection.
+     *
+     * @param selection The current tree selection.
+     * @return True if all the selected nodes can be moved down.
+     */
+    protected boolean canDoTreeDown(ISelection selection) {
+        if (!selection.isEmpty() && selection instanceof ITreeSelection) {
+            ArrayList<UiElementNode> selected = filterSelection((ITreeSelection) selection);
+            return mUiTreeActions.canDoDown(selected);
+        }
+
+        return false;
     }
 
     /**
@@ -739,21 +769,21 @@ public final class UiTreeBlock extends MasterDetailsBlock implements ICommitXml 
     }
 
     @Override
-    protected void registerPages(DetailsPart detailsPart) {
+    protected void registerPages(DetailsPart inDetailsPart) {
         // Keep a reference on the details part (the super class doesn't provide a getter
         // for it.)
-        mDetailsPart = detailsPart;
+        mDetailsPart = inDetailsPart;
 
         // The page selection mechanism does not use pages registered by association with
         // a node class. Instead it uses a custom details page provider that provides a
         // new UiElementDetail instance for each node instance. A limit of 5 pages is
         // then set (the value is arbitrary but should be reasonable) for the internal
         // page book.
-        detailsPart.setPageLimit(5);
+        inDetailsPart.setPageLimit(5);
 
         final UiTreeBlock tree = this;
 
-        detailsPart.setPageProvider(new IDetailsPageProvider() {
+        inDetailsPart.setPageProvider(new IDetailsPageProvider() {
             public IDetailsPage getPage(Object key) {
                 if (key instanceof UiElementNode) {
                     return new UiElementDetail(tree);

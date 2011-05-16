@@ -187,81 +187,138 @@ public abstract class UiActions implements ICommitXml {
      * If the tree has a selection, move it up, either in the child list or as the last child
      * of the previous parent.
      */
-    public void doUp(final List<UiElementNode> nodes) {
-        if (nodes == null || nodes.size() < 1) {
+    public void doUp(final List<UiElementNode> uiNodes) {
+        if (uiNodes == null || uiNodes.size() < 1) {
             return;
         }
 
-        final Node[] select_xml_node = { null };
-        UiElementNode last_node = null;
-        UiElementNode search_root = null;
+        final Node[]          selectXmlNode = { null };
+        final UiElementNode[] uiLastNode    = { null };
+        final UiElementNode[] uiSearchRoot  = { null };
 
-        for (int i = 0; i < nodes.size(); i++) {
-            final UiElementNode node = last_node = nodes.get(i);
-
-            // the node will move either up to its parent or grand-parent
-            search_root = node.getUiParent();
-            if (search_root != null && search_root.getUiParent() != null) {
-                search_root = search_root.getUiParent();
-            }
-
-            commitPendingXmlChanges();
-            getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
-                public void run() {
-                    Node xml_node = node.getXmlNode();
-                    if (xml_node != null) {
-                        Node xml_parent = xml_node.getParentNode();
-                        if (xml_parent != null) {
-                            UiElementNode ui_prev = node.getUiPreviousSibling();
-                            if (ui_prev != null && ui_prev.getXmlNode() != null) {
-                                // This node is not the first one of the parent, so it can be
-                                // removed and then inserted before its previous sibling.
-                                // If the previous sibling can have children, though, then it
-                                // is inserted at the end of the children list.
-                                Node xml_prev = ui_prev.getXmlNode();
-                                if (ui_prev.getDescriptor().hasChildren()) {
-                                    xml_prev.appendChild(xml_parent.removeChild(xml_node));
-                                    select_xml_node[0] = xml_node;
-                                } else {
-                                    xml_parent.insertBefore(
-                                            xml_parent.removeChild(xml_node),
-                                            xml_prev);
-                                    select_xml_node[0] = xml_node;
-                                }
-                            } else if (!(xml_parent instanceof Document) &&
-                                    xml_parent.getParentNode() != null &&
-                                    !(xml_parent.getParentNode() instanceof Document)) {
-                                // If the node is the first one of the child list of its
-                                // parent, move it up in the hierarchy as previous sibling
-                                // to the parent. This is only possible if the parent of the
-                                // parent is not a document.
-                                Node grand_parent = xml_parent.getParentNode();
-                                grand_parent.insertBefore(xml_parent.removeChild(xml_node),
-                                        xml_parent);
-                                select_xml_node[0] = xml_node;
-                            }
-                        }
-                    }
+        commitPendingXmlChanges();
+        getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
+            public void run() {
+                for (int i = 0; i < uiNodes.size(); i++) {
+                    UiElementNode uiNode = uiLastNode[0] = uiNodes.get(i);
+                    doUpInternal(uiNode, selectXmlNode, uiSearchRoot, false /*testOnly*/);
                 }
-            });
-        }
+            }
+        });
 
-        assert last_node != null; // tell Eclipse this can't be null below
+        assert uiLastNode[0] != null; // tell Eclipse this can't be null below
 
-        if (select_xml_node[0] == null) {
+        if (selectXmlNode[0] == null) {
             // The XML node has not been moved, we can just select the same UI node
-            selectUiNode(last_node);
+            selectUiNode(uiLastNode[0]);
         } else {
             // The XML node has moved. At this point the UI model has been reloaded
             // and the XML node has been affected to a new UI node. Find that new UI
             // node and select it.
-            if (search_root == null) {
-                search_root = last_node.getUiRoot();
+            if (uiSearchRoot[0] == null) {
+                uiSearchRoot[0] = uiLastNode[0].getUiRoot();
             }
-            if (search_root != null) {
-                selectUiNode(search_root.findXmlNode(select_xml_node[0]));
+            if (uiSearchRoot[0] != null) {
+                selectUiNode(uiSearchRoot[0].findXmlNode(selectXmlNode[0]));
             }
         }
+    }
+
+    /**
+     * Checks whether the "up" action can be performed on all items.
+     *
+     * @return True if the up action can be carried on *all* items.
+     */
+    public boolean canDoUp(final List<UiElementNode> uiNodes) {
+        if (uiNodes == null || uiNodes.size() < 1) {
+            return false;
+        }
+
+        final Node[]          selectXmlNode = { null };
+        final UiElementNode[] uiSearchRoot  = { null };
+
+        commitPendingXmlChanges();
+
+        for (int i = 0; i < uiNodes.size(); i++) {
+            if (!doUpInternal(uiNodes.get(i), selectXmlNode, uiSearchRoot, true /*testOnly*/)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean doUpInternal(
+            UiElementNode uiNode,
+            final Node[] outSelectXmlNode,
+            final UiElementNode[] outUiSearchRoot,
+            boolean testOnly) {
+        // the node will move either up to its parent or grand-parent
+        outUiSearchRoot[0] = uiNode.getUiParent();
+        if (outUiSearchRoot[0] != null && outUiSearchRoot[0].getUiParent() != null) {
+            outUiSearchRoot[0] = outUiSearchRoot[0].getUiParent();
+        }
+        Node xmlNode = uiNode.getXmlNode();
+        ElementDescriptor nodeDesc = uiNode.getDescriptor();
+        if (xmlNode == null || nodeDesc == null) {
+            return false;
+        }
+        UiElementNode uiParentNode = uiNode.getUiParent();
+        Node xmlParent = uiParentNode == null ? null : uiParentNode.getXmlNode();
+        if (xmlParent == null) {
+            return false;
+        }
+
+        UiElementNode uiPrev = uiNode.getUiPreviousSibling();
+        if (uiPrev != null && uiPrev.getXmlNode() != null) {
+            // This node is not the first one of the parent.
+            Node xmlPrev = uiPrev.getXmlNode();
+            if (uiPrev.getDescriptor().acceptChild(nodeDesc)) {
+                // If the previous sibling can accept this child, then it
+                // is inserted at the end of the children list.
+                if (testOnly) {
+                    return true;
+                }
+                xmlPrev.appendChild(xmlParent.removeChild(xmlNode));
+                outSelectXmlNode[0] = xmlNode;
+            } else {
+                // This node is not the first one of the parent, so it can be
+                // removed and then inserted before its previous sibling.
+                if (testOnly) {
+                    return true;
+                }
+                xmlParent.insertBefore(
+                        xmlParent.removeChild(xmlNode),
+                        xmlPrev);
+                outSelectXmlNode[0] = xmlNode;
+            }
+        } else if (uiParentNode != null && !(xmlParent instanceof Document)) {
+            UiElementNode uiGrandParent = uiParentNode.getUiParent();
+            Node xmlGrandParent = uiGrandParent == null ? null : uiGrandParent.getXmlNode();
+            ElementDescriptor grandDesc =
+                uiGrandParent == null ? null : uiGrandParent.getDescriptor();
+
+            if (xmlGrandParent != null &&
+                    !(xmlGrandParent instanceof Document) &&
+                    grandDesc != null &&
+                    grandDesc.acceptChild(nodeDesc)) {
+                // If the node is the first one of the child list of its
+                // parent, move it up in the hierarchy as previous sibling
+                // to the parent. This is only possible if the parent of the
+                // parent is not a document.
+                // The parent node must actually accept this kind of child.
+
+                if (testOnly) {
+                    return true;
+                }
+                xmlGrandParent.insertBefore(
+                        xmlParent.removeChild(xmlNode),
+                        xmlParent);
+                outSelectXmlNode[0] = xmlNode;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -275,77 +332,138 @@ public abstract class UiActions implements ICommitXml {
             return;
         }
 
-        final Node[] select_xml_node = { null };
-        UiElementNode last_node = null;
-        UiElementNode search_root = null;
+        final Node[]          selectXmlNode = { null };
+        final UiElementNode[] uiLastNode    = { null };
+        final UiElementNode[] uiSearchRoot  = { null };
 
-        for (int i = nodes.size() - 1; i >= 0; i--) {
-            final UiElementNode node = last_node = nodes.get(i);
-            // the node will move either down to its parent or grand-parent
-            search_root = node.getUiParent();
-            if (search_root != null && search_root.getUiParent() != null) {
-                search_root = search_root.getUiParent();
-            }
-
-            commitPendingXmlChanges();
-            getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
-                public void run() {
-                    Node xml_node = node.getXmlNode();
-                    if (xml_node != null) {
-                        Node xml_parent = xml_node.getParentNode();
-                        if (xml_parent != null) {
-                            UiElementNode uiNext = node.getUiNextSibling();
-                            if (uiNext != null && uiNext.getXmlNode() != null) {
-                                // This node is not the last one of the parent, so it can be
-                                // removed and then inserted after its next sibling.
-                                // If the next sibling is a node that can have children, though,
-                                // then the node is inserted as the first child.
-                                Node xml_next = uiNext.getXmlNode();
-                                if (uiNext.getDescriptor().hasChildren()) {
-                                    // Note: insertBefore works as append if the ref node is
-                                    // null, i.e. when the node doesn't have children yet.
-                                    xml_next.insertBefore(xml_parent.removeChild(xml_node),
-                                            xml_next.getFirstChild());
-                                    select_xml_node[0] = xml_node;
-                                } else {
-                                    // Insert "before after next" ;-)
-                                    xml_parent.insertBefore(xml_parent.removeChild(xml_node),
-                                            xml_next.getNextSibling());
-                                    select_xml_node[0] = xml_node;
-                                }
-                            } else if (!(xml_parent instanceof Document) &&
-                                    xml_parent.getParentNode() != null &&
-                                    !(xml_parent.getParentNode() instanceof Document)) {
-                                // This node is the last node of its parent.
-                                // If neither the parent nor the grandparent is a document,
-                                // then the node can be insert right after the parent.
-                                Node grand_parent = xml_parent.getParentNode();
-                                grand_parent.insertBefore(xml_parent.removeChild(xml_node),
-                                        xml_parent.getNextSibling());
-                                select_xml_node[0] = xml_node;
-                            }
-                        }
-                    }
+        commitPendingXmlChanges();
+        getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
+            public void run() {
+                for (int i = nodes.size() - 1; i >= 0; i--) {
+                    final UiElementNode node = uiLastNode[0] = nodes.get(i);
+                    doDownInternal(node, selectXmlNode, uiSearchRoot, false /*testOnly*/);
                 }
-            });
-        }
+            }
+        });
 
-        assert last_node != null; // tell Eclipse this can't be null below
+        assert uiLastNode[0] != null; // tell Eclipse this can't be null below
 
-        if (select_xml_node[0] == null) {
+        if (selectXmlNode[0] == null) {
             // The XML node has not been moved, we can just select the same UI node
-            selectUiNode(last_node);
+            selectUiNode(uiLastNode[0]);
         } else {
             // The XML node has moved. At this point the UI model has been reloaded
             // and the XML node has been affected to a new UI node. Find that new UI
             // node and select it.
-            if (search_root == null) {
-                search_root = last_node.getUiRoot();
+            if (uiSearchRoot[0] == null) {
+                uiSearchRoot[0] = uiLastNode[0].getUiRoot();
             }
-            if (search_root != null) {
-                selectUiNode(search_root.findXmlNode(select_xml_node[0]));
+            if (uiSearchRoot[0] != null) {
+                selectUiNode(uiSearchRoot[0].findXmlNode(selectXmlNode[0]));
             }
         }
+    }
+
+    /**
+     * Checks whether the "down" action can be performed on all items.
+     *
+     * @return True if the down action can be carried on *all* items.
+     */
+    public boolean canDoDown(final List<UiElementNode> uiNodes) {
+        if (uiNodes == null || uiNodes.size() < 1) {
+            return false;
+        }
+
+        final Node[]          selectXmlNode = { null };
+        final UiElementNode[] uiSearchRoot  = { null };
+
+        commitPendingXmlChanges();
+
+        for (int i = 0; i < uiNodes.size(); i++) {
+            if (!doDownInternal(uiNodes.get(i), selectXmlNode, uiSearchRoot, true /*testOnly*/)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean doDownInternal(
+            final UiElementNode uiNode,
+            final Node[] outSelectXmlNode,
+            final UiElementNode[] outUiSearchRoot,
+            boolean testOnly) {
+        // the node will move either down to its parent or grand-parent
+        outUiSearchRoot[0] = uiNode.getUiParent();
+        if (outUiSearchRoot[0] != null && outUiSearchRoot[0].getUiParent() != null) {
+            outUiSearchRoot[0] = outUiSearchRoot[0].getUiParent();
+        }
+
+        Node xmlNode = uiNode.getXmlNode();
+        ElementDescriptor nodeDesc = uiNode.getDescriptor();
+        if (xmlNode == null || nodeDesc == null) {
+            return false;
+        }
+        UiElementNode uiParentNode = uiNode.getUiParent();
+        Node xmlParent = uiParentNode == null ? null : uiParentNode.getXmlNode();
+        if (xmlParent == null) {
+            return false;
+        }
+
+        UiElementNode uiNext = uiNode.getUiNextSibling();
+        if (uiNext != null && uiNext.getXmlNode() != null) {
+            // This node is not the last one of the parent.
+            Node xmlNext = uiNext.getXmlNode();
+            // If the next sibling is a node that can have children, though,
+            // then the node is inserted as the first child.
+            if (uiNext.getDescriptor().acceptChild(nodeDesc)) {
+                if (testOnly) {
+                    return true;
+                }
+                // Note: insertBefore works as append if the ref node is
+                // null, i.e. when the node doesn't have children yet.
+                xmlNext.insertBefore(
+                        xmlParent.removeChild(xmlNode),
+                        xmlNext.getFirstChild());
+                outSelectXmlNode[0] = xmlNode;
+            } else {
+                // This node is not the last one of the parent, so it can be
+                // removed and then inserted after its next sibling.
+
+                if (testOnly) {
+                    return true;
+                }
+                // Insert "before after next" ;-)
+                xmlParent.insertBefore(
+                        xmlParent.removeChild(xmlNode),
+                        xmlNext.getNextSibling());
+                outSelectXmlNode[0] = xmlNode;
+            }
+        } else if (uiParentNode != null && !(xmlParent instanceof Document)) {
+            UiElementNode uiGrandParent = uiParentNode.getUiParent();
+            Node xmlGrandParent = uiGrandParent == null ? null : uiGrandParent.getXmlNode();
+            ElementDescriptor grandDesc =
+                uiGrandParent == null ? null : uiGrandParent.getDescriptor();
+
+            if (xmlGrandParent != null &&
+                    !(xmlGrandParent instanceof Document) &&
+                    grandDesc != null &&
+                    grandDesc.acceptChild(nodeDesc)) {
+                // This node is the last node of its parent.
+                // If neither the parent nor the grandparent is a document,
+                // then the node can be inserted right after the parent.
+                // The parent node must actually accept this kind of child.
+                if (testOnly) {
+                    return true;
+                }
+                xmlGrandParent.insertBefore(
+                        xmlParent.removeChild(xmlNode),
+                        xmlParent.getNextSibling());
+                outSelectXmlNode[0] = xmlNode;
+            }
+        }
+
+        return false;
     }
 
     //---------------------
