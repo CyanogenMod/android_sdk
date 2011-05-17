@@ -34,6 +34,13 @@ public class ViewInfo {
     private final Object mViewObject;
     private final Object mLayoutParamsObject;
 
+    // optional info
+    private int mBaseLine = Integer.MIN_VALUE;
+    private int mLeftMargin = Integer.MIN_VALUE;
+    private int mTopMargin = Integer.MIN_VALUE;
+    private int mRightMargin = Integer.MIN_VALUE;
+    private int mBottomMargin = Integer.MIN_VALUE;
+
     public ViewInfo(String name, Object cookie, int left, int top, int right, int bottom) {
         this(name, cookie, left, top, right, bottom, null /*viewObject*/,
                 null /*layoutParamsObject*/);
@@ -60,6 +67,15 @@ public class ViewInfo {
         } else {
             mChildren = Collections.emptyList();
         }
+    }
+
+    public void setExtendedInfo(int baseLine, int leftMargin, int topMargin,
+            int rightMargin, int bottomMargin) {
+        mBaseLine = baseLine;
+        mLeftMargin = leftMargin;
+        mTopMargin = topMargin;
+        mRightMargin = rightMargin;
+        mBottomMargin = bottomMargin;
     }
 
     /**
@@ -129,5 +145,40 @@ public class ViewInfo {
      */
     public Object getLayoutParamsObject() {
         return mLayoutParamsObject;
+    }
+
+    /**
+     * Returns the baseline value. If the value is unknown, returns {@link Integer#MIN_VALUE}.
+     */
+    public int getBaseLine() {
+        return mBaseLine;
+    }
+
+    /**
+     * Returns the left margin value. If the value is unknown, returns {@link Integer#MIN_VALUE}.
+     */
+    public int getLeftMargin() {
+        return mLeftMargin;
+    }
+
+    /**
+     * Returns the top margin value. If the value is unknown, returns {@link Integer#MIN_VALUE}.
+     */
+    public int getTopMargin() {
+        return mTopMargin;
+    }
+
+    /**
+     * Returns the right margin value. If the value is unknown, returns {@link Integer#MIN_VALUE}.
+     */
+    public int getRightMargin() {
+        return mRightMargin;
+    }
+
+    /**
+     * Returns the bottom margin value. If the value is unknown, returns {@link Integer#MIN_VALUE}.
+     */
+    public int getBottomMargin() {
+        return mBottomMargin;
     }
 }
