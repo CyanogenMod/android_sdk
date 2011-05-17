@@ -143,8 +143,11 @@ public abstract class Bridge {
      *
      * @return the baseline value or -1 if not applicable to the view object or if this layout
      *     library does not implement this method.
+     *
+     * @deprecated use the extended ViewInfo.
      */
-    public int getViewBaseline(Object viewObject) {
-        return -1;
+    @Deprecated
+    public Result getViewBaseline(Object viewObject) {
+        return NOT_IMPLEMENTED.createResult();
     }
 }

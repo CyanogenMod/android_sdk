@@ -47,6 +47,7 @@ public class Result {
         ERROR_RENDER,
         ERROR_ANIM_NOT_FOUND,
         ERROR_NOT_A_DRAWABLE,
+        ERROR_REFLECTION,
         ERROR_UNKNOWN;
 
         private Result mResult;

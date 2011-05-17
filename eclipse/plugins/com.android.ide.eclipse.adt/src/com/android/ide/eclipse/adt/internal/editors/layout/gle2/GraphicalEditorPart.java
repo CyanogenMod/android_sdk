@@ -1480,6 +1480,7 @@ public class GraphicalEditorPart extends EditorPart
                 mMinSdkVersion,
                 mTargetSdkVersion,
                 logger);
+
         if (noDecor) {
             params.setForceNoDecor();
         } else {
