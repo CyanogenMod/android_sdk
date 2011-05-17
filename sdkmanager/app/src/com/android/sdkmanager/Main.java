@@ -44,6 +44,7 @@ import com.android.sdkuilib.internal.repository.UpdateNoWindow;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.UpdaterWindow;
+import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 import com.android.util.Pair;
 
 import org.eclipse.swt.widgets.Display;
@@ -314,7 +315,8 @@ public class Main {
             UpdaterWindow window = new UpdaterWindow(
                     null /* parentShell */,
                     errorLogger,
-                    mOsSdkFolder);
+                    mOsSdkFolder,
+                    InvocationContext.STANDALONE);
             window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
             window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
             if (autoUpdate) {

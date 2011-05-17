@@ -29,6 +29,7 @@ import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
 import com.android.sdkuilib.repository.UpdaterWindow;
+import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -1011,7 +1012,8 @@ public final class AvdSelector {
         UpdaterWindow window = new UpdaterWindow(
                 mTable.getShell(),
                 log,
-                mAvdManager.getSdkManager().getLocation());
+                mAvdManager.getSdkManager().getLocation(),
+                InvocationContext.AVD_SELECTOR);
         window.open();
         refresh(true /*reload*/); // UpdaterWindow uses its own AVD manager so this one must reload.
 

@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.UpdaterWindow;
+import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -45,7 +46,7 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
     }
 
     public void run(IAction action) {
-        Sdk sdk = Sdk.getCurrent();
+        final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
 
             // Runs the updater window, directing all logs to the ADT console.
@@ -53,7 +54,8 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
             UpdaterWindow window = new UpdaterWindow(
                     AdtPlugin.getDisplay().getActiveShell(),
                     new AdtConsoleSdkLog(),
-                    sdk.getSdkLocation());
+                    sdk.getSdkLocation(),
+                    InvocationContext.IDE);
 
             ISdkChangeListener listener = new ISdkChangeListener() {
                 public void onSdkLoaded() {
@@ -88,7 +90,6 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
                     // then we want to make sure we don't get any attempt to use the SDK
                     // before the postInstallHook is called.
 
-                    Sdk sdk = Sdk.getCurrent();
                     if (sdk != null) {
                         DexWrapper dx = sdk.getDexWrapper();
                         dx.unload();

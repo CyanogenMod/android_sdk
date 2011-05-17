@@ -23,6 +23,7 @@ import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
@@ -86,8 +87,14 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
+     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     *  opening the SDK Manager. Unused for SdkMan1.
      */
-    public UpdaterWindowImpl(Shell parentShell, ISdkLog sdkLog, String osSdkRoot) {
+    public UpdaterWindowImpl(
+            Shell parentShell,
+            ISdkLog sdkLog,
+            String osSdkRoot,
+            InvocationContext context/*unused*/) {
         mParentShell = parentShell;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }
