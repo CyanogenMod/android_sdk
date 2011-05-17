@@ -168,6 +168,11 @@
             name="Include Other Layout"
             render="skip" />
         <view
+            class="fragment"
+            name="Fragment"
+            fill="opposite"
+            render="skip" />
+        <view
             class="android.widget.TableLayout"
             fill="opposite"
             render="skip" />
