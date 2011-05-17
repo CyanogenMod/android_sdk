@@ -37,6 +37,7 @@ import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
@@ -74,6 +75,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -863,6 +869,8 @@ public class ConfigurationComposite extends Composite {
         // add the night mode to the bundle combinations.
         addNightModeToBundles(configBundles);
 
+        addRenderTargetToBundles(configBundles);
+
         for (LayoutDevice device : mDeviceList) {
             for (DeviceConfig config : device.getConfigs()) {
 
@@ -1045,8 +1053,45 @@ public class ConfigurationComposite extends Composite {
             Collections.sort(matches, new PhoneConfigComparator());
         }
 
+        // Look at the currently active editor to see if it's a layout editor, and if so,
+        // look up its configuration and if the configuration is in our match list,
+        // use it. This means we "preserve" the current configuration when you open
+        // new layouts.
+        IWorkbench workbench = PlatformUI.getWorkbench();
+        IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
+        IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
+        IEditorPart activeEditor = page.getActiveEditor();
+        if (activeEditor instanceof LayoutEditor
+                && mEditedFile != null
+                // (Only do this when the two files are in the same project)
+                && ((LayoutEditor) activeEditor).getProject() == mEditedFile.getProject()) {
+            LayoutEditor editor = (LayoutEditor) activeEditor;
+            FolderConfiguration configuration = editor.getGraphicalEditor().getConfiguration();
+            if (configuration != null) {
+                for (ConfigMatch match : matches) {
+                    if (configuration.equals(match.testConfig)) {
+                        return match;
+                    }
+                }
+            }
+        }
+
         // the list has been sorted so that the first item is the best config
         return matches.get(0);
+    }
+
+    private void addRenderTargetToBundles(List<ConfigBundle> configBundles) {
+        Pair<ResourceQualifier[], IAndroidTarget> state = loadRenderState();
+        if (state != null) {
+            IAndroidTarget target = state.getSecond();
+            if (target != null) {
+                int apiLevel = target.getVersion().getApiLevel();
+                for (ConfigBundle bundle : configBundles) {
+                    bundle.config.setVersionQualifier(
+                            new VersionQualifier(apiLevel));
+                }
+            }
+        }
     }
 
     private void addDockModeToBundles(List<ConfigBundle> addConfig) {
@@ -1282,16 +1327,16 @@ public class ConfigurationComposite extends Composite {
                     SortedSet<String> regions = projectRes.getRegions(language);
                     for (String region : regions) {
                         mLocaleCombo.add(
-                                String.format("%1$s / %2$s", language, region)); //$NON-NLS-1$
+                                String.format("%1$s / %2$s", language, region));
                         RegionQualifier regionQual = new RegionQualifier(region);
                         mLocaleList.add(new ResourceQualifier[] { langQual, regionQual });
                     }
 
                     // now the entry for the other regions the language alone
                     if (regions.size() > 0) {
-                        mLocaleCombo.add(String.format("%1$s / Other", language)); //$NON-NLS-1$
+                        mLocaleCombo.add(String.format("%1$s / Other", language));
                     } else {
-                        mLocaleCombo.add(String.format("%1$s / Any", language)); //$NON-NLS-1$
+                        mLocaleCombo.add(String.format("%1$s / Any", language));
                     }
                     // create a region qualifier that will never be matched by qualified resources.
                     mLocaleList.add(new ResourceQualifier[] {
