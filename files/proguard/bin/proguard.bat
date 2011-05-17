@@ -12,6 +12,6 @@ SET PROGUARD_HOME=..
 :home
 
 set java_exe=
-call %PROGUARD_HOME%\..\lib\find_java.bat
+call "%PROGUARD_HOME%"\..\lib\find_java.bat
 
-call %java_exe% -jar "%PROGUARD_HOME%"\lib\proguard.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
+call %java_exe% -jar "%PROGUARD_HOME%"\lib\proguard.jar %*
