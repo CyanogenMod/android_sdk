@@ -22,6 +22,8 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkmanager.*;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -36,7 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class AboutPage extends Composite {
+public class AboutPage extends UpdaterPage {
 
     private Label mLabel;
 
@@ -44,12 +46,17 @@ public class AboutPage extends Composite {
      * Create the composite.
      * @param parent The parent of the composite.
      */
-    public AboutPage(Composite parent) {
-        super(parent, SWT.BORDER);
+    public AboutPage(Composite parent, int swtStyle) {
+        super(parent, swtStyle);
 
         createContents(this);
 
         postCreate();  //$hide$
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "About";
     }
 
     private void createContents(Composite parent) {

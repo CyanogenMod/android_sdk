@@ -42,6 +42,7 @@ public class SettingsController {
 
     private final Properties mProperties = new Properties();
 
+    /** The currently associated {@link ISettingsPage}. Can be null. */
     private ISettingsPage mSettingsPage;
 
     private final UpdaterData mUpdaterData;
@@ -135,20 +136,26 @@ public class SettingsController {
 
     /**
      * Associate the given {@link ISettingsPage} with this {@link SettingsController}.
-     *
+     * <p/>
      * This loads the current properties into the setting page UI.
      * It then associates the SettingsChanged callback with this controller.
+     * <p/>
+     * If the setting page given is null, it will be unlinked from controller.
+     *
+     * @param settingsPage An {@link ISettingsPage} to associate with the controller.
      */
     public void setSettingsPage(ISettingsPage settingsPage) {
-
         mSettingsPage = settingsPage;
-        mSettingsPage.loadSettings(mProperties);
 
-        settingsPage.setOnSettingsChanged(new ISettingsPage.SettingsChangedCallback() {
-            public void onSettingsChanged(ISettingsPage page) {
-                SettingsController.this.onSettingsChanged();
-            }
-        });
+        if (settingsPage != null) {
+            settingsPage.loadSettings(mProperties);
+
+            settingsPage.setOnSettingsChanged(new ISettingsPage.SettingsChangedCallback() {
+                public void onSettingsChanged(ISettingsPage page) {
+                    SettingsController.this.onSettingsChanged();
+                }
+            });
+        }
     }
 
     /**

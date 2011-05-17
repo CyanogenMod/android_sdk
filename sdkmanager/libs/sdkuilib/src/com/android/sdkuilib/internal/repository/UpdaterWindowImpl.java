@@ -19,10 +19,12 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.IUpdaterWindow;
+import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -39,7 +41,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 /**
@@ -61,7 +62,7 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
     private boolean mInternalPageChange;
     /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
      *  the string title and the Composite class to instantiate to create the page. */
-    private ArrayList<Object[]> mExtraPages;
+    private ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>> mExtraPages;
     /** A factory to create progress task dialogs. */
     private ProgressTaskFactory mTaskFactory;
     /** The initial page to display. If null or not a know class, the first page will be displayed.
@@ -180,14 +181,17 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * <p/>
      * All pages must be registered before the call to {@link #open()}.
      *
-     * @param title The title of the page.
      * @param pageClass The {@link Composite}-derived class that will implement the page.
+     * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
      */
-    public void registerPage(String title, Class<? extends Composite> pageClass) {
+    @SuppressWarnings("unchecked")
+    public void registerPage(Class<? extends UpdaterPage> pageClass,
+            Purpose purpose) {
         if (mExtraPages == null) {
-            mExtraPages = new ArrayList<Object[]>();
+            mExtraPages = new ArrayList<Pair<Class<? extends UpdaterPage>, Purpose>>();
         }
-        mExtraPages.add(new Object[]{ title, pageClass });
+        Pair<?, Purpose> value = Pair.of(pageClass, purpose);
+        mExtraPages.add((Pair<Class<? extends UpdaterPage>, Purpose>) value);
     }
 
     /**
@@ -230,10 +234,10 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * displayed in the window.
      */
     protected void createPages() {
-        mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, mUpdaterData);
+        mAvdManagerPage = new AvdManagerPage(mPagesRootComposite, SWT.BORDER, mUpdaterData);
 
-        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, mUpdaterData);
-        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, mUpdaterData);
+        mLocalPackagePage = new LocalPackagesPage(mPagesRootComposite, SWT.BORDER, mUpdaterData);
+        mRemotePackagesPage = new RemotePackagesPage(mPagesRootComposite, SWT.BORDER, mUpdaterData);
 
         addPage(mAvdManagerPage, "Virtual devices");
 
@@ -261,7 +265,7 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
     private void setWindowImage(Shell androidSdkUpdater) {
         String imageName = "android_icon_16.png"; //$NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            imageName = "android_icon_128.png"; //$NON-NLS-1$
+            imageName = "android_icon_128.png";
         }
 
         if (mUpdaterData != null) {
@@ -327,6 +331,10 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * {@link Composite#getData()} field.
      */
     protected void addPage(Composite page, String title) {
+        assert title != null;
+        if (title == null) {
+            title = "Unknown";
+        }
         page.setData(title);
         mPages.add(page);
         if (mPageList != null) {
@@ -339,34 +347,20 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * using the constructor that takes a single {@link Composite} argument and then adds it
      * to the page list.
      */
-    @SuppressWarnings("unchecked")
     protected void addExtraPages() {
         if (mExtraPages == null) {
             return;
         }
 
-        for (Object[] extraPage : mExtraPages) {
-            String title = (String) extraPage[0];
-            Class<? extends Composite> clazz = (Class<? extends Composite>) extraPage[1];
-
-            // We want the constructor that takes a single Composite as parameter
-            Constructor<? extends Composite> cons;
-            try {
-                cons = clazz.getConstructor(new Class<?>[] { Composite.class });
-                Composite instance = cons.newInstance(new Object[] { mPagesRootComposite });
-                addPage(instance, title);
-
-            } catch (NoSuchMethodException e) {
-                // There is no such constructor.
-                mUpdaterData.getSdkLog().error(e,
-                        "Failed to add extra page %1$s. Constructor args must be (Composite parent).",  //$NON-NLS-1$
-                        clazz.getSimpleName());
-
-            } catch (Exception e) {
-                // Log this instead of crashing the whole app.
-                mUpdaterData.getSdkLog().error(e,
-                        "Failed to add extra page %1$s.",  //$NON-NLS-1$
-                        clazz.getSimpleName());
+        for (Pair<Class<? extends UpdaterPage>, Purpose> extraPage : mExtraPages) {
+            Class<? extends UpdaterPage> clazz = extraPage.getFirst();
+            UpdaterPage instance = UpdaterPage.newInstance(
+                    clazz,
+                    mPagesRootComposite,
+                    SWT.BORDER,
+                    mUpdaterData.getSdkLog());
+            if (instance != null) {
+                addPage(instance, instance.getPageTitle());
             }
         }
     }
