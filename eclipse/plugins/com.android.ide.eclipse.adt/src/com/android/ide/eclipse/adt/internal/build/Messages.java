@@ -92,11 +92,11 @@ public class Messages extends NLS {
 
     public static String Requires_1_5_Error;
 
-    public static String Requires_Class_Compatibility_5;
+    public static String Requires_Class_Compatibility_s;
 
-    public static String Requires_Compiler_Compliance_5;
+    public static String Requires_Compiler_Compliance_s;
 
-    public static String Requires_Source_Compatibility_5;
+    public static String Requires_Source_Compatibility_s;
 
     public static String s_Contains_Xml_Error;
 

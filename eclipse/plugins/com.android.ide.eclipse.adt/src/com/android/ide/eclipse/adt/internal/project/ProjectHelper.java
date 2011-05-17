@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -286,21 +287,22 @@ public final class ProjectHelper {
     /**
      * Checks the project compiler compliance level is supported.
      * @param javaProject The project to check
-     * @return <ul>
+     * @return A pair with the first integer being an error code, and the second value
+     *   being the invalid value found or null. The error code can be: <ul>
      * <li><code>COMPILER_COMPLIANCE_OK</code> if the project is properly configured</li>
      * <li><code>COMPILER_COMPLIANCE_LEVEL</code> for unsupported compiler level</li>
      * <li><code>COMPILER_COMPLIANCE_SOURCE</code> for unsupported source compatibility</li>
      * <li><code>COMPILER_COMPLIANCE_CODEGEN_TARGET</code> for unsupported .class format</li>
      * </ul>
      */
-    public static final int checkCompilerCompliance(IJavaProject javaProject) {
+    public static final Pair<Integer, String> checkCompilerCompliance(IJavaProject javaProject) {
         // get the project compliance level option
         String compliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 
         // check it against a list of valid compliance level strings.
         if (checkCompliance(compliance) == false) {
             // if we didn't find the proper compliance level, we return an error
-            return COMPILER_COMPLIANCE_LEVEL;
+            return Pair.of(COMPILER_COMPLIANCE_LEVEL, compliance);
         }
 
         // otherwise we check source compatibility
@@ -309,7 +311,7 @@ public final class ProjectHelper {
         // check it against a list of valid compliance level strings.
         if (checkCompliance(source) == false) {
             // if we didn't find the proper compliance level, we return an error
-            return COMPILER_COMPLIANCE_SOURCE;
+            return Pair.of(COMPILER_COMPLIANCE_SOURCE, source);
         }
 
         // otherwise check codegen level
@@ -318,23 +320,24 @@ public final class ProjectHelper {
         // check it against a list of valid compliance level strings.
         if (checkCompliance(codeGen) == false) {
             // if we didn't find the proper compliance level, we return an error
-            return COMPILER_COMPLIANCE_CODEGEN_TARGET;
+            return Pair.of(COMPILER_COMPLIANCE_CODEGEN_TARGET, codeGen);
         }
 
-        return COMPILER_COMPLIANCE_OK;
+        return Pair.of(COMPILER_COMPLIANCE_OK, null);
     }
 
     /**
      * Checks the project compiler compliance level is supported.
      * @param project The project to check
-     * @return <ul>
+     * @return A pair with the first integer being an error code, and the second value
+     *   being the invalid value found or null. The error code can be: <ul>
      * <li><code>COMPILER_COMPLIANCE_OK</code> if the project is properly configured</li>
      * <li><code>COMPILER_COMPLIANCE_LEVEL</code> for unsupported compiler level</li>
      * <li><code>COMPILER_COMPLIANCE_SOURCE</code> for unsupported source compatibility</li>
      * <li><code>COMPILER_COMPLIANCE_CODEGEN_TARGET</code> for unsupported .class format</li>
      * </ul>
      */
-    public static final int checkCompilerCompliance(IProject project) {
+    public static final Pair<Integer, String> checkCompilerCompliance(IProject project) {
         // get the java project from the IProject resource object
         IJavaProject javaProject = JavaCore.create(project);
 
@@ -349,6 +352,9 @@ public final class ProjectHelper {
      * @param project The project to check and fix.
      */
     public static final void checkAndFixCompilerCompliance(IProject project) {
+        // FIXME This method is never used. Shall we just removed it?
+        // {@link #checkAndFixCompilerCompliance(IJavaProject)} is used instead.
+
         // get the java project from the IProject resource object
         IJavaProject javaProject = JavaCore.create(project);
 
@@ -362,7 +368,8 @@ public final class ProjectHelper {
      * @param javaProject The Java project to check and fix.
      */
     public static final void checkAndFixCompilerCompliance(IJavaProject javaProject) {
-        if (checkCompilerCompliance(javaProject) != COMPILER_COMPLIANCE_OK) {
+        Pair<Integer, String> result = checkCompilerCompliance(javaProject);
+        if (result.getFirst().intValue() != COMPILER_COMPLIANCE_OK) {
             // setup the preferred compiler compliance level.
             javaProject.setOption(JavaCore.COMPILER_COMPLIANCE,
                     AdtConstants.COMPILER_COMPLIANCE_PREFERRED);
