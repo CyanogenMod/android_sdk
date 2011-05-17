@@ -27,7 +27,6 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -265,6 +264,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         mPkgPage.registerMenuAction(
                 MenuAction.SHOW_ADDON_SITES, manageSources);
 
+        // TODO: When invoked from Eclipse, we actually don't want to change the menu bar.
         MenuBarEnhancer.setupMenu(APP_NAME, menuTools, new IMenuBarCallback() {
             public void onPreferencesMenuSelected() {
                 showRegisteredPage(Purpose.SETTINGS);
