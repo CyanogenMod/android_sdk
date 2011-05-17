@@ -132,8 +132,8 @@ public class ListViewTypeMenu extends SubmenuAction {
     }
 
     /**
-     * Action which brings up the "Create new XML File" wizard, pre-selected with the
-     * animation category
+     * Action which brings up a resource chooser to choose an arbitrary layout as the
+     * layout to be previewed in the list.
      */
     private class PickLayoutAction extends Action {
         private final String mType;

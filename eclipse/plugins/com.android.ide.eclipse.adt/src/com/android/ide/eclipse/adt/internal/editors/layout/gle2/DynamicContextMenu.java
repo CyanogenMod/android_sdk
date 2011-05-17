@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.IViewRule;
@@ -210,7 +211,7 @@ import java.util.regex.Pattern;
             }
         }
 
-        insertListPreviewType(endId);
+        insertTagSpecificMenus(endId);
         insertVisualRefactorings(endId);
     }
 
@@ -235,8 +236,8 @@ import java.util.regex.Pattern;
         mMenuManager.insertBefore(endId, new Separator());
     }
 
-    /** "Preview List Content" pull-right menu */
-    private void insertListPreviewType(String endId) {
+    /** "Preview List Content" pull-right menu for lists, "Preview Fragment" for fragments, etc. */
+    private void insertTagSpecificMenus(String endId) {
 
         List<SelectionItem> selection = mCanvas.getSelectionManager().getSelections();
         if (selection.size() == 0) {
@@ -248,6 +249,10 @@ import java.util.regex.Pattern;
             if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW)) {
                 mMenuManager.insertBefore(endId, new Separator());
                 mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas));
+                return;
+            } else if (name.equals(VIEW_FRAGMENT) && selection.size() == 1) {
+                mMenuManager.insertBefore(endId, new Separator());
+                mMenuManager.insertBefore(endId, new FragmentMenu(mCanvas));
                 return;
             }
         }
