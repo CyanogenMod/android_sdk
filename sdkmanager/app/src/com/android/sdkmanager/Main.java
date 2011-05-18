@@ -39,6 +39,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
 import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
+import com.android.sdkuilib.internal.repository.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.repository.PackagesPage;
 import com.android.sdkuilib.internal.repository.UpdateNoWindow;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
@@ -232,7 +233,7 @@ public class Main {
                 // We don't support a specific GUI for this.
                 // If the user forces a gui mode to see this list, simply launch the regular GUI.
                 if (!mSdkCommandLine.getFlagNoUI(verb)) {
-                    showMainWindow(false /*autoUpdate*/);
+                    showSdkManagerWindow(false /*autoUpdate*/);
                 } else {
                     displayRemoteSdkListNoUI();
                 }
@@ -279,13 +280,21 @@ public class Main {
                 if (mSdkCommandLine.getFlagNoUI(verb)) {
                     updateSdkNoUI();
                 } else {
-                    showMainWindow(true /*autoUpdate*/);
+                    showSdkManagerWindow(true /*autoUpdate*/);
                 }
 
             } else if (SdkCommandLine.OBJECT_ADB.equals(directObject)) {
                 updateAdb();
 
             }
+        } else if (SdkCommandLine.VERB_DISPLAY.equals(verb)) {
+            if (SdkCommandLine.OBJECT_AVD.equals(directObject)) {
+                showAvdManagerWindow();
+
+            } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
+                showSdkManagerWindow(false /*autoUpdate*/);
+            }
+
         } else if (SdkCommandLine.VERB_DELETE.equals(verb) &&
                 SdkCommandLine.OBJECT_AVD.equals(directObject)) {
             deleteAvd();
@@ -295,7 +304,7 @@ public class Main {
             moveAvd();
 
         } else if (verb == null && directObject == null) {
-            showMainWindow(false /*autoUpdate*/);
+            showSdkManagerWindow(false /*autoUpdate*/);
 
         } else {
             mSdkCommandLine.printHelpAndExit(null);
@@ -303,9 +312,9 @@ public class Main {
     }
 
     /**
-     * Display the main SdkManager app window
+     * Display the main SDK Manager app window
      */
-    private void showMainWindow(boolean autoUpdate) {
+    private void showSdkManagerWindow(boolean autoUpdate) {
         try {
             MessageBoxLog errorLogger = new MessageBoxLog(
                     "SDK Manager",
@@ -323,6 +332,34 @@ public class Main {
                 window.setInitialPage(PackagesPage.class);
                 window.setRequestAutoUpdate(true);
             }
+            window.open();
+
+            errorLogger.displayResult(true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Display the main AVD Manager app window
+     */
+    private void showAvdManagerWindow() {
+        try {
+            MessageBoxLog errorLogger = new MessageBoxLog(
+                    "AVD Manager",
+                    Display.getCurrent(),
+                    true /*logErrorsOnly*/);
+
+            AvdManagerWindowImpl1 window = new AvdManagerWindowImpl1(
+                    null /* parentShell */,
+                    errorLogger,
+                    mOsSdkFolder,
+                    AvdManagerWindowImpl1.InvocationContext.STANDALONE);
+
+            window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
+            window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
+
             window.open();
 
             errorLogger.displayResult(true);

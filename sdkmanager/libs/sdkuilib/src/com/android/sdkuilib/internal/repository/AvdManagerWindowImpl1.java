@@ -20,15 +20,10 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
-import com.android.sdkuilib.internal.repository.PackagesPage.MenuAction;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.tasks.ProgressView;
-import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
-import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
-import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.UpdaterWindow;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -46,25 +41,55 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
 import java.util.ArrayList;
 
 /**
- * This is the private implementation of the UpdateWindow
- * for the second version of the SDK Manager.
- * <p/>
- * This window features only one embedded page, the combined installed+available package list.
+ * This is an intermediate version of the {@link AvdManagerPage}
+ * wrapped in its own standalone window for use from the SDK Manager 2.
  */
-public class UpdaterWindowImpl2 implements IUpdaterWindow {
+public class AvdManagerWindowImpl1 implements IUpdaterWindow {
 
-    private static final String APP_NAME = "Android SDK Manager";
+    private static final String APP_NAME = "Android Virtual Device Manager";
+    private static final String APP_NAME_MAC_MENU = "AVD Manager";
+
+    /**
+     * Enum giving some indication of what is invoking this window.
+     * The behavior and UI will change slightly depending on the context.
+     * <p/>
+     * Note: if you add Android support to your specific IDE, you might want
+     * to specialize this context enum.
+     */
+    public enum InvocationContext {
+        /**
+         * The AVD Manager is invoked from the stand-alone 'android' tool.
+         * In this mode, we present an about box, a settings page.
+         * For SdkMan2, we also have a menu bar and link to the SDK Manager 2.
+         */
+        STANDALONE,
+
+        /**
+         * The AVD Manager is invoked from the SDK Manager.
+         * This is similar to the {@link #STANDALONE} mode except we don't need
+         * to display a menu bar at all since we don't want a menu item linking
+         * back to the SDK Manager and we don't need to redisplay the options
+         * and about which are already on the root window.
+         */
+        SDK_MANAGER,
+
+        /**
+         * The AVD Manager is invoked from an IDE.
+         * In this mode, we do not modify the menu bar.
+         * There is no about box and no settings.
+         */
+        IDE,
+    }
+
+
     private final Shell mParentShell;
     private final InvocationContext mContext;
     /** Internal data shared between the window and its pages. */
@@ -78,11 +103,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     // --- UI members ---
 
     protected Shell mShell;
-    private PackagesPage mPkgPage;
-    private ProgressBar mProgressBar;
-    private Label mStatusText;
-    private ImgDisabledButton mButtonStop;
-    private ToggleButton mButtonDetails;
+    private AvdManagerPage mAvdPage;
     private SettingsController mSettingsController;
 
     /**
@@ -94,7 +115,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * @param context The {@link InvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
-    public UpdaterWindowImpl2(
+    public AvdManagerWindowImpl1(
             Shell parentShell,
             ISdkLog sdkLog,
             String osSdkRoot,
@@ -107,7 +128,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     /**
      * Creates a new window. Caller must call open(), which will block.
      * <p/>
-     * This is to be used when the window is opened from {@link AvdManagerWindowImpl1}
+     * This is to be used when the window is opened from {@link UpdaterWindowImpl2}
      * to share the same {@link UpdaterData} structure.
      *
      * @param parentShell Parent shell.
@@ -115,7 +136,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * @param context The {@link InvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
-    public UpdaterWindowImpl2(
+    public AvdManagerWindowImpl1(
             Shell parentShell,
             UpdaterData updaterData,
             InvocationContext context) {
@@ -174,105 +195,18 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     private void createContents() {
 
-        mPkgPage = new PackagesPage(mShell, SWT.NONE, mUpdaterData);
-        mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-
-        Composite composite1 = new Composite(mShell, SWT.NONE);
-        composite1.setLayout(new GridLayout(1, false));
-        composite1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        mProgressBar = new ProgressBar(composite1, SWT.NONE);
-        mProgressBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        mStatusText = new Label(composite1, SWT.NONE);
-        mStatusText.setText("Status Placeholder");  //$NON-NLS-1$ placeholder
-        mStatusText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-
-        Composite composite2 = new Composite(mShell, SWT.NONE);
-        composite2.setLayout(new GridLayout(2, false));
-
-        mButtonStop = new ImgDisabledButton(composite2, SWT.NONE,
-                getImage("stop_enabled_16.png"),   //$NON-NLS-1$
-                getImage("stop_disabled_16.png"));   //$NON-NLS-1$
-        mButtonStop.addListener(SWT.Selection, new Listener() {
-            public void handleEvent(Event event) {
-                onStopSelected();
-            }
-        });
-
-        mButtonDetails = new ToggleButton(composite2, SWT.NONE,
-                getImage("collapsed_16.png"),   //$NON-NLS-1$
-                getImage("expanded_16.png"));   //$NON-NLS-1$
-        mButtonDetails.addListener(SWT.Selection, new Listener() {
-            public void handleEvent(Event event) {
-                onToggleDetails();
-            }
-        });
+        mAvdPage = new AvdManagerPage(mShell, SWT.NONE, mUpdaterData);
+        mAvdPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
 
     private void createMenuBar() {
 
+        if (mContext != InvocationContext.STANDALONE) {
+            return;
+        }
+
         Menu menuBar = new Menu(mShell, SWT.BAR);
         mShell.setMenuBar(menuBar);
-
-        MenuItem menuBarPackages = new MenuItem(menuBar, SWT.CASCADE);
-        menuBarPackages.setText("Packages");
-
-        Menu menuPkgs = new Menu(menuBarPackages);
-        menuBarPackages.setMenu(menuPkgs);
-
-        MenuItem showUpdatesNew = new MenuItem(menuPkgs,
-                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG.getMenuStyle());
-        showUpdatesNew.setText(
-                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.TOGGLE_SHOW_UPDATE_NEW_PKG, showUpdatesNew);
-
-        MenuItem showInstalled = new MenuItem(menuPkgs,
-                MenuAction.TOGGLE_SHOW_INSTALLED_PKG.getMenuStyle());
-        showInstalled.setText(
-                MenuAction.TOGGLE_SHOW_INSTALLED_PKG.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.TOGGLE_SHOW_INSTALLED_PKG, showInstalled);
-
-        MenuItem showObsoletePackages = new MenuItem(menuPkgs,
-                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG.getMenuStyle());
-        showObsoletePackages.setText(
-                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.TOGGLE_SHOW_OBSOLETE_PKG, showObsoletePackages);
-
-        MenuItem showArchives = new MenuItem(menuPkgs,
-                MenuAction.TOGGLE_SHOW_ARCHIVES.getMenuStyle());
-        showArchives.setText(
-                MenuAction.TOGGLE_SHOW_ARCHIVES.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.TOGGLE_SHOW_ARCHIVES, showArchives);
-
-        new MenuItem(menuPkgs, SWT.SEPARATOR);
-
-        MenuItem sortByApi = new MenuItem(menuPkgs,
-                MenuAction.SORT_API_LEVEL.getMenuStyle());
-        sortByApi.setText(
-                MenuAction.SORT_API_LEVEL.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.SORT_API_LEVEL, sortByApi);
-
-        MenuItem sortBySource = new MenuItem(menuPkgs,
-                MenuAction.SORT_SOURCE.getMenuStyle());
-        sortBySource.setText(
-                MenuAction.SORT_SOURCE.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.SORT_SOURCE, sortBySource);
-
-        new MenuItem(menuPkgs, SWT.SEPARATOR);
-
-        MenuItem reload = new MenuItem(menuPkgs,
-                MenuAction.RELOAD.getMenuStyle());
-        reload.setText(
-                MenuAction.RELOAD.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.RELOAD, reload);
 
         MenuItem menuBarTools = new MenuItem(menuBar, SWT.CASCADE);
         menuBarTools.setText("Tools");
@@ -280,32 +214,23 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         Menu menuTools = new Menu(menuBarTools);
         menuBarTools.setMenu(menuTools);
 
-        if (mContext == InvocationContext.STANDALONE) {
-            MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
-            manageAvds.setText("Manage AVDs...");
-            manageAvds.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent event) {
-                    onAvdManager();
-                }
-            });
-        }
+        MenuItem manageSdk = new MenuItem(menuTools, SWT.NONE);
+        manageSdk.setText("Manage SDK...");
+        manageSdk.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                onSdkManager();
+            }
+        });
 
-        MenuItem manageSources = new MenuItem(menuTools,
-                MenuAction.SHOW_ADDON_SITES.getMenuStyle());
-        manageSources.setText(
-                MenuAction.SHOW_ADDON_SITES.getMenuTitle());
-        mPkgPage.registerMenuAction(
-                MenuAction.SHOW_ADDON_SITES, manageSources);
-
-        if (mContext == InvocationContext.STANDALONE) {
+        if (mContext != InvocationContext.IDE) {
             // Note: when invoked from an IDE, the SwtMenuBar library isn't
             // available. This means this source should not directly import
             // any of SwtMenuBar classes, otherwise the whole window class
             // would fail to load. The MenuBarWrapper below helps to make
             // that indirection.
 
-            new MenuBarWrapper(APP_NAME, menuTools) {
+            new MenuBarWrapper(APP_NAME_MAC_MENU, menuTools) {
                 @Override
                 public void onPreferencesMenuSelected() {
                     showRegisteredPage(Purpose.SETTINGS);
@@ -418,12 +343,6 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * Returns true if we should show the window.
      */
     private boolean postCreateContent() {
-        ProgressViewFactory factory = new ProgressViewFactory();
-        factory.setProgressView(new ProgressView(
-                mStatusText, mProgressBar, mButtonStop,
-                mContext == InvocationContext.IDE ? mUpdaterData.getSdkLog() : null));
-        mUpdaterData.setTaskFactory(factory);
-
         setWindowImage(mShell);
 
         setupSources();
@@ -441,9 +360,6 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
                     false /* includeObsoletes */);
         }
 
-        // Tell the one page its the selected one
-        mPkgPage.onPageSelected();
-
         return true;
     }
 
@@ -455,7 +371,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     private void setWindowImage(Shell shell) {
         String imageName = "android_icon_16.png"; //$NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-            imageName = "android_icon_128.png"; //$NON-NLS-1$
+            imageName = "android_icon_128.png";
         }
 
         if (mUpdaterData != null) {
@@ -504,14 +420,6 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         mSettingsController.applySettings();
     }
 
-    private void onToggleDetails() {
-        mButtonDetails.setState(1 - mButtonDetails.getState());
-    }
-
-    private void onStopSelected() {
-        // TODO
-    }
-
     private void showRegisteredPage(Purpose purpose) {
         if (mExtraPages == null) {
             return;
@@ -532,14 +440,14 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         }
     }
 
-    private void onAvdManager() {
+    private void onSdkManager() {
         ITaskFactory oldFactory = mUpdaterData.getTaskFactory();
 
         try {
-            AvdManagerWindowImpl1 win = new AvdManagerWindowImpl1(
+            UpdaterWindowImpl2 win = new UpdaterWindowImpl2(
                     mShell,
                     mUpdaterData,
-                    AvdManagerWindowImpl1.InvocationContext.SDK_MANAGER);
+                    UpdaterWindow.InvocationContext.AVD_MANAGER);
 
             for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
                 win.registerPage(page.getFirst(), page.getSecond());
@@ -547,7 +455,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
             win.open();
         } catch (Exception e) {
-            mUpdaterData.getSdkLog().error(e, "AVD Manager window error");
+            mUpdaterData.getSdkLog().error(e, "SDK Manager window error");
         } finally {
             mUpdaterData.setTaskFactory(oldFactory);
         }
@@ -599,7 +507,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
             }
 
             getShell().setText(
-                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));  //$NON-NLS-1$
+                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));
 
             Label filler = new Label(shell, SWT.NONE);
             GridDataBuilder.create(filler).hFill().hGrab();

@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * Opens an SDK Updater Window.
+ * Opens an SDK Manager Window.
  *
  * This is the public entry point for using the window.
  */
@@ -49,12 +49,21 @@ public class UpdaterWindow {
          * For SdkMan2, we also have a menu bar and link to the AVD manager.
          */
         STANDALONE,
+
+        /**
+         * The SDK Manager is invoked from the standalone AVD Manager.
+         * This is similar to the standalone mode except that in this case we
+         * don't display a menu item linking to the AVD Manager.
+         */
+        AVD_MANAGER,
+
         /**
          * The SDK Manager is invoked from an IDE.
          * In this mode, we do not modify the menu bar. There is no about box
          * and no settings (e.g. HTTP proxy settings are inherited from Eclipse.)
          */
         IDE,
+
         /**
          * The SDK Manager is invoked from the AVD Selector.
          * For SdkMan1, this means the AVD page will be displayed first.
