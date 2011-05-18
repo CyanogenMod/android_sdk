@@ -540,16 +540,22 @@ public class Hyperlinks {
         IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
         IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
         IPath workspacePath = workspace.getLocation();
+        IFile file = null;
         if (workspacePath.isPrefixOf(filePath)) {
             IPath relativePath = filePath.makeRelativeTo(workspacePath);
-            IResource file = workspace.findMember(relativePath);
-            if (file instanceof IFile) {
-                try {
-                    AdtPlugin.openFile((IFile) file, region);
-                    return;
-                } catch (PartInitException ex) {
-                    AdtPlugin.log(ex, "Can't open %$1s", filePath); //$NON-NLS-1$
-                }
+            IResource member = workspace.findMember(relativePath);
+            if (member instanceof IFile) {
+                file = (IFile) member;
+            }
+        } else if (filePath.isAbsolute()) {
+            file = workspace.getFileForLocation(filePath);
+        }
+        if (file != null) {
+            try {
+                AdtPlugin.openFile(file, region);
+                return;
+            } catch (PartInitException ex) {
+                AdtPlugin.log(ex, "Can't open %$1s", filePath); //$NON-NLS-1$
             }
         } else {
             // It's not a path in the workspace; look externally
