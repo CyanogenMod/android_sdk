@@ -1428,7 +1428,7 @@ public class GraphicalEditorPart extends EditorPart
         float xdpi = mConfigComposite.getXDpi();
         float ydpi = mConfigComposite.getYDpi();
 
-        ILayoutPullParser modelParser = new UiElementPullParser(model,
+        UiElementPullParser modelParser = new UiElementPullParser(model,
                 mUseExplodeMode, explodeNodes, density, xdpi, project);
         ILayoutPullParser topParser = modelParser;
 

@@ -20,11 +20,15 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.FragmentMenu;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -348,6 +352,13 @@ public final class UiElementPullParser extends BasePullParser {
         Node xmlNode = uiNode.getXmlNode();
 
         if (xmlNode != null) {
+            if (localName.equals(ATTR_LAYOUT) && xmlNode.getNodeName().equals(VIEW_FRAGMENT)) {
+                String layout = FragmentMenu.getFragmentLayout(xmlNode);
+                if (layout != null) {
+                    return layout;
+                }
+            }
+
             Node attribute = xmlNode.getAttributes().getNamedItemNS(namespace, localName);
             if (attribute != null) {
                 String value = attribute.getNodeValue();
@@ -379,7 +390,19 @@ public final class UiElementPullParser extends BasePullParser {
 
     public String getName() {
         if (mParsingState == START_TAG || mParsingState == END_TAG) {
-            return getCurrentNode().getDescriptor().getXmlLocalName();
+            String name = getCurrentNode().getDescriptor().getXmlLocalName();
+
+            if (name.equals(VIEW_FRAGMENT)) {
+                // Temporarily translate <fragment> to <include> (and in getAttribute
+                // we will also provide a layout-attribute for the corresponding
+                // fragment name attribute)
+                String layout = FragmentMenu.getFragmentLayout(getCurrentNode().getXmlNode());
+                if (layout != null) {
+                    return VIEW_INCLUDE;
+                }
+            }
+
+            return name;
         }
 
         return null;
@@ -478,18 +501,18 @@ public final class UiElementPullParser extends BasePullParser {
     }
 
     /** {@link DimensionEntry} complex unit: Value is raw pixels. */
-    public static final int COMPLEX_UNIT_PX = 0;
+    private static final int COMPLEX_UNIT_PX = 0;
     /** {@link DimensionEntry} complex unit: Value is Device Independent
      *  Pixels. */
-    public static final int COMPLEX_UNIT_DIP = 1;
+    private static final int COMPLEX_UNIT_DIP = 1;
     /** {@link DimensionEntry} complex unit: Value is a scaled pixel. */
-    public static final int COMPLEX_UNIT_SP = 2;
+    private static final int COMPLEX_UNIT_SP = 2;
     /** {@link DimensionEntry} complex unit: Value is in points. */
-    public static final int COMPLEX_UNIT_PT = 3;
+    private static final int COMPLEX_UNIT_PT = 3;
     /** {@link DimensionEntry} complex unit: Value is in inches. */
-    public static final int COMPLEX_UNIT_IN = 4;
+    private static final int COMPLEX_UNIT_IN = 4;
     /** {@link DimensionEntry} complex unit: Value is in millimeters. */
-    public static final int COMPLEX_UNIT_MM = 5;
+    private static final int COMPLEX_UNIT_MM = 5;
 
     private final static DimensionEntry[] sDimensions = new DimensionEntry[] {
         new DimensionEntry("px", COMPLEX_UNIT_PX),

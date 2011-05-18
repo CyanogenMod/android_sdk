@@ -56,6 +56,8 @@ public class LayoutMetadata {
     public static final String KEY_LV_HEADER = "listheader";    //$NON-NLS-1$
     /** The property key, included in comments, which references a list footer layout */
     public static final String KEY_LV_FOOTER = "listfooter";    //$NON-NLS-1$
+    /** The property key, included in comments, which references a fragment layout to show */
+    public static final String KEY_FRAGMENT_LAYOUT = "layout";        //$NON-NLS-1$
 
     /** The metadata class is a singleton for now since it has no state of its own */
     private static final LayoutMetadata sInstance = new LayoutMetadata();
@@ -84,8 +86,10 @@ public class LayoutMetadata {
     public String getProperty(IDocument document, Node node, String name) {
         IStructuredModel model = null;
         try {
-            IModelManager modelManager = StructuredModelManager.getModelManager();
-            model = modelManager.getExistingModelForRead(document);
+            if (document != null) {
+                IModelManager modelManager = StructuredModelManager.getModelManager();
+                model = modelManager.getExistingModelForRead(document);
+            }
 
             Node comment = findComment(node);
             if (comment != null) {
