@@ -395,7 +395,8 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
     private boolean postCreateContent() {
         ProgressViewFactory factory = new ProgressViewFactory();
         factory.setProgressView(new ProgressView(
-                mStatusText, mProgressBar, mButtonStop));
+                mStatusText, mProgressBar, mButtonStop,
+                mContext == InvocationContext.IDE ? mUpdaterData.getSdkLog() : null));
         mUpdaterData.setTaskFactory(factory);
 
         setWindowImage(mShell);
