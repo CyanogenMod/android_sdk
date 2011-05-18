@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
+import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
+
 import com.android.ide.common.resources.platform.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -164,7 +166,8 @@ public final class CustomViewDescriptorService {
 
                         String name = DescriptorsUtils.getBasename(fqcn);
                         ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
-                                getAttributeDescriptor(type, parentDescriptor));
+                                getAttributeDescriptor(type, parentDescriptor),
+                                parentDescriptor.hasChildren());
                         descriptor.setSuperClass(parentDescriptor);
 
                         synchronized (mCustomDescriptorMap) {
@@ -241,8 +244,14 @@ public final class CustomViewDescriptorService {
                 // parent class is a valid View class with a descriptor, so we create one
                 // for this class.
                 String name = DescriptorsUtils.getBasename(fqcn);
+                // A custom view accepts children if its parent descriptor also does.
+                // The only exception to this is ViewGroup, which accepts children even though
+                // its parent does not.
+                boolean isViewGroup = fqcn.equals(CLASS_VIEWGROUP);
+                boolean hasChildren = isViewGroup || parentDescriptor.hasChildren();
                 ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
-                        getAttributeDescriptor(type, parentDescriptor));
+                        getAttributeDescriptor(type, parentDescriptor),
+                        hasChildren);
                 descriptor.setSuperClass(parentDescriptor);
 
                 // add it to the map
@@ -283,7 +292,10 @@ public final class CustomViewDescriptorService {
     }
 
     private class CustomViewDescriptor extends ViewElementDescriptor {
-        public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes) {
+        private boolean mHasChildren;
+
+        public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes,
+                boolean hasChildren) {
             super(
                     fqcn, // xml name
                     name, // ui name
@@ -295,7 +307,20 @@ public final class CustomViewDescriptorService {
                     null, // children
                     false // mandatory
             );
+            mHasChildren = hasChildren;
         }
+
+        /**
+         * {@inheritDoc}
+         * <p>
+         * Custom views can accept children even if we have no information about
+         * allowed children.
+         */
+        @Override
+        public boolean hasChildren() {
+            return mHasChildren;
+        }
+
 
         @Override
         public Image getGenericIcon() {
