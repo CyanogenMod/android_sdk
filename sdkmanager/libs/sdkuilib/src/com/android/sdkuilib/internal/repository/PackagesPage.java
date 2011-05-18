@@ -96,7 +96,7 @@ public class PackagesPage extends UpdaterPage
     enum MenuAction {
         RELOAD                      (SWT.NONE,  "Reload"),
         SHOW_ADDON_SITES            (SWT.NONE,  "Manage Sources..."),
-        TOGGLE_SHOW_ARCHIVES        (SWT.CHECK, "Show Archives"),
+        TOGGLE_SHOW_ARCHIVES        (SWT.CHECK, "Show Archives Details"),
         TOGGLE_SHOW_INSTALLED_PKG   (SWT.CHECK, "Show Installed Packages"),
         TOGGLE_SHOW_OBSOLETE_PKG    (SWT.CHECK, "Show Obsolete Packages"),
         TOGGLE_SHOW_UPDATE_NEW_PKG  (SWT.CHECK, "Show Updates/New Packages"),
@@ -919,7 +919,8 @@ public class PackagesPage extends UpdaterPage
             }
         } else {
             // In non-detail mode, we install all the compatible archives
-            // found in the selected pkg items or update packages.
+            // found in the selected pkg items. We also automatically
+            // select update packages rather than the root package if any.
 
             Object[] checked = mTreeViewer.getCheckedElements();
             if (checked != null) {
@@ -930,6 +931,15 @@ public class PackagesPage extends UpdaterPage
                         p = (Package) c;
                     } else if (c instanceof PkgItem) {
                         p = ((PkgItem) c).getPackage();
+
+                        PkgItem pi = (PkgItem) c;
+                        if (pi.getState() == PkgState.HAS_UPDATE) {
+                            List<Package> updates = pi.getUpdatePkgs();
+                            // If there's one and only one update, auto-select it instead.
+                            if (updates != null && updates.size() == 1) {
+                                p = updates.get(0);
+                            }
+                        }
                     }
                     if (p != null) {
                         for (Archive a : p.getArchives()) {
@@ -1073,9 +1083,17 @@ public class PackagesPage extends UpdaterPage
                     case INSTALLED:
                         return "Installed";
                     case HAS_UPDATE:
-                        return "Update available";
+                        List<Package> updates = pkg.getUpdatePkgs();
+                        if (updates.size() == 1) {
+                            return String.format("Update available: rev. %1$s",
+                                    updates.get(0).getRevision());
+                        } else {
+                            // This case should not happen in *our* typical release workflow.
+                            return "Multiple updates available";
+                        }
                     case NEW:
-                        return "Not installed. New revision " + Integer.toString(pkg.getRevision());
+                        return "Not installed";
+                        // TODO display pkg.getRevision() in a tooltip
                     }
                     return pkg.getState().toString();
 
@@ -1158,7 +1176,10 @@ public class PackagesPage extends UpdaterPage
 
             } else if (parentElement instanceof PkgItem) {
                 List<Package> pkgs = ((PkgItem) parentElement).getUpdatePkgs();
-                if (pkgs != null) {
+
+                // Display update packages as sub-items if there's more than one
+                // or if the archive/details mode is activated.
+                if (pkgs != null && (pkgs.size() > 1 || mDisplayArchives)) {
                     return pkgs.toArray();
                 }
 
@@ -1177,7 +1198,8 @@ public class PackagesPage extends UpdaterPage
         }
 
         public Object getParent(Object element) {
-            // TODO Auto-generated method stub
+            // Pass. We don't try to compute the parent element and so far
+            // that doesn't seem to affect the behavior of the tree widget.
             return null;
         }
 
@@ -1190,7 +1212,10 @@ public class PackagesPage extends UpdaterPage
 
             } else if (parentElement instanceof PkgItem) {
                 List<Package> pkgs = ((PkgItem) parentElement).getUpdatePkgs();
-                if (pkgs != null) {
+
+                // Display update packages as sub-items if there's more than one
+                // or if the archive/details mode is activated.
+                if (pkgs != null && (pkgs.size() > 1 || mDisplayArchives)) {
                     return !pkgs.isEmpty();
                 }
 
