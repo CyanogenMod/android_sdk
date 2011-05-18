@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.CALENDAR_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.AdapterBinding;
@@ -45,6 +46,7 @@ import com.android.util.Pair;
 import org.eclipse.core.resources.IProject;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Set;
@@ -141,7 +143,9 @@ public final class ProjectCallback extends LegacyCallback {
         } catch (Exception e) {
             // Add the missing class to the list so that the renderer can print them later.
             // no need to log this.
-            mMissingClasses.add(className);
+            if (!className.equals(VIEW_FRAGMENT)) {
+                mMissingClasses.add(className);
+            }
         }
 
         try {
@@ -175,6 +179,27 @@ public final class ProjectCallback extends LegacyCallback {
             Method m = view.getClass().getMethod("setText",
                                                  new Class<?>[] { CharSequence.class });
             m.invoke(view, getShortClassName(className));
+
+            // Call MockView.setGravity(Gravity.CENTER) to get the text centered in
+            // MockViews.
+            // TODO: Do this in layoutlib's MockView class instead.
+            try {
+                // Look up android.view.Gravity#CENTER - or can we just hard-code
+                // the value (17) here?
+                Class<?> gravity =
+                    Class.forName("android.view.Gravity", //$NON-NLS-1$
+                            true, view.getClass().getClassLoader());
+                Field centerField = gravity.getField("CENTER"); //$NON-NLS-1$
+                int center = centerField.getInt(null);
+                m = view.getClass().getMethod("setGravity",
+                        new Class<?>[] { Integer.TYPE });
+                // Center
+                //int center = (0x0001 << 4) | (0x0001 << 0);
+                m.invoke(view, Integer.valueOf(center));
+            } catch (Exception e) {
+                // Not important to center views
+            }
+
             return view;
         } catch (Exception e) {
             // We failed to create and return a mock view.

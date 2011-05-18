@@ -147,6 +147,14 @@ public interface IClientRulesEngine {
     String displayIncludeSourceInput();
 
     /**
+     * Displays an input dialog tailored for inputing the source of a {@code <fragment>}
+     * layout tag.
+     *
+     * @return the fully qualified class name of the fragment activity
+     */
+    String displayFragmentSourceInput();
+
+    /**
      * Select the given nodes
      *
      * @param nodes the nodes to be selected, never null

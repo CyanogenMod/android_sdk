@@ -247,6 +247,8 @@ public class UiElementNode implements IPropertySource {
                 attr = _Element_getAttributeNS(elem,
                                 SdkConstants.NS_RESOURCES,
                                 AndroidManifestDescriptors.ANDROID_LABEL_ATTR);
+            } else if (mXmlNode.getNodeName().equals(LayoutDescriptors.VIEW_FRAGMENT)) {
+                attr = attr.substring(attr.lastIndexOf('.') + 1);
             }
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,
