@@ -44,6 +44,14 @@ public abstract class Bridge {
     public abstract int getApiLevel();
 
     /**
+     * Returns the revision of the library inside a given (layoutlib) API level.
+     * The true revision number of the library is {@link #getApiLevel()}.{@link #getRevision()}
+     */
+    public int getRevision() {
+        return 0;
+    }
+
+    /**
      * Returns an {@link EnumSet} of the supported {@link Capability}.
      * @return an {@link EnumSet} with the supported capabilities.
      *
