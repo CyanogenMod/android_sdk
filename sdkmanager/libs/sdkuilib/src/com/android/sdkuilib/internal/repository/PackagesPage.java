@@ -18,7 +18,6 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.Package;
@@ -26,7 +25,8 @@ import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdkuilib.internal.repository.PackageManager.PkgItem;
+import com.android.sdkuilib.internal.repository.PackageManager.PkgState;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.util.Pair;
@@ -91,7 +91,7 @@ public class PackagesPage extends Composite
     private static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
     private static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
 
-    private final List<PkgItem> mPackages = new ArrayList<PkgItem>();
+    private final PackageManagerImpl mPkgManager;
     private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
     private final UpdaterData mUpdaterData;
 
@@ -122,13 +122,14 @@ public class PackagesPage extends Composite
         super(parent, SWT.NONE);
 
         mUpdaterData = updaterData;
+        mPkgManager = new PackageManagerImpl(updaterData);
         createContents(this);
 
         postCreate();  //$hide$
     }
 
     public void onPageSelected() {
-        if (mPackages.isEmpty()) {
+        if (mPkgManager.getPackages().isEmpty()) {
             // Initialize the package list the first time the page is shown.
             loadPackages();
         }
@@ -372,67 +373,13 @@ public class PackagesPage extends Composite
             return;
         }
 
+
         try {
             enableUi(mGroupPackages, false);
 
-            boolean firstLoad = mPackages.size() == 0;
-            mPackages.clear();
+            boolean firstLoad = mPkgManager.getPackages().isEmpty();
 
-            // get local packages
-            for (Package pkg : mUpdaterData.getInstalledPackages()) {
-                PkgItem pi = new PkgItem(pkg, PkgState.INSTALLED);
-                mPackages.add(pi);
-            }
-
-            // get remote packages
-            final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
-            mUpdaterData.loadRemoteAddonsList();
-            mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
-                public void run(ITaskMonitor monitor) {
-                    SdkSource[] sources = mUpdaterData.getSources().getAllSources();
-                    for (SdkSource source : sources) {
-                        Package[] pkgs = source.getPackages();
-                        if (pkgs == null) {
-                            source.load(monitor, forceHttp);
-                            pkgs = source.getPackages();
-                        }
-                        if (pkgs == null) {
-                            continue;
-                        }
-
-                        nextPkg: for(Package pkg : pkgs) {
-                            boolean isUpdate = false;
-                            for (PkgItem pi: mPackages) {
-                                if (pi.isSameAs(pkg)) {
-                                    continue nextPkg;
-                                }
-                                if (pi.isUpdatedBy(pkg)) {
-                                    isUpdate = true;
-                                    break;
-                                }
-                            }
-
-                            if (!isUpdate) {
-                                PkgItem pi = new PkgItem(pkg, PkgState.NEW);
-                                mPackages.add(pi);
-                            }
-                        }
-
-                        // Dynamically update the table while we load after each source.
-                        // Since the official Android source gets loaded first, it makes the
-                        // window look non-empty a lot sooner.
-                        mGroupPackages.getDisplay().syncExec(new Runnable() {
-                            public void run() {
-                                sortPackages(true /*updateButtons*/);
-                            }
-                        });
-                    }
-
-                    monitor.setDescription("Done loading %1$d packages from %2$d sources",
-                            mPackages.size(),
-                            sources.length);
-                }
-            });
+            mPkgManager.loadPackages();
 
             if (firstLoad) {
                 // set the initial expanded state
@@ -507,7 +454,7 @@ public class PackagesPage extends Composite
             mCategories.add(cat);
         }
 
-        for (PkgItem item : mPackages) {
+        for (PkgItem item : mPkgManager.getPackages()) {
             if (!keepItem(item)) {
                 continue;
             }
@@ -615,7 +562,7 @@ public class PackagesPage extends Composite
         mCategories.clear();
 
         Set<SdkSource> sourceSet = new HashSet<SdkSource>();
-        for (PkgItem item : mPackages) {
+        for (PkgItem item : mPkgManager.getPackages()) {
             if (keepItem(item)) {
                 sourceSet.add(item.getSource());
             }
@@ -646,7 +593,7 @@ public class PackagesPage extends Composite
                     key.toString(),
                     iconRef);
 
-            for (PkgItem item : mPackages) {
+            for (PkgItem item : mPkgManager.getPackages()) {
                 if (item.getSource() == source) {
                     cat.getItems().add(item);
                 }
@@ -1186,110 +1133,25 @@ public class PackagesPage extends Composite
         }
     }
 
-    public enum PkgState {
-        /**
-         * Package is locally installed and has no update available on remote sites.
-         */
-        INSTALLED,
+    private class PackageManagerImpl extends PackageManager {
 
-        /**
-         * Package is installed and has an update available.
-         * In this case, {@link PkgItem#getUpdatePkgs()} provides the list of 1 or more
-         * packages that can update this {@link PkgItem}.
-         */
-        HAS_UPDATE,
-
-        /**
-         * There's a new package available on the remote site that isn't
-         * installed locally.
-         */
-        NEW
-    }
-
-    public static class PkgItem implements Comparable<PkgItem> {
-        private final Package mPkg;
-        private PkgState mState;
-        private List<Package> mUpdatePkgs;
-
-        public PkgItem(Package pkg, PkgState state) {
-            mPkg = pkg;
-            mState = state;
-            assert mPkg != null;
+        public PackageManagerImpl(UpdaterData updaterData) {
+            super(updaterData);
         }
 
-        public boolean isObsolete() {
-            return mPkg.isObsolete();
-        }
-
-        public boolean isSameAs(Package pkg) {
-            return mPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE;
-        }
-
-        /**
-         * Check whether the 'pkg' argument updates this package.
-         * If it does, record it as a sub-package.
-         * Returns true if it was recorded as an update, false otherwise.
-         */
-        public boolean isUpdatedBy(Package pkg) {
-            if (mPkg.canBeUpdatedBy(pkg) == UpdateInfo.UPDATE) {
-                if (mUpdatePkgs == null) {
-                    mUpdatePkgs = new ArrayList<Package>();
+        @Override
+        public void updatePackageTable() {
+            // Dynamically update the table while we load after each source.
+            // Since the official Android source gets loaded first, it makes the
+            // window look non-empty a lot sooner.
+            mGroupPackages.getDisplay().syncExec(new Runnable() {
+                public void run() {
+                    sortPackages(true /* updateButtons */);
                 }
-                mUpdatePkgs.add(pkg);
-                mState = PkgState.HAS_UPDATE;
-                return true;
-            }
-
-            return false;
+            });
         }
 
-        public String getName() {
-            return mPkg.getListDescription();
-        }
-
-        public int getRevision() {
-            return mPkg.getRevision();
-        }
-
-        public String getDescription() {
-            return mPkg.getDescription();
-        }
-
-        public Package getPackage() {
-            return mPkg;
-        }
-
-        public PkgState getState() {
-            return mState;
-        }
-
-        public SdkSource getSource() {
-            if (mState == PkgState.NEW) {
-                return mPkg.getParentSource();
-            } else {
-                return null;
-            }
-        }
-
-        public int getApi() {
-            return mPkg instanceof IPackageVersion ?
-                    ((IPackageVersion) mPkg).getVersion().getApiLevel() :
-                        -1;
-        }
-
-        public List<Package> getUpdatePkgs() {
-            return mUpdatePkgs;
-        }
-
-        public Archive[] getArchives() {
-            return mPkg.getArchives();
-        }
-
-        public int compareTo(PkgItem pkg) {
-            return getPackage().compareTo(pkg.getPackage());
-        }
     }
-
 
 
     // --- Implementation of ISdkChangeListener ---
