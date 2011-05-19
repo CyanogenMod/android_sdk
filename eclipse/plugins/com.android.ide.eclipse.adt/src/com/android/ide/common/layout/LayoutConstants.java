@@ -36,6 +36,7 @@ public class LayoutConstants {
     public static final String ATTR_CLASS = "class";                    //$NON-NLS-1$
     public static final String ATTR_ON_CLICK = "onClick";               //$NON-NLS-1$
     public static final String ATTR_TAG = "tag";                        //$NON-NLS-1$
+    public static final String ATTR_NUM_COLUMNS = "numColumns";         //$NON-NLS-1$
 
     // Some common layout element names
     public static final String RELATIVE_LAYOUT = "RelativeLayout";      //$NON-NLS-1$
@@ -181,6 +182,9 @@ public class LayoutConstants {
 
     /** The fully qualified class name of a TableLayout view */
     public static final String FQCN_TABLE_LAYOUT = "android.widget.TableLayout"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a GridView view */
+    public static final String FQCN_GRID_VIEW = "android.widget.GridView"; //$NON-NLS-1$
 
     /** The fully qualified class name of a TabWidget view */
     public static final String FQCN_TAB_WIDGET = "android.widget.TabWidget"; //$NON-NLS-1$

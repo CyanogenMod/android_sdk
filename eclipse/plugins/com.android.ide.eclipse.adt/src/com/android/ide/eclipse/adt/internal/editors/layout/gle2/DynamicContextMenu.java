@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
@@ -246,9 +247,10 @@ import java.util.regex.Pattern;
         for (SelectionItem item : selection) {
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
             String name = node.getDescriptor().getXmlLocalName();
-            if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW)) {
+            boolean isGrid = name.equals(GRID_VIEW);
+            if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW) || isGrid) {
                 mMenuManager.insertBefore(endId, new Separator());
-                mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas));
+                mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas, isGrid));
                 return;
             } else if (name.equals(VIEW_FRAGMENT) && selection.size() == 1) {
                 mMenuManager.insertBefore(endId, new Separator());

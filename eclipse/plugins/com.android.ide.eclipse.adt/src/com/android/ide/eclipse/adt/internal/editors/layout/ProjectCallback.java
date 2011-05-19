@@ -19,6 +19,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.CALENDAR_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
@@ -439,22 +441,24 @@ public final class ProjectCallback extends LegacyCallback {
 
     /**
      * For the given class, finds and returns the nearest super class which is a ListView
-     * or an ExpandableListView, or returns null.
+     * or an ExpandableListView or a GridView (which uses a list adapter), or returns null.
      *
      * @param clz the class of the view object
-     * @return the fully qualified class name of the list view ancestor, or null if there
+     * @return the fully qualified class name of the list ancestor, or null if there
      *         is no list view ancestor
      */
-    public static String getListViewFqcn(Class<?> clz) {
+    public static String getListAdapterViewFqcn(Class<?> clz) {
         String fqcn = clz.getName();
         if (fqcn.endsWith(LIST_VIEW)) { // including EXPANDABLE_LIST_VIEW
             return fqcn;
+        } else if (fqcn.equals(FQCN_GRID_VIEW)) {
+                return fqcn;
         } else if (fqcn.startsWith(ANDROID_PKG_PREFIX)) {
             return null;
         }
         Class<?> superClass = clz.getSuperclass();
         if (superClass != null) {
-            return getListViewFqcn(superClass);
+            return getListAdapterViewFqcn(superClass);
         } else {
             // Should not happen; we would have encountered android.view.View first,
             // and it should have been covered by the ANDROID_PKG_PREFIX case above.
@@ -508,7 +512,7 @@ public final class ProjectCallback extends LegacyCallback {
         // class name, otherwise return null. This is used to filter out other types
         // of AdapterViews (such as Spinners) where we don't want to use the list item
         // binding.
-        String listFqcn = getListViewFqcn(viewObject.getClass());
+        String listFqcn = getListAdapterViewFqcn(viewObject.getClass());
         if (listFqcn == null) {
             return null;
         }
@@ -522,7 +526,8 @@ public final class ProjectCallback extends LegacyCallback {
             return null;
         }
 
-        AdapterBinding binding = new AdapterBinding(12);
+        int count = listFqcn.endsWith(GRID_VIEW) ? 24 : 12;
+        AdapterBinding binding = new AdapterBinding(count);
         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_EXPANDABLE_LIST_ITEM,
                     true /* isFramework */, 1));
