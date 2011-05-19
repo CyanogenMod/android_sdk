@@ -194,6 +194,9 @@ public class DeviceBridge {
             if (device.isOnline()) {
                 device.executeShellCommand(buildIsServerRunningShellCommand(),
                         new BooleanResultReader(result));
+                if (!result[0] && loadViewServerInfo(device).protocolVersion > 2) {
+                    result[0] = true;
+                }
             }
         } catch (TimeoutException e) {
             Log.e(TAG, "Timeout checking status of view server on device " + device);
