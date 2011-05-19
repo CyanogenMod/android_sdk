@@ -2275,9 +2275,12 @@ public class ConfigurationComposite extends Composite {
                     return parentStyle.equals("Theme") || parentStyle.startsWith("Theme.");
                 } else {
                     // if it's a project style, we check this is a theme.
-                    value = styleMap.get(parentStyle);
-                    if (value != null) {
-                        return isTheme(value, styleMap);
+                    ResourceValue parentValue = styleMap.get(parentStyle);
+
+                    // also prevent stackoverflow in case the dev mistakenly declared
+                    // the parent of the style as the style itfself.
+                    if (parentValue != null && parentValue.equals(value) == false) {
+                        return isTheme(parentValue, styleMap);
                     }
                 }
             }
