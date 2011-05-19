@@ -2445,6 +2445,24 @@ public class ConfigurationComposite extends Composite {
                         }
                     }
                     target = stringToTarget(values[1]);
+
+                    // See if we should "correct" the rendering target to a better version.
+                    // If you're using a pre-release version of the render target, and a
+                    // final release is available and installed, we should switch to that
+                    // one instead.
+                    if (target != null) {
+                        AndroidVersion version = target.getVersion();
+                        if (version.getCodename() != null && mTargetList != null) {
+                            int targetApiLevel = version.getApiLevel() + 1;
+                            for (IAndroidTarget t : mTargetList) {
+                                if (t.getVersion().getApiLevel() == targetApiLevel
+                                        && t.isPlatform()) {
+                                    target = t;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 return Pair.of(locale, target);
