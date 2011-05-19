@@ -219,6 +219,33 @@ public class LayoutLibrary {
     // ------ Layout Lib API proxy
 
     /**
+     * Returns the API level of the layout library.
+     */
+    public int getApiLevel() {
+        if (mBridge != null) {
+            return mBridge.getApiLevel();
+        }
+
+        if (mLegacyBridge != null) {
+            return getLegacyApiLevel();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Returns the revision of the library inside a given (layoutlib) API level.
+     * The true version number of the library is {@link #getApiLevel()}.{@link #getRevision()}
+     */
+    public int getRevision() {
+        if (mBridge != null) {
+            return mBridge.getRevision();
+        }
+
+        return 0;
+    }
+
+    /**
      * Returns whether the LayoutLibrary supports a given {@link Capability}.
      * @return true if it supports it.
      *
