@@ -485,6 +485,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         return descriptor;
     }
 
+    /**
      * Creates and return a new {@code <requestFocus>} descriptor.
      * @param knownLayouts  A list of all known layout view descriptors, used to find the
      *   FrameLayout descriptor and extract its layout attributes.
