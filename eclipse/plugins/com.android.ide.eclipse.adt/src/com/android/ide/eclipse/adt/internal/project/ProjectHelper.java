@@ -57,34 +57,55 @@ public final class ProjectHelper {
 
     /**
      * Adds the corresponding source folder to the class path entries.
+     * This method does not check whether the entry is already defined in the project.
      *
      * @param entries The class path entries to read. A copy will be returned.
-     * @param new_entry The parent source folder to remove.
+     * @param newEntry The new class path entry to add.
      * @return A new class path entries array.
      */
     public static IClasspathEntry[] addEntryToClasspath(
-            IClasspathEntry[] entries, IClasspathEntry new_entry) {
+            IClasspathEntry[] entries, IClasspathEntry newEntry) {
         int n = entries.length;
         IClasspathEntry[] newEntries = new IClasspathEntry[n + 1];
         System.arraycopy(entries, 0, newEntries, 0, n);
-        newEntries[n] = new_entry;
+        newEntries[n] = newEntry;
         return newEntries;
     }
 
     /**
      * Adds the corresponding source folder to the project's class path entries.
+     * This method does not check whether the entry is already defined in the project.
      *
      * @param javaProject The java project of which path entries to update.
-     * @param new_entry The parent source folder to remove.
+     * @param newEntry The new class path entry to add.
      * @throws JavaModelException
      */
-    public static void addEntryToClasspath(
-            IJavaProject javaProject, IClasspathEntry new_entry)
+    public static void addEntryToClasspath(IJavaProject javaProject, IClasspathEntry newEntry)
             throws JavaModelException {
 
         IClasspathEntry[] entries = javaProject.getRawClasspath();
-        entries = addEntryToClasspath(entries, new_entry);
+        entries = addEntryToClasspath(entries, newEntry);
         javaProject.setRawClasspath(entries, new NullProgressMonitor());
+    }
+
+    /**
+     * Checks whether the given class path entry is already defined in the project.
+     *
+     * @param javaProject The java project of which path entries to check.
+     * @param newEntry The parent source folder to remove.
+     * @return True if the class path entry is already defined.
+     * @throws JavaModelException
+     */
+    public static boolean isEntryInClasspath(IJavaProject javaProject, IClasspathEntry newEntry)
+            throws JavaModelException {
+
+        IClasspathEntry[] entries = javaProject.getRawClasspath();
+        for (IClasspathEntry entry : entries) {
+            if (entry.equals(newEntry)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
