@@ -87,6 +87,13 @@ public final class LayoutDescriptors implements IDescriptorProvider {
     public static final String VIEW_VIEWTAG = "view";           //$NON-NLS-1$
 
     /**
+     * The XML name of the special {@code <requestFocus>} layout tag.
+     * A synthetic element with that name is created as part of the view descriptors list
+     * returned by {@link #getViewDescriptors()}.
+     */
+    public static final String REQUEST_FOCUS = "requestFocus";//$NON-NLS-1$
+
+    /**
      * The attribute name of the include tag's url naming the resource to be inserted
      * <p>
      * <b>NOTE</b>: The layout attribute is NOT in the Android namespace!
@@ -483,6 +490,26 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         }
 
         return descriptor;
+    }
+
+     * Creates and return a new {@code <requestFocus>} descriptor.
+     * @param knownLayouts  A list of all known layout view descriptors, used to find the
+     *   FrameLayout descriptor and extract its layout attributes.
+     */
+    private ViewElementDescriptor createRequestFocus() {
+        String xml_name = REQUEST_FOCUS;
+
+        // Create the include descriptor
+        return new ViewElementDescriptor(
+                xml_name,  // xml_name
+                xml_name, // ui_name
+                xml_name, // "class name"; the GLE only treats this as an element tag
+                "Requests focus for the parent element or one of its descendants", // tooltip
+                null,  // sdk_url
+                null,  // attributes
+                null,  // layout attributes
+                null,  // children
+                false  /* mandatory */);
     }
 
     /**
