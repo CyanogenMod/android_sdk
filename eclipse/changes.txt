@@ -34,6 +34,9 @@
   - The palette supports custom views, picking up any custom
     implementations of the View class in your project source folders
     or in included libraries, and these can be dragged into layouts.
+  - Fragments support: Fragments are available in the palette, and in
+    the tool you can choose which layout to show rendered for a given
+    fragment tag. Go to declaration works for fragment classes.
   - The layout editor automatically applies a "zoom to fit" for newly
     opened files as well as on device size and orientation changes to
     ensure that large layouts are always fully visible unless you
@@ -49,6 +52,14 @@
   - The layout editor is smarter about picking a default theme to
     render a layout with, consulting factors like theme registrations
     in the manifest, the SDK version, etc.
+  - The layout editor is also smarter about picking a default
+    configuration to render a layout with, defaulting to the currently
+    visible configuration in the previous file. It also considers the
+    SDK target to determine whether to default to a tablet or phone
+    screen size.
+  - Basic focus support: The first text field dropped in a layout is
+    assigned focus, and there are "Request Focus" and "Clear Focus"
+    context menu items on text fields to change the focus.
 - XML editors:
   - Code completion has been significantly improved. It now works
     within <style> elements, it completes dimensional units,
