@@ -52,6 +52,7 @@ import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -330,6 +331,28 @@ public class ManifestInfo {
     }
 
     /**
+     * Returns the {@link IPackageFragment} for the package registered in the manifest
+     *
+     * @return the {@link IPackageFragment} for the package registered in the manifest
+     */
+    public IPackageFragment getPackageFragment() {
+        sync();
+        try {
+            IJavaProject javaProject = BaseProjectHelper.getJavaProject(mProject);
+            if (javaProject != null) {
+                IPackageFragmentRoot root = ManifestInfo.getSourcePackageRoot(javaProject);
+                if (root != null) {
+                    return root.getPackageFragment(mPackage);
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the activity associated with the given layout file. Makes an educated guess
      * by peeking at the usages of the R.layout.name field corresponding to the layout and
      * if it finds a usage.
@@ -540,7 +563,7 @@ public class ManifestInfo {
     }
 
     /** Returns the first package root for the given java project */
-    private static IPackageFragmentRoot getSourcePackageRoot(IJavaProject javaProject) {
+    public static IPackageFragmentRoot getSourcePackageRoot(IJavaProject javaProject) {
         IPackageFragmentRoot packageRoot = null;
         List<IPath> sources = BaseProjectHelper.getSourceClasspaths(javaProject);
 
