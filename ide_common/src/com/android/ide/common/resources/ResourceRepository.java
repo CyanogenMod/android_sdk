@@ -482,10 +482,11 @@ public abstract class ResourceRepository {
      */
     private Map<String, ResourceValue> getConfiguredResource(ResourceType type,
             FolderConfiguration referenceConfig) {
+
         // get the resource item for the given type
         List<ResourceItem> items = mResourceMap.get(type);
         if (items == null) {
-            return Collections.emptyMap();
+            return new HashMap<String, ResourceValue>();
         }
 
         // create the map
