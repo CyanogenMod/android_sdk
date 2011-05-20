@@ -63,6 +63,7 @@ public abstract class SwtBaseDialog extends Dialog {
     /** Last dialog size for this session, different for each dialog class. */
     private static Map<Class<?>, Point> sLastSizeMap = new HashMap<Class<?>, Point>();
 
+    private volatile boolean mQuitRequested = false;
     private boolean mReturnValue;
     private Shell mShell;
 
@@ -85,17 +86,22 @@ public abstract class SwtBaseDialog extends Dialog {
      * @return The last value set using {@link #setReturnValue(boolean)} or false by default.
      */
     public boolean open() {
-        createShell();
-        createContents();
-        positionShell();
-        postCreate();
-        mShell.open();
-        mShell.layout();
-        Display display = getParent().getDisplay();
-        while (!mShell.isDisposed()) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
-            }
+        if (!mQuitRequested) {
+            createShell();
+        }
+        if (!mQuitRequested) {
+            createContents();
+        }
+        if (!mQuitRequested) {
+            positionShell();
+        }
+        if (!mQuitRequested) {
+            postCreate();
+        }
+        if (!mQuitRequested) {
+            mShell.open();
+            mShell.layout();
+            eventLoop();
         }
 
         return mReturnValue;
@@ -140,6 +146,22 @@ public abstract class SwtBaseDialog extends Dialog {
     protected abstract void postCreate();
 
     /**
+     * Run the event loop.
+     * This is called from {@link #open()} after {@link #postCreate()} and
+     * after the window has been shown on screen.
+     * Derived classes might want to use this as a place to start automated
+     * tasks that will update the UI.
+     */
+    protected void eventLoop() {
+        Display display = getParent().getDisplay();
+        while (!mQuitRequested && !mShell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
+    }
+
+    /**
      * Returns the current value that {@link #open()} will return to the caller.
      * Default is false.
      */
@@ -166,10 +188,16 @@ public abstract class SwtBaseDialog extends Dialog {
     /**
      * Saves the dialog size and close the dialog.
      * The {@link #open()} method will given return value (see {@link #setReturnValue(boolean)}.
+     * <p/>
+     * It's safe to call this method before the shell is initialized,
+     * in which case the dialog will close as soon as possible.
      */
     protected void close() {
-        saveSize();
-        getShell().close();
+        if (mShell != null) {
+            saveSize();
+            getShell().close();
+        }
+        mQuitRequested = true;
     }
 
     //-------

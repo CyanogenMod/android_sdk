@@ -261,6 +261,15 @@
                label="Fix Project Properties"
                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3"/>
          <action
+               class="com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction"
+               enablesFor="1"
+               icon="icons/android.png"
+               id="com.android.ide.eclipse.adt.wizards.actions.AddCompatibilityJarAction"
+               label="Add Compatibility Library..."
+               menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3"
+               tooltip="Add the Compatibility Library to the project">
+         </action>
+         <action
                class="com.android.ide.eclipse.adt.internal.refactorings.renamepackage.RenamePackageAction"
                enablesFor="1"
                id="com.android.ide.eclipse.adt.project.RenamePackageAction"
