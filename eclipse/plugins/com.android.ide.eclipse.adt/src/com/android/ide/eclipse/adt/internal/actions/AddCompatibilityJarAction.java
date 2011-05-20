@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
@@ -89,7 +90,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
                             .getAdapter(IProject.class);
                 }
                 if (project != null) {
-                    updateProject(project);
+                    install(project, false /* waitForFinish */);
                 }
             }
         }
@@ -99,7 +100,16 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         mSelection = selection;
     }
 
-    private void updateProject(final IProject project) {
+    /**
+     * Install the compatibility jar into the given project.
+     *
+     * @param project The Android project to install the compatibility jar into
+     * @param waitForFinish If true, block until the task has finished
+     * @return true if the installation was successful (or if <code>waitForFinish</code>
+     *    is false, if the installation is likely to be successful - e.g. the user has
+     *    at least agreed to all installation prompts.)
+     */
+    public static boolean install(final IProject project, boolean waitForFinish) {
 
         final IJavaProject javaProject = JavaCore.create(project);
         if (javaProject == null) {
@@ -110,9 +120,9 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk == null) {
             AdtPlugin.printErrorToConsole(
-                    this.getClass().getSimpleName(),   // tag
+                    AddCompatibilityJarAction.class.getSimpleName(),   // tag
                     "Error: Android SDK is not loaded yet."); //$NON-NLS-1$
-            return;
+            return false;
         }
 
         // TODO: For the generic action, check the library isn't in the project already.
@@ -130,7 +140,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
 
         if (!result.getFirst().booleanValue()) {
             AdtPlugin.printErrorToConsole("Failed to install Android Compatibility library");
-            return;
+            return false;
         }
 
         // TODO these "v4" values needs to be dynamic, e.g. we could try to match
@@ -143,12 +153,12 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         if (!jarPath.isFile()) {
             AdtPlugin.printErrorToConsole("Android Compatibility JAR not found:",
                     jarPath.getAbsolutePath());
-            return;
+            return false;
         }
 
         // Then run an Eclipse asynchronous job to update the project
 
-        new Job("Add Compatibility Library to Project") {
+        Job job = new Job("Add Compatibility Library to Project") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
@@ -183,10 +193,22 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
                     }
                 }
             }
-        }.schedule();
+        };
+        job.schedule();
+
+        if (waitForFinish) {
+            try {
+                job.join();
+                return job.getState() == IStatus.OK;
+            } catch (InterruptedException e) {
+                AdtPlugin.log(e, null);
+            }
+        }
+
+        return true;
     }
 
-    private IResource copyJarIntoProject(
+    private static IResource copyJarIntoProject(
             IProject project,
             File jarPath,
             IProgressMonitor monitor) throws IOException, CoreException {
@@ -202,6 +224,8 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         // Only modify the file if necessary so that we don't trigger unnecessary recompilations
         if (!destPath.isFile() || !isSameFile(jarPath, destPath)) {
             copyFile(jarPath, destPath);
+            // Make sure Eclipse discovers java.io file changes
+            resFolder.refreshLocal(1, new NullProgressMonitor());
         }
 
         return destFile;
@@ -213,7 +237,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
      * @param source the source file to copy
      * @param destination the destination file to write
      */
-    private boolean isSameFile(File source, File destination) throws IOException {
+    private static boolean isSameFile(File source, File destination) throws IOException {
 
         if (source.length() != destination.length()) {
             return false;
@@ -273,7 +297,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
      * @param source the source file to copy
      * @param destination the destination file to write
      */
-    private void copyFile(File source, File destination) throws IOException {
+    private static void copyFile(File source, File destination) throws IOException {
         FileInputStream fis = null;
         FileOutputStream fos = null;
         try {

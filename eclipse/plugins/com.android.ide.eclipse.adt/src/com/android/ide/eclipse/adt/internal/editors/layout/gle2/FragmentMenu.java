@@ -289,7 +289,7 @@ public class FragmentMenu extends SubmenuAction {
 
             if (validator != null) {
                 // Ensure wide enough to accommodate validator error message
-                dlg.setSize(70, 10);
+                dlg.setSize(85, 10);
                 dlg.setInputValidator(validator);
             }
 
