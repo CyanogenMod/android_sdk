@@ -150,7 +150,10 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     protected void postCreate() {
         ProgressViewFactory factory = new ProgressViewFactory();
         factory.setProgressView(new ProgressView(
-                mStatusText, mProgressBar, null /*buttonStop*/));
+                mStatusText,
+                mProgressBar,
+                null /*buttonStop*/,
+                mUpdaterData.getSdkLog()));
         mUpdaterData.setTaskFactory(factory);
 
         setupSources();
