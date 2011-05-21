@@ -57,6 +57,13 @@ public class LayoutLog {
     public final static String TAG_RESOURCES_RESOLVE = TAG_RESOURCES_PREFIX + "resolve";
 
     /**
+     * Tag for resource resolution failure, specifically for theme attributes.
+     * In this case the warning/error data object will be a ResourceValue containing the type
+     * and name of the resource that failed to resolve
+     */
+    public final static String TAG_RESOURCES_RESOLVE_THEME_ATTR = TAG_RESOURCES_RESOLVE + ".theme";
+
+    /**
      * Tag for failure when reading the content of a resource file.
      */
     public final static String TAG_RESOURCES_READ = TAG_RESOURCES_PREFIX + "read";

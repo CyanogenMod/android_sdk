@@ -67,14 +67,13 @@ public class ResourceResolver extends RenderResources {
     }
 
     /**
-     * Creates a new ResourceResolver object.
+     * Creates a new {@link ResourceResolver} object.
      *
-     * @param IFrameworkResourceIdProvider an optional framework resource ID provider
      * @param projectResources the project resources.
      * @param frameworkResources the framework resources.
      * @param themeName the name of the current theme.
      * @param isProjectTheme Is this a project theme?
-     * @return
+     * @return a new {@link ResourceResolver}
      */
     public static ResourceResolver create(
             Map<ResourceType, Map<String, ResourceValue>> projectResources,
@@ -231,12 +230,22 @@ public class ResourceResolver extends RenderResources {
             }
 
             // Now look for the item in the theme, starting with the current one.
+            ResourceValue item;
             if (frameworkOnly) {
                 // FIXME for now we do the same as if it didn't specify android:
-                return findItemInStyle(mTheme, referenceName);
+                item = findItemInStyle(mTheme, referenceName);
+            } else {
+                item = findItemInStyle(mTheme, referenceName);
             }
 
-            return findItemInStyle(mTheme, referenceName);
+            if (item == null && mLogger != null) {
+                mLogger.warning(LayoutLog.TAG_RESOURCES_RESOLVE_THEME_ATTR,
+                        String.format("Couldn't find theme resource %1$s for the current theme",
+                                reference),
+                        new ResourceValue(ResourceType.ATTR, referenceName, frameworkOnly));
+            }
+
+            return item;
         } else if (reference.startsWith(PREFIX_RESOURCE_REF)) {
             boolean frameworkOnly = false;
 
