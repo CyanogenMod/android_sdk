@@ -32,7 +32,36 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class UpdaterWindow {
 
+    /** The actual window implement to which this class delegates. */
     private IUpdaterWindow mWindow;
+
+    /**
+     * Enum giving some indication of what is invoking this window.
+     * The behavior and UI will change slightly depending on the context.
+     * <p/>
+     * Note: if you add Android support to your specific IDE, you might want
+     * to specialize this context enum.
+     */
+    public enum InvocationContext {
+        /**
+         * The SDK Manager is invoked from the stand-alone 'android' tool.
+         * In this mode, we present an about box, a settings page.
+         * For SdkMan2, we also have a menu bar and link to the AVD manager.
+         */
+        STANDALONE,
+        /**
+         * The SDK Manager is invoked from an IDE.
+         * In this mode, we do not modify the menu bar. There is no about box
+         * and no settings (e.g. HTTP proxy settings are inherited from Eclipse.)
+         */
+        IDE,
+        /**
+         * The SDK Manager is invoked from the AVD Selector.
+         * For SdkMan1, this means the AVD page will be displayed first.
+         * For SdkMan2, we won't be using this.
+         */
+        AVD_SELECTOR
+    }
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -40,14 +69,20 @@ public class UpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
+     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     *  opening the SDK Manager.
      */
-    public UpdaterWindow(Shell parentShell, ISdkLog sdkLog, String osSdkRoot) {
+    public UpdaterWindow(
+            Shell parentShell,
+            ISdkLog sdkLog,
+            String osSdkRoot,
+            InvocationContext context) {
 
         // TODO right now the new PackagesPage is experimental and not enabled by default
         if (System.getenv("ANDROID_SDKMAN_EXP") != null) {  //$NON-NLS-1$
-            mWindow = new UpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot);
+            mWindow = new UpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot, context);
         } else {
-            mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot);
+            mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot, context);
         }
     }
 

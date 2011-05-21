@@ -17,8 +17,6 @@
 package com.android.sdkuilib.internal.repository;
 
 
-import com.android.menubar.IMenuBarCallback;
-import com.android.menubar.MenuBarEnhancer;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdkuilib.internal.repository.PackagesPage.MenuAction;
@@ -27,6 +25,7 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -68,6 +67,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     private static final String APP_NAME = "Android SDK Manager";
     private final Shell mParentShell;
+    private final InvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
     /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
@@ -92,9 +92,16 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
+     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     *  opening the SDK Manager.
      */
-    public UpdaterWindowImpl2(Shell parentShell, ISdkLog sdkLog, String osSdkRoot) {
+    public UpdaterWindowImpl2(
+            Shell parentShell,
+            ISdkLog sdkLog,
+            String osSdkRoot,
+            InvocationContext context) {
         mParentShell = parentShell;
+        mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }
 
@@ -254,8 +261,10 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         Menu menuTools = new Menu(menuBarTools);
         menuBarTools.setMenu(menuTools);
 
-        MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
-        manageAvds.setText("Manage AVDs...");
+        if (mContext == InvocationContext.STANDALONE) {
+            MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
+            manageAvds.setText("Manage AVDs...");
+        }
 
         MenuItem manageSources = new MenuItem(menuTools,
                 MenuAction.SHOW_ADDON_SITES.getMenuStyle());
@@ -264,24 +273,32 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         mPkgPage.registerMenuAction(
                 MenuAction.SHOW_ADDON_SITES, manageSources);
 
-        // TODO: When invoked from Eclipse, we actually don't want to change the menu bar.
-        MenuBarEnhancer.setupMenu(APP_NAME, menuTools, new IMenuBarCallback() {
-            public void onPreferencesMenuSelected() {
-                showRegisteredPage(Purpose.SETTINGS);
-            }
+        if (mContext == InvocationContext.STANDALONE) {
+            // Note: when invoked from an IDE, the SwtMenuBar library isn't
+            // available. This means this source should not directly import
+            // any of SwtMenuBar classes, otherwise the whole window class
+            // would fail to load. The MenuBarWrapper below helps to make
+            // that indirection.
 
-            public void onAboutMenuSelected() {
-                showRegisteredPage(Purpose.ABOUT_BOX);
-            }
-
-            public void printError(String format, Object... args) {
-                if (mUpdaterData != null) {
-                    // TODO: right now dump to stderr. Use sdklog later.
-                    //mUpdaterData.getSdkLog().error(null, format, args);
-                    System.err.printf(format, args);
+            new MenuBarWrapper(APP_NAME, menuTools) {
+                @Override
+                public void onPreferencesMenuSelected() {
+                    showRegisteredPage(Purpose.SETTINGS);
                 }
-            }
-        });
+
+                @Override
+                public void onAboutMenuSelected() {
+                    showRegisteredPage(Purpose.ABOUT_BOX);
+                }
+
+                @Override
+                public void printError(String format, Object... args) {
+                    if (mUpdaterData != null) {
+                        mUpdaterData.getSdkLog().error(null, format, args);
+                    }
+                }
+            };
+        }
     }
 
     private Image getImage(String filename) {
