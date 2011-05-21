@@ -24,6 +24,8 @@ import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
+import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
+import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
@@ -32,12 +34,8 @@ import com.android.sdkuilib.ui.SwtBaseDialog;
 import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -509,126 +507,6 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
 
     // End of hiding from SWT Designer
     //$hide<<$
-
-    // -----
-
-    /**
-     * A label that can display 2 images depending on its internal state.
-     * This acts as a button by firing the {@link SWT#Selection} listener.
-     */
-    private static class ToggleButton extends CLabel {
-        private Image[] mImage = new Image[2];
-        private boolean mMouseIn;
-        private int mState = 0;
-
-
-        public ToggleButton(Composite parent, int style, Image image1, Image image2) {
-            super(parent, style);
-            mImage[0] = image1;
-            mImage[1] = image2;
-            updateImage();
-
-            addMouseListener(new MouseListener() {
-                public void mouseDown(MouseEvent e) {
-                    // pass
-                }
-
-                public void mouseUp(MouseEvent e) {
-                    // We select on mouse-up, as it should be properly done since this is the
-                    // only way a user can cancel a button click by moving out of the button.
-                    if (mMouseIn && e.button == 1) {
-                        notifyListeners(SWT.Selection, new Event());
-                    }
-                }
-
-                public void mouseDoubleClick(MouseEvent e) {
-                    if (mMouseIn && e.button == 1) {
-                        notifyListeners(SWT.DefaultSelection, new Event());
-                    }
-                }
-            });
-
-            addMouseTrackListener(new MouseTrackListener() {
-                public void mouseExit(MouseEvent e) {
-                    if (mMouseIn) {
-                        mMouseIn = false;
-                        redraw();
-                    }
-                }
-
-                public void mouseEnter(MouseEvent e) {
-                    if (!mMouseIn) {
-                        mMouseIn = true;
-                        redraw();
-                    }
-                }
-
-                public void mouseHover(MouseEvent e) {
-                    // pass
-                }
-            });
-        }
-
-        @Override
-        public int getStyle() {
-            int style = super.getStyle();
-            if (mMouseIn) {
-                style |= SWT.SHADOW_IN;
-            }
-            return style;
-        }
-
-        /**
-         * Sets current state.
-         * @param state A value 0 or 1.
-         */
-        public void setState(int state) {
-            assert state == 0 || state == 1;
-            mState = state;
-            updateImage();
-            redraw();
-        }
-
-        /**
-         * Returns the current state
-         * @return Returns the current state, either 0 or 1.
-         */
-        public int getState() {
-            return mState;
-        }
-
-        protected void updateImage() {
-            setImage(mImage[getState()]);
-        }
-    }
-
-    /**
-     * A label that can display 2 images depending on its enabled/disabled state.
-     * This acts as a button by firing the {@link SWT#Selection} listener.
-     */
-    private static class ImgDisabledButton extends ToggleButton {
-        public ImgDisabledButton(Composite parent, int style,
-                Image imageEnabled, Image imageDisabled) {
-            super(parent, style, imageEnabled, imageDisabled);
-        }
-
-        @Override
-        public void setEnabled(boolean enabled) {
-            super.setEnabled(enabled);
-            updateImage();
-            redraw();
-        }
-
-        @Override
-        public void setState(int state) {
-            throw new UnsupportedOperationException(); // not available for this type of button
-        }
-
-        @Override
-        public int getState() {
-            return (isDisposed() || !isEnabled()) ? 1 : 0;
-        }
-    }
 
     // -----
 
