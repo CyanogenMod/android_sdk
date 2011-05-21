@@ -65,6 +65,10 @@ public class MarqueeGesture extends Gesture {
 
     @Override
     public void update(ControlPoint pos) {
+        if (mOverlay == null) {
+            return;
+        }
+
         int x = Math.min(pos.x, mStart.x);
         int y = Math.min(pos.y, mStart.y);
         int w = Math.abs(pos.x - mStart.x);
