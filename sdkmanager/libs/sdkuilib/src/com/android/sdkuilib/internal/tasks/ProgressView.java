@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.tasks;
 
+import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 
@@ -49,6 +50,8 @@ public final class ProgressView implements IProgressUiProvider {
     /** The current mode of operation of the dialog. */
     private State mState = State.IDLE;
 
+
+
     // UI fields
     private final Label mLabel;
     private final Control mStopButton;
@@ -61,18 +64,31 @@ public final class ProgressView implements IProgressUiProvider {
      */
     private final StringBuilder mLogText = new StringBuilder();
 
+    /** Logger object. Can be null. */
+    private final ISdkLog mLog;
+
+    private String mLastLogMsg = null;
 
     /**
      * Creates a new {@link ProgressView} object, a simple "holder" for the various
      * widgets used to display and update a progress + status bar.
      *
-     * @param label The label of the current operation. Must not be null.
-     * @param progressBar The progress bar showing the current progress. Must not be null.
-     * @param stopButton The stop button. Optional. Can be null.
+     * @param label The label to display titles of status updates (e.g. task titles and
+     *      calls to {@link #setDescription(String)}.) Must not be null.
+     * @param progressBar The progress bar to update during a task. Must not be null.
+     * @param stopButton The stop button. It will be disabled when there's no task that can
+     *      be interrupted. A selection listener will be attached to it. Optional. Can be null.
+     * @param log An <em>optional</em> logger object that will be used to report all the log.
+     *      If null, all logging will be collected here with a little UI to display it.
      */
-    public ProgressView(Label label, ProgressBar progressBar, Control stopButton) {
+    public ProgressView(
+            Label label,
+            ProgressBar progressBar,
+            Control stopButton,
+            ISdkLog log) {
         mLabel = label;
         mProgressBar = progressBar;
+        mLog = log;
         mProgressBar.setEnabled(false);
 
         mStopButton = stopButton;
@@ -162,8 +178,15 @@ public final class ProgressView implements IProgressUiProvider {
                 mLabel.setText(description);
             }
         });
-        synchronized (mLogText) {
-            mLogText.append("** ").append(description);
+
+        if (acceptLog(description)) {
+            if (mLog != null) {
+                mLog.printf("%1$s", description);
+            } else {
+                synchronized (mLogText) {
+                    mLogText.append(description);
+                }
+            }
         }
     }
 
@@ -172,8 +195,14 @@ public final class ProgressView implements IProgressUiProvider {
      * This method can be invoked from a non-UI thread.
      */
     public void log(String log) {
-        synchronized (mLogText) {
-            mLogText.append("=> ").append(log);
+        if (acceptLog(log)) {
+            if (mLog != null) {
+                mLog.printf("  %1$s", log);
+            } else {
+                synchronized (mLogText) {
+                    mLogText.append(" ").append(log);
+                }
+            }
         }
     }
 
@@ -182,8 +211,14 @@ public final class ProgressView implements IProgressUiProvider {
      * This method can be invoked from a non-UI thread.
      */
     public void logError(String log) {
-        synchronized (mLogText) {
-            mLogText.append("=> ").append(log);
+        if (acceptLog(log)) {
+            if (mLog != null) {
+                mLog.error(null, "  %1$s", log);
+            } else {
+                synchronized (mLogText) {
+                    mLogText.append("ERROR: ").append(log);
+                }
+            }
         }
     }
 
@@ -193,8 +228,14 @@ public final class ProgressView implements IProgressUiProvider {
      * This method can be invoked from a non-UI thread.
      */
     public void logVerbose(String log) {
-        synchronized (mLogText) {
-            mLogText.append("=> ").append(log);
+        if (acceptLog(log)) {
+            if (mLog != null) {
+                mLog.printf("    %1$s", log);
+            } else {
+                synchronized (mLogText) {
+                    mLogText.append("  ").append(log);
+                }
+            }
         }
     }
 
@@ -260,5 +301,33 @@ public final class ProgressView implements IProgressUiProvider {
         }
 
         return result[0];
+    }
+
+    // ----
+
+    /**
+     * Filter messages displayed in the log: <br/>
+     * - Messages with a % are typical part of a progress update and shouldn't be in the log. <br/>
+     * - Messages that are the same as the same output message should be output a second time.
+     *
+     * @param msg The potential log line to print.
+     * @return True if the log line should be printed, false otherwise.
+     */
+    private boolean acceptLog(String msg) {
+        if (msg == null) {
+            return false;
+        }
+
+        msg = msg.trim();
+        if (msg.indexOf('%') != -1) {
+            return false;
+        }
+
+        if (msg.equals(mLastLogMsg)) {
+            return false;
+        }
+
+        mLastLogMsg = msg;
+        return true;
     }
 }

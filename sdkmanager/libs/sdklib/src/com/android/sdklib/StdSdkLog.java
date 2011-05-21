@@ -28,24 +28,57 @@ public class StdSdkLog implements ISdkLog {
 
     public void error(Throwable t, String errorFormat, Object... args) {
         if (errorFormat != null) {
-            System.err.printf("Error: " + errorFormat, args);
-            if (!errorFormat.endsWith("\n")) {
-                System.err.printf("\n");
+            String msg = String.format("Error: " + errorFormat, args);
+
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS &&
+                    !msg.endsWith("\r\n") &&
+                    msg.endsWith("\n")) {
+                // remove last \n so that println can use \r\n as needed.
+                msg = msg.substring(0, msg.length() - 1);
+            }
+
+            System.err.print(msg);
+
+            if (!msg.endsWith("\n")) {
+                System.err.println();
             }
         }
         if (t != null) {
-            System.err.printf("Error: %s\n", t.getMessage());
+            System.err.println(String.format("Error: %1$s%2$s", t.getMessage()));
         }
     }
 
     public void warning(String warningFormat, Object... args) {
-        System.out.printf("Warning: " + warningFormat, args);
-        if (!warningFormat.endsWith("\n")) {
-            System.out.printf("\n");
+        String msg = String.format("Warning: " + warningFormat, args);
+
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS &&
+                !msg.endsWith("\r\n") &&
+                msg.endsWith("\n")) {
+            // remove last \n so that println can use \r\n as needed.
+            msg = msg.substring(0, msg.length() - 1);
+        }
+
+        System.out.print(msg);
+
+        if (!msg.endsWith("\n")) {
+            System.out.println();
         }
     }
 
     public void printf(String msgFormat, Object... args) {
-        System.out.printf(msgFormat, args);
+        String msg = String.format(msgFormat, args);
+
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS &&
+                !msg.endsWith("\r\n") &&
+                msg.endsWith("\n")) {
+            // remove last \n so that println can use \r\n as needed.
+            msg = msg.substring(0, msg.length() - 1);
+        }
+
+        System.out.print(msg);
+
+        if (!msg.endsWith("\n")) {
+            System.out.println();
+        }
     }
 }
