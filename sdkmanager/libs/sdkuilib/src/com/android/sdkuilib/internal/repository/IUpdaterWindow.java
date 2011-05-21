@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.repository;
+package com.android.sdkuilib.internal.repository;
 
-import com.android.sdkuilib.internal.repository.UpdaterPage;
+import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.swt.widgets.Composite;
 
+/**
+ * Interface for the actual implementation of the Update Window.
+ */
 public interface IUpdaterWindow {
 
     /**

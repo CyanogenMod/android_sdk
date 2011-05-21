@@ -23,7 +23,6 @@ import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.IUpdaterWindow;
 import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;

@@ -17,6 +17,7 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
+import com.android.sdkuilib.internal.repository.IUpdaterWindow;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
 import com.android.sdkuilib.internal.repository.UpdaterWindowImpl2;
@@ -27,9 +28,9 @@ import org.eclipse.swt.widgets.Shell;
 /**
  * Opens an SDK Updater Window.
  *
- * This is the public interface for using the window.
+ * This is the public entry point for using the window.
  */
-public class UpdaterWindow implements IUpdaterWindow {
+public class UpdaterWindow {
 
     private IUpdaterWindow mWindow;
 
@@ -87,6 +88,7 @@ public class UpdaterWindow implements IUpdaterWindow {
 
     /**
      * Adds a new listener to be notified when a change is made to the content of the SDK.
+     * This should be called before {@link #open()}.
      */
     public void addListener(ISdkChangeListener listener) {
         mWindow.addListener(listener);
