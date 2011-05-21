@@ -65,6 +65,10 @@ public final class ProgressView implements IProgressUiProvider {
     /**
      * Creates a new {@link ProgressView} object, a simple "holder" for the various
      * widgets used to display and update a progress + status bar.
+     *
+     * @param label The label of the current operation. Must not be null.
+     * @param progressBar The progress bar showing the current progress. Must not be null.
+     * @param stopButton The stop button. Optional. Can be null.
      */
     public ProgressView(Label label, ProgressBar progressBar, Control stopButton) {
         mLabel = label;
@@ -72,13 +76,15 @@ public final class ProgressView implements IProgressUiProvider {
         mProgressBar.setEnabled(false);
 
         mStopButton = stopButton;
-        mStopButton.addListener(SWT.Selection, new Listener() {
-            public void handleEvent(Event event) {
-                if (mState == State.ACTIVE) {
-                    changeState(State.STOP_PENDING);
+        if (mStopButton != null) {
+            mStopButton.addListener(SWT.Selection, new Listener() {
+                public void handleEvent(Event event) {
+                    if (mState == State.ACTIVE) {
+                        changeState(State.STOP_PENDING);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
