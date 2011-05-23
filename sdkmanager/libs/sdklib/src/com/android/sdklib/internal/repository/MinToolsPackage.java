@@ -30,7 +30,7 @@ import java.util.Properties;
  */
 public abstract class MinToolsPackage extends Package implements IMinToolsDependency {
 
-    protected static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
+    static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
 
     /**
      * The minimal revision of the tools package required by this extra package, if > 0,

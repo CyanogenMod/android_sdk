@@ -110,9 +110,24 @@ public class SdkRepositoryTest extends TestCase {
 
     // --- Helpers ------------
 
-    /** Helper method that returns a validator for our XSD */
-    private Validator getValidator(int version, CaptureErrorHandler handler) throws SAXException {
+    /** Helper method that returns a validator for our Repository XSD */
+    private Validator getRepoValidator(int version, CaptureErrorHandler handler)
+            throws SAXException {
         InputStream xsdStream = SdkRepoConstants.getXsdStream(version);
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(new StreamSource(xsdStream));
+        Validator validator = schema.newValidator();
+        if (handler != null) {
+            validator.setErrorHandler(handler);
+        }
+
+        return validator;
+    }
+
+    /** Helper method that returns a validator for our Addon XSD */
+    private Validator getAddonValidator(int version, CaptureErrorHandler handler)
+            throws SAXException {
+        InputStream xsdStream = SdkAddonConstants.getXsdStream(version);
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(xsdStream));
         Validator validator = schema.newValidator();
@@ -141,7 +156,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(1, handler);
+        Validator validator = getRepoValidator(1, handler);
         validator.validate(source);
         handler.verify();
     }
@@ -153,7 +168,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(2, handler);
+        Validator validator = getRepoValidator(2, handler);
         validator.validate(source);
         handler.verify();
     }
@@ -165,7 +180,43 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(xmlStream);
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(3, handler);
+        Validator validator = getRepoValidator(3, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Validate a valid sample using namespace version 4 using an InputStream */
+    public void testValidateLocalRepositoryFile4() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/repository_sample_4.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getRepoValidator(4, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Validate a valid sample using namespace version 1 using an InputStream */
+    public void testValidateLocalAddonFile1() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/addon_sample_1.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getAddonValidator(1, handler);
+        validator.validate(source);
+        handler.verify();
+    }
+
+    /** Validate a valid sample using namespace version 2 using an InputStream */
+    public void testValidateLocalAddonFile2() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/addon_sample_2.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getAddonValidator(2, handler);
         validator.validate(source);
         handler.verify();
     }
@@ -177,7 +228,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, handler);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, handler);
 
         try {
             validator.validate(source);
@@ -207,7 +258,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, handler);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, handler);
         validator.validate(source);
         handler.verify();
     }
@@ -222,7 +273,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -244,7 +295,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -266,7 +317,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -294,7 +345,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
@@ -320,7 +371,7 @@ public class SdkRepositoryTest extends TestCase {
         Source source = new StreamSource(new StringReader(document));
 
         // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
+        Validator validator = getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, null);
         try {
             validator.validate(source);
         } catch (SAXParseException e) {
