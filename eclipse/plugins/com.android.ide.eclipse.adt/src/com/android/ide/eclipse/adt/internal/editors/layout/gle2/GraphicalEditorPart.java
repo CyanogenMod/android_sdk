@@ -1755,7 +1755,9 @@ public class GraphicalEditorPart extends EditorPart
         }
 
         if (!append) {
-            mErrorLabel.setText("");
+            mErrorLabel.setText("");    //$NON-NLS-1$
+        } else {
+            addText(mErrorLabel, "\n"); //$NON-NLS-1$
         }
         if (missingClasses.size() > 0) {
             addText(mErrorLabel, "The following classes could not be found:\n");
@@ -1831,6 +1833,14 @@ public class GraphicalEditorPart extends EditorPart
                 }
             } catch (CoreException e) {
                 AdtPlugin.log(e, null);
+            }
+
+            if (logger.seenTagPrefix(LayoutLog.TAG_RESOURCES_RESOLVE_THEME_ATTR)) {
+                addBoldText(mErrorLabel,
+                        "Missing styles. Is the correct theme chosen for this layout?\n");
+                addText(mErrorLabel,
+                        "Use the Theme combo box above the layout to choose a different layout, " +
+                        "or fix the theme style references.\n\n");
             }
 
             if (hasAaptErrors && logger.seenTagPrefix(LayoutLog.TAG_RESOURCES_PREFIX)) {

@@ -72,7 +72,7 @@ class RenderLogger extends LayoutLog {
         }
 
         if (mFidelityWarnings != null) {
-            sb.append("The graphics preview may not be accurate:\n");
+            sb.append("The graphics preview in the layout editor may not be accurate:\n");
             for (String warning : mFidelityWarnings) {
                 sb.append("* ");
                 sb.append(warning).append('\n');
@@ -91,6 +91,7 @@ class RenderLogger extends LayoutLog {
     @Override
     public void error(String tag, String message, Object data) {
         String description = describe(message);
+
         AdtPlugin.log(IStatus.ERROR, "%1$s: %2$s", mName, description);
 
         addError(tag, description);
@@ -211,6 +212,4 @@ class RenderLogger extends LayoutLog {
             return false;
         }
     }
-
-
 }
