@@ -23,6 +23,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.hierarchyviewer.scene.VersionLoader;
 
 import java.io.IOException;
 import java.io.File;
@@ -56,10 +57,6 @@ public class DeviceBridge {
         AndroidDebugBridge.addDeviceChangeListener(listener);
     }
 
-    public static void stopListenForDevices(AndroidDebugBridge.IDeviceChangeListener listener) {
-        AndroidDebugBridge.removeDeviceChangeListener(listener);
-    }
-
     public static IDevice[] getDevices() {
         return bridge.getDevices();
     }
@@ -71,6 +68,11 @@ public class DeviceBridge {
             if (device.isOnline()) {
                 device.executeShellCommand(buildIsServerRunningShellCommand(),
                         new BooleanResultReader(result));
+                if (!result[0]) {
+                    if (VersionLoader.loadProtocolVersion(device) > 2) {
+                        result[0] = true;
+                    }
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
