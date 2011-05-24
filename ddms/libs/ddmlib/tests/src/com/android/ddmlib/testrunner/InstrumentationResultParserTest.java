@@ -188,7 +188,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addLineBreak(output);
 
         mMockListener.testRunStarted(RUN_NAME, 0);
-        mMockListener.testRunFailed(errorMessage);
+        mMockListener.testRunFailed(EasyMock.contains(errorMessage));
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
 
         injectAndVerifyTestString(output.toString());
