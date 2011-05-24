@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.io.OsHelper;
 
 import java.io.File;
 import java.security.MessageDigest;

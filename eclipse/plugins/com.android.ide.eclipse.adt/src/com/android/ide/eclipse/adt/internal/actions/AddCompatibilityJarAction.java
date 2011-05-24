@@ -21,6 +21,7 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.io.OsHelper;
 import com.android.sdkuilib.internal.repository.AdtUpdateDialog;
 import com.android.util.Pair;
 
@@ -50,11 +51,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -222,113 +219,13 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         File destPath = loc.toFile();
 
         // Only modify the file if necessary so that we don't trigger unnecessary recompilations
-        if (!destPath.isFile() || !isSameFile(jarPath, destPath)) {
-            copyFile(jarPath, destPath);
+        if (!destPath.isFile() || !OsHelper.isSameFile(jarPath, destPath)) {
+            OsHelper.copyFile(jarPath, destPath);
             // Make sure Eclipse discovers java.io file changes
             resFolder.refreshLocal(1, new NullProgressMonitor());
         }
 
         return destFile;
-    }
-
-    /**
-     * Checks whether 2 binary files are the same.
-     *
-     * @param source the source file to copy
-     * @param destination the destination file to write
-     */
-    private static boolean isSameFile(File source, File destination) throws IOException {
-
-        if (source.length() != destination.length()) {
-            return false;
-        }
-
-        FileInputStream fis1 = null;
-        FileInputStream fis2 = null;
-
-        try {
-            fis1 = new FileInputStream(source);
-            fis2 = new FileInputStream(destination);
-
-            byte[] buffer1 = new byte[8192];
-            byte[] buffer2 = new byte[8192];
-
-            int read1;
-            while ((read1 = fis1.read(buffer1)) != -1) {
-                int read2 = 0;
-                while (read2 < read1) {
-                    int n = fis2.read(buffer2, read2, read1 - read2);
-                    if (n == -1) {
-                        break;
-                    }
-                }
-
-                if (read2 != read1) {
-                    return false;
-                }
-
-                if (!Arrays.equals(buffer1, buffer2)) {
-                    return false;
-                }
-            }
-        } finally {
-            if (fis2 != null) {
-                try {
-                    fis2.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-            if (fis1 != null) {
-                try {
-                    fis1.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Installs a binary file
-     *
-     * @param source the source file to copy
-     * @param destination the destination file to write
-     */
-    private static void copyFile(File source, File destination) throws IOException {
-        FileInputStream fis = null;
-        FileOutputStream fos = null;
-        try {
-            fis = new FileInputStream(source);
-            fos = new FileOutputStream(destination);
-
-            byte[] buffer = new byte[8192];
-
-            int read;
-            while ((read = fis.read(buffer)) != -1) {
-                fos.write(buffer, 0, read);
-            }
-
-        } catch (FileNotFoundException e) {
-            // shouldn't happen since we check before.
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
     }
 
     /**
