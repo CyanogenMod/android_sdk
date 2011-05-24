@@ -198,8 +198,20 @@ public class LayoutConstants {
     /** The fully qualified class name of an AdapterView */
     public static final String FQCN_ADAPTER_VIEW = "android.widget.AdapterView"; //$NON-NLS-1$
 
+    /** The fully qualified class name of a ListView */
+    public static final String FQCN_LIST_VIEW = "android.widget.ListView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of an ExpandableListView */
+    public static final String FQCN_EXPANDABLE_LIST_VIEW = "android.widget.ExpandableListView"; //$NON-NLS-1$
+
     /** The fully qualified class name of a GestureOverlayView */
     public static final String FQCN_GESTURE_OVERLAY_VIEW = "android.gesture.GestureOverlayView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a DatePicker */
+    public static final String FQCN_DATE_PICKER = "android.widget.DatePicker"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a TimePicker */
+    public static final String FQCN_TIME_PICKER = "android.widget.TimePicker"; //$NON-NLS-1$
 
     /** The fully qualified class name of a RadioGroup */
     public static final String FQCN_RADIO_GROUP = "android.widgets.RadioGroup";  //$NON-NLS-1$
