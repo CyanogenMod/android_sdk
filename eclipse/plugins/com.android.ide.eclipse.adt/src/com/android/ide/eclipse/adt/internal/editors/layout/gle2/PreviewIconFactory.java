@@ -17,6 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_DATE_PICKER;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_EXPANDABLE_LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_TIME_PICKER;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
@@ -39,6 +43,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepos
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.sdklib.IAndroidTarget;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IPath;
@@ -164,6 +169,32 @@ public class PreviewIconFactory {
                 String fqn = repository.getFullClassName(element);
                 assert fqn.length() > 0 : element.getNodeName();
                 RenderMode renderMode = repository.getRenderMode(fqn);
+
+                // Temporary special cases
+                if (fqn.equals(FQCN_LIST_VIEW) || fqn.equals(FQCN_EXPANDABLE_LIST_VIEW)) {
+                    if (!mPalette.getEditor().renderingSupports(Capability.ADAPTER_BINDING)) {
+                        renderMode = RenderMode.SKIP;
+                    }
+                } else if (fqn.equals(FQCN_DATE_PICKER) || fqn.equals(FQCN_TIME_PICKER)) {
+                    IAndroidTarget renderingTarget = mPalette.getEditor().getRenderingTarget();
+                    // In Honeycomb, these widgets only render properly in the Holo themes.
+                    int apiLevel = renderingTarget.getVersion().getApiLevel();
+                    if (apiLevel == 11) {
+                        String themeName = mPalette.getCurrentTheme();
+                        if (themeName == null || !themeName.startsWith("Theme.Holo")) { //$NON-NLS-1$
+                            // Note - it's possible that the the theme is some other theme
+                            // such as a user theme which inherits from Theme.Holo and that
+                            // the render -would- have worked, but it's harder to detect that
+                            // scenario, so we err on the side of caution and just show an
+                            // icon + name for the time widgets.
+                            renderMode = RenderMode.SKIP;
+                        }
+                    } else if (apiLevel >= 12) {
+                        // Currently broken, even for Holo.
+                        renderMode = RenderMode.SKIP;
+                    } // apiLevel <= 10 is fine
+                }
+
                 if (renderMode == RenderMode.ALONE) {
                     elements.add(Collections.singletonList(element));
                 } else if (renderMode == RenderMode.NORMAL) {
@@ -561,7 +592,7 @@ public class PreviewIconFactory {
             if (themeName.startsWith(themeNamePrefix)) {
                 themeName = themeName.substring(themeNamePrefix.length());
             }
-            String dirName = String.format("palette-preview-r11c-%s-%s-%s", cleanup(targetName),
+            String dirName = String.format("palette-preview-r11d-%s-%s-%s", cleanup(targetName),
                     cleanup(themeName), cleanup(mPalette.getCurrentDevice()));
             IPath dirPath = pluginState.append(dirName);
 
