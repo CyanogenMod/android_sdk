@@ -90,6 +90,7 @@ groovy
 guava
 hardcoded
 hardcodes
+holo
 hotfix
 href
 http

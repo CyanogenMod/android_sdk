@@ -531,6 +531,15 @@ public class RulesEngine {
         mInsertType = insertType;
     }
 
+    /**
+     * Return the type of insert currently in progress
+     *
+     * @return the type of insert currently in progress
+     */
+    public InsertType getInsertType() {
+        return mInsertType;
+    }
+
     // ---- private ---
 
     /**

@@ -233,8 +233,17 @@ public class NodeProxy implements INode {
             }
         }
 
-        // TODO we probably want to defer that to the GRE to use IViewRule#getDefaultAttributes()
-        DescriptorsUtils.setDefaultLayoutAttributes(uiNew, false /*updateLayout*/);
+        RulesEngine engine = null;
+        AndroidXmlEditor editor = mNode.getEditor();
+        if (editor instanceof LayoutEditor) {
+            engine = ((LayoutEditor)editor).getRulesEngine();
+        }
+
+        // Set default attributes -- but only for new widgets (not when moving or copying)
+        if (engine == null || engine.getInsertType().isCreate()) {
+            // TODO: This should probably use IViewRule#getDefaultAttributes() at some point
+            DescriptorsUtils.setDefaultLayoutAttributes(uiNew, false /*updateLayout*/);
+        }
 
         Node xmlNode = uiNew.createXmlNode();
 
@@ -252,12 +261,8 @@ public class NodeProxy implements INode {
         UiViewElementNode uiNewView = (UiViewElementNode) uiNew;
         NodeProxy newNode = mFactory.create(uiNewView);
 
-        AndroidXmlEditor editor = mNode.getEditor();
-        if (editor instanceof LayoutEditor) {
-            RulesEngine engine = ((LayoutEditor)editor).getRulesEngine();
-            if (engine != null) {
-                engine.callCreateHooks(editor, this, newNode, null);
-            }
+        if (engine != null) {
+            engine.callCreateHooks(editor, this, newNode, null);
         }
 
         return newNode;
