@@ -86,23 +86,14 @@ public class SdkRepoConstants extends RepoConstants {
     };
 
     /**
-     * Returns a stream to the requested repository XML Schema.
+     * Returns a stream to the requested {@code sdk-repository} XML Schema.
      *
      * @param version Between 1 and {@link #NS_LATEST_VERSION}, included.
      * @return An {@link InputStream} object for the local XSD file or
      *         null if there is no schema for the requested version.
      */
     public static InputStream getXsdStream(int version) {
-        String filename = String.format("sdk-repository-%d.xsd", version);      //$NON-NLS-1$
-        InputStream stream = SdkRepoConstants.class.getResourceAsStream(filename);
-        if (stream == null) {
-            // Try the alternate schemas that are not published yet.
-            // This allows us to internally test with new schemas before the
-            // public repository uses it.
-            filename = String.format("-sdk-repository-%d.xsd", version);      //$NON-NLS-1$
-            stream = SdkRepoConstants.class.getResourceAsStream(filename);
-        }
-        return stream;
+        return getXsdStream(NODE_SDK_REPOSITORY, version);
     }
 
     /**

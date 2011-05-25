@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository;
 
+import java.io.InputStream;
+
 
 
 /**
@@ -107,5 +109,44 @@ public class RepoConstants {
      */
     public static final String FD_TEMP = "temp";     //$NON-NLS-1$
 
+    /**
+     * Returns a stream to the requested XML Schema.
+     * This is an internal helper. Users of the library should call
+     * {@link SdkRepoConstants#getXsdStream(String, int)} or
+     * {@link SdkAddonConstants#getXsdStream(String, int)}.
+     *
+     * @param rootElement The root of the filename of the XML schema.
+     *   This is by convention the same as the root element declared by the schema.
+     * @param version The XML schema revision number, an integer >= 1.
+     * @return An {@link InputStream} object for the local XSD file or
+     *         null if there is no schema for the requested version.
+     * @see SdkRepoConstants#getXsdStream(int)
+     * @see SdkAddonConstants#getXsdStream(int)
+     */
+    protected static InputStream getXsdStream(String rootElement, int version) {
+        String filename = String.format("%1$s-%2$d.xsd", rootElement, version);      //$NON-NLS-1$
+
+        InputStream stream = null;
+        try {
+            stream = RepoConstants.class.getResourceAsStream(filename);
+        } catch (Exception e) {
+            // Some implementations seem to return null on failure,
+            // others throw an exception. We want to return null.
+        }
+        if (stream == null) {
+            // Try the alternate schemas that are not published yet.
+            // This allows us to internally test with new schemas before the
+            // public repository uses it.
+            filename = String.format("-%1$s-%2$d.xsd", rootElement, version);      //$NON-NLS-1$
+            try {
+                stream = RepoConstants.class.getResourceAsStream(filename);
+            } catch (Exception e) {
+                // Some implementations seem to return null on failure,
+                // others throw an exception. We want to return null.
+            }
+        }
+
+        return stream;
+    }
 
 }
