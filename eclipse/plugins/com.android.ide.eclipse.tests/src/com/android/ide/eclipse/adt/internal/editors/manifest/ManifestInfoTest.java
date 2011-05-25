@@ -328,5 +328,9 @@ public class ManifestInfoTest extends AdtProjectTest {
         public boolean hasRenderingLibrary() {
             return false;
         }
+
+        public String getShortClasspathName() {
+            return null;
+        }
     }
 }
