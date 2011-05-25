@@ -41,7 +41,7 @@ import java.util.Properties;
  * Represents a sample XML node in an SDK repository.
  */
 public class SamplePackage extends MinToolsPackage
-    implements IPackageVersion, IMinApiLevelDependency, IMinToolsDependency {
+    implements IPackageVersion, IMinApiLevelDependency {
 
     private static final String PROP_MIN_API_LEVEL = "Sample.MinApiLevel";  //$NON-NLS-1$
 

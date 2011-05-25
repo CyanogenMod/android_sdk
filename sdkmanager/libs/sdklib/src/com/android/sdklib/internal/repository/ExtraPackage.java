@@ -22,13 +22,14 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.RepoConstants;
-import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * Represents a extra XML node in an SDK repository.
@@ -36,9 +37,10 @@ import java.util.Properties;
 public class ExtraPackage extends MinToolsPackage
     implements IMinApiLevelDependency {
 
-    private static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
-    private static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
-    private static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
+    static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
+    static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
+    static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
+    static final String PROP_PROJECT_FILES = "Extra.ProjectFiles"; //$NON-NLS-1$
 
     /**
      * The vendor folder name. It must be a non-empty single-segment path.
@@ -63,6 +65,12 @@ public class ExtraPackage extends MinToolsPackage
     private final int mMinApiLevel;
 
     /**
+     * The project-files listed by this extra package.
+     * The array can be empty but not null.
+     */
+    private final String[] mProjectFiles;
+
+    /**
      * Creates a new tool package from the attributes and elements of the given XML node.
      * This constructor should throw an exception if the package cannot be created.
      *
@@ -75,11 +83,40 @@ public class ExtraPackage extends MinToolsPackage
     ExtraPackage(SdkSource source, Node packageNode, String nsUri, Map<String,String> licenses) {
         super(source, packageNode, nsUri, licenses);
 
-        mPath   = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_PATH);
-        mVendor = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VENDOR);
+        mPath   = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_PATH);
+        mVendor = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_VENDOR);
 
-        mMinApiLevel = XmlParserUtils.getXmlInt(packageNode, SdkRepoConstants.NODE_MIN_API_LEVEL,
+        mMinApiLevel = XmlParserUtils.getXmlInt(packageNode, RepoConstants.NODE_MIN_API_LEVEL,
                 MIN_API_LEVEL_NOT_SPECIFIED);
+
+        mProjectFiles = parseProjectFiles(
+                XmlParserUtils.getFirstChild(packageNode, RepoConstants.NODE_PROJECT_FILES));
+    }
+
+    private String[] parseProjectFiles(Node projectFilesNode) {
+        ArrayList<String> paths = new ArrayList<String>();
+
+        if (projectFilesNode != null) {
+            String nsUri = projectFilesNode.getNamespaceURI();
+            for(Node child = projectFilesNode.getFirstChild();
+                     child != null;
+                     child = child.getNextSibling()) {
+
+                if (child.getNodeType() == Node.ELEMENT_NODE &&
+                        nsUri.equals(child.getNamespaceURI()) &&
+                        RepoConstants.NODE_PATH.equals(child.getLocalName())) {
+                    String path = child.getTextContent();
+                    if (path != null) {
+                        path = path.trim();
+                        if (path.length() > 0) {
+                            paths.add(path);
+                        }
+                    }
+                }
+            }
+        }
+
+        return paths.toArray(new String[paths.size()]);
     }
 
     /**
@@ -154,6 +191,18 @@ public class ExtraPackage extends MinToolsPackage
 
         mMinApiLevel = Integer.parseInt(
             getProperty(props, PROP_MIN_API_LEVEL, Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+
+        String projectFiles = getProperty(props, PROP_PROJECT_FILES, null);
+        ArrayList<String> filePaths = new ArrayList<String>();
+        if (projectFiles != null && projectFiles.length() > 0) {
+            for (String filePath : projectFiles.split(Pattern.quote(File.pathSeparator))) {
+                filePath = filePath.trim();
+                if (filePath.length() > 0) {
+                    filePaths.add(filePath);
+                }
+            }
+        }
+        mProjectFiles = filePaths.toArray(new String[filePaths.size()]);
     }
 
     /**
@@ -172,6 +221,17 @@ public class ExtraPackage extends MinToolsPackage
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
             props.setProperty(PROP_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
         }
+
+        if (mProjectFiles.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mProjectFiles.length; i++) {
+                if (i > 0) {
+                    sb.append(File.pathSeparatorChar);
+                }
+                sb.append(mProjectFiles[i]);
+            }
+            props.setProperty(PROP_PROJECT_FILES, sb.toString());
+        }
     }
 
     /**
@@ -180,6 +240,24 @@ public class ExtraPackage extends MinToolsPackage
      */
     public int getMinApiLevel() {
         return mMinApiLevel;
+    }
+
+    /**
+     * The project-files listed by this extra package.
+     * The array can be empty but not null.
+     * <p/>
+     * IMPORTANT: directory separators are NOT translated and may not match
+     * the {@link File#separatorChar} of the current platform. It's up to the
+     * user to adequately interpret the paths.
+     * Similarly, no guarantee is made on the validity of the paths.
+     * Users are expected to apply all usual sanity checks such as removing
+     * "./" and "../" and making sure these paths don't reference files outside
+     * of the installed archive.
+     *
+     * @since sdk-repository-4.xsd or sdk-addon-2.xsd
+     */
+    public String[] getProjectFiles() {
+        return mProjectFiles;
     }
 
     /**

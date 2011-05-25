@@ -46,7 +46,7 @@ public class SdkRepoConstants extends RepoConstants {
 
     /** The latest version of the sdk-repository XML Schema.
      *  Valid version numbers are between 1 and this number, included. */
-    public static final int NS_LATEST_VERSION = 3;
+    public static final int NS_LATEST_VERSION = 4;
 
     /** The XML namespace of the latest sdk-repository XML. */
     public static final String NS_URI = getSchemaUri(NS_LATEST_VERSION);
@@ -64,6 +64,13 @@ public class SdkRepoConstants extends RepoConstants {
     public static final String NODE_DOC             = "doc";                  //$NON-NLS-1$
     /** A sample package. */
     public static final String NODE_SAMPLE          = "sample";               //$NON-NLS-1$
+
+
+    /** A layoutlib package. */
+    public static final String NODE_LAYOUT_LIB      = "layoutlib";            //$NON-NLS-1$
+    /** The API integer for a layoutlib element. */
+    public static final String NODE_API             = "api";                  //$NON-NLS-1$
+
 
     /**
      * List of possible nodes in a repository XML. Used to populate options automatically

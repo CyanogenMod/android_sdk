@@ -42,6 +42,8 @@ public class RepoConstants {
     public static final String NODE_RELEASE_URL   = "release-url";              //$NON-NLS-1$
     /** The optional obsolete qualifier for all packages. */
     public static final String NODE_OBSOLETE      = "obsolete";                 //$NON-NLS-1$
+    /** The optional project-files provided by extra packages. */
+    public static final String NODE_PROJECT_FILES = "project-files";            //$NON-NLS-1$
 
     /** The optional minimal tools revision required by platform & extra packages. */
     public static final String NODE_MIN_TOOLS_REV = "min-tools-rev";            //$NON-NLS-1$
@@ -67,7 +69,7 @@ public class RepoConstants {
     public static final String NODE_LIB       = "lib";                          //$NON-NLS-1$
 
     /** The path segment, a string, for extra packages. */
-    public static final String NODE_PATH = "path";                                  //$NON-NLS-1$
+    public static final String NODE_PATH      = "path";                         //$NON-NLS-1$
 
     /** The archives container, for all packages. */
     public static final String NODE_ARCHIVES = "archives";                      //$NON-NLS-1$

@@ -42,7 +42,7 @@ public class SdkAddonConstants extends RepoConstants {
 
     /** The latest version of the sdk-addon XML Schema.
      *  Valid version numbers are between 1 and this number, included. */
-    public static final int NS_LATEST_VERSION = 1;
+    public static final int NS_LATEST_VERSION = 2;
 
     /** The XML namespace of the latest sdk-addon XML. */
     public static final String NS_URI = getSchemaUri(NS_LATEST_VERSION);

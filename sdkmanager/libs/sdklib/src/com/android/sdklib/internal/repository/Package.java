@@ -171,6 +171,14 @@ public abstract class Package implements IDescription, Comparable<Package> {
     /**
      * Utility method that returns a property from a {@link Properties} object.
      * Returns the default value if props is null or if the property is not defined.
+     *
+     * @param props The {@link Properties} to search into.
+     *   If null, the default value is returned.
+     * @param propKey The name of the property. Must not be null.
+     * @param defaultValue The default value to return if {@code props} is null or if the
+     *   key is not found. Can be null.
+     * @return The string value of the given key in the properties, or null if the key
+     *   isn't found or if {@code props} is null.
      */
     protected String getProperty(Properties props, String propKey, String defaultValue) {
         if (props == null) {
@@ -238,8 +246,8 @@ public abstract class Package implements IDescription, Comparable<Package> {
         if (archivesNode != null) {
             String nsUri = archivesNode.getNamespaceURI();
             for(Node child = archivesNode.getFirstChild();
-                child != null;
-                child = child.getNextSibling()) {
+                     child != null;
+                     child = child.getNextSibling()) {
 
                 if (child.getNodeType() == Node.ELEMENT_NODE &&
                         nsUri.equals(child.getNamespaceURI()) &&

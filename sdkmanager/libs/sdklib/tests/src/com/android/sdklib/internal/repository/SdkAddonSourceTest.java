@@ -144,7 +144,7 @@ public class SdkAddonSourceTest extends TestCase {
     }
 
     /**
-     * Validate we can still load a valid addon schema version 1
+     * Validate we can still a valid add-on schema version 1
      */
     public void testLoadOldXml_1() throws Exception {
         InputStream xmlStream = getTestResource("/com/android/sdklib/testdata/addon_sample_1.xml");
@@ -161,6 +161,79 @@ public class SdkAddonSourceTest extends TestCase {
         assertEquals(Boolean.TRUE, validatorFound[0]);
         assertEquals(null, validationError[0]);
         assertEquals(SdkAddonConstants.getSchemaUri(1), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mSource._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the packages
+        assertTrue(mSource._parsePackages(doc, uri, monitor));
+
+        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
+                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+                     "Found G USB Driver package, revision 43 (Obsolete)\n" +
+                     "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
+                     "Found Unkown Extra package, revision 2 (Obsolete)\n",
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+
+        // check the packages we found... we expected to find 11 packages with each at least
+        // one archive.
+        Package[] pkgs = mSource.getPackages();
+        assertEquals(6, pkgs.length);
+        for (Package p : pkgs) {
+            assertTrue(p.getArchives().length >= 1);
+        }
+
+        // Check the extra packages path, vendor, install folder
+
+        final String osSdkPath = "SDK";
+        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+
+        ArrayList<String> extraPaths   = new ArrayList<String>();
+        ArrayList<String> extraVendors = new ArrayList<String>();
+        ArrayList<File>   extraInstall = new ArrayList<File>();
+        for (Package p : pkgs) {
+            if (p instanceof ExtraPackage) {
+                extraPaths.add(((ExtraPackage) p).getPath());
+                extraVendors.add(((ExtraPackage) p).getVendor());
+                extraInstall.add(((ExtraPackage) p).getInstallFolder(osSdkPath, sdkManager));
+            }
+        }
+        assertEquals(
+                "[usb_driver, extra_api_dep, extra0000005f]",
+                Arrays.toString(extraPaths.toArray()));
+        assertEquals(
+                "[g, android_vendor, vendor0000005f]",
+                Arrays.toString(extraVendors.toArray()));
+        assertEquals(
+                ("[SDK/extras/g/usb_driver, " +
+                  "SDK/extras/android_vendor/extra_api_dep, " +
+                  "SDK/extras/vendor0000005f/extra0000005f]").replace('/', File.separatorChar),
+                Arrays.toString(extraInstall.toArray()));
+    }
+
+    /**
+     * Validate we can still a valid add-on schema version 1
+     */
+    public void testLoadOldXml_2() throws Exception {
+        InputStream xmlStream = getTestResource("/com/android/sdklib/testdata/addon_sample_2.xml");
+
+        // guess the version from the XML document
+        int version = mSource._getXmlSchemaVersion(xmlStream);
+        assertEquals(2, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://" + SdkAddonConstants.URL_DEFAULT_FILENAME;
+
+        String uri = mSource._validateXml(xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkAddonConstants.getSchemaUri(2), uri);
 
         // Validation was successful, load the document
         MockMonitor monitor = new MockMonitor();
