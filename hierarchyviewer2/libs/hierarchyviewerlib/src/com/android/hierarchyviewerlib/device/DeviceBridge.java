@@ -194,8 +194,11 @@ public class DeviceBridge {
             if (device.isOnline()) {
                 device.executeShellCommand(buildIsServerRunningShellCommand(),
                         new BooleanResultReader(result));
-                if (!result[0] && loadViewServerInfo(device).protocolVersion > 2) {
-                    result[0] = true;
+                if (!result[0]) {
+                    ViewServerInfo serverInfo = loadViewServerInfo(device);
+                    if (serverInfo != null && serverInfo.protocolVersion > 2) {
+                        result[0] = true;
+                    }
                 }
             }
         } catch (TimeoutException e) {
