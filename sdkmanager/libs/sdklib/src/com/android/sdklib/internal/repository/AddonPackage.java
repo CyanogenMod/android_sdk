@@ -26,6 +26,7 @@ import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.util.Pair;
 
 import org.w3c.dom.Node;
 
@@ -38,7 +39,7 @@ import java.util.Properties;
  * Represents an add-on XML node in an SDK repository.
  */
 public class AddonPackage extends Package
-    implements IPackageVersion, IPlatformDependency, IExactApiLevelDependency {
+    implements IPackageVersion, IPlatformDependency, IExactApiLevelDependency, ILayoutlibVersion {
 
     private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
     private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
@@ -46,6 +47,11 @@ public class AddonPackage extends Package
     private final String mVendor;
     private final String mName;
     private final AndroidVersion mVersion;
+
+    /**
+     * The helper handling the layoutlib version.
+     */
+    private final LayoutlibVersionMixin mLayoutlibVersion;
 
     /** An add-on library. */
     public static class Lib {
@@ -90,6 +96,8 @@ public class AddonPackage extends Package
         mVersion = new AndroidVersion(apiLevel, codeName);
 
         mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepoConstants.NODE_LIBS));
+
+        mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }
 
     /**
@@ -120,6 +128,7 @@ public class AddonPackage extends Package
         mVersion = target.getVersion();
         mName     = target.getName();
         mVendor   = target.getVendor();
+        mLayoutlibVersion = new LayoutlibVersionMixin(props);
 
         IOptionalLibrary[] optLibs = target.getOptionalLibraries();
         if (optLibs == null || optLibs.length == 0) {
@@ -184,6 +193,8 @@ public class AddonPackage extends Package
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
+        mLayoutlibVersion.saveProperties(props);
+
         if (mName != null) {
             props.setProperty(PROP_NAME, mName);
         }
@@ -245,6 +256,22 @@ public class AddonPackage extends Package
     /** Returns the libs defined in this add-on. Can be an empty array but not null. */
     public Lib[] getLibs() {
         return mLibs;
+    }
+
+    /**
+     * Returns the layoutlib version.
+     * <p/>
+     * The first integer is the API of layoublib, which should be > 0.
+     * It will be equal to {@link ILayoutlibVersion#LAYOUTLIB_API_NOT_SPECIFIED} (0)
+     * if the layoutlib version isn't specified.
+     * <p/>
+     * The second integer is the revision for that given API. It is >= 0
+     * and works as a minor revision number, incremented for the same API level.
+     *
+     * @since sdk-addon-2.xsd
+     */
+    public Pair<Integer, Integer> getLayoutlibVersion() {
+        return mLayoutlibVersion.getLayoutlibVersion();
     }
 
     /**

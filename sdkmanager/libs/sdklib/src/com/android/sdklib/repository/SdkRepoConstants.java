@@ -66,12 +66,6 @@ public class SdkRepoConstants extends RepoConstants {
     public static final String NODE_SAMPLE          = "sample";               //$NON-NLS-1$
 
 
-    /** A layoutlib package. */
-    public static final String NODE_LAYOUT_LIB      = "layoutlib";            //$NON-NLS-1$
-    /** The API integer for a layoutlib element. */
-    public static final String NODE_API             = "api";                  //$NON-NLS-1$
-
-
     /**
      * List of possible nodes in a repository XML. Used to populate options automatically
      * in the no-GUI mode.

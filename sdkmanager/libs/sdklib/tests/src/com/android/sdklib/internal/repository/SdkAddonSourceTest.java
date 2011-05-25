@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.SdkAddonConstants;
+import com.android.util.Pair;
 
 import org.w3c.dom.Document;
 
@@ -255,11 +256,29 @@ public class SdkAddonSourceTest extends TestCase {
 
         // check the packages we found... we expected to find 11 packages with each at least
         // one archive.
+        // Note the order doesn't necessary match the one from the
+        // assertEquald(getCapturedVerboseLog) because packages are sorted using the
+        // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
         Package[] pkgs = mSource.getPackages();
+
         assertEquals(6, pkgs.length);
         for (Package p : pkgs) {
             assertTrue(p.getArchives().length >= 1);
         }
+
+        // Check the layoutlib of the platform packages.
+        ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
+        for (Package p : pkgs) {
+            if (p instanceof AddonPackage) {
+                layoutlibVers.add(((AddonPackage) p).getLayoutlibVersion());
+            }
+        }
+        assertEquals(
+                 "[Pair [first=3, second=42], " +         // for #3 "This add-on has no libraries"
+                 "Pair [first=0, second=0], " +           // for #2 "My Second add-on"
+                 "Pair [first=5, second=0]]",            // for #1 "My First add-on"
+                Arrays.toString(layoutlibVers.toArray()));
+
 
         // Check the extra packages path, vendor, install folder
 
