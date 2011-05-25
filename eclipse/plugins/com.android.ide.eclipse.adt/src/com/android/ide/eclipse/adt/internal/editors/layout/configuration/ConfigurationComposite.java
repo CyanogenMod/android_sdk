@@ -1777,9 +1777,9 @@ public class ConfigurationComposite extends Composite {
             IAndroidTarget[] targets = currentSdk.getTargets();
             int match = -1;
             for (int i = 0 ; i < targets.length; i++) {
-                // FIXME: support add-on rendering and check based on project minSdkVersion
-                if (targets[i].isPlatform()) {
-                    mTargetCombo.add(targets[i].getFullName());
+                // FIXME: add check based on project minSdkVersion
+                if (targets[i].hasRenderingLibrary()) {
+                    mTargetCombo.add(targets[i].getShortClasspathName());
                     mTargetList.add(targets[i]);
 
                     if (mRenderingTarget != null) {

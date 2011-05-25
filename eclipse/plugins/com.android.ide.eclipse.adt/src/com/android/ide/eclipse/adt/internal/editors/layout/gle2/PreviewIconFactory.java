@@ -579,8 +579,8 @@ public class PreviewIconFactory {
             // We have multiple directories - one for each combination of SDK, theme and device
             // (and later, possibly other qualifiers).
             // These are created -lazily-.
-            String targetName = mPalette.getCurrentTarget().getFullName();
-            String androidTargetNamePrefix = "Android ";
+            String targetName = mPalette.getCurrentTarget().hashString();
+            String androidTargetNamePrefix = "android-";
             String themeNamePrefix = "Theme.";
             if (targetName.startsWith(androidTargetNamePrefix)) {
                 targetName = targetName.substring(androidTargetNamePrefix.length());

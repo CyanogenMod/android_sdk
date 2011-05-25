@@ -554,9 +554,23 @@ public class SdkManager {
                 }
             }
 
+            // get the abi list.
             String[] abiList = getAbiList(addonDir.getAbsolutePath());
+
+            // check whether the add-on provides its own rendering info/library.
+            boolean hasRenderingLibrary = false;
+            boolean hasRenderingResources = false;
+
+            File dataFolder = new File(addonDir, SdkConstants.FD_DATA);
+            if (dataFolder.isDirectory()) {
+                hasRenderingLibrary = new File(dataFolder, SdkConstants.FN_LAYOUTLIB_JAR).isFile();
+                hasRenderingResources = new File(dataFolder, SdkConstants.FD_RES).isDirectory() &&
+                        new File(dataFolder, SdkConstants.FD_FONTS).isDirectory();
+            }
+
             AddOnTarget target = new AddOnTarget(addonDir.getAbsolutePath(), name, vendor,
-                    revisionValue, description, abiList, libMap, baseTarget);
+                    revisionValue, description, abiList, libMap,
+                    hasRenderingLibrary, hasRenderingResources,baseTarget);
 
             // need to parse the skins.
             String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));

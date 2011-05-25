@@ -21,7 +21,6 @@ import com.android.sdklib.util.SparseArray;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
-import java.util.ArrayList;
 
 /**
  * Represents a platform target in the SDK.
@@ -175,6 +174,10 @@ final class PlatformTarget implements IAndroidTarget {
         return mName;
     }
 
+    public String getShortClasspathName() {
+        return mName;
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -209,6 +212,14 @@ final class PlatformTarget implements IAndroidTarget {
     public String getPath(int pathId) {
         return mPaths.get(pathId);
     }
+
+    /**
+     * Returns whether the target is able to render layouts. This is always true for platforms.
+     */
+    public boolean hasRenderingLibrary() {
+        return true;
+    }
+
 
     public String[] getSkins() {
         return mSkins;

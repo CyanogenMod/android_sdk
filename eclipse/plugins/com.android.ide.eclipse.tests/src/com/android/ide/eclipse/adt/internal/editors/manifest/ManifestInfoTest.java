@@ -324,5 +324,9 @@ public class ManifestInfoTest extends AdtProjectTest {
         public int compareTo(IAndroidTarget o) {
             return 0;
         }
+
+        public boolean hasRenderingLibrary() {
+            return false;
+        }
     }
 }
