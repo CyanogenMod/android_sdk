@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.sdklib.internal.repository;
+package com.android.sdklib.io;
 
 import com.android.sdklib.SdkConstants;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 
 /**
  * Helper methods used when dealing with archives installation.
  */
-abstract class OsHelper {
+public abstract class OsHelper {
 
     /**
      * Reflection method for File.setExecutable(boolean, boolean). Only present in Java 6.
@@ -52,7 +54,7 @@ abstract class OsHelper {
      * Files that cannot be deleted right away are marked for deletion on exit.
      * The argument can be null.
      */
-    static void deleteFileOrFolder(File fileOrFolder) {
+    public static void deleteFileOrFolder(File fileOrFolder) {
         if (fileOrFolder != null) {
             if (fileOrFolder.isDirectory()) {
                 // Must delete content recursively first
@@ -95,7 +97,7 @@ abstract class OsHelper {
     /**
      * Sets the executable Unix permission (+x) on a file or folder.
      * <p/>
-     * This attempts to use {@link File#setExecutable(boolean, boolean)} through reflection if
+     * This attempts to use File#setExecutable through reflection if
      * it's available.
      * If this is not available, this invokes a chmod exec instead,
      * so there is no guarantee of it being fast.
@@ -105,7 +107,7 @@ abstract class OsHelper {
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
-    static void setExecutablePermission(File file) throws IOException {
+    public static void setExecutablePermission(File file) throws IOException {
         if (sFileReflectionDone == false) {
             try {
                 sFileSetExecutable = File.class.getMethod("setExecutable", //$NON-NLS-1$
@@ -141,11 +143,12 @@ abstract class OsHelper {
     /**
      * Copies a binary file.
      *
-     * @param source the source file to copy
-     * @param dest the destination file to write
-     * @return True if the file was successfully copied. False otherwise.
+     * @param source the source file to copy.
+     * @param dest the destination file to write.
+     * @throws FileNotFoundException if the source file doesn't exist.
+     * @throws IOException if there's a problem reading or writing the file.
      */
-    static boolean copyFile(File source, File dest) {
+    public static void copyFile(File source, File dest) throws IOException {
         byte[] buffer = new byte[8192];
 
         FileInputStream fis = null;
@@ -158,11 +161,6 @@ abstract class OsHelper {
             while ((read = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, read);
             }
-
-            return true;
-
-        } catch (Exception e) {
-            // Ignore. Simply return false below.
 
         } finally {
             if (fis != null) {
@@ -180,7 +178,67 @@ abstract class OsHelper {
                 }
             }
         }
+    }
 
-        return false;
+    /**
+     * Checks whether 2 binary files are the same.
+     *
+     * @param source the source file to copy
+     * @param destination the destination file to write
+     * @throws FileNotFoundException if the source files don't exist.
+     * @throws IOException if there's a problem reading the files.
+     */
+    public static boolean isSameFile(File source, File destination) throws IOException {
+
+        if (source.length() != destination.length()) {
+            return false;
+        }
+
+        FileInputStream fis1 = null;
+        FileInputStream fis2 = null;
+
+        try {
+            fis1 = new FileInputStream(source);
+            fis2 = new FileInputStream(destination);
+
+            byte[] buffer1 = new byte[8192];
+            byte[] buffer2 = new byte[8192];
+
+            int read1;
+            while ((read1 = fis1.read(buffer1)) != -1) {
+                int read2 = 0;
+                while (read2 < read1) {
+                    int n = fis2.read(buffer2, read2, read1 - read2);
+                    if (n == -1) {
+                        break;
+                    }
+                }
+
+                if (read2 != read1) {
+                    return false;
+                }
+
+                if (!Arrays.equals(buffer1, buffer2)) {
+                    return false;
+                }
+            }
+        } finally {
+            if (fis2 != null) {
+                try {
+                    fis2.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            if (fis1 != null) {
+                try {
+                    fis1.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+
+        return true;
     }
 }

@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.io.OsHelper;
 import com.android.sdklib.repository.RepoConstants;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -854,7 +855,9 @@ public class ArchiveInstaller {
             if (file.isFile()) {
                 File f = new File(destFolder, file.getName());
                 destFiles.remove(f);
-                if (!OsHelper.copyFile(file, f)) {
+                try {
+                    OsHelper.copyFile(file, f);
+                } catch (IOException e) {
                     result = false;
                 }
             }
