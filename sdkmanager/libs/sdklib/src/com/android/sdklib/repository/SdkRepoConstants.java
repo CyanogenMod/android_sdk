@@ -94,7 +94,15 @@ public class SdkRepoConstants extends RepoConstants {
      */
     public static InputStream getXsdStream(int version) {
         String filename = String.format("sdk-repository-%d.xsd", version);      //$NON-NLS-1$
-        return SdkRepoConstants.class.getResourceAsStream(filename);
+        InputStream stream = SdkRepoConstants.class.getResourceAsStream(filename);
+        if (stream == null) {
+            // Try the alternate schemas that are not published yet.
+            // This allows us to internally test with new schemas before the
+            // public repository uses it.
+            filename = String.format("-sdk-repository-%d.xsd", version);      //$NON-NLS-1$
+            stream = SdkRepoConstants.class.getResourceAsStream(filename);
+        }
+        return stream;
     }
 
     /**

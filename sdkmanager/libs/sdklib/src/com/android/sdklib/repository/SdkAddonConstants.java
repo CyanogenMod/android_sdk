@@ -71,7 +71,15 @@ public class SdkAddonConstants extends RepoConstants {
      */
     public static InputStream getXsdStream(int version) {
         String filename = String.format("sdk-addon-%d.xsd", version);      //$NON-NLS-1$
-        return SdkAddonConstants.class.getResourceAsStream(filename);
+        InputStream stream = SdkAddonConstants.class.getResourceAsStream(filename);
+        if (stream == null) {
+            // Try the alternate schemas that are not published yet.
+            // This allows us to internally test with new schemas before the
+            // public repository uses it.
+            filename = String.format("-sdk-addon-%d.xsd", version);      //$NON-NLS-1$
+            stream = SdkRepoConstants.class.getResourceAsStream(filename);
+        }
+        return stream;
     }
 
     /**
