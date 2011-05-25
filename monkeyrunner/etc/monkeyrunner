@@ -81,8 +81,10 @@ else
     if [ -n "$ANDROID_BUILD_TOP" ]; then
         osname=`uname -s | tr A-Z a-z`
         swtpath="${ANDROID_BUILD_TOP}/prebuilt/${osname}-${vmarch}/swt"
-    else
+    elif [ -d "$frameworkdir/$vmarch" ]; then
         swtpath="${frameworkdir}/${vmarch}"
+    else
+        swtpath="${frameworkdir}"
     fi
 fi
 
