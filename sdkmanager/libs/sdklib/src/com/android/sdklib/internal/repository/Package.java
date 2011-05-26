@@ -180,7 +180,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * @return The string value of the given key in the properties, or null if the key
      *   isn't found or if {@code props} is null.
      */
-    protected String getProperty(Properties props, String propKey, String defaultValue) {
+    static String getProperty(Properties props, String propKey, String defaultValue) {
         if (props == null) {
             return defaultValue;
         }

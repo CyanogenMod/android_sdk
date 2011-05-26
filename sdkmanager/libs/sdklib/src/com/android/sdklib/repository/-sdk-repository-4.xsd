@@ -88,7 +88,6 @@
             <xsd:element name="api-level" type="xsd:positiveInteger"  />
             <!-- The optional codename for this platform, if it's a preview. -->
             <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
-
             <!-- The revision, an int > 0, incremented each time a new
                  package is generated. -->
             <xsd:element name="revision"  type="xsd:positiveInteger" />
@@ -126,7 +125,9 @@
 
     <xsd:complexType name="layoutlibType" >
         <xsd:annotation>
-            <xsd:documentation>An SDK tool package.</xsd:documentation>
+            <xsd:documentation>
+                Version information for a layoutlib included in a platform.
+            </xsd:documentation>
         </xsd:annotation>
         <xsd:all>
             <!-- The layoutlib API level, an int > 0,

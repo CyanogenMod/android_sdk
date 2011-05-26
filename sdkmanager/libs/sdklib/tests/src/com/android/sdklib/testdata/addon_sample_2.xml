@@ -57,6 +57,10 @@
                 <sdk:name>com.android.mymaps</sdk:name>
             </sdk:lib>
         </sdk:libs>
+        <sdk:layoutlib>
+            <sdk:api>5</sdk:api>
+            <sdk:revision>0</sdk:revision>
+        </sdk:layoutlib>
     </sdk:add-on>
 
     <sdk:add-on>
@@ -86,6 +90,7 @@
             </sdk:lib>
         </sdk:libs>
         <sdk:uses-license ref="license2" />
+        <!-- No layoutlib element in this package. It's optional. -->
     </sdk:add-on>
 
     <sdk:add-on>
@@ -103,6 +108,10 @@
         </sdk:archives>
         <!-- The libs node is mandatory, however it can be empty. -->
         <sdk:libs />
+        <sdk:layoutlib>
+            <sdk:api>3</sdk:api>
+            <sdk:revision>42</sdk:revision>
+        </sdk:layoutlib>
     </sdk:add-on>
 
     <sdk:extra>
@@ -164,6 +173,7 @@
         <sdk:min-tools-rev>3</sdk:min-tools-rev>
         <sdk:min-api-level>42</sdk:min-api-level>
         <sdk:obsolete></sdk:obsolete>
+        <!-- No project-files element in this package. -->
     </sdk:extra>
 
 </sdk:sdk-addon>

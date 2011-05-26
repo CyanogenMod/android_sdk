@@ -36,13 +36,9 @@ import java.util.Properties;
 /**
  * Represents a platform XML node in an SDK repository.
  */
-public class PlatformPackage extends MinToolsPackage implements IPackageVersion {
+public class PlatformPackage extends MinToolsPackage implements IPackageVersion, ILayoutlibVersion {
 
-    public static final String PROP_VERSION       = "Platform.Version";             //$NON-NLS-1$
-    public static final String PROP_LAYOUTLIB_API = "Platform.Layoutlib.Api";       //$NON-NLS-1$
-    public static final String PROP_LAYOUTLIB_REV = "Platform.Layoutlib.Revision";  //$NON-NLS-1$
-    public static final int LAYOUTLIB_API_NOT_SPECIFIED = 0;
-    public static final int LAYOUTLIB_REV_NOT_SPECIFIED = 0;
+    public static final String PROP_VERSION       = "Platform.Version";
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -51,14 +47,9 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
     private final String mVersionName;
 
     /**
-     * The layoutlib version. Mandatory starting with XSD rev 4.
-     * The first integer is the API of layoublib, which should be > 0.
-     * It will be equal to {@link #LAYOUTLIB_API_NOT_SPECIFIED} (0) if the layoutlib
-     * version isn't specified.
-     * The second integer is the revision for that given API. It is >= 0
-     * and works as a minor revision number, incremented for the same API level.
+     * The helper handling the layoutlib version.
      */
-    private final Pair<Integer, Integer> mLayoutlibVersion;
+    private final LayoutlibVersionMixin mLayoutlibVersion;
 
     /**
      * Creates a new platform package from the attributes and elements of the given XML node.
@@ -82,25 +73,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
 
         mVersion = new AndroidVersion(apiLevel, codeName);
 
-        mLayoutlibVersion = parseLayoutlib(
-                XmlParserUtils.getFirstChild(packageNode, SdkRepoConstants.NODE_LAYOUT_LIB));
-    }
-
-    /**
-     * Parses an XML node to process the {@code <layoutlib>} element.
-     *
-     * The layoutlib element is new in the XSD rev 4, so we need to cope with it missing
-     * in earlier XMLs even though it is now mandatory.
-     */
-    private Pair<Integer, Integer> parseLayoutlib(Node layoutlibNode) {
-        int api = LAYOUTLIB_API_NOT_SPECIFIED;
-        int rev = LAYOUTLIB_REV_NOT_SPECIFIED;
-        if (layoutlibNode != null) {
-            api = XmlParserUtils.getXmlInt(layoutlibNode, SdkRepoConstants.NODE_API, 0);
-            rev = XmlParserUtils.getXmlInt(layoutlibNode, SdkRepoConstants.NODE_REVISION, 0);
-        }
-
-        return Pair.of(api, rev);
+        mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }
 
     /**
@@ -130,12 +103,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
 
         mVersion = target.getVersion();
         mVersionName  = target.getVersionName();
-
-        int layoutlibApi = Integer.parseInt(
-            getProperty(props, PROP_LAYOUTLIB_API, Integer.toString(LAYOUTLIB_API_NOT_SPECIFIED)));
-        int layoutlibRev = Integer.parseInt(
-            getProperty(props, PROP_LAYOUTLIB_REV, Integer.toString(LAYOUTLIB_REV_NOT_SPECIFIED)));
-        mLayoutlibVersion = Pair.of(layoutlibApi, layoutlibRev);
+        mLayoutlibVersion = new LayoutlibVersionMixin(props);
     }
 
     /**
@@ -147,15 +115,12 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
+        mLayoutlibVersion.saveProperties(props);
 
         if (mVersionName != null) {
             props.setProperty(PROP_VERSION, mVersionName);
         }
 
-        if (mLayoutlibVersion.getFirst().intValue() != LAYOUTLIB_API_NOT_SPECIFIED) {
-            props.setProperty(PROP_LAYOUTLIB_API, mLayoutlibVersion.getFirst().toString());
-            props.setProperty(PROP_LAYOUTLIB_REV, mLayoutlibVersion.getSecond().toString());
-        }
     }
 
     /** Returns the version, a string, for platform packages. */
@@ -172,8 +137,8 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
      * Returns the layoutlib version. Mandatory starting with repository XSD rev 4.
      * <p/>
      * The first integer is the API of layoublib, which should be > 0.
-     * It will be equal to {@link #LAYOUTLIB_API_NOT_SPECIFIED} (0) if the layoutlib
-     * version isn't specified.
+     * It will be equal to {@link ILayoutlibVersion#LAYOUTLIB_API_NOT_SPECIFIED} (0)
+     * if the layoutlib version isn't specified.
      * <p/>
      * The second integer is the revision for that given API. It is >= 0
      * and works as a minor revision number, incremented for the same API level.
@@ -181,7 +146,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion 
      * @since sdk-repository-4.xsd
      */
     public Pair<Integer, Integer> getLayoutlibVersion() {
-        return mLayoutlibVersion;
+        return mLayoutlibVersion.getLayoutlibVersion();
     }
 
     /**

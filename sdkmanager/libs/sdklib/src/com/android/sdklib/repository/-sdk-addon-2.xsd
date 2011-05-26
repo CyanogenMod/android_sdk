@@ -35,9 +35,11 @@
            <extra> packages.
 
          - v2 is used by the SDK Updater in Tools r12.
-           <extra> element now has a <project-files> element that contains 1 or
-           or more <path>, each indicating the relative path of a file that this package
-           can contribute to installed projects.
+            - <extra> element now has a <project-files> element that contains 1 or
+              or more <path>, each indicating the relative path of a file that this package
+              can contribute to installed projects.
+            - <addon> element now has an optional <layoutlib> that indicates the API
+              and revision of the layout library for this particular add-on, if any.
     -->
 
     <xsd:element name="sdk-addon" type="sdk:repositoryType" />
@@ -70,10 +72,33 @@
             <xsd:element name="api-level"    type="xsd:positiveInteger"  />
             <!-- The optional codename for this add-on, if it's a preview. -->
             <xsd:element name="codename"     type="xsd:string"      minOccurs="0" />
-
             <!-- The revision, an int > 0, incremented each time a new
                  package is generated. -->
             <xsd:element name="revision"     type="xsd:positiveInteger" />
+
+            <!-- An add-on can declare 0 or more libraries.
+                 This element is mandatory but it can be empty.
+            -->
+
+            <xsd:element name="libs">
+                <xsd:complexType>
+                    <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+                        <xsd:element name="lib">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <!-- The name of the library. -->
+                                    <xsd:element name="name" type="xsd:normalizedString" />
+                                    <!-- The optional description of this add-on library. -->
+                                    <xsd:element name="description" type="xsd:string" minOccurs="0" />
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- optional elements -->
+
             <!-- The optional license of this package. If present, users will have
                  to agree to it before downloading. -->
             <xsd:element name="uses-license" type="sdk:usesLicenseType" minOccurs="0" />
@@ -92,24 +117,27 @@
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"     type="xsd:string"      minOccurs="0" />
 
-            <!-- An add-on can declare 0 or more libraries. -->
+            <!-- Information on the layoutlib packaged in this platform. -->
+            <xsd:element name="layoutlib" type="sdk:layoutlibType"  minOccurs="0" />
+        </xsd:all>
+    </xsd:complexType>
 
-            <xsd:element name="libs">
-                <xsd:complexType>
-                    <xsd:sequence minOccurs="0" maxOccurs="unbounded">
-                        <xsd:element name="lib">
-                            <xsd:complexType>
-                                <xsd:all>
-                                    <!-- The name of the library. -->
-                                    <xsd:element name="name" type="xsd:normalizedString" />
-                                    <!-- The optional description of this add-on library. -->
-                                    <xsd:element name="description" type="xsd:string" minOccurs="0" />
-                                </xsd:all>
-                            </xsd:complexType>
-                        </xsd:element>
-                    </xsd:sequence>
-                </xsd:complexType>
-            </xsd:element>
+
+    <!-- The definition of a layout library used by an addon. -->
+
+    <xsd:complexType name="layoutlibType" >
+        <xsd:annotation>
+            <xsd:documentation>
+                Version information for a layoutlib included in an addon.
+            .</xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- The layoutlib API level, an int > 0,
+                 incremented with each new incompatible lib. -->
+            <xsd:element name="api"          type="xsd:positiveInteger" />
+            <!-- The incremental minor revision for that API, e.g. in case of bug fixes.
+                 Optional. An int >= 0, assumed to be 0 if the element is missing. -->
+            <xsd:element name="revision"     type="xsd:nonNegativeInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
 

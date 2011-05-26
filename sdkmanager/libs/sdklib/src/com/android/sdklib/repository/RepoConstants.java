@@ -65,6 +65,12 @@ public class RepoConstants {
     /** The name, a string, for add-on packages or for libraries. */
     public static final String NODE_NAME      = "name";                         //$NON-NLS-1$
 
+
+    /** A layoutlib package. */
+    public static final String NODE_LAYOUT_LIB      = "layoutlib";              //$NON-NLS-1$
+    /** The API integer for a layoutlib element. */
+    public static final String NODE_API             = "api";                    //$NON-NLS-1$
+
     /** The libs container, optional for an add-on. */
     public static final String NODE_LIBS      = "libs";                         //$NON-NLS-1$
     /** A lib element in a libs container. */
