@@ -153,6 +153,8 @@ public class MonkeyRunnerOptions {
                 }
 
                 pluginListBuilder.add(plugin);
+            } else if ("-u".equals(argument)){
+                // This is asking for unbuffered input. We can ignore this.
             } else if (argument.startsWith("-") &&
                 // Once we have the scriptfile, the rest of the arguments go to jython.
                 scriptFile == null) {
@@ -161,7 +163,8 @@ public class MonkeyRunnerOptions {
                 return null;
             } else {
                 if (scriptFile == null) {
-                    // get the filepath of the script to run.  This will be the last undashed argument.
+                    // get the filepath of the script to run.
+                    // This will be the last undashed argument.
                     scriptFile = new File(argument);
                     if (!scriptFile.exists()) {
                         printUsage("Can't open specified script file");
