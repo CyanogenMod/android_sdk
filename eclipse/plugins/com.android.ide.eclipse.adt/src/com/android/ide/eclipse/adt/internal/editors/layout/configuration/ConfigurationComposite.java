@@ -56,6 +56,7 @@ import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.util.Pair;
 
@@ -758,16 +759,53 @@ public class ConfigurationComposite extends Composite {
         // Default to layoutlib version 5
         Sdk current = Sdk.getCurrent();
         if (current != null) {
+            IAndroidTarget projectTarget = current.getTarget(mEditedFile.getProject());
+            int minProjectApi = Integer.MAX_VALUE;
+            if (projectTarget != null) {
+                if (!projectTarget.isPlatform() && projectTarget.hasRenderingLibrary()) {
+                    // Renderable non-platform targets are all going to be adequate (they
+                    // will have at least version 5 of layoutlib) so use the project
+                    // target as the render target.
+                    return projectTarget;
+                }
+                minProjectApi = projectTarget.getVersion().getApiLevel();
+            }
+
+            // We want to pick a render target that contains at least version 5 (and
+            // preferably version 6) of the layout library. To do this, we go through the
+            // targets and pick the -smallest- API level that is both simultaneously at
+            // least as big as the project API level, and supports layoutlib level 5+.
+            IAndroidTarget best = null;
+            int bestApiLevel = Integer.MAX_VALUE;
+
             for (IAndroidTarget target : current.getTargets()) {
-                // Only Honeycomb has layoutlib version 5; as soon as we backport
-                // adjust this algorithm to find the lowest version that contains
-                // layoutlib 5
-                AndroidVersion version = target.getVersion();
-                int apiLevel = version.getApiLevel();
-                if (apiLevel >= 11) { // Layoutlib so far has been backported to 11
-                    return target;
+                // Non-platform targets are not chosen as the default render target
+                if (!target.isPlatform()) {
+                    continue;
+                }
+
+                int apiLevel = target.getVersion().getApiLevel();
+
+                // Ignore targets that have a lower API level than the minimum project
+                // API level:
+                if (apiLevel < minProjectApi) {
+                    continue;
+                }
+
+                // Look up the layout lib API level. This property is new so it will only
+                // be defined for version 6 or higher, which means non-null is adequate
+                // to see if this target is eligible:
+                String property = target.getProperty(PlatformPackage.PROP_LAYOUTLIB_API);
+                // In addition, Android 3.0 with API level 11 had version 5.0 which is adequate:
+                if (property != null || apiLevel >= 11) {
+                    if (apiLevel < bestApiLevel) {
+                        bestApiLevel = apiLevel;
+                        best = target;
+                    }
                 }
             }
+
+            return best;
         }
 
         return null;

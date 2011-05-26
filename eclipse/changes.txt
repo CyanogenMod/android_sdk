@@ -1,7 +1,7 @@
 11.0.0
 - Visual Refactoring:
   - The new "Extract Style" refactoring pulls out style constants and
-    defines them as style rules intead.
+    defines them as style rules instead.
   - The new "Wrap in Container" refactoring surrounds the selected
     views with a new layout, and transfers namespace and layout
     parameters to the new parent
