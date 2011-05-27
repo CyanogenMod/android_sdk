@@ -16,16 +16,10 @@
 
 package com.android.ide.eclipse.ddms.views;
 
-import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.ImageLoader;
-import com.android.ddmuilib.logcat.LogColors;
-import com.android.ddmuilib.logcat.LogFilter;
-import com.android.ddmuilib.logcat.LogPanel;
-import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
-import com.android.ddmuilib.logcat.LogPanel.LogCatViewInterface;
-import com.android.ide.eclipse.ddms.CommonAction;
-import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -60,44 +54,47 @@ import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.ide.IDE;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmuilib.ImageLoader;
+import com.android.ddmuilib.logcat.LogColors;
+import com.android.ddmuilib.logcat.LogFilter;
+import com.android.ddmuilib.logcat.LogPanel;
+import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
+import com.android.ddmuilib.logcat.LogPanel.LogCatViewInterface;
+import com.android.ide.eclipse.ddms.CommonAction;
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.i18n.Messages;
+import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
 /**
  * The log cat view displays log output from the current device selection.
- *
  */
 public final class LogCatView extends SelectionDependentViewPart implements LogCatViewInterface {
 
-    public static final String ID =
-        "com.android.ide.eclipse.ddms.views.LogCatView"; //$NON-NLS-1$
+    public static final String ID = "com.android.ide.eclipse.ddms.views.LogCatView"; //$NON-NLS-1$
 
     private static final String PREFS_COL_TIME =
-        DdmsPlugin.PLUGIN_ID + ".logcat.time"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.time"; //$NON-NLS-1$
     private static final String PREFS_COL_LEVEL =
-        DdmsPlugin.PLUGIN_ID + ".logcat.level"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.level"; //$NON-NLS-1$
     private static final String PREFS_COL_PID =
-        DdmsPlugin.PLUGIN_ID + ".logcat.pid"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.pid"; //$NON-NLS-1$
     private static final String PREFS_COL_TAG =
-        DdmsPlugin.PLUGIN_ID + ".logcat.tag"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.tag"; //$NON-NLS-1$
     private static final String PREFS_COL_MESSAGE =
-        DdmsPlugin.PLUGIN_ID + ".logcat.message"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.message"; //$NON-NLS-1$
 
     private static final String PREFS_FILTERS =
-        DdmsPlugin.PLUGIN_ID + ".logcat.filters"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.filters"; //$NON-NLS-1$
 
     public static final String CHOICE_METHOD_DECLARATION =
-        DdmsPlugin.PLUGIN_ID + ".logcat.MethodDeclaration"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.MethodDeclaration"; //$NON-NLS-1$
     public static final String CHOICE_ERROR_LINE =
-        DdmsPlugin.PLUGIN_ID + ".logcat.ErrorLine"; //$NON-NLS-1$
+            DdmsPlugin.PLUGIN_ID + ".logcat.ErrorLine"; //$NON-NLS-1$
 
     /* Default values for the switch of perspective. */
     public static final boolean DEFAULT_SWITCH_PERSPECTIVE = true;
-    public static final String DEFAULT_PERSPECTIVE_ID =
-        "org.eclipse.jdt.ui.JavaPerspective"; //$NON-NLS-1$
-
+    public static final String DEFAULT_PERSPECTIVE_ID = "org.eclipse.jdt.ui.JavaPerspective"; //$NON-NLS-1$
     private static LogCatView sThis;
     private LogPanel mLogPanel;
 
@@ -122,8 +119,8 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
     private Clipboard mClipboard;
 
     /**
-     * An implementation of {@link ILogFilterStorageManager} to bridge to the eclipse preference
-     * store, and saves the log filters.
+     * An implementation of {@link ILogFilterStorageManager} to bridge to the
+     * eclipse preference store, and saves the log filters.
      */
     private final class FilterStorage implements ILogFilterStorageManager {
 
@@ -135,7 +132,7 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
             String[] filters = filterPrefs.split("\\|"); //$NON-NLS-1$
 
             ArrayList<LogFilter> list =
-                new ArrayList<LogFilter>(filters.length);
+                    new ArrayList<LogFilter>(filters.length);
 
             for (String f : filters) {
                 if (f.length() > 0) {
@@ -166,8 +163,8 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
     }
 
     /**
-     * This class defines what to do with the search match returned by a double-click or by the
-     * Go to Problem action.
+     * This class defines what to do with the search match returned by a
+     * double-click or by the Go to Problem action.
      */
     private class LogCatViewSearchRequestor extends SearchRequestor {
 
@@ -236,6 +233,7 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
 
     /**
      * Sets the display font.
+     * 
      * @param font The font.
      */
     public static void setFont(Font font) {
@@ -257,50 +255,50 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
         colors.warningColor = new Color(d, 255, 127, 0);
         colors.verboseColor = new Color(d, 0, 0, 0);
 
-        mCreateFilterAction = new CommonAction("Create Filter") {
+        mCreateFilterAction = new CommonAction(Messages.LogCatView_Create_Filter) {
             @Override
             public void run() {
                 mLogPanel.addFilter();
             }
         };
-        mCreateFilterAction.setToolTipText("Create Filter");
-        mCreateFilterAction.setImageDescriptor(loader.loadDescriptor("add.png"));
+        mCreateFilterAction.setToolTipText(Messages.LogCatView_Create_Filter_Tooltip);
+        mCreateFilterAction.setImageDescriptor(loader.loadDescriptor("add.png")); //$NON-NLS-1$
 
-        mEditFilterAction = new CommonAction("Edit Filter") {
+        mEditFilterAction = new CommonAction(Messages.LogCatView_Edit_Filter) {
             @Override
             public void run() {
                 mLogPanel.editFilter();
             }
         };
-        mEditFilterAction.setToolTipText("Edit Filter");
+        mEditFilterAction.setToolTipText(Messages.LogCatView_Edit_Filter_Tooltip);
         mEditFilterAction.setImageDescriptor(loader.loadDescriptor("edit.png")); //$NON-NLS-1$
 
-        mDeleteFilterAction = new CommonAction("Delete Filter") {
+        mDeleteFilterAction = new CommonAction(Messages.LogCatView_Delete_Filter) {
             @Override
             public void run() {
                 mLogPanel.deleteFilter();
             }
         };
-        mDeleteFilterAction.setToolTipText("Delete Filter");
+        mDeleteFilterAction.setToolTipText(Messages.LogCatView_Delete_Filter_Tooltip);
         mDeleteFilterAction.setImageDescriptor(loader.loadDescriptor("delete.png")); //$NON-NLS-1$
 
-        mExportAction = new CommonAction("Export Selection As Text...") {
+        mExportAction = new CommonAction(Messages.LogCatView_Export_Selection_As_Text) {
             @Override
             public void run() {
                 mLogPanel.save();
             }
         };
-        mExportAction.setToolTipText("Export Selection As Text...");
+        mExportAction.setToolTipText(Messages.LogCatView_Export_Selection_As_Text_Tooltip);
         mExportAction.setImageDescriptor(loader.loadDescriptor("save.png")); //$NON-NLS-1$
 
-        mGotoMethodDeclarationAction = new CommonAction("Go to Problem (method declaration)") {
+        mGotoMethodDeclarationAction = new CommonAction(Messages.LogCatView_Go_To_Problem_Method) {
             @Override
             public void run() {
                 goToErrorLine(CHOICE_METHOD_DECLARATION);
             }
         };
 
-        mGotoErrorLineAction = new CommonAction("Go to Problem (error line)") {
+        mGotoErrorLineAction = new CommonAction(Messages.LogCatView_Go_To_Problem_Error_Line) {
             @Override
             public void run() {
                 goToErrorLine(CHOICE_ERROR_LINE);
@@ -309,19 +307,19 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
 
         LogLevel[] levels = LogLevel.values();
         mLogLevelActions = new CommonAction[mLogLevelIcons.length];
-        for (int i = 0 ; i < mLogLevelActions.length; i++) {
+        for (int i = 0; i < mLogLevelActions.length; i++) {
             String name = levels[i].getStringValue();
             mLogLevelActions[i] = new CommonAction(name, IAction.AS_CHECK_BOX) {
                 @Override
                 public void run() {
                     // disable the other actions and record current index
-                    for (int i = 0 ; i < mLogLevelActions.length; i++) {
+                    for (int i = 0; i < mLogLevelActions.length; i++) {
                         Action a = mLogLevelActions[i];
                         if (a == this) {
                             a.setChecked(true);
 
                             // set the log level
-                            mLogPanel.setCurrentFilterLogLevel(i+2);
+                            mLogPanel.setCurrentFilterLogLevel(i + 2);
                         } else {
                             a.setChecked(false);
                         }
@@ -333,14 +331,13 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
             mLogLevelActions[i].setImageDescriptor(loader.loadDescriptor(mLogLevelIcons[i]));
         }
 
-        mClearAction = new Action("Clear Log") {
+        mClearAction = new Action(Messages.LogCatView_Clear_Log) {
             @Override
             public void run() {
                 mLogPanel.clear();
             }
         };
         mClearAction.setImageDescriptor(loader.loadDescriptor("clear.png")); //$NON-NLS-1$
-
 
         // now create the log view
         mLogPanel = new LogPanel(colors, new FilterStorage(), LogPanel.FILTER_MANUAL);
@@ -367,7 +364,8 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
         // setup the copy action
         mClipboard = new Clipboard(d);
         IActionBars actionBars = getViewSite().getActionBars();
-        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), new Action("Copy") {
+        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), new Action(
+                Messages.LogCatView_Copy) {
             @Override
             public void run() {
                 mLogPanel.copy(mClipboard);
@@ -376,12 +374,12 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
 
         // setup the select all action
         actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
-                new Action("Select All") {
-            @Override
-            public void run() {
-                mLogPanel.selectAll();
-            }
-        });
+                new Action(Messages.LogCatView_Select_All) {
+                    @Override
+                    public void run() {
+                        mLogPanel.selectAll();
+                    }
+                });
     }
 
     @Override
@@ -469,17 +467,21 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
         try {
             String msg = mLogPanel.getSelectedErrorLineMessage();
             if (msg != null) {
-                String error_line_matcher_string = "\\s*at\\ (.*)\\((.*)\\.java\\:(\\d+)\\)";
+                String error_line_matcher_string = "\\s*at\\ (.*)\\((.*)\\.java\\:(\\d+)\\)"; //$NON-NLS-1$
                 Matcher error_line_matcher = Pattern.compile(
                         error_line_matcher_string).matcher(msg);
 
                 if (error_line_matcher.find()) {
                     String class_name_method = error_line_matcher.group(1);
 
-                    // TODO: Search currently only matches the class declaration (using
-                    // IJavaSearchConstants.DECLARATIONS). We may want to jump to the
-                    // "reference" of the class instead (IJavaSearchConstants.REFERENCES)
-                    // using the filename and line number to disambiguate the search results.
+                    // TODO: Search currently only matches the class declaration
+                    // (using
+                    // IJavaSearchConstants.DECLARATIONS). We may want to jump
+                    // to the
+                    // "reference" of the class instead
+                    // (IJavaSearchConstants.REFERENCES)
+                    // using the filename and line number to disambiguate the
+                    // search results.
                     String class_name_line = error_line_matcher.group(2);
                     int line_number = Integer.parseInt(error_line_matcher.group(3));
 
@@ -489,23 +491,27 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
                                 IJavaSearchConstants.CLASS,
                                 IJavaSearchConstants.DECLARATIONS,
                                 SearchPattern.R_EXACT_MATCH
-                                | SearchPattern.R_CASE_SENSITIVE),
-                                new SearchParticipant[] { SearchEngine
-                            .getDefaultSearchParticipant() },
-                            SearchEngine.createWorkspaceScope(),
-                            new LogCatViewSearchRequestor(CHOICE_ERROR_LINE, line_number),
-                            new NullProgressMonitor());
+                                        | SearchPattern.R_CASE_SENSITIVE),
+                                new SearchParticipant[] {
+                                    SearchEngine
+                                            .getDefaultSearchParticipant()
+                                },
+                                SearchEngine.createWorkspaceScope(),
+                                new LogCatViewSearchRequestor(CHOICE_ERROR_LINE, line_number),
+                                new NullProgressMonitor());
                     } else if (CHOICE_METHOD_DECLARATION.equals(choice)) {
                         se.search(SearchPattern.createPattern(class_name_method,
                                 IJavaSearchConstants.METHOD,
                                 IJavaSearchConstants.DECLARATIONS,
                                 SearchPattern.R_EXACT_MATCH
-                                | SearchPattern.R_CASE_SENSITIVE),
-                                new SearchParticipant[] { SearchEngine
-                            .getDefaultSearchParticipant() },
-                            SearchEngine.createWorkspaceScope(),
-                            new LogCatViewSearchRequestor(CHOICE_METHOD_DECLARATION, 0),
-                            new NullProgressMonitor());
+                                        | SearchPattern.R_CASE_SENSITIVE),
+                                new SearchParticipant[] {
+                                    SearchEngine
+                                            .getDefaultSearchParticipant()
+                                },
+                                SearchEngine.createWorkspaceScope(),
+                                new LogCatViewSearchRequestor(CHOICE_METHOD_DECLARATION, 0),
+                                new NullProgressMonitor());
                     }
                 }
             }
@@ -519,4 +525,3 @@ public final class LogCatView extends SelectionDependentViewPart implements LogC
         goToErrorLine();
     }
 }
-

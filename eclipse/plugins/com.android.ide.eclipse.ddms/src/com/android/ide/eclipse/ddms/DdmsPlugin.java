@@ -27,6 +27,7 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
+import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
 import org.eclipse.core.runtime.CoreException;
@@ -253,8 +254,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         mHasDebuggerConnectors = dcce.length > 0;
 
         // get the other configElements and instantiante them in a Job.
-        new Job("DDMS post-create init") {
-
+        new Job(Messages.DdmsPlugin_DDMS_Post_Create_Init) {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
@@ -740,10 +740,10 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         Calendar c = Calendar.getInstance();
 
         if (tag == null) {
-            return String.format("[%1$tF %1$tT]", c);
+            return String.format(Messages.DdmsPlugin_Message_Tag_Mask_1, c);
         }
 
-        return String.format("[%1$tF %1$tT - %2$s]", c, tag);
+        return String.format(Messages.DdmsPlugin_Message_Tag_Mask_2, c, tag);
     }
 
     /**

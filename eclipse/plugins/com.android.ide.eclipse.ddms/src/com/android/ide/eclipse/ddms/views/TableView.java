@@ -19,6 +19,7 @@ package com.android.ide.eclipse.ddms.views;
 import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
+import com.android.ide.eclipse.ddms.i18n.Messages;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.dnd.Clipboard;
@@ -27,7 +28,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.actions.ActionFactory;
 
 /**
- * Base class for view containing Table that needs to support copy, and select all.
+ * Base class for view containing Table that needs to support copy, and select
+ * all.
  */
 public abstract class TableView extends SelectionDependentViewPart {
 
@@ -42,6 +44,7 @@ public abstract class TableView extends SelectionDependentViewPart {
     /**
      * Setup the listener for the Table objects of <code>Panel</code>, and setup
      * the copy and select all actions.
+     * 
      * @param panel The panel to setup
      * @param parent The parent composite of the Panel's content.
      */
@@ -66,25 +69,25 @@ public abstract class TableView extends SelectionDependentViewPart {
         mClipboard = new Clipboard(parent.getDisplay());
         IActionBars actionBars = getViewSite().getActionBars();
         actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(),
-                mCopyAction = new Action("Copy") {
-            @Override
-            public void run() {
-                if (mActivator != null) {
-                    mActivator.copy(mClipboard);
-                }
-            }
-        });
+                mCopyAction = new Action(Messages.TableView_Copy) {
+                    @Override
+                    public void run() {
+                        if (mActivator != null) {
+                            mActivator.copy(mClipboard);
+                        }
+                    }
+                });
 
         // setup the select all action
         actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
-                mSelectAllAction = new Action("Select All") {
-            @Override
-            public void run() {
-                if (mActivator != null) {
-                    mActivator.selectAll();
-                }
-            }
-        });
+                mSelectAllAction = new Action(Messages.TableView_Select_All) {
+                    @Override
+                    public void run() {
+                        if (mActivator != null) {
+                            mActivator.selectAll();
+                        }
+                    }
+                });
 
     }
 
