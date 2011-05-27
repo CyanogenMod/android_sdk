@@ -36,7 +36,6 @@ import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
@@ -47,7 +46,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -146,7 +144,6 @@ public class PackagesPage extends UpdaterPage
     private TreeViewerColumn mColumnApi;
     private TreeViewerColumn mColumnRevision;
     private TreeViewerColumn mColumnStatus;
-    private Color mColorUpdate;
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
 
@@ -482,14 +479,10 @@ public class PackagesPage extends UpdaterPage
         fontData.setStyle(SWT.ITALIC);
         mTreeFontItalic = new Font(mTree.getDisplay(), fontData);
 
-        mColorUpdate = new Color(mTree.getDisplay(), 0xff, 0xff, 0xcc);
-
         mTree.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 mTreeFontItalic.dispose();
-                mColorUpdate.dispose();
                 mTreeFontItalic = null;
-                mColorUpdate = null;
             }
         });
     }
@@ -1030,8 +1023,7 @@ public class PackagesPage extends UpdaterPage
 
     // ----------------------
 
-    public class PkgCellLabelProvider extends ColumnLabelProvider
-        implements ITableFontProvider, ITableColorProvider {
+    public class PkgCellLabelProvider extends ColumnLabelProvider implements ITableFontProvider {
 
         private final TreeViewerColumn mColumn;
 
@@ -1145,22 +1137,6 @@ public class PackagesPage extends UpdaterPage
                 return mTreeFontItalic;
             }
             return super.getFont(element);
-        }
-
-        // -- ITableColorProvider
-
-        public Color getBackground(Object element, int columnIndex) {
-            if (element instanceof PkgItem) {
-                if (((PkgItem) element).getState() == PkgState.HAS_UPDATE) {
-                    return mColorUpdate;
-                }
-            }
-            return null;
-        }
-
-        public Color getForeground(Object element, int columnIndex) {
-            // Not used
-            return null;
         }
     }
 
