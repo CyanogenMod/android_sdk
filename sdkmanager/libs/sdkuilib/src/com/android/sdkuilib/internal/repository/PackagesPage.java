@@ -573,7 +573,7 @@ public class PackagesPage extends UpdaterPage
         if (!unusedItemsMap.containsKey(PkgCategory.KEY_EXTRA)) {
             PkgCategory cat = new PkgCategory(
                     PkgCategory.KEY_EXTRA,
-                    "Add-ons & Extras",
+                    "Extras",
                     imgFactory.getImageByName(ICON_CAT_OTHER));
             unusedItemsMap.put(PkgCategory.KEY_EXTRA, Pair.of(cat, new HashSet<PkgItem>()));
             mCategories.add(cat);

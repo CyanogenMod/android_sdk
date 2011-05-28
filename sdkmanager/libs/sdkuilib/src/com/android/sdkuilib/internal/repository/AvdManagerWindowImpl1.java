@@ -34,7 +34,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -249,16 +248,6 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
                 }
             };
         }
-    }
-
-    private Image getImage(String filename) {
-        if (mUpdaterData != null) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
-            if (imgFactory != null) {
-                return imgFactory.getImageByName(filename);
-            }
-        }
-        return null;
     }
 
 
