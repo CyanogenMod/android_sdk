@@ -17,10 +17,10 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
-import com.android.sdkuilib.internal.repository.IUpdaterWindow;
+import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
-import com.android.sdkuilib.internal.repository.UpdaterWindowImpl;
-import com.android.sdkuilib.internal.repository.UpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.SdkUpdaterWindowImpl1;
+import com.android.sdkuilib.internal.repository.SdkUpdaterWindowImpl2;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
@@ -30,10 +30,10 @@ import org.eclipse.swt.widgets.Shell;
  *
  * This is the public entry point for using the window.
  */
-public class UpdaterWindow {
+public class SdkUpdaterWindow {
 
     /** The actual window implement to which this class delegates. */
-    private IUpdaterWindow mWindow;
+    private ISdkUpdaterWindow mWindow;
 
     /**
      * Enum giving some indication of what is invoking this window.
@@ -42,7 +42,7 @@ public class UpdaterWindow {
      * Note: if you add Android support to your specific IDE, you might want
      * to specialize this context enum.
      */
-    public enum InvocationContext {
+    public enum SdkInvocationContext {
         /**
          * The SDK Manager is invoked from the stand-alone 'android' tool.
          * In this mode, we present an about box, a settings page.
@@ -78,20 +78,20 @@ public class UpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link SdkInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
-    public UpdaterWindow(
+    public SdkUpdaterWindow(
             Shell parentShell,
             ISdkLog sdkLog,
             String osSdkRoot,
-            InvocationContext context) {
+            SdkInvocationContext context) {
 
         // TODO right now the new PackagesPage is experimental and not enabled by default
         if (System.getenv("ANDROID_SDKMAN_EXP") != null) {  //$NON-NLS-1$
-            mWindow = new UpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot, context);
+            mWindow = new SdkUpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot, context);
         } else {
-            mWindow = new UpdaterWindowImpl(parentShell, sdkLog, osSdkRoot, context);
+            mWindow = new SdkUpdaterWindowImpl1(parentShell, sdkLog, osSdkRoot, context);
         }
     }
 

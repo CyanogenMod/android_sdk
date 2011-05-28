@@ -59,9 +59,9 @@ import java.util.Collection;
 
 
 /**
- * Implements an {@link UpdateChooserDialog}.
+ * Implements an {@link SdkUpdaterChooserDialog}.
  */
-final class UpdateChooserDialog extends GridDialog {
+final class SdkUpdaterChooserDialog extends GridDialog {
 
     /** Last dialog size for this session. */
     private static Point sLastSize;
@@ -103,7 +103,7 @@ final class UpdateChooserDialog extends GridDialog {
      * @param updaterData The updater data
      * @param archives The archives to be installed
      */
-    public UpdateChooserDialog(Shell parentShell,
+    public SdkUpdaterChooserDialog(Shell parentShell,
             UpdaterData updaterData,
             Collection<ArchiveInfo> archives) {
         super(parentShell, 3, false/*makeColumnsEqual*/);
@@ -237,7 +237,6 @@ final class UpdateChooserDialog extends GridDialog {
      */
     @Override
     protected Control createButtonBar(Composite parent) {
-
         Composite composite = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 0; // this is incremented by createButton
@@ -398,7 +397,7 @@ final class UpdateChooserDialog extends GridDialog {
      * (e.g. A <- B <- C and A is disabled so C should be disabled; currently C's state depends
      * solely on B's state). We currently don't need this. It would be straightforward to add
      * if we had a need for it, though. This would require changes to {@link ArchiveInfo} and
-     * {@link UpdaterLogic}.
+     * {@link SdkUpdaterLogic}.
      */
     private void displayInformation(ArchiveInfo ai) {
         if (ai == null) {

@@ -742,9 +742,9 @@
             label="Android SDK and AVD Manager"
             visible="true">
          <action
-               class="com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction"
+               class="com.android.ide.eclipse.adt.internal.actions.SdkAvdManagerAction"
                icon="icons/avd_manager.png"
-               id="com.android.ide.eclipse.adt.ui.avdmanager"
+               id="com.android.ide.eclipse.adt.ui.sdkavdmanager"
                label="Android SDK and AVD Manager"
                menubarPath="Window/additions"
                style="push"

@@ -74,7 +74,7 @@ public class UpdaterLogicTest extends TestCase {
 
     }
 
-    private static class MockUpdaterLogic extends UpdaterLogic {
+    private static class MockUpdaterLogic extends SdkUpdaterLogic {
         private final Package[] mRemotePackages;
 
         public MockUpdaterLogic(IUpdaterData updaterData, Package[] remotePackages) {

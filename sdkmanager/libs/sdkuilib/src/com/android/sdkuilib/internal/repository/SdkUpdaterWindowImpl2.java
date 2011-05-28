@@ -28,7 +28,7 @@ import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
 import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -62,11 +62,11 @@ import java.util.ArrayList;
  * <p/>
  * This window features only one embedded page, the combined installed+available package list.
  */
-public class UpdaterWindowImpl2 implements IUpdaterWindow {
+public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     private static final String APP_NAME = "Android SDK Manager";
     private final Shell mParentShell;
-    private final InvocationContext mContext;
+    private final SdkInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
     /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
@@ -91,14 +91,14 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link SdkInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
-    public UpdaterWindowImpl2(
+    public SdkUpdaterWindowImpl2(
             Shell parentShell,
             ISdkLog sdkLog,
             String osSdkRoot,
-            InvocationContext context) {
+            SdkInvocationContext context) {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
@@ -112,13 +112,13 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
      *
      * @param parentShell Parent shell.
      * @param updaterData The parent's updater data.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link SdkInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
-    public UpdaterWindowImpl2(
+    public SdkUpdaterWindowImpl2(
             Shell parentShell,
             UpdaterData updaterData,
-            InvocationContext context) {
+            SdkInvocationContext context) {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = updaterData;
@@ -280,7 +280,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         Menu menuTools = new Menu(menuBarTools);
         menuBarTools.setMenu(menuTools);
 
-        if (mContext == InvocationContext.STANDALONE) {
+        if (mContext == SdkInvocationContext.STANDALONE) {
             MenuItem manageAvds = new MenuItem(menuTools, SWT.NONE);
             manageAvds.setText("Manage AVDs...");
             manageAvds.addSelectionListener(new SelectionAdapter() {
@@ -298,7 +298,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         mPkgPage.registerMenuAction(
                 MenuAction.SHOW_ADDON_SITES, manageSources);
 
-        if (mContext == InvocationContext.STANDALONE) {
+        if (mContext == SdkInvocationContext.STANDALONE) {
             // Note: when invoked from an IDE, the SwtMenuBar library isn't
             // available. This means this source should not directly import
             // any of SwtMenuBar classes, otherwise the whole window class
@@ -421,7 +421,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
         ProgressViewFactory factory = new ProgressViewFactory();
         factory.setProgressView(new ProgressView(
                 mStatusText, mProgressBar, mButtonStop,
-                mContext == InvocationContext.IDE ? mUpdaterData.getSdkLog() : null));
+                mContext == SdkInvocationContext.IDE ? mUpdaterData.getSdkLog() : null));
         mUpdaterData.setTaskFactory(factory);
 
         setWindowImage(mShell);
@@ -539,7 +539,7 @@ public class UpdaterWindowImpl2 implements IUpdaterWindow {
             AvdManagerWindowImpl1 win = new AvdManagerWindowImpl1(
                     mShell,
                     mUpdaterData,
-                    AvdManagerWindowImpl1.InvocationContext.SDK_MANAGER);
+                    AvdManagerWindowImpl1.AvdInvocationContext.SDK_MANAGER);
 
             for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
                 win.registerPage(page.getFirst(), page.getSecond());

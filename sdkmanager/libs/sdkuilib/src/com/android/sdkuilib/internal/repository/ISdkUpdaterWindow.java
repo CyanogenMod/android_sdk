@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 /**
  * Interface for the actual implementation of the Update Window.
  */
-public interface IUpdaterWindow {
+public interface ISdkUpdaterWindow {
 
     /**
      * Registers an extra page for the updater window.
