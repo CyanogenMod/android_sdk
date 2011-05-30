@@ -28,7 +28,12 @@ LOCAL_JAR_MANIFEST := manifest.txt
 LOCAL_JAVA_LIBRARIES := \
         androidprefs \
         common \
-        commons-compress-1.0
+        commons-compress-1.0 \
+        httpclient-4.1.1 \
+        httpcore-4.1 \
+        httpmime-4.1.1 \
+        commons-logging-1.1.1 \
+        commons-codec-1.4
 
 LOCAL_MODULE := sdklib
 

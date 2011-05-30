@@ -7,5 +7,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/commons-compress/commons-compress-1.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/http-client/commons-codec-1.4.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/http-client/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/http-client/httpclient-4.1.1.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/http-client/httpcore-4.1.jar"/>
+	<classpathentry kind="var" path="ANDROID_SRC/prebuilt/common/http-client/httpmime-4.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
