@@ -23,7 +23,7 @@ import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.UpdaterWindow;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -51,7 +51,7 @@ import java.util.ArrayList;
  * This is an intermediate version of the {@link AvdManagerPage}
  * wrapped in its own standalone window for use from the SDK Manager 2.
  */
-public class AvdManagerWindowImpl1 implements IUpdaterWindow {
+public class AvdManagerWindowImpl1 {
 
     private static final String APP_NAME = "Android Virtual Device Manager";
     private static final String APP_NAME_MAC_MENU = "AVD Manager";
@@ -63,7 +63,7 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
      * Note: if you add Android support to your specific IDE, you might want
      * to specialize this context enum.
      */
-    public enum InvocationContext {
+    public enum AvdInvocationContext {
         /**
          * The AVD Manager is invoked from the stand-alone 'android' tool.
          * In this mode, we present an about box, a settings page.
@@ -90,7 +90,7 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
 
 
     private final Shell mParentShell;
-    private final InvocationContext mContext;
+    private final AvdInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
     private final UpdaterData mUpdaterData;
     /** A list of extra pages to instantiate. Each entry is an object array with 2 elements:
@@ -111,14 +111,14 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link AvdInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
     public AvdManagerWindowImpl1(
             Shell parentShell,
             ISdkLog sdkLog,
             String osSdkRoot,
-            InvocationContext context) {
+            AvdInvocationContext context) {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
@@ -127,18 +127,18 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
     /**
      * Creates a new window. Caller must call open(), which will block.
      * <p/>
-     * This is to be used when the window is opened from {@link UpdaterWindowImpl2}
+     * This is to be used when the window is opened from {@link SdkUpdaterWindowImpl2}
      * to share the same {@link UpdaterData} structure.
      *
      * @param parentShell Parent shell.
      * @param updaterData The parent's updater data.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link AvdInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager.
      */
     public AvdManagerWindowImpl1(
             Shell parentShell,
             UpdaterData updaterData,
-            InvocationContext context) {
+            AvdInvocationContext context) {
         mParentShell = parentShell;
         mContext = context;
         mUpdaterData = updaterData;
@@ -200,7 +200,7 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
 
     private void createMenuBar() {
 
-        if (mContext != InvocationContext.STANDALONE) {
+        if (mContext != AvdInvocationContext.STANDALONE) {
             return;
         }
 
@@ -222,7 +222,7 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
             }
         });
 
-        if (mContext != InvocationContext.IDE) {
+        if (mContext != AvdInvocationContext.IDE) {
             // Note: when invoked from an IDE, the SwtMenuBar library isn't
             // available. This means this source should not directly import
             // any of SwtMenuBar classes, otherwise the whole window class
@@ -433,10 +433,10 @@ public class AvdManagerWindowImpl1 implements IUpdaterWindow {
         ITaskFactory oldFactory = mUpdaterData.getTaskFactory();
 
         try {
-            UpdaterWindowImpl2 win = new UpdaterWindowImpl2(
+            SdkUpdaterWindowImpl2 win = new SdkUpdaterWindowImpl2(
                     mShell,
                     mUpdaterData,
-                    UpdaterWindow.InvocationContext.AVD_MANAGER);
+                    SdkUpdaterWindow.SdkInvocationContext.AVD_MANAGER);
 
             for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
                 win.registerPage(page.getFirst(), page.getSecond());

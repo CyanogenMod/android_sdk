@@ -33,11 +33,11 @@ import java.util.Collection;
  * (new or local) archive, which means the dependent archive needs to be successfully
  * installed first. Finally this archive can also be a dependency for another one.
  * <p/>
- * The accepted and rejected flags are used by {@link UpdateChooserDialog} to follow
+ * The accepted and rejected flags are used by {@link SdkUpdaterChooserDialog} to follow
  * user choices. The installer should never install something that is not accepted.
  * <p/>
  * <em>Note</em>: There is currently no logic to support more than one level of
- * dependency, either here or in the {@link UpdateChooserDialog}, since we currently
+ * dependency, either here or in the {@link SdkUpdaterChooserDialog}, since we currently
  * have no need for it.
  *
  * @see ArchiveInfo#ArchiveInfo(Archive, Archive, ArchiveInfo[])

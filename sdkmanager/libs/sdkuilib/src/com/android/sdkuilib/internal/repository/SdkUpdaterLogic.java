@@ -54,11 +54,11 @@ import java.util.Set;
  * When the user doesn't provide a selection, looks at local package to find
  * those that can be updated and compute dependencies too.
  */
-class UpdaterLogic {
+class SdkUpdaterLogic {
 
     private final IUpdaterData mUpdaterData;
 
-    public UpdaterLogic(IUpdaterData updaterData) {
+    public SdkUpdaterLogic(IUpdaterData updaterData) {
         mUpdaterData = updaterData;
     }
 

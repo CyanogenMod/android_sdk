@@ -65,7 +65,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Data shared between {@link UpdaterWindowImpl} and its pages.
+ * Data shared between {@link SdkUpdaterWindowImpl1} and its pages.
  */
 class UpdaterData implements IUpdaterData {
     private String mOsSdkRoot;
@@ -679,7 +679,7 @@ class UpdaterData implements IUpdaterData {
         // automatically by computeUpdates() iif it needs to access sources to
         // resolve missing dependencies.
 
-        UpdaterLogic ul = new UpdaterLogic(this);
+        SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
         List<ArchiveInfo> archives = ul.computeUpdates(
                 selectedArchives,
                 getSources(),
@@ -700,7 +700,7 @@ class UpdaterData implements IUpdaterData {
 
         Collections.sort(archives);
 
-        UpdateChooserDialog dialog = new UpdateChooserDialog(getWindowShell(), this, archives);
+        SdkUpdaterChooserDialog dialog = new SdkUpdaterChooserDialog(getWindowShell(), this, archives);
         dialog.open();
 
         ArrayList<ArchiveInfo> result = dialog.getResult();
@@ -722,7 +722,7 @@ class UpdaterData implements IUpdaterData {
         refreshSources(true);
         loadRemoteAddonsList();
 
-        UpdaterLogic ul = new UpdaterLogic(this);
+        SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
         List<ArchiveInfo> archives = ul.computeUpdates(
                 null /*selectedArchives*/,
                 getSources(),

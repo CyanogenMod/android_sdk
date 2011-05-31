@@ -29,7 +29,7 @@ import java.util.Properties;
 /**
  * Performs an update using only a non-interactive console output with no GUI.
  */
-public class UpdateNoWindow {
+public class SdkUpdaterNoWindow {
 
     /** The {@link UpdaterData} to use. */
     private final UpdaterData mUpdaterData;
@@ -52,7 +52,7 @@ public class UpdateNoWindow {
      * @param proxyPort An optional HTTP/HTTPS proxy port. Can be null.
      * @param proxyHost An optional HTTP/HTTPS proxy host. Can be null.
      */
-    public UpdateNoWindow(String osSdkRoot,
+    public SdkUpdaterNoWindow(String osSdkRoot,
             SdkManager sdkManager,
             ISdkLog sdkLog,
             boolean force,
@@ -153,7 +153,7 @@ public class UpdateNoWindow {
 
     /**
      * A custom implementation of {@link ITaskMonitor} that defers all output to the
-     * super {@link UpdateNoWindow#mSdkLog}.
+     * super {@link SdkUpdaterNoWindow#mSdkLog}.
      */
     private class ConsoleTask implements ITaskMonitor {
 

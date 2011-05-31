@@ -30,6 +30,7 @@ import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.actions.SdkAvdManagerAction;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.internal.launch.DelayedLaunchInfo.InstallRetryMode;
 import com.android.ide.eclipse.adt.internal.launch.DeviceChooserDialog.DeviceChooserResponse;
@@ -39,7 +40,6 @@ import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.internal.wizards.actions.AvdManagerAction;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -497,7 +497,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             Shell shell = display.getActiveShell();
                             if (MessageDialog.openQuestion(shell, "Android AVD Error",
                                     "No compatible targets were found. Do you wish to a add new Android Virtual Device?")) {
-                                AvdManagerAction action = new AvdManagerAction();
+                                SdkAvdManagerAction action = new SdkAvdManagerAction();
                                 action.run(null /*action*/);
                                 searchAgain[0] = true;
                             }

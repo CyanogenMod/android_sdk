@@ -23,7 +23,7 @@ import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.util.Pair;
 
 import org.eclipse.swt.SWT;
@@ -51,7 +51,7 @@ import java.util.ArrayList;
  * (AVD list, settings, about, installed packages, available packages)
  * and the corresponding page on the right.
  */
-public class UpdaterWindowImpl implements IUpdaterWindow {
+public class SdkUpdaterWindowImpl1 implements ISdkUpdaterWindow {
 
     private final Shell mParentShell;
     /** Internal data shared between the window and its pages. */
@@ -87,14 +87,14 @@ public class UpdaterWindowImpl implements IUpdaterWindow {
      * @param parentShell Parent shell.
      * @param sdkLog Logger. Cannot be null.
      * @param osSdkRoot The OS path to the SDK root.
-     * @param context The {@link InvocationContext} to change the behavior depending on who's
+     * @param context The {@link SdkInvocationContext} to change the behavior depending on who's
      *  opening the SDK Manager. Unused for SdkMan1.
      */
-    public UpdaterWindowImpl(
+    public SdkUpdaterWindowImpl1(
             Shell parentShell,
             ISdkLog sdkLog,
             String osSdkRoot,
-            InvocationContext context/*unused*/) {
+            SdkInvocationContext context/*unused*/) {
         mParentShell = parentShell;
         mUpdaterData = new UpdaterData(osSdkRoot, sdkLog);
     }

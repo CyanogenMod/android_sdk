@@ -41,11 +41,11 @@ import com.android.sdkmanager.internal.repository.AboutPage;
 import com.android.sdkmanager.internal.repository.SettingsPage;
 import com.android.sdkuilib.internal.repository.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.repository.PackagesPage;
-import com.android.sdkuilib.internal.repository.UpdateNoWindow;
+import com.android.sdkuilib.internal.repository.SdkUpdaterNoWindow;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
-import com.android.sdkuilib.repository.UpdaterWindow;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.util.Pair;
 
 import org.eclipse.swt.widgets.Display;
@@ -80,7 +80,7 @@ public class Main {
     private final static int INVALID_TARGET_ID = 0;
 
     private final static String[] BOOLEAN_YES_REPLIES = new String[] { "yes", "y" };
-    private final static String[] BOOLEAN_NO_REPLIES = new String[] { "no", "n" };
+    private final static String[] BOOLEAN_NO_REPLIES  = new String[] { "no",  "n" };
 
     /** Path to the SDK folder. This is the parent of {@link #TOOLSDIR}. */
     private String mOsSdkFolder;
@@ -321,11 +321,11 @@ public class Main {
                     Display.getCurrent(),
                     true /*logErrorsOnly*/);
 
-            UpdaterWindow window = new UpdaterWindow(
+            SdkUpdaterWindow window = new SdkUpdaterWindow(
                     null /* parentShell */,
                     errorLogger,
                     mOsSdkFolder,
-                    InvocationContext.STANDALONE);
+                    SdkInvocationContext.STANDALONE);
             window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
             window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
             if (autoUpdate) {
@@ -355,7 +355,7 @@ public class Main {
                     null /* parentShell */,
                     errorLogger,
                     mOsSdkFolder,
-                    AvdManagerWindowImpl1.InvocationContext.STANDALONE);
+                    AvdManagerWindowImpl1.AvdInvocationContext.STANDALONE);
 
             window.registerPage(SettingsPage.class, UpdaterPage.Purpose.SETTINGS);
             window.registerPage(AboutPage.class,    UpdaterPage.Purpose.ABOUT_BOX);
@@ -376,7 +376,7 @@ public class Main {
         String proxyHost = mSdkCommandLine.getParamProxyHost();
         String proxyPort = mSdkCommandLine.getParamProxyPort();
 
-        UpdateNoWindow upd = new UpdateNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
+        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
                 force, useHttp, proxyHost, proxyPort);
         upd.listRemotePackages(obsolete);
     }
@@ -400,7 +400,7 @@ public class Main {
             errorAndExit(filterResult.getFirst());
         }
 
-        UpdateNoWindow upd = new UpdateNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
+        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
                 force, useHttp, proxyHost, proxyPort);
         upd.updateAll(filterResult.getSecond(), obsolete, dryMode);
     }

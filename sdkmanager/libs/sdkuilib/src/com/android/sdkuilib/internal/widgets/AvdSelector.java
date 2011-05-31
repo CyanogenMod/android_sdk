@@ -28,8 +28,8 @@ import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTask;
-import com.android.sdkuilib.repository.UpdaterWindow;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
@@ -1009,11 +1009,11 @@ public final class AvdSelector {
             log = new MessageBoxLog("Result of SDK Manager", display, true /*logErrorsOnly*/);
         }
 
-        UpdaterWindow window = new UpdaterWindow(
+        SdkUpdaterWindow window = new SdkUpdaterWindow(
                 mTable.getShell(),
                 log,
                 mAvdManager.getSdkManager().getLocation(),
-                InvocationContext.AVD_SELECTOR);
+                SdkInvocationContext.AVD_SELECTOR);
         window.open();
         refresh(true /*reload*/); // UpdaterWindow uses its own AVD manager so this one must reload.
 

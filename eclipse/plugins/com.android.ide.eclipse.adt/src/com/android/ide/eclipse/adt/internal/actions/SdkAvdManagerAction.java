@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.wizards.actions;
+package com.android.ide.eclipse.adt.internal.actions;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdkuilib.repository.ISdkChangeListener;
-import com.android.sdkuilib.repository.UpdaterWindow;
-import com.android.sdkuilib.repository.UpdaterWindow.InvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -32,10 +32,10 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
- * Delegate for the toolbar/menu action "Android AVD Manager".
- * It displays the Android AVD Manager.
+ * Delegate for the toolbar/menu action "Android SDK & AVD Manager".
+ * It displays the Android SDK & AVD Manager.
  */
-public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
+public class SdkAvdManagerAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
 
     public void dispose() {
         // nothing to dispose.
@@ -51,11 +51,11 @@ public class AvdManagerAction implements IWorkbenchWindowActionDelegate, IObject
 
             // Runs the updater window, directing all logs to the ADT console.
 
-            UpdaterWindow window = new UpdaterWindow(
+            SdkUpdaterWindow window = new SdkUpdaterWindow(
                     AdtPlugin.getDisplay().getActiveShell(),
                     new AdtConsoleSdkLog(),
                     sdk.getSdkLocation(),
-                    InvocationContext.IDE);
+                    SdkInvocationContext.IDE);
 
             ISdkChangeListener listener = new ISdkChangeListener() {
                 public void onSdkLoaded() {

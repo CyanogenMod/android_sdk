@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Menu;
  *
  * The {@link MenuBarEnhancer} and {@link IMenuBarCallback} classes are only
  * available when the SwtMenuBar library is available too. This wrapper helps
- * {@link UpdaterWindowImpl2} make the call conditional, otherwise the updater
+ * {@link SdkUpdaterWindowImpl2} make the call conditional, otherwise the updater
  * window class would fail to load when the SwtMenuBar library isn't found.
  */
 abstract class MenuBarWrapper {
