@@ -901,7 +901,8 @@ public class PackagesPage extends UpdaterPage
         if (checked != null) {
             for (Object c : checked) {
                 if (c instanceof PkgItem) {
-                    if (((PkgItem) c).getState() == PkgState.INSTALLED) {
+                    PkgState state = ((PkgItem) c).getState();
+                    if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
                         canDelete = true;
                         break;
                     }
@@ -972,6 +973,8 @@ public class PackagesPage extends UpdaterPage
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
+                // The local package list has changed, make sure to refresh it
+                mUpdaterData.getLocalSdkParser().clearPackages();
                 // loadPackages will also re-enable the UI
                 loadPackages();
             }
@@ -991,18 +994,21 @@ public class PackagesPage extends UpdaterPage
         final List<Archive> archives = new ArrayList<Archive>();
 
         for (Object c : checked) {
-            if (c instanceof PkgItem && ((PkgItem) c).getState() == PkgState.INSTALLED) {
-                Package p = ((PkgItem) c).getPackage();
+            if (c instanceof PkgItem) {
+                PkgState state = ((PkgItem) c).getState();
+                if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
+                    Package p = ((PkgItem) c).getPackage();
 
-                Archive[] as = p.getArchives();
-                if (as.length == 1 && as[0] != null && as[0].isLocal()) {
-                    Archive archive = as[0];
-                    String osPath = archive.getLocalOsPath();
+                    Archive[] as = p.getArchives();
+                    if (as.length == 1 && as[0] != null && as[0].isLocal()) {
+                        Archive archive = as[0];
+                        String osPath = archive.getLocalOsPath();
 
-                    File dir = new File(osPath);
-                    if (dir.isDirectory()) {
-                        msg += "\n - " + p.getShortDescription();
-                        archives.add(archive);
+                        File dir = new File(osPath);
+                        if (dir.isDirectory()) {
+                            msg += "\n - " + p.getShortDescription();
+                            archives.add(archive);
+                        }
                     }
                 }
             }
@@ -1033,6 +1039,8 @@ public class PackagesPage extends UpdaterPage
                         }
                     });
                 } finally {
+                    // The local package list has changed, make sure to refresh it
+                    mUpdaterData.getLocalSdkParser().clearPackages();
                     // loadPackages will also re-enable the UI
                     loadPackages();
                 }
