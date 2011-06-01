@@ -45,6 +45,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GCWrapper;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
@@ -1211,7 +1212,8 @@ public class RulesEngine {
 
         public Map<INode, Rect> measureChildren(INode parent,
                 IClientRulesEngine.AttributeFilter filter) {
-            Map<INode, Rect> map = mEditor.measureChildren(parent, filter);
+            RenderService renderService = RenderService.create(mEditor);
+            Map<INode, Rect> map = renderService.measureChildren(parent, filter);
             if (map == null) {
                 map = Collections.emptyMap();
             }

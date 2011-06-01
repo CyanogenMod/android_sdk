@@ -26,7 +26,6 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
-import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
@@ -69,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
@@ -266,18 +264,19 @@ public class PreviewIconFactory {
             RenderSession session = null;
             NodeList childNodes = documentElement.getChildNodes();
             try {
-                LayoutLog logger = new RenderLogger("palette");
                 // Important to get these sizes large enough for clients that don't support
                 // RenderMode.FULL_EXPAND such as 1.6
                 int width = 200;
                 int height = childNodes.getLength() == 1 ? 400 : 1600;
-                Set<UiElementNode> expandNodes = Collections.<UiElementNode>emptySet();
-                RenderingMode renderingMode = RenderingMode.FULL_EXPAND;
 
-                session = editor.render(model, width, height, expandNodes,
-                        overrideBgColor, true /*no decorations*/, logger,
-                        renderingMode);
-
+                session = RenderService.create(editor)
+                    .setModel(model)
+                    .setSize(width, height)
+                    .setRenderingMode(RenderingMode.FULL_EXPAND)
+                    .setLog(new RenderLogger("palette"))
+                    .setOverrideBgColor(overrideBgColor)
+                    .setDecorations(false)
+                    .createRenderSession();
             } catch (Throwable t) {
                 // If there are internal errors previewing the components just revert to plain
                 // icons and labels
@@ -439,7 +438,9 @@ public class PreviewIconFactory {
      */
     private RGB renderDrawableResource(String themeItemName) {
         GraphicalEditorPart editor = mPalette.getEditor();
-        BufferedImage image = editor.renderThemeItem(themeItemName, 100, 100);
+        BufferedImage image = RenderService.create(editor)
+            .setSize(100, 100)
+            .renderThemeItem(themeItemName);
         if (image != null) {
             // Use the middle pixel as the color since that works better for gradients;
             // solid colors work too.

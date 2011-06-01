@@ -30,7 +30,6 @@ import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ViewInfo;
-import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -982,9 +981,14 @@ public class PaletteControl extends Composite {
                 int renderWidth = Math.min(screenBounds.width, MAX_RENDER_WIDTH);
                 int renderHeight = Math.min(screenBounds.height, MAX_RENDER_HEIGHT);
                 LayoutLog silentLogger = new LayoutLog();
-                session = editor.render(model, renderWidth, renderHeight,
-                    null /* explodeNodes */, overrideBgColor, true /*no decorations*/,
-                    silentLogger, RenderingMode.NORMAL);
+
+                session = RenderService.create(editor)
+                    .setModel(model)
+                    .setSize(renderWidth, renderHeight)
+                    .setLog(silentLogger)
+                    .setOverrideBgColor(overrideBgColor)
+                    .setDecorations(false)
+                    .createRenderSession();
             } catch (Throwable t) {
                 // Previews can fail for a variety of reasons -- let's not bug
                 // the user with it
