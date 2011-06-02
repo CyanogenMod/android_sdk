@@ -1425,11 +1425,10 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
-        // also remove the ProjectCallback as it caches custom views which must be reloaded
-        // with the classloader of the new LayoutLib.
-        if (mProjectCallback != null && mProjectCallback.isUsed()) {
-            mProjectCallback = null;
-        }
+        // Also remove the ProjectCallback as it caches custom views which must be reloaded
+        // with the classloader of the new LayoutLib. We also have to clear it out
+        // because it stores a reference to the layout library which could have changed.
+        mProjectCallback = null;
 
         // FIXME: get rid of the current LayoutScene if any.
     }
