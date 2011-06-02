@@ -22,6 +22,7 @@ import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -219,7 +220,7 @@ public class ViewMetadataRepository {
                                 if (childNode.getNodeType() == Node.ELEMENT_NODE) {
                                     Element child = (Element) childNode;
                                     ViewData view = createViewData(fillTypes, child,
-                                            null, FillPreference.NONE, RenderMode.NORMAL);
+                                            null, FillPreference.NONE, RenderMode.NORMAL, null);
                                     category.addView(view);
                                 }
                             }
@@ -237,7 +238,7 @@ public class ViewMetadataRepository {
 
     private ViewData createViewData(Map<String, FillPreference> fillTypes,
             Element child, String defaultFqcn, FillPreference defaultFill,
-            RenderMode defaultRender) {
+            RenderMode defaultRender, String defaultSize) {
         String fqcn = child.getAttribute("class"); //$NON-NLS-1$
         if (fqcn.length() == 0) {
             fqcn = defaultFqcn;
@@ -260,10 +261,12 @@ public class ViewMetadataRepository {
         if (displayName.length() == 0) {
             displayName = null;
         }
+
         String relatedTo = child.getAttribute("relatedTo"); //$NON-NLS-1$
+        String resize = child.getAttribute("resize"); //$NON-NLS-1$
         ViewData view = new ViewData(fqcn, displayName, fillPreference,
                 skip.length() == 0 ? false : Boolean.valueOf(skip),
-                renderMode, relatedTo);
+                renderMode, relatedTo, resize);
 
         String init = child.getAttribute("init"); //$NON-NLS-1$
         String icon = child.getAttribute("icon"); //$NON-NLS-1$
@@ -282,7 +285,7 @@ public class ViewMetadataRepository {
                 if (variationNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element variation = (Element) variationNode;
                     ViewData variationView = createViewData(fillTypes, variation,
-                            fqcn, fillPreference, renderMode);
+                            fqcn, fillPreference, renderMode, resize);
                     view.addVariation(variationView);
                 }
             }
@@ -465,11 +468,13 @@ public class ViewMetadataRepository {
         private String mInitString;
         /** The name of an icon (known to the {@link IconFactory} to show for this view */
         private String mIconName;
+        /** The resize preference of this view */
+        private String mResize;
 
         /** Constructs a new view data for the given class */
         private ViewData(String fqcn, String displayName,
                 FillPreference fillPreference, boolean skip, RenderMode renderMode,
-                String relatedTo) {
+                String relatedTo, String resize) {
             super();
             mFqcn = fqcn;
             mDisplayName = displayName;
@@ -477,6 +482,7 @@ public class ViewMetadataRepository {
             mSkip = skip;
             mRenderMode = renderMode;
             mRelatedTo = relatedTo;
+            mResize = resize;
         }
 
         /** Returns the {@link FillPreference} for views of this type */
@@ -491,6 +497,10 @@ public class ViewMetadataRepository {
 
         private String getDisplayName() {
             return mDisplayName;
+        }
+
+        private String getResize() {
+            return mResize;
         }
 
         // Implements Comparable<ViewData> such that views can be sorted naturally
@@ -595,6 +605,38 @@ public class ViewMetadataRepository {
         }
 
         return RenderMode.NORMAL;
+    }
+
+    /**
+     * Returns the {@link ResizePolicy} for the given class.
+     *
+     * @param fqcn the fully qualified class name of the target widget
+     * @return the {@link ResizePolicy} for the widget, which will never be null (but may
+     *         be the default of {@link ResizePolicy#full()} if no metadata is found for
+     *         the given widget)
+     */
+    public ResizePolicy getResizePolicy(String fqcn) {
+        ViewData view = getClassToView().get(fqcn);
+        if (view != null) {
+            String resize = view.getResize();
+            if (resize != null && resize.length() > 0) {
+                if ("full".equals(resize)) { //$NON-NLS-1$
+                    return ResizePolicy.full();
+                } else if ("none".equals(resize)) { //$NON-NLS-1$
+                    return ResizePolicy.none();
+                } else if ("horizontal".equals(resize)) { //$NON-NLS-1$
+                    return ResizePolicy.horizontal();
+                } else if ("vertical".equals(resize)) { //$NON-NLS-1$
+                    return ResizePolicy.vertical();
+                } else if ("scaled".equals(resize)) { //$NON-NLS-1$
+                    return ResizePolicy.scaled();
+                } else {
+                    assert false : resize;
+                }
+            }
+        }
+
+        return ResizePolicy.full();
     }
 
     /**

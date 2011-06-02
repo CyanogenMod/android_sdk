@@ -15,11 +15,15 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
+import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
+
 import com.android.ide.common.api.INode;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.sdklib.SdkConstants;
+import com.android.util.Pair;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.gef.ui.parts.TreeViewer;
@@ -854,9 +858,8 @@ public class SelectionManager implements ISelectionProvider {
         mCanvas.redraw();
     }
 
-    /* package */ SelectionItem createSelection(CanvasViewInfo vi) {
-        return new SelectionItem(vi, mCanvas.getRulesEngine(),
-                mCanvas.getNodeFactory());
+    SelectionItem createSelection(CanvasViewInfo vi) {
+        return new SelectionItem(mCanvas, vi);
     }
 
     /**
@@ -964,5 +967,23 @@ public class SelectionManager implements ISelectionProvider {
             }
             setOutlineSelection(nodes);
         }
+    }
+
+    public Pair<SelectionItem, SelectionHandle> findHandle(ControlPoint controlPoint) {
+        if (!isEmpty()) {
+            LayoutPoint layoutPoint = controlPoint.toLayout();
+            int distance = (int) ((PIXEL_MARGIN + PIXEL_RADIUS) / mCanvas.getScale());
+
+            for (SelectionItem item : getSelections()) {
+                SelectionHandles handles = item.getSelectionHandles();
+                // See if it's over the selection handles
+                SelectionHandle handle = handles.findHandle(layoutPoint, distance);
+                if (handle != null) {
+                    return Pair.of(item, handle);
+                }
+            }
+
+        }
+        return null;
     }
 }

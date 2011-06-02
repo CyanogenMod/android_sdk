@@ -24,8 +24,8 @@
     relatedTo CDATA #IMPLIED
     skip (true|false) "false"
     render (alone|skip|normal) "normal"
-    fill ( none|both|width|height|opposite|
-          width_in_vertical|height_in_horizontal) "none"
+    fill (none|both|width|height|opposite|width_in_vertical|height_in_horizontal) "none"
+    resize (full|none|horizontal|vertical|scaled) "full"
 >
 ]>
 <metadata>
@@ -69,27 +69,33 @@
             class="android.widget.ProgressBar"
             relatedTo="SeekBar"
             name="ProgressBar (Large)"
-            init="style=?android:attr/progressBarStyleLarge">
+            init="style=?android:attr/progressBarStyleLarge"
+            resize="scaled" >
             <view
                 name="ProgressBar (Normal)"
-                init="" />
+                init=""
+                resize="scaled" />
             <view
                 name="ProgressBar (Small)"
-                init="style=?android:attr/progressBarStyleSmall" />
+                init="style=?android:attr/progressBarStyleSmall"
+                resize="scaled" />
             <view
                 name="ProgressBar (Horizontal)"
-                init="style=?android:attr/progressBarStyleHorizontal" />
+                init="style=?android:attr/progressBarStyleHorizontal"
+                resize="horizontal" />
         </view>
         <view
             class="android.widget.SeekBar"
             relatedTo="ProgressBar"
+            resize="horizontal"
             fill="width_in_vertical" />
         <view
             class="android.widget.QuickContactBadge" />
         <view
             class="android.widget.RadioGroup" />
         <view
-            class="android.widget.RatingBar" />
+            class="android.widget.RatingBar"
+            resize="horizontal" />
     </category>
     <category
         name="Text Fields">
@@ -97,6 +103,7 @@
             class="android.widget.EditText"
             name="Plain Text"
             init=""
+            resize="horizontal"
             relatedTo="Spinner,TextView,AutoCompleteTextView,MultiAutoCompleteTextView"
             fill="width_in_vertical">
             <view
@@ -116,9 +123,11 @@
                 init="android:inputType=phone" />
             <view
                 name="Postal Address"
+                resize="full"
                 init="android:inputType=textPostalAddress" />
             <view
                 name="Multiline Text"
+                resize="full"
                 init="android:inputType=textMultiLine" />
             <view
                 name="Time"
@@ -179,6 +188,7 @@
         <view
             class="android.widget.TableRow"
             fill="opposite"
+            resize="vertical"
             render="skip" />
     </category>
     <category
@@ -225,9 +235,11 @@
         name="Images &amp; Media">
         <view
             class="android.widget.ImageView"
+            resize="scaled"
             relatedTo="ImageButton,VideoView" />
         <view
             class="android.widget.ImageButton"
+            resize="scaled"
             relatedTo="Button,ImageView" />
         <view
             class="android.widget.Gallery"
@@ -323,9 +335,11 @@
             render="alone" />
         <view
             class="android.widget.ZoomButton"
-            relatedTo="Button" />
+            relatedTo="Button,ZoomControls" />
         <view
-            class="android.widget.ZoomControls" />
+            class="android.widget.ZoomControls"
+            relatedTo="ZoomButton"
+            resize="none" />
         <view
             class="merge"
             skip="true"
@@ -339,6 +353,7 @@
             render="skip" />
         <view
             class="android.widget.AbsoluteLayout"
+            name="AbsoluteLayout (Deprecated)"
             fill="opposite"
             render="skip" />
     </category>

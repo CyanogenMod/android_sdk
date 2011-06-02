@@ -15,9 +15,14 @@
  */
 package com.android.ide.common.layout;
 
+import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.IFeedbackPainter;
+import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.Point;
+import com.android.ide.common.api.Rect;
 
 /** Rule for AdapterView subclasses that don't have more specific rules */
 public class AdapterViewRule extends BaseLayoutRule {
@@ -25,6 +30,28 @@ public class AdapterViewRule extends BaseLayoutRule {
     public DropFeedback onDropEnter(INode targetNode, IDragElement[] elements) {
         // You are not allowed to insert children into AdapterViews; you must
         // use the dedicated addView methods etc dynamically
-        return null;
+        DropFeedback dropFeedback = new DropFeedback(null,  new IFeedbackPainter() {
+            public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+                Rect b = node.getBounds();
+                if (b.isValid()) {
+                    gc.useStyle(DrawingStyle.DROP_RECIPIENT);
+                    gc.drawRect(b);
+                }
+            }
+        });
+        String fqcn = targetNode.getFqcn();
+        String name = fqcn.substring(fqcn.lastIndexOf('.') +1);
+        dropFeedback.errorMessage = String.format(
+                "%s cannot be configured via XML; add content to the AdapterView using Java code",
+                name);
+        dropFeedback.invalidTarget = true;
+        return dropFeedback;
+    }
+
+    @Override
+    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
+            DropFeedback feedback, Point p) {
+        feedback.invalidTarget = true;
+        return feedback;
     }
 }

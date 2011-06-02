@@ -20,10 +20,10 @@ import java.util.List;
 
 
 /**
- * An {@link IViewRule} describes the GLE rules that apply to a given Layout or View object
- * in the Graphical Layout Editor (GLE).
+ * An {@link IViewRule} describes the rules that apply to a given Layout or View object
+ * in the Graphical Layout Editor.
  * <p/>
- * Such a rule is implemented by builtin layout helpers, or 3rd party layout rule implementations
+ * Rules are implemented by builtin layout helpers, or 3rd party layout rule implementations
  * provided with or for a given 3rd party widget.
  * <p/>
  * A 3rd party layout rule should use the same fully qualified class name as the layout it
@@ -34,9 +34,6 @@ import java.util.List;
  * across platforms or editor instances. As such, rules methods should never cache editor-specific
  * arguments that they might receive.
  * <p/>
- * When rules are instantiated, a property "_rules_engine" is dynamically added which references
- * the {@link IClientRulesEngine} created for this rule.
- * <p>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  * </p>
@@ -220,4 +217,44 @@ public interface IViewRule {
      *            as a copy, or as a move, etc.
      */
     void onChildInserted(INode child, INode parent, InsertType insertType);
+
+
+    /**
+     * Called by the IDE on the parent layout when a child widget is being resized. This
+     * is called once at the beginning of the resizing operation.
+     *
+     * @param child the widget being resized
+     * @param parent the layout containing the child
+     * @return a {@link DropFeedback} object which performs an update painter callback
+     *         etc.
+     */
+    DropFeedback onResizeBegin(INode child, INode parent);
+
+    /**
+     * Called by the IDE on the parent layout when a child widget is being resized. This
+     * is called repeatedly during the resize as the mouse is dragged to update the drag
+     * bounds, recompute guidelines, etc. The resize has not yet been "committed" so the
+     * XML should not be edited yet.
+     *
+     * @param feedback the {@link DropFeedback} object created in {@link #onResizeBegin}
+     * @param child the widget being resized
+     * @param parent the layout containing the child
+     * @param newBounds the new bounds the user has chosen to resize the widget to,
+     *    in absolute coordinates
+     */
+    void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds);
+
+    /**
+     * Called by the IDE on the parent layout when a child widget is being resized. This
+     * is called once at the end of the resize operation, if it was not canceled.
+     * This method can call {@link INode#editXml} to update the node to reflect the
+     * new bounds.
+     *
+     * @param feedback the {@link DropFeedback} object created in {@link #onResizeBegin}
+     * @param child the widget being resized
+     * @param parent the layout containing the child
+     * @param newBounds the new bounds the user has chosen to resize the widget to,
+     *    in absolute coordinates
+     */
+    void onResizeEnd(DropFeedback feedback, INode child, INode parent, Rect newBounds);
 }

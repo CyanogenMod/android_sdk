@@ -575,6 +575,8 @@ public class MoveGesture extends DropGesture {
                                                                   mCurrentDragElements);
 
                     if (df != null) {
+                        mCanvas.getGestureManager().updateMessage(df);
+
                         // We should also dispatch an onDropMove() call to the initial enter
                         // position, such that the view is notified of the position where
                         // we are within the node immediately (before we for example attempt
@@ -585,6 +587,7 @@ public class MoveGesture extends DropGesture {
                         updateDropFeedback(df, event);
                         df = mCanvas.getRulesEngine().callOnDropMove(targetNode,
                                 mCurrentDragElements, df, new Point(p.x, p.y));
+                        mCanvas.getGestureManager().updateMessage(df);
                     }
 
                     if (df != null &&
@@ -643,6 +646,7 @@ public class MoveGesture extends DropGesture {
             updateDropFeedback(mFeedback, event);
             DropFeedback df = mCanvas.getRulesEngine().callOnDropMove(
                     mTargetNode, mCurrentDragElements, mFeedback, p2);
+            mCanvas.getGestureManager().updateMessage(mFeedback);
 
             if (df == null) {
                 // The target is no longer interested in the drop move.

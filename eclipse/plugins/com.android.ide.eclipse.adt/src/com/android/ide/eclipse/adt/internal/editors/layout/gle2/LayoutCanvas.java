@@ -462,6 +462,15 @@ public class LayoutCanvas extends Canvas {
     }
 
     /**
+     * Returns the {@link GestureManager} associated with this canvas.
+     *
+     * @return the {@link GestureManager} associated with this canvas, never null.
+     */
+    GestureManager getGestureManager() {
+        return mGestureManager;
+    }
+
+    /**
      * Returns the current {@link HoverOverlay} painting the mouse hover.
      *
      * @return the hover overlay responsible for painting the mouse hover,
@@ -747,7 +756,7 @@ public class LayoutCanvas extends Canvas {
             }
 
             if (!mSelectionOverlay.isHiding()) {
-                mSelectionOverlay.paint(mSelectionManager, mGCWrapper, mRulesEngine);
+                mSelectionOverlay.paint(mSelectionManager, mGCWrapper, gc, mRulesEngine);
             }
             mGestureManager.paint(gc);
 

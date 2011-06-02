@@ -70,6 +70,7 @@ dirs
 discoverable
 ditto
 docs
+dp
 dpi
 drawable
 drawables
@@ -166,6 +167,7 @@ programmatically
 proguard
 proxies
 proxy
+px
 quickfix
 recompilation
 rect
@@ -181,6 +183,8 @@ reparse
 reparses
 rescales
 residual
+resizability
+resizable
 rollback
 sans
 scrollable
