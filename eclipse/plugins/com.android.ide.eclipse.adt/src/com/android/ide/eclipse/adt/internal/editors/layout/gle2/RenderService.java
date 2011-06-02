@@ -56,8 +56,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -322,7 +322,7 @@ public class RenderService {
                         mProjectCallback.setLayoutParser(queryLayoutName, modelParser);
                         topParser = new ContextPullParser(mProjectCallback);
                         topParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                        topParser.setInput(new FileReader(layoutFile));
+                        topParser.setInput(new FileInputStream(layoutFile), "UTF-8"); //$NON-NLS-1$
                     } catch (XmlPullParserException e) {
                         AdtPlugin.log(e, ""); //$NON-NLS-1$
                     } catch (FileNotFoundException e) {
