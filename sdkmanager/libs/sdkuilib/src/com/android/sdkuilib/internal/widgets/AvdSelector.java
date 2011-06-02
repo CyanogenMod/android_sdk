@@ -298,7 +298,7 @@ public final class AvdSelector {
         mDetailsButton = new Button(buttons, SWT.PUSH | SWT.FLAT);
         mDetailsButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mDetailsButton.setText("Details...");
-        mDetailsButton.setToolTipText("Diplays details of the selected AVD.");
+        mDetailsButton.setToolTipText("Displays details of the selected AVD.");
         mDetailsButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
