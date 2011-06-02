@@ -28,6 +28,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PA
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_RIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_TOP;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
@@ -35,24 +36,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_V
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ABOVE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_BASELINE;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_PARENT_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_PARENT_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_PARENT_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_PARENT_TOP;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_TOP;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_ALIGN_WITH_PARENT_MISSING;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_BELOW;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_CENTER_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_CENTER_IN_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_CENTER_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_TO_LEFT_OF;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
-import static com.android.ide.common.layout.LayoutConstants.VAUE_TO_RIGHT_OF;
 
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IDragElement;
@@ -105,30 +89,36 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     @Override
     public List<String> getSelectionHint(INode parentNode, INode childNode) {
         List<String> infos = new ArrayList<String>(18);
-        addAttr(VALUE_ABOVE, childNode, infos);
-        addAttr(VALUE_BELOW, childNode, infos);
-        addAttr(VALUE_TO_LEFT_OF, childNode, infos);
-        addAttr(VAUE_TO_RIGHT_OF, childNode, infos);
-        addAttr(VALUE_ALIGN_BASELINE, childNode, infos);
-        addAttr(VALUE_ALIGN_TOP, childNode, infos);
-        addAttr(VALUE_ALIGN_BOTTOM, childNode, infos);
-        addAttr(VALUE_ALIGN_LEFT, childNode, infos);
-        addAttr(VALUE_ALIGN_RIGHT, childNode, infos);
-        addAttr(VALUE_ALIGN_PARENT_TOP, childNode, infos);
-        addAttr(VALUE_ALIGN_PARENT_BOTTOM, childNode, infos);
-        addAttr(VALUE_ALIGN_PARENT_LEFT, childNode, infos);
-        addAttr(VALUE_ALIGN_PARENT_RIGHT, childNode, infos);
-        addAttr(VALUE_ALIGN_WITH_PARENT_MISSING, childNode, infos);
-        addAttr(VALUE_CENTER_HORIZONTAL, childNode, infos);
-        addAttr(VALUE_CENTER_IN_PARENT, childNode, infos);
-        addAttr(VALUE_CENTER_VERTICAL, childNode, infos);
+        addAttr(ATTR_LAYOUT_ABOVE, childNode, infos);
+        addAttr(ATTR_LAYOUT_BELOW, childNode, infos);
+        addAttr(ATTR_LAYOUT_TO_LEFT_OF, childNode, infos);
+        addAttr(ATTR_LAYOUT_TO_RIGHT_OF, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_BASELINE, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_TOP, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_BOTTOM, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_LEFT, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_RIGHT, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_PARENT_TOP, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_PARENT_BOTTOM, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_PARENT_LEFT, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_PARENT_RIGHT, childNode, infos);
+        addAttr(ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING, childNode, infos);
+        addAttr(ATTR_LAYOUT_CENTER_HORIZONTAL, childNode, infos);
+        addAttr(ATTR_LAYOUT_CENTER_IN_PARENT, childNode, infos);
+        addAttr(ATTR_LAYOUT_CENTER_VERTICAL, childNode, infos);
 
         return infos;
     }
 
     private void addAttr(String propertyName, INode childNode, List<String> infos) {
-        String a = childNode.getStringAttr(ANDROID_URI, ATTR_LAYOUT_PREFIX + propertyName);
+        String a = childNode.getStringAttr(ANDROID_URI, propertyName);
         if (a != null && a.length() > 0) {
+            // Display the layout parameters without the leading layout_ prefix
+            // and id references without the @+id/ prefix
+            if (propertyName.startsWith(ATTR_LAYOUT_PREFIX)) {
+                propertyName = propertyName.substring(ATTR_LAYOUT_PREFIX.length());
+            }
+            a = stripIdPrefix(a);
             String s = propertyName + ": " + a;
             infos.add(s);
         }
