@@ -77,26 +77,22 @@ public class LayoutConstants {
     public static final String ATTR_LAYOUT_MARGIN_TOP = "layout_marginTop";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MARGIN_BOTTOM = "layout_marginBottom";  //$NON-NLS-1$
 
+    // RelativeLayout layout params:
     public static final String ATTR_LAYOUT_ALIGN_LEFT = "layout_alignLeft";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_RIGHT = "layout_alignRight";      //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_TOP = "layout_alignTop";          //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_BOTTOM = "layout_alignBottom";    //$NON-NLS-1$
-
     public static final String ATTR_LAYOUT_ALIGN_PARENT_TOP = "layout_alignParentTop"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_BOTTOM = "layout_alignParentBottom"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_LEFT = "layout_alignParentLeft";//$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_PARENT_RIGHT = "layout_alignParentRight";   //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING = "layout_alignWithParentMissing"; //$NON-NLS-1$
-
     public static final String ATTR_LAYOUT_ALIGN_BASELINE = "layout_alignBaseline"; //$NON-NLS-1$
-
     public static final String ATTR_LAYOUT_CENTER_IN_PARENT = "layout_centerInParent"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_CENTER_VERTICAL = "layout_centerVertical"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_CENTER_HORIZONTAL = "layout_centerHorizontal"; //$NON-NLS-1$
-
     public static final String ATTR_LAYOUT_TO_RIGHT_OF = "layout_toRightOf";    //$NON-NLS-1$
     public static final String ATTR_LAYOUT_TO_LEFT_OF = "layout_toLeftOf";      //$NON-NLS-1$
-
     public static final String ATTR_LAYOUT_BELOW = "layout_below";              //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ABOVE = "layout_above";              //$NON-NLS-1$
 
@@ -109,25 +105,6 @@ public class LayoutConstants {
     public static final String VALUE_TRUE = "true";                             //$NON-NLS-1$
     public static final String VALUE_FALSE= "false";                            //$NON-NLS-1$
     public static final String VALUE_N_DP = "%ddp";                             //$NON-NLS-1$
-
-    public static final String VALUE_CENTER_VERTICAL = "centerVertical";        //$NON-NLS-1$
-    public static final String VALUE_CENTER_IN_PARENT = "centerInParent";       //$NON-NLS-1$
-    public static final String VALUE_CENTER_HORIZONTAL = "centerHorizontal";    //$NON-NLS-1$
-    public static final String VALUE_ALIGN_PARENT_RIGHT = "alignParentRight";    //$NON-NLS-1$
-    public static final String VALUE_ALIGN_PARENT_LEFT = "alignParentLeft";      //$NON-NLS-1$
-    public static final String VALUE_ALIGN_PARENT_BOTTOM = "alignParentBottom";  //$NON-NLS-1$
-    public static final String VALUE_ALIGN_PARENT_TOP = "alignParentTop";        //$NON-NLS-1$
-    public static final String VALUE_ALIGN_RIGHT = "alignRight";                 //$NON-NLS-1$
-    public static final String VALUE_ALIGN_LEFT = "alignLeft";                   //$NON-NLS-1$
-    public static final String VALUE_ALIGN_BOTTOM = "alignBottom";               //$NON-NLS-1$
-    public static final String VALUE_ALIGN_TOP = "alignTop";                     //$NON-NLS-1$
-    public static final String VALUE_ALIGN_BASELINE = "alignBaseline";           //$NON-NLS-1$
-    public static final String VAUE_TO_RIGHT_OF = "toRightOf";                   //$NON-NLS-1$
-    public static final String VALUE_TO_LEFT_OF = "toLeftOf";                    //$NON-NLS-1$
-    public static final String VALUE_BELOW = "below";                            //$NON-NLS-1$
-    public static final String VALUE_ABOVE = "above";                            //$NON-NLS-1$
-    public static final String VALUE_ALIGN_WITH_PARENT_MISSING =
-        "alignWithParentMissing"; //$NON-NLS-1$
 
     // Gravity values. These have the GRAVITY_ prefix in front of value because we already
     // have VALUE_CENTER_HORIZONTAL defined for layouts, and its definition conflicts
