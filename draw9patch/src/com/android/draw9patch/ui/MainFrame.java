@@ -45,10 +45,6 @@ public class MainFrame extends JFrame {
     public MainFrame(String path) throws HeadlessException {
         super("Draw 9-patch");
 
-        if (path != null) {
-            setTitle(String.format(TITLE_FORMAT, path));
-        }
-
         buildActions();
         buildMenuBar();
         buildContent();
@@ -60,6 +56,8 @@ public class MainFrame extends JFrame {
                 File file = new File(path);
                 BufferedImage img = GraphicsUtilities.loadCompatibleImage(file.toURI().toURL());
                 showImageEditor(img, file.getAbsolutePath());
+
+                setTitle(String.format(TITLE_FORMAT, path));
             } catch (Exception ex) {
                 showOpenFilePanel();
             }
