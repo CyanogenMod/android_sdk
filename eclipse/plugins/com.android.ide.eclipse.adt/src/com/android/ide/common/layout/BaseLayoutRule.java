@@ -28,11 +28,15 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
+import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.IFeedbackPainter;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
@@ -40,9 +44,11 @@ import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.MenuAction.ChoiceProvider;
+import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
 import java.net.URL;
@@ -565,5 +571,234 @@ public class BaseLayoutRule extends BaseViewRule {
                 }
             }
         });
+    }
+
+    // ---- Resizing ----
+
+    /** State held during resizing operations */
+    protected static class ResizeState {
+        /** The proposed resized bounds of the node */
+        public Rect bounds;
+
+        /** The preferred wrap_content bounds of the node */
+        public Rect wrapBounds;
+
+        /** The type of horizontal edge being resized, or null */
+        public SegmentType horizontalEdgeType;
+
+        /** The type of vertical edge being resized, or null */
+        public SegmentType verticalEdgeType;
+
+        /** Whether the user has snapped to the wrap_content width */
+        public boolean wrapWidth;
+
+        /** Whether the user has snapped to the wrap_content height */
+        public boolean wrapHeight;
+    }
+
+    @Override
+    public DropFeedback onResizeBegin(INode child, INode parent,
+            SegmentType horizontalEdge, SegmentType verticalEdge) {
+        ResizeState state = new ResizeState();
+        state.horizontalEdgeType = horizontalEdge;
+        state.verticalEdgeType = verticalEdge;
+
+        // Compute preferred (wrap_content) size such that we can offer guidelines to
+        // snap to the preferred size
+        Map<INode, Rect> sizes = mRulesEngine.measureChildren(parent,
+                new IClientRulesEngine.AttributeFilter() {
+                    public String getAttribute(INode node, String namespace, String localName) {
+                        // Change attributes to wrap_content
+                        if (ATTR_LAYOUT_WIDTH.equals(localName)
+                                && SdkConstants.NS_RESOURCES.equals(namespace)) {
+                            return VALUE_WRAP_CONTENT;
+                        }
+                        if (ATTR_LAYOUT_HEIGHT.equals(localName)
+                                && SdkConstants.NS_RESOURCES.equals(namespace)) {
+                            return VALUE_WRAP_CONTENT;
+                        }
+
+                        return null;
+                    }
+                });
+        if (sizes != null) {
+            state.wrapBounds = sizes.get(child);
+        }
+
+        return new DropFeedback(state, new IFeedbackPainter() {
+            public void paint(IGraphics gc, INode node, DropFeedback feedback) {
+                ResizeState resizeState = (ResizeState) feedback.userData;
+                if (resizeState != null && resizeState.bounds != null) {
+                    gc.useStyle(DrawingStyle.RESIZE_PREVIEW);
+                    Rect b = resizeState.bounds;
+                    gc.drawRect(b);
+
+                    if (resizeState.wrapBounds != null) {
+                        gc.useStyle(DrawingStyle.GUIDELINE);
+                        int wrapWidth = resizeState.wrapBounds.w;
+                        int wrapHeight = resizeState.wrapBounds.h;
+
+                        // Show the "wrap_content" guideline.
+                        // If we are showing both the wrap_width and wrap_height lines
+                        // then we show at most the rectangle formed by the two lines;
+                        // otherwise we show the entire width of the line
+                        if (resizeState.horizontalEdgeType != null) {
+                            int y = -1;
+                            switch (resizeState.horizontalEdgeType) {
+                                case TOP:
+                                    y = b.y + b.h - wrapHeight;
+                                    break;
+                                case BOTTOM:
+                                    y = b.y + wrapHeight;
+                                    break;
+                                default: assert false : resizeState.horizontalEdgeType;
+                            }
+                            if (resizeState.verticalEdgeType != null) {
+                                switch (resizeState.verticalEdgeType) {
+                                    case LEFT:
+                                        gc.drawLine(b.x + b.w - wrapWidth, y, b.x + b.w, y);
+                                        break;
+                                    case RIGHT:
+                                        gc.drawLine(b.x, y, b.x + wrapWidth, y);
+                                        break;
+                                    default: assert false : resizeState.verticalEdgeType;
+                                }
+                            } else {
+                                gc.drawLine(b.x, y, b.x + b.w, y);
+                            }
+                        }
+                        if (resizeState.verticalEdgeType != null) {
+                            int x = -1;
+                            switch (resizeState.verticalEdgeType) {
+                                case LEFT:
+                                    x = b.x + b.w - wrapWidth;
+                                    break;
+                                case RIGHT:
+                                    x = b.x + wrapWidth;
+                                    break;
+                                default: assert false : resizeState.verticalEdgeType;
+                            }
+                            if (resizeState.horizontalEdgeType != null) {
+                                switch (resizeState.horizontalEdgeType) {
+                                    case TOP:
+                                        gc.drawLine(x, b.y + b.h - wrapHeight, x, b.y + b.h);
+                                        break;
+                                    case BOTTOM:
+                                        gc.drawLine(x, b.y, x, b.y + wrapHeight);
+                                        break;
+                                    default: assert false : resizeState.horizontalEdgeType;
+                                }
+                            } else {
+                                gc.drawLine(x, b.y, x, b.y + b.h);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public static final int getMaxMatchDistance() {
+        // TODO - make constant once we're happy with the feel
+        return 20;
+    }
+
+
+    @Override
+    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent,
+            Rect newBounds, int modifierMask) {
+        ResizeState state = (ResizeState) feedback.userData;
+        state.bounds = newBounds;
+
+        // Match on wrap bounds
+        state.wrapWidth = state.wrapHeight = false;
+        if (state.wrapBounds != null) {
+            Rect b = state.wrapBounds;
+            int maxMatchDistance = getMaxMatchDistance();
+            if (state.horizontalEdgeType != null) {
+                if (Math.abs(newBounds.h - b.h) < maxMatchDistance) {
+                    state.wrapHeight = true;
+                    if (state.horizontalEdgeType == SegmentType.TOP) {
+                        newBounds.y += newBounds.h - b.h;
+                    }
+                    newBounds.h = b.h;
+                }
+            }
+            if (state.verticalEdgeType != null) {
+                if (Math.abs(newBounds.w - b.w) < maxMatchDistance) {
+                    state.wrapWidth = true;
+                    if (state.verticalEdgeType == SegmentType.LEFT) {
+                        newBounds.x += newBounds.w - b.w;
+                    }
+                    newBounds.w = b.w;
+                }
+            }
+        }
+
+        feedback.message = getResizeUpdateMessage(state, child, parent,
+                newBounds, state.horizontalEdgeType, state.verticalEdgeType);
+    }
+
+    @Override
+    public void onResizeEnd(DropFeedback feedback, INode child, final INode parent,
+            final Rect newBounds) {
+        final Rect oldBounds = child.getBounds();
+        if (oldBounds.w != newBounds.w || oldBounds.h != newBounds.h) {
+            final ResizeState state = (ResizeState) feedback.userData;
+            child.editXml("Resize", new INodeHandler() {
+                public void handle(INode n) {
+                    setNewSizeBounds(state, n, parent, oldBounds, newBounds,
+                            state.horizontalEdgeType, state.verticalEdgeType);
+                }
+            });
+        }
+    }
+
+    /**
+     * Returns the message to display to the user during the resize operation
+     *
+     * @param resizeState the current resize state
+     * @param child the child node being resized
+     * @param parent the parent of the resized node
+     * @param newBounds the new bounds to resize the child to, in pixels
+     * @param horizontalEdge the horizontal edge being resized
+     * @param verticalEdge the vertical edge being resized
+     * @return the message to display for the current resize bounds
+     */
+    protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
+            Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
+        String width = resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
+                    String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w));
+        String height = resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
+            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h));
+
+        // U+00D7: Unicode for multiplication sign
+        return String.format("Resize to %s \u00D7 %s", width, height);
+    }
+
+    /**
+     * Performs the edit on the node to complete a resizing operation. The actual edit
+     * part is pulled out such that subclasses can change/add to the edits and be part of
+     * the same undo event
+     *
+     * @param resizeState the current resize state
+     * @param node the child node being resized
+     * @param layout the parent of the resized node
+     * @param newBounds the new bounds to resize the child to, in pixels
+     * @param horizontalEdge the horizontal edge being resized
+     * @param verticalEdge the vertical edge being resized
+     */
+    protected void setNewSizeBounds(ResizeState resizeState, INode node, INode layout,
+            Rect oldBounds, Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
+        if (verticalEdge != null && (newBounds.w != oldBounds.w || resizeState.wrapWidth)) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
+                    resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
+                        String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w)));
+        }
+        if (horizontalEdge != null && (newBounds.h != oldBounds.h || resizeState.wrapHeight)) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
+                    resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
+                        String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h)));
+        }
     }
 }

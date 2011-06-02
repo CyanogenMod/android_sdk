@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.MergeCookie;
@@ -75,6 +76,7 @@ public class CanvasViewInfo implements IPropertySource {
     private final Object mViewObject;
     private final UiViewElementNode mUiViewNode;
     private CanvasViewInfo mParent;
+    private ViewInfo mViewInfo;
     private final ArrayList<CanvasViewInfo> mChildren = new ArrayList<CanvasViewInfo>();
 
     /**
@@ -100,10 +102,11 @@ public class CanvasViewInfo implements IPropertySource {
      */
     private CanvasViewInfo(CanvasViewInfo parent, String name,
             Object viewObject, UiViewElementNode node, Rectangle absRect,
-            Rectangle selectionRect) {
+            Rectangle selectionRect, ViewInfo viewInfo) {
         mParent = parent;
         mName = name;
         mViewObject = viewObject;
+        mViewInfo = viewInfo;
         mUiViewNode  = node;
         mAbsRect = absRect;
         mSelectionRect = selectionRect;
@@ -272,6 +275,39 @@ public class CanvasViewInfo implements IPropertySource {
      */
     public Object getViewObject() {
         return mViewObject;
+    }
+
+    public int getBaseline() {
+        if (mViewInfo != null) {
+            int baseline = mViewInfo.getBaseLine();
+            if (baseline != Integer.MIN_VALUE) {
+                return baseline;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the {@link Margins} for this {@link CanvasViewInfo}
+     *
+     * @return the {@link Margins} for this {@link CanvasViewInfo}
+     */
+    public Margins getMargins() {
+        if (mViewInfo != null) {
+            int leftMargin = mViewInfo.getLeftMargin();
+            int topMargin = mViewInfo.getTopMargin();
+            int rightMargin = mViewInfo.getRightMargin();
+            int bottomMargin = mViewInfo.getBottomMargin();
+            return new Margins(
+                leftMargin != Integer.MIN_VALUE ? leftMargin : 0,
+                rightMargin != Integer.MIN_VALUE ? rightMargin : 0,
+                topMargin != Integer.MIN_VALUE ? topMargin : 0,
+                bottomMargin != Integer.MIN_VALUE ? bottomMargin : 0
+            );
+        }
+
+        return null;
     }
 
     // ---- Implementation of IPropertySource
@@ -624,7 +660,7 @@ public class CanvasViewInfo implements IPropertySource {
                         }
 
                         CanvasViewInfo mergeView = new CanvasViewInfo(rootView, VIEW_MERGE, null,
-                                merge, absRect, absRect);
+                                merge, absRect, absRect, null /* viewInfo */);
                         for (CanvasViewInfo view : merged) {
                             if (rootView.removeChild(view)) {
                                 mergeView.addChild(view);
@@ -646,7 +682,8 @@ public class CanvasViewInfo implements IPropertySource {
                 if (rootView != null && hasMergeParent(rootView.getUiViewNode())) {
                     CanvasViewInfo merge = new CanvasViewInfo(null, VIEW_MERGE, null,
                             (UiViewElementNode) rootView.getUiViewNode().getUiParent(),
-                            rootView.getAbsRect(), rootView.getSelectionRect());
+                            rootView.getAbsRect(), rootView.getSelectionRect(),
+                            null /* viewInfo */);
                     // Insert the <merge> as the new real root
                     rootView.mParent = merge;
                     merge.addChild(rootView);
@@ -732,7 +769,7 @@ public class CanvasViewInfo implements IPropertySource {
             Rectangle selectionRect = new Rectangle(x, y, w - 1, h - 1);
 
             return new CanvasViewInfo(parent, root.getClassName(), root.getViewObject(), node,
-                    absRect, selectionRect);
+                    absRect, selectionRect, root);
         }
 
         /** Create a subtree recursively until you run out of keys */
@@ -965,7 +1002,7 @@ public class CanvasViewInfo implements IPropertySource {
                             Rectangle absRect = new Rectangle(parentX, parentY, 0, 0);
                             String name = found.getDescriptor().getXmlLocalName();
                             CanvasViewInfo v = new CanvasViewInfo(parentView, name, null, found,
-                                    absRect, absRect);
+                                    absRect, absRect, null /* viewInfo */);
                             // Find corresponding index in the parent view
                             List<CanvasViewInfo> siblings = parentView.getChildren();
                             int insertPosition = siblings.size();
@@ -990,7 +1027,7 @@ public class CanvasViewInfo implements IPropertySource {
                     Rectangle absRect = new Rectangle(parentX, parentY, 0, 0);
                     String name = node.getDescriptor().getXmlLocalName();
                     CanvasViewInfo v = new CanvasViewInfo(parentView, name, null, node, absRect,
-                            absRect);
+                            absRect, null /* viewInfo */);
                     parentView.addChild(v);
                 }
             }

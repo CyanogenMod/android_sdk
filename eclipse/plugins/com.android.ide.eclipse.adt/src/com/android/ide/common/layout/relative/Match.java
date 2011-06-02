@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.eclipse.org/org/documents/epl-v10.php
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.ide.common.layout.relative;
+
+import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
+
+import com.android.ide.common.api.Segment;
+
+/** A match is a potential pairing of two segments with a given {@link ConstraintType}. */
+class Match {
+    /** the edge of the dragged node that is matched */
+    public final Segment with;
+
+    /** the "other" edge that the dragged edge is matched with */
+    public final Segment edge;
+
+    /** the signed distance between the matched edges */
+    public final int delta;
+
+    /** the type of constraint this is a match for */
+    public final ConstraintType type;
+
+    /** whether this {@link Match} results in a cycle */
+    public boolean cycle;
+
+    /**
+     * Create a new match.
+     *
+     * @param edge the "other" edge that the dragged edge is matched with
+     * @param with the edge of the dragged node that is matched
+     * @param type the type of constraint this is a match for
+     * @param delta the signed distance between the matched edges
+     */
+    public Match(Segment edge, Segment with, ConstraintType type, int delta) {
+        this.edge = edge;
+        this.with = with;
+        this.type = type;
+        this.delta = delta;
+    }
+
+    /**
+     * Returns the XML constraint attribute value for this match
+     *
+     * @return the XML constraint attribute value for this match
+     */
+    public String getConstraint() {
+        if (type.targetParent) {
+            return type.name + '=' + VALUE_TRUE;
+        } else {
+            String id = edge.id;
+            return type.name + '=' + id;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Match [type=" + type + ", delta=" + delta + ", edge=" + edge
+                + "]";
+    }
+}

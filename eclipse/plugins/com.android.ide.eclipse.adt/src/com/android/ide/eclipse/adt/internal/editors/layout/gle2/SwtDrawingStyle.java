@@ -39,7 +39,17 @@ public enum SwtDrawingStyle {
     /**
      * The style definition corresponding to {@link DrawingStyle#GUIDELINE}
      */
-    GUIDELINE(new RGB(0x00, 0xFF, 0x00), 255, SWT.LINE_DOT),
+    GUIDELINE(new RGB(0x00, 0xAA, 0x00), 192, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#GUIDELINE}
+     */
+    GUIDELINE_SHADOW(new RGB(0x00, 0xAA, 0x00), 192, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#GUIDELINE_DASHED}
+     */
+    GUIDELINE_DASHED(new RGB(0x00, 0xAA, 0x00), 192, SWT.LINE_CUSTOM),
 
     /**
      * The style definition corresponding to {@link DrawingStyle#HOVER}
@@ -85,6 +95,17 @@ public enum SwtDrawingStyle {
     DROP_PREVIEW(new RGB(0xFF, 0x99, 0x00), 255, null, 0, 2, SWT.LINE_CUSTOM),
 
     /**
+     * The style definition corresponding to {@link DrawingStyle#RESIZE_PREVIEW}
+     */
+    RESIZE_PREVIEW(new RGB(0xFF, 0x99, 0x00), 255, null, 0, 2, SWT.LINE_SOLID),
+
+    /**
+     * The style used to show a proposed resize bound which is being rejected (for example,
+     * because there is no near edge to attach to in a RelativeLayout).
+     */
+    RESIZE_FAIL(new RGB(0xFF, 0x99, 0x00), 255, null, 0, 2, SWT.LINE_CUSTOM),
+
+    /**
      * The style definition corresponding to {@link DrawingStyle#HELP}
      */
     HELP(new RGB(0xFF, 0xFF, 0xFF), 255, new RGB(0x00, 0x00, 0x00), 128, 1, SWT.LINE_SOLID),
@@ -92,7 +113,22 @@ public enum SwtDrawingStyle {
     /**
      * The style definition corresponding to {@link DrawingStyle#INVALID}
      */
-    INVALID(new RGB(0xFF, 0xFF, 0xFF), 255, new RGB(0xFF, 0x00, 0x00), 150, 2, SWT.LINE_SOLID),
+    INVALID(new RGB(0xFF, 0xFF, 0xFF), 255, new RGB(0xFF, 0x00, 0x00), 64, 2, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#DEPENDENCY}
+     */
+    DEPENDENCY(new RGB(0xFF, 0xFF, 0xFF), 255, new RGB(0xFF, 0xFF, 0x00), 24, 2, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#CYCLE}
+     */
+    CYCLE(new RGB(0xFF, 0x00, 0x00), 192, null, 0, 1, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#DRAGGED}
+     */
+    DRAGGED(new RGB(0xFF, 0xFF, 0xFF), 255, new RGB(0x00, 0xFF, 0x00), 16, 2, SWT.LINE_SOLID),
 
     /**
      * The style definition corresponding to {@link DrawingStyle#EMPTY}
@@ -202,6 +238,10 @@ public enum SwtDrawingStyle {
                 return SELECTION;
             case GUIDELINE:
                 return GUIDELINE;
+            case GUIDELINE_SHADOW:
+                return GUIDELINE_SHADOW;
+            case GUIDELINE_DASHED:
+                return GUIDELINE_DASHED;
             case HOVER:
                 return HOVER;
             case HOVER_SELECTION:
@@ -218,10 +258,20 @@ public enum SwtDrawingStyle {
                 return DROP_RECIPIENT;
             case DROP_PREVIEW:
                 return DROP_PREVIEW;
+            case RESIZE_PREVIEW:
+                return RESIZE_PREVIEW;
+            case RESIZE_FAIL:
+                return RESIZE_FAIL;
             case HELP:
                 return HELP;
             case INVALID:
                 return INVALID;
+            case DEPENDENCY:
+                return DEPENDENCY;
+            case CYCLE:
+                return CYCLE;
+            case DRAGGED:
+                return DRAGGED;
             case EMPTY:
                 return EMPTY;
             case CUSTOM1:

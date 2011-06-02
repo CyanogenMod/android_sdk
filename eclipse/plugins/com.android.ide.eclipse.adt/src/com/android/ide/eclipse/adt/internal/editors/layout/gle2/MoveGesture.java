@@ -124,13 +124,40 @@ public class MoveGesture extends DropGesture {
     }
 
     @Override
+    public void begin(ControlPoint pos, int startMask) {
+        super.begin(pos, startMask);
+
+        // Hide selection overlays during a move drag
+        mCanvas.getSelectionOverlay().setHidden(true);
+    }
+
+    @Override
     public void end(ControlPoint pos, boolean canceled) {
         super.end(pos, canceled);
+
+        mCanvas.getSelectionOverlay().setHidden(false);
 
         // Ensure that the outline is back to showing the current selection, since during
         // a drag gesture we temporarily set it to show the current target node instead.
         mCanvas.getSelectionManager().syncOutlineSelection();
     }
+
+    /* TODO: Pass modifier mask to drag rules as well! This doesn't work yet since
+       the drag &amp; drop code seems to steal keyboard events.
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        update(mCanvas.getGestureManager().getCurrentControlPoint());
+        mCanvas.redraw();
+        return true;
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        update(mCanvas.getGestureManager().getCurrentControlPoint());
+        mCanvas.redraw();
+        return true;
+    }
+    */
 
     /*
      * The cursor has entered the drop target boundaries.
@@ -440,6 +467,7 @@ public class MoveGesture extends DropGesture {
         df.sameCanvas = mCanvas == mGlobalDragInfo.getSourceCanvas();
         df.invalidTarget = false;
         df.dipScale = mCanvas.getLayoutEditor().getGraphicalEditor().getDipScale();
+        df.modifierMask = mCanvas.getGestureManager().getRuleModifierMask();
 
         // Set the drag bounds, after converting it from control coordinates to
         // layout coordinates
@@ -455,8 +483,11 @@ public class MoveGesture extends DropGesture {
             int y = (int) (controlDragBounds.y / verticalScale);
             int w = (int) (controlDragBounds.w / horizScale);
             int h = (int) (controlDragBounds.h / verticalScale);
-
             dragBounds = new Rect(x, y, w, h);
+        }
+        int baseline = dragInfo.getDragBaseline();
+        if (baseline != -1) {
+            df.dragBaseline = baseline;
         }
         df.dragBounds = dragBounds;
     }

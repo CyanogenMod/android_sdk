@@ -17,10 +17,12 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_LAYOUT;
 
+import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.SegmentType;
 
 import java.util.List;
 
@@ -60,5 +62,13 @@ public class TableRowRule extends LinearLayoutRule {
                         children);
             }
         }
+    }
+
+    @Override
+    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        // No resizing in TableRows; the width is *always* match_parent and the height is
+        // *always* wrap_content.
+        return null;
     }
 }

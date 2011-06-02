@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
@@ -31,6 +32,7 @@ import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.util.Pair;
 
 import java.util.ArrayList;
@@ -213,29 +215,33 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
      * this case, the bottom right corner will stay fixed).
      */
     @Override
-    protected void setNewSizeBounds(INode node, Rect previousBounds, Rect newBounds) {
-        super.setNewSizeBounds(node, previousBounds, newBounds);
-        if (newBounds.x != previousBounds.x) {
+    protected void setNewSizeBounds(ResizeState resizeState, INode node, INode layout,
+            Rect previousBounds, Rect newBounds, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        super.setNewSizeBounds(resizeState, node, layout, previousBounds, newBounds,
+                horizontalEdge, verticalEdge);
+        if (verticalEdge != null && newBounds.x != previousBounds.x) {
             node.setAttribute(ANDROID_URI, ATTR_LAYOUT_X,
-                    String.format(VALUE_N_DP, newBounds.x -node.getParent().getBounds().x));
+                    String.format(VALUE_N_DP,
+                            mRulesEngine.pxToDp(newBounds.x - node.getParent().getBounds().x)));
         }
-        if (newBounds.y != previousBounds.y) {
+        if (horizontalEdge != null && newBounds.y != previousBounds.y) {
             node.setAttribute(ANDROID_URI, ATTR_LAYOUT_Y,
-                    String.format(VALUE_N_DP, newBounds.y - node.getParent().getBounds().y));
+                    String.format(VALUE_N_DP,
+                            mRulesEngine.pxToDp(newBounds.y - node.getParent().getBounds().y)));
         }
     }
 
-    // Overridden so we can change the drag feedback message; the super implementation
-    // only shows the width and height, and we want to include the new position as well
     @Override
-    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent,
-            Rect newBounds) {
-        super.onResizeUpdate(feedback, child, parent, newBounds);
+    protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
+            Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
         Rect parentBounds = parent.getBounds();
-        feedback.message = String.format("Set bounds to (x = %d, y = %d, width = %d, height = %d)",
-                newBounds.x - parentBounds.x, newBounds.y - parentBounds.y,
-                newBounds.w, newBounds.h);
+        return String.format("Set bounds to (x = %d, y = %d, width = %s, height = %s)",
+                mRulesEngine.pxToDp(newBounds.x - parentBounds.x),
+                mRulesEngine.pxToDp(newBounds.y - parentBounds.y),
+                resizeState.wrapWidth ?
+                        VALUE_WRAP_CONTENT : Integer.toString(mRulesEngine.pxToDp(newBounds.w)),
+                resizeState.wrapHeight ?
+                        VALUE_WRAP_CONTENT : Integer.toString(mRulesEngine.pxToDp(newBounds.h)));
     }
-
-
 }

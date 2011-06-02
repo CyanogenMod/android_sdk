@@ -45,6 +45,17 @@ public interface IGraphics {
     void drawLine(Point p1, Point p2);
 
     /**
+     * Draws an arrow from (x1, y1) to (x2, y2).
+     *
+     * @param x1 The x coordinate of the beginning of the arrow
+     * @param y1 The y coordinate of the beginning of the arrow
+     * @param x2 The x coordinate of the end (point) of the arrow
+     * @param y2 The y coordinate of the end (point) of the arrow
+     * @param size The size of the arrowhead
+     */
+    void drawArrow(int x1, int y1, int x2, int y2, int size);
+
+    /**
      * Draws a rectangle outline between 2 points, using the current foreground
      * color and alpha.
      */

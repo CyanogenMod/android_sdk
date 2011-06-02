@@ -487,4 +487,123 @@ public class GCWrapper implements IGraphics {
 
         return color;
     }
+
+    // arrows
+
+    private static final int MIN_LENGTH = 10;
+
+
+    public void drawArrow(int x1, int y1, int x2, int y2, int size) {
+        int arrowWidth = size;
+        int arrowHeight = size;
+
+        checkGC();
+        useStrokeAlpha();
+        x1 = mHScale.translate(x1);
+        y1 = mVScale.translate(y1);
+        x2 = mHScale.translate(x2);
+        y2 = mVScale.translate(y2);
+        GC graphics = getGc();
+
+        // Make size adjustments to ensure that the arrow has enough width to be visible
+        if (x1 == x2 && Math.abs(y1 - y2) < MIN_LENGTH) {
+            int delta = (MIN_LENGTH - Math.abs(y1 - y2)) / 2;
+            if (y1 < y2) {
+                y1 -= delta;
+                y2 += delta;
+            } else {
+                y1 += delta;
+                y2-= delta;
+            }
+
+        } else if (y1 == y2 && Math.abs(x1 - x2) < MIN_LENGTH) {
+            int delta = (MIN_LENGTH - Math.abs(x1 - x2)) / 2;
+            if (x1 < x2) {
+                x1 -= delta;
+                x2 += delta;
+            } else {
+                x1 += delta;
+                x2-= delta;
+            }
+        }
+
+        graphics.drawLine(x1, y1, x2, y2);
+
+        // Arrowhead:
+
+        if (x1 == x2) {
+            // Vertical
+            if (y2 > y1) {
+                graphics.drawLine(x2 - arrowWidth, y2 - arrowHeight, x2, y2);
+                graphics.drawLine(x2 + arrowWidth, y2 - arrowHeight, x2, y2);
+            } else {
+                graphics.drawLine(x2 - arrowWidth, y2 + arrowHeight, x2, y2);
+                graphics.drawLine(x2 + arrowWidth, y2 + arrowHeight, x2, y2);
+            }
+        } else if (y1 == y2) {
+            // Horizontal
+            if (x2 > x1) {
+                graphics.drawLine(x2 - arrowHeight, y2 - arrowWidth, x2, y2);
+                graphics.drawLine(x2 - arrowHeight, y2 + arrowWidth, x2, y2);
+            } else {
+                graphics.drawLine(x2 + arrowHeight, y2 - arrowWidth, x2, y2);
+                graphics.drawLine(x2 + arrowHeight, y2 + arrowWidth, x2, y2);
+            }
+        } else {
+            // Compute angle:
+            int dy = y2 - y1;
+            int dx = x2 - x1;
+            double angle = Math.atan2(dy, dx);
+            double lineLength = Math.sqrt(dy * dy + dx * dx);
+
+            // Imagine a line of the same length as the arrow, but with angle 0.
+            // Its two arrow lines are at (-arrowWidth, -arrowHeight) relative
+            // to the endpoint (x1 + lineLength, y1) stretching up to (x2,y2).
+            // We compute the positions of (ax,ay) for the point above and
+            // below this line and paint the lines to it:
+            double ax = x1 + lineLength - arrowHeight;
+            double ay = y1 - arrowWidth;
+            int rx = (int) (Math.cos(angle) * (ax-x1) - Math.sin(angle) * (ay-y1) + x1);
+            int ry = (int) (Math.sin(angle) * (ax-x1) + Math.cos(angle) * (ay-y1) + y1);
+            graphics.drawLine(x2, y2, rx, ry);
+
+            ay = y1 + arrowWidth;
+            rx = (int) (Math.cos(angle) * (ax-x1) - Math.sin(angle) * (ay-y1) + x1);
+            ry = (int) (Math.sin(angle) * (ax-x1) + Math.cos(angle) * (ay-y1) + y1);
+            graphics.drawLine(x2, y2, rx, ry);
+        }
+
+        /* TODO: Experiment with filled arrow heads?
+        if (x1 == x2) {
+            // Vertical
+            if (y2 > y1) {
+                for (int i = 0; i < arrowWidth; i++) {
+                    graphics.drawLine(x2 - arrowWidth + i, y2 - arrowWidth + i,
+                            x2 + arrowWidth - i, y2 - arrowWidth + i);
+                }
+            } else {
+                for (int i = 0; i < arrowWidth; i++) {
+                    graphics.drawLine(x2 - arrowWidth + i, y2 + arrowWidth - i,
+                            x2 + arrowWidth - i, y2 + arrowWidth - i);
+                }
+            }
+        } else if (y1 == y2) {
+            // Horizontal
+            if (x2 > x1) {
+                for (int i = 0; i < arrowHeight; i++) {
+                    graphics.drawLine(x2 - arrowHeight + i, y2 - arrowHeight + i, x2
+                            - arrowHeight + i, y2 + arrowHeight - i);
+                }
+            } else {
+                for (int i = 0; i < arrowHeight; i++) {
+                    graphics.drawLine(x2 + arrowHeight - i, y2 - arrowHeight + i, x2
+                            + arrowHeight - i, y2 + arrowHeight - i);
+                }
+            }
+        } else {
+            // Arbitrary angle -- need to use trig
+            // TODO: Implement this
+        }
+        */
+    }
 }

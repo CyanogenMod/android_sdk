@@ -98,6 +98,11 @@ public class DropFeedback {
     public Rect dragBounds;
 
     /**
+     * The baseline of the primary dragged view. -1 means that the view does not have a baseline.
+     */
+    public int dragBaseline = -1;
+
+    /**
      * Set to true when the drag'n'drop starts and ends in the same canvas of the
      * same Eclipse instance.
      * <p/>
@@ -135,4 +140,17 @@ public class DropFeedback {
      * separators.
      */
     public String errorMessage;
+
+    /**
+     * A mask of the currently held keyboard modifier keys - some combination of
+     * {@link #MODIFIER1}, {@link #MODIFIER2}, {@link #MODIFIER3}, or none.
+     */
+    public int modifierMask;
+
+    /** Bitmask value for modifier key 1 (Control on Windows/Linux, Command on Mac, etc) */
+    public static final int MODIFIER1 = 1;
+    /** Bitmask value for modifier key 2 (Shift) */
+    public static final int MODIFIER2 = 2;
+    /** Bitmask value for modifier key 3 (Alt on Windows/Linux, Option on Mac, etc) */
+    public static final int MODIFIER3 = 4;
 }

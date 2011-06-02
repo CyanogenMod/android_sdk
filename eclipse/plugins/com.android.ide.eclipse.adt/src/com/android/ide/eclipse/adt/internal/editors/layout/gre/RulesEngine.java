@@ -33,13 +33,16 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.ViewRule;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GCWrapper;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
@@ -102,6 +105,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -332,6 +336,23 @@ public class RulesEngine {
         return null;
     }
 
+    public void callPaintSelectionFeedback(GCWrapper gcWrapper, NodeProxy parentNode,
+            List<? extends INode> childNodes) {
+        // try to find a rule for this element's FQCN
+        IViewRule rule = loadRule(parentNode.getNode());
+
+        if (rule != null) {
+            try {
+                rule.paintSelectionFeedback(gcWrapper, parentNode, childNodes);
+
+            } catch (Exception e) {
+                AdtPlugin.log(e, "%s.callPaintSelectionFeedback() failed: %s",
+                        rule.getClass().getSimpleName(),
+                        e.toString());
+            }
+        }
+    }
+
     /**
      * Called when the d'n'd starts dragging over the target node.
      * If interested, returns a DropFeedback passed to onDrop/Move/Leave/Paint.
@@ -469,13 +490,13 @@ public class RulesEngine {
 
     // ---- Resize operations ----
 
-    public DropFeedback callOnResizeBegin(NodeProxy child, NodeProxy parent, Point where,
-            Rect newBounds) {
+    public DropFeedback callOnResizeBegin(NodeProxy child, NodeProxy parent, Rect newBounds,
+            SegmentType horizontalEdge, SegmentType verticalEdge) {
         IViewRule rule = loadRule(parent.getNode());
 
         if (rule != null) {
             try {
-                return rule.onResizeBegin(child, parent);
+                return rule.onResizeBegin(child, parent, horizontalEdge, verticalEdge);
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onResizeBegin() failed: %s", rule.getClass().getSimpleName(),
                         e.toString());
@@ -485,13 +506,13 @@ public class RulesEngine {
         return null;
     }
 
-    public void callOnResizeUpdate(DropFeedback feedback, NodeProxy child,
-            NodeProxy parent, Point where, Rect newBounds) {
+    public void callOnResizeUpdate(DropFeedback feedback, NodeProxy child, NodeProxy parent,
+            Rect newBounds, int modifierMask) {
         IViewRule rule = loadRule(parent.getNode());
 
         if (rule != null) {
             try {
-                rule.onResizeUpdate(feedback, child, parent, newBounds);
+                rule.onResizeUpdate(feedback, child, parent, newBounds, modifierMask);
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onResizeUpdate() failed: %s", rule.getClass().getSimpleName(),
                         e.toString());
@@ -500,7 +521,7 @@ public class RulesEngine {
     }
 
     public void callOnResizeEnd(DropFeedback feedback, NodeProxy child, NodeProxy parent,
-            Point where, Rect newBounds) {
+            Rect newBounds) {
         IViewRule rule = loadRule(parent.getNode());
 
         if (rule != null) {
@@ -1178,6 +1199,29 @@ public class RulesEngine {
                 AdtPlugin.log(e, null);
             }
             return null;
+        }
+
+        public void redraw() {
+            mEditor.getCanvasControl().redraw();
+        }
+
+        public void layout() {
+            mEditor.recomputeLayout();
+        }
+
+        public Map<INode, Rect> measureChildren(INode parent,
+                IClientRulesEngine.AttributeFilter filter) {
+            Map<INode, Rect> map = mEditor.measureChildren(parent, filter);
+            if (map == null) {
+                map = Collections.emptyMap();
+            }
+            return map;
+        }
+
+        public int pxToDp(int px) {
+            ConfigurationComposite config = mEditor.getConfigurationComposite();
+            float dpi = config.getDensity().getDpiValue();
+            return (int) (px * 160 / dpi);
         }
     }
 

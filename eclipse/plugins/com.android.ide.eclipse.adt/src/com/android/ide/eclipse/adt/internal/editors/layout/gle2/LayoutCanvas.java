@@ -62,7 +62,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -144,7 +143,7 @@ public class LayoutCanvas extends Canvas {
     private DropTarget mDropTarget;
 
     /** Factory that can create {@link INode} proxies. */
-    private final NodeFactory mNodeFactory = new NodeFactory();
+    private final NodeFactory mNodeFactory = new NodeFactory(this);
 
     /** Vertical scaling & scrollbar information. */
     private CanvasTransform mVScale;
@@ -284,42 +283,6 @@ public class LayoutCanvas extends Canvas {
             }
         });
 
-        addKeyListener(new KeyListener() {
-
-            public void keyPressed(KeyEvent e) {
-                // Set up backspace as an alias for the delete action within the canvas.
-                // On most Macs there is no delete key - though there IS a key labeled
-                // "Delete" and it sends a backspace key code! In short, for Macs we should
-                // treat backspace as delete, and it's harmless (and probably useful) to
-                // handle backspace for other platforms as well.
-                if (e.keyCode == SWT.BS) {
-                    mDeleteAction.run();
-                } else if (e.keyCode == SWT.ESC) {
-                    mSelectionManager.selectParent();
-                } else {
-                    // Zooming actions
-                    char c = e.character;
-                    LayoutActionBar actionBar = mLayoutEditor.getGraphicalEditor()
-                            .getLayoutActionBar();
-                    if (c == '1' && actionBar.isZoomingAllowed()) {
-                        setScale(1, true);
-                    } else if (c == '0' && actionBar.isZoomingAllowed()) {
-                        setFitScale(true);
-                    } else if (e.keyCode == '0' && (e.stateMask & SWT.MOD2) != 0
-                            && actionBar.isZoomingAllowed()) {
-                        setFitScale(false);
-                    } else if (c == '+' && actionBar.isZoomingAllowed()) {
-                        actionBar.rescale(1);
-                    } else if (c == '-' && actionBar.isZoomingAllowed()) {
-                        actionBar.rescale(-1);
-                    }
-                }
-            }
-
-            public void keyReleased(KeyEvent e) {
-            }
-        });
-
         // --- setup drag'n'drop ---
         // DND Reference: http://www.eclipse.org/articles/Article-SWT-DND/DND-in-SWT.html
 
@@ -341,6 +304,36 @@ public class LayoutCanvas extends Canvas {
         Object outline = layoutEditor.getAdapter(IContentOutlinePage.class);
         if (outline instanceof OutlinePage) {
             mOutlinePage = (OutlinePage) outline;
+        }
+    }
+
+    public void handleKeyPressed(KeyEvent e) {
+        // Set up backspace as an alias for the delete action within the canvas.
+        // On most Macs there is no delete key - though there IS a key labeled
+        // "Delete" and it sends a backspace key code! In short, for Macs we should
+        // treat backspace as delete, and it's harmless (and probably useful) to
+        // handle backspace for other platforms as well.
+        if (e.keyCode == SWT.BS) {
+            mDeleteAction.run();
+        } else if (e.keyCode == SWT.ESC) {
+            mSelectionManager.selectParent();
+        } else {
+            // Zooming actions
+            char c = e.character;
+            LayoutActionBar actionBar = mLayoutEditor.getGraphicalEditor()
+                    .getLayoutActionBar();
+            if (c == '1' && actionBar.isZoomingAllowed()) {
+                setScale(1, true);
+            } else if (c == '0' && actionBar.isZoomingAllowed()) {
+                setFitScale(true);
+            } else if (e.keyCode == '0' && (e.stateMask & SWT.MOD2) != 0
+                    && actionBar.isZoomingAllowed()) {
+                setFitScale(false);
+            } else if (c == '+' && actionBar.isZoomingAllowed()) {
+                actionBar.rescale(1);
+            } else if (c == '-' && actionBar.isZoomingAllowed()) {
+                actionBar.rescale(-1);
+            }
         }
     }
 
@@ -438,7 +431,7 @@ public class LayoutCanvas extends Canvas {
     /**
      * Returns the {@link LayoutEditor} associated with this canvas.
      */
-    LayoutEditor getLayoutEditor() {
+    public LayoutEditor getLayoutEditor() {
         return mLayoutEditor;
     }
 

@@ -38,6 +38,17 @@ public enum DrawingStyle {
     GUIDELINE,
 
     /**
+     * The style used to guideline shadows
+     */
+    GUIDELINE_SHADOW,
+
+    /**
+     * The style used to draw guidelines, in particular shared edges and center lines; this
+     * is a dashed edge.
+     */
+    GUIDELINE_DASHED,
+
+    /**
      * The style used for hovered views (e.g. when the mouse is directly on top
      * of the view)
      */
@@ -92,6 +103,19 @@ public enum DrawingStyle {
     DROP_PREVIEW,
 
     /**
+     * The style used to preview a resize operation. Similar to {@link #DROP_PREVIEW}
+     * but usually fainter to work better in combination with guidelines which
+     * are often overlaid during resize.
+     */
+    RESIZE_PREVIEW,
+
+    /**
+     * The style used to show a proposed resize bound which is being rejected (for example,
+     * because there is no near edge to attach to in a RelativeLayout).
+     */
+    RESIZE_FAIL,
+
+    /**
      * The style used to draw help/hint text.
      */
     HELP,
@@ -100,6 +124,22 @@ public enum DrawingStyle {
      * The style used to draw illegal/error/invalid markers
      */
     INVALID,
+
+    /**
+     * The style used to highlight dependencies
+     */
+    DEPENDENCY,
+
+    /**
+     * The style used to draw an invalid cycle
+     */
+    CYCLE,
+
+    /**
+     * The style used to highlight the currently dragged views during a layout
+     * move (if they are not hidden)
+     */
+    DRAGGED,
 
     /**
      * The style used to draw empty containers of zero bounds (which are padded

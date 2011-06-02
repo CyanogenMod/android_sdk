@@ -17,7 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.DropFeedback;
+import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Rect;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
 import org.eclipse.jface.action.IStatusLineManager;
@@ -307,6 +310,7 @@ public class GestureManager {
             mLastStateMask = 0;
             updateMessage(null);
             updateCursor(mousePos);
+            mCanvas.redraw();
         }
     }
 
@@ -387,7 +391,37 @@ public class GestureManager {
             // same as the one we set?
             mDisplayingMessage = null;
             status.setMessage(null);
+            status.setErrorMessage(null);
         }
+    }
+
+    /**
+     * Returns the current mouse position as a {@link ControlPoint}
+     *
+     * @return the current mouse position as a {@link ControlPoint}
+     */
+    public ControlPoint getCurrentControlPoint() {
+        return ControlPoint.create(mCanvas, mLastMouseX, mLastMouseY);
+    }
+
+    /**
+     * Returns the current SWT modifier key mask as an {@link IViewRule} modifier mask
+     *
+     * @return the current SWT modifier key mask as an {@link IViewRule} modifier mask
+     */
+    public int getRuleModifierMask() {
+        int swtMask = mLastStateMask;
+        int modifierMask = 0;
+        if ((swtMask & SWT.MOD1) != 0) {
+            modifierMask |= DropFeedback.MODIFIER1;
+        }
+        if ((swtMask & SWT.MOD2) != 0) {
+            modifierMask |= DropFeedback.MODIFIER2;
+        }
+        if ((swtMask & SWT.MOD3) != 0) {
+            modifierMask |= DropFeedback.MODIFIER3;
+        }
+        return modifierMask;
     }
 
     /**
@@ -461,19 +495,58 @@ public class GestureManager {
         // --- KeyListener ---
 
         public void keyPressed(KeyEvent e) {
-            if (e.keyCode == SWT.ESC) {
-                ControlPoint controlPoint = ControlPoint.create(mCanvas,
-                        mLastMouseX, mLastMouseY);
-                finishGesture(controlPoint, true);
-                return;
+            mLastStateMask = e.stateMask;
+            // Workaround for the fact that in keyPressed the current state
+            // mask is not yet updated
+            if (e.keyCode == SWT.SHIFT) {
+                mLastStateMask |= SWT.MOD2;
+            }
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                if (e.keyCode == SWT.COMMAND) {
+                    mLastStateMask |= SWT.MOD1;
+                }
+            } else {
+                if (e.keyCode == SWT.CTRL) {
+                    mLastStateMask |= SWT.MOD1;
+                }
             }
 
+            // Give gestures a first chance to see and consume the key press
             if (mCurrentGesture != null) {
-                mCurrentGesture.keyPressed(e);
+                // unless it's "Escape", which cancels the gesture
+                if (e.keyCode == SWT.ESC) {
+                    ControlPoint controlPoint = ControlPoint.create(mCanvas,
+                            mLastMouseX, mLastMouseY);
+                    finishGesture(controlPoint, true);
+                    return;
+                }
+
+                if (mCurrentGesture.keyPressed(e)) {
+                    return;
+                }
             }
+
+            // Fall back to canvas actions for the key press
+            mCanvas.handleKeyPressed(e);
         }
 
         public void keyReleased(KeyEvent e) {
+            mLastStateMask = e.stateMask;
+            // Workaround for the fact that in keyPressed the current state
+            // mask is not yet updated
+            if (e.keyCode == SWT.SHIFT) {
+                mLastStateMask &= ~SWT.MOD2;
+            }
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                if (e.keyCode == SWT.COMMAND) {
+                    mLastStateMask &= ~SWT.MOD1;
+                }
+            } else {
+                if (e.keyCode == SWT.CTRL) {
+                    mLastStateMask &= ~SWT.MOD1;
+                }
+            }
+
             if (mCurrentGesture != null) {
                 mCurrentGesture.keyReleased(e);
             }
@@ -741,6 +814,12 @@ public class GestureManager {
                         int height = (int) (scale * boundingBox.height);
                         dragBounds = new Rect(deltaX, deltaY, width, height);
                         dragInfo.setDragBounds(dragBounds);
+
+                        // Record the baseline such that we can perform baseline alignment
+                        // on the node as it's dragged around
+                        NodeProxy firstNode =
+                            mCanvas.getNodeFactory().create(mDragSelection.get(0).getViewInfo());
+                        dragInfo.setDragBaseline(firstNode.getBaseline());
                     }
                 }
             }

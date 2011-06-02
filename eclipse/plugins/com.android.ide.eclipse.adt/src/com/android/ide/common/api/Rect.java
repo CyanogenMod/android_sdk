@@ -130,9 +130,45 @@ public class Rect {
                          y + (h > 0 ? h : 0));
     }
 
+    /**
+     * Returns the X coordinate of the right hand side of the rectangle
+     *
+     * @return the X coordinate of the right hand side of the rectangle
+     */
+    public int x2() {
+        return x + w;
+    }
+
+    /**
+     * Returns the Y coordinate of the bottom of the rectangle
+     *
+     * @return the Y coordinate of the bottom of the rectangle
+     */
+    public int y2() {
+        return y + h;
+    }
+
+    /**
+     * Returns the X coordinate of the center of the rectangle
+     *
+     * @return the X coordinate of the center of the rectangle
+     */
+    public int centerX() {
+        return x + w / 2;
+    }
+
+    /**
+     * Returns the Y coordinate of the center of the rectangle
+     *
+     * @return the Y coordinate of the center of the rectangle
+     */
+    public int centerY() {
+        return y + h / 2;
+    }
+
     @Override
     public String toString() {
-        return String.format("Rect [%dx%d - %dx%d]", x, y, w, h);
+        return String.format("Rect [(%d,%d)-(%d,%d): %dx%d]", x, y, x + w, y + h, w, h);
     }
 
     @Override
@@ -161,5 +197,14 @@ public class Rect {
         hc ^= ((w >> 16) & 0x000FFFF) | ((w & 0x000FFFF) << 16);
         hc ^= ((h >> 24) & 0x00000FF) | ((h & 0x0FFFFFF) <<  8);
         return hc;
+    }
+
+    /**
+     * Returns the center point in the rectangle
+     *
+     * @return the center point in the rectangle
+     */
+    public Point center() {
+        return new Point(x + w / 2, y + h / 2);
     }
 }

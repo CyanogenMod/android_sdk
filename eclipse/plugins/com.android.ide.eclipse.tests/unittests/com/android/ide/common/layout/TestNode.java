@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 
 import java.util.ArrayList;
@@ -172,4 +173,11 @@ public class TestNode implements INode {
                 + ", attributes=" + mAttributes + ", bounds=" + mBounds + "]";
     }
 
+    public int getBaseline() {
+        return -1;
+    }
+
+    public Margins getMargins() {
+        return null;
+    }
 }

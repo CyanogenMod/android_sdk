@@ -22,6 +22,9 @@ import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 
+import com.android.ide.common.api.IClientRulesEngine;
+import com.android.ide.common.api.INode;
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
 import com.android.ide.common.rendering.api.Capability;
@@ -32,6 +35,7 @@ import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.Result;
 import com.android.ide.common.rendering.api.SessionParams;
+import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceRepository;
@@ -55,7 +59,10 @@ import com.android.ide.eclipse.adt.internal.editors.layout.configuration.Configu
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
@@ -140,6 +147,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1481,6 +1489,13 @@ public class GraphicalEditorPart extends EditorPart
                 mTargetSdkVersion,
                 logger);
 
+        // Request margin and baseline information.
+        // TODO: Be smarter about setting this; start without it, and on the first request
+        // for an extended view info, re-render in the same session, and then set a flag
+        // which will cause this to create extended view info each time from then on in the
+        // same session
+        params.setExtendedViewInfoMode(true);
+
         if (noDecor) {
             params.setForceNoDecor();
         } else {
@@ -1548,6 +1563,116 @@ public class GraphicalEditorPart extends EditorPart
             Object data = result.getData();
             if (data instanceof BufferedImage) {
                 return (BufferedImage) data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Measure the children of the given parent node, applying the given filter to the
+     * pull parser's attribute values.
+     *
+     * @param parent the parent node to measure children for
+     * @param filter the filter to apply to the attribute values
+     * @return a map from node children of the parent to new bounds of the nodes
+     */
+    public Map<INode, Rect> measureChildren(INode parent,
+            final IClientRulesEngine.AttributeFilter filter) {
+        int width = parent.getBounds().w;
+        int height = parent.getBounds().h;
+
+        ResourceResolver resources = getResourceResolver();
+        LayoutLibrary layoutLibrary = getLayoutLibrary();
+        IProject project = getProject();
+        Density density = mConfigComposite.getDensity();
+        float xdpi = mConfigComposite.getXDpi();
+        float ydpi = mConfigComposite.getYDpi();
+        ResourceManager resManager = ResourceManager.getInstance();
+        ProjectResources projectRes = resManager.getProjectResources(project);
+        // TODO - use mProjectCallback? If so restore logger after use
+        ProjectCallback projectCallback = new ProjectCallback(layoutLibrary, projectRes, project);
+        LayoutLog silentLogger = new LayoutLog();
+
+        UiElementNode parentNode = ((NodeProxy) parent).getNode();
+        final NodeFactory nodeFactory = getCanvasControl().getNodeFactory();
+        UiElementPullParser topParser = new UiElementPullParser(parentNode,
+                false, Collections.<UiElementNode>emptySet(), density, xdpi, project) {
+            @Override
+            public String getAttributeValue(String namespace, String localName) {
+                if (filter != null) {
+                    Object cookie = getViewCookie();
+                    if (cookie instanceof UiViewElementNode) {
+                        NodeProxy node = nodeFactory.create((UiViewElementNode) cookie);
+                        if (node != null) {
+                            String value = filter.getAttribute(node, namespace, localName);
+                            if (value != null) {
+                                return value;
+                            }
+                            // null means no preference, not "unset".
+                        }
+                    }
+                }
+
+                return super.getAttributeValue(namespace, localName);
+            }
+
+            /**
+             * The parser usually assumes that the top level node is a document node that
+             * should be skipped, and that's not the case when we render in the middle of
+             * the tree, so override {@link UiElementPullParser#onNextFromStartDocument}
+             * to change this behavior
+             */
+            @Override
+            public void onNextFromStartDocument() {
+                mParsingState = START_TAG;
+            }
+        };
+
+        SessionParams params = new SessionParams(
+                topParser,
+                RenderingMode.FULL_EXPAND,
+                project /* projectKey */,
+                width, height,
+                density, xdpi, ydpi,
+                resources,
+                projectCallback,
+                mMinSdkVersion,
+                mTargetSdkVersion,
+                silentLogger);
+        params.setLayoutOnly();
+        params.setForceNoDecor();
+
+        RenderSession session = null;
+        try {
+            projectCallback.setLogger(silentLogger);
+            session = layoutLibrary.createSession(params);
+            if (session.getResult().isSuccess()) {
+                assert session.getRootViews().size() == 1;
+                ViewInfo root = session.getRootViews().get(0);
+                List<ViewInfo> children = root.getChildren();
+                Map<INode, Rect> map = new HashMap<INode, Rect>(children.size());
+                NodeFactory factory = getCanvasControl().getNodeFactory();
+                for (ViewInfo info : children) {
+                    if (info.getCookie() instanceof UiViewElementNode) {
+                        UiViewElementNode uiNode = (UiViewElementNode) info.getCookie();
+                        NodeProxy node = factory.create(uiNode);
+                        map.put(node, new Rect(info.getLeft(), info.getTop(),
+                                info.getRight() - info.getLeft(),
+                                info.getBottom() - info.getTop()));
+                    }
+                }
+
+                return map;
+            }
+        } catch (RuntimeException t) {
+            // Exceptions from the bridge
+            displayError(t.getLocalizedMessage());
+            throw t;
+        } finally {
+            projectCallback.setLogger(null);
+            if (session != null) {
+                session.dispose();
             }
         }
 

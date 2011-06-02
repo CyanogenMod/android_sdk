@@ -115,5 +115,4 @@ public class DomUtilitiesTest extends TestCase {
         assertFalse(DomUtilities.isContiguous(Arrays.asList(foo, baz)));
         assertFalse(DomUtilities.isContiguous(Arrays.asList(root, baz)));
     }
-
 }

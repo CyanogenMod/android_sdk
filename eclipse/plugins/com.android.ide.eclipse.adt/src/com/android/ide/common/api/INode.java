@@ -58,6 +58,20 @@ public interface INode {
      */
     Rect getBounds();
 
+    /**
+     * Returns the margins for this node.
+     *
+     * @return the margins for this node, never null
+     */
+    Margins getMargins();
+
+    /**
+     * Returns the baseline of this node, or -1 if it has no baseline.
+     * The baseline is the distance from the top down to the baseline.
+     *
+     * @return the baseline, or -1 if not applicable
+     */
+    int getBaseline();
 
     // ---- Hierarchy handling ----
 

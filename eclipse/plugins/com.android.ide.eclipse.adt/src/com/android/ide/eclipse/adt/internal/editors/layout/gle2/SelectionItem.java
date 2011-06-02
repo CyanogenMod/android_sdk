@@ -182,7 +182,7 @@ class SelectionItem {
      * @return the {@link ResizePolicy} for this item, never null
      */
     public ResizePolicy getResizePolicy() {
-        if (mResizePolicy == null) {
+        if (mResizePolicy == null && mNodeProxy != null) {
             mResizePolicy = ViewMetadataRepository.get().getResizePolicy(mNodeProxy.getFqcn());
         }
 

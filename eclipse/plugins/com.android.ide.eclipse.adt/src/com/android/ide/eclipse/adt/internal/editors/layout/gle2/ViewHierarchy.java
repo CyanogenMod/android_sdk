@@ -34,8 +34,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.RandomAccess;
 import java.util.Set;
 
@@ -110,6 +112,9 @@ public class ViewHierarchy {
     /** The render session for the current view hierarchy */
     private RenderSession mSession;
 
+    /** Map from nodes to canvas view infos */
+    private Map<UiViewElementNode, CanvasViewInfo> mNodeToView = Collections.emptyMap();
+
     /**
      * Disposes the view hierarchy content.
      */
@@ -146,6 +151,7 @@ public class ViewHierarchy {
         mSession = session;
         mIsResultValid = (session != null && session.getResult().isSuccess());
         mExplodedParents = false;
+        mNodeToView = new HashMap<UiViewElementNode, CanvasViewInfo>(50);
         if (mIsResultValid && session != null) {
             List<ViewInfo> rootList = session.getRootViews();
 
@@ -213,7 +219,7 @@ public class ViewHierarchy {
             addInvisibleParents(mLastValidViewInfoRoot, explodedNodes);
 
             // Update the selection
-            mCanvas.getSelectionManager().sync(mLastValidViewInfoRoot);
+            mCanvas.getSelectionManager().sync();
         } else {
             mIncludedBounds = null;
             mInvisibleParents.clear();
@@ -268,6 +274,7 @@ public class ViewHierarchy {
 
         if (key != null) {
             mCanvas.getNodeFactory().create(vi);
+            mNodeToView.put(key, vi);
         }
 
         for (CanvasViewInfo child : vi.getChildren()) {
@@ -568,10 +575,7 @@ public class ViewHierarchy {
      *         null if no match was found.
      */
     public CanvasViewInfo findViewInfoFor(INode node) {
-        if (mLastValidViewInfoRoot != null && node instanceof NodeProxy) {
-            return findViewInfoKey(((NodeProxy) node).getNode(), mLastValidViewInfoRoot);
-        }
-        return null;
+        return findViewInfoFor((NodeProxy) node);
     }
 
     /**
@@ -580,27 +584,24 @@ public class ViewHierarchy {
      *
      * @param viewKey The view key that a matching {@link CanvasViewInfo} should
      *            have as its key.
-     * @param canvasViewInfo A root {@link CanvasViewInfo} to search from.
      * @return A {@link CanvasViewInfo} matching the given key, or null if not
      *         found.
      */
-    public CanvasViewInfo findViewInfoKey(Object viewKey, CanvasViewInfo canvasViewInfo) {
-        if (canvasViewInfo == null) {
-            return null;
-        }
-        if (canvasViewInfo.getUiViewNode() == viewKey) {
-            return canvasViewInfo;
-        }
+    public CanvasViewInfo findViewInfoFor(UiElementNode viewKey) {
+        return mNodeToView.get(viewKey);
+    }
 
-        // try to find a matching child
-        for (CanvasViewInfo child : canvasViewInfo.getChildren()) {
-            CanvasViewInfo v = findViewInfoKey(viewKey, child);
-            if (v != null) {
-                return v;
-            }
-        }
-
-        return null;
+    /**
+     * Tries to find a child with the given node proxy as the view key.
+     * Returns null if not found.
+     *
+     * @param proxy The view key that a matching {@link CanvasViewInfo} should
+     *            have as its key.
+     * @return A {@link CanvasViewInfo} matching the given key, or null if not
+     *         found.
+     */
+    public CanvasViewInfo findViewInfoFor(NodeProxy proxy) {
+        return mNodeToView.get(proxy.getNode());
     }
 
     /**
