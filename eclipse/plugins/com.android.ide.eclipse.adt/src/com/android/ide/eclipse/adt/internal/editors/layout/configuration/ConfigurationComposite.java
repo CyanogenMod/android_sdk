@@ -2178,12 +2178,12 @@ public class ConfigurationComposite extends Composite {
             mListener.onRenderingTargetPostChange(mRenderingTarget);
         }
 
+        // Store project-wide render-target setting
+        saveRenderState();
+
         if (computeOk &&  mListener != null) {
             mListener.onConfigurationChange();
         }
-
-        // Store project-wide render-target setting
-        saveRenderState();
     }
 
     /**
