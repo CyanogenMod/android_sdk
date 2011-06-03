@@ -68,5 +68,6 @@ public interface IDensityBasedResourceValue extends IResourceValue {
      * Returns the density associated to the resource.
      * @deprecated use {@link DensityBasedResourceValue#getResourceDensity()}
      */
+    @Deprecated
     Density getDensity();
 }

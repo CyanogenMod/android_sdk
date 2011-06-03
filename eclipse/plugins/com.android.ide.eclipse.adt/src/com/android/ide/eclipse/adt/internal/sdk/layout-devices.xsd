@@ -187,6 +187,7 @@
                     <xsd:restriction base="xsd:token">
                         <xsd:enumeration value="ldpi" />
                         <xsd:enumeration value="mdpi" />
+                        <xsd:enumeration value="tvdpi" />
                         <xsd:enumeration value="hdpi" />
                         <xsd:enumeration value="xhdpi" />
                     </xsd:restriction>
