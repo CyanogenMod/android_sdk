@@ -823,11 +823,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         sb.append("Code completion in " + basename + " for " + caretLocation + ":\n");
         for (ICompletionProposal proposal : proposals) {
             // TODO: assertNotNull(proposal.getImage());
-            sb.append(proposal.getDisplayString());
+            sb.append(proposal.getDisplayString().trim());
             String help = proposal.getAdditionalProposalInfo();
             if (help != null && help.trim().length() > 0) {
                 sb.append(" : ");
-                sb.append(help.replace('\n', ' '));
+                sb.append(help.replace('\n', ' ').trim());
             }
             sb.append('\n');
         }
