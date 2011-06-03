@@ -66,7 +66,7 @@ import java.util.Map;
 
 @SuppressWarnings("restriction")
 public class AdtProjectTest extends SdkTestCase {
-    private static final int TARGET_API_LEVEL = 11;
+    private static final int TARGET_API_LEVEL = 12;
     public static final String TEST_PROJECT_PACKAGE = "com.android.eclipse.tests"; //$NON-NLS-1$
 
     /** Update golden files if different from the actual results */
