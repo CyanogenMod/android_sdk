@@ -33,6 +33,7 @@ android:childIndicator : Indicator shown beside the child View.  [reference]
 android:childIndicatorLeft : The left bound for a child's indicator.  [dimension] 
 android:childIndicatorRight : The right bound for a child's indicator.  [dimension] 
 android:choiceMode : Defines the choice behavior for the view.  [enum] 
+class : Supply the name of the fragment class to instantiate
 android:clickable : Defines whether this view reacts to click events.  [boolean] 
 android:clipChildren : Defines whether a child is limited to draw inside of its bounds  or not.  [boolean] 
 android:clipToPadding : Defines whether the ViewGroup will clip its drawing surface so  as to exclude the padding area.  [boolean] 
@@ -115,7 +116,7 @@ android:height : Makes the TextView be exactly this many pixels tall.  [dimensio
 android:hint : Hint text to display when the text is empty.  [string] 
 android:horizontalSpacing : Defines the default horizontal spacing between columns.  [dimension] 
 android:iconifiedByDefault : The default state of the SearchView.  [boolean] 
-android:id : [reference]. * Required. 
+android:id : Supply an identifier name for the top-level view, to later retrieve  it with View.findViewById() or Activity.findViewById().  [reference] 
 android:ignoreGravity : Indicates what view should not be affected by gravity.  [reference] 
 android:imeActionId : Supply a value for EditorInfo.actionId used when an input method  is connected to the text view.  [integer] 
 android:imeActionLabel : Supply a value for EditorInfo.actionLabel used when an input  method is connected to the text view.  [string] 
@@ -162,6 +163,7 @@ android:minHeight : Defines the minimum height of the view.
 android:minLines : Makes the TextView be at least this many lines tall.  [integer] 
 android:minWidth : Defines the minimum width of the view.
 android:mode : [enum] 
+android:name : Supply the name of the fragment class to instantiate.
 android:nextFocusDown : Defines the next view to give focus to when the next focus is FOCUS_DOWN If the reference refers to a view that does not exist or is  part of a hierarchy that is invisible, a java.lang.RuntimeException will result when the  reference is accessed.  [reference] 
 android:nextFocusForward : Defines the next view to give focus to when the next focus is FOCUS_FORWARD If the reference refers to a view that does not exist or is  part of a hierarchy that is invisible, a java.lang.RuntimeException will result when the  reference is accessed.  [reference] 
 android:nextFocusLeft : Defines the next view to give focus to when the next focus is FOCUS_LEFT.  [reference] 
@@ -248,7 +250,7 @@ android:tabLayout : Layout used to organize each tab's content.  [reference]
 android:tabStripEnabled : Determines whether the strip under the tab indicators is drawn  or not.  [boolean] 
 android:tabStripLeft : Drawable used to draw the left part of the strip underneath the  tabs.  [reference] 
 android:tabStripRight : Drawable used to draw the right part of the strip underneath  the tabs.  [reference] 
-android:tag : Supply a tag for this view containing a String, to be retrieved  later with View.getTag() or searched for with View.findViewWithTag() .  [string] 
+android:tag : Supply a tag for the top-level view containing a String, to be  retrieved later with View.getTag() or searched for with View.findViewWithTag() .  [string] 
 android:text : Text to display.  [string] 
 android:textAppearance : Base text color, typeface, size, and style.  [reference] 
 android:textColor : Text color.  [reference, color] 

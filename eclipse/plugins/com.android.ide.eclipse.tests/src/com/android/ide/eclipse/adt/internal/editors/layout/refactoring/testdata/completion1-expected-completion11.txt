@@ -57,4 +57,5 @@ Code completion in completion1.xml for ^<TextView:
 <WebView />
 <ZoomButton />
 <ZoomControls />
+<fragment /> : A Fragment is a piece of an application's user interface or behavior  that can be placed in an Activity
 <include /> : Lets you statically include XML layouts inside other XML layouts.
