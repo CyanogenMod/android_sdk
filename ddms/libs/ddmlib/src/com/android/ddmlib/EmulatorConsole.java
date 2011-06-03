@@ -202,46 +202,58 @@ public final class EmulatorConsole {
      */
     public static synchronized EmulatorConsole getConsole(IDevice d) {
         // we need to make sure that the device is an emulator
-        Matcher m = sEmulatorRegexp.matcher(d.getSerialNumber());
+        // get the port number. This is the console port.
+        Integer port = getEmulatorPort(d.getSerialNumber());
+        if (port == null) {
+            return null;
+        }
+
+        EmulatorConsole console = sEmulators.get(port);
+
+        if (console != null) {
+            // if the console exist, we ping the emulator to check the connection.
+            if (console.ping() == false) {
+                RemoveConsole(console.mPort);
+                console = null;
+            }
+        }
+
+        if (console == null) {
+            // no console object exists for this port so we create one, and start
+            // the connection.
+            console = new EmulatorConsole(port);
+            if (console.start()) {
+                sEmulators.put(port, console);
+            } else {
+                console = null;
+            }
+        }
+
+        return console;
+    }
+
+    /**
+     * Return port of emulator given its serial number.
+     *
+     * @param serialNumber the emulator's serial number
+     * @return the integer port or <code>null</code> if it could not be determined
+     */
+    public static Integer getEmulatorPort(String serialNumber) {
+        Matcher m = sEmulatorRegexp.matcher(serialNumber);
         if (m.matches()) {
             // get the port number. This is the console port.
             int port;
             try {
                 port = Integer.parseInt(m.group(1));
-                if (port <= 0) {
-                    return null;
+                if (port > 0) {
+                    return port;
                 }
             } catch (NumberFormatException e) {
                 // looks like we failed to get the port number. This is a bit strange since
                 // it's coming from a regexp that only accept digit, but we handle the case
                 // and return null.
-                return null;
             }
-
-            EmulatorConsole console = sEmulators.get(port);
-
-            if (console != null) {
-                // if the console exist, we ping the emulator to check the connection.
-                if (console.ping() == false) {
-                    RemoveConsole(console.mPort);
-                    console = null;
-                }
-            }
-
-            if (console == null) {
-                // no console object exists for this port so we create one, and start
-                // the connection.
-                console = new EmulatorConsole(port);
-                if (console.start()) {
-                    sEmulators.put(port, console);
-                } else {
-                    console = null;
-                }
-            }
-
-            return console;
         }
-
         return null;
     }
 
