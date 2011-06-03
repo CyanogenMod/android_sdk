@@ -416,6 +416,22 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 "android:interpolator=\"^@android:anim/bounce_interpolator\"");
     }
 
+    public void testCompletion62() throws Exception {
+        // Test completing inside an element that contains .'s, such as a custom view tag
+        checkLayoutCompletion("completion9.xml",  "android:layout_wi^dth=");
+    }
+
+    public void testCompletion63() throws Exception {
+        // Test attribute completion inside a custom view tag
+        // TODO: This works in a running IDE but not in a test context; figure out why.
+        //checkLayoutCompletion("completion9.xml",  "android:drawable^Top");
+    }
+
+    public void testCompletion64() throws Exception {
+        // Test element completion inside a custom view tag
+        checkLayoutCompletion("completion9.xml",  "^<Button");
+    }
+
     // ---- Test *applying* code completion ----
 
 

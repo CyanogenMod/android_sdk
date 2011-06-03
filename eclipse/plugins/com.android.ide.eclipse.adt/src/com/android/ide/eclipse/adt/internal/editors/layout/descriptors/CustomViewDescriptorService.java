@@ -21,6 +21,7 @@ import static com.android.sdklib.SdkConstants.CLASS_VIEWGROUP;
 import com.android.ide.common.resources.platform.ViewClassInfo;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
@@ -167,7 +168,8 @@ public final class CustomViewDescriptorService {
                         String name = DescriptorsUtils.getBasename(fqcn);
                         ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
                                 getAttributeDescriptor(type, parentDescriptor),
-                                parentDescriptor.hasChildren());
+                                getLayoutAttributeDescriptors(type, parentDescriptor),
+                                parentDescriptor.getChildren());
                         descriptor.setSuperClass(parentDescriptor);
 
                         synchronized (mCustomDescriptorMap) {
@@ -249,9 +251,16 @@ public final class CustomViewDescriptorService {
                 // its parent does not.
                 boolean isViewGroup = fqcn.equals(CLASS_VIEWGROUP);
                 boolean hasChildren = isViewGroup || parentDescriptor.hasChildren();
+                ViewElementDescriptor[] children = null;
+                if (hasChildren && builtInList != null) {
+                    // We can't figure out what the allowable children are by just
+                    // looking at the class, so assume any View is valid
+                    children = builtInList.toArray(new ViewElementDescriptor[builtInList.size()]);
+                }
                 ViewElementDescriptor descriptor = new CustomViewDescriptor(name, fqcn,
                         getAttributeDescriptor(type, parentDescriptor),
-                        hasChildren);
+                        getLayoutAttributeDescriptors(type, parentDescriptor),
+                        children);
                 descriptor.setSuperClass(parentDescriptor);
 
                 // add it to the map
@@ -291,11 +300,15 @@ public final class CustomViewDescriptorService {
         return parentDescriptor.getAttributes();
     }
 
-    private class CustomViewDescriptor extends ViewElementDescriptor {
-        private boolean mHasChildren;
+    private AttributeDescriptor[] getLayoutAttributeDescriptors(IType type,
+            ViewElementDescriptor parentDescriptor) {
+        return parentDescriptor.getLayoutAttributes();
+    }
 
+    private class CustomViewDescriptor extends ViewElementDescriptor {
         public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes,
-                boolean hasChildren) {
+                AttributeDescriptor[] layoutAttributes,
+                ElementDescriptor[] children) {
             super(
                     fqcn, // xml name
                     name, // ui name
@@ -303,24 +316,11 @@ public final class CustomViewDescriptorService {
                     fqcn, // tooltip
                     null, // sdk_url
                     attributes,
-                    null, // layout attributes
-                    null, // children
+                    layoutAttributes,
+                    children,
                     false // mandatory
             );
-            mHasChildren = hasChildren;
         }
-
-        /**
-         * {@inheritDoc}
-         * <p>
-         * Custom views can accept children even if we have no information about
-         * allowed children.
-         */
-        @Override
-        public boolean hasChildren() {
-            return mHasChildren;
-        }
-
 
         @Override
         public Image getGenericIcon() {
