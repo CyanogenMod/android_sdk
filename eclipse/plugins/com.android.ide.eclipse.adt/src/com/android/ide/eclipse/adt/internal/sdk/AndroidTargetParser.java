@@ -264,7 +264,8 @@ public final class AndroidTargetParser {
             // now load the layout lib bridge
             LayoutLibrary layoutBridge =  LayoutLibrary.load(
                     mAndroidTarget.getPath(IAndroidTarget.LAYOUT_LIB),
-                    AdtPlugin.getDefault());
+                    AdtPlugin.getDefault(),
+                    "ADT plug-in");
 
             progress.worked(1);
 

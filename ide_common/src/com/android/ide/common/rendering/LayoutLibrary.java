@@ -135,7 +135,7 @@ public class LayoutLibrary {
      * @param log an optional log file.
      * @return a {@link LayoutLibrary} object always.
      */
-    public static LayoutLibrary load(String layoutLibJarOsPath, ILogger log) {
+    public static LayoutLibrary load(String layoutLibJarOsPath, ILogger log, String toolName) {
 
         LoadStatus status = LoadStatus.LOADING;
         String message = null;
@@ -195,7 +195,8 @@ public class LayoutLibrary {
                         int api = bridge.getApiLevel();
                         if (api > Bridge.API_CURRENT) {
                             status = LoadStatus.FAILED;
-                            message = "LayoutLib is too recent. Update your tool!";
+                            message = String.format(
+                                    "This version of the rendering library is more recent than your version of %1$s. Please update %1$s", toolName);
                         }
                     }
                 }
