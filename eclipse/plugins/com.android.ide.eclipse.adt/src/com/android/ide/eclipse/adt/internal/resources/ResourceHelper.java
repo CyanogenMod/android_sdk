@@ -17,15 +17,19 @@
 package com.android.ide.eclipse.adt.internal.resources;
 
 import static com.android.AndroidConstants.FD_RES_VALUES;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_STYLE;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
+import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
 import com.android.ide.common.resources.configuration.DockModeQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -48,6 +52,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.VisualRefactoring;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
@@ -67,19 +72,27 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.xml.sax.InputSource;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -87,11 +100,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 /**
  * Helper class to deal with SWT specifics for the resources.
  */
 @SuppressWarnings("restriction") // XML model
 public class ResourceHelper {
+
+    private static final String TAG_ITEM = "item"; //$NON-NLS-1$
+    private static final String ATTR_COLOR = "color";  //$NON-NLS-1$
 
     private final static Map<Class<?>, Image> sIconMap = new HashMap<Class<?>, Image>(
             FolderConfiguration.getQualifierCount());
@@ -442,5 +461,107 @@ public class ResourceHelper {
             layoutName = layoutName.substring(0, dotIndex);
         }
         return layoutName;
+    }
+
+    /**
+     * Tries to resolve the given resource value to an actual RGB color. For state lists
+     * it will pick the simplest/fallback color.
+     *
+     * @param resources the resource resolver to use to follow color references
+     * @param color the color to resolve
+     * @return the corresponding {@link RGB} color, or null
+     */
+    public static RGB resolveColor(ResourceResolver resources, ResourceValue color) {
+        color = resources.resolveResValue(color);
+        if (color == null) {
+            return null;
+        }
+        String value = color.getValue();
+
+        while (value != null) {
+            if (value.startsWith("#")) { //$NON-NLS-1$
+                try {
+                    int rgba = ImageUtils.getColor(value);
+                    // Drop alpha channel
+                    return ImageUtils.intToRgb(rgba);
+                } catch (NumberFormatException nfe) {
+                    ;
+                }
+                return null;
+            }
+            if (value.startsWith("@")) { //$NON-NLS-1$
+                boolean isFramework = color.isFramework();
+                color = resources.findResValue(value, isFramework);
+                if (color != null) {
+                    value = color.getValue();
+                } else {
+                    break;
+                }
+            } else {
+                File file = new File(value);
+                if (file.exists() && file.getName().endsWith(DOT_XML)) {
+                    // Parse
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    BufferedInputStream bis = null;
+                    try {
+                        bis = new BufferedInputStream(new FileInputStream(file));
+                        InputSource is = new InputSource(bis);
+                        factory.setNamespaceAware(true);
+                        factory.setValidating(false);
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+                        Document document = builder.parse(is);
+                        NodeList items = document.getElementsByTagName(TAG_ITEM);
+
+                        value = findColorValue(items);
+                        continue;
+                    } catch (Exception e) {
+                        AdtPlugin.log(e, "Failed parsing color file %1$s", file.getName());
+                    } finally {
+                        if (bis != null) {
+                            try {
+                                bis.close();
+                            } catch (IOException e) {
+                                // Nothing useful can be done here
+                            }
+                        }
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Searches a color XML file for the color definition element that does not
+     * have an associated state and returns its color
+     */
+    private static String findColorValue(NodeList items) {
+        for (int i = 0, n = items.getLength(); i < n; i++) {
+            // Find non-state color definition
+            Node item = items.item(i);
+            boolean hasState = false;
+            if (item.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) item;
+                if (element.hasAttributeNS(ANDROID_URI, ATTR_COLOR)) {
+                    NamedNodeMap attributes = element.getAttributes();
+                    for (int j = 0, m = attributes.getLength(); j < m; j++) {
+                        Attr attribute = (Attr) attributes.item(j);
+                        if (attribute.getLocalName().startsWith("state_")) { //$NON-NLS-1$
+                            hasState = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasState) {
+                        return element.getAttributeNS(ANDROID_URI, ATTR_COLOR);
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }

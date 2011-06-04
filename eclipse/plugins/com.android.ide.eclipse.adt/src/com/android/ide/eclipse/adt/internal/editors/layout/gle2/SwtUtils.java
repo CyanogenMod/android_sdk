@@ -17,13 +17,17 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.Rect;
 
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.WritableRaster;
 import java.util.List;
@@ -61,6 +65,44 @@ public class SwtUtils {
     }
 
     /**
+     * Returns true if the given type of {@link BufferedImage} is supported for
+     * conversion. For unsupported formats, use
+     * {@link #convertToCompatibleFormat(BufferedImage)} first.
+     *
+     * @param imageType the {@link BufferedImage#getType()}
+     * @return true if we can convert the given buffered image format
+     */
+    private static boolean isSupportedPaletteType(int imageType) {
+        switch (imageType) {
+            case BufferedImage.TYPE_INT_RGB:
+            case BufferedImage.TYPE_INT_ARGB:
+            case BufferedImage.TYPE_INT_ARGB_PRE:
+            case BufferedImage.TYPE_3BYTE_BGR:
+            case BufferedImage.TYPE_4BYTE_ABGR:
+            case BufferedImage.TYPE_4BYTE_ABGR_PRE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /** Converts the given arbitrary {@link BufferedImage} to another {@link BufferedImage}
+     * in a format that is supported (see {@link #isSupportedPaletteType(int)})
+     *
+     * @param image the image to be converted
+     * @return a new image that is in a guaranteed compatible format
+     */
+    private static BufferedImage convertToCompatibleFormat(BufferedImage image) {
+        BufferedImage converted = new BufferedImage(image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics graphics = converted.getGraphics();
+        graphics.drawImage(image, 0, 0, null);
+        graphics.dispose();
+
+        return converted;
+    }
+
+    /**
      * Converts an AWT {@link BufferedImage} into an equivalent SWT {@link Image}. Whether
      * the transparency data is transferred is optional, and this method can also apply an
      * alpha adjustment during the conversion.
@@ -79,16 +121,31 @@ public class SwtUtils {
      */
     public static Image convertToSwt(Display display, BufferedImage awtImage,
             boolean transferAlpha, int globalAlpha) {
+        if (!isSupportedPaletteType(awtImage.getType())) {
+            awtImage = convertToCompatibleFormat(awtImage);
+        }
+
         int width = awtImage.getWidth();
         int height = awtImage.getHeight();
 
         WritableRaster raster = awtImage.getRaster();
-        int[] imageDataBuffer = ((DataBufferInt) raster.getDataBuffer()).getData();
-
+        DataBuffer dataBuffer = raster.getDataBuffer();
         ImageData imageData =
             new ImageData(width, height, 32, getAwtPaletteData(awtImage.getType()));
 
-        imageData.setPixels(0, 0, imageDataBuffer.length, imageDataBuffer, 0);
+        if (dataBuffer instanceof DataBufferInt) {
+            int[] imageDataBuffer = ((DataBufferInt) dataBuffer).getData();
+            imageData.setPixels(0, 0, imageDataBuffer.length, imageDataBuffer, 0);
+        } else if (dataBuffer instanceof DataBufferByte) {
+            byte[] imageDataBuffer = ((DataBufferByte) dataBuffer).getData();
+            try {
+                imageData.setPixels(0, 0, imageDataBuffer.length, imageDataBuffer, 0);
+            } catch (SWTException se) {
+                // Unsupported depth
+                return convertToSwt(display, convertToCompatibleFormat(awtImage),
+                        transferAlpha, globalAlpha);
+            }
+        }
 
         if (transferAlpha) {
             byte[] alphaData = new byte[height * width];
@@ -247,6 +304,19 @@ public class SwtUtils {
         }
 
         return new Image(image.getDevice(), destData);
+    }
+
+    /**
+     * Creates a new empty/blank image of the given size
+     *
+     * @param display the display to associate the image with
+     * @param width the width of the image
+     * @param height the height of the image
+     * @return a new blank image of the given size
+     */
+    public static Image createEmptyImage(Display display, int width, int height) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        return SwtUtils.convertToSwt(display, image, false, 0);
     }
 
     /**

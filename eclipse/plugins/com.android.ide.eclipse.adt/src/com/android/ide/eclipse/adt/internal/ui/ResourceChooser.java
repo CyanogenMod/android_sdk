@@ -80,6 +80,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
     private String mCurrentResource;
     private final IProject mProject;
     private IInputValidator mInputValidator;
+    private ResourcePreviewHelper mPreviewHelper;
 
     /**
      * Creates a Resource Chooser dialog.
@@ -109,6 +110,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",
                 mResourceType.getDisplayName().toLowerCase()));
+    }
+
+    public void setPreviewHelper(ResourcePreviewHelper previewHelper) {
+        mPreviewHelper = previewHelper;
     }
 
     @Override
@@ -254,6 +259,11 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 }
                 updateStatus(status);
             }
+        }
+
+        if (mPreviewHelper != null) {
+            computeResult();
+            mPreviewHelper.updatePreview(mResourceType, mCurrentResource);
         }
     }
 

@@ -15,6 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_9PNG;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_BMP;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_GIF;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_JPG;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
+import static com.android.ide.eclipse.adt.AdtUtils.endsWithIgnoreCase;
+
 import com.android.ide.common.api.Rect;
 
 import org.eclipse.swt.graphics.RGB;
@@ -484,8 +491,8 @@ public class ImageUtils {
     public static BufferedImage scale(BufferedImage source, double xScale, double yScale) {
         int sourceWidth = source.getWidth();
         int sourceHeight = source.getHeight();
-        int destWidth = (int) (xScale * sourceWidth);
-        int destHeight = (int) (yScale * sourceHeight);
+        int destWidth = Math.max(1, (int) (xScale * sourceWidth));
+        int destHeight = Math.max(1, (int) (yScale * sourceHeight));
         BufferedImage scaled = new BufferedImage(destWidth, destHeight, source.getType());
         Graphics2D g2 = scaled.createGraphics();
         g2.setComposite(AlphaComposite.Src);
@@ -499,5 +506,38 @@ public class ImageUtils {
         g2.dispose();
 
         return scaled;
+    }
+
+    /**
+     * Returns true if the given file path points to an image file recognized by
+     * Android. See http://developer.android.com/guide/appendix/media-formats.html
+     * for details.
+     *
+     * @param path the filename to be tested
+     * @return true if the file represents an image file
+     */
+    public static boolean hasImageExtension(String path) {
+        return endsWithIgnoreCase(path, DOT_PNG)
+            || endsWithIgnoreCase(path, DOT_9PNG)
+            || endsWithIgnoreCase(path, DOT_GIF)
+            || endsWithIgnoreCase(path, DOT_JPG)
+            || endsWithIgnoreCase(path, DOT_BMP);
+    }
+
+    /**
+     * Creates a new image of the given size filled with the given color
+     *
+     * @param width the width of the image
+     * @param height the height of the image
+     * @param color the color of the image
+     * @return a new image of the given size filled with the given color
+     */
+    public static BufferedImage createColoredImage(int width, int height, RGB color) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = image.getGraphics();
+        g.setColor(new Color(color.red, color.green, color.blue));
+        g.fillRect(0, 0, image.getWidth(), image.getHeight());
+        g.dispose();
+        return image;
     }
 }

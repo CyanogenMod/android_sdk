@@ -71,6 +71,13 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         });
     }
 
+    public void setImage(Image image) {
+        if (mDisposeImage) {
+            mImage.dispose();
+        }
+        mImage = image;
+    }
+
     public void setScale(float scale) {
         mScale = scale;
     }

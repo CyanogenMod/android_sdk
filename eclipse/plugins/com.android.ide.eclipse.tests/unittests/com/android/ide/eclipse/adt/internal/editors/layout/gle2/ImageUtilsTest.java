@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.Rect;
 
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 
 import java.awt.Color;
@@ -345,4 +346,14 @@ public class ImageUtilsTest extends TestCase {
         assertEquals(0xFFFF0000, scaled.getRGB(100, 100));
         assertEquals(0xFF00FF00, scaled.getRGB(199, 199));
     }
+
+    public void testCreateColoredImage() throws Exception {
+        BufferedImage image = ImageUtils.createColoredImage(120, 110, new RGB(0xFE, 0xFD, 0xFC));
+        assertEquals(120, image.getWidth());
+        assertEquals(110, image.getHeight());
+        assertEquals(0xFFFEFDFC, image.getRGB(0, 0));
+        assertEquals(0xFFFEFDFC, image.getRGB(50, 50));
+        assertEquals(0xFFFEFDFC, image.getRGB(119, 109));
+    }
+
 }

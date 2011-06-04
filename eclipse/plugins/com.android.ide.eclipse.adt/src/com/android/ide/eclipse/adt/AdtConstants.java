@@ -108,6 +108,14 @@ public class AdtConstants {
     public final static String DOT_RES = DOT + EXT_RES;
     /** Dot-Extension for PNG files, i.e. ".png" */
     public static final String DOT_PNG = ".png"; //$NON-NLS-1$
+    /** Dot-Extension for 9-patch files, i.e. ".9.png" */
+    public static final String DOT_9PNG = ".9.png"; //$NON-NLS-1$
+    /** Dot-Extension for GIF files, i.e. ".gif" */
+    public static final String DOT_GIF = ".gif"; //$NON-NLS-1$
+    /** Dot-Extension for JPEG files, i.e. ".jpg" */
+    public static final String DOT_JPG = ".jpg"; //$NON-NLS-1$
+    /** Dot-Extension for BMP files, i.e. ".bmp" */
+    public static final String DOT_BMP = ".bmp"; //$NON-NLS-1$
 
     /** Name of the android sources directory */
     public static final String FD_ANDROID_SOURCES = "sources"; //$NON-NLS-1$

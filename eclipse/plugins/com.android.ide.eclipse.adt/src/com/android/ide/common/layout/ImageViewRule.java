@@ -40,6 +40,9 @@ public class ImageViewRule extends BaseViewRule {
                     new PropertySettingNodeHandler(ANDROID_URI, ATTR_SRC,
                             src.length() > 0 ? src : null));
                 return;
+            } else {
+                // Remove the view; the insertion was canceled
+                parent.removeChild(node);
             }
         }
 
