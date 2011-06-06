@@ -31,6 +31,7 @@ import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.Result;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -400,6 +401,10 @@ public final class ProjectCallback extends LegacyCallback {
         }
 
         return null;
+    }
+
+    public ILayoutPullParser getParser(ResourceValue layoutResource) {
+        return getParser(layoutResource.getName());
     }
 
     public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
