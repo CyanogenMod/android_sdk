@@ -28,7 +28,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.DrawingStyle;
@@ -44,10 +43,12 @@ import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.Segment;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.MenuAction.ChoiceProvider;
+import com.android.ide.common.layout.relative.MarginType;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
@@ -575,31 +576,15 @@ public class BaseLayoutRule extends BaseViewRule {
 
     // ---- Resizing ----
 
-    /** State held during resizing operations */
-    protected static class ResizeState {
-        /** The proposed resized bounds of the node */
-        public Rect bounds;
-
-        /** The preferred wrap_content bounds of the node */
-        public Rect wrapBounds;
-
-        /** The type of horizontal edge being resized, or null */
-        public SegmentType horizontalEdgeType;
-
-        /** The type of vertical edge being resized, or null */
-        public SegmentType verticalEdgeType;
-
-        /** Whether the user has snapped to the wrap_content width */
-        public boolean wrapWidth;
-
-        /** Whether the user has snapped to the wrap_content height */
-        public boolean wrapHeight;
+    /** Creates a new {@link ResizeState} object to track resize state */
+    protected ResizeState createResizeState(INode layout, INode node) {
+        return new ResizeState(this, layout, node);
     }
 
     @Override
     public DropFeedback onResizeBegin(INode child, INode parent,
             SegmentType horizontalEdge, SegmentType verticalEdge) {
-        ResizeState state = new ResizeState();
+        ResizeState state = createResizeState(parent, child);
         state.horizontalEdgeType = horizontalEdge;
         state.verticalEdgeType = verticalEdge;
 
@@ -632,6 +617,17 @@ public class BaseLayoutRule extends BaseViewRule {
                     gc.useStyle(DrawingStyle.RESIZE_PREVIEW);
                     Rect b = resizeState.bounds;
                     gc.drawRect(b);
+
+                    if (resizeState.horizontalFillSegment != null) {
+                        gc.useStyle(DrawingStyle.GUIDELINE);
+                        Segment s = resizeState.horizontalFillSegment;
+                        gc.drawLine(s.from, s.at, s.to, s.at);
+                    }
+                    if (resizeState.verticalFillSegment != null) {
+                        gc.useStyle(DrawingStyle.GUIDELINE);
+                        Segment s = resizeState.verticalFillSegment;
+                        gc.drawLine(s.at, s.from, s.at, s.to);
+                    }
 
                     if (resizeState.wrapBounds != null) {
                         gc.useStyle(DrawingStyle.GUIDELINE);
@@ -703,7 +699,6 @@ public class BaseLayoutRule extends BaseViewRule {
         return 20;
     }
 
-
     @Override
     public void onResizeUpdate(DropFeedback feedback, INode child, INode parent,
             Rect newBounds, int modifierMask) {
@@ -732,6 +727,32 @@ public class BaseLayoutRule extends BaseViewRule {
                     }
                     newBounds.w = b.w;
                 }
+            }
+        }
+
+        // Match on fill bounds
+        state.horizontalFillSegment = null;
+        state.fillHeight = false;
+        if (state.horizontalEdgeType == SegmentType.BOTTOM && !state.wrapHeight) {
+            Rect parentBounds = parent.getBounds();
+            state.horizontalFillSegment = new Segment(parentBounds.y2(), newBounds.x,
+                newBounds.x2(),
+                null /*node*/, null /*id*/, SegmentType.BOTTOM, MarginType.NO_MARGIN);
+            if (Math.abs(newBounds.y2() - parentBounds.y2()) < getMaxMatchDistance()) {
+                state.fillHeight = true;
+                newBounds.h = parentBounds.y2() - newBounds.y;
+            }
+        }
+        state.verticalFillSegment = null;
+        state.fillWidth = false;
+        if (state.verticalEdgeType == SegmentType.RIGHT && !state.wrapWidth) {
+            Rect parentBounds = parent.getBounds();
+            state.verticalFillSegment = new Segment(parentBounds.x2(), newBounds.y,
+                newBounds.y2(),
+                null /*node*/, null /*id*/, SegmentType.RIGHT, MarginType.NO_MARGIN);
+            if (Math.abs(newBounds.x2() - parentBounds.x2()) < getMaxMatchDistance()) {
+                state.fillWidth = true;
+                newBounds.w = parentBounds.x2() - newBounds.x;
             }
         }
 
@@ -767,10 +788,8 @@ public class BaseLayoutRule extends BaseViewRule {
      */
     protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
             Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
-        String width = resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
-                    String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w));
-        String height = resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
-            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h));
+        String width = resizeState.getWidthAttribute();
+        String height = resizeState.getHeightAttribute();
 
         // U+00D7: Unicode for multiplication sign
         return String.format("Resize to %s \u00D7 %s", width, height);
@@ -790,15 +809,13 @@ public class BaseLayoutRule extends BaseViewRule {
      */
     protected void setNewSizeBounds(ResizeState resizeState, INode node, INode layout,
             Rect oldBounds, Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
-        if (verticalEdge != null && (newBounds.w != oldBounds.w || resizeState.wrapWidth)) {
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
-                    resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
-                        String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w)));
+        if (verticalEdge != null
+            && (newBounds.w != oldBounds.w || resizeState.wrapWidth || resizeState.fillWidth)) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, resizeState.getWidthAttribute());
         }
-        if (horizontalEdge != null && (newBounds.h != oldBounds.h || resizeState.wrapHeight)) {
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
-                    resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
-                        String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h)));
+        if (horizontalEdge != null
+            && (newBounds.h != oldBounds.h || resizeState.wrapHeight || resizeState.fillHeight)) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, resizeState.getHeightAttribute());
         }
     }
 }
