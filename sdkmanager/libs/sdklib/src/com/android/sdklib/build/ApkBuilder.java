@@ -881,6 +881,7 @@ public final class ApkBuilder {
             "rsh".equalsIgnoreCase(extension) == false &&           // RenderScript header files
             "d".equalsIgnoreCase(extension) == false &&             // Dependency files
             "java".equalsIgnoreCase(extension) == false &&          // Java files
+            "scala".equalsIgnoreCase(extension) == false &&         // Scala files
             "class".equalsIgnoreCase(extension) == false &&         // Java class files
             "scc".equalsIgnoreCase(extension) == false &&           // VisualSourceSafe
             "swp".equalsIgnoreCase(extension) == false &&           // vi swap file
