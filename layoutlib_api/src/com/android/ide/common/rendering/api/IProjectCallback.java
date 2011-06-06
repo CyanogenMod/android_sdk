@@ -97,8 +97,18 @@ public interface IProjectCallback {
      * Returns a custom parser for the layout of the given name.
      * @param layoutName the name of the layout.
      * @return returns a custom parser or null if no custom parsers are needed.
+     * @deprecated This is replaced by {@link #getParser(ResourceValue)} but older version
+     * of the layoutlib (before API7) will still call this method.
      */
+    @Deprecated
     ILayoutPullParser getParser(String layoutName);
+
+    /**
+     * Returns a custom parser for a given layout.
+     * @param layoutResource The layout.
+     * @return returns a custom parser or null if no custom parsers are needed.
+     */
+    ILayoutPullParser getParser(ResourceValue layoutResource);
 
     /**
      * Returns the value of an item used by an adapter.
