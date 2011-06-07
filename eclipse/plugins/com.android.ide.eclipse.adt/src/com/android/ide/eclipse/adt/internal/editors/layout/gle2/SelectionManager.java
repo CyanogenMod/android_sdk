@@ -94,7 +94,6 @@ public class SelectionManager implements ISelectionProvider {
     /** List of clients listening to selection changes. */
     private final ListenerList mSelectionListeners = new ListenerList();
 
-
     /**
      * Constructs a new {@link SelectionManager} associated with the given layout canvas.
      *
@@ -105,12 +104,12 @@ public class SelectionManager implements ISelectionProvider {
     }
 
     public void addSelectionChangedListener(ISelectionChangedListener listener) {
-         mSelectionListeners.add(listener);
-     }
+        mSelectionListeners.add(listener);
+    }
 
-     public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-         mSelectionListeners.remove(listener);
-     }
+    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+        mSelectionListeners.remove(listener);
+    }
 
     /**
      * Returns the native {@link SelectionItem} list.
