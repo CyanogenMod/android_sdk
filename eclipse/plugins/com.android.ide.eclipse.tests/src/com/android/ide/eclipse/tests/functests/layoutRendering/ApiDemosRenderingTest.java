@@ -144,6 +144,10 @@ public class ApiDemosRenderingTest extends SdkTestCase {
                 Object adapterCookie, Object viewObject) {
             return null;
         }
+
+        public ILayoutPullParser getParser(ResourceValue layoutResource) {
+            return null;
+        }
     }
 
     public void testApiDemos() throws IOException, XmlPullParserException {
