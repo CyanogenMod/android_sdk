@@ -16,13 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_DATE_PICKER;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TIME_PICKER;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
@@ -41,6 +39,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepos
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.IAndroidTarget;
 import com.android.util.Pair;
@@ -49,13 +48,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.RGB;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -70,16 +66,12 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Factory which can provide preview icons for android views of a particular SDK and
  * editor's configuration chooser
  */
 public class PreviewIconFactory {
-    private static final String TAG_ITEM = "item"; //$NON-NLS-1$
-    private static final String ATTR_COLOR = "color";  //$NON-NLS-1$
     private PaletteControl mPalette;
     private RGB mBackground;
     private RGB mForeground;
@@ -438,9 +430,11 @@ public class PreviewIconFactory {
      */
     private RGB renderDrawableResource(String themeItemName) {
         GraphicalEditorPart editor = mPalette.getEditor();
+        ResourceResolver resources = editor.getResourceResolver();
+        ResourceValue resourceValue = resources.findItemInTheme(themeItemName);
         BufferedImage image = RenderService.create(editor)
             .setSize(100, 100)
-            .renderThemeItem(themeItemName);
+            .renderDrawable(resourceValue);
         if (image != null) {
             // Use the middle pixel as the color since that works better for gradients;
             // solid colors work too.
@@ -453,97 +447,7 @@ public class PreviewIconFactory {
 
     private static RGB resolveThemeColor(ResourceResolver resources, String resourceName) {
         ResourceValue textColor = resources.findItemInTheme(resourceName);
-        textColor = resources.resolveResValue(textColor);
-        if (textColor == null) {
-            return null;
-        }
-        String value = textColor.getValue();
-
-        while (value != null) {
-            if (value.startsWith("#")) { //$NON-NLS-1$
-                try {
-                    int rgba = ImageUtils.getColor(value);
-                    // Drop alpha channel
-                    return ImageUtils.intToRgb(rgba);
-                } catch (NumberFormatException nfe) {
-                    ;
-                }
-                return null;
-            }
-            if (value.startsWith("@")) { //$NON-NLS-1$
-                boolean isFramework = textColor.isFramework();
-                textColor = resources.findResValue(value, isFramework);
-                if (textColor != null) {
-                    value = textColor.getValue();
-                } else {
-                    break;
-                }
-            } else {
-                File file = new File(value);
-                if (file.exists() && file.getName().endsWith(DOT_XML)) {
-                    // Parse
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    BufferedInputStream bis = null;
-                    try {
-                        bis = new BufferedInputStream(new FileInputStream(file));
-                        InputSource is = new InputSource(bis);
-                        factory.setNamespaceAware(true);
-                        factory.setValidating(false);
-                        DocumentBuilder builder = factory.newDocumentBuilder();
-                        Document document = builder.parse(is);
-                        NodeList items = document.getElementsByTagName(TAG_ITEM);
-
-                        value = findColorValue(items);
-                        continue;
-                    } catch (Exception e) {
-                        AdtPlugin.log(e, "Failed parsing color file %1$s", file.getName());
-                    } finally {
-                        if (bis != null) {
-                            try {
-                                bis.close();
-                            } catch (IOException e) {
-                                // Nothing useful can be done here
-                            }
-                        }
-                    }
-                }
-
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     *  Searches a color XML file for the color definition element that does not
-     * have an associated state and returns its color
-     */
-    private static String findColorValue(NodeList items) {
-        for (int i = 0, n = items.getLength(); i < n; i++) {
-            // Find non-state color definition
-            Node item = items.item(i);
-            boolean hasState = false;
-            if (item.getNodeType() == Node.ELEMENT_NODE) {
-                Element element = (Element) item;
-                if (element.hasAttributeNS(ANDROID_URI, ATTR_COLOR)) {
-                    NamedNodeMap attributes = element.getAttributes();
-                    for (int j = 0, m = attributes.getLength(); j < m; j++) {
-                        Attr attribute = (Attr) attributes.item(j);
-                        if (attribute.getLocalName().startsWith("state_")) { //$NON-NLS-1$
-                            hasState = true;
-                            break;
-                        }
-                    }
-
-                    if (!hasState) {
-                        return element.getAttributeNS(ANDROID_URI, ATTR_COLOR);
-                    }
-                }
-            }
-        }
-
-        return null;
+        return ResourceHelper.resolveColor(resources, textColor);
     }
 
     private String getFileName(ElementDescriptor descriptor) {

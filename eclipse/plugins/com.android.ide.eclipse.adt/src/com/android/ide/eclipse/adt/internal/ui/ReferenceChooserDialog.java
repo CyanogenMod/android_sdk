@@ -72,6 +72,7 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
     private Button mNewResButton;
     private final IProject mProject;
     private TreeViewer mTreeViewer;
+    private ResourcePreviewHelper mPreviewHelper;
 
     /**
      * @param project
@@ -90,6 +91,10 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         setMessage(String.format("Choose a resource"));
 
         setDialogBoundsSettings(sDialogSettings, getDialogBoundsStrategy());
+    }
+
+    public void setPreviewHelper(ResourcePreviewHelper previewHelper) {
+        mPreviewHelper = previewHelper;
     }
 
     public void setCurrentResource(String resource) {
@@ -183,6 +188,21 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
     protected void handleSelection() {
         validateCurrentSelection();
         updateNewResButton();
+
+        if (mPreviewHelper != null) {
+            TreePath treeSelection = getSelection();
+            ResourceType type = null;
+            if (treeSelection != null && treeSelection.getSegmentCount() == 2) {
+                Object segment = treeSelection.getSegment(0);
+                if (segment instanceof ResourceType) {
+                    type = (ResourceType) segment;
+                    // Ensure that mCurrentResource is valid
+                    computeResult();
+                }
+            }
+
+            mPreviewHelper.updatePreview(type, mCurrentResource);
+        }
     }
 
     protected void handleDoubleClick() {

@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
@@ -40,6 +41,7 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.MarginChooser;
+import com.android.ide.eclipse.adt.internal.ui.ResourcePreviewHelper;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
 import com.android.resources.ResourceType;
@@ -180,7 +182,8 @@ class ClientRulesEngine implements IClientRulesEngine {
     }
 
     public String displayReferenceInput(String currentValue) {
-        AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
+        GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
+        AndroidXmlEditor editor = graphicalEditor.getLayoutEditor();
         IProject project = editor.getProject();
         if (project != null) {
             // get the resource repository for this project and the system resources.
@@ -194,6 +197,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                     project,
                     projectRepository,
                     shell);
+            dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
 
             dlg.setCurrentResource(currentValue);
 
@@ -211,7 +215,8 @@ class ClientRulesEngine implements IClientRulesEngine {
 
     private String displayResourceInput(String resourceTypeName, String currentValue,
             IInputValidator validator) {
-        AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
+        GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
+        AndroidXmlEditor editor = graphicalEditor.getLayoutEditor();
         IProject project = editor.getProject();
         ResourceType type = ResourceType.getEnum(resourceTypeName);
         if (project != null) {
@@ -229,6 +234,7 @@ class ClientRulesEngine implements IClientRulesEngine {
             // open a resource chooser dialog for specified resource type.
             ResourceChooser dlg = new ResourceChooser(project, type, projectRepository,
                     systemRepository, shell);
+            dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
 
             if (validator != null) {
                 // Ensure wide enough to accommodate validator error message

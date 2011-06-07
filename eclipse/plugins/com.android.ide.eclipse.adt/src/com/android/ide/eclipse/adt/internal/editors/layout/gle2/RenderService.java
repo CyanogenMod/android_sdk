@@ -387,16 +387,19 @@ public class RenderService {
     }
 
     /**
-     * Renders the given resource which should refer to a drawable and returns it
+     * Renders the given resource value (which should refer to a drawable) and returns it
      * as an image
      *
-     * @param itemName the theme item to be looked up and rendered
+     * @param drawableResourceValue the drawable resource value to be rendered, or null
      * @return the image, or null if something went wrong
      */
-    public BufferedImage renderThemeItem(String itemName) {
+    public BufferedImage renderDrawable(ResourceValue drawableResourceValue) {
+        if (drawableResourceValue == null) {
+            return null;
+        }
+
         finishConfiguration();
 
-        ResourceValue drawableResourceValue = mResourceResolver.findItemInTheme(itemName);
         DrawableParams params = new DrawableParams(drawableResourceValue, mProject, mWidth, mHeight,
                 mDensity, mXdpi, mYdpi, mResourceResolver, mProjectCallback, mMinSdkVersion,
                 mTargetSdkVersion, mLogger);
