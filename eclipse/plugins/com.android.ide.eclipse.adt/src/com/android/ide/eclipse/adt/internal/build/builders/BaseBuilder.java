@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.build.builders;
 
 import com.android.ide.common.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;

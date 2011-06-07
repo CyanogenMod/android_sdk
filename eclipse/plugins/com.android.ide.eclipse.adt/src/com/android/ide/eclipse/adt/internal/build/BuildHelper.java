@@ -26,17 +26,17 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkBuilder.JarStatus;
+import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
-import com.android.sdklib.build.ApkBuilder.JarStatus;
-import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.internal.build.DebugKeyProvider;
-import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdklib.internal.build.SignedJarBuilder;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -96,11 +96,20 @@ public class BuildHelper {
     private static final String CONSOLE_PREFIX_DX = "Dx";   //$NON-NLS-1$
     private final static String TEMP_PREFIX = "android_";   //$NON-NLS-1$
 
+    private static final String COMMAND_CRUNCH = "crunch";  //$NON-NLS-1$
+    private static final String COMMAND_PACKAGE = "package"; //$NON-NLS-1$
+
     private final IProject mProject;
     private final AndroidPrintStream mOutStream;
     private final AndroidPrintStream mErrStream;
     private final boolean mVerbose;
     private final boolean mDebugMode;
+
+    public static final boolean BENCHMARK_FLAG = false;
+    public static long sStartOverallTime = 0;
+    public static long sStartJavaCTime = 0;
+
+    private final static int MILLION = 1000000;
 
     /**
      * An object able to put a marker on a resource.
@@ -126,6 +135,37 @@ public class BuildHelper {
         mVerbose = verbose;
     }
 
+
+    public void updateCrunchCache() throws AaptExecException, AaptResultException {
+        // Benchmarking start
+        long startCrunchTime = 0;
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Starting Initial Packaging (.ap_)"; //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
+            startCrunchTime = System.nanoTime();
+        }
+
+        // Get the resources folder to crunch from
+        IFolder resFolder = mProject.getFolder(AdtConstants.WS_RESOURCES);
+        List<String> resPaths = new ArrayList<String>();
+        resPaths.add(resFolder.getLocation().toOSString());
+
+        // Get the output folder where the cache is stored.
+        IFolder cacheFolder = mProject.getFolder(AdtConstants.WS_CRUNCHCACHE);
+        String cachePath = cacheFolder.getLocation().toOSString();
+
+        /* For crunching, we don't need the osManifestPath, osAssetsPath, or the configFilter
+         * parameters for executeAapt
+         */
+        executeAapt(COMMAND_CRUNCH, "", resPaths, "", cachePath, "", 0);
+
+        // Benchmarking end
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Ending Initial Package (.ap_). \nTime Elapsed: " //$NON-NLS-1$
+                            + ((System.nanoTime() - startCrunchTime)/MILLION) + "ms";     //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
+        }
+    }
     /**
      * Packages the resources of the projet into a .ap_ file.
      * @param manifestFile the manifest of the project.
@@ -142,7 +182,19 @@ public class BuildHelper {
     public void packageResources(IFile manifestFile, List<IProject> libProjects, String resFilter,
             int versionCode, String outputFolder, String outputFilename)
             throws AaptExecException, AaptResultException {
+
+        // Benchmarking start
+        long startPackageTime = 0;
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Starting Initial Packaging (.ap_)";    //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
+            startPackageTime = System.nanoTime();
+        }
+
         // need to figure out some path before we can execute aapt;
+
+        // get the cache folder
+        IFolder cacheFolder = mProject.getFolder(AdtConstants.WS_CRUNCHCACHE);
 
         // get the resource folder
         IFolder resFolder = mProject.getFolder(AdtConstants.WS_RESOURCES);
@@ -155,12 +207,14 @@ public class BuildHelper {
             assetsFolder = null;
         }
 
+        IPath cacheLocation = cacheFolder.getLocation();
         IPath resLocation = resFolder.getLocation();
         IPath manifestLocation = manifestFile.getLocation();
 
         if (resLocation != null && manifestLocation != null) {
             // list of res folder (main project + maybe libraries)
             ArrayList<String> osResPaths = new ArrayList<String>();
+            osResPaths.add(cacheLocation.toOSString()); // PNG crunch cache
             osResPaths.add(resLocation.toOSString()); //main project
 
             // libraries?
@@ -181,9 +235,16 @@ public class BuildHelper {
             }
 
             // build the default resource package
-            executeAapt(osManifestPath, osResPaths, osAssetsPath,
+            executeAapt(COMMAND_PACKAGE, osManifestPath, osResPaths, osAssetsPath,
                     outputFolder + File.separator + outputFilename, resFilter,
                     versionCode);
+        }
+
+        // Benchmarking end
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Ending Initial Package (.ap_). \nTime Elapsed: " //$NON-NLS-1$
+                            + ((System.nanoTime() - startPackageTime)/MILLION) + "ms";    //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
         }
     }
 
@@ -682,10 +743,12 @@ public class BuildHelper {
 
     /**
      * Executes aapt. If any error happen, files or the project will be marked.
+     * @param command The command for aapt to execute. Currently supported: package and crunch
      * @param osManifestPath The path to the manifest file
      * @param osResPath The path to the res folder
      * @param osAssetsPath The path to the assets folder. This can be null.
-     * @param osOutFilePath The path to the temporary resource file to create.
+     * @param osOutFilePath The path to the temporary resource file to create,
+     *   or in the case of crunching the path to the cache to create/update.
      * @param configFilter The configuration filter for the resources to include
      * (used with -c option, for example "port,en,fr" to include portrait, English and French
      * resources.)
@@ -694,7 +757,7 @@ public class BuildHelper {
      * @throws AaptExecException
      * @throws AaptResultException
      */
-    private void executeAapt(String osManifestPath,
+    private void executeAapt(String aaptCommand, String osManifestPath,
             List<String> osResPaths, String osAssetsPath, String osOutFilePath,
             String configFilter, int versionCode) throws AaptExecException, AaptResultException {
         IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
@@ -702,50 +765,58 @@ public class BuildHelper {
         // Create the command line.
         ArrayList<String> commandArray = new ArrayList<String>();
         commandArray.add(target.getPath(IAndroidTarget.AAPT));
-        commandArray.add("package"); //$NON-NLS-1$
-        commandArray.add("-f");//$NON-NLS-1$
+        commandArray.add(aaptCommand);
         if (AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE) {
             commandArray.add("-v"); //$NON-NLS-1$
         }
 
-        // if more than one res, this means there's a library (or more) and we need
-        // to activate the auto-add-overlay
-        if (osResPaths.size() > 1) {
-            commandArray.add("--auto-add-overlay"); //$NON-NLS-1$
-        }
-
-        if (mDebugMode) {
-            commandArray.add("--debug-mode"); //$NON-NLS-1$
-        }
-
-        if (versionCode > 0) {
-            commandArray.add("--version-code"); //$NON-NLS-1$
-            commandArray.add(Integer.toString(versionCode));
-        }
-
-        if (configFilter != null) {
-            commandArray.add("-c"); //$NON-NLS-1$
-            commandArray.add(configFilter);
-        }
-
-        commandArray.add("-M"); //$NON-NLS-1$
-        commandArray.add(osManifestPath);
-
+        // Common to all commands
         for (String path : osResPaths) {
             commandArray.add("-S"); //$NON-NLS-1$
             commandArray.add(path);
         }
 
-        if (osAssetsPath != null) {
-            commandArray.add("-A"); //$NON-NLS-1$
-            commandArray.add(osAssetsPath);
+        if (aaptCommand.equals(COMMAND_PACKAGE)) {
+            commandArray.add("-f");          //$NON-NLS-1$
+            commandArray.add("--no-crunch"); //$NON-NLS-1$
+
+            // if more than one res, this means there's a library (or more) and we need
+            // to activate the auto-add-overlay
+            if (osResPaths.size() > 1) {
+                commandArray.add("--auto-add-overlay"); //$NON-NLS-1$
+            }
+
+            if (mDebugMode) {
+                commandArray.add("--debug-mode"); //$NON-NLS-1$
+            }
+
+            if (versionCode > 0) {
+                commandArray.add("--version-code"); //$NON-NLS-1$
+                commandArray.add(Integer.toString(versionCode));
+            }
+
+            if (configFilter != null) {
+                commandArray.add("-c"); //$NON-NLS-1$
+                commandArray.add(configFilter);
+            }
+
+            commandArray.add("-M"); //$NON-NLS-1$
+            commandArray.add(osManifestPath);
+
+            if (osAssetsPath != null) {
+                commandArray.add("-A"); //$NON-NLS-1$
+                commandArray.add(osAssetsPath);
+            }
+
+            commandArray.add("-I"); //$NON-NLS-1$
+            commandArray.add(target.getPath(IAndroidTarget.ANDROID_JAR));
+
+            commandArray.add("-F"); //$NON-NLS-1$
+            commandArray.add(osOutFilePath);
+        } else if (aaptCommand.equals(COMMAND_CRUNCH)) {
+            commandArray.add("-C"); //$NON-NLS-1$
+            commandArray.add(osOutFilePath);
         }
-
-        commandArray.add("-I"); //$NON-NLS-1$
-        commandArray.add(target.getPath(IAndroidTarget.ANDROID_JAR));
-
-        commandArray.add("-F"); //$NON-NLS-1$
-        commandArray.add(osOutFilePath);
 
         String command[] = commandArray.toArray(
                 new String[commandArray.size()]);
@@ -757,6 +828,15 @@ public class BuildHelper {
                 sb.append(' ');
             }
             AdtPlugin.printToConsole(mProject, sb.toString());
+        }
+
+        // Benchmarking start
+        long startAaptTime = 0;
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Starting " + aaptCommand  //$NON-NLS-1$
+                         + " call to Aapt";                        //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
+            startAaptTime = System.nanoTime();
         }
 
         // launch
@@ -786,6 +866,14 @@ public class BuildHelper {
         } catch (InterruptedException e) {
             String msg = String.format(Messages.AAPT_Exec_Error, command[0]);
             throw new AaptExecException(msg, e);
+        }
+
+        // Benchmarking end
+        if (BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Ending " + aaptCommand                  //$NON-NLS-1$
+                         + " call to Aapt.\nBENCHMARK ADT: Time Elapsed: "       //$NON-NLS-1$
+                         + ((System.nanoTime() - startAaptTime)/MILLION) + "ms"; //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
         }
     }
 
@@ -1090,8 +1178,15 @@ public class BuildHelper {
                     while (true) {
                         String line = outReader.readLine();
                         if (line != null) {
-                            AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
-                                    project, line);
+                            // If benchmarking always print the lines that
+                            // correspond to benchmarking info returned by ADT
+                            if (BENCHMARK_FLAG && line.startsWith("BENCHMARK:")) {    //$NON-NLS-1$
+                                AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS,
+                                        project, line);
+                            } else {
+                                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE,
+                                        project, line);
+                            }
                         } else {
                             break;
                         }

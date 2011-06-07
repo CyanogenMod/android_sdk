@@ -76,6 +76,7 @@ public final class AaptExecLoopTask extends BaseTask {
     private boolean mForce = true; // true due to legacy reasons
     private boolean mDebug = false;
     private boolean mVerbose = false;
+    private boolean mUseCrunchCache = false;
     private int mVersionCode = 0;
     private String mManifest;
     private ArrayList<Path> mResources;
@@ -117,6 +118,14 @@ public final class AaptExecLoopTask extends BaseTask {
      */
     public void setVerbose(boolean verbose) {
         mVerbose = verbose;
+    }
+
+    /**
+     * Sets the value of the "usecrunchcache" attribute
+     * @param usecrunch whether to use the crunch cache.
+     */
+    public void setNoCrunch(boolean nocrunch) {
+        mUseCrunchCache = nocrunch;
     }
 
     public void setVersioncode(String versionCode) {
@@ -345,6 +354,11 @@ public final class AaptExecLoopTask extends BaseTask {
 
         // aapt command. Only "package" is supported at this time really.
         task.createArg().setValue(mCommand);
+
+        // No crunch flag
+        if (mUseCrunchCache) {
+            task.createArg().setValue("--no-crunch");
+        }
 
         // force flag
         if (mForce) {

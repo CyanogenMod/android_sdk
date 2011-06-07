@@ -124,6 +124,9 @@ public final class ExportHelper {
             File resourceFile = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_RES);
             resourceFile.deleteOnExit();
 
+            // Make sure the PNG crunch cache is up to date
+            helper.updateCrunchCache();
+
             // package the resources.
             helper.packageResources(
                     project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML),
