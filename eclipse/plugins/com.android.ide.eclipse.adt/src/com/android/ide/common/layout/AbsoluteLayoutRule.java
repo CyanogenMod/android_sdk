@@ -20,7 +20,6 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
@@ -239,9 +238,6 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
         return String.format("Set bounds to (x = %d, y = %d, width = %s, height = %s)",
                 mRulesEngine.pxToDp(newBounds.x - parentBounds.x),
                 mRulesEngine.pxToDp(newBounds.y - parentBounds.y),
-                resizeState.wrapWidth ?
-                        VALUE_WRAP_CONTENT : Integer.toString(mRulesEngine.pxToDp(newBounds.w)),
-                resizeState.wrapHeight ?
-                        VALUE_WRAP_CONTENT : Integer.toString(mRulesEngine.pxToDp(newBounds.h)));
+                resizeState.getWidthAttribute(), resizeState.getHeightAttribute());
     }
 }

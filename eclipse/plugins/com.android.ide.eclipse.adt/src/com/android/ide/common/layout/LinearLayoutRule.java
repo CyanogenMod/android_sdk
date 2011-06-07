@@ -25,9 +25,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_WEIGHT_SUM;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.DrawingStyle;
@@ -685,60 +683,128 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
     }
 
-    @Override
-    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge) {
-        return super.onResizeBegin(child, parent, horizontalEdge, verticalEdge);
+    /** Custom resize state used during linear layout resizing */
+    private class LinearResizeState extends ResizeState {
+        /** Whether the node should be assigned a new weight */
+        public boolean useWeight;
+        /** Weight sum to be applied to the parent */
+        private float mNewWeightSum;
+        /** The weight to be set on the node (provided {@link #useWeight} is true) */
+        private float mWeight;
+        /** Map from nodes to preferred bounds of nodes where the weights have been cleared */
+        public final Map<INode, Rect> unweightedSizes;
+        /** Total required size required by the siblings <b>without</b> weights */
+        public int totalLength;
+        /** List of nodes which should have their weights cleared */
+        public List<INode> mClearWeights;
+
+        private LinearResizeState(BaseLayoutRule rule, INode layout, INode node) {
+            super(rule, layout, node);
+
+            unweightedSizes = mRulesEngine.measureChildren(layout,
+                    new IClientRulesEngine.AttributeFilter() {
+                        public String getAttribute(INode n, String namespace, String localName) {
+                            // Clear out layout weights; we need to measure the unweighted sizes
+                            // of the children
+                            if (ATTR_LAYOUT_WEIGHT.equals(localName)
+                                    && SdkConstants.NS_RESOURCES.equals(namespace)) {
+                                return ""; //$NON-NLS-1$
+                            }
+
+                            return null;
+                        }
+                    });
+
+            // Compute total required size required by the siblings *without* weights
+            totalLength = 0;
+            final boolean isVertical = isVertical(layout);
+            for (Map.Entry<INode, Rect> entry : unweightedSizes.entrySet()) {
+                Rect preferredSize = entry.getValue();
+                if (isVertical) {
+                    totalLength += preferredSize.h;
+                } else {
+                    totalLength += preferredSize.w;
+                }
+            }
+        }
+
+        /** Resets the computed state */
+        void reset() {
+            mNewWeightSum = -1;
+            useWeight = false;
+            mClearWeights = null;
+        }
+
+        /** Sets a weight to be applied to the node */
+        void setWeight(float weight) {
+            useWeight = true;
+            mWeight = weight;
+        }
+
+        /** Sets a weight sum to be applied to the parent layout */
+        void setWeightSum(float weightSum) {
+            mNewWeightSum = weightSum;
+        }
+
+        /** Marks that the given node should be cleared when applying the new size */
+        void clearWeight(INode n) {
+            if (mClearWeights == null) {
+                mClearWeights = new ArrayList<INode>();
+            }
+            mClearWeights.add(n);
+        }
+
+        /** Applies the state to the nodes */
+        public void apply() {
+            assert useWeight;
+
+            String value = mWeight > 0 ? formatFloatAttribute(mWeight) : null;
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
+
+            if (mClearWeights != null) {
+                for (INode n : mClearWeights) {
+                    if (getWeight(n) > 0.0f) {
+                        n.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
+                    }
+                }
+            }
+
+            if (mNewWeightSum > 0.0) {
+                layout.setAttribute(ANDROID_URI, ATTR_WEIGHT_SUM,
+                        formatFloatAttribute(mNewWeightSum));
+            }
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Overridden in this layout in order to make resizing affect the layout_weight
-     * attribute instead of the layout_width (for horizontal LinearLayouts) or
-     * layout_height (for vertical LinearLayouts).
-     */
     @Override
-    protected void setNewSizeBounds(ResizeState resizeState, INode node, INode layout,
-            Rect previousBounds, Rect newBounds, SegmentType horizontalEdge,
+    protected ResizeState createResizeState(INode layout, INode node) {
+        return new LinearResizeState(this, layout, node);
+    }
+
+    protected void updateResizeState(LinearResizeState resizeState, final INode node, INode layout,
+            Rect oldBounds, Rect newBounds, SegmentType horizontalEdge,
             SegmentType verticalEdge) {
-        final Rect oldBounds = node.getBounds();
+        // Update the resize state.
+        // This method attempts to compute a new layout weight to be used in the direction
+        // of the linear layout. If the superclass has already determined that we can snap to
+        // a wrap_content or match_parent boundary, we prefer that. Otherwise, we attempt to
+        // compute a layout weight - which can fail if the size is too big (not enough room),
+        // or if the size is too small (smaller than the natural width of the node), and so on.
+        // In that case this method just aborts, which will leave the resize state object
+        // in such a state that it will call the superclass to resize instead, which will fall
+        // back to device independent pixel sizing.
+        resizeState.reset();
+
         if (oldBounds.equals(newBounds)) {
             return;
         }
-        // Handle resizing in the opposite dimension of the layout
-        boolean isVertical = isVertical(layout);
-        if (!isVertical && horizontalEdge != null) {
-            if (newBounds.h != oldBounds.h || resizeState.wrapHeight) {
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
-                        resizeState.wrapHeight ? VALUE_WRAP_CONTENT :
-                            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.h)));
-            }
-            if (verticalEdge == null) {
-                return;
-            }
-            // else: fall through to compute a dynamic weight
-        }
-        if (isVertical && verticalEdge != null) {
-            if (newBounds.w != oldBounds.w || resizeState.wrapWidth) {
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
-                        resizeState.wrapWidth ? VALUE_WRAP_CONTENT :
-                            String.format(VALUE_N_DP, mRulesEngine.pxToDp(newBounds.w)));
-            }
-            if (horizontalEdge == null) {
-                return;
-            }
-        }
 
-        // If we're setting the width/height to wrap_content in the dimension of the
+        // If we're setting the width/height to wrap_content/match_parent in the dimension of the
         // linear layout, then just apply wrap_content and clear weights.
+        boolean isVertical = isVertical(layout);
         if (!isVertical && verticalEdge != null) {
-            if (resizeState.wrapWidth) {
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
-                // Clear weight
-                if (getWeight(node) > 0.0f) {
-                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
-                }
+            if (resizeState.wrapWidth || resizeState.fillWidth) {
+                resizeState.clearWeight(node);
                 return;
             }
             if (newBounds.w == oldBounds.w) {
@@ -747,12 +813,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
 
         if (isVertical && horizontalEdge != null) {
-            if (resizeState.wrapHeight) {
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
-                // Clear weight
-                if (getWeight(node) > 0.0f) {
-                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
-                }
+            if (resizeState.wrapHeight || resizeState.fillHeight) {
+                resizeState.clearWeight(node);
                 return;
             }
             if (newBounds.h == oldBounds.h) {
@@ -760,44 +822,30 @@ public class LinearLayoutRule extends BaseLayoutRule {
             }
         }
 
+        // Compute weight sum
         float sum = getWeightSum(layout);
         if (sum <= 0.0f) {
             sum = 1.0f;
-            layout.setAttribute(ANDROID_URI, ATTR_WEIGHT_SUM, formatFloatAttribute(sum));
+            resizeState.setWeightSum(sum);
         }
 
-        Map<INode, Rect> sizes = mRulesEngine.measureChildren(layout,
-                new IClientRulesEngine.AttributeFilter() {
-                    public String getAttribute(INode n, String namespace, String localName) {
-                        // Clear out layout weights; we need to measure the unweighted sizes
-                        // of the children
-                        if (ATTR_LAYOUT_WEIGHT.equals(localName)
-                                && SdkConstants.NS_RESOURCES.equals(namespace)) {
-                            return ""; //$NON-NLS-1$
-                        }
-
-                        return null;
-                    }
-                });
-        int totalLength = 0;
-        for (Map.Entry<INode, Rect> entry : sizes.entrySet()) {
-            Rect preferredSize = entry.getValue();
-            if (isVertical) {
-                totalLength += preferredSize.h;
-            } else {
-                totalLength += preferredSize.w;
+        // If the new size of the node is smaller than its preferred/wrap_content size,
+        // then we cannot use weights to size it; switch to pixel-based sizing instead
+        Map<INode, Rect> sizes = resizeState.unweightedSizes;
+        Rect nodePreferredSize = sizes.get(node);
+        if (nodePreferredSize != null) {
+            if (horizontalEdge != null && newBounds.h < nodePreferredSize.h ||
+                    verticalEdge != null && newBounds.w < nodePreferredSize.w) {
+                return;
             }
         }
 
         Rect layoutBounds = layout.getBounds();
-        int remaining = (isVertical ? layoutBounds.h : layoutBounds.w) - totalLength;
+        int remaining = (isVertical ? layoutBounds.h : layoutBounds.w) - resizeState.totalLength;
         Rect nodeBounds = sizes.get(node);
         if (nodeBounds == null) {
-            super.setNewSizeBounds(resizeState, node, layout, oldBounds, newBounds, horizontalEdge,
-                    verticalEdge);
             return;
         }
-        assert nodeBounds != null;
 
         if (remaining > 0) {
             int missing = 0;
@@ -812,7 +860,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
                     // smaller size.
                     missing = newBounds.h - resizeState.wrapBounds.h;
                     remaining += nodeBounds.h - resizeState.wrapBounds.h;
-                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
+                    resizeState.wrapHeight = true;
                 }
             } else {
                 if (newBounds.w > nodeBounds.w) {
@@ -820,61 +868,85 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 } else if (newBounds.w > resizeState.wrapBounds.w) {
                     missing = newBounds.w - resizeState.wrapBounds.w;
                     remaining += nodeBounds.w - resizeState.wrapBounds.w;
-                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
+                    resizeState.wrapWidth = true;
                 }
             }
             if (missing > 0) {
                 // (weight / weightSum) * remaining = missing, so
                 // weight = missing * weightSum / remaining
                 float weight = missing * sum / remaining;
-                String value = weight > 0 ? formatFloatAttribute(weight) : null;
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
+                resizeState.setWeight(weight);
             }
-        } else {
-            // TODO: This algorithm should be refined.
-            // One possible solution is to clear the weights and sizes of all children
-            // to the left or right of the resized node (depending on whether the right
-            // or left edge was resized - the key point being that the other edge should
-            // not move).
+        }
+    }
 
-            // There is no leftover space after adding up the wrap-content sizes of the
-            // children. In that case, just make the weight of this child the same proportion
-            // of the sum-of-weights as its new size is out of the parent size.
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Overridden in this layout in order to make resizing affect the layout_weight
+     * attribute instead of the layout_width (for horizontal LinearLayouts) or
+     * layout_height (for vertical LinearLayouts).
+     */
+    @Override
+    protected void setNewSizeBounds(ResizeState state, final INode node, INode layout,
+            Rect oldBounds, Rect newBounds, SegmentType horizontalEdge,
+            SegmentType verticalEdge) {
+        LinearResizeState resizeState = (LinearResizeState) state;
+        updateResizeState(resizeState, node, layout, oldBounds, newBounds,
+                horizontalEdge, verticalEdge);
 
-            // Use actual sum of weights, not the declared sum on the parent layout,
-            // to get the proportions right
-            float otherSum = 0.0f;
-            for (INode child : layout.getChildren()) {
-                if (child != node) {
-                    otherSum += getWeight(child);
+        if (resizeState.useWeight) {
+            resizeState.apply();
+
+            // Handle resizing in the opposite dimension of the layout
+            final boolean isVertical = isVertical(layout);
+            if (!isVertical && horizontalEdge != null) {
+                if (newBounds.h != oldBounds.h || resizeState.wrapHeight
+                        || resizeState.fillHeight) {
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT,
+                            resizeState.getHeightAttribute());
                 }
             }
-
-            float newSize = isVertical ? newBounds.h : newBounds.w;
-            float totalSize = isVertical ? layoutBounds.h : layoutBounds.w;
-            float weight;
-            if (newSize >= totalSize) {
-                // The new view was resized to something larger than the layout itself;
-                // that obviously can't be achieved with layout weights, so just pick
-                // something large to give it a lot of space but not all.
-                weight = 10 * otherSum;
-            } else {
-                weight = newSize * otherSum / (totalSize - newSize);
+            if (isVertical && verticalEdge != null) {
+                if (newBounds.w != oldBounds.w || resizeState.wrapWidth || resizeState.fillWidth) {
+                    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH,
+                            resizeState.getWidthAttribute());
+                }
             }
-            String value = weight > 0 ? formatFloatAttribute(weight) : null;
-            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
-            String fill = getFillParentValueName();
-            node.setAttribute(ANDROID_URI, isVertical ? ATTR_LAYOUT_WEIGHT : ATTR_LAYOUT_WIDTH,
-                    fill);
+        } else {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, null);
+            super.setNewSizeBounds(resizeState, node, layout, oldBounds, newBounds,
+                    horizontalEdge, verticalEdge);
         }
     }
 
     @Override
-    protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
+    protected String getResizeUpdateMessage(ResizeState state, INode child, INode parent,
             Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
-        return super.getResizeUpdateMessage(resizeState, child, parent, newBounds,
+        LinearResizeState resizeState = (LinearResizeState) state;
+        updateResizeState(resizeState, child, parent, child.getBounds(), newBounds,
                 horizontalEdge, verticalEdge);
-        // TODO: Change message to display the current layout weight instead
+
+        if (resizeState.useWeight) {
+            String weight = formatFloatAttribute(resizeState.mWeight);
+            String dimension = String.format("layout weight %1$s", weight);
+
+            String width;
+            String height;
+            if (isVertical(parent)) {
+                width = resizeState.getWidthAttribute();
+                height = dimension;
+            } else {
+                width = dimension;
+                height = resizeState.getHeightAttribute();
+            }
+
+            // U+00D7: Unicode for multiplication sign
+            return String.format("Resize to %s \u00D7 %s", width, height);
+        } else {
+            return super.getResizeUpdateMessage(state, child, parent, newBounds,
+                    horizontalEdge, verticalEdge);
+        }
     }
 
     /**
