@@ -310,26 +310,27 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
-    public ResourceValue resolveResValue(ResourceValue value) {
-        if (value == null) {
+    public ResourceValue resolveResValue(ResourceValue resValue) {
+        if (resValue == null) {
             return null;
         }
 
-        // if the resource value is a style, we simply return it.
-        if (value instanceof StyleResourceValue) {
-            return value;
+        // if the resource value is null, we simply return it.
+        String value = resValue.getValue();
+        if (value == null) {
+            return resValue;
         }
 
         // else attempt to find another ResourceValue referenced by this one.
-        ResourceValue resolvedValue = findResValue(value.getValue(), value.isFramework());
+        ResourceValue resolvedResValue = findResValue(value, resValue.isFramework());
 
         // if the value did not reference anything, then we simply return the input value
-        if (resolvedValue == null) {
-            return value;
+        if (resolvedResValue == null) {
+            return resValue;
         }
 
         // otherwise, we attempt to resolve this new value as well
-        return resolveResValue(resolvedValue);
+        return resolveResValue(resolvedResValue);
     }
 
     // ---- Private helper methods.

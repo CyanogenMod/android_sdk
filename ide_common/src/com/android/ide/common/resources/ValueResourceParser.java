@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources;
 
+import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.resources.ResourceType;
@@ -35,6 +36,7 @@ public final class ValueResourceParser extends DefaultHandler {
     private final static String ATTR_NAME = "name";
     private final static String ATTR_TYPE = "type";
     private final static String ATTR_PARENT = "parent";
+    private final static String ATTR_VALUE = "value";
 
     private final static String DEFAULT_NS_PREFIX = "android:";
     private final static int DEFAULT_NS_PREFIX_LEN = DEFAULT_NS_PREFIX.length();
@@ -45,8 +47,10 @@ public final class ValueResourceParser extends DefaultHandler {
 
     private boolean inResources = false;
     private int mDepth = 0;
-    private StyleResourceValue mCurrentStyle = null;
     private ResourceValue mCurrentValue = null;
+    private StyleResourceValue mCurrentStyle = null;
+    private DeclareStyleableResourceValue mCurrentDeclareStyleable = null;
+    private String mCurrentAttribute = null;
     private IValueResourceRepository mRepository;
     private final boolean mIsFramework;
 
@@ -66,8 +70,10 @@ public final class ValueResourceParser extends DefaultHandler {
         } else if (mDepth == 2) {
             mCurrentValue = null;
             mCurrentStyle = null;
+            mCurrentDeclareStyleable = null;
         } else if (mDepth == 3) {
             mCurrentValue = null;
+            mCurrentAttribute = null;
         }
 
         mDepth--;
@@ -101,29 +107,53 @@ public final class ValueResourceParser extends DefaultHandler {
                         // get the resource name
                         String name = attributes.getValue(ATTR_NAME);
                         if (name != null) {
-                            if (type == ResourceType.STYLE) {
-                                String parent = attributes.getValue(ATTR_PARENT);
-                                mCurrentStyle = new StyleResourceValue(type, name, parent,
-                                        mIsFramework);
-                                mRepository.addResourceValue(type, mCurrentStyle);
-                            } else {
-                                mCurrentValue = new ResourceValue(type, name, mIsFramework);
-                                mRepository.addResourceValue(type, mCurrentValue);
+                            switch (type) {
+                                case STYLE:
+                                    String parent = attributes.getValue(ATTR_PARENT);
+                                    mCurrentStyle = new StyleResourceValue(type, name, parent,
+                                            mIsFramework);
+                                    mRepository.addResourceValue(type, mCurrentStyle);
+                                    break;
+                                case DECLARE_STYLEABLE:
+                                    mCurrentDeclareStyleable = new DeclareStyleableResourceValue(
+                                            type, name, mIsFramework);
+                                    mRepository.addResourceValue(type, mCurrentDeclareStyleable);
+                                    break;
+                                default:
+                                    mCurrentValue = new ResourceValue(type, name, mIsFramework);
+                                    mRepository.addResourceValue(type, mCurrentValue);
+                                    break;
                             }
                         }
                     }
                 }
-            } else if (mDepth == 3 && mCurrentStyle != null) {
+            } else if (mDepth == 3) {
                 // get the resource name
                 String name = attributes.getValue(ATTR_NAME);
                 if (name != null) {
-                    // the name can, in some cases, contain a prefix! we remove it.
-                    if (name.startsWith(DEFAULT_NS_PREFIX)) {
-                        name = name.substring(DEFAULT_NS_PREFIX_LEN);
-                    }
 
-                    mCurrentValue = new ResourceValue(null, name, mIsFramework);
-                    mCurrentStyle.addValue(mCurrentValue);
+                    if (mCurrentStyle != null) {
+                        // the name can, in some cases, contain a prefix! we remove it.
+                        if (name.startsWith(DEFAULT_NS_PREFIX)) {
+                            name = name.substring(DEFAULT_NS_PREFIX_LEN);
+                        }
+
+                        mCurrentValue = new ResourceValue(null, name, mIsFramework);
+                        mCurrentStyle.addValue(mCurrentValue);
+                    } else if (mCurrentDeclareStyleable != null) {
+                        mCurrentAttribute = name;
+                    }
+                }
+            } else if (mDepth == 4 && mCurrentDeclareStyleable != null) {
+                // get the enum/flag name
+                String name = attributes.getValue(ATTR_NAME);
+                String value = attributes.getValue(ATTR_VALUE);
+
+                try {
+                    mCurrentDeclareStyleable.addValue(mCurrentAttribute,
+                            name, Integer.decode(value));
+                } catch (NumberFormatException e) {
+                    // pass, we'll just ignore this value
                 }
             }
         } finally {
