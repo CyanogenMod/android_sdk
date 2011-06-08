@@ -93,7 +93,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             "^ *[a-zA-Z_:]+ *= *(?:\"[^<\"]*\"|'[^<']*')");  //$NON-NLS-1$
 
     /** Regexp to detect an element tag name */
-    private static Pattern sFirstElementWord = Pattern.compile("^[a-zA-Z0-9_:-]+"); //$NON-NLS-1$
+    private static Pattern sFirstElementWord = Pattern.compile("^[a-zA-Z0-9_:.-]+"); //$NON-NLS-1$
 
     /** Regexp to detect whitespace */
     private static Pattern sWhitespace = Pattern.compile("\\s+"); //$NON-NLS-1$
@@ -349,11 +349,11 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * @return an ElementDescriptor[] or null if no valid element was found.
      */
-    private Object[] getChoicesForElement(String parent, Node current_node) {
+    protected Object[] getChoicesForElement(String parent, Node currentNode) {
         ElementDescriptor grandparent = null;
-        if (current_node.getParentNode().getNodeType() == Node.ELEMENT_NODE) {
-            grandparent = getDescriptor(current_node.getParentNode().getNodeName());
-        } else if (current_node.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
+        if (currentNode.getParentNode().getNodeType() == Node.ELEMENT_NODE) {
+            grandparent = getDescriptor(currentNode.getParentNode().getNodeName());
+        } else if (currentNode.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
             grandparent = getRootDescriptor();
         }
         if (grandparent != null) {
@@ -368,7 +368,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     }
 
     /** Non-destructively sort a list of ElementDescriptors and return the result */
-    private static ElementDescriptor[] sort(ElementDescriptor[] elements) {
+    protected static ElementDescriptor[] sort(ElementDescriptor[] elements) {
         if (elements != null && elements.length > 1) {
             // Sort alphabetically. Must make copy to not destroy original.
             ElementDescriptor[] copy = new ElementDescriptor[elements.length];
@@ -473,8 +473,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             if (currentUiNode != null) {
                 choices = currentUiNode.getAttributeDescriptors();
             } else {
-                ElementDescriptor parent_desc = getDescriptor(parent);
-                choices = parent_desc.getAttributes();
+                ElementDescriptor parentDesc = getDescriptor(parent);
+                choices = parentDesc.getAttributes();
             }
         }
         return choices;
@@ -576,6 +576,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             // content assist to elements valid for the parent.
             parent = parentNode.getNodeName();
             ElementDescriptor desc = getDescriptor(parent);
+            if (desc == null && parent.indexOf('.') != -1) {
+                // The parent is a custom view and we don't have metadata about its
+                // allowable children, so just assume any normal layout tag is
+                // legal
+                desc = mRootDescriptor;
+            }
+
             if (desc != null) {
                 choices = sort(desc.getChildren());
             }
@@ -1171,7 +1178,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
     /**
      * Computes (if needed) and returns the root descriptor.
      */
-    private ElementDescriptor getRootDescriptor() {
+    protected ElementDescriptor getRootDescriptor() {
         if (mRootDescriptor == null) {
             AndroidTargetData data = mEditor.getTargetData();
             if (data != null) {
