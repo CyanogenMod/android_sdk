@@ -352,24 +352,6 @@ public final class DescriptorsUtils {
     }
 
     /**
-     * Capitalizes the string, i.e. transforms the initial [a-z] into [A-Z].
-     * Returns the string unmodified if the first character is not [a-z].
-     *
-     * @param str The string to capitalize.
-     * @return The capitalized string
-     */
-    public static String capitalize(String str) {
-        if (str == null || str.length() < 1 || Character.isUpperCase(str.charAt(0))) {
-            return str;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(Character.toUpperCase(str.charAt(0)));
-        sb.append(str.substring(1));
-        return sb.toString();
-    }
-
-    /**
      * Formats the javadoc tooltip to be usable in a tooltip.
      */
     public static String formatTooltip(String javadoc) {

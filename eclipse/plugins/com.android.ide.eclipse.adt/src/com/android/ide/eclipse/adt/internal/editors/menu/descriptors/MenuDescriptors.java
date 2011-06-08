@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.menu.descriptors;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME;
 
 import com.android.ide.common.resources.platform.DeclareStyleableInfo;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
@@ -185,7 +186,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
      * - a "Menu" prefix, except for <menu> itself which is just "Menu".
      */
     private String getStyleName(String xmlName) {
-        String styleName = DescriptorsUtils.capitalize(xmlName);
+        String styleName = AdtUtils.capitalize(xmlName);
 
         // This is NOT the UI Name but the expected internal style name
         final String MENU_STYLE_BASE_NAME = "Menu"; //$NON-NLS-1$

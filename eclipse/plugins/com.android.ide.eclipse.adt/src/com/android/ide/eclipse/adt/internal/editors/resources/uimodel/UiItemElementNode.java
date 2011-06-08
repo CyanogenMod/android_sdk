@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources.uimodel;
 
-import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ItemElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -48,7 +48,7 @@ public class UiItemElementNode extends UiElementNode {
             String type = elem.getAttribute(ResourcesDescriptors.TYPE_ATTR);
             String name = elem.getAttribute(ResourcesDescriptors.NAME_ATTR);
             if (type != null && name != null && type.length() > 0 && name.length() > 0) {
-                type = DescriptorsUtils.capitalize(type);
+                type = AdtUtils.capitalize(type);
                 return String.format("%1$s (%2$s %3$s)", name, type, getDescriptor().getUiName());
             }
         }

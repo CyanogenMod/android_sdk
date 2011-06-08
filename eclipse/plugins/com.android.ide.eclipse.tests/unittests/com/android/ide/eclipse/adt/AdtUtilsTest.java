@@ -29,4 +29,20 @@ public class AdtUtilsTest extends TestCase {
         assertFalse(AdtUtils.endsWithIgnoreCase("foob", "foo"));
         assertFalse(AdtUtils.endsWithIgnoreCase("foo", "fo"));
     }
+
+    public void testStripWhitespace() {
+        assertEquals("foo", AdtUtils.stripWhitespace("foo"));
+        assertEquals("foobar", AdtUtils.stripWhitespace("foo bar"));
+        assertEquals("foobar", AdtUtils.stripWhitespace("  foo bar  \n\t"));
+    }
+
+    public void testCapitalize() {
+        assertEquals("UPPER", AdtUtils.capitalize("UPPER"));
+        assertEquals("Lower", AdtUtils.capitalize("lower"));
+        assertEquals("Capital", AdtUtils.capitalize("Capital"));
+        assertEquals("CamelCase", AdtUtils.capitalize("camelCase"));
+        assertEquals("", AdtUtils.capitalize(""));
+        assertSame("Foo", AdtUtils.capitalize("Foo"));
+        assertNull(null, AdtUtils.capitalize(null));
+    }
 }
