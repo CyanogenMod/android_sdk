@@ -37,6 +37,7 @@ changeset
 checkbox
 classloader
 classpath
+clickable
 clipboard
 clipboards
 clueless
