@@ -39,6 +39,8 @@ import org.eclipse.ui.views.properties.IPropertyDescriptor;
  * This is the "default" kind of attribute. If in doubt, use this.
  */
 public class TextAttributeDescriptor extends AttributeDescriptor implements IPropertyDescriptor {
+    public static final String DEPRECATED_CATEGORY = "Deprecated";
+
     private String mUiName;
     private String mTooltip;
 
@@ -102,7 +104,7 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
 
     public String getCategory() {
         if (isDeprecated()) {
-            return "Deprecated";
+            return DEPRECATED_CATEGORY;
         }
 
         ElementDescriptor parent = getParent();
