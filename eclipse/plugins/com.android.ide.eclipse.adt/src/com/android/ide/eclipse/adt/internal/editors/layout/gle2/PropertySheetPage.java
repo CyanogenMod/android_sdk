@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor.DEPRECATED_CATEGORY;
+
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
@@ -36,6 +38,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.views.properties.IPropertySheetEntry;
 import org.eclipse.ui.views.properties.PropertySheetEntry;
+import org.eclipse.ui.views.properties.PropertySheetSorter;
 
 /**
  * A customized property sheet page for the graphical layout editor v2.
@@ -52,9 +55,30 @@ import org.eclipse.ui.views.properties.PropertySheetEntry;
  * @since GLE2
  */
 public class PropertySheetPage extends org.eclipse.ui.views.properties.PropertySheetPage {
+    private static final String MISC_CATEGORY = "Misc";
 
     public PropertySheetPage() {
         super();
+
+        setSorter(new PropertySheetSorter() {
+            @Override
+            public int compareCategories(String categoryA, String categoryB) {
+                // Sort the "Deprecated" category to the bottom, and the "Misc"
+                // category second to last.
+                if (categoryA.equals(DEPRECATED_CATEGORY)) {
+                    return 1;
+                } else if (categoryB.equals(DEPRECATED_CATEGORY)) {
+                    return -1;
+                }
+                if (categoryA.equals(MISC_CATEGORY)) {
+                    return 1;
+                } else if (categoryB.equals(MISC_CATEGORY)) {
+                    return -1;
+                }
+
+                return super.compareCategories(categoryA, categoryB);
+            }
+        });
     }
 
     @Override
