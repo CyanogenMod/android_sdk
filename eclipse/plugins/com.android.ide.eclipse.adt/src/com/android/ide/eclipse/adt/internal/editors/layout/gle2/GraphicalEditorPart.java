@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFI
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
 
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
@@ -36,16 +37,17 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor;
+import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ChangeFlags;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
-import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
@@ -90,6 +92,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.preferences.BuildPathsPropertyPage;
 import org.eclipse.jdt.ui.actions.OpenNewClassWizardAction;
 import org.eclipse.jdt.ui.wizards.NewClassWizardPage;
 import org.eclipse.jface.viewers.ISelection;
@@ -110,8 +113,13 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.INullSelectionListener;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.EditorPart;
 import org.eclipse.ui.part.FileEditorInput;
@@ -1552,12 +1560,25 @@ public class GraphicalEditorPart extends EditorPart
         } else {
             addText(mErrorLabel, "\n"); //$NON-NLS-1$
         }
+
         if (missingClasses.size() > 0) {
             addText(mErrorLabel, "The following classes could not be found:\n");
             for (String clazz : missingClasses) {
                 addText(mErrorLabel, "- ");
-                addClassLink(mErrorLabel, clazz);
-                addText(mErrorLabel, "\n");
+                addText(mErrorLabel, clazz);
+                addText(mErrorLabel, " (");
+                addActionLink(mErrorLabel, clazz,
+                        ActionLinkStyleRange.LINK_FIX_BUILD_PATH, "Fix Build Path");
+                addText(mErrorLabel, ", ");
+                addActionLink(mErrorLabel, clazz,
+                        ActionLinkStyleRange.LINK_EDIT_XML, "Edit XML");
+                if (clazz.indexOf('.') != -1) {
+                    // Add "Create Class" link, but only for custom views
+                    addText(mErrorLabel, ", ");
+                    addActionLink(mErrorLabel, clazz,
+                            ActionLinkStyleRange.LINK_CREATE_CLASS, "Create Class");
+                }
+                addText(mErrorLabel, ")\n");
             }
         }
         if (brokenClasses.size() > 0) {
@@ -1568,8 +1589,13 @@ public class GraphicalEditorPart extends EditorPart
 
             for (String clazz : brokenClasses) {
                 addText(mErrorLabel, "- ");
-                addClassLink(mErrorLabel, clazz);
-                addText(mErrorLabel, "\n");
+                addText(mErrorLabel, " (");
+                addActionLink(mErrorLabel, clazz,
+                        ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class");
+                addText(mErrorLabel, ", ");
+                addActionLink(mErrorLabel, clazz,
+                        ActionLinkStyleRange.LINK_SHOW_LOG, "Show Error Log");
+                addText(mErrorLabel, ")\n");
 
                 if (!(clazz.startsWith("android.") || //$NON-NLS-1$
                         clazz.startsWith("com.google."))) { //$NON-NLS-1$
@@ -1669,7 +1695,7 @@ public class GraphicalEditorPart extends EditorPart
         int start = (s == null ? 0 : s.length());
 
         styledText.append(text);
-        StyleRange sr = new ClassLinkStyleRange();
+        StyleRange sr = new StyleRange();
         sr.start = start;
         sr.length = text.length();
         sr.fontStyle = SWT.BOLD;
@@ -1679,17 +1705,17 @@ public class GraphicalEditorPart extends EditorPart
     /**
      * Add a URL-looking link to the styled text widget.
      * <p/>
-     * A mouse-click listener is setup and it interprets the link as being a missing class name.
-     * The logic *must* be changed if this is used later for a different purpose.
+     * A mouse-click listener is setup and it interprets the link based on the
+     * action, corresponding to the value fields in {@link ActionLinkStyleRange}.
      */
-    private void addClassLink(StyledText styledText, String link) {
+    private void addActionLink(StyledText styledText, String fqcn, int action, String label) {
         String s = styledText.getText();
         int start = (s == null ? 0 : s.length());
-        styledText.append(link);
+        styledText.append(label);
 
-        StyleRange sr = new ClassLinkStyleRange();
+        StyleRange sr = new ActionLinkStyleRange(action, fqcn);
         sr.start = start;
-        sr.length = link.length();
+        sr.length = label.length();
         sr.fontStyle = SWT.NORMAL;
         sr.underlineStyle = SWT.UNDERLINE_LINK;
         sr.underline = true;
@@ -1815,8 +1841,74 @@ public class GraphicalEditorPart extends EditorPart
         return null;
     }
 
-    /** This StyleRange represents a missing class link that the user can click */
-    private static class ClassLinkStyleRange extends StyleRange {}
+    /**
+     * This StyleRange represents a clickable link in the render output, where various
+     * actions can be taken such as creating a class, opening the project chooser to
+     * adjust the build path, etc.
+     */
+    private class ActionLinkStyleRange extends StyleRange {
+        /** Create a view class */
+        private static final int LINK_CREATE_CLASS = 1;
+        /** Edit the build path for the current project */
+        private static final int LINK_FIX_BUILD_PATH = 2;
+        /** Show the XML tab */
+        private static final int LINK_EDIT_XML = 3;
+        /** Open the given class */
+        private static final int LINK_OPEN_CLASS = 4;
+        /** Show the error log */
+        private static final int LINK_SHOW_LOG = 5;
+
+        /** The current class or null */
+        private final String mFqcn;
+        /** The action to be taken when the link is clicked */
+        private final int mAction;
+
+        private ActionLinkStyleRange(int action, String fqcn) {
+            super();
+            this.mAction = action;
+            this.mFqcn = fqcn;
+        }
+
+        /** Performs the click action */
+        public void onClick() {
+            switch (mAction) {
+                case LINK_CREATE_CLASS:
+                    createNewClass(mFqcn);
+                    break;
+                case LINK_EDIT_XML:
+                    mLayoutEditor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+                    break;
+                case LINK_FIX_BUILD_PATH:
+                    @SuppressWarnings("restriction")
+                    String id = BuildPathsPropertyPage.PROP_ID;
+                    PreferencesUtil.createPropertyDialogOn(
+                            AdtPlugin.getDisplay().getActiveShell(),
+                            getProject(), id, null, null).open();
+                    break;
+                case LINK_OPEN_CLASS:
+                    AdtPlugin.openJavaClass(getProject(), mFqcn);
+                    break;
+                case LINK_SHOW_LOG:
+                    IWorkbench workbench = PlatformUI.getWorkbench();
+                    IWorkbenchWindow workbenchWindow = workbench.getActiveWorkbenchWindow();
+                    try {
+                        IWorkbenchPage page = workbenchWindow.getActivePage();
+                        page.showView("org.eclipse.pde.runtime.LogView"); //$NON-NLS-1$
+                    } catch (PartInitException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public boolean similarTo(StyleRange style) {
+            // Prevent adjacent link ranges from getting merged
+            return false;
+        }
+    }
 
     /**
      * Returns the error label for the graphical editor (which may not be visible
@@ -1857,190 +1949,195 @@ public class GraphicalEditorPart extends EditorPart
                 }
             }
 
-            if (r instanceof ClassLinkStyleRange) {
-                String fqcn = mErrorLabel.getText(r.start, r.start + r.length - 1);
-                if (!AdtPlugin.openJavaClass(getProject(), fqcn)) {
-                    createNewClass(fqcn);
-                }
+            if (r instanceof ActionLinkStyleRange) {
+                ActionLinkStyleRange range = (ActionLinkStyleRange) r;
+                range.onClick();
             }
 
             LayoutCanvas canvas = getCanvasControl();
             canvas.updateMenuActionState(canvas.getSelectionManager().getSelections().isEmpty());
         }
+    }
 
-        private void createNewClass(String fqcn) {
+    private void createNewClass(String fqcn) {
 
-            int pos = fqcn.lastIndexOf('.');
-            String packageName = pos < 0 ? "" : fqcn.substring(0, pos);  //$NON-NLS-1$
-            String className = pos <= 0 || pos >= fqcn.length() ? "" : fqcn.substring(pos + 1); //$NON-NLS-1$
+        int pos = fqcn.lastIndexOf('.');
+        String packageName = pos < 0 ? "" : fqcn.substring(0, pos);  //$NON-NLS-1$
+        String className = pos <= 0 || pos >= fqcn.length() ? "" : fqcn.substring(pos + 1); //$NON-NLS-1$
 
-            // create the wizard page for the class creation, and configure it
-            NewClassWizardPage page = new NewClassWizardPage();
+        // create the wizard page for the class creation, and configure it
+        NewClassWizardPage page = new NewClassWizardPage();
 
-            // set the parent class
-            page.setSuperClass(SdkConstants.CLASS_VIEW, true /* canBeModified */);
+        // set the parent class
+        page.setSuperClass(SdkConstants.CLASS_VIEW, true /* canBeModified */);
 
-            // get the source folders as java elements.
-            IPackageFragmentRoot[] roots = getPackageFragmentRoots(mLayoutEditor.getProject(),
-                    true /*include_containers*/);
+        // get the source folders as java elements.
+        IPackageFragmentRoot[] roots = getPackageFragmentRoots(mLayoutEditor.getProject(),
+                false /*includeContainers*/, true /*skipGenFolder*/);
 
-            IPackageFragmentRoot currentRoot = null;
-            IPackageFragment currentFragment = null;
-            int packageMatchCount = -1;
+        IPackageFragmentRoot currentRoot = null;
+        IPackageFragment currentFragment = null;
+        int packageMatchCount = -1;
 
-            for (IPackageFragmentRoot root : roots) {
-                // Get the java element for the package.
-                // This method is said to always return a IPackageFragment even if the
-                // underlying folder doesn't exist...
-                IPackageFragment fragment = root.getPackageFragment(packageName);
-                if (fragment != null && fragment.exists()) {
-                    // we have a perfect match! we use it.
-                    currentRoot = root;
-                    currentFragment = fragment;
-                    packageMatchCount = -1;
-                    break;
-                } else {
-                    // we don't have a match. we look for the fragment with the best match
-                    // (ie the closest parent package we can find)
-                    try {
-                        IJavaElement[] children;
-                        children = root.getChildren();
-                        for (IJavaElement child : children) {
-                            if (child instanceof IPackageFragment) {
-                                fragment = (IPackageFragment)child;
-                                if (packageName.startsWith(fragment.getElementName())) {
-                                    // its a match. get the number of segments
-                                    String[] segments = fragment.getElementName().split("\\."); //$NON-NLS-1$
-                                    if (segments.length > packageMatchCount) {
-                                        packageMatchCount = segments.length;
-                                        currentFragment = fragment;
-                                        currentRoot = root;
-                                    }
+        for (IPackageFragmentRoot root : roots) {
+            // Get the java element for the package.
+            // This method is said to always return a IPackageFragment even if the
+            // underlying folder doesn't exist...
+            IPackageFragment fragment = root.getPackageFragment(packageName);
+            if (fragment != null && fragment.exists()) {
+                // we have a perfect match! we use it.
+                currentRoot = root;
+                currentFragment = fragment;
+                packageMatchCount = -1;
+                break;
+            } else {
+                // we don't have a match. we look for the fragment with the best match
+                // (ie the closest parent package we can find)
+                try {
+                    IJavaElement[] children;
+                    children = root.getChildren();
+                    for (IJavaElement child : children) {
+                        if (child instanceof IPackageFragment) {
+                            fragment = (IPackageFragment)child;
+                            if (packageName.startsWith(fragment.getElementName())) {
+                                // its a match. get the number of segments
+                                String[] segments = fragment.getElementName().split("\\."); //$NON-NLS-1$
+                                if (segments.length > packageMatchCount) {
+                                    packageMatchCount = segments.length;
+                                    currentFragment = fragment;
+                                    currentRoot = root;
                                 }
                             }
                         }
-                    } catch (JavaModelException e) {
-                        // Couldn't get the children: we just ignore this package root.
                     }
+                } catch (JavaModelException e) {
+                    // Couldn't get the children: we just ignore this package root.
                 }
             }
+        }
 
-            ArrayList<IPackageFragment> createdFragments = null;
+        ArrayList<IPackageFragment> createdFragments = null;
 
-            if (currentRoot != null) {
-                // if we have a perfect match, we set it and we're done.
-                if (packageMatchCount == -1) {
-                    page.setPackageFragmentRoot(currentRoot, true /* canBeModified*/);
-                    page.setPackageFragment(currentFragment, true /* canBeModified */);
-                } else {
-                    // we have a partial match.
-                    // create the package. We have to start with the first segment so that we
-                    // know what to delete in case of a cancel.
-                    try {
-                        createdFragments = new ArrayList<IPackageFragment>();
+        if (currentRoot != null) {
+            // if we have a perfect match, we set it and we're done.
+            if (packageMatchCount == -1) {
+                page.setPackageFragmentRoot(currentRoot, true /* canBeModified*/);
+                page.setPackageFragment(currentFragment, true /* canBeModified */);
+            } else {
+                // we have a partial match.
+                // create the package. We have to start with the first segment so that we
+                // know what to delete in case of a cancel.
+                try {
+                    createdFragments = new ArrayList<IPackageFragment>();
 
-                        int totalCount = packageName.split("\\.").length; //$NON-NLS-1$
-                        int count = 0;
-                        int index = -1;
-                        // skip the matching packages
-                        while (count < packageMatchCount) {
-                            index = packageName.indexOf('.', index+1);
-                            count++;
-                        }
+                    int totalCount = packageName.split("\\.").length; //$NON-NLS-1$
+                    int count = 0;
+                    int index = -1;
+                    // skip the matching packages
+                    while (count < packageMatchCount) {
+                        index = packageName.indexOf('.', index+1);
+                        count++;
+                    }
 
-                        // create the rest of the segments, except for the last one as indexOf will
-                        // return -1;
-                        while (count < totalCount - 1) {
-                            index = packageName.indexOf('.', index+1);
-                            count++;
-                            createdFragments.add(currentRoot.createPackageFragment(
-                                    packageName.substring(0, index),
-                                    true /* force*/, new NullProgressMonitor()));
-                        }
-
-                        // create the last package
+                    // create the rest of the segments, except for the last one as indexOf will
+                    // return -1;
+                    while (count < totalCount - 1) {
+                        index = packageName.indexOf('.', index+1);
+                        count++;
                         createdFragments.add(currentRoot.createPackageFragment(
-                                packageName, true /* force*/, new NullProgressMonitor()));
+                                packageName.substring(0, index),
+                                true /* force*/, new NullProgressMonitor()));
+                    }
 
-                        // set the root and fragment in the Wizard page
-                        page.setPackageFragmentRoot(currentRoot, true /* canBeModified*/);
-                        page.setPackageFragment(createdFragments.get(createdFragments.size()-1),
-                                true /* canBeModified */);
-                    } catch (JavaModelException e) {
-                        // If we can't create the packages, there's a problem.
-                        // We revert to the default package
-                        for (IPackageFragmentRoot root : roots) {
-                            // Get the java element for the package.
-                            // This method is said to always return a IPackageFragment even if the
-                            // underlying folder doesn't exist...
-                            IPackageFragment fragment = root.getPackageFragment(packageName);
-                            if (fragment != null && fragment.exists()) {
-                                page.setPackageFragmentRoot(root, true /* canBeModified*/);
-                                page.setPackageFragment(fragment, true /* canBeModified */);
-                                break;
-                            }
+                    // create the last package
+                    createdFragments.add(currentRoot.createPackageFragment(
+                            packageName, true /* force*/, new NullProgressMonitor()));
+
+                    // set the root and fragment in the Wizard page
+                    page.setPackageFragmentRoot(currentRoot, true /* canBeModified*/);
+                    page.setPackageFragment(createdFragments.get(createdFragments.size()-1),
+                            true /* canBeModified */);
+                } catch (JavaModelException e) {
+                    // If we can't create the packages, there's a problem.
+                    // We revert to the default package
+                    for (IPackageFragmentRoot root : roots) {
+                        // Get the java element for the package.
+                        // This method is said to always return a IPackageFragment even if the
+                        // underlying folder doesn't exist...
+                        IPackageFragment fragment = root.getPackageFragment(packageName);
+                        if (fragment != null && fragment.exists()) {
+                            page.setPackageFragmentRoot(root, true /* canBeModified*/);
+                            page.setPackageFragment(fragment, true /* canBeModified */);
+                            break;
                         }
                     }
                 }
-            } else if (roots.length > 0) {
-                // if we haven't found a valid fragment, we set the root to the first source folder.
-                page.setPackageFragmentRoot(roots[0], true /* canBeModified*/);
             }
+        } else if (roots.length > 0) {
+            // if we haven't found a valid fragment, we set the root to the first source folder.
+            page.setPackageFragmentRoot(roots[0], true /* canBeModified*/);
+        }
 
-            // if we have a starting class name we use it
-            if (className != null) {
-                page.setTypeName(className, true /* canBeModified*/);
-            }
+        // if we have a starting class name we use it
+        if (className != null) {
+            page.setTypeName(className, true /* canBeModified*/);
+        }
 
-            // create the action that will open it the wizard.
-            OpenNewClassWizardAction action = new OpenNewClassWizardAction();
-            action.setConfiguredWizardPage(page);
-            action.run();
-            IJavaElement element = action.getCreatedElement();
+        // create the action that will open it the wizard.
+        OpenNewClassWizardAction action = new OpenNewClassWizardAction();
+        action.setConfiguredWizardPage(page);
+        action.run();
+        IJavaElement element = action.getCreatedElement();
 
-            if (element == null) {
-                // lets delete the packages we created just for this.
-                // we need to start with the leaf and go up
-                if (createdFragments != null) {
-                    try {
-                        for (int i = createdFragments.size() - 1 ; i >= 0 ; i--) {
-                            createdFragments.get(i).delete(true /* force*/,
-                                                           new NullProgressMonitor());
-                        }
-                    } catch (JavaModelException e) {
-                        e.printStackTrace();
+        if (element == null) {
+            // lets delete the packages we created just for this.
+            // we need to start with the leaf and go up
+            if (createdFragments != null) {
+                try {
+                    for (int i = createdFragments.size() - 1 ; i >= 0 ; i--) {
+                        createdFragments.get(i).delete(true /* force*/,
+                                                       new NullProgressMonitor());
                     }
+                } catch (JavaModelException e) {
+                    e.printStackTrace();
                 }
             }
         }
+    }
 
-        /**
-         * Computes and return the {@link IPackageFragmentRoot}s corresponding to the source
-         * folders of the specified project.
-         *
-         * @param project the project
-         * @param include_containers True to include containers
-         * @return an array of IPackageFragmentRoot.
-         */
-        private IPackageFragmentRoot[] getPackageFragmentRoots(IProject project,
-                boolean include_containers) {
-            ArrayList<IPackageFragmentRoot> result = new ArrayList<IPackageFragmentRoot>();
-            try {
-                IJavaProject javaProject = JavaCore.create(project);
-                IPackageFragmentRoot[] roots = javaProject.getPackageFragmentRoots();
-                for (int i = 0; i < roots.length; i++) {
-                    IClasspathEntry entry = roots[i].getRawClasspathEntry();
-                    if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE ||
-                            (include_containers &&
-                                    entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER)) {
-                        result.add(roots[i]);
+    /**
+     * Computes and return the {@link IPackageFragmentRoot}s corresponding to the source
+     * folders of the specified project.
+     *
+     * @param project the project
+     * @param includeContainers True to include containers
+     * @param skipGenFolder True to skip the "gen" folder
+     * @return an array of IPackageFragmentRoot.
+     */
+    private IPackageFragmentRoot[] getPackageFragmentRoots(IProject project,
+            boolean includeContainers, boolean skipGenFolder) {
+        ArrayList<IPackageFragmentRoot> result = new ArrayList<IPackageFragmentRoot>();
+        try {
+            IJavaProject javaProject = JavaCore.create(project);
+            IPackageFragmentRoot[] roots = javaProject.getPackageFragmentRoots();
+            for (int i = 0; i < roots.length; i++) {
+                if (skipGenFolder) {
+                    IResource resource = roots[i].getResource();
+                    if (resource != null && resource.getName().equals(FD_GEN_SOURCES)) {
+                        continue;
                     }
                 }
-            } catch (JavaModelException e) {
+                IClasspathEntry entry = roots[i].getRawClasspathEntry();
+                if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE ||
+                        (includeContainers &&
+                                entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER)) {
+                    result.add(roots[i]);
+                }
             }
-
-            return result.toArray(new IPackageFragmentRoot[result.size()]);
+        } catch (JavaModelException e) {
         }
+
+        return result.toArray(new IPackageFragmentRoot[result.size()]);
     }
 
     /**
