@@ -34,6 +34,7 @@ import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.Result;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
+import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMetadata;
@@ -47,7 +48,12 @@ import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -58,7 +64,7 @@ import java.util.TreeSet;
 /**
  * Loader for Android Project class in order to use them in the layout editor.
  * <p/>This implements {@link IProjectCallback} for the old and new API through
- * {@link ILegacyCallback}
+ * {@link LegacyCallback}
  */
 public final class ProjectCallback extends LegacyCallback {
     private final HashMap<String, Class<?>> mLoadedClasses = new HashMap<String, Class<?>>();
@@ -75,7 +81,7 @@ public final class ProjectCallback extends LegacyCallback {
 
     private String mLayoutName;
     private ILayoutPullParser mLayoutEmbeddedParser;
-
+    private ResourceResolver mResourceResolver;
 
     /**
      * Creates a new {@link ProjectCallback} to be used with the layout lib.
@@ -396,15 +402,51 @@ public final class ProjectCallback extends LegacyCallback {
     }
 
     public ILayoutPullParser getParser(String layoutName) {
-        if (layoutName.equals(mLayoutName)) {
-            return mLayoutEmbeddedParser;
+        // Try to compute the ResourceValue for this layout since layoutlib
+        // must be an older version which doesn't pass the value:
+        if (mResourceResolver != null) {
+            ResourceValue value = mResourceResolver.getProjectResource(ResourceType.LAYOUT,
+                    layoutName);
+            if (value != null) {
+                return getParser(value);
+            }
         }
 
-        return null;
+        return getParser(layoutName, null);
     }
 
     public ILayoutPullParser getParser(ResourceValue layoutResource) {
-        return getParser(layoutResource.getName());
+        return getParser(layoutResource.getName(),
+                new File(layoutResource.getValue()));
+    }
+
+    private ILayoutPullParser getParser(String layoutName, File xml) {
+        if (layoutName.equals(mLayoutName)) {
+            ILayoutPullParser parser = mLayoutEmbeddedParser;
+            // The parser should only be used once!! If it is included more than once,
+            // subsequent includes should just use a plain pull parser that is not tied
+            // to the XML model
+            mLayoutEmbeddedParser = null;
+            return parser;
+        }
+
+        // For included layouts, create a ContextPullParser such that we get the
+        // layout editor behavior in included layouts as well - which for example
+        // replaces <fragment> tags with <include>.
+        if (xml != null && xml.isFile()) {
+            ContextPullParser parser = new ContextPullParser(this, xml);
+            try {
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+                parser.setInput(new FileInputStream(xml), "UTF-8"); //$NON-NLS-1$
+                return parser;
+            } catch (XmlPullParserException e) {
+                AdtPlugin.log(e, null);
+            } catch (FileNotFoundException e) {
+                // Shouldn't happen since we check isFile() above
+            }
+        }
+
+        return null;
     }
 
     public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
@@ -542,5 +584,14 @@ public final class ProjectCallback extends LegacyCallback {
         }
 
         return binding;
+    }
+
+    /**
+     * Sets the {@link ResourceResolver} to be used when looking up resources
+     *
+     * @param resolver the resolver to use
+     */
+    public void setResourceResolver(ResourceResolver resolver) {
+        mResourceResolver = resolver;
     }
 }

@@ -220,16 +220,10 @@ public class GraphicalEditorPart extends EditorPart
     private Map<ResourceType, Map<String, ResourceValue>> mConfiguredProjectRes;
     private ProjectCallback mProjectCallback;
     private boolean mNeedsRecompute = false;
-
     private TargetListener mTargetListener;
-
     private ConfigListener mConfigListener;
     private ResourceResolver mResourceResolver;
-
     private ReloadListener mReloadListener;
-
-    private boolean mUseExplodeMode;
-
     private int mMinSdkVersion;
     private int mTargetSdkVersion;
     private LayoutActionBar mActionBar;

@@ -320,7 +320,7 @@ public class RenderService {
                         // as it's what IXmlPullParser.getParser(String) will receive.
                         String queryLayoutName = mEditor.getLayoutResourceName();
                         mProjectCallback.setLayoutParser(queryLayoutName, modelParser);
-                        topParser = new ContextPullParser(mProjectCallback);
+                        topParser = new ContextPullParser(mProjectCallback, layoutFile);
                         topParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                         topParser.setInput(new FileInputStream(layoutFile), "UTF-8"); //$NON-NLS-1$
                     } catch (XmlPullParserException e) {
@@ -376,6 +376,7 @@ public class RenderService {
 
         try {
             mProjectCallback.setLogger(mLogger);
+            mProjectCallback.setResourceResolver(mResourceResolver);
             return mLayoutLib.createSession(params);
         } catch (RuntimeException t) {
             // Exceptions from the bridge
@@ -383,6 +384,7 @@ public class RenderService {
             throw t;
         } finally {
             mProjectCallback.setLogger(null);
+            mProjectCallback.setResourceResolver(null);
         }
     }
 
@@ -482,6 +484,7 @@ public class RenderService {
         RenderSession session = null;
         try {
             mProjectCallback.setLogger(mLogger);
+            mProjectCallback.setResourceResolver(mResourceResolver);
             session = mLayoutLib.createSession(params);
             if (session.getResult().isSuccess()) {
                 assert session.getRootViews().size() == 1;
@@ -506,6 +509,7 @@ public class RenderService {
             throw t;
         } finally {
             mProjectCallback.setLogger(null);
+            mProjectCallback.setResourceResolver(null);
             if (session != null) {
                 session.dispose();
             }

@@ -98,22 +98,7 @@ public class LayoutMetadata {
             Node comment = findComment(node);
             if (comment != null) {
                 String text = comment.getNodeValue();
-                assert text.startsWith(COMMENT_PROLOGUE);
-                String valuesString = text.substring(COMMENT_PROLOGUE.length());
-                String[] values = valuesString.split(","); //$NON-NLS-1$
-                if (values.length == 1) {
-                    valuesString = values[0].trim();
-                    if (valuesString.indexOf('\n') != -1) {
-                        values = valuesString.split("\n"); //$NON-NLS-1$
-                    }
-                }
-                String target = name + '=';
-                for (int j = 0; j < values.length; j++) {
-                    String value = values[j].trim();
-                    if (value.startsWith(target)) {
-                        return value.substring(target.length()).trim();
-                    }
-                }
+                return getProperty(name, text);
             }
 
             return null;
@@ -122,6 +107,33 @@ public class LayoutMetadata {
                 model.releaseFromRead();
             }
         }
+    }
+
+    /**
+     * Returns the given property specified in the given XML comment
+     *
+     * @param name the name of the property to look up
+     * @param text the comment text for an XML node
+     * @return the value stored with the given node and name, or null
+     */
+    public static String getProperty(String name, String text) {
+        assert text.startsWith(COMMENT_PROLOGUE);
+        String valuesString = text.substring(COMMENT_PROLOGUE.length());
+        String[] values = valuesString.split(","); //$NON-NLS-1$
+        if (values.length == 1) {
+            valuesString = values[0].trim();
+            if (valuesString.indexOf('\n') != -1) {
+                values = valuesString.split("\n"); //$NON-NLS-1$
+            }
+        }
+        String target = name + '=';
+        for (int j = 0; j < values.length; j++) {
+            String value = values[j].trim();
+            if (value.startsWith(target)) {
+                return value.substring(target.length()).trim();
+            }
+        }
+        return null;
     }
 
     /**
