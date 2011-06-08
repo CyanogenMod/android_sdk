@@ -59,15 +59,6 @@ public class DescriptorsUtilsTest extends TestCase {
         assertEquals("The t axis", DescriptorsUtils.prettyAttributeUiName("theTAxis"));
     }
 
-    public void testCapitalize() {
-        assertEquals("UPPER", DescriptorsUtils.capitalize("UPPER"));
-        assertEquals("Lower", DescriptorsUtils.capitalize("lower"));
-        assertEquals("Capital", DescriptorsUtils.capitalize("Capital"));
-        assertEquals("CamelCase", DescriptorsUtils.capitalize("camelCase"));
-        assertEquals("", DescriptorsUtils.capitalize(""));
-        assertSame("Foo", DescriptorsUtils.capitalize("Foo"));
-    }
-
     public void testFormatTooltip() {
         assertEquals("", DescriptorsUtils.formatTooltip(""));
 

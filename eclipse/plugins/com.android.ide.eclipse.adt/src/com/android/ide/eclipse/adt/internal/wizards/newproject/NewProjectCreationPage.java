@@ -22,9 +22,11 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import static com.android.ide.eclipse.adt.AdtUtils.capitalize;
+import static com.android.ide.eclipse.adt.AdtUtils.stripWhitespace;
+
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -906,7 +908,7 @@ public class NewProjectCreationPage extends WizardPage {
             mProjectNameModifiedByUser = true;
 
             if (!mApplicationNameModifiedByUser) {
-                String name = DescriptorsUtils.capitalize(mProjectNameField.getText());
+                String name = capitalize(mProjectNameField.getText());
                 try {
                     mInternalApplicationNameUpdate = true;
                     mApplicationNameField.setText(name);
@@ -915,10 +917,10 @@ public class NewProjectCreationPage extends WizardPage {
                 }
             }
             if (!mActivityNameModifiedByUser) {
-                String name = DescriptorsUtils.capitalize(mProjectNameField.getText());
+                String name = capitalize(mProjectNameField.getText());
                 try {
                     mInternalActivityNameUpdate = true;
-                    mActivityNameField.setText(name + ACTIVITY_NAME_SUFFIX);
+                    mActivityNameField.setText(stripWhitespace(name) + ACTIVITY_NAME_SUFFIX);
                 } finally {
                     mInternalActivityNameUpdate = false;
                 }
@@ -938,10 +940,10 @@ public class NewProjectCreationPage extends WizardPage {
         if (!mInternalApplicationNameUpdate) {
                mApplicationNameModifiedByUser = true;
                if (!mActivityNameModifiedByUser) {
-                   String name = DescriptorsUtils.capitalize(mApplicationNameField.getText());
+                   String name = capitalize(mApplicationNameField.getText());
                    try {
                        mInternalActivityNameUpdate = true;
-                       mActivityNameField.setText(name + ACTIVITY_NAME_SUFFIX);
+                       mActivityNameField.setText(stripWhitespace(name) + ACTIVITY_NAME_SUFFIX);
                    } finally {
                        mInternalActivityNameUpdate = false;
                    }
