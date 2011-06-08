@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
@@ -28,7 +28,6 @@ import com.android.sdklib.xml.ManifestData.Activity;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -140,9 +139,10 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             return;
         }
 
-        // make sure the project is built. This is a synchronous call which returns when the
+        // make sure the project is built and PostCompilerBuilder runs.
+        // This is a synchronous call which returns when the
         // build is done.
-        project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+        ProjectHelper.build(project, monitor, true);
 
         // check if the project has errors, and abort in this case.
         if (ProjectHelper.hasError(project, true)) {

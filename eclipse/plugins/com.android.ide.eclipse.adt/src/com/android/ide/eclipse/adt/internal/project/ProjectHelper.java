@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
@@ -33,6 +34,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
@@ -45,6 +47,8 @@ import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Utility class to manipulate Project parameters/properties.
@@ -807,5 +811,43 @@ public final class ProjectHelper {
             return null;
         }
         return (IFile) r;
+    }
+
+    /**
+     * Build project incrementally. If fullBuild is not set, then the packaging steps in
+     * the post compiler are skipped. (Though resource deltas are still processed).
+     * @param project The project to be built.
+     * @param monitor A eclipse runtime progress monitor to be updated by the builders.
+     * @param fullBuild Set whether to run the packaging (dexing and building apk) steps of
+     *                  the post compiler.
+     * @throws CoreException
+     */
+    public static void build(IProject project, IProgressMonitor monitor, boolean fullBuild)
+                            throws CoreException {
+        // Do an incremental build to pick up all the deltas
+        project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+        if (fullBuild) {
+            // Create the map to pass to the PostC builder
+            Map<String, String> args = new TreeMap<String, String>();
+            args.put(PostCompilerBuilder.POST_C_REQUESTED, ""); //$NON-NLS-1$
+            // Get Post Compiler to do packaging
+            project.build(IncrementalProjectBuilder.FULL_BUILD,
+                          PostCompilerBuilder.ID, args, monitor);
+        }
+    }
+
+    /**
+     * Build the project incrementally. Post compilation step will not occur.
+     * This is equivalent to calling
+     * <code>build(project, monitor, false)</code>
+     * @param project The project to be built.
+     * @param monitor A eclipse runtime progress monitor to be updated by the builders.
+     * @throws CoreException
+     * @see #build(IProject, IProgressMonitor, boolean)
+     */
+    public static void build(IProject project, IProgressMonitor monitor)
+                             throws CoreException {
+        // Disable full building by default
+        build(project, monitor, false);
     }
 }

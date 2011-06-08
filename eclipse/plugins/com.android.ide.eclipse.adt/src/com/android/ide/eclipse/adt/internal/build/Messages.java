@@ -118,6 +118,10 @@ public class Messages extends NLS {
 
     public static String Start_Full_Pre_Compiler;
 
+    public static String Skip_Post_Compiler;
+
+    public static String Start_Full_Post_Compiler;
+
     public static String Start_Inc_Apk_Build;
 
     public static String Start_Inc_Pre_Compiler;
