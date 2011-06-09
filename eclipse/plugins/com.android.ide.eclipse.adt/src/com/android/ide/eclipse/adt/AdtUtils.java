@@ -67,4 +67,41 @@ public class AdtUtils {
         sb.append(str.substring(1));
         return sb.toString();
     }
+
+    /**
+     * Computes the edit distance (number of insertions, deletions or substitutions
+     * to edit one string into the other) between two strings. In particular,
+     * this will compute the Levenshtein distance.
+     * <p>
+     * See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
+     *
+     * @param s the first string to compare
+     * @param t the second string to compare
+     * @return the edit distance between the two strings
+     */
+    public static int editDistance(String s, String t) {
+        int m = s.length();
+        int n = t.length();
+        int[][] d = new int[m + 1][n + 1];
+        for (int i = 0; i <= m; i++) {
+            d[i][0] = i;
+        }
+        for (int j = 0; j <= n; j++) {
+            d[0][j] = j;
+        }
+        for (int j = 1; j <= n; j++) {
+            for (int i = 1; i <= m; i++) {
+                if (s.charAt(i - 1) == t.charAt(j - 1)) {
+                    d[i][j] = d[i - 1][j - 1];
+                } else {
+                    int deletion = d[i - 1][j] + 1;
+                    int insertion = d[i][j - 1] + 1;
+                    int substitution = d[i - 1][j - 1] + 1;
+                    d[i][j] = Math.min(deletion, Math.min(insertion, substitution));
+                }
+            }
+        }
+
+        return d[m][n];
+    }
 }

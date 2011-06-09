@@ -115,10 +115,14 @@ public class CustomViewFinder {
     }
 
     public void refresh() {
-        refresh(null);
+        refresh(null /*listener*/, true /* sync */);
     }
 
     public void refresh(final Listener listener) {
+        refresh(listener, false /* sync */);
+    }
+
+    private void refresh(final Listener listener, boolean sync) {
         // Add this listener to the list of listeners which should be notified when the
         // search is done. (There could be more than one since multiple requests could
         // arrive for a slow search since the search is run in a different thread).
@@ -139,6 +143,13 @@ public class CustomViewFinder {
 
         FindViewsJob job = new FindViewsJob();
         job.schedule();
+        if (sync) {
+            try {
+                job.join();
+            } catch (InterruptedException e) {
+                AdtPlugin.log(e, null);
+            }
+        }
     }
 
     public Collection<String> getCustomViews() {

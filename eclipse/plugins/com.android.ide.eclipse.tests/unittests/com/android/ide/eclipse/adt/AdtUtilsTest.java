@@ -45,4 +45,16 @@ public class AdtUtilsTest extends TestCase {
         assertSame("Foo", AdtUtils.capitalize("Foo"));
         assertNull(null, AdtUtils.capitalize(null));
     }
+
+    public void testEditDistance() {
+        // editing kitten to sitting has edit distance 3:
+        //   replace k with s
+        //   replace e with i
+        //   append g
+        assertEquals(3, AdtUtils.editDistance("kitten", "sitting"));
+
+        assertEquals(3, AdtUtils.editDistance("saturday", "sunday"));
+        assertEquals(1, AdtUtils.editDistance("button", "bitton"));
+        assertEquals(6, AdtUtils.editDistance("radiobutton", "bitton"));
+    }
 }
