@@ -23,7 +23,8 @@ package com.android.resources;
 public enum DockMode implements ResourceEnum {
     NONE("", "No Dock"),
     CAR("car", "Car Dock"),
-    DESK("desk", "Desk Dock");
+    DESK("desk", "Desk Dock"),
+    TELEVISION("television", "Television");
 
     private final String mValue;
     private final String mDisplayValue;

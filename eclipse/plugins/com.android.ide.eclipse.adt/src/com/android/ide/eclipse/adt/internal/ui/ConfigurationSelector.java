@@ -30,9 +30,12 @@ import com.android.ide.common.resources.configuration.PixelDensityQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenHeightQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.common.resources.configuration.ScreenWidthQualifier;
+import com.android.ide.common.resources.configuration.SmallestScreenWidthQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
@@ -422,6 +425,10 @@ public class ConfigurationSelector extends Composite {
             mUiMap.put(NetworkCodeQualifier.class, new MNCEdit(mQualifierEditParent));
             mUiMap.put(LanguageQualifier.class, new LanguageEdit(mQualifierEditParent));
             mUiMap.put(RegionQualifier.class, new RegionEdit(mQualifierEditParent));
+            mUiMap.put(SmallestScreenWidthQualifier.class,
+                    new SmallestScreenWidthEdit(mQualifierEditParent));
+            mUiMap.put(ScreenWidthQualifier.class, new ScreenWidthEdit(mQualifierEditParent));
+            mUiMap.put(ScreenHeightQualifier.class, new ScreenHeightEdit(mQualifierEditParent));
             mUiMap.put(ScreenSizeQualifier.class, new ScreenSizeEdit(mQualifierEditParent));
             mUiMap.put(ScreenRatioQualifier.class, new ScreenRatioEdit(mQualifierEditParent));
             mUiMap.put(ScreenOrientationQualifier.class, new OrientationEdit(mQualifierEditParent));
@@ -964,6 +971,204 @@ public class ConfigurationSelector extends Composite {
             }
         }
     }
+
+    /**
+     * Edit widget for {@link SmallestScreenWidthQualifier}.
+     */
+    private class SmallestScreenWidthEdit extends QualifierEditBase {
+
+        private Text mSize;
+
+        public SmallestScreenWidthEdit(Composite parent) {
+            super(parent, SmallestScreenWidthQualifier.NAME);
+
+            ModifyListener modifyListener = new ModifyListener() {
+                public void modifyText(ModifyEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            FocusAdapter focusListener = new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            mSize = new Text(this, SWT.BORDER);
+            mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mSize.addVerifyListener(new DimensionVerifier());
+            mSize.addModifyListener(modifyListener);
+            mSize.addFocusListener(focusListener);
+        }
+
+        private void onSizeChange() {
+            // update the current config
+            String size = mSize.getText();
+
+            if (size.length() == 0) {
+                // if one of the strings is empty, reset to no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setSmallestScreenWidthQualifier(
+                        new SmallestScreenWidthQualifier());
+            } else {
+                SmallestScreenWidthQualifier qualifier = SmallestScreenWidthQualifier.getQualifier(
+                        size);
+
+                if (qualifier != null) {
+                    mSelectedConfiguration.setSmallestScreenWidthQualifier(qualifier);
+                } else {
+                    // Failure! Looks like the value is wrong, reset the qualifier
+                    // Since the qualifier classes are immutable, and we don't want to
+                    // remove the qualifier from the configuration, we create a new default one.
+                    mSelectedConfiguration.setSmallestScreenWidthQualifier(
+                            new SmallestScreenWidthQualifier());
+                }
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            SmallestScreenWidthQualifier q = (SmallestScreenWidthQualifier)qualifier;
+
+            mSize.setText(Integer.toString(q.getValue()));
+        }
+    }
+
+    /**
+     * Edit widget for {@link ScreenWidthQualifier}.
+     */
+    private class ScreenWidthEdit extends QualifierEditBase {
+
+        private Text mSize;
+
+        public ScreenWidthEdit(Composite parent) {
+            super(parent, ScreenWidthQualifier.NAME);
+
+            ModifyListener modifyListener = new ModifyListener() {
+                public void modifyText(ModifyEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            FocusAdapter focusListener = new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            mSize = new Text(this, SWT.BORDER);
+            mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mSize.addVerifyListener(new DimensionVerifier());
+            mSize.addModifyListener(modifyListener);
+            mSize.addFocusListener(focusListener);
+        }
+
+        private void onSizeChange() {
+            // update the current config
+            String size = mSize.getText();
+
+            if (size.length() == 0) {
+                // if one of the strings is empty, reset to no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setScreenWidthQualifier(new ScreenWidthQualifier());
+            } else {
+                ScreenWidthQualifier qualifier = ScreenWidthQualifier.getQualifier(size);
+
+                if (qualifier != null) {
+                    mSelectedConfiguration.setScreenWidthQualifier(qualifier);
+                } else {
+                    // Failure! Looks like the value is wrong, reset the qualifier
+                    // Since the qualifier classes are immutable, and we don't want to
+                    // remove the qualifier from the configuration, we create a new default one.
+                    mSelectedConfiguration.setScreenWidthQualifier(
+                            new ScreenWidthQualifier());
+                }
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            ScreenWidthQualifier q = (ScreenWidthQualifier)qualifier;
+
+            mSize.setText(Integer.toString(q.getValue()));
+        }
+    }
+
+    /**
+     * Edit widget for {@link ScreenHeightQualifier}.
+     */
+    private class ScreenHeightEdit extends QualifierEditBase {
+
+        private Text mSize;
+
+        public ScreenHeightEdit(Composite parent) {
+            super(parent, ScreenHeightQualifier.NAME);
+
+            ModifyListener modifyListener = new ModifyListener() {
+                public void modifyText(ModifyEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            FocusAdapter focusListener = new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    onSizeChange();
+                }
+            };
+
+            mSize = new Text(this, SWT.BORDER);
+            mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            mSize.addVerifyListener(new DimensionVerifier());
+            mSize.addModifyListener(modifyListener);
+            mSize.addFocusListener(focusListener);
+        }
+
+        private void onSizeChange() {
+            // update the current config
+            String size = mSize.getText();
+
+            if (size.length() == 0) {
+                // if one of the strings is empty, reset to no qualifier.
+                // Since the qualifier classes are immutable, and we don't want to
+                // remove the qualifier from the configuration, we create a new default one.
+                mSelectedConfiguration.setScreenHeightQualifier(new ScreenHeightQualifier());
+            } else {
+                ScreenHeightQualifier qualifier = ScreenHeightQualifier.getQualifier(size);
+
+                if (qualifier != null) {
+                    mSelectedConfiguration.setScreenHeightQualifier(qualifier);
+                } else {
+                    // Failure! Looks like the value is wrong, reset the qualifier
+                    // Since the qualifier classes are immutable, and we don't want to
+                    // remove the qualifier from the configuration, we create a new default one.
+                    mSelectedConfiguration.setScreenHeightQualifier(
+                            new ScreenHeightQualifier());
+                }
+            }
+
+            // notify of change
+            onChange(true /* keepSelection */);
+        }
+
+        @Override
+        public void setQualifier(ResourceQualifier qualifier) {
+            ScreenHeightQualifier q = (ScreenHeightQualifier)qualifier;
+
+            mSize.setText(Integer.toString(q.getValue()));
+        }
+    }
+
 
     /**
      * Edit widget for {@link ScreenSizeQualifier}.

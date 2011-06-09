@@ -131,6 +131,7 @@ public class ConfigEditDialog extends GridDialog {
 
     public void getConfig(FolderConfiguration config) {
         config.set(mConfig);
+        config.updateScreenWidthAndHeight();
     }
 
     @Override
