@@ -31,7 +31,7 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceDeltaKind;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
-import com.android.ide.common.resources.configuration.DockModeQualifier;
+import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
@@ -39,15 +39,15 @@ import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
-import com.android.ide.common.resources.configuration.PixelDensityQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
+import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -121,12 +121,12 @@ public class ResourceHelper {
         sIconMap.put(NetworkCodeQualifier.class,       factory.getIcon("mnc")); //$NON-NLS-1$
         sIconMap.put(LanguageQualifier.class,          factory.getIcon("language")); //$NON-NLS-1$
         sIconMap.put(RegionQualifier.class,            factory.getIcon("region")); //$NON-NLS-1$
-        sIconMap.put(ScreenSizeQualifier.class,        factory.getIcon("size")); //$NON-NLS-1$
+        sIconMap.put(ScreenLayoutSizeQualifier.class,  factory.getIcon("size")); //$NON-NLS-1$
         sIconMap.put(ScreenRatioQualifier.class,       factory.getIcon("ratio")); //$NON-NLS-1$
         sIconMap.put(ScreenOrientationQualifier.class, factory.getIcon("orientation")); //$NON-NLS-1$
-        sIconMap.put(DockModeQualifier.class,          factory.getIcon("dockmode")); //$NON-NLS-1$
+        sIconMap.put(UiModeQualifier.class,            factory.getIcon("dockmode")); //$NON-NLS-1$
         sIconMap.put(NightModeQualifier.class,         factory.getIcon("nightmode")); //$NON-NLS-1$
-        sIconMap.put(PixelDensityQualifier.class,      factory.getIcon("dpi")); //$NON-NLS-1$
+        sIconMap.put(DensityQualifier.class,           factory.getIcon("dpi")); //$NON-NLS-1$
         sIconMap.put(TouchScreenQualifier.class,       factory.getIcon("touch")); //$NON-NLS-1$
         sIconMap.put(KeyboardStateQualifier.class,     factory.getIcon("keyboard")); //$NON-NLS-1$
         sIconMap.put(TextInputMethodQualifier.class,   factory.getIcon("text_input")); //$NON-NLS-1$

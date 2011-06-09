@@ -16,19 +16,19 @@
 
 package com.android.ide.common.resources.configuration;
 
-import com.android.resources.ScreenSize;
+import com.android.resources.ScreenLayoutSize;
 
 import junit.framework.TestCase;
 
 public class ScreenSizeQualifierTest extends TestCase {
 
-    private ScreenSizeQualifier ssq;
+    private ScreenLayoutSizeQualifier ssq;
     private FolderConfiguration config;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ssq = new ScreenSizeQualifier();
+        ssq = new ScreenLayoutSizeQualifier();
         config = new FolderConfiguration();
     }
 
@@ -41,29 +41,29 @@ public class ScreenSizeQualifierTest extends TestCase {
 
     public void testSmall() {
         assertEquals(true, ssq.checkAndSet("small", config)); //$NON-NLS-1$
-        assertTrue(config.getScreenSizeQualifier() != null);
-        assertEquals(ScreenSize.SMALL, config.getScreenSizeQualifier().getValue());
-        assertEquals("small", config.getScreenSizeQualifier().toString()); //$NON-NLS-1$
+        assertTrue(config.getScreenLayoutSizeQualifier() != null);
+        assertEquals(ScreenLayoutSize.SMALL, config.getScreenLayoutSizeQualifier().getValue());
+        assertEquals("small", config.getScreenLayoutSizeQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testNormal() {
         assertEquals(true, ssq.checkAndSet("normal", config)); //$NON-NLS-1$
-        assertTrue(config.getScreenSizeQualifier() != null);
-        assertEquals(ScreenSize.NORMAL, config.getScreenSizeQualifier().getValue());
-        assertEquals("normal", config.getScreenSizeQualifier().toString()); //$NON-NLS-1$
+        assertTrue(config.getScreenLayoutSizeQualifier() != null);
+        assertEquals(ScreenLayoutSize.NORMAL, config.getScreenLayoutSizeQualifier().getValue());
+        assertEquals("normal", config.getScreenLayoutSizeQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testLarge() {
         assertEquals(true, ssq.checkAndSet("large", config)); //$NON-NLS-1$
-        assertTrue(config.getScreenSizeQualifier() != null);
-        assertEquals(ScreenSize.LARGE, config.getScreenSizeQualifier().getValue());
-        assertEquals("large", config.getScreenSizeQualifier().toString()); //$NON-NLS-1$
+        assertTrue(config.getScreenLayoutSizeQualifier() != null);
+        assertEquals(ScreenLayoutSize.LARGE, config.getScreenLayoutSizeQualifier().getValue());
+        assertEquals("large", config.getScreenLayoutSizeQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testXLarge() {
         assertEquals(true, ssq.checkAndSet("xlarge", config)); //$NON-NLS-1$
-        assertTrue(config.getScreenSizeQualifier() != null);
-        assertEquals(ScreenSize.XLARGE, config.getScreenSizeQualifier().getValue());
-        assertEquals("xlarge", config.getScreenSizeQualifier().toString()); //$NON-NLS-1$
+        assertTrue(config.getScreenLayoutSizeQualifier() != null);
+        assertEquals(ScreenLayoutSize.XLARGE, config.getScreenLayoutSizeQualifier().getValue());
+        assertEquals("xlarge", config.getScreenLayoutSizeQualifier().toString()); //$NON-NLS-1$
     }
 }

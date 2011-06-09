@@ -17,16 +17,16 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
+import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
-import com.android.ide.common.resources.configuration.PixelDensityQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 
@@ -167,10 +167,10 @@ public class LayoutDevice {
             node.setTextContent(Integer.toString(ncq.getCode()));
         }
 
-        ScreenSizeQualifier ssq = config.getScreenSizeQualifier();
-        if (ssq != null) {
+        ScreenLayoutSizeQualifier slsq = config.getScreenLayoutSizeQualifier();
+        if (slsq != null) {
             Element node = createNode(doc, configNode, LayoutDevicesXsd.NODE_SCREEN_SIZE);
-            node.setTextContent(ssq.getFolderSegment());
+            node.setTextContent(slsq.getFolderSegment());
         }
 
         ScreenRatioQualifier srq = config.getScreenRatioQualifier();
@@ -185,10 +185,10 @@ public class LayoutDevice {
             node.setTextContent(soq.getFolderSegment());
         }
 
-        PixelDensityQualifier pdq = config.getPixelDensityQualifier();
-        if (pdq != null) {
+        DensityQualifier dq = config.getDensityQualifier();
+        if (dq != null) {
             Element node = createNode(doc, configNode, LayoutDevicesXsd.NODE_PIXEL_DENSITY);
-            node.setTextContent(pdq.getFolderSegment());
+            node.setTextContent(dq.getFolderSegment());
         }
 
         TouchScreenQualifier ttq = config.getTouchTypeQualifier();

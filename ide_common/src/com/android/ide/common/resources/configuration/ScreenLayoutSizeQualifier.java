@@ -17,26 +17,26 @@
 package com.android.ide.common.resources.configuration;
 
 import com.android.resources.ResourceEnum;
-import com.android.resources.ScreenSize;
+import com.android.resources.ScreenLayoutSize;
 
 /**
  * Resource Qualifier for Screen Size. Size can be "small", "normal", "large" and "x-large"
  */
-public class ScreenSizeQualifier extends EnumBasedResourceQualifier {
+public class ScreenLayoutSizeQualifier extends EnumBasedResourceQualifier {
 
     public static final String NAME = "Screen Size";
 
-    private ScreenSize mValue = null;
+    private ScreenLayoutSize mValue = null;
 
 
-    public ScreenSizeQualifier() {
+    public ScreenLayoutSizeQualifier() {
     }
 
-    public ScreenSizeQualifier(ScreenSize value) {
+    public ScreenLayoutSizeQualifier(ScreenLayoutSize value) {
         mValue = value;
     }
 
-    public ScreenSize getValue() {
+    public ScreenLayoutSize getValue() {
         return mValue;
     }
 
@@ -57,10 +57,10 @@ public class ScreenSizeQualifier extends EnumBasedResourceQualifier {
 
     @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
-        ScreenSize size = ScreenSize.getEnum(value);
+        ScreenLayoutSize size = ScreenLayoutSize.getEnum(value);
         if (size != null) {
-            ScreenSizeQualifier qualifier = new ScreenSizeQualifier(size);
-            config.setScreenSizeQualifier(qualifier);
+            ScreenLayoutSizeQualifier qualifier = new ScreenLayoutSizeQualifier(size);
+            config.setScreenLayoutSizeQualifier(qualifier);
             return true;
         }
 

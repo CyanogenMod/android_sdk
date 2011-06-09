@@ -25,18 +25,18 @@ import java.util.regex.Pattern;
 /**
  * Resource Qualifier for Screen Pixel Density.
  */
-public final class PixelDensityQualifier extends EnumBasedResourceQualifier {
+public final class DensityQualifier extends EnumBasedResourceQualifier {
     private final static Pattern sDensityLegacyPattern = Pattern.compile("^(\\d+)dpi$");//$NON-NLS-1$
 
-    public static final String NAME = "Pixel Density";
+    public static final String NAME = "Density";
 
     private Density mValue = Density.MEDIUM;
 
-    public PixelDensityQualifier() {
+    public DensityQualifier() {
         // pass
     }
 
-    public PixelDensityQualifier(Density value) {
+    public DensityQualifier(Density value) {
         mValue = value;
     }
 
@@ -79,9 +79,9 @@ public final class PixelDensityQualifier extends EnumBasedResourceQualifier {
         }
 
         if (density != null) {
-            PixelDensityQualifier qualifier = new PixelDensityQualifier();
+            DensityQualifier qualifier = new DensityQualifier();
             qualifier.mValue = density;
-            config.setPixelDensityQualifier(qualifier);
+            config.setDensityQualifier(qualifier);
             return true;
         }
 
@@ -90,7 +90,7 @@ public final class PixelDensityQualifier extends EnumBasedResourceQualifier {
 
     @Override
     public boolean isMatchFor(ResourceQualifier qualifier) {
-        if (qualifier instanceof PixelDensityQualifier) {
+        if (qualifier instanceof DensityQualifier) {
             // as long as there's a density qualifier, it's always a match.
             // The best match will be found later.
             return true;
@@ -105,8 +105,8 @@ public final class PixelDensityQualifier extends EnumBasedResourceQualifier {
             return true;
         }
 
-        PixelDensityQualifier compareQ = (PixelDensityQualifier)compareTo;
-        PixelDensityQualifier referenceQ = (PixelDensityQualifier)reference;
+        DensityQualifier compareQ = (DensityQualifier)compareTo;
+        DensityQualifier referenceQ = (DensityQualifier)reference;
 
         if (compareQ.mValue == referenceQ.mValue) {
             // what we have is already the best possible match (exact match)

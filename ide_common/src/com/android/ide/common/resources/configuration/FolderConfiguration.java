@@ -50,10 +50,10 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private final static int INDEX_SMALLEST_SCREEN_WIDTH = 4;
     private final static int INDEX_SCREEN_WIDTH          = 5;
     private final static int INDEX_SCREEN_HEIGHT         = 6;
-    private final static int INDEX_SCREEN_SIZE           = 7;
+    private final static int INDEX_SCREEN_LAYOUT_SIZE    = 7;
     private final static int INDEX_SCREEN_RATIO          = 8;
     private final static int INDEX_SCREEN_ORIENTATION    = 9;
-    private final static int INDEX_DOCK_MODE             = 10;
+    private final static int INDEX_UI_MODE               = 10;
     private final static int INDEX_NIGHT_MODE            = 11;
     private final static int INDEX_PIXEL_DENSITY         = 12;
     private final static int INDEX_TOUCH_TYPE            = 13;
@@ -229,8 +229,8 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof ScreenHeightQualifier) {
             mQualifiers[INDEX_SCREEN_HEIGHT] = qualifier;
 
-        } else if (qualifier instanceof ScreenSizeQualifier) {
-            mQualifiers[INDEX_SCREEN_SIZE] = qualifier;
+        } else if (qualifier instanceof ScreenLayoutSizeQualifier) {
+            mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = qualifier;
 
         } else if (qualifier instanceof ScreenRatioQualifier) {
             mQualifiers[INDEX_SCREEN_RATIO] = qualifier;
@@ -238,13 +238,13 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof ScreenOrientationQualifier) {
             mQualifiers[INDEX_SCREEN_ORIENTATION] = qualifier;
 
-        } else if (qualifier instanceof DockModeQualifier) {
-            mQualifiers[INDEX_DOCK_MODE] = qualifier;
+        } else if (qualifier instanceof UiModeQualifier) {
+            mQualifiers[INDEX_UI_MODE] = qualifier;
 
         } else if (qualifier instanceof NightModeQualifier) {
             mQualifiers[INDEX_NIGHT_MODE] = qualifier;
 
-        } else if (qualifier instanceof PixelDensityQualifier) {
+        } else if (qualifier instanceof DensityQualifier) {
             mQualifiers[INDEX_PIXEL_DENSITY] = qualifier;
 
         } else if (qualifier instanceof TouchScreenQualifier) {
@@ -350,12 +350,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return (ScreenHeightQualifier) mQualifiers[INDEX_SCREEN_HEIGHT];
     }
 
-    public void setScreenSizeQualifier(ScreenSizeQualifier qualifier) {
-        mQualifiers[INDEX_SCREEN_SIZE] = qualifier;
+    public void setScreenLayoutSizeQualifier(ScreenLayoutSizeQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = qualifier;
     }
 
-    public ScreenSizeQualifier getScreenSizeQualifier() {
-        return (ScreenSizeQualifier)mQualifiers[INDEX_SCREEN_SIZE];
+    public ScreenLayoutSizeQualifier getScreenLayoutSizeQualifier() {
+        return (ScreenLayoutSizeQualifier)mQualifiers[INDEX_SCREEN_LAYOUT_SIZE];
     }
 
     public void setScreenRatioQualifier(ScreenRatioQualifier qualifier) {
@@ -374,12 +374,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return (ScreenOrientationQualifier)mQualifiers[INDEX_SCREEN_ORIENTATION];
     }
 
-    public void setDockModeQualifier(DockModeQualifier qualifier) {
-        mQualifiers[INDEX_DOCK_MODE] = qualifier;
+    public void setUiModeQualifier(UiModeQualifier qualifier) {
+        mQualifiers[INDEX_UI_MODE] = qualifier;
     }
 
-    public DockModeQualifier getDockModeQualifier() {
-        return (DockModeQualifier)mQualifiers[INDEX_DOCK_MODE];
+    public UiModeQualifier getUiModeQualifier() {
+        return (UiModeQualifier)mQualifiers[INDEX_UI_MODE];
     }
 
     public void setNightModeQualifier(NightModeQualifier qualifier) {
@@ -390,12 +390,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return (NightModeQualifier)mQualifiers[INDEX_NIGHT_MODE];
     }
 
-    public void setPixelDensityQualifier(PixelDensityQualifier qualifier) {
+    public void setDensityQualifier(DensityQualifier qualifier) {
         mQualifiers[INDEX_PIXEL_DENSITY] = qualifier;
     }
 
-    public PixelDensityQualifier getPixelDensityQualifier() {
-        return (PixelDensityQualifier)mQualifiers[INDEX_PIXEL_DENSITY];
+    public DensityQualifier getDensityQualifier() {
+        return (DensityQualifier)mQualifiers[INDEX_PIXEL_DENSITY];
     }
 
     public void setTouchTypeQualifier(TouchScreenQualifier qualifier) {
@@ -457,7 +457,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     /**
      * Updates the {@link SmallestScreenWidthQualifier}, {@link ScreenWidthQualifier}, and
      * {@link ScreenHeightQualifier} based on the (required) values of
-     * {@link ScreenDimensionQualifier} {@link PixelDensityQualifier}, and
+     * {@link ScreenDimensionQualifier} {@link DensityQualifier}, and
      * {@link ScreenOrientationQualifier}.
      *
      * Also the density cannot be {@link Density#NODPI} as it's not valid on a device.
@@ -469,7 +469,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         ResourceQualifier orientQ = mQualifiers[INDEX_SCREEN_ORIENTATION];
 
         if (sizeQ != null && densityQ != null && orientQ != null) {
-            Density density = ((PixelDensityQualifier) densityQ).getValue();
+            Density density = ((DensityQualifier) densityQ).getValue();
             if (density == Density.NODPI) {
                 return;
             }
@@ -846,12 +846,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
-        mQualifiers[INDEX_SCREEN_SIZE] = new ScreenSizeQualifier();
+        mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenLayoutSizeQualifier();
         mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
-        mQualifiers[INDEX_DOCK_MODE] = new DockModeQualifier();
+        mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();
         mQualifiers[INDEX_NIGHT_MODE] = new NightModeQualifier();
-        mQualifiers[INDEX_PIXEL_DENSITY] = new PixelDensityQualifier();
+        mQualifiers[INDEX_PIXEL_DENSITY] = new DensityQualifier();
         mQualifiers[INDEX_TOUCH_TYPE] = new TouchScreenQualifier();
         mQualifiers[INDEX_KEYBOARD_STATE] = new KeyboardStateQualifier();
         mQualifiers[INDEX_TEXT_INPUT_METHOD] = new TextInputMethodQualifier();

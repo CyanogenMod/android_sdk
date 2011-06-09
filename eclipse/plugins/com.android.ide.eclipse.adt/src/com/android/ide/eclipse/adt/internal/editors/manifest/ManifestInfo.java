@@ -27,6 +27,7 @@ import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_TARGET_SDK_VERSIO
 import static com.android.sdklib.xml.AndroidManifest.ATTRIBUTE_THEME;
 import static com.android.sdklib.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.sdklib.xml.AndroidManifest.NODE_USES_SDK;
+
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.REFERENCES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -34,7 +35,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.IAbstractFile;
-import com.android.resources.ScreenSize;
+import com.android.resources.ScreenLayoutSize;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidManifest;
@@ -288,7 +289,7 @@ public class ManifestInfo {
      * @param screenSize the screen size to obtain a default theme for, or null if unknown
      * @return the theme to use for this project, never null
      */
-    public String getDefaultTheme(IAndroidTarget renderingTarget, ScreenSize screenSize) {
+    public String getDefaultTheme(IAndroidTarget renderingTarget, ScreenLayoutSize screenSize) {
         sync();
 
         if (mManifestTheme != null) {
@@ -303,7 +304,7 @@ public class ManifestInfo {
         int apiLevel = Math.min(mTargetSdk, renderingTargetSdk);
         // For now this theme works only on XLARGE screens. When it works for all sizes,
         // add that new apiLevel to this check.
-        if (apiLevel >= 11 && screenSize == ScreenSize.XLARGE) {
+        if (apiLevel >= 11 && screenSize == ScreenLayoutSize.XLARGE) {
             return PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
         } else {
             return PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$

@@ -17,16 +17,16 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.common.resources.configuration.CountryCodeQualifier;
+import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
-import com.android.ide.common.resources.configuration.PixelDensityQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.resources.Density;
@@ -34,9 +34,9 @@ import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
+import com.android.resources.ScreenLayoutSize;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRatio;
-import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 
 import org.xml.sax.Attributes;
@@ -131,9 +131,9 @@ class LayoutDeviceHandler extends DefaultHandler {
                     Integer.parseInt(mStringAccumulator.toString()));
             mCurrentConfig.setNetworkCodeQualifier(ncq);
         } else if (LayoutDevicesXsd.NODE_SCREEN_SIZE.equals(localName)) {
-            ScreenSizeQualifier ssq = new ScreenSizeQualifier(
-                    ScreenSize.getEnum(mStringAccumulator.toString()));
-            mCurrentConfig.setScreenSizeQualifier(ssq);
+            ScreenLayoutSizeQualifier ssq = new ScreenLayoutSizeQualifier(
+                    ScreenLayoutSize.getEnum(mStringAccumulator.toString()));
+            mCurrentConfig.setScreenLayoutSizeQualifier(ssq);
         } else if (LayoutDevicesXsd.NODE_SCREEN_RATIO.equals(localName)) {
             ScreenRatioQualifier srq = new ScreenRatioQualifier(
                     ScreenRatio.getEnum(mStringAccumulator.toString()));
@@ -143,9 +143,9 @@ class LayoutDeviceHandler extends DefaultHandler {
                     ScreenOrientation.getEnum(mStringAccumulator.toString()));
             mCurrentConfig.setScreenOrientationQualifier(soq);
         } else if (LayoutDevicesXsd.NODE_PIXEL_DENSITY.equals(localName)) {
-            PixelDensityQualifier pdq = new PixelDensityQualifier(
+            DensityQualifier dq = new DensityQualifier(
                     Density.getEnum(mStringAccumulator.toString()));
-            mCurrentConfig.setPixelDensityQualifier(pdq);
+            mCurrentConfig.setDensityQualifier(dq);
         } else if (LayoutDevicesXsd.NODE_TOUCH_TYPE.equals(localName)) {
             TouchScreenQualifier tsq = new TouchScreenQualifier(
                     TouchScreen.getEnum(mStringAccumulator.toString()));

@@ -16,24 +16,24 @@
 
 package com.android.ide.common.resources.configuration;
 
-import com.android.resources.DockMode;
+import com.android.resources.UiMode;
 
 import junit.framework.TestCase;
 
 public class DockModeQualifierTest extends TestCase {
 
-    private DockModeQualifier mCarQualifier;
-    private DockModeQualifier mDeskQualifier;
-    private DockModeQualifier mTVQualifier;
-    private DockModeQualifier mNoneQualifier;
+    private UiModeQualifier mCarQualifier;
+    private UiModeQualifier mDeskQualifier;
+    private UiModeQualifier mTVQualifier;
+    private UiModeQualifier mNoneQualifier;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mCarQualifier = new DockModeQualifier(DockMode.CAR);
-        mDeskQualifier = new DockModeQualifier(DockMode.DESK);
-        mTVQualifier = new DockModeQualifier(DockMode.TELEVISION);
-        mNoneQualifier = new DockModeQualifier(DockMode.NONE);
+        mCarQualifier = new UiModeQualifier(UiMode.CAR);
+        mDeskQualifier = new UiModeQualifier(UiMode.DESK);
+        mTVQualifier = new UiModeQualifier(UiMode.TELEVISION);
+        mNoneQualifier = new UiModeQualifier(UiMode.NORMAL);
     }
 
     @Override

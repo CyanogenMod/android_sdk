@@ -24,16 +24,16 @@ import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.common.resources.configuration.DockModeQualifier;
+import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
-import com.android.ide.common.resources.configuration.PixelDensityQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -48,12 +48,12 @@ import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.Density;
-import com.android.resources.DockMode;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.resources.ScreenLayoutSize;
 import com.android.resources.ScreenOrientation;
-import com.android.resources.ScreenSize;
+import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.PlatformPackage;
@@ -146,7 +146,7 @@ public class ConfigurationComposite extends Composite {
     private Combo mDeviceCombo;
     private Combo mDeviceConfigCombo;
     private Combo mLocaleCombo;
-    private Combo mDockCombo;
+    private Combo mUiModeCombo;
     private Combo mNightCombo;
     private Combo mThemeCombo;
     private Combo mTargetCombo;
@@ -251,8 +251,8 @@ public class ConfigurationComposite extends Composite {
         String configName;
         ResourceQualifier[] locale;
         String theme;
-        /** dock mode. Guaranteed to be non null */
-        DockMode dock = DockMode.NONE;
+        /** UI mode. Guaranteed to be non null */
+        UiMode uiMode = UiMode.NORMAL;
         /** night mode. Guaranteed to be non null */
         NightMode night = NightMode.NOTNIGHT;
         /** the version being targeted for rendering */
@@ -276,7 +276,7 @@ public class ConfigurationComposite extends Composite {
                 sb.append(SEP);
                 sb.append(theme);
                 sb.append(SEP);
-                sb.append(dock.getResourceValue());
+                sb.append(uiMode.getResourceValue());
                 sb.append(SEP);
                 sb.append(night.getResourceValue());
                 sb.append(SEP);
@@ -313,9 +313,9 @@ public class ConfigurationComposite extends Composite {
                             }
 
                             theme = values[3];
-                            dock = DockMode.getEnum(values[4]);
-                            if (dock == null) {
-                                dock = DockMode.NONE;
+                            uiMode = UiMode.getEnum(values[4]);
+                            if (uiMode == null) {
+                                uiMode = UiMode.NORMAL;
                             }
                             night = NightMode.getEnum(values[5]);
                             if (night == null) {
@@ -487,13 +487,13 @@ public class ConfigurationComposite extends Composite {
                 GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL));
         gd.heightHint = 0;
 
-        mDockCombo = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
-        mDockCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL
+        mUiModeCombo = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mUiModeCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL
                 | GridData.GRAB_HORIZONTAL));
-        for (DockMode mode : DockMode.values()) {
-            mDockCombo.add(mode.getLongDisplayValue());
+        for (UiMode mode : UiMode.values()) {
+            mUiModeCombo.add(mode.getLongDisplayValue());
         }
-        mDockCombo.addSelectionListener(new SelectionAdapter() {
+        mUiModeCombo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onDockChange();
@@ -715,7 +715,7 @@ public class ConfigurationComposite extends Composite {
 
                         adaptConfigSelection(false /*needBestMatch*/);
 
-                        mDockCombo.select(DockMode.getIndex(mState.dock));
+                        mUiModeCombo.select(UiMode.getIndex(mState.uiMode));
                         mNightCombo.select(NightMode.getIndex(mState.night));
                         mTargetCombo.select(mTargetList.indexOf(mState.target));
 
@@ -959,7 +959,7 @@ public class ConfigurationComposite extends Composite {
                 selectDevice(mState.device = match.device);
                 fillConfigCombo(match.name);
                 mLocaleCombo.select(match.bundle.localeIndex);
-                mDockCombo.select(match.bundle.dockModeIndex);
+                mUiModeCombo.select(match.bundle.dockModeIndex);
                 mNightCombo.select(match.bundle.nightModeIndex);
 
                 // TODO: display a better warning!
@@ -982,7 +982,7 @@ public class ConfigurationComposite extends Composite {
             selectDevice(mState.device = match.device);
             fillConfigCombo(match.name);
             mLocaleCombo.select(match.bundle.localeIndex);
-            mDockCombo.select(match.bundle.dockModeIndex);
+            mUiModeCombo.select(match.bundle.dockModeIndex);
             mNightCombo.select(match.bundle.nightModeIndex);
         }
     }
@@ -992,14 +992,14 @@ public class ConfigurationComposite extends Composite {
      */
     private static class TabletConfigComparator implements Comparator<ConfigMatch> {
         public int compare(ConfigMatch o1, ConfigMatch o2) {
-            ScreenSize ss1 = o1.testConfig.getScreenSizeQualifier().getValue();
-            ScreenSize ss2 = o2.testConfig.getScreenSizeQualifier().getValue();
+            ScreenLayoutSize ss1 = o1.testConfig.getScreenLayoutSizeQualifier().getValue();
+            ScreenLayoutSize ss2 = o2.testConfig.getScreenLayoutSizeQualifier().getValue();
 
             // X-LARGE is better than all others (which are considered identical)
             // if both X-LARGE, then LANDSCAPE is better than all others (which are identical)
 
-            if (ss1 == ScreenSize.XLARGE) {
-                if (ss2 == ScreenSize.XLARGE) {
+            if (ss1 == ScreenLayoutSize.XLARGE) {
+                if (ss2 == ScreenLayoutSize.XLARGE) {
                     ScreenOrientation so1 =
                         o1.testConfig.getScreenOrientationQualifier().getValue();
                     ScreenOrientation so2 =
@@ -1019,7 +1019,7 @@ public class ConfigurationComposite extends Composite {
                 } else {
                     return -1;
                 }
-            } else if (ss2 == ScreenSize.XLARGE) {
+            } else if (ss2 == ScreenLayoutSize.XLARGE) {
                 return 1;
             } else {
                 return 0;
@@ -1044,14 +1044,14 @@ public class ConfigurationComposite extends Composite {
 
         public int compare(ConfigMatch o1, ConfigMatch o2) {
             int dpi1 = Density.DEFAULT_DENSITY;
-            if (o1.testConfig.getPixelDensityQualifier() != null) {
-                dpi1 = o1.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+            if (o1.testConfig.getDensityQualifier() != null) {
+                dpi1 = o1.testConfig.getDensityQualifier().getValue().getDpiValue();
                 dpi1 = mDensitySort.get(dpi1, 100 /* valueIfKeyNotFound*/);
             }
 
             int dpi2 = Density.DEFAULT_DENSITY;
-            if (o2.testConfig.getPixelDensityQualifier() != null) {
-                dpi2 = o2.testConfig.getPixelDensityQualifier().getValue().getDpiValue();
+            if (o2.testConfig.getDensityQualifier() != null) {
+                dpi2 = o2.testConfig.getDensityQualifier().getValue().getDpiValue();
                 dpi2 = mDensitySort.get(dpi2, 100 /* valueIfKeyNotFound*/);
             }
 
@@ -1138,9 +1138,9 @@ public class ConfigurationComposite extends Composite {
         // loop on each item and for each, add all variations of the dock modes
         for (ConfigBundle bundle : addConfig) {
             int index = 0;
-            for (DockMode mode : DockMode.values()) {
+            for (UiMode mode : UiMode.values()) {
                 ConfigBundle b = new ConfigBundle(bundle);
-                b.config.setDockModeQualifier(new DockModeQualifier(mode));
+                b.config.setUiModeQualifier(new UiModeQualifier(mode));
                 b.dockModeIndex = index++;
                 list.add(b);
             }
@@ -1305,9 +1305,9 @@ public class ConfigurationComposite extends Composite {
                 mState.theme = mThemeCombo.getItem(index);
             }
 
-            index = mDockCombo.getSelectionIndex();
+            index = mUiModeCombo.getSelectionIndex();
             if (index != -1) {
-                mState.dock = DockMode.getByIndex(index);
+                mState.uiMode = UiMode.getByIndex(index);
             }
 
             index = mNightCombo.getSelectionIndex();
@@ -1471,12 +1471,12 @@ public class ConfigurationComposite extends Composite {
                 ManifestInfo manifest = ManifestInfo.get(project);
 
                 // Look up the screen size for the current configuration
-                ScreenSize screenSize = null;
+                ScreenLayoutSize screenSize = null;
                 if (mState.device != null) {
                     List<DeviceConfig> configs = mState.device.getConfigs();
                     for (DeviceConfig config : configs) {
-                        ScreenSizeQualifier qualifier =
-                            config.getConfig().getScreenSizeQualifier();
+                        ScreenLayoutSizeQualifier qualifier =
+                            config.getConfig().getScreenLayoutSizeQualifier();
                         screenSize = qualifier.getValue();
                         break;
                     }
@@ -1683,7 +1683,7 @@ public class ConfigurationComposite extends Composite {
      */
     public Density getDensity() {
         if (mCurrentConfig != null) {
-            PixelDensityQualifier qual = mCurrentConfig.getPixelDensityQualifier();
+            DensityQualifier qual = mCurrentConfig.getDensityQualifier();
             if (qual != null) {
                 // just a sanity check
                 Density d = qual.getValue();
@@ -2214,11 +2214,11 @@ public class ConfigurationComposite extends Composite {
                         (RegionQualifier)localeQualifiers[LOCALE_REGION]);
             }
 
-            index = mDockCombo.getSelectionIndex();
+            index = mUiModeCombo.getSelectionIndex();
             if (index == -1) {
                 index = 0; // no selection = 0
             }
-            mCurrentConfig.setDockModeQualifier(new DockModeQualifier(DockMode.getByIndex(index)));
+            mCurrentConfig.setUiModeQualifier(new UiModeQualifier(UiMode.getByIndex(index)));
 
             index = mNightCombo.getSelectionIndex();
             if (index == -1) {

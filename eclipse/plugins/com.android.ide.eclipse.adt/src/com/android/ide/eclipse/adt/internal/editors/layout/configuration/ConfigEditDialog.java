@@ -16,12 +16,12 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 
-import com.android.ide.common.resources.configuration.DockModeQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
+import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
@@ -246,7 +246,7 @@ public class ConfigEditDialog extends GridDialog {
             public boolean accept(ResourceQualifier qualifier) {
                 if (qualifier instanceof LanguageQualifier ||
                         qualifier instanceof RegionQualifier ||
-                        qualifier instanceof DockModeQualifier ||
+                        qualifier instanceof UiModeQualifier ||
                         qualifier instanceof NightModeQualifier ||
                         qualifier instanceof VersionQualifier) {
                     return false;
