@@ -37,6 +37,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -48,6 +49,8 @@ import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.I
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
@@ -95,6 +98,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.preferences.BuildPathsPropertyPage;
 import org.eclipse.jdt.ui.actions.OpenNewClassWizardAction;
 import org.eclipse.jdt.ui.wizards.NewClassWizardPage;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.window.Window;
@@ -109,6 +115,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.INullSelectionListener;
@@ -1567,16 +1576,23 @@ public class GraphicalEditorPart extends EditorPart
                 addText(mErrorLabel, "- ");
                 addText(mErrorLabel, clazz);
                 addText(mErrorLabel, " (");
-                addActionLink(mErrorLabel, clazz,
-                        ActionLinkStyleRange.LINK_FIX_BUILD_PATH, "Fix Build Path");
+
+                IProject project = getProject();
+                Collection<String> customViews = getCustomViewClassNames(project);
+                addTypoSuggestions(clazz, customViews, false);
+                addTypoSuggestions(clazz, customViews, true);
+                addTypoSuggestions(clazz, getAndroidViewClassNames(project), false);
+
+                addActionLink(mErrorLabel,
+                        ActionLinkStyleRange.LINK_FIX_BUILD_PATH, "Fix Build Path", clazz, null);
                 addText(mErrorLabel, ", ");
-                addActionLink(mErrorLabel, clazz,
-                        ActionLinkStyleRange.LINK_EDIT_XML, "Edit XML");
+                addActionLink(mErrorLabel,
+                        ActionLinkStyleRange.LINK_EDIT_XML, "Edit XML", clazz, null);
                 if (clazz.indexOf('.') != -1) {
                     // Add "Create Class" link, but only for custom views
                     addText(mErrorLabel, ", ");
-                    addActionLink(mErrorLabel, clazz,
-                            ActionLinkStyleRange.LINK_CREATE_CLASS, "Create Class");
+                    addActionLink(mErrorLabel,
+                            ActionLinkStyleRange.LINK_CREATE_CLASS, "Create Class", clazz, null);
                 }
                 addText(mErrorLabel, ")\n");
             }
@@ -1590,11 +1606,11 @@ public class GraphicalEditorPart extends EditorPart
             for (String clazz : brokenClasses) {
                 addText(mErrorLabel, "- ");
                 addText(mErrorLabel, " (");
-                addActionLink(mErrorLabel, clazz,
-                        ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class");
+                addActionLink(mErrorLabel,
+                        ActionLinkStyleRange.LINK_OPEN_CLASS, "Open Class", clazz, null);
                 addText(mErrorLabel, ", ");
-                addActionLink(mErrorLabel, clazz,
-                        ActionLinkStyleRange.LINK_SHOW_LOG, "Show Error Log");
+                addActionLink(mErrorLabel,
+                        ActionLinkStyleRange.LINK_SHOW_LOG, "Show Error Log", clazz, null);
                 addText(mErrorLabel, ")\n");
 
                 if (!(clazz.startsWith("android.") || //$NON-NLS-1$
@@ -1612,6 +1628,76 @@ public class GraphicalEditorPart extends EditorPart
         }
 
         mSashError.setMaximizedControl(null);
+    }
+
+    private void addTypoSuggestions(String actual, Collection<String> views,
+            boolean compareWithPackage) {
+        if (views.size() == 0) {
+            return;
+        }
+
+        // Look for typos and try to match with custom views and android views
+        String actualBase = actual.substring(actual.lastIndexOf('.') + 1);
+        if (views.size() > 0) {
+            for (String suggested : views) {
+                String suggestedBase = suggested.substring(suggested.lastIndexOf('.') + 1);
+
+                String matchWith = compareWithPackage ? suggested : suggestedBase;
+                int maxDistance = actualBase.length() >= 4 ? 2 : 1;
+                if (Math.abs(actualBase.length() - matchWith.length()) > maxDistance) {
+                    // The string lengths differ more than the allowed edit distance;
+                    // no point in even attempting to compute the edit distance (requires
+                    // O(n*m) storage and O(n*m) speed, where n and m are the string lengths)
+                    continue;
+                }
+                if (AdtUtils.editDistance(actualBase, matchWith) <= maxDistance) {
+                    // Suggest this class as a typo for the given class
+                    String labelClass = (suggestedBase.equals(actual) || actual.indexOf('.') != -1)
+                        ? suggested : suggestedBase;
+                    addActionLink(mErrorLabel,
+                            ActionLinkStyleRange.LINK_CHANGE_CLASS_TO,
+                            String.format("Change to %1$s",
+                                    // Only show full package name if class name
+                                    // is the same
+                                    labelClass),
+                                    actual,
+                                    suggested.startsWith(ANDROID_PKG) ? suggestedBase : suggested
+                    );
+                    addText(mErrorLabel, ", ");
+                }
+            }
+        }
+    }
+
+    private static Collection<String> getCustomViewClassNames(IProject project) {
+        CustomViewFinder finder = CustomViewFinder.get(project);
+        Collection<String> views = finder.getAllViews();
+        if (views == null) {
+            finder.refresh();
+            views = finder.getAllViews();
+        }
+
+        return views;
+    }
+
+    private static Collection<String> getAndroidViewClassNames(IProject project) {
+        List<String> classNames = new ArrayList<String>(100);
+
+        Sdk currentSdk = Sdk.getCurrent();
+        IAndroidTarget target = currentSdk.getTarget(project);
+        if (target != null) {
+            AndroidTargetData targetData = currentSdk.getTargetData(target);
+            LayoutDescriptors layoutDescriptors = targetData.getLayoutDescriptors();
+
+            for (ViewElementDescriptor d : layoutDescriptors.getViewDescriptors()) {
+                classNames.add(d.getFullClassName());
+            }
+            for (ViewElementDescriptor d : layoutDescriptors.getLayoutDescriptors()) {
+                classNames.add(d.getFullClassName());
+            }
+        }
+
+        return classNames;
     }
 
     /** Add a normal line of text to the styled text widget. */
@@ -1708,12 +1794,13 @@ public class GraphicalEditorPart extends EditorPart
      * A mouse-click listener is setup and it interprets the link based on the
      * action, corresponding to the value fields in {@link ActionLinkStyleRange}.
      */
-    private void addActionLink(StyledText styledText, String fqcn, int action, String label) {
+    private void addActionLink(StyledText styledText, int action, String label,
+            String data1, String data2) {
         String s = styledText.getText();
         int start = (s == null ? 0 : s.length());
         styledText.append(label);
 
-        StyleRange sr = new ActionLinkStyleRange(action, fqcn);
+        StyleRange sr = new ActionLinkStyleRange(action, data1, data2);
         sr.start = start;
         sr.length = label.length();
         sr.fontStyle = SWT.NORMAL;
@@ -1857,23 +1944,28 @@ public class GraphicalEditorPart extends EditorPart
         private static final int LINK_OPEN_CLASS = 4;
         /** Show the error log */
         private static final int LINK_SHOW_LOG = 5;
+        /** Change the class reference to the given fully qualified name */
+        private static final int LINK_CHANGE_CLASS_TO = 6;
 
-        /** The current class or null */
-        private final String mFqcn;
+        /** Client data 1 - usually the class name */
+        private final String mData1;
+        /** Client data 2 - such as the suggested new name */
+        private final String mData2;
         /** The action to be taken when the link is clicked */
         private final int mAction;
 
-        private ActionLinkStyleRange(int action, String fqcn) {
+        private ActionLinkStyleRange(int action, String data1, String data2) {
             super();
-            this.mAction = action;
-            this.mFqcn = fqcn;
+            mAction = action;
+            mData1 = data1;
+            mData2 = data2;
         }
 
         /** Performs the click action */
         public void onClick() {
             switch (mAction) {
                 case LINK_CREATE_CLASS:
-                    createNewClass(mFqcn);
+                    createNewClass(mData1);
                     break;
                 case LINK_EDIT_XML:
                     mLayoutEditor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
@@ -1886,7 +1978,7 @@ public class GraphicalEditorPart extends EditorPart
                             getProject(), id, null, null).open();
                     break;
                 case LINK_OPEN_CLASS:
-                    AdtPlugin.openJavaClass(getProject(), mFqcn);
+                    AdtPlugin.openJavaClass(getProject(), mData1);
                     break;
                 case LINK_SHOW_LOG:
                     IWorkbench workbench = PlatformUI.getWorkbench();
@@ -1895,6 +1987,60 @@ public class GraphicalEditorPart extends EditorPart
                         IWorkbenchPage page = workbenchWindow.getActivePage();
                         page.showView("org.eclipse.pde.runtime.LogView"); //$NON-NLS-1$
                     } catch (PartInitException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                    break;
+                case LINK_CHANGE_CLASS_TO:
+                    // Change class reference of mData1 to mData2
+                    // TODO: run under undo lock
+                    MultiTextEdit edits = new MultiTextEdit();
+                    ISourceViewer textViewer = mLayoutEditor.getStructuredSourceViewer();
+                    IDocument document = textViewer.getDocument();
+                    String xml = document.get();
+                    int index = 0;
+                    // Replace <old with <new and </old with </new
+                    String prefix = "<"; //$NON-NLS-1$
+                    String find = prefix + mData1;
+                    String replaceWith = prefix + mData2;
+                    while (true) {
+                        index = xml.indexOf(find, index);
+                        if (index == -1) {
+                            break;
+                        }
+                        edits.addChild(new ReplaceEdit(index, find.length(), replaceWith));
+                        index += find.length();
+                    }
+                    index = 0;
+                    prefix = "</"; //$NON-NLS-1$
+                    find = prefix + mData1;
+                    replaceWith = prefix + mData2;
+                    while (true) {
+                        index = xml.indexOf(find, index);
+                        if (index == -1) {
+                            break;
+                        }
+                        edits.addChild(new ReplaceEdit(index, find.length(), replaceWith));
+                        index += find.length();
+                    }
+                    // Handle <view class="old">
+                    index = 0;
+                    prefix = "\""; //$NON-NLS-1$
+                    String suffix = "\""; //$NON-NLS-1$
+                    find = prefix + mData1 + suffix;
+                    replaceWith = prefix + mData2 + suffix;
+                    while (true) {
+                        index = xml.indexOf(find, index);
+                        if (index == -1) {
+                            break;
+                        }
+                        edits.addChild(new ReplaceEdit(index, find.length(), replaceWith));
+                        index += find.length();
+                    }
+                    try {
+                        edits.apply(document);
+                    } catch (MalformedTreeException e) {
+                        AdtPlugin.log(e, null);
+                    } catch (BadLocationException e) {
                         AdtPlugin.log(e, null);
                     }
                     break;

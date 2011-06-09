@@ -120,6 +120,7 @@ javadoc
 keystore
 layoutlib
 leaky
+levenshtein
 lib
 lifecycle
 linebreaks
