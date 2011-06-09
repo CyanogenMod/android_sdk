@@ -102,6 +102,17 @@ class RenderLogger extends LayoutLog {
         String description = describe(message);
         AdtPlugin.log(throwable, "%1$s: %2$s", mName, description);
         if (throwable != null) {
+            if (throwable instanceof ClassNotFoundException) {
+                // The project callback is given a chance to resolve classes,
+                // and when it fails, it will record it in its own list which
+                // is displayed in a special way (with action hyperlinks etc).
+                // Therefore, include these messages in the visible render log,
+                // especially since the user message from a ClassNotFoundException
+                // is really not helpful (it just lists the class name without
+                // even mentioning that it is a class-not-found exception.)
+                return;
+            }
+
             mHaveExceptions = true;
         }
 
