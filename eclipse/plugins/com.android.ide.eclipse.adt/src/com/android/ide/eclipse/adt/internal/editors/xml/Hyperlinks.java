@@ -1509,7 +1509,7 @@ public class Hyperlinks {
                 return;
             }
 
-            IAbstractFile wrappedFile = mFile.getFile();
+            IAbstractFile wrappedFile = mFile != null ? mFile.getFile() : null;
             if (wrappedFile instanceof IFileWrapper) {
                 IFile file = ((IFileWrapper) wrappedFile).getIFile();
                 try {

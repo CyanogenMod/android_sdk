@@ -550,7 +550,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                }
                int replaceLength = 0;
                addMatchingProposals(proposals, choices,
-                       offset, parentNode != null ? parentNode : null, wordPrefix, needTag,
+                       offset, parentNode, wordPrefix, needTag,
                                false /* isAttribute */,
                                false /*isNew*/,
                                false /*isComplete*/,

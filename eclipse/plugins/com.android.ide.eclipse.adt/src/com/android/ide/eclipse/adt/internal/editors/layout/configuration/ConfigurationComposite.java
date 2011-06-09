@@ -44,9 +44,9 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.resources.Density;
 import com.android.resources.DockMode;
 import com.android.resources.NightMode;
@@ -1463,7 +1463,7 @@ public class ConfigurationComposite extends Composite {
             mIsProjectTheme.clear();
 
             ArrayList<String> themes = new ArrayList<String>();
-            String includedIn = mListener != null ? mListener.getIncludedWithin() : null;
+            String includedIn = mListener.getIncludedWithin();
 
             // First list any themes that are declared by the manifest
             if (mEditedFile != null) {

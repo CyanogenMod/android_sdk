@@ -129,7 +129,7 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
      * A delegating {@link IContentAssistProcessor} whose purpose is to filter out some
      * default Eclipse XML completions which are distracting in Android XML files
      */
-    private class FilteringContentAssistProcessor implements IContentAssistProcessor {
+    private static class FilteringContentAssistProcessor implements IContentAssistProcessor {
         private IContentAssistProcessor mDelegate;
 
         public FilteringContentAssistProcessor(IContentAssistProcessor delegate) {

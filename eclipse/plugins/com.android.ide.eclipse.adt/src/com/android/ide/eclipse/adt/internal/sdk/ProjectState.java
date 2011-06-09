@@ -379,13 +379,13 @@ public final class ProjectState {
      *
      * @return the matching LibraryState or <code>null</code>
      *
-     * @see #needs(IProject)
+     * @see #needs(ProjectState)
      */
     public LibraryState getLibrary(IProject library) {
         synchronized (mLibraries) {
             for (LibraryState state : mLibraries) {
                 ProjectState ps = state.getProjectState();
-                if (ps != null && ps.equals(library)) {
+                if (ps != null && ps.getProject().equals(library)) {
                     return state;
                 }
             }

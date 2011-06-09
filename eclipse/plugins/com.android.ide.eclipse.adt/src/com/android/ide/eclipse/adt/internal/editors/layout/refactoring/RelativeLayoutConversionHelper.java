@@ -557,7 +557,7 @@ class RelativeLayoutConversionHelper {
                 }
             }
 
-            if (baselineRef != null && !baselineRef.equals(childView.getId())) {
+            if (baselineRef != null && !baselineRef.getId().equals(childView.getId())) {
                 assert !isVertical;
                 // Only align if they share the same gravity
                 if ((childView.getGravity() & GRAVITY_VERT_MASK) ==

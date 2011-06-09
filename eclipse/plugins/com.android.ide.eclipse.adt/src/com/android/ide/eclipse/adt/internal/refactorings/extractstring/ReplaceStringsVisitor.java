@@ -79,7 +79,7 @@ class ReplaceStringsVisitor extends ASTVisitor {
         mXmlId = xmlId;
     }
 
-    @SuppressWarnings("unchecked")    //$NON-NLS-1$
+    @SuppressWarnings("unchecked")
     @Override
     public boolean visit(StringLiteral node) {
         if (node.getLiteralValue().equals(mOldString)) {
@@ -191,7 +191,7 @@ class ReplaceStringsVisitor extends ASTVisitor {
      *
      * This covers the case of Activity.setTitle(int resId) vs setTitle(String str).
      */
-    @SuppressWarnings("unchecked")  //$NON-NLS-1$
+    @SuppressWarnings("unchecked")
     private boolean examineMethodInvocation(StringLiteral node) {
 
         ASTNode parent = null;
@@ -332,8 +332,7 @@ class ReplaceStringsVisitor extends ASTVisitor {
 
     private Expression findContextFieldOrMethod(StringLiteral node) {
         TypeDeclaration clazz = findParentClass(node, TypeDeclaration.class);
-        ITypeBinding clazzType = clazz == null ? null : clazz.resolveBinding();
-        return findContextFieldOrMethod(clazzType);
+        return clazz == null ? null : findContextFieldOrMethod(clazz.resolveBinding());
     }
 
     private Expression findContextFieldOrMethod(ITypeBinding clazzType) {

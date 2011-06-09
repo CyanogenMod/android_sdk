@@ -294,18 +294,18 @@ public final class CustomViewDescriptorService {
      * @param type the type for which the {@link AttributeDescriptor} are returned.
      * @param parentDescriptor the {@link ViewElementDescriptor} of the direct superclass.
      */
-    private AttributeDescriptor[] getAttributeDescriptor(IType type,
+    private static AttributeDescriptor[] getAttributeDescriptor(IType type,
             ViewElementDescriptor parentDescriptor) {
         // TODO add the class attribute descriptors to the parent descriptors.
         return parentDescriptor.getAttributes();
     }
 
-    private AttributeDescriptor[] getLayoutAttributeDescriptors(IType type,
+    private static AttributeDescriptor[] getLayoutAttributeDescriptors(IType type,
             ViewElementDescriptor parentDescriptor) {
         return parentDescriptor.getLayoutAttributes();
     }
 
-    private class CustomViewDescriptor extends ViewElementDescriptor {
+    private static class CustomViewDescriptor extends ViewElementDescriptor {
         public CustomViewDescriptor(String name, String fqcn, AttributeDescriptor[] attributes,
                 AttributeDescriptor[] layoutAttributes,
                 ElementDescriptor[] children) {

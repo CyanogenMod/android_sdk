@@ -290,7 +290,7 @@ public class SimpleElement implements IDragElement {
                     mAttributes.size() == se.mAttributes.size() &&
                     mElements.size() == se.mElements.size() &&
                     mAttributes.equals(se.mAttributes) &&
-                    mElements.equals(mElements);
+                    mElements.equals(se.mElements);
         }
         return false;
     }

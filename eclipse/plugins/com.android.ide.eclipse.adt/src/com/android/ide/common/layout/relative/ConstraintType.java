@@ -141,10 +141,11 @@ enum ConstraintType {
     public static ConstraintType fromAttribute(String attribute) {
         if (sNameToType == null) {
             ConstraintType[] types = ConstraintType.values();
-            sNameToType = new HashMap<String, ConstraintType>(types.length);
+            Map<String, ConstraintType> map = new HashMap<String, ConstraintType>(types.length);
             for (ConstraintType type : types) {
-                sNameToType.put(type.name, type);
+                map.put(type.name, type);
             }
+            sNameToType = map;
         }
         return sNameToType.get(attribute);
     }

@@ -250,7 +250,7 @@ public class WrapInWizard extends VisualRefactoringWizard {
 
                     for (ViewElementDescriptor d : layoutDescriptors) {
                         String className = d.getFullClassName();
-                        if (exclude == null || !exclude.equals(className)) {
+                        if (exclude == null || !exclude.contains(className)) {
                             combo.add(d.getUiName());
                             classNames.add(Pair.of(className, d));
                         }

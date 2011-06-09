@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
@@ -90,7 +90,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
      * Basic Content Provider for a table full of {@link IDevice} objects. The input is
      * a {@link AndroidDebugBridge}.
      */
-    private class ContentProvider implements IStructuredContentProvider {
+    private static class ContentProvider implements IStructuredContentProvider {
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof AndroidDebugBridge) {
                 return ((AndroidDebugBridge)inputElement).getDevices();
@@ -462,7 +462,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
         }
 
         if (mWarningImage == null) {
-            mNoMatchImage = factory.getIcon("warning", //$NON-NLS-1$
+            mWarningImage = factory.getIcon("warning", //$NON-NLS-1$
                     SWT.COLOR_YELLOW,
                     IconFactory.SHAPE_DEFAULT);
         }

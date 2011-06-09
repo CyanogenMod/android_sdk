@@ -362,7 +362,7 @@ public class AndroidPackageRenameParticipant extends AndroidRenameParticipant {
                         if (attributes != null) {
                             Node attributeNode = attributes
                                     .getNamedItem(LayoutConstants.ATTR_CLASS);
-                            if (attributeNode != null || attributeNode instanceof Attr) {
+                            if (attributeNode instanceof Attr) {
                                 Attr attribute = (Attr) attributeNode;
                                 String value = attribute.getValue();
                                 if (value != null) {

@@ -34,8 +34,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -269,7 +269,7 @@ class NewXmlFileCreationPage extends WizardPage {
                     return String.format(
                             "android:orientation=\"vertical\"\n"       //$NON-NLS-1$
                             + "android:layout_width=\"%1$s\"\n"        //$NON-NLS-1$
-                            + "android:layout_height=\"%1$s\"",        //$NON-NLS-1$
+                            + "android:layout_height=\"%2$s\"",        //$NON-NLS-1$
                             fill, fill);
                 }
 

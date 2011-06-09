@@ -93,7 +93,7 @@ public class MarqueeGesture extends Gesture {
      * overlay rectangle matching the mouse coordinate delta between gesture
      * start and the current position.
      */
-    private class MarqueeOverlay extends Overlay {
+    private static class MarqueeOverlay extends Overlay {
         /** Rectangle border color. */
         private Color mStroke;
 

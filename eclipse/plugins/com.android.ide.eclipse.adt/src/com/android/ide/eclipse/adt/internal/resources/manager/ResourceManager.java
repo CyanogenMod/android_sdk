@@ -89,7 +89,7 @@ public final class ResourceManager {
      * Interface to be notified of resource changes.
      *
      * @see ResourceManager#addListener(IResourceListener)
-     * @see ResourceManager#removeListener(IResource)
+     * @see ResourceManager#removeListener(IResourceListener)
      */
     public interface IResourceListener {
         /**
@@ -146,7 +146,7 @@ public final class ResourceManager {
      * Removes an {@link IResourceListener}, so that it's not notified of resource changes anymore.
      * @param listener the listener to be removed.
      */
-    public void removeListener(IResource listener) {
+    public void removeListener(IResourceListener listener) {
         synchronized (mListeners) {
             mListeners.remove(listener);
         }
