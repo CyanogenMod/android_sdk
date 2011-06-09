@@ -611,8 +611,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // handle libraries
             ArrayList<IFolder> libResFolders = new ArrayList<IFolder>();
-            ArrayList<IFolder> libOutputFolders = new ArrayList<IFolder>();
-            ArrayList<String> libJavaPackages = new ArrayList<String>();
+            StringBuilder libJavaPackages = null;
             if (libProjects != null) {
                 for (IProject lib : libProjects) {
                     IFolder libResFolder = lib.getFolder(SdkConstants.FD_RES);
@@ -623,26 +622,19 @@ public class PreCompilerBuilder extends BaseBuilder {
                     try {
                         String libJavaPackage = AndroidManifest.getPackage(new IFolderWrapper(lib));
                         if (libJavaPackage.equals(javaPackage) == false) {
-                            libJavaPackages.add(libJavaPackage);
-                            libOutputFolders.add(getGenManifestPackageFolder(libJavaPackage));
+                            if (libJavaPackages == null) {
+                                libJavaPackages = new StringBuilder(libJavaPackage);
+                            } else {
+                                libJavaPackages.append(":");
+                                libJavaPackages.append(libJavaPackage);
+                            }
                         }
                     } catch (Exception e) {
                     }
                 }
             }
-
             execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                    mainPackageFolder, libResFolders, null /* custom java package */);
-
-            final int count = libOutputFolders.size();
-            if (count > 0) {
-                for (int i = 0 ; i < count ; i++) {
-                    IFolder libFolder = libOutputFolders.get(i);
-                    String libJavaPackage = libJavaPackages.get(i);
-                    execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                            libFolder, libResFolders, libJavaPackage);
-                }
-            }
+                    mainPackageFolder, libResFolders, libJavaPackages.toString());
         }
     }
 
@@ -686,7 +678,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         }
 
         if (customJavaPackage != null) {
-            array.add("--custom-package"); //$NON-NLS-1$
+            array.add("--extra-packages"); //$NON-NLS-1$
             array.add(customJavaPackage);
         }
 

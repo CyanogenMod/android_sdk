@@ -253,37 +253,27 @@ public final class AaptExecLoopTask extends Task {
     public void execute() throws BuildException {
         Project taskProject = getProject();
 
-        // first do a full resource package
-        callAapt(null /*customPackage*/);
+        String libPkgProp = null;
 
         // if the parameters indicate generation of the R class, check if
         // more R classes need to be created for libraries.
         if (mRFolder != null && new File(mRFolder).isDirectory()) {
-            String libPkgProp = taskProject.getProperty(AntConstants.PROP_PROJECT_LIBS_PKG);
-            if (libPkgProp != null) {
-                // get the main package to compare in case the libraries use the same
-                String mainPackage = taskProject.getProperty(AntConstants.PROP_MANIFEST_PACKAGE);
-
-                String[] libPkgs = libPkgProp.split(";");
-                for (String libPkg : libPkgs) {
-                    if (libPkg.length() > 0 && mainPackage.equals(libPkg) == false) {
-                        // FIXME: instead of recreating R.java from scratch, maybe copy
-                        // the files (R.java and manifest.java)? This would force to replace
-                        // the package line on the fly.
-                        callAapt(libPkg);
-                    }
-                }
-            }
+            libPkgProp = taskProject.getProperty(AntConstants.PROP_PROJECT_LIBS_PKG);
+            // Replace ";" with ":" since that's what aapt expects
+            libPkgProp = libPkgProp.replace(';', ':');
         }
+        // Call aapt. If there are libraries, we'll pass a non-null string of libs.
+        callAapt(libPkgProp);
     }
 
     /**
      * Calls aapt with the given parameters.
      * @param resourceFilter the resource configuration filter to pass to aapt (if configName is
      * non null)
-     * @param customPackage an optional custom package.
+     * @param extraPackages an optional list of colon-separated packages. Can be null
+     *        Ex: com.foo.one:com.foo.two:com.foo.lib
      */
-    private void callAapt(String customPackage) {
+    private void callAapt(String extraPackages) {
         Project taskProject = getProject();
 
         final boolean generateRClass = mRFolder != null && new File(mRFolder).isDirectory();
@@ -351,9 +341,9 @@ public final class AaptExecLoopTask extends Task {
             }
         }
 
-        if (customPackage != null) {
-            task.createArg().setValue("--custom-package");
-            task.createArg().setValue(customPackage);
+        if (extraPackages != null) {
+            task.createArg().setValue("--extra-packages");
+            task.createArg().setValue(extraPackages);
         }
 
         // if the project contains libraries, force auto-add-overlay
