@@ -23,8 +23,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.MenuAction.Toggle;
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.LayoutLog;
@@ -676,7 +676,7 @@ public class PaletteControl extends Composite {
      * An Item widget represents one {@link ElementDescriptor} that can be dropped on the
      * GLE2 canvas using drag'n'drop.
      */
-    private class IconTextItem extends CLabel implements MouseTrackListener {
+    private static class IconTextItem extends CLabel implements MouseTrackListener {
 
         private boolean mMouseIn;
 

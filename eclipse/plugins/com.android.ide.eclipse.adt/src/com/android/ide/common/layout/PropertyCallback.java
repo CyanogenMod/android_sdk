@@ -44,7 +44,7 @@ public class PropertyCallback implements IMenuCallback {
 
     // ---- Implements IMenuCallback ----
     public void action(MenuAction action, final String valueId, final Boolean newValue) {
-        if (mTargetNodes != null && mTargetNodes.size() == 0) {
+        if (mTargetNodes == null || mTargetNodes.size() == 0) {
             return;
         }
         mTargetNodes.get(0).editXml(mUndoLabel, new INodeHandler() {

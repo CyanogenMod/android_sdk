@@ -33,9 +33,7 @@ public class CyclicDependencyValidator implements IInputValidator {
 
     public String isValid(String newText) {
         if (mInvalidIds.contains(newText)) {
-            return String.format(
-                    "Cyclic include, not valid",
-                    newText);
+            return "Cyclic include, not valid";
         }
         return null;
     }

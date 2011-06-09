@@ -249,7 +249,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
     private static boolean createWsParentDirectory(IContainer wsPath) {
         if (wsPath.getType() == IResource.FOLDER) {
-            if (wsPath == null || wsPath.exists()) {
+            if (wsPath.exists()) {
                 return true;
             }
 

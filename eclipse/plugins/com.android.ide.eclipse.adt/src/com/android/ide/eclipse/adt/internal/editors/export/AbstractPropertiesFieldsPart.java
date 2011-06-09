@@ -205,7 +205,7 @@ abstract class AbstractPropertiesFieldsPart extends ManifestSectionPart {
                     numLines = doc.getNumberOfLines();
 
                     IRegion info = numLines > 0 ? doc.getLineInformation(numLines - 1) : null;
-                    if (info.getLength() == 0) {
+                    if (info != null && info.getLength() == 0) {
                         // last line is empty. Insert right before there.
                         doc.replace(info.getOffset(), info.getLength(), line);
                     } else {

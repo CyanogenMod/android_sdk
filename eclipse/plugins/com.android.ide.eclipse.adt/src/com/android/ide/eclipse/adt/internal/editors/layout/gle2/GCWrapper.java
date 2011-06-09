@@ -58,7 +58,7 @@ public class GCWrapper implements IGraphics {
     /**
      * Implementation of IColor wrapping an SWT color.
      */
-    private class ColorWrapper implements IColor {
+    private static class ColorWrapper implements IColor {
         private final Color mColor;
 
         public ColorWrapper(Color color) {

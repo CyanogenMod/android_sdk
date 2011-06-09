@@ -38,14 +38,14 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewMetadata;
+import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.MenuAction.OrderedChoices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
-import com.android.ide.common.api.IViewMetadata.FillPreference;
-import com.android.ide.common.api.MenuAction.OrderedChoices;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
 
@@ -544,7 +544,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     /** A possible match position */
-    private class MatchPos {
+    private static class MatchPos {
         /** The pixel distance */
         private int mDistance;
         /** The position among siblings */
@@ -571,7 +571,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         }
     }
 
-    private class LinearDropData {
+    private static class LinearDropData {
         /** Vertical layout? */
         private final boolean mVertical;
 

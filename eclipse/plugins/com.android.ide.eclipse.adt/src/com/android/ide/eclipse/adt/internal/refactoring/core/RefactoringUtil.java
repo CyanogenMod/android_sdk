@@ -86,7 +86,7 @@ public class RefactoringUtil {
         Attr attribute = null;
         for (int j = 0; j < attributes.getLength(); j++) {
             Node attNode = attributes.item(j);
-            if (attNode != null || attNode instanceof Attr) {
+            if (attNode instanceof Attr) {
                 Attr attr = (Attr) attNode;
                 String name = attr.getLocalName();
                 String namespace = attr.getNamespaceURI();
