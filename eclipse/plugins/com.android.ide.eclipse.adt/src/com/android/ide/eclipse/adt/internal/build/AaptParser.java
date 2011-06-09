@@ -192,7 +192,12 @@ public final class AaptParser {
      * @return true if the parsing failed, false if success.
      */
     public static boolean parseOutput(List<String> results, IProject project) {
-        return parseOutput(results.toArray(new String[results.size()]), project);
+        int size = results.size();
+        if (size > 0) {
+            return parseOutput(results.toArray(new String[size]), project);
+        }
+
+        return true;
     }
 
     /**

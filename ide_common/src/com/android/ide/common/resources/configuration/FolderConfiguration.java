@@ -17,7 +17,9 @@
 package com.android.ide.common.resources.configuration;
 
 import com.android.AndroidConstants;
+import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
+import com.android.resources.ScreenOrientation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,24 +43,27 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     private final ResourceQualifier[] mQualifiers = new ResourceQualifier[INDEX_COUNT];
 
-    private final static int INDEX_COUNTRY_CODE       = 0;
-    private final static int INDEX_NETWORK_CODE       = 1;
-    private final static int INDEX_LANGUAGE           = 2;
-    private final static int INDEX_REGION             = 3;
-    private final static int INDEX_SCREEN_SIZE        = 4;
-    private final static int INDEX_SCREEN_RATIO       = 5;
-    private final static int INDEX_SCREEN_ORIENTATION = 6;
-    private final static int INDEX_DOCK_MODE          = 7;
-    private final static int INDEX_NIGHT_MODE         = 8;
-    private final static int INDEX_PIXEL_DENSITY      = 9;
-    private final static int INDEX_TOUCH_TYPE         = 10;
-    private final static int INDEX_KEYBOARD_STATE     = 11;
-    private final static int INDEX_TEXT_INPUT_METHOD  = 12;
-    private final static int INDEX_NAVIGATION_STATE   = 13;
-    private final static int INDEX_NAVIGATION_METHOD  = 14;
-    private final static int INDEX_SCREEN_DIMENSION   = 15;
-    private final static int INDEX_VERSION            = 16;
-    private final static int INDEX_COUNT              = 17;
+    private final static int INDEX_COUNTRY_CODE          = 0;
+    private final static int INDEX_NETWORK_CODE          = 1;
+    private final static int INDEX_LANGUAGE              = 2;
+    private final static int INDEX_REGION                = 3;
+    private final static int INDEX_SMALLEST_SCREEN_WIDTH = 4;
+    private final static int INDEX_SCREEN_WIDTH          = 5;
+    private final static int INDEX_SCREEN_HEIGHT         = 6;
+    private final static int INDEX_SCREEN_SIZE           = 7;
+    private final static int INDEX_SCREEN_RATIO          = 8;
+    private final static int INDEX_SCREEN_ORIENTATION    = 9;
+    private final static int INDEX_DOCK_MODE             = 10;
+    private final static int INDEX_NIGHT_MODE            = 11;
+    private final static int INDEX_PIXEL_DENSITY         = 12;
+    private final static int INDEX_TOUCH_TYPE            = 13;
+    private final static int INDEX_KEYBOARD_STATE        = 14;
+    private final static int INDEX_TEXT_INPUT_METHOD     = 15;
+    private final static int INDEX_NAVIGATION_STATE      = 16;
+    private final static int INDEX_NAVIGATION_METHOD     = 17;
+    private final static int INDEX_SCREEN_DIMENSION      = 18;
+    private final static int INDEX_VERSION               = 19;
+    private final static int INDEX_COUNT                 = 20;
 
     /**
      * Creates a {@link FolderConfiguration} matching the folder segments.
@@ -205,38 +210,64 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     public void addQualifier(ResourceQualifier qualifier) {
         if (qualifier instanceof CountryCodeQualifier) {
             mQualifiers[INDEX_COUNTRY_CODE] = qualifier;
+
         } else if (qualifier instanceof NetworkCodeQualifier) {
             mQualifiers[INDEX_NETWORK_CODE] = qualifier;
+
         } else if (qualifier instanceof LanguageQualifier) {
             mQualifiers[INDEX_LANGUAGE] = qualifier;
+
         } else if (qualifier instanceof RegionQualifier) {
             mQualifiers[INDEX_REGION] = qualifier;
+
+        } else if (qualifier instanceof SmallestScreenWidthQualifier) {
+            mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = qualifier;
+
+        } else if (qualifier instanceof ScreenWidthQualifier) {
+            mQualifiers[INDEX_SCREEN_WIDTH] = qualifier;
+
+        } else if (qualifier instanceof ScreenHeightQualifier) {
+            mQualifiers[INDEX_SCREEN_HEIGHT] = qualifier;
+
         } else if (qualifier instanceof ScreenSizeQualifier) {
             mQualifiers[INDEX_SCREEN_SIZE] = qualifier;
+
         } else if (qualifier instanceof ScreenRatioQualifier) {
             mQualifiers[INDEX_SCREEN_RATIO] = qualifier;
+
         } else if (qualifier instanceof ScreenOrientationQualifier) {
             mQualifiers[INDEX_SCREEN_ORIENTATION] = qualifier;
+
         } else if (qualifier instanceof DockModeQualifier) {
             mQualifiers[INDEX_DOCK_MODE] = qualifier;
+
         } else if (qualifier instanceof NightModeQualifier) {
             mQualifiers[INDEX_NIGHT_MODE] = qualifier;
+
         } else if (qualifier instanceof PixelDensityQualifier) {
             mQualifiers[INDEX_PIXEL_DENSITY] = qualifier;
+
         } else if (qualifier instanceof TouchScreenQualifier) {
             mQualifiers[INDEX_TOUCH_TYPE] = qualifier;
+
         } else if (qualifier instanceof KeyboardStateQualifier) {
             mQualifiers[INDEX_KEYBOARD_STATE] = qualifier;
+
         } else if (qualifier instanceof TextInputMethodQualifier) {
             mQualifiers[INDEX_TEXT_INPUT_METHOD] = qualifier;
+
         } else if (qualifier instanceof NavigationStateQualifier) {
             mQualifiers[INDEX_NAVIGATION_STATE] = qualifier;
+
         } else if (qualifier instanceof NavigationMethodQualifier) {
             mQualifiers[INDEX_NAVIGATION_METHOD] = qualifier;
+
         } else if (qualifier instanceof ScreenDimensionQualifier) {
             mQualifiers[INDEX_SCREEN_DIMENSION] = qualifier;
+
         } else if (qualifier instanceof VersionQualifier) {
             mQualifiers[INDEX_VERSION] = qualifier;
+
         }
     }
 
@@ -293,6 +324,30 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     public RegionQualifier getRegionQualifier() {
         return (RegionQualifier)mQualifiers[INDEX_REGION];
+    }
+
+    public void setSmallestScreenWidthQualifier(SmallestScreenWidthQualifier qualifier) {
+        mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = qualifier;
+    }
+
+    public SmallestScreenWidthQualifier getSmallestScreenWidthQualifier() {
+        return (SmallestScreenWidthQualifier) mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH];
+    }
+
+    public void setScreenWidthQualifier(ScreenWidthQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_WIDTH] = qualifier;
+    }
+
+    public ScreenWidthQualifier getScreenWidthQualifier() {
+        return (ScreenWidthQualifier) mQualifiers[INDEX_SCREEN_WIDTH];
+    }
+
+    public void setScreenHeightQualifier(ScreenHeightQualifier qualifier) {
+        mQualifiers[INDEX_SCREEN_HEIGHT] = qualifier;
+    }
+
+    public ScreenHeightQualifier getScreenHeightQualifier() {
+        return (ScreenHeightQualifier) mQualifiers[INDEX_SCREEN_HEIGHT];
     }
 
     public void setScreenSizeQualifier(ScreenSizeQualifier qualifier) {
@@ -397,6 +452,61 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     public VersionQualifier getVersionQualifier() {
         return (VersionQualifier)mQualifiers[INDEX_VERSION];
+    }
+
+    /**
+     * Updates the {@link SmallestScreenWidthQualifier}, {@link ScreenWidthQualifier}, and
+     * {@link ScreenHeightQualifier} based on the (required) values of
+     * {@link ScreenDimensionQualifier} {@link PixelDensityQualifier}, and
+     * {@link ScreenOrientationQualifier}.
+     *
+     * Also the density cannot be {@link Density#NODPI} as it's not valid on a device.
+     */
+    public void updateScreenWidthAndHeight() {
+
+        ResourceQualifier sizeQ = mQualifiers[INDEX_SCREEN_DIMENSION];
+        ResourceQualifier densityQ = mQualifiers[INDEX_PIXEL_DENSITY];
+        ResourceQualifier orientQ = mQualifiers[INDEX_SCREEN_ORIENTATION];
+
+        if (sizeQ != null && densityQ != null && orientQ != null) {
+            Density density = ((PixelDensityQualifier) densityQ).getValue();
+            if (density == Density.NODPI) {
+                return;
+            }
+
+            ScreenOrientation orientation = ((ScreenOrientationQualifier) orientQ).getValue();
+
+            int size1 = ((ScreenDimensionQualifier) sizeQ).getValue1();
+            int size2 = ((ScreenDimensionQualifier) sizeQ).getValue2();
+
+            // make sure size1 is the biggest (should be the case, but make sure)
+            if (size1 < size2) {
+                int a = size1;
+                size1 = size2;
+                size2 = a;
+            }
+
+            // compute the dp. round them up since we want -w480dp to match a 480.5dp screen
+            int dp1 = (int) Math.ceil(size1 * Density.DEFAULT_DENSITY / density.getDpiValue());
+            int dp2 = (int) Math.ceil(size2 * Density.DEFAULT_DENSITY / density.getDpiValue());
+
+            setSmallestScreenWidthQualifier(new SmallestScreenWidthQualifier(dp2));
+
+            switch (orientation) {
+                case PORTRAIT:
+                    setScreenWidthQualifier(new ScreenWidthQualifier(dp2));
+                    setScreenHeightQualifier(new ScreenHeightQualifier(dp1));
+                    break;
+                case LANDSCAPE:
+                    setScreenWidthQualifier(new ScreenWidthQualifier(dp1));
+                    setScreenHeightQualifier(new ScreenHeightQualifier(dp2));
+                    break;
+                case SQUARE:
+                    setScreenWidthQualifier(new ScreenWidthQualifier(dp2));
+                    setScreenHeightQualifier(new ScreenHeightQualifier(dp2));
+                    break;
+            }
+        }
     }
 
     /**
@@ -704,6 +814,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                 return false;
             }
         }
+
         return true;
     }
 
@@ -732,6 +843,9 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_NETWORK_CODE] = new NetworkCodeQualifier();
         mQualifiers[INDEX_LANGUAGE] = new LanguageQualifier();
         mQualifiers[INDEX_REGION] = new RegionQualifier();
+        mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
+        mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
+        mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
         mQualifiers[INDEX_SCREEN_SIZE] = new ScreenSizeQualifier();
         mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();

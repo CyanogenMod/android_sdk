@@ -120,6 +120,7 @@ class LayoutDeviceHandler extends DefaultHandler {
             mCurrentDevice = null;
             mDefaultConfig = null;
         } else if (LayoutDevicesXsd.NODE_CONFIG.equals(localName)) {
+            mCurrentConfig.updateScreenWidthAndHeight();
             mCurrentConfig = null;
         } else if (LayoutDevicesXsd.NODE_COUNTRY_CODE.equals(localName)) {
             CountryCodeQualifier ccq = new CountryCodeQualifier(

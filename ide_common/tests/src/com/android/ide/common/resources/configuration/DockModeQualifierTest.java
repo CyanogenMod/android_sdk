@@ -24,6 +24,7 @@ public class DockModeQualifierTest extends TestCase {
 
     private DockModeQualifier mCarQualifier;
     private DockModeQualifier mDeskQualifier;
+    private DockModeQualifier mTVQualifier;
     private DockModeQualifier mNoneQualifier;
 
     @Override
@@ -31,6 +32,7 @@ public class DockModeQualifierTest extends TestCase {
         super.setUp();
         mCarQualifier = new DockModeQualifier(DockMode.CAR);
         mDeskQualifier = new DockModeQualifier(DockMode.DESK);
+        mTVQualifier = new DockModeQualifier(DockMode.TELEVISION);
         mNoneQualifier = new DockModeQualifier(DockMode.NONE);
     }
 
@@ -39,10 +41,12 @@ public class DockModeQualifierTest extends TestCase {
         super.tearDown();
         mCarQualifier = null;
         mDeskQualifier = null;
+        mTVQualifier = null;
         mNoneQualifier = null;
     }
 
     public void testIsBetterMatchThan() {
+        assertTrue(mNoneQualifier.isBetterMatchThan(mCarQualifier, mDeskQualifier));
         assertTrue(mNoneQualifier.isBetterMatchThan(mCarQualifier, mDeskQualifier));
         assertFalse(mNoneQualifier.isBetterMatchThan(mDeskQualifier, mDeskQualifier));
         assertTrue(mNoneQualifier.isBetterMatchThan(mDeskQualifier, mCarQualifier));
@@ -53,17 +57,27 @@ public class DockModeQualifierTest extends TestCase {
 
         assertTrue(mCarQualifier.isBetterMatchThan(mDeskQualifier, mCarQualifier));
         assertFalse(mCarQualifier.isBetterMatchThan(mDeskQualifier, mDeskQualifier));
+
+        assertTrue(mTVQualifier.isBetterMatchThan(mCarQualifier, mTVQualifier));
+        assertFalse(mTVQualifier.isBetterMatchThan(mDeskQualifier, mDeskQualifier));
+
     }
 
     public void testIsMatchFor() {
         assertTrue(mNoneQualifier.isMatchFor(mCarQualifier));
         assertTrue(mNoneQualifier.isMatchFor(mDeskQualifier));
+        assertTrue(mNoneQualifier.isMatchFor(mTVQualifier));
         assertTrue(mCarQualifier.isMatchFor(mCarQualifier));
         assertTrue(mDeskQualifier.isMatchFor(mDeskQualifier));
+        assertTrue(mTVQualifier.isMatchFor(mTVQualifier));
 
         assertFalse(mCarQualifier.isMatchFor(mNoneQualifier));
         assertFalse(mCarQualifier.isMatchFor(mDeskQualifier));
+
         assertFalse(mDeskQualifier.isMatchFor(mCarQualifier));
         assertFalse(mDeskQualifier.isMatchFor(mNoneQualifier));
+
+        assertFalse(mTVQualifier.isMatchFor(mCarQualifier));
+        assertFalse(mTVQualifier.isMatchFor(mNoneQualifier));
     }
 }

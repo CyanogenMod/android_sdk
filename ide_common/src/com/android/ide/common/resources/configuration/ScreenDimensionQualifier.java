@@ -144,7 +144,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
 
     @Override
     public String getShortDisplayValue() {
-        if (mValue1 != -1 && mValue2 != -1) {
+        if (isValid()) {
             return String.format("%1$dx%2$d", mValue1, mValue2);
         }
 
@@ -153,7 +153,7 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
 
     @Override
     public String getLongDisplayValue() {
-        if (mValue1 != -1 && mValue2 != -1) {
+        if (isValid()) {
             return String.format("Screen resolution %1$dx%2$d", mValue1, mValue2);
         }
 
