@@ -25,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.ide.eclipse.mock.Mocks;
-import com.android.resources.DockMode;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
@@ -34,6 +33,7 @@ import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.TouchScreen;
+import com.android.resources.UiMode;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -168,7 +168,7 @@ public class ConfigMatchTest extends TestCase {
                 "normal", // screen size
                 "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getResourceValue(), // screen orientation
-                DockMode.DESK.getResourceValue(), // dock mode
+                UiMode.DESK.getResourceValue(), // dock mode
                 NightMode.NIGHT.getResourceValue(), // night mode
                 "mdpi", // dpi
                 TouchScreen.FINGER.getResourceValue(), // touch mode
@@ -197,7 +197,7 @@ public class ConfigMatchTest extends TestCase {
                 "normal", // screen size
                 "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getResourceValue(), // screen orientation
-                DockMode.DESK.getResourceValue(), // dock mode
+                UiMode.DESK.getResourceValue(), // dock mode
                 NightMode.NIGHT.getResourceValue(), // night mode
                 "mdpi", // dpi
                 TouchScreen.FINGER.getResourceValue(), // touch mode

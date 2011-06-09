@@ -22,13 +22,13 @@ import junit.framework.TestCase;
 
 public class PixelDensityQualifierTest extends TestCase {
 
-    private PixelDensityQualifier pdq;
+    private DensityQualifier pdq;
     private FolderConfiguration config;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        pdq = new PixelDensityQualifier();
+        pdq = new DensityQualifier();
         config = new FolderConfiguration();
     }
 
@@ -41,9 +41,9 @@ public class PixelDensityQualifierTest extends TestCase {
 
     public void testCheckAndSet() {
         assertEquals(true, pdq.checkAndSet("ldpi", config));//$NON-NLS-1$
-        assertTrue(config.getPixelDensityQualifier() != null);
-        assertEquals(Density.LOW, config.getPixelDensityQualifier().getValue());
-        assertEquals("ldpi", config.getPixelDensityQualifier().toString()); //$NON-NLS-1$
+        assertTrue(config.getDensityQualifier() != null);
+        assertEquals(Density.LOW, config.getDensityQualifier().getValue());
+        assertEquals("ldpi", config.getDensityQualifier().toString()); //$NON-NLS-1$
     }
 
     public void testFailures() {
@@ -55,10 +55,10 @@ public class PixelDensityQualifierTest extends TestCase {
     }
 
     public void testIsBetterMatchThan() {
-        PixelDensityQualifier ldpi = new PixelDensityQualifier(Density.LOW);
-        PixelDensityQualifier mdpi = new PixelDensityQualifier(Density.MEDIUM);
-        PixelDensityQualifier hdpi = new PixelDensityQualifier(Density.HIGH);
-        PixelDensityQualifier xhdpi = new PixelDensityQualifier(Density.XHIGH);
+        DensityQualifier ldpi = new DensityQualifier(Density.LOW);
+        DensityQualifier mdpi = new DensityQualifier(Density.MEDIUM);
+        DensityQualifier hdpi = new DensityQualifier(Density.HIGH);
+        DensityQualifier xhdpi = new DensityQualifier(Density.XHIGH);
 
         // first test that each Q is a better match than all other Qs when the ref is the same Q.
         assertTrue(ldpi.isBetterMatchThan(mdpi, ldpi));

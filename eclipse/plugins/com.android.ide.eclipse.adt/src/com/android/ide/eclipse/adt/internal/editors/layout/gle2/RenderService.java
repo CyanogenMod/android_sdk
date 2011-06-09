@@ -32,7 +32,7 @@ import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.resources.ResourceResolver;
-import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.ContextPullParser;
 import com.android.ide.eclipse.adt.internal.editors.layout.ExplodedRenderingHelper;
@@ -85,7 +85,7 @@ public class RenderService {
     private final Density mDensity;
     private final float mXdpi;
     private final float mYdpi;
-    private final ScreenSizeQualifier mScreenSize;
+    private final ScreenLayoutSizeQualifier mScreenLayoutSize;
 
     // The following fields are optional or configurable using the various chained
     // setters:
@@ -112,7 +112,7 @@ public class RenderService {
         mDensity = config.getDensity();
         mXdpi = config.getXDpi();
         mYdpi = config.getYDpi();
-        mScreenSize = config.getCurrentConfig().getScreenSizeQualifier();
+        mScreenLayoutSize = config.getCurrentConfig().getScreenLayoutSizeQualifier();
         mLayoutLib = editor.getReadyLayoutLib(true /*displayError*/);
         mResourceResolver = editor.getResourceResolver();
         mProjectCallback = editor.getProjectCallback(true /*reset*/, mLayoutLib);
@@ -363,8 +363,8 @@ public class RenderService {
             }
         }
 
-        if (mScreenSize != null) {
-            params.setConfigScreenSize(mScreenSize.getValue());
+        if (mScreenLayoutSize != null) {
+            params.setConfigScreenSize(mScreenLayoutSize.getValue());
         }
 
         if (mOverrideBgColor != null) {

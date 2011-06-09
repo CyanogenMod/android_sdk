@@ -17,23 +17,21 @@
 package com.android.resources;
 
 /**
- * Screen size enum.
- * <p/>This is used in the manifest in the uses-configuration node and in the resource folder names.
+ * UI Mode enum.
+ * <p/>This is used in the resource folder names.
  */
-public enum ScreenSize implements ResourceEnum {
-    SMALL("small", "Small", "Small Screen"), //$NON-NLS-1$
-    NORMAL("normal", "Normal", "Normal Screen"), //$NON-NLS-1$
-    LARGE("large", "Large", "Large Screen"), //$NON-NLS-1$
-    XLARGE("xlarge", "X-Large", "Extra Large Screen"); //$NON-NLS-1$
+public enum UiMode implements ResourceEnum {
+    NORMAL("", "Normal"),
+    CAR("car", "Car Dock"),
+    DESK("desk", "Desk Dock"),
+    TELEVISION("television", "Television");
 
     private final String mValue;
-    private final String mShortDisplayValue;
-    private final String mLongDisplayValue;
+    private final String mDisplayValue;
 
-    private ScreenSize(String value, String shortDisplayValue, String longDisplayValue) {
+    private UiMode(String value, String display) {
         mValue = value;
-        mShortDisplayValue = shortDisplayValue;
-        mLongDisplayValue = longDisplayValue;
+        mDisplayValue = display;
     }
 
     /**
@@ -41,10 +39,10 @@ public enum ScreenSize implements ResourceEnum {
      * @param value The qualifier value.
      * @return the enum for the qualifier value or null if no matching was found.
      */
-    public static ScreenSize getEnum(String value) {
-        for (ScreenSize orient : values()) {
-            if (orient.mValue.equals(value)) {
-                return orient;
+    public static UiMode getEnum(String value) {
+        for (UiMode mode : values()) {
+            if (mode.mValue.equals(value)) {
+                return mode;
             }
         }
 
@@ -56,17 +54,17 @@ public enum ScreenSize implements ResourceEnum {
     }
 
     public String getShortDisplayValue() {
-        return mShortDisplayValue;
+        return mDisplayValue;
     }
 
     public String getLongDisplayValue() {
-        return mLongDisplayValue;
+        return mDisplayValue;
     }
 
-    public static int getIndex(ScreenSize orientation) {
+    public static int getIndex(UiMode value) {
         int i = 0;
-        for (ScreenSize orient : values()) {
-            if (orient == orientation) {
+        for (UiMode mode : values()) {
+            if (mode == value) {
                 return i;
             }
 
@@ -76,24 +74,22 @@ public enum ScreenSize implements ResourceEnum {
         return -1;
     }
 
-    public static ScreenSize getByIndex(int index) {
+    public static UiMode getByIndex(int index) {
         int i = 0;
-        for (ScreenSize orient : values()) {
+        for (UiMode value : values()) {
             if (i == index) {
-                return orient;
+                return value;
             }
             i++;
         }
-
         return null;
     }
 
     public boolean isFakeValue() {
-        return false;
+        return this == NORMAL; // NORMAL is not a real enum. it's used for internal state only.
     }
 
     public boolean isValidValueForDevice() {
-        return true;
+        return this != NORMAL;
     }
-
 }

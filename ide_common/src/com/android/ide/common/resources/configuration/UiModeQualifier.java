@@ -16,27 +16,27 @@
 
 package com.android.ide.common.resources.configuration;
 
-import com.android.resources.DockMode;
 import com.android.resources.ResourceEnum;
+import com.android.resources.UiMode;
 
 /**
- * Resource Qualifier for Navigation Method.
+ * Resource Qualifier for UI Mode.
  */
-public final class DockModeQualifier extends EnumBasedResourceQualifier {
+public final class UiModeQualifier extends EnumBasedResourceQualifier {
 
-    public static final String NAME = "Dock Mode";
+    public static final String NAME = "UI Mode";
 
-    private DockMode mValue;
+    private UiMode mValue;
 
-    public DockModeQualifier() {
+    public UiModeQualifier() {
         // pass
     }
 
-    public DockModeQualifier(DockMode value) {
+    public UiModeQualifier(UiMode value) {
         mValue = value;
     }
 
-    public DockMode getValue() {
+    public UiMode getValue() {
         return mValue;
     }
 
@@ -52,15 +52,15 @@ public final class DockModeQualifier extends EnumBasedResourceQualifier {
 
     @Override
     public String getShortName() {
-        return "Dock Mode";
+        return NAME;
     }
 
     @Override
     public boolean checkAndSet(String value, FolderConfiguration config) {
-        DockMode mode = DockMode.getEnum(value);
+        UiMode mode = UiMode.getEnum(value);
         if (mode != null) {
-            DockModeQualifier qualifier = new DockModeQualifier(mode);
-            config.setDockModeQualifier(qualifier);
+            UiModeQualifier qualifier = new UiModeQualifier(mode);
+            config.setUiModeQualifier(qualifier);
             return true;
         }
 
@@ -69,13 +69,13 @@ public final class DockModeQualifier extends EnumBasedResourceQualifier {
 
     @Override
     public boolean isMatchFor(ResourceQualifier qualifier) {
-        // only NONE is a match other DockModes
-        if (mValue == DockMode.NONE) {
+        // only normal is a match for all UI mode, because it's not an actual mode.
+        if (mValue == UiMode.NORMAL) {
             return true;
         }
 
         // others must be an exact match
-        return ((DockModeQualifier)qualifier).mValue == mValue;
+        return ((UiModeQualifier)qualifier).mValue == mValue;
     }
 
     @Override
@@ -84,8 +84,8 @@ public final class DockModeQualifier extends EnumBasedResourceQualifier {
             return true;
         }
 
-        DockModeQualifier compareQualifier = (DockModeQualifier)compareTo;
-        DockModeQualifier referenceQualifier = (DockModeQualifier)reference;
+        UiModeQualifier compareQualifier = (UiModeQualifier)compareTo;
+        UiModeQualifier referenceQualifier = (UiModeQualifier)reference;
 
         if (compareQualifier.getValue() == referenceQualifier.getValue()) {
             // what we have is already the best possible match (exact match)
@@ -93,8 +93,8 @@ public final class DockModeQualifier extends EnumBasedResourceQualifier {
         } else  if (mValue == referenceQualifier.mValue) {
             // got new exact value, this is the best!
             return true;
-        } else if (mValue == DockMode.NONE) {
-            // else "none" can be a match in case there's no exact match
+        } else if (mValue == UiMode.NORMAL) {
+            // else "normal" can be a match in case there's no exact match
             return true;
         }
 

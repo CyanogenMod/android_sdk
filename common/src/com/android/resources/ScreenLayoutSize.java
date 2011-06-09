@@ -17,21 +17,23 @@
 package com.android.resources;
 
 /**
- * Dock enum.
- * <p/>This is used in the resource folder names.
+ * Screen size enum.
+ * <p/>This is used in the manifest in the uses-configuration node and in the resource folder names.
  */
-public enum DockMode implements ResourceEnum {
-    NONE("", "No Dock"),
-    CAR("car", "Car Dock"),
-    DESK("desk", "Desk Dock"),
-    TELEVISION("television", "Television");
+public enum ScreenLayoutSize implements ResourceEnum {
+    SMALL("small", "Small", "Small Screen"), //$NON-NLS-1$
+    NORMAL("normal", "Normal", "Normal Screen"), //$NON-NLS-1$
+    LARGE("large", "Large", "Large Screen"), //$NON-NLS-1$
+    XLARGE("xlarge", "X-Large", "Extra Large Screen"); //$NON-NLS-1$
 
     private final String mValue;
-    private final String mDisplayValue;
+    private final String mShortDisplayValue;
+    private final String mLongDisplayValue;
 
-    private DockMode(String value, String display) {
+    private ScreenLayoutSize(String value, String shortDisplayValue, String longDisplayValue) {
         mValue = value;
-        mDisplayValue = display;
+        mShortDisplayValue = shortDisplayValue;
+        mLongDisplayValue = longDisplayValue;
     }
 
     /**
@@ -39,10 +41,10 @@ public enum DockMode implements ResourceEnum {
      * @param value The qualifier value.
      * @return the enum for the qualifier value or null if no matching was found.
      */
-    public static DockMode getEnum(String value) {
-        for (DockMode mode : values()) {
-            if (mode.mValue.equals(value)) {
-                return mode;
+    public static ScreenLayoutSize getEnum(String value) {
+        for (ScreenLayoutSize orient : values()) {
+            if (orient.mValue.equals(value)) {
+                return orient;
             }
         }
 
@@ -54,17 +56,17 @@ public enum DockMode implements ResourceEnum {
     }
 
     public String getShortDisplayValue() {
-        return mDisplayValue;
+        return mShortDisplayValue;
     }
 
     public String getLongDisplayValue() {
-        return mDisplayValue;
+        return mLongDisplayValue;
     }
 
-    public static int getIndex(DockMode value) {
+    public static int getIndex(ScreenLayoutSize orientation) {
         int i = 0;
-        for (DockMode mode : values()) {
-            if (mode == value) {
+        for (ScreenLayoutSize orient : values()) {
+            if (orient == orientation) {
                 return i;
             }
 
@@ -74,22 +76,24 @@ public enum DockMode implements ResourceEnum {
         return -1;
     }
 
-    public static DockMode getByIndex(int index) {
+    public static ScreenLayoutSize getByIndex(int index) {
         int i = 0;
-        for (DockMode value : values()) {
+        for (ScreenLayoutSize orient : values()) {
             if (i == index) {
-                return value;
+                return orient;
             }
             i++;
         }
+
         return null;
     }
 
     public boolean isFakeValue() {
-        return this == NONE; // NONE is not a real enum. it's used for internal state only.
+        return false;
     }
 
     public boolean isValidValueForDevice() {
-        return this != NONE;
+        return true;
     }
+
 }
