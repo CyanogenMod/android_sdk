@@ -16,6 +16,10 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_VIEW_PKG;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_WEBKIT_PKG;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -53,7 +57,7 @@ public class ViewElementDescriptor extends ElementDescriptor {
     private final String mFullClassName;
 
     /** The list of layout attributes. Can be empty but not null. */
-    private final AttributeDescriptor[] mLayoutAttributes;
+    private AttributeDescriptor[] mLayoutAttributes;
 
     /** The super-class descriptor. Can be null. */
     private ViewElementDescriptor mSuperClassDesc;
@@ -117,6 +121,16 @@ public class ViewElementDescriptor extends ElementDescriptor {
     }
 
     /**
+     * Sets the list of layout attribute attributes.
+     *
+     * @param attributes the new layout attributes, not null
+     */
+    public void setLayoutAttributes(AttributeDescriptor[] attributes) {
+        assert attributes != null;
+        mLayoutAttributes = attributes;
+    }
+
+    /**
      * Returns a new {@link UiViewElementNode} linked to this descriptor.
      */
     @Override
@@ -168,4 +182,17 @@ public class ViewElementDescriptor extends ElementDescriptor {
         return icon;
     }
 
+    /**
+     * Returns true if views with the given fully qualified class name need to include
+     * their package in the layout XML tag
+     *
+     * @param fqcn the fully qualified class name, such as android.widget.Button
+     * @return true if the full package path should be included in the layout XML element
+     *         tag
+     */
+    public static boolean viewNeedsPackage(String fqcn) {
+        return !(fqcn.startsWith(ANDROID_WIDGET_PREFIX)
+              || fqcn.startsWith(ANDROID_VIEW_PKG)
+              || fqcn.startsWith(ANDROID_WEBKIT_PKG));
+    }
 }

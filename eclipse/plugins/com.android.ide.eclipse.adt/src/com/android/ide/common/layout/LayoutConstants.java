@@ -37,6 +37,7 @@ public class LayoutConstants {
     public static final String ATTR_ON_CLICK = "onClick";               //$NON-NLS-1$
     public static final String ATTR_TAG = "tag";                        //$NON-NLS-1$
     public static final String ATTR_NUM_COLUMNS = "numColumns";         //$NON-NLS-1$
+    public static final String ATTR_PADDING = "padding";                //$NON-NLS-1$
 
     // Some common layout element names
     public static final String RELATIVE_LAYOUT = "RelativeLayout";      //$NON-NLS-1$
@@ -133,15 +134,18 @@ public class LayoutConstants {
     public static final String ANDROID_URI = SdkConstants.NS_RESOURCES;
 
     /**
-     * The package name where the widgets live (the ones that require no prefix in layout
-     * files)
-     */
-    public static final String ANDROID_WIDGET_PREFIX = "android.widget."; //$NON-NLS-1$
-
-    /**
      * The top level android package as a prefix, "android.".
      */
     public static final String ANDROID_PKG_PREFIX = ANDROID_PKG + '.';
+
+    /** The android.view. package prefix */
+    public static final String ANDROID_VIEW_PKG = ANDROID_PKG_PREFIX + "view."; //$NON-NLS-1$
+
+    /** The android.widget. package prefix */
+    public static final String ANDROID_WIDGET_PREFIX = ANDROID_PKG_PREFIX + "widget."; //$NON-NLS-1$
+
+    /** The android.webkit. package prefix */
+    public static final String ANDROID_WEBKIT_PKG = ANDROID_PKG_PREFIX + "webkit."; //$NON-NLS-1$
 
     /** The fully qualified class name of an EditText view */
     public static final String FQCN_EDIT_TEXT = "android.widget.EditText"; //$NON-NLS-1$

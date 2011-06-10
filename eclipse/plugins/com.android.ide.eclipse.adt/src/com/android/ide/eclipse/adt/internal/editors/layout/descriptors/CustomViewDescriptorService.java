@@ -205,17 +205,6 @@ public final class CustomViewDescriptorService {
         // check if the type is a built-in View class.
         List<ViewElementDescriptor> builtInList = null;
 
-        Sdk currentSdk = Sdk.getCurrent();
-        if (currentSdk != null) {
-            IAndroidTarget target = currentSdk.getTarget(project);
-            if (target != null) {
-                AndroidTargetData data = currentSdk.getTargetData(target);
-                if (data != null) {
-                    builtInList = data.getLayoutDescriptors().getViewDescriptors();
-                }
-            }
-        }
-
         // give up if there's no type
         if (type == null) {
             return null;
@@ -223,10 +212,18 @@ public final class CustomViewDescriptorService {
 
         String fqcn = type.getFullyQualifiedName();
 
-        if (builtInList != null) {
-            for (ViewElementDescriptor viewDescriptor : builtInList) {
-                if (fqcn.equals(viewDescriptor.getFullClassName())) {
-                    return viewDescriptor;
+        Sdk currentSdk = Sdk.getCurrent();
+        if (currentSdk != null) {
+            IAndroidTarget target = currentSdk.getTarget(project);
+            if (target != null) {
+                AndroidTargetData data = currentSdk.getTargetData(target);
+                if (data != null) {
+                    LayoutDescriptors descriptors = data.getLayoutDescriptors();
+                    ViewElementDescriptor d = descriptors.findDescriptorByClass(fqcn);
+                    if (d != null) {
+                        return d;
+                    }
+                    builtInList = descriptors.getViewDescriptors();
                 }
             }
         }

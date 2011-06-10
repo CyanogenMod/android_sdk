@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_STRING_PREFI
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.STRING_PREFIX;
 import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
 
 import com.android.ide.common.rendering.LayoutLibrary;
@@ -43,14 +44,13 @@ import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor;
+import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ChangeFlags;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
-import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
@@ -1661,7 +1661,7 @@ public class GraphicalEditorPart extends EditorPart
                                     // is the same
                                     labelClass),
                                     actual,
-                                    suggested.startsWith(ANDROID_PKG) ? suggestedBase : suggested
+                                    viewNeedsPackage(suggested) ? suggested : suggestedBase
                     );
                     addText(mErrorLabel, ", ");
                 }
@@ -1681,23 +1681,15 @@ public class GraphicalEditorPart extends EditorPart
     }
 
     private static Collection<String> getAndroidViewClassNames(IProject project) {
-        List<String> classNames = new ArrayList<String>(100);
-
         Sdk currentSdk = Sdk.getCurrent();
         IAndroidTarget target = currentSdk.getTarget(project);
         if (target != null) {
             AndroidTargetData targetData = currentSdk.getTargetData(target);
             LayoutDescriptors layoutDescriptors = targetData.getLayoutDescriptors();
-
-            for (ViewElementDescriptor d : layoutDescriptors.getViewDescriptors()) {
-                classNames.add(d.getFullClassName());
-            }
-            for (ViewElementDescriptor d : layoutDescriptors.getLayoutDescriptors()) {
-                classNames.add(d.getFullClassName());
-            }
+            return layoutDescriptors.getAllViewClassNames();
         }
 
-        return classNames;
+        return Collections.emptyList();
     }
 
     /** Add a normal line of text to the styled text widget. */

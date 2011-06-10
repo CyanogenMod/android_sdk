@@ -1230,20 +1230,7 @@ public abstract class VisualRefactoring extends Refactoring {
     protected ViewElementDescriptor getElementDescriptor(String fqcn) {
         AndroidTargetData data = mEditor.getTargetData();
         if (data != null) {
-            List<ViewElementDescriptor> views =
-                data.getLayoutDescriptors().getViewDescriptors();
-            for (ViewElementDescriptor descriptor : views) {
-                if (fqcn.equals(descriptor.getFullClassName())) {
-                    return descriptor;
-                }
-            }
-            List<ViewElementDescriptor> layouts =
-                data.getLayoutDescriptors().getLayoutDescriptors();
-            for (ViewElementDescriptor descriptor : layouts) {
-                if (fqcn.equals(descriptor.getFullClassName())) {
-                    return descriptor;
-                }
-            }
+            return data.getLayoutDescriptors().findDescriptorByClass(fqcn);
         }
 
         return null;
