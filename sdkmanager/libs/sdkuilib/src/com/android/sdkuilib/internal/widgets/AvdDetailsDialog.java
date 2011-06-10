@@ -21,6 +21,8 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
 
 import org.eclipse.swt.SWT;
@@ -40,7 +42,6 @@ import java.util.Set;
 final class AvdDetailsDialog extends SwtBaseDialog {
 
     private final AvdInfo mAvdInfo;
-    private Composite mRootComposite;
 
     public AvdDetailsDialog(Shell shell, AvdInfo avdInfo) {
         super(shell, SWT.APPLICATION_MODAL, "AVD details");
@@ -52,13 +53,13 @@ final class AvdDetailsDialog extends SwtBaseDialog {
      */
     @Override
     protected void createContents() {
-        mRootComposite = new Composite(getShell(), SWT.NONE);
-        mRootComposite.setLayout(new GridLayout(2, false));
-        mRootComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
+        Shell shell = getShell();
+        GridLayoutBuilder.create(shell).columns(2);
+        GridDataBuilder.create(shell).fill();
 
         GridLayout gl;
 
-        Composite c = new Composite(mRootComposite, SWT.NONE);
+        Composite c = new Composite(shell, SWT.NONE);
         c.setLayout(gl = new GridLayout(2, false));
         gl.marginHeight = gl.marginWidth = 0;
         c.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -110,11 +111,11 @@ final class AvdDetailsDialog extends SwtBaseDialog {
                     copy.remove(AvdManager.AVD_INI_IMAGES_2);
 
                     if (copy.size() > 0) {
-                        Label l = new Label(mRootComposite, SWT.SEPARATOR | SWT.HORIZONTAL);
+                        Label l = new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL);
                         l.setLayoutData(new GridData(
                                 GridData.FILL, GridData.CENTER, false, false, 2, 1));
 
-                        c = new Composite(mRootComposite, SWT.NONE);
+                        c = new Composite(shell, SWT.NONE);
                         c.setLayout(gl = new GridLayout(2, false));
                         gl.marginHeight = gl.marginWidth = 0;
                         c.setLayoutData(new GridData(GridData.FILL_BOTH));
