@@ -62,6 +62,10 @@ public class BuildPreferencePage extends FieldEditorPreferencePage implements
                 "Force error when external jars contain native libraries",
                 getFieldEditorParent()));
 
+        addField(new BooleanFieldEditor(AdtPrefs.PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE,
+                "Skip packaging and dexing until export or launch. (Speeds up automatic builds on file save)",
+                getFieldEditorParent()));
+
         RadioGroupFieldEditor rgfe = new RadioGroupFieldEditor(
                 AdtPrefs.PREFS_BUILD_VERBOSITY,
                 Messages.BuildPreferencePage_Build_Output, 1, new String[][] {
