@@ -64,7 +64,8 @@ class HardwarePropertyChooser extends GridDialog {
         // simple list for index->name resolution.
         final ArrayList<String> indexToName = new ArrayList<String>();
         for (Entry<String, HardwareProperty> entry : mProperties.entrySet()) {
-            if (mExceptProperties.contains(entry.getKey()) == false) {
+            if (entry.getValue().isValidForUi() &&
+                    mExceptProperties.contains(entry.getKey()) == false) {
                 c.add(entry.getValue().getAbstract());
                 indexToName.add(entry.getKey());
             }

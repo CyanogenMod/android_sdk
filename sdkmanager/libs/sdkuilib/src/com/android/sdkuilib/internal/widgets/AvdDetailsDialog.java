@@ -66,7 +66,7 @@ final class AvdDetailsDialog extends SwtBaseDialog {
 
         if (mAvdInfo != null) {
             displayValue(c, "Name:", mAvdInfo.getName());
-            displayValue(c, "ABI:", AvdInfo.getPrettyAbiType(mAvdInfo.getAbiType()));
+            displayValue(c, "CPU/ABI:", AvdInfo.getPrettyAbiType(mAvdInfo.getAbiType()));
 
             displayValue(c, "Path:", mAvdInfo.getDataFolderPath());
 
@@ -103,6 +103,7 @@ final class AvdDetailsDialog extends SwtBaseDialog {
                     HashMap<String, String> copy = new HashMap<String, String>(properties);
                     // remove stuff we already displayed (or that we don't want to display)
                     copy.remove(AvdManager.AVD_INI_ABI_TYPE);
+                    copy.remove(AvdManager.AVD_INI_CPU_ARCH);
                     copy.remove(AvdManager.AVD_INI_SKIN_NAME);
                     copy.remove(AvdManager.AVD_INI_SKIN_PATH);
                     copy.remove(AvdManager.AVD_INI_SDCARD_SIZE);

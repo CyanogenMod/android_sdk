@@ -71,6 +71,12 @@ public class AvdManager {
      */
      public final static String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
 
+     /**
+      * AVD/config.ini key name representing the CPU architecture of the specific avd
+      *
+      */
+      public final static String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
+
 
     /**
      * AVD/config.ini key name representing the SDK-relative path of the skin folder, if any,
@@ -572,6 +578,19 @@ public class AvdManager {
 
             // Now the abi type
             values.put(AVD_INI_ABI_TYPE, abiType);
+
+            // and the cpu arch.
+            if (SdkConstants.ABI_ARMEABI.equals(abiType) ||
+                    SdkConstants.ABI_ARMEABI_V7A.equals(abiType)) {
+                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_ARM);
+            } else if (SdkConstants.ABI_INTEL_ATOM.equals(abiType)) {
+                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_INTEL_ATOM);
+            } else {
+                log.error(null,
+                        "ABI %1$s is not supported by this version of the SDK Tools", abiType);
+                needCleanup = true;
+                return null;
+            }
 
             // Now the skin.
             if (skinName == null || skinName.length() == 0) {

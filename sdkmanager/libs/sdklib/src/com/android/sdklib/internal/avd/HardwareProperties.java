@@ -47,7 +47,8 @@ public class HardwareProperties {
     public enum ValueType {
         INTEGER("integer"),
         BOOLEAN("boolean"),
-        DISKSIZE("diskSize");
+        DISKSIZE("diskSize"),
+        STRING("string");
 
         private String mValue;
 
@@ -98,8 +99,9 @@ public class HardwareProperties {
             return mDescription;
         }
 
-        public boolean isValid() {
-            return mName != null && mType != null;
+        public boolean isValidForUi() {
+            // don't show display string type for now.
+            return mType != ValueType.STRING;
         }
     }
 
@@ -128,6 +130,7 @@ public class HardwareProperties {
                         if (HW_PROP_NAME.equals(valueName)) {
                             prop = new HardwareProperty();
                             prop.mName = value;
+                            map.put(prop.mName, prop);
                         }
 
                         if (prop == null) {
@@ -145,11 +148,6 @@ public class HardwareProperties {
                         } else if (HW_PROP_DESC.equals(valueName)) {
                             prop.mDescription = value;
                         }
-
-                        if (prop.isValid()) {
-                            map.put(prop.mName, prop);
-                        }
-
                     } else {
                         log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
                                 file.getAbsolutePath(), line);
