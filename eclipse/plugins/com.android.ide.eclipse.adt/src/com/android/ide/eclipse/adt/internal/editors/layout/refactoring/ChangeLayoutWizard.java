@@ -18,7 +18,9 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -108,6 +110,8 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
             // RelativeLayout at the root.
             Set<String> exclude = new HashSet<String>();
             exclude.add(VIEW_INCLUDE);
+            exclude.add(VIEW_MERGE);
+            exclude.add(VIEW_FRAGMENT);
             boolean oldIsRelativeLayout = mOldType.equals(FQCN_RELATIVE_LAYOUT);
             if (oldIsRelativeLayout) {
                 exclude.add(mOldType);
