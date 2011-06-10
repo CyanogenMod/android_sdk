@@ -24,8 +24,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +97,10 @@ public class HardwareProperties {
         public String getDescription() {
             return mDescription;
         }
+
+        public boolean isValid() {
+            return mName != null && mType != null;
+        }
     }
 
     /**
@@ -110,7 +114,7 @@ public class HardwareProperties {
             FileInputStream fis = new FileInputStream(file);
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
 
-            Map<String, HardwareProperty> map = new HashMap<String, HardwareProperty>();
+            Map<String, HardwareProperty> map = new TreeMap<String, HardwareProperty>();
 
             String line = null;
             HardwareProperty prop = null;
@@ -124,7 +128,6 @@ public class HardwareProperties {
                         if (HW_PROP_NAME.equals(valueName)) {
                             prop = new HardwareProperty();
                             prop.mName = value;
-                            map.put(prop.mName, prop);
                         }
 
                         if (prop == null) {
@@ -142,6 +145,11 @@ public class HardwareProperties {
                         } else if (HW_PROP_DESC.equals(valueName)) {
                             prop.mDescription = value;
                         }
+
+                        if (prop.isValid()) {
+                            map.put(prop.mName, prop);
+                        }
+
                     } else {
                         log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
                                 file.getAbsolutePath(), line);
