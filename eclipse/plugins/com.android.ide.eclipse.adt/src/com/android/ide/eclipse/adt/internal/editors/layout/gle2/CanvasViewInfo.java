@@ -779,6 +779,12 @@ public class CanvasViewInfo implements IPropertySource {
             assert viewInfo.getCookie() != null;
 
             CanvasViewInfo view = createView(parent, viewInfo, parentX, parentY);
+            // Bug workaround: Ensure that we never have a child node identical
+            // to its parent node: this can happen for example when rendering a
+            // ZoomControls view where the merge cookies point to the parent.
+            if (parent != null && view.mUiViewNode == parent.mUiViewNode) {
+                return null;
+            }
 
             // Process children:
             parentX += viewInfo.getLeft();
@@ -792,7 +798,9 @@ public class CanvasViewInfo implements IPropertySource {
                     if (cookie instanceof UiViewElementNode || cookie instanceof MergeCookie) {
                         CanvasViewInfo childView = createSubtree(view, child,
                                 parentX, parentY);
-                        view.addChild(childView);
+                        if (childView != null) {
+                            view.addChild(childView);
+                        }
                     } // else: null cookies, adapter item references, etc: No child views.
                 }
 
@@ -930,7 +938,9 @@ public class CanvasViewInfo implements IPropertySource {
                 ViewInfo child = children.get(index);
                 if (child.getCookie() != null) {
                     CanvasViewInfo childView = createSubtree(parentView, child, parentX, parentY);
-                    parentView.addChild(childView);
+                    if (childView != null) {
+                        parentView.addChild(childView);
+                    }
                     if (child.getCookie() instanceof UiViewElementNode) {
                         afterNode = (UiViewElementNode) child.getCookie();
                     }
@@ -1084,7 +1094,7 @@ public class CanvasViewInfo implements IPropertySource {
             // not MergeCookies.
             if (viewInfo.getCookie() != null) {
                 CanvasViewInfo subtree = createSubtree(parent, viewInfo, parentX, parentY);
-                if (parent != null) {
+                if (parent != null && subtree != null) {
                     parent.mChildren.add(subtree);
                 }
                 return subtree;
