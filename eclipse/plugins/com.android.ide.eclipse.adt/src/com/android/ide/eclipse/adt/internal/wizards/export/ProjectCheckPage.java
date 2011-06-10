@@ -21,8 +21,8 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
-import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.NonLibraryProjectOnlyFilter;
+import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard.ExportWizardPage;
 import com.android.sdklib.xml.ManifestData;
 
@@ -45,6 +45,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * First Export Wizard Page. Display warning/errors.
@@ -176,12 +177,13 @@ final class ProjectCheckPage extends ExportWizardPage {
                                 AdtConstants.DOT_ANDROID_PACKAGE;
 
                         File f = new File(apkFilePath);
-                        if (f.isFile() == false) {
+                        try {
+                            f.createNewFile();
+                        } catch (IOException e) {
                             addError(mErrorComposite,
-                                    String.format("%1$s/%2$s/%1$s%3$s does not exists!",
-                                            project.getName(),
-                                            outputIFolder.getName(),
-                                            AdtConstants.DOT_ANDROID_PACKAGE));
+                                     String.format("Could not open %1$s/%2$s/%1$s%3$s for writing!",
+                                                   project.getName(), outputIFolder.getName(),
+                                                   AdtConstants.DOT_ANDROID_PACKAGE));
                         }
                     } else {
                         addError(mErrorComposite,

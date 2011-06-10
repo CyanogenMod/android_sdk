@@ -16,17 +16,17 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.AaptExecException;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AaptResultException;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
@@ -71,6 +71,11 @@ public class PostCompilerBuilder extends BaseBuilder {
     private static final String PROPERTY_CONVERT_TO_DEX = "convertToDex"; //$NON-NLS-1$
     private static final String PROPERTY_PACKAGE_RESOURCES = "packageResources"; //$NON-NLS-1$
     private static final String PROPERTY_BUILD_APK = "buildApk"; //$NON-NLS-1$
+
+    /** Flag to pass to PostCompiler builder that sets if it runs or not.
+     *  Set this flag whenever calling build if PostCompiler is to run
+     */
+    public final static String POST_C_REQUESTED = "RunPostCompiler"; //$NON-NLS-1$
 
     /**
      * Dex conversion flag. This is set to true if one of the changed/added/removed
@@ -250,7 +255,9 @@ public class PostCompilerBuilder extends BaseBuilder {
             // First thing we do is go through the resource delta to not
             // lose it if we have to abort the build for any reason.
             PostCompilerDeltaVisitor dv = null;
-            if (kind == FULL_BUILD) {
+            if (args.containsKey(POST_C_REQUESTED)) {
+                // Skip over flag setting
+            } else if (kind == FULL_BUILD) {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Apk_Build);
 
@@ -339,6 +346,17 @@ public class PostCompilerBuilder extends BaseBuilder {
                 markProject(AdtConstants.MARKER_PACKAGING, Messages.Failed_To_Get_Output,
                         IMarker.SEVERITY_ERROR);
                 return allRefProjects;
+            }
+
+            // Check to see if we're going to launch or export. If not, we can skip
+            // The packaging and dexing process.
+            if (!args.containsKey(POST_C_REQUESTED)) {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
+                        Messages.Skip_Post_Compiler);
+                return allRefProjects;
+            } else {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
+                        Messages.Start_Full_Post_Compiler);
             }
 
             // first thing we do is check that the SDK directory has been setup.

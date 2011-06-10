@@ -26,9 +26,9 @@ import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.export.ApkData;
 import com.android.sdklib.internal.export.MultiApkExportHelper;
-import com.android.sdklib.internal.export.ProjectConfig;
 import com.android.sdklib.internal.export.MultiApkExportHelper.ExportException;
 import com.android.sdklib.internal.export.MultiApkExportHelper.Target;
+import com.android.sdklib.internal.export.ProjectConfig;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
@@ -38,7 +38,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
@@ -214,7 +213,7 @@ public class MultiApkExportAction implements IObjectActionDelegate {
                 }
 
                 // build the project, mainly for the java compilation. The rest is handled below.
-                project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+                ProjectHelper.build(project, monitor);
 
                 // store the resolved project in the map.
                 resolvedProjects.put(projectConfig, projectState);
