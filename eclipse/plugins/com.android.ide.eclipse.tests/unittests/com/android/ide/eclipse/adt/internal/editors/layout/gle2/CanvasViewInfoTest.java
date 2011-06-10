@@ -623,6 +623,34 @@ public class CanvasViewInfoTest extends TestCase {
         assertEquals(new Rectangle(0, 40, 49, 19), bounds2);
     }
 
+    public void testCookieWorkaround() throws Exception {
+        UiViewElementNode rootNode = createNode("android.widget.LinearLayout", true);
+        ViewInfo root = new ViewInfo("included", null, 0, 0, 100, 100);
+
+        UiViewElementNode node2 = createNode(rootNode, "childNode2", false);
+        MergeCookie mergeCookie = new MergeCookie(root);
+
+        ViewInfo childView1 = new ViewInfo("childView1", mergeCookie, 0, 20, 50, 40);
+        ViewInfo childView2 = new ViewInfo("childView2", node2, 0, 40, 50, 60);
+
+        root.setChildren(Arrays.asList(childView1, childView2));
+
+        Pair<CanvasViewInfo, List<Rectangle>> result = CanvasViewInfo.create(root, true);
+        CanvasViewInfo rootView = result.getFirst();
+        List<Rectangle> bounds = result.getSecond();
+        assertNotNull(rootView);
+
+        assertEquals("included", rootView.getName());
+        assertNull(rootView.getParent());
+        assertNull(rootView.getUiViewNode());
+        // childView1 should have been removed since it has the wrong merge cookie
+        assertEquals(1, rootView.getChildren().size());
+        assertEquals(1, rootView.getUniqueChildren().size());
+
+        Rectangle bounds1 = bounds.get(0);
+        assertEquals(new Rectangle(0, 40, 49, 19), bounds1);
+    }
+
     public void testGestureOverlayView() throws Exception {
         boolean layoutlib5 = true;
 
