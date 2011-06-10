@@ -20,7 +20,7 @@ package com.android.resources;
  * Screen size enum.
  * <p/>This is used in the manifest in the uses-configuration node and in the resource folder names.
  */
-public enum ScreenLayoutSize implements ResourceEnum {
+public enum ScreenSize implements ResourceEnum {
     SMALL("small", "Small", "Small Screen"), //$NON-NLS-1$
     NORMAL("normal", "Normal", "Normal Screen"), //$NON-NLS-1$
     LARGE("large", "Large", "Large Screen"), //$NON-NLS-1$
@@ -30,7 +30,7 @@ public enum ScreenLayoutSize implements ResourceEnum {
     private final String mShortDisplayValue;
     private final String mLongDisplayValue;
 
-    private ScreenLayoutSize(String value, String shortDisplayValue, String longDisplayValue) {
+    private ScreenSize(String value, String shortDisplayValue, String longDisplayValue) {
         mValue = value;
         mShortDisplayValue = shortDisplayValue;
         mLongDisplayValue = longDisplayValue;
@@ -41,8 +41,8 @@ public enum ScreenLayoutSize implements ResourceEnum {
      * @param value The qualifier value.
      * @return the enum for the qualifier value or null if no matching was found.
      */
-    public static ScreenLayoutSize getEnum(String value) {
-        for (ScreenLayoutSize orient : values()) {
+    public static ScreenSize getEnum(String value) {
+        for (ScreenSize orient : values()) {
             if (orient.mValue.equals(value)) {
                 return orient;
             }
@@ -63,9 +63,9 @@ public enum ScreenLayoutSize implements ResourceEnum {
         return mLongDisplayValue;
     }
 
-    public static int getIndex(ScreenLayoutSize orientation) {
+    public static int getIndex(ScreenSize orientation) {
         int i = 0;
-        for (ScreenLayoutSize orient : values()) {
+        for (ScreenSize orient : values()) {
             if (orient == orientation) {
                 return i;
             }
@@ -76,9 +76,9 @@ public enum ScreenLayoutSize implements ResourceEnum {
         return -1;
     }
 
-    public static ScreenLayoutSize getByIndex(int index) {
+    public static ScreenSize getByIndex(int index) {
         int i = 0;
-        for (ScreenLayoutSize orient : values()) {
+        for (ScreenSize orient : values()) {
             if (i == index) {
                 return orient;
             }

@@ -24,9 +24,9 @@ import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
-import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 
@@ -167,7 +167,7 @@ public class LayoutDevice {
             node.setTextContent(Integer.toString(ncq.getCode()));
         }
 
-        ScreenLayoutSizeQualifier slsq = config.getScreenLayoutSizeQualifier();
+        ScreenSizeQualifier slsq = config.getScreenSizeQualifier();
         if (slsq != null) {
             Element node = createNode(doc, configNode, LayoutDevicesXsd.NODE_SCREEN_SIZE);
             node.setTextContent(slsq.getFolderSegment());

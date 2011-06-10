@@ -30,9 +30,9 @@ import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenHeightQualifier;
-import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenWidthQualifier;
 import com.android.ide.common.resources.configuration.SmallestScreenWidthQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
@@ -47,9 +47,9 @@ import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceEnum;
-import com.android.resources.ScreenLayoutSize;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRatio;
+import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.resources.UiMode;
 
@@ -429,8 +429,7 @@ public class ConfigurationSelector extends Composite {
                     new SmallestScreenWidthEdit(mQualifierEditParent));
             mUiMap.put(ScreenWidthQualifier.class, new ScreenWidthEdit(mQualifierEditParent));
             mUiMap.put(ScreenHeightQualifier.class, new ScreenHeightEdit(mQualifierEditParent));
-            mUiMap.put(ScreenLayoutSizeQualifier.class,
-                    new ScreenLayoutSizeEdit(mQualifierEditParent));
+            mUiMap.put(ScreenSizeQualifier.class, new ScreenSizeEdit(mQualifierEditParent));
             mUiMap.put(ScreenRatioQualifier.class, new ScreenRatioEdit(mQualifierEditParent));
             mUiMap.put(ScreenOrientationQualifier.class, new OrientationEdit(mQualifierEditParent));
             mUiMap.put(UiModeQualifier.class, new UiModeEdit(mQualifierEditParent));
@@ -1172,17 +1171,17 @@ public class ConfigurationSelector extends Composite {
 
 
     /**
-     * Edit widget for {@link ScreenLayoutSizeQualifier}.
+     * Edit widget for {@link ScreenSizeQualifier}.
      */
-    private class ScreenLayoutSizeEdit extends QualifierEditBase {
+    private class ScreenSizeEdit extends QualifierEditBase {
 
         private Combo mSize;
 
-        public ScreenLayoutSizeEdit(Composite parent) {
-            super(parent, ScreenLayoutSizeQualifier.NAME);
+        public ScreenSizeEdit(Composite parent) {
+            super(parent, ScreenSizeQualifier.NAME);
 
             mSize = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY);
-            fillCombo(mSize, ScreenLayoutSize.values());
+            fillCombo(mSize, ScreenSize.values());
 
             mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mSize.addSelectionListener(new SelectionListener() {
@@ -1200,14 +1199,14 @@ public class ConfigurationSelector extends Composite {
             int index = mSize.getSelectionIndex();
 
             if (index != -1) {
-                mSelectedConfiguration.setScreenLayoutSizeQualifier(new ScreenLayoutSizeQualifier(
-                        ScreenLayoutSize.getByIndex(index)));
+                mSelectedConfiguration.setScreenSizeQualifier(new ScreenSizeQualifier(
+                        ScreenSize.getByIndex(index)));
             } else {
                 // empty selection, means no qualifier.
                 // Since the qualifier classes are immutable, and we don't want to
                 // remove the qualifier from the configuration, we create a new default one.
-                mSelectedConfiguration.setScreenLayoutSizeQualifier(
-                        new ScreenLayoutSizeQualifier());
+                mSelectedConfiguration.setScreenSizeQualifier(
+                        new ScreenSizeQualifier());
             }
 
             // notify of change
@@ -1216,13 +1215,13 @@ public class ConfigurationSelector extends Composite {
 
         @Override
         public void setQualifier(ResourceQualifier qualifier) {
-            ScreenLayoutSizeQualifier q = (ScreenLayoutSizeQualifier)qualifier;
+            ScreenSizeQualifier q = (ScreenSizeQualifier)qualifier;
 
-            ScreenLayoutSize value = q.getValue();
+            ScreenSize value = q.getValue();
             if (value == null) {
                 mSize.clearSelection();
             } else {
-                mSize.select(ScreenLayoutSize.getIndex(value));
+                mSize.select(ScreenSize.getIndex(value));
             }
         }
     }

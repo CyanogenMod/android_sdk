@@ -31,8 +31,8 @@ import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
-import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.sdk.LoadStatus;
@@ -44,15 +44,15 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-import com.android.resources.ScreenLayoutSize;
 import com.android.resources.ScreenOrientation;
+import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -992,14 +992,14 @@ public class ConfigurationComposite extends Composite {
      */
     private static class TabletConfigComparator implements Comparator<ConfigMatch> {
         public int compare(ConfigMatch o1, ConfigMatch o2) {
-            ScreenLayoutSize ss1 = o1.testConfig.getScreenLayoutSizeQualifier().getValue();
-            ScreenLayoutSize ss2 = o2.testConfig.getScreenLayoutSizeQualifier().getValue();
+            ScreenSize ss1 = o1.testConfig.getScreenSizeQualifier().getValue();
+            ScreenSize ss2 = o2.testConfig.getScreenSizeQualifier().getValue();
 
             // X-LARGE is better than all others (which are considered identical)
             // if both X-LARGE, then LANDSCAPE is better than all others (which are identical)
 
-            if (ss1 == ScreenLayoutSize.XLARGE) {
-                if (ss2 == ScreenLayoutSize.XLARGE) {
+            if (ss1 == ScreenSize.XLARGE) {
+                if (ss2 == ScreenSize.XLARGE) {
                     ScreenOrientation so1 =
                         o1.testConfig.getScreenOrientationQualifier().getValue();
                     ScreenOrientation so2 =
@@ -1019,7 +1019,7 @@ public class ConfigurationComposite extends Composite {
                 } else {
                     return -1;
                 }
-            } else if (ss2 == ScreenLayoutSize.XLARGE) {
+            } else if (ss2 == ScreenSize.XLARGE) {
                 return 1;
             } else {
                 return 0;
@@ -1471,12 +1471,12 @@ public class ConfigurationComposite extends Composite {
                 ManifestInfo manifest = ManifestInfo.get(project);
 
                 // Look up the screen size for the current configuration
-                ScreenLayoutSize screenSize = null;
+                ScreenSize screenSize = null;
                 if (mState.device != null) {
                     List<DeviceConfig> configs = mState.device.getConfigs();
                     for (DeviceConfig config : configs) {
-                        ScreenLayoutSizeQualifier qualifier =
-                            config.getConfig().getScreenLayoutSizeQualifier();
+                        ScreenSizeQualifier qualifier =
+                            config.getConfig().getScreenSizeQualifier();
                         screenSize = qualifier.getValue();
                         break;
                     }
