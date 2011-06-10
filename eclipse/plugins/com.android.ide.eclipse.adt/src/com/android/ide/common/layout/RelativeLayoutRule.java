@@ -187,6 +187,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
                 state.removeCycles();
 
                 // Now write the new elements.
+                INode previous = null;
                 for (IDragElement element : elements) {
                     String fqcn = element.getFqcn();
 
@@ -202,7 +203,25 @@ public class RelativeLayoutRule extends BaseLayoutRule {
                     addAttributes(newChild, element, idMap, BaseLayoutRule.DEFAULT_ATTR_FILTER);
                     addInnerElements(newChild, element, idMap);
 
-                    state.applyConstraints(newChild);
+                    if (previous == null) {
+                        state.applyConstraints(newChild);
+                        previous = newChild;
+                    } else {
+                        // Arrange the nodes next to each other, depending on which
+                        // edge we are attaching to. For example, if attaching to the
+                        // top edge, arrange the subsequent nodes in a column below it.
+                        //
+                        // TODO: Try to do something smarter here where we detect
+                        // constraints between the dragged edges, and we preserve these.
+                        // We have to do this carefully though because if the
+                        // constraints go through some other nodes not part of the
+                        // selection, this doesn't work right, and you might be
+                        // dragging several connected components, which we'd then
+                        // need to stitch together such that they are all visible.
+
+                        state.attachPrevious(previous, newChild);
+                        previous = newChild;
+                    }
                 }
             }
         });

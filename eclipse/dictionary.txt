@@ -152,6 +152,7 @@ num
 ok
 os
 palette
+param
 params
 pings
 placeholder

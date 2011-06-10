@@ -63,8 +63,8 @@ public class MoveHandler extends GuidelineHandler {
         }
         mDraggedNodes = nodes;
 
-        mHorizontalDeps = mDependencyGraph.dependsOn(nodes, false /* vertical */);
-        mVerticalDeps = mDependencyGraph.dependsOn(nodes, true /* vertical */);
+        mHorizontalDeps = mDependencyGraph.dependsOn(nodes, false /* verticalEdge */);
+        mVerticalDeps = mDependencyGraph.dependsOn(nodes, true /* verticalEdge */);
 
         for (INode child : layout.getChildren()) {
             Rect bc = child.getBounds();
@@ -81,12 +81,9 @@ public class MoveHandler extends GuidelineHandler {
                 }
 
                 if (!isDragged) {
-                    // Need an id to reference child in attachments to it, so skip
-                    // nodes without ids
                     String id = child.getStringAttr(ANDROID_URI, ATTR_ID);
-                    if (id == null) {
-                        continue;
-                    }
+                    // It's okay for id to be null; if you apply a constraint
+                    // to a node with a missing id we will generate the id
 
                     boolean addHorizontal = !mHorizontalDeps.contains(child);
                     boolean addVertical = !mVerticalDeps.contains(child);
@@ -233,7 +230,7 @@ public class MoveHandler extends GuidelineHandler {
 
         Match match = pickBestMatch(mHorizontalSuggestions);
         if (match != null) {
-            if (mVerticalDeps.contains(match.edge.node)) {
+            if (mHorizontalDeps.contains(match.edge.node)) {
                 match.cycle = true;
             }
 
@@ -259,7 +256,7 @@ public class MoveHandler extends GuidelineHandler {
 
         match = pickBestMatch(mVerticalSuggestions);
         if (match != null) {
-            if (mHorizontalDeps.contains(match.edge.node)) {
+            if (mVerticalDeps.contains(match.edge.node)) {
                 match.cycle = true;
             }
 

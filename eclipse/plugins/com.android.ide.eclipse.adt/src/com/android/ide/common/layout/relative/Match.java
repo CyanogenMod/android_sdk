@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.layout.relative;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 
 import com.android.ide.common.api.Segment;
@@ -36,15 +38,22 @@ class Match {
     /** whether this {@link Match} results in a cycle */
     public boolean cycle;
 
+    /** The associated {@link GuidelineHander} which performed the match */
+    private final GuidelineHandler mHandler;
+
     /**
      * Create a new match.
      *
+     * @param handler the handler which performed the match
      * @param edge the "other" edge that the dragged edge is matched with
      * @param with the edge of the dragged node that is matched
      * @param type the type of constraint this is a match for
      * @param delta the signed distance between the matched edges
      */
-    public Match(Segment edge, Segment with, ConstraintType type, int delta) {
+    public Match(GuidelineHandler handler, Segment edge, Segment with,
+            ConstraintType type, int delta) {
+        mHandler = handler;
+
         this.edge = edge;
         this.with = with;
         this.type = type;
@@ -54,13 +63,29 @@ class Match {
     /**
      * Returns the XML constraint attribute value for this match
      *
+     * @param generateId whether an id should be generated if one is missing
      * @return the XML constraint attribute value for this match
      */
-    public String getConstraint() {
+    public String getConstraint(boolean generateId) {
         if (type.targetParent) {
             return type.name + '=' + VALUE_TRUE;
         } else {
             String id = edge.id;
+            if (id == null || id.length() == -1) {
+                if (!generateId) {
+                    // Placeholder to display for the user during dragging
+                    id = "<generated>";
+                } else {
+                    // Must generate an id on the fly!
+                    // See if it's been set by a different constraint we've already applied
+                    // to this same node
+                    id = edge.node.getStringAttr(ANDROID_URI, ATTR_ID);
+                    if (id == null || id.length() == 0) {
+                        id = mHandler.getRulesEngine().getUniqueId(edge.node.getFqcn());
+                        edge.node.setAttribute(ANDROID_URI, ATTR_ID, id);
+                    }
+                }
+            }
             return type.name + '=' + id;
         }
     }

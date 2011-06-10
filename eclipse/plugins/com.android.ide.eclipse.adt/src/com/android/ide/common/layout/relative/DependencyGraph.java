@@ -21,8 +21,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 
 import com.android.ide.common.api.IDragElement;
-import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
+import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.common.layout.BaseLayoutRule;
 
@@ -150,8 +150,8 @@ class DependencyGraph {
      *
      * @param nodes the set of nodes that we want to compute the transitive dependencies
      *            for
-     * @param vertical if true, look for vertical dependencies, otherwise look for
-     *            horizontal dependencies
+     * @param vertical if true, look for vertical edge dependencies, otherwise look for
+     *            horizontal edge dependencies
      * @return the set of nodes that directly or indirectly depend on the given nodes in
      *         the given direction
      */
