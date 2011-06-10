@@ -210,5 +210,18 @@ public interface IClientRulesEngine {
          */
         String getAttribute(INode node, String namespace, String localName);
     }
+
+    /**
+     * Given a UI root node and a potential XML node name, returns the first available id
+     * that matches the pattern "prefix%d".
+     * <p/>
+     * TabWidget is a special case and the method will always return "@android:id/tabs".
+     *
+     * @param fqcn The fully qualified class name of the view to generate a unique id for
+     * @return A suitable generated id in the attribute form needed by the XML id tag
+     *         (e.g. "@+id/something")
+     */
+    public String getUniqueId(String fqcn);
+
 }
 
