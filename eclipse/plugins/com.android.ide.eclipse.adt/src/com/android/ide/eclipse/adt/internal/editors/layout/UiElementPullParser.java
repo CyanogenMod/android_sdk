@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_PADDING;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.ATTR_LAYOUT;
@@ -58,7 +59,6 @@ import java.util.regex.Pattern;
  * This pull parser generates {@link ViewInfo}s which key is a {@link UiElementNode}.
  */
 public class UiElementPullParser extends BasePullParser {
-    private final static String ATTR_PADDING = "padding"; //$NON-NLS-1$
     private final static Pattern FLOAT_PATTERN = Pattern.compile("(-?[0-9]+(?:\\.[0-9]+)?)(.*)"); //$NON-NLS-1$
 
     private final int[] sIntOut = new int[1];
@@ -68,7 +68,7 @@ public class UiElementPullParser extends BasePullParser {
     private final boolean mExplodedRendering;
     private boolean mZeroAttributeIsPadding = false;
     private boolean mIncreaseExistingPadding = false;
-    private List<ViewElementDescriptor> mLayoutDescriptors;
+    private LayoutDescriptors mDescriptors;
     private final Density mDensity;
     private final float mXdpi;
 
@@ -121,8 +121,7 @@ public class UiElementPullParser extends BasePullParser {
             // get the layout descriptor
             IAndroidTarget target = Sdk.getCurrent().getTarget(project);
             AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
-            LayoutDescriptors descriptors = data.getLayoutDescriptors();
-            mLayoutDescriptors = descriptors.getLayoutDescriptors();
+            mDescriptors = data.getLayoutDescriptors();
         }
         push(mRoot);
     }
@@ -162,18 +161,15 @@ public class UiElementPullParser extends BasePullParser {
         if (mExplodedRendering) {
             // first get the node name
             String xml = node.getDescriptor().getXmlLocalName();
-            for (ViewElementDescriptor descriptor : mLayoutDescriptors) {
-                if (xml.equals(descriptor.getXmlLocalName())) {
-                    NamedNodeMap attributes = node.getXmlNode().getAttributes();
-                    Node padding = attributes.getNamedItemNS(SdkConstants.NS_RESOURCES, "padding");
-                    if (padding == null) {
-                        // we'll return an extra padding
-                        mZeroAttributeIsPadding = true;
-                    } else {
-                        mIncreaseExistingPadding = true;
-                    }
-
-                    break;
+            ViewElementDescriptor descriptor = mDescriptors.findDescriptorByTag(xml);
+            if (descriptor != null) {
+                NamedNodeMap attributes = node.getXmlNode().getAttributes();
+                Node padding = attributes.getNamedItemNS(SdkConstants.NS_RESOURCES, ATTR_PADDING);
+                if (padding == null) {
+                    // we'll return an extra padding
+                    mZeroAttributeIsPadding = true;
+                } else {
+                    mIncreaseExistingPadding = true;
                 }
             }
         }

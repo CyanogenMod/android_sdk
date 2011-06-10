@@ -1692,6 +1692,9 @@ public class Hyperlinks {
                         if (region != null
                                 && DOMRegionContext.XML_TAG_NAME.equals(region.getType())) {
                             ITextRegion subRegion = region.getRegionAtCharacterOffset(offset);
+                            if (subRegion == null) {
+                                return null;
+                            }
                             int regionStart = region.getStartOffset();
                             int subregionStart = subRegion.getStart();
                             int relativeOffset = offset - (regionStart + subregionStart);

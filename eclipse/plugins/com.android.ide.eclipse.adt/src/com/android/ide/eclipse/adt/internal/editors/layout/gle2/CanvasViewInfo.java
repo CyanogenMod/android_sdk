@@ -77,7 +77,7 @@ public class CanvasViewInfo implements IPropertySource {
     private final UiViewElementNode mUiViewNode;
     private CanvasViewInfo mParent;
     private ViewInfo mViewInfo;
-    private final ArrayList<CanvasViewInfo> mChildren = new ArrayList<CanvasViewInfo>();
+    private final List<CanvasViewInfo> mChildren = new ArrayList<CanvasViewInfo>();
 
     /**
      * Is this view info an individually exploded view? This is the case for views
@@ -390,7 +390,8 @@ public class CanvasViewInfo implements IPropertySource {
         // etc)
         if (mParent != null
                 && mParent.mName.endsWith(GESTURE_OVERLAY_VIEW)
-                && mParent.isRoot()) {
+                && mParent.isRoot()
+                && mParent.mChildren.size() == 1) {
             return true;
         }
 
