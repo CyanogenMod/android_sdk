@@ -1187,7 +1187,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         // build the command line based on the available parameters.
         ArrayList<String> list = new ArrayList<String>();
 
-        String path = avdToLaunch.getEmulatorPath(AdtPlugin.getOsSdkFolder());
+        String path = AdtPlugin.getOsAbsoluteEmulator();
 
         list.add(path);
 
