@@ -192,6 +192,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 if (mProjectButton.getSelection()) {
                     setupResourceList();
                     mNewButton.setEnabled(true);
+                    updatePreview();
                 }
             }
         });
@@ -204,6 +205,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 if (mSystemButton.getSelection()) {
                     setupResourceList();
                     mNewButton.setEnabled(false);
+                    updatePreview();
                 }
             }
         });
@@ -261,6 +263,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             }
         }
 
+        updatePreview();
+    }
+
+    private void updatePreview() {
         if (mPreviewHelper != null) {
             computeResult();
             mPreviewHelper.updatePreview(mResourceType, mCurrentResource);
