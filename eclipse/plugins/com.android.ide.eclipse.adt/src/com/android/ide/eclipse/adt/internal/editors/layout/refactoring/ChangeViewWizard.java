@@ -16,8 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
-import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CustomViewFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
@@ -152,7 +155,9 @@ class ChangeViewWizard extends VisualRefactoringWizard {
                             targetData.getLayoutDescriptors().getViewDescriptors();
                         for (ViewElementDescriptor d : descriptors) {
                             String className = d.getFullClassName();
-                            if (className.equals(LayoutDescriptors.VIEW_INCLUDE)) {
+                            if (className.equals(VIEW_INCLUDE)
+                                    || className.equals(VIEW_FRAGMENT)
+                                    || className.equals(REQUEST_FOCUS)) {
                                 continue;
                             }
                             combo.add(d.getUiName());
