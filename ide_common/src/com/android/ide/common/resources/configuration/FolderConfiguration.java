@@ -229,7 +229,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof ScreenHeightQualifier) {
             mQualifiers[INDEX_SCREEN_HEIGHT] = qualifier;
 
-        } else if (qualifier instanceof ScreenLayoutSizeQualifier) {
+        } else if (qualifier instanceof ScreenSizeQualifier) {
             mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = qualifier;
 
         } else if (qualifier instanceof ScreenRatioQualifier) {
@@ -350,12 +350,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return (ScreenHeightQualifier) mQualifiers[INDEX_SCREEN_HEIGHT];
     }
 
-    public void setScreenLayoutSizeQualifier(ScreenLayoutSizeQualifier qualifier) {
+    public void setScreenSizeQualifier(ScreenSizeQualifier qualifier) {
         mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = qualifier;
     }
 
-    public ScreenLayoutSizeQualifier getScreenLayoutSizeQualifier() {
-        return (ScreenLayoutSizeQualifier)mQualifiers[INDEX_SCREEN_LAYOUT_SIZE];
+    public ScreenSizeQualifier getScreenSizeQualifier() {
+        return (ScreenSizeQualifier)mQualifiers[INDEX_SCREEN_LAYOUT_SIZE];
     }
 
     public void setScreenRatioQualifier(ScreenRatioQualifier qualifier) {
@@ -846,7 +846,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
         mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
-        mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenLayoutSizeQualifier();
+        mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenSizeQualifier();
         mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
         mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();

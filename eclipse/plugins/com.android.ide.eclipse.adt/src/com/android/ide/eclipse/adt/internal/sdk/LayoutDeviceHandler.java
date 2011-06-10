@@ -24,9 +24,9 @@ import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
 import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.NetworkCodeQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
-import com.android.ide.common.resources.configuration.ScreenLayoutSizeQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
+import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.resources.Density;
@@ -34,9 +34,9 @@ import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.resources.NavigationState;
-import com.android.resources.ScreenLayoutSize;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRatio;
+import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 
 import org.xml.sax.Attributes;
@@ -131,9 +131,9 @@ class LayoutDeviceHandler extends DefaultHandler {
                     Integer.parseInt(mStringAccumulator.toString()));
             mCurrentConfig.setNetworkCodeQualifier(ncq);
         } else if (LayoutDevicesXsd.NODE_SCREEN_SIZE.equals(localName)) {
-            ScreenLayoutSizeQualifier ssq = new ScreenLayoutSizeQualifier(
-                    ScreenLayoutSize.getEnum(mStringAccumulator.toString()));
-            mCurrentConfig.setScreenLayoutSizeQualifier(ssq);
+            ScreenSizeQualifier ssq = new ScreenSizeQualifier(
+                    ScreenSize.getEnum(mStringAccumulator.toString()));
+            mCurrentConfig.setScreenSizeQualifier(ssq);
         } else if (LayoutDevicesXsd.NODE_SCREEN_RATIO.equals(localName)) {
             ScreenRatioQualifier srq = new ScreenRatioQualifier(
                     ScreenRatio.getEnum(mStringAccumulator.toString()));

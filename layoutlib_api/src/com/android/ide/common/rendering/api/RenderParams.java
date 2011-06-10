@@ -17,7 +17,7 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.resources.Density;
-import com.android.resources.ScreenLayoutSize;
+import com.android.resources.ScreenSize;
 
 /**
  * Base class for rendering parameters. This include the generic parameters but not what needs
@@ -46,7 +46,7 @@ public abstract class RenderParams {
 
     private IImageFactory mImageFactory = null;
 
-    private ScreenLayoutSize mConfigScreenSize = null;
+    private ScreenSize mConfigScreenSize = null;
     private String mAppIcon = null;
     private String mAppLabel = null;
     private String mLocale = null;
@@ -138,7 +138,7 @@ public abstract class RenderParams {
         mImageFactory = imageFactory;
     }
 
-    public void setConfigScreenSize(ScreenLayoutSize size) {
+    public void setConfigScreenSize(ScreenSize size) {
         mConfigScreenSize  = size;
     }
 
@@ -218,7 +218,7 @@ public abstract class RenderParams {
         return mImageFactory;
     }
 
-    public ScreenLayoutSize getConfigScreenSize() {
+    public ScreenSize getConfigScreenSize() {
         return mConfigScreenSize;
     }
 

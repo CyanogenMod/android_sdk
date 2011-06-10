@@ -15,9 +15,9 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
-import static com.android.resources.ScreenLayoutSize.LARGE;
-import static com.android.resources.ScreenLayoutSize.NORMAL;
-import static com.android.resources.ScreenLayoutSize.XLARGE;
+import static com.android.resources.ScreenSize.LARGE;
+import static com.android.resources.ScreenSize.NORMAL;
+import static com.android.resources.ScreenSize.XLARGE;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
