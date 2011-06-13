@@ -130,7 +130,7 @@ public final class GuidelinePainter implements IFeedbackPainter {
         // Display the constraint. Remove the @id/ and @+id/ prefixes to make the text
         // shorter and easier to read. This doesn't use stripPrefix() because the id is
         // usually not a prefix of the value (for example, 'layout_alignBottom=@+id/foo').
-        String constraint = m.getConstraint();
+        String constraint = m.getConstraint(false /* generateId */);
         String description = constraint.replace(NEW_ID_PREFIX, "").replace(ID_PREFIX, "");
         if (description.startsWith(ATTR_LAYOUT_PREFIX)) {
             description = description.substring(ATTR_LAYOUT_PREFIX.length());

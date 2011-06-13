@@ -29,21 +29,23 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.RenderService;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionManager;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.ui.MarginChooser;
-import com.android.ide.eclipse.adt.internal.ui.ResourcePreviewHelper;
 import com.android.ide.eclipse.adt.internal.ui.ReferenceChooserDialog;
 import com.android.ide.eclipse.adt.internal.ui.ResourceChooser;
+import com.android.ide.eclipse.adt.internal.ui.ResourcePreviewHelper;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 
@@ -481,4 +483,10 @@ class ClientRulesEngine implements IClientRulesEngine {
         }
     }
 
+    public String getUniqueId(String fqcn) {
+        UiDocumentNode root = mRulesEngine.getEditor().getModel();
+        String prefix = fqcn.substring(fqcn.lastIndexOf('.') + 1);
+        prefix = Character.toLowerCase(prefix.charAt(0)) + prefix.substring(1);
+        return DescriptorsUtils.getFreeWidgetId(root, prefix);
+    }
 }

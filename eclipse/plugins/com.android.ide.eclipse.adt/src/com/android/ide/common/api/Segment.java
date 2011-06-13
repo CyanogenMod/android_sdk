@@ -45,7 +45,10 @@ public class Segment {
     /** The node that contains this edge */
     public final INode node;
 
-    /** The id of the node */
+    /**
+     * The id of the node. May be null (in which case id should be generated when
+     * move/resize is completed
+     */
     public final String id;
 
     public Segment(int at, int from, int to, INode node, String id, SegmentType edgeType,
