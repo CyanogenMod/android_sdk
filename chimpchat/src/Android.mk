@@ -18,6 +18,13 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
+LOCAL_JAVA_LIBRARIES := \
+	ddmlib \
+	hierarchyviewerlib \
+	guavalib \
+	sdklib \
+	swt
+
 LOCAL_MODULE := chimpchat
 
 LOCAL_MODULE_TAGS := eng
