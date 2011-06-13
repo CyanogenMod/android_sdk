@@ -26,6 +26,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_WEIGHT_SUM;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.DrawingStyle;
@@ -220,8 +222,18 @@ public class LinearLayoutRule extends BaseLayoutRule {
                                     share = sum / numTargets;
                                 }
                                 String value = formatFloatAttribute((float) share);
+                                String sizeAttribute = isVertical(parentNode) ?
+                                        ATTR_LAYOUT_HEIGHT : ATTR_LAYOUT_WIDTH;
                                 for (INode target : targets) {
                                     target.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, value);
+                                    // Also set the width/height to 0dp to ensure actual equal
+                                    // size (without this, only the remaining space is
+                                    // distributed)
+                                    if (VALUE_WRAP_CONTENT.equals(
+                                            target.getStringAttr(ANDROID_URI, sizeAttribute))) {
+                                        target.setAttribute(ANDROID_URI,
+                                                sizeAttribute, VALUE_ZERO_DP);
+                                    }
                                 }
                             } else {
                                 assert action.getId().equals(ACTION_BASELINE);
@@ -539,6 +551,40 @@ public class LinearLayoutRule extends BaseLayoutRule {
             }
             if (fill.fillVertically(vertical)) {
                 node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, fillParent);
+            }
+        }
+
+        // If you insert into a layout that already is using layout weights,
+        // and all the layout weights are the same (nonzero) value, then use
+        // the same weight for this new layout as well. Also duplicate the 0dip/0px/0dp
+        // sizes, if used.
+        boolean duplicateWeight = true;
+        boolean duplicate0dip = true;
+        String sameWeight = null;
+        String sizeAttribute = isVertical(parent) ? ATTR_LAYOUT_HEIGHT : ATTR_LAYOUT_WIDTH;
+        for (INode target : parent.getChildren()) {
+            if (target == node) {
+                continue;
+            }
+            String weight = target.getStringAttr(ANDROID_URI, ATTR_LAYOUT_WEIGHT);
+            if (weight == null || weight.length() == 0) {
+                duplicateWeight = false;
+                break;
+            } else if (sameWeight != null && !sameWeight.equals(weight)) {
+                duplicateWeight = false;
+            } else {
+                sameWeight = weight;
+            }
+            String size = target.getStringAttr(ANDROID_URI, sizeAttribute);
+            if (size != null && !size.startsWith("0")) { //$NON-NLS-1$
+                duplicate0dip = false;
+                break;
+            }
+        }
+        if (duplicateWeight && sameWeight != null) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, sameWeight);
+            if (duplicate0dip) {
+                node.setAttribute(ANDROID_URI, sizeAttribute, VALUE_ZERO_DP);
             }
         }
     }
