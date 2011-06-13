@@ -20,6 +20,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
@@ -373,7 +374,7 @@ public final class AvdSelector {
         final TableColumn column3 = new TableColumn(mTable, SWT.NONE);
         column3.setText("API Level");
         final TableColumn column4 = new TableColumn(mTable, SWT.NONE);
-        column4.setText("ABI");
+        column4.setText("CPU/ABI");
 
         adjustColumnsWidth(mTable, column0, column1, column2, column3, column4);
         setupSelectionListener(mTable);
@@ -1032,7 +1033,9 @@ public final class AvdSelector {
         AvdStartDialog dialog = new AvdStartDialog(mTable.getShell(), avdInfo, mOsSdkPath,
                 mController);
         if (dialog.open() == Window.OK) {
-            String path = avdInfo.getEmulatorPath(mOsSdkPath + File.separator);
+            String path = mOsSdkPath + File.separator
+                    + SdkConstants.OS_SDK_TOOLS_FOLDER
+                    + SdkConstants.FN_EMULATOR;
 
             final String avdName = avdInfo.getName();
 
