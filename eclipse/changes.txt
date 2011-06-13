@@ -1,4 +1,16 @@
 12.0.0
+- Many bug fixes!
+- Visual Layout Editor:
+  - New RelativeLayout drop support with guideline suggestions for
+    attachments and cycle prevention.
+  - Resize support in most layouts. In LinearLayout, sizes are mapped
+    to weights. Guideline snapping to wrap_content and match_parent.
+  - Previews of drawables and colors in the resource chooser dialogs.
+  - Improved error messages and links for rendering errors, including
+    detection of misspellings of class names.
+- Build system: Delay post compiler phase until actual export or debug
+  to speed up interactive file saves. (This is off by default but can
+  be enabled in the ADT options panel.)
 
 11.0.0
 - Visual Refactoring:
