@@ -19,8 +19,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyDevice;
-import com.android.monkeyrunner.core.TouchPressType;
+import com.android.chimpchat.core.IChimpDevice;
+import com.android.chimpchat.core.TouchPressType;
 
 /**
  * Action to press a certain button.
@@ -62,7 +62,7 @@ public class PressAction implements Action {
     }
 
     @Override
-    public void execute(IMonkeyDevice device) {
+    public void execute(IChimpDevice device) {
         device.press(key, TouchPressType.fromIdentifier(downUpFlag));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner;
+package com.android.chimpchat;
 
 import com.android.ddmlib.RawImage;
-import com.android.monkeyrunner.adb.image.CaptureRawAndConvertedImage;
-import com.android.monkeyrunner.adb.image.ImageUtils;
-import com.android.monkeyrunner.adb.image.CaptureRawAndConvertedImage.MonkeyRunnerRawImage;
+import com.android.chimpchat.adb.image.CaptureRawAndConvertedImage;
+import com.android.chimpchat.adb.image.ImageUtils;
+import com.android.chimpchat.adb.image.CaptureRawAndConvertedImage.ChimpRawImage;
 
 import junit.framework.TestCase;
 
@@ -41,7 +41,7 @@ public class ImageUtilsTest extends TestCase {
     private static RawImage createRawImage(String name) throws IOException, ClassNotFoundException {
         ObjectInputStream is =
             new ObjectInputStream(ImageUtilsTest.class.getResourceAsStream(name));
-        CaptureRawAndConvertedImage.MonkeyRunnerRawImage wrapper = (MonkeyRunnerRawImage) is.readObject();
+        CaptureRawAndConvertedImage.ChimpRawImage wrapper = (ChimpRawImage) is.readObject();
         is.close();
         return wrapper.toRawImage();
     }

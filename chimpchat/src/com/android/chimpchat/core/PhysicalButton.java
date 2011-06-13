@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner.core;
+package com.android.chimpchat.core;
 
-import java.awt.image.BufferedImage;
+public enum PhysicalButton {
+    HOME("home"),
+    SEARCH("search"),
+    MENU("menu"),
+    BACK("back"),
+    DPAD_UP("DPAD_UP"),
+    DPAD_DOWN("DPAD_DOWN"),
+    DPAD_LEFT("DPAD_LEFT"),
+    DPAD_RIGHT("DPAD_RIGHT"),
+    DPAD_CENTER("DPAD_CENTER"),
+    ENTER("enter");
 
-/**
- * MonkeyImage interface.
- *
- * This interface defines an image representing a screen snapshot.
- */
-public interface IMonkeyImage {
-    // TODO: add java docs
-    BufferedImage createBufferedImage();
-    BufferedImage getBufferedImage();
+    private String keyName;
 
-    IMonkeyImage getSubImage(int x, int y, int w, int h);
+    private PhysicalButton(String keyName) {
+        this.keyName = keyName;
+    }
 
-    byte[] convertToBytes(String format);
-    boolean writeToFile(String path, String format);
-    int getPixel(int x, int y);
-    boolean sameAs(IMonkeyImage other, double percent);
+    public String getKeyName() {
+        return keyName;
+    }
 }

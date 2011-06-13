@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.core.IChimpDevice;
 
 /**
  * Action to type in a string on the device.
@@ -40,7 +40,7 @@ public class TypeAction implements Action {
     }
 
     @Override
-    public void execute(IMonkeyDevice device) {
+    public void execute(IChimpDevice device) {
         device.type(whatToType);
     }
 }

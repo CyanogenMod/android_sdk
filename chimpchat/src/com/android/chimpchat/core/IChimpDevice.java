@@ -60,6 +60,13 @@ public interface IChimpDevice {
     void reboot(@Nullable String into);
 
     /**
+     * List properties of the device that we can inspect
+     *
+     * @return the list of property keys
+     */
+    Collection<String> getPropertyList();
+
+    /**
      * Get device's property.
      *
      * @param key the property name

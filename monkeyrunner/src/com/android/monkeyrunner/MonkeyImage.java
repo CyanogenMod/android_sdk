@@ -17,7 +17,7 @@ package com.android.monkeyrunner;
 
 import com.google.common.base.Preconditions;
 
-import com.android.monkeyrunner.core.IMonkeyImage;
+import com.android.chimpchat.core.IChimpImage;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.python.core.ArgParser;
@@ -40,13 +40,13 @@ public class MonkeyImage extends PyObject implements ClassDictInit {
         JythonUtils.convertDocAnnotationsForClass(MonkeyImage.class, dict);
     }
 
-    private IMonkeyImage impl;
+    private IChimpImage impl;
 
-    public MonkeyImage(IMonkeyImage impl) {
+    public MonkeyImage(IChimpImage impl) {
         this.impl = impl;
     }
 
-    public IMonkeyImage getImpl() {
+    public IChimpImage getImpl() {
         return impl;
     }
 
@@ -135,8 +135,8 @@ public class MonkeyImage extends PyObject implements ClassDictInit {
 
         PyObject otherObject = ap.getPyObject(0);
         // TODO: check if this conversion wortks
-        IMonkeyImage other = (IMonkeyImage) otherObject.__tojava__(
-                IMonkeyImage.class);
+        IChimpImage other = (IChimpImage) otherObject.__tojava__(
+                IChimpImage.class);
 
         double percent = JythonUtils.getFloat(ap, 1, 1.0);
 
@@ -159,7 +159,7 @@ public class MonkeyImage extends PyObject implements ClassDictInit {
         int w = rect.__getitem__(2).asInt();
         int h = rect.__getitem__(3).asInt();
 
-        IMonkeyImage image = impl.getSubImage(x, y, w, h);
+        IChimpImage image = impl.getSubImage(x, y, w, h);
         return new MonkeyImage(image);
     }
 }

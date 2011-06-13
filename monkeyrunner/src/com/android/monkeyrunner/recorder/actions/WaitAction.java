@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.core.IChimpDevice;
 
 /**
  * Action that specifies to wait for a certain amount of time.
@@ -36,7 +36,7 @@ public class WaitAction implements Action {
         return "WAIT|" + pydict;
     }
 
-    public void execute(IMonkeyDevice device) throws Exception {
+    public void execute(IChimpDevice device) throws Exception {
         long ms = (long) (1000.0f * howLongSeconds);
         Thread.sleep(ms);
     }

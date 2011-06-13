@@ -17,13 +17,12 @@ package com.android.monkeyrunner.controller;
 
 import com.google.common.collect.Sets;
 
-import com.android.monkeyrunner.MonkeyManager;
+import com.android.chimpchat.core.IChimpDevice;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
@@ -48,7 +47,7 @@ import javax.swing.table.AbstractTableModel;
 public class VariableFrame extends JFrame {
     private static final Logger LOG = Logger.getLogger(VariableFrame.class.getName());
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private MonkeyManager monkeyManager;
+    private IChimpDevice device;
 
     private static class VariableHolder implements Comparable<VariableHolder> {
         private final String key;
@@ -88,23 +87,12 @@ public class VariableFrame extends JFrame {
 
         public void refresh() {
             Collection<String> variables;
-            try {
-                variables = monkeyManager.listVariable();
-            } catch (IOException e) {
-                LOG.log(Level.SEVERE, "Error getting list of variables", e);
-                return;
-            }
+            variables = device.getPropertyList();
             for (final String variable : variables) {
                 EXECUTOR.execute(new Runnable() {
                     public void run() {
                         String value;
-                        try {
-                            value = monkeyManager.getVariable(variable);
-                        } catch (IOException e) {
-                            LOG.log(Level.SEVERE,
-                                    "Error getting variable value for " + variable, e);
-                            return;
-                        }
+                        value = device.getProperty(variable);
                         if (value == null) {
                             value = "";
                         }
@@ -179,7 +167,7 @@ public class VariableFrame extends JFrame {
         pack();
     }
 
-    public void init(MonkeyManager monkeyManager) {
-        this.monkeyManager = monkeyManager;
+    public void init(IChimpDevice device) {
+        this.device = device;
     }
 }

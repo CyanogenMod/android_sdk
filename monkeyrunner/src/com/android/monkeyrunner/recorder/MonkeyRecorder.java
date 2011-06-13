@@ -15,10 +15,9 @@
  */
 package com.android.monkeyrunner.recorder;
 
+import com.android.chimpchat.ChimpChat;
+import com.android.chimpchat.core.IChimpDevice;
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.adb.AdbBackend;
-import com.android.monkeyrunner.core.IMonkeyBackend;
-import com.android.monkeyrunner.core.IMonkeyDevice;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -50,7 +49,7 @@ public class MonkeyRecorder {
         start(device.getImpl());
     }
 
-    /* package */static void start(final IMonkeyDevice device) {
+    /* package */static void start(final IChimpDevice device) {
         MonkeyRecorderFrame frame = new MonkeyRecorderFrame(device);
         // TODO: this is a hack until the window listener works.
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -75,7 +74,7 @@ public class MonkeyRecorder {
     }
 
     public static void main(String[] args) {
-        IMonkeyBackend adb = new AdbBackend();
-        MonkeyRecorder.start(adb.waitForConnection());
+        ChimpChat chimp = ChimpChat.getInstance();
+        MonkeyRecorder.start(chimp.waitForConnection());
     }
 }

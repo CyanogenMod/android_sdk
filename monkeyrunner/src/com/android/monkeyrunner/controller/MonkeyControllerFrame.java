@@ -15,10 +15,10 @@
  */
 package com.android.monkeyrunner.controller;
 
-import com.android.monkeyrunner.MonkeyManager;
-import com.android.monkeyrunner.PhysicalButton;
-import com.android.monkeyrunner.core.IMonkeyImage;
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.core.PhysicalButton;
+import com.android.chimpchat.core.TouchPressType;
+import com.android.chimpchat.core.IChimpImage;
+import com.android.chimpchat.core.IChimpDevice;
 
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -52,8 +52,10 @@ public class MonkeyControllerFrame extends JFrame {
     private final JLabel imageLabel = new JLabel();
     private final VariableFrame variableFrame;
 
-    private MonkeyManager monkeyManager;
+    private final IChimpDevice device;
     private BufferedImage currentImage;
+
+    private final TouchPressType DOWN_AND_UP = TouchPressType.DOWN_AND_UP;
 
     private final Timer timer = new Timer(1000, new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -61,20 +63,17 @@ public class MonkeyControllerFrame extends JFrame {
         }
     });
 
-    private final IMonkeyDevice device;
-
     private class PressAction extends AbstractAction {
         private final PhysicalButton button;
 
         public PressAction(PhysicalButton button) {
             this.button = button;
         }
+        /* When this fails, it no longer throws a runtime exception,
+         * but merely will log the failure.
+         */
         public void actionPerformed(ActionEvent event) {
-            try {
-                monkeyManager.press(button);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            device.press(button.getKeyName(), DOWN_AND_UP);
             updateScreen();
         }
     }
@@ -85,9 +84,9 @@ public class MonkeyControllerFrame extends JFrame {
         return button;
     }
 
-    public MonkeyControllerFrame(IMonkeyDevice device) {
+    public MonkeyControllerFrame(IChimpDevice chimpDevice) {
         super("MonkeyController");
-        this.device = device;
+        this.device = chimpDevice;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -117,14 +116,13 @@ public class MonkeyControllerFrame extends JFrame {
             }
         });
 
+        /* Similar to above, when the following two methods fail, they
+         * no longer throw a runtime exception, but merely will log the failure.
+         */
         imageLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                try {
-                    monkeyManager.touch(event.getX(), event.getY());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                device.touch(event.getX(), event.getY(), DOWN_AND_UP);
                 updateScreen();
             }
 
@@ -134,11 +132,7 @@ public class MonkeyControllerFrame extends JFrame {
         focusManager.addKeyEventDispatcher(new KeyEventDispatcher() {
             public boolean dispatchKeyEvent(KeyEvent event) {
                 if (KeyEvent.KEY_TYPED == event.getID()) {
-                    try {
-                        monkeyManager.type(event.getKeyChar());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    device.type(Character.toString(event.getKeyChar()));
                 }
                 return false;
             }
@@ -147,7 +141,7 @@ public class MonkeyControllerFrame extends JFrame {
         SwingUtilities.invokeLater(new Runnable(){
             public void run() {
                 init();
-                variableFrame.init(monkeyManager);
+                variableFrame.init(device);
             }
         });
 
@@ -155,7 +149,7 @@ public class MonkeyControllerFrame extends JFrame {
     }
 
     private void updateScreen() {
-        IMonkeyImage snapshot = device.takeSnapshot();
+        IChimpImage snapshot = device.takeSnapshot();
         currentImage = snapshot.createBufferedImage();
         imageLabel.setIcon(new ImageIcon(currentImage));
 
@@ -163,10 +157,6 @@ public class MonkeyControllerFrame extends JFrame {
     }
 
     private void init() {
-        monkeyManager = device.getManager();
-        if (monkeyManager == null) {
-            throw new RuntimeException("Unable to create monkey manager");
-        }
         updateScreen();
         timer.start();
     }

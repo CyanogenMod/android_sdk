@@ -19,10 +19,11 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
-import com.android.monkeyrunner.core.IMonkeyBackend;
-import com.android.monkeyrunner.core.IMonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyImage;
-import com.android.monkeyrunner.core.MonkeyImageBase;
+import com.android.chimpchat.ChimpChat;
+import com.android.chimpchat.core.IChimpBackend;
+import com.android.chimpchat.core.IChimpDevice;
+import com.android.chimpchat.core.IChimpImage;
+import com.android.chimpchat.core.ChimpImageBase;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.python.core.ArgParser;
@@ -42,27 +43,23 @@ import javax.swing.JOptionPane;
 @MonkeyRunnerExported(doc = "Main entry point for MonkeyRunner")
 public class MonkeyRunner extends PyObject implements ClassDictInit {
     private static final Logger LOG = Logger.getLogger(MonkeyRunner.class.getCanonicalName());
-    private static IMonkeyBackend backend;
+    private static ChimpChat chimpchat;
 
     public static void classDictInit(PyObject dict) {
         JythonUtils.convertDocAnnotationsForClass(MonkeyRunner.class, dict);
     }
 
-    /**
-     * Set the backend MonkeyRunner is using.
-     *
-     * @param backend the backend to use.
-     */
-    /* package */ static void setBackend(IMonkeyBackend backend) {
-        MonkeyRunner.backend = backend;
+    static void setChimpChat(ChimpChat chimp){
+        chimpchat = chimp;
     }
+
 
     @MonkeyRunnerExported(doc = "Waits for the workstation to connect to the device.",
             args = {"timeout", "deviceId"},
             argDocs = {"The timeout in seconds to wait. The default is to wait indefinitely.",
             "A regular expression that specifies the device name. See the documentation " +
             "for 'adb' in the Developer Guide to learn more about device names."},
-            returns = "A MonkeyDevice object representing the connected device.")
+            returns = "A ChimpDevice object representing the connected device.")
     public static MonkeyDevice waitForConnection(PyObject[] args, String[] kws) {
         ArgParser ap = JythonUtils.createArgParser(args, kws);
         Preconditions.checkNotNull(ap);
@@ -75,10 +72,10 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
             timeoutMs = Long.MAX_VALUE;
         }
 
-        IMonkeyDevice device = backend.waitForConnection(timeoutMs,
+        IChimpDevice device = chimpchat.waitForConnection(timeoutMs,
                 ap.getString(1, ".*"));
-        MonkeyDevice monkeyDevice = new MonkeyDevice(device);
-        return monkeyDevice;
+        MonkeyDevice chimpDevice = new MonkeyDevice(device);
+        return chimpDevice;
     }
 
     @MonkeyRunnerExported(doc = "Pause the currently running program for the specified " +
@@ -191,7 +188,7 @@ public class MonkeyRunner extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String path = ap.getString(0);
-        IMonkeyImage image = MonkeyImageBase.loadImageFromFile(path);
+        IChimpImage image = ChimpImageBase.loadImageFromFile(path);
         return new MonkeyImage(image);
     }
 

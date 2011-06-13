@@ -19,11 +19,13 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
-import com.android.monkeyrunner.core.IMonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyImage;
-import com.android.monkeyrunner.core.TouchPressType;
+import com.android.chimpchat.ChimpChat;
+import com.android.chimpchat.core.IChimpDevice;
+import com.android.chimpchat.core.IChimpImage;
+import com.android.chimpchat.core.TouchPressType;
+import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
+
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
-import com.android.monkeyrunner.easy.HierarchyViewer;
 
 import org.python.core.ArgParser;
 import org.python.core.ClassDictInit;
@@ -60,13 +62,13 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
     @MonkeyRunnerExported(doc = "Sends a DOWN event, immediately followed by an UP event when used with touch() or press()")
     public static final String DOWN_AND_UP = TouchPressType.DOWN_AND_UP.getIdentifier();
 
-    private IMonkeyDevice impl;
+    private IChimpDevice impl;
 
-    public MonkeyDevice(IMonkeyDevice impl) {
+    public MonkeyDevice(IChimpDevice impl) {
         this.impl = impl;
     }
 
-    public IMonkeyDevice getImpl() {
+    public IChimpDevice getImpl() {
         return impl;
     }
 
@@ -80,7 +82,7 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
     "Gets the device's screen buffer, yielding a screen capture of the entire display.",
             returns = "A MonkeyImage object (a bitmap wrapper)")
     public MonkeyImage takeSnapshot() {
-        IMonkeyImage image = impl.takeSnapshot();
+        IChimpImage image = impl.takeSnapshot();
         return new MonkeyImage(image);
     }
 
@@ -175,10 +177,17 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String name = ap.getString(0);
+        String touchType = ap.getString(1);
+
+        // The old docs had this string, and so in favor of maintaining
+        // backwards compatibility, let's special case it to the new one.
+        if (touchType.equals("DOWN_AND_UP")){
+            touchType = "downAndUp";
+        }
         TouchPressType type = TouchPressType.fromIdentifier(ap.getString(1));
         if (type == null) {
             LOG.warning(String.format("Invalid TouchPressType specified (%s) default used instead",
-                    ap.getString(2)));
+                    ap.getString(1)));
             type = TouchPressType.DOWN_AND_UP;
         }
 

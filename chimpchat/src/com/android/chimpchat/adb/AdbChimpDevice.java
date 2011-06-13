@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,6 +80,8 @@ public class AdbChimpDevice implements IChimpDevice {
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error getting the manager to quit", e);
         }
+        manager.close();
+        executor.shutdown();
         manager = null;
     }
 
@@ -223,6 +225,16 @@ public class AdbChimpDevice implements IChimpDevice {
             return manager.getVariable(key);
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "Unable to get variable: " + key, e);
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<String> getPropertyList() {
+        try {
+            return manager.listVariable();
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Unable to get variable list", e);
             return null;
         }
     }
