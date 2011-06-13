@@ -304,11 +304,8 @@ public class LocalSdkParser {
             }
         }
 
-        final String emulatorBinName =
-            SdkConstants.FN_EMULATOR + SdkConstants.FN_EMULATOR_EXTENSION;
-
         if (!names.contains(SdkConstants.androidCmdName()) ||
-                !names.contains(emulatorBinName)) {
+                !names.contains(SdkConstants.FN_EMULATOR)) {
             return null;
         }
 

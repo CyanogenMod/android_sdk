@@ -305,8 +305,8 @@ final class AvdCreationDialog extends GridDialog {
 
         //ABI group
         label = new Label(parent, SWT.NONE);
-        label.setText("ABI:");
-        tooltip = "The ABI to use in the virtual device";
+        label.setText("CPU/ABI:");
+        tooltip = "The CPU/ABI to use in the virtual device";
         label.setToolTipText(tooltip);
 
          mAbiTypeCombo = new Combo(parent, SWT.READ_ONLY | SWT.DROP_DOWN);
@@ -792,11 +792,17 @@ final class AvdCreationDialog extends GridDialog {
         mProperties.clear();
 
         if (props != null) {
-            mProperties.putAll(props);
+            for (Entry<String, String> entry : props.entrySet()) {
+                HardwareProperty prop = mHardwareMap.get(entry.getKey());
+                if (prop != null && prop.isValidForUi()) {
+                    mProperties.put(entry.getKey(), entry.getValue());
+                }
+            }
         }
 
         // Cleanup known non-hardware properties
         mProperties.remove(AvdManager.AVD_INI_ABI_TYPE);
+        mProperties.remove(AvdManager.AVD_INI_CPU_ARCH);
         mProperties.remove(AvdManager.AVD_INI_SKIN_PATH);
         mProperties.remove(AvdManager.AVD_INI_SKIN_NAME);
         mProperties.remove(AvdManager.AVD_INI_SDCARD_SIZE);
@@ -804,6 +810,7 @@ final class AvdCreationDialog extends GridDialog {
         mProperties.remove(AvdManager.AVD_INI_SNAPSHOT_PRESENT);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_1);
         mProperties.remove(AvdManager.AVD_INI_IMAGES_2);
+
         mHardwareViewer.refresh();
     }
 
