@@ -34,6 +34,8 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
     public final static String PREFS_BUILD_FORCE_ERROR_ON_NATIVELIB_IN_JAR = AdtPlugin.PLUGIN_ID + ".forceErrorNativeLibInJar"; //$NON-NLS-1$
 
+    public final static String PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE = AdtPlugin.PLUGIN_ID + ".skipPostCompileOnFileSave"; //$NON-NLS-1$
+
     public final static String PREFS_BUILD_VERBOSITY = AdtPlugin.PLUGIN_ID + ".buildVerbosity"; //$NON-NLS-1$
 
     public final static String PREFS_DEFAULT_DEBUG_KEYSTORE = AdtPlugin.PLUGIN_ID + ".defaultDebugKeyStore"; //$NON-NLS-1$
@@ -64,6 +66,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
     private boolean mBuildForceResResfresh = false;
     private boolean mBuildForceErrorOnNativeLibInJar = true;
+    private boolean mBuildSkipPostCompileOnFileSave = true;
     private boolean mFormatXml = false;
     private float mMonitorDensity = 0.f;
     private String mPalette;
@@ -153,6 +156,11 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             mBuildForceErrorOnNativeLibInJar = mStore.getBoolean(PREFS_BUILD_RES_AUTO_REFRESH);
         }
 
+        if (property == null || PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE.equals(property)) {
+            mBuildSkipPostCompileOnFileSave =
+                mStore.getBoolean(PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE);
+        }
+
         if (property == null || PREFS_MONITOR_DENSITY.equals(property)) {
             mMonitorDensity = mStore.getFloat(PREFS_MONITOR_DENSITY);
         }
@@ -190,6 +198,10 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         return mBuildForceErrorOnNativeLibInJar;
     }
 
+    public boolean getBuildSkipPostCompileOnFileSave() {
+        return mBuildSkipPostCompileOnFileSave;
+    }
+
     public String getPaletteModes() {
         return mPalette;
     }
@@ -220,6 +232,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
         store.setDefault(PREFS_BUILD_RES_AUTO_REFRESH, true);
         store.setDefault(PREFS_BUILD_FORCE_ERROR_ON_NATIVELIB_IN_JAR, true);
+        store.setDefault(PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE, false);
 
         store.setDefault(PREFS_BUILD_VERBOSITY, BuildVerbosity.ALWAYS.name());
 

@@ -255,7 +255,8 @@ public class PostCompilerBuilder extends BaseBuilder {
             // First thing we do is go through the resource delta to not
             // lose it if we have to abort the build for any reason.
             PostCompilerDeltaVisitor dv = null;
-            if (args.containsKey(POST_C_REQUESTED)) {
+            if (args.containsKey(POST_C_REQUESTED)
+                    && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
                 // Skip over flag setting
             } else if (kind == FULL_BUILD) {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
@@ -349,8 +350,9 @@ public class PostCompilerBuilder extends BaseBuilder {
             }
 
             // Check to see if we're going to launch or export. If not, we can skip
-            // The packaging and dexing process.
-            if (!args.containsKey(POST_C_REQUESTED)) {
+            // the packaging and dexing process.
+            if (!args.containsKey(POST_C_REQUESTED)
+                    && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Skip_Post_Compiler);
                 return allRefProjects;

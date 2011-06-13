@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.project;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
@@ -826,7 +827,9 @@ public final class ProjectHelper {
                             throws CoreException {
         // Do an incremental build to pick up all the deltas
         project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
-        if (fullBuild) {
+        // If the preferences indicate not to use post compiler optimization then the
+        // incremental build will have done everything necessary
+        if (fullBuild && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
             // Create the map to pass to the PostC builder
             Map<String, String> args = new TreeMap<String, String>();
             args.put(PostCompilerBuilder.POST_C_REQUESTED, ""); //$NON-NLS-1$
