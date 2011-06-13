@@ -106,6 +106,7 @@ public class LayoutConstants {
     public static final String VALUE_TRUE = "true";                             //$NON-NLS-1$
     public static final String VALUE_FALSE= "false";                            //$NON-NLS-1$
     public static final String VALUE_N_DP = "%ddp";                             //$NON-NLS-1$
+    public static final String VALUE_ZERO_DP = "0dp";                           //$NON-NLS-1$
 
     // Gravity values. These have the GRAVITY_ prefix in front of value because we already
     // have VALUE_CENTER_HORIZONTAL defined for layouts, and its definition conflicts
