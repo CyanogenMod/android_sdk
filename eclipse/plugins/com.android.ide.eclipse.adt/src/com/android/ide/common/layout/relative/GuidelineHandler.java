@@ -24,6 +24,7 @@ import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
 import static com.android.ide.common.layout.BaseLayoutRule.getMaxMatchDistance;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
@@ -109,13 +110,15 @@ public class GuidelineHandler {
 
     /**
      * The set of nodes which depend on the currently selected nodes, including
-     * transitively, through horizontal constraints.
+     * transitively, through horizontal constraints (a "horizontal constraint"
+     * is a constraint between two horizontal edges)
      */
     protected Set<INode> mHorizontalDeps;
 
     /**
      * The set of nodes which depend on the currently selected nodes, including
-     * transitively, through vertical constraints.
+     * transitively, through vertical constraints (a "vertical constraint"
+     * is a constraint between two vertical edges)
      */
     protected Set<INode> mVerticalDeps;
 
@@ -468,7 +471,7 @@ public class GuidelineHandler {
                 continue;
             }
 
-            Match match = new Match(edge, draggedEdge, type, delta);
+            Match match = new Match(this, edge, draggedEdge, type, delta);
 
             if (distance < closestDistance) {
                 closest.clear();
@@ -492,6 +495,8 @@ public class GuidelineHandler {
     /**
      * Given a node, apply the suggestions by expressing them as relative layout param
      * values
+     *
+     * @param n the node to apply constraints to
      */
     public void applyConstraints(INode n) {
         // Process each edge separately
@@ -548,25 +553,25 @@ public class GuidelineHandler {
         }
 
         if (mMoveTop && mCurrentTopMatch != null) {
-            applyConstraint(n, mCurrentTopMatch.getConstraint());
+            applyConstraint(n, mCurrentTopMatch.getConstraint(true /* generateId */));
             if (mCurrentTopMatch.type == ALIGN_BASELINE) {
                 // HACK! WORKAROUND! Baseline doesn't provide a new bottom edge for attachments
-                String c = mCurrentTopMatch.getConstraint();
+                String c = mCurrentTopMatch.getConstraint(true);
                 c = c.replace(ATTR_LAYOUT_ALIGN_BASELINE, ATTR_LAYOUT_ALIGN_BOTTOM);
                 applyConstraint(n, c);
             }
         }
 
         if (mMoveBottom && mCurrentBottomMatch != null) {
-            applyConstraint(n, mCurrentBottomMatch.getConstraint());
+            applyConstraint(n, mCurrentBottomMatch.getConstraint(true));
         }
 
         if (mMoveLeft && mCurrentLeftMatch != null) {
-            applyConstraint(n, mCurrentLeftMatch.getConstraint());
+            applyConstraint(n, mCurrentLeftMatch.getConstraint(true));
         }
 
         if (mMoveRight && mCurrentRightMatch != null) {
-            applyConstraint(n, mCurrentRightMatch.getConstraint());
+            applyConstraint(n, mCurrentRightMatch.getConstraint(true));
         }
 
         if (mMoveLeft) {
@@ -588,7 +593,6 @@ public class GuidelineHandler {
         String name = constraint.substring(0, constraint.indexOf('='));
         String value = constraint.substring(constraint.indexOf('=') + 1);
         n.setAttribute(ANDROID_URI, name, value);
-
     }
 
     private void applyMargin(INode n, String marginAttribute, int margin) {
@@ -598,6 +602,58 @@ public class GuidelineHandler {
         } else if (n.getStringAttr(ANDROID_URI, marginAttribute) != null) {
             // Clear out existing margin
             n.setAttribute(ANDROID_URI, marginAttribute, null);
+        }
+    }
+
+    private void removeRelativeParams(INode node) {
+        for (ConstraintType type : ConstraintType.values()) {
+            node.setAttribute(ANDROID_URI, type.name, null);
+        }
+        node.setAttribute(ANDROID_URI,ATTR_LAYOUT_MARGIN_LEFT, null);
+        node.setAttribute(ANDROID_URI,ATTR_LAYOUT_MARGIN_RIGHT, null);
+        node.setAttribute(ANDROID_URI,ATTR_LAYOUT_MARGIN_TOP, null);
+        node.setAttribute(ANDROID_URI,ATTR_LAYOUT_MARGIN_BOTTOM, null);
+    }
+
+    /**
+     * Attach the new child to the previous node
+     * @param previous the previous child
+     * @param node the new child to attach it to
+     */
+    public void attachPrevious(INode previous, INode node) {
+        removeRelativeParams(node);
+
+        String id = previous.getStringAttr(ANDROID_URI, ATTR_ID);
+        if (id == null) {
+            return;
+        }
+
+        if (mCurrentTopMatch != null || mCurrentBottomMatch != null) {
+            // Attaching the top: arrange below, and for bottom arrange above
+            node.setAttribute(ANDROID_URI,
+                    mCurrentTopMatch != null ? ATTR_LAYOUT_BELOW : ATTR_LAYOUT_ABOVE, id);
+            // Apply same left/right constraints as the parent
+            if (mCurrentLeftMatch != null) {
+                applyConstraint(node, mCurrentLeftMatch.getConstraint(true));
+                applyMargin(node, ATTR_LAYOUT_MARGIN_LEFT, mLeftMargin);
+            } else if (mCurrentRightMatch != null) {
+                applyConstraint(node, mCurrentRightMatch.getConstraint(true));
+                applyMargin(node, ATTR_LAYOUT_MARGIN_RIGHT, mRightMargin);
+            }
+        } else if (mCurrentLeftMatch != null || mCurrentRightMatch != null) {
+            node.setAttribute(ANDROID_URI,
+                    mCurrentLeftMatch != null ? ATTR_LAYOUT_TO_RIGHT_OF : ATTR_LAYOUT_TO_LEFT_OF,
+                            id);
+            // Apply same top/bottom constraints as the parent
+            if (mCurrentTopMatch != null) {
+                applyConstraint(node, mCurrentTopMatch.getConstraint(true));
+                applyMargin(node, ATTR_LAYOUT_MARGIN_TOP, mTopMargin);
+            } else if (mCurrentBottomMatch != null) {
+                applyConstraint(node, mCurrentBottomMatch.getConstraint(true));
+                applyMargin(node, ATTR_LAYOUT_MARGIN_BOTTOM, mBottomMargin);
+            }
+        } else {
+            return;
         }
     }
 
@@ -761,5 +817,14 @@ public class GuidelineHandler {
 
             return 0;
         }
+    }
+
+    /**
+     * Returns the {@link IClientRulesEngine} IDE callback
+     *
+     * @return the {@link IClientRulesEngine} IDE callback, never null
+     */
+    public IClientRulesEngine getRulesEngine() {
+        return mRulesEngine;
     }
 }

@@ -84,14 +84,7 @@ public class ResizeHandler extends GuidelineHandler {
 
         for (INode child : layout.getChildren()) {
             if (child != resized) {
-                // Need an id to reference child in attachments to it, so skip nodes
-                // without ids
-                // TODO: Generate an id on the fly when needed (at commit time) instead!
                 String id = child.getStringAttr(ANDROID_URI, ATTR_ID);
-                if (id == null) {
-                    continue;
-                }
-
                 addBounds(child, id,
                         !mHorizontalDeps.contains(child),
                         !mVerticalDeps.contains(child));
@@ -208,7 +201,7 @@ public class ResizeHandler extends GuidelineHandler {
             Match match = pickBestMatch(mHorizontalSuggestions);
             if (match != null
                     && (!mSnap || Math.abs(match.delta) < BaseLayoutRule.getMaxMatchDistance())) {
-                if (mVerticalDeps.contains(match.edge.node)) {
+                if (mHorizontalDeps.contains(match.edge.node)) {
                     match.cycle = true;
                 }
 
@@ -232,7 +225,7 @@ public class ResizeHandler extends GuidelineHandler {
             Match match = pickBestMatch(mVerticalSuggestions);
             if (match != null
                     && (!mSnap || Math.abs(match.delta) < BaseLayoutRule.getMaxMatchDistance())) {
-                if (mHorizontalDeps.contains(match.edge.node)) {
+                if (mVerticalDeps.contains(match.edge.node)) {
                     match.cycle = true;
                 }
 
