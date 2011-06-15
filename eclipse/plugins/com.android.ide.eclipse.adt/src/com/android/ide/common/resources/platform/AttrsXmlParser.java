@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -532,9 +532,8 @@ public final class AttrsXmlParser {
                     } else {
                         String value = valueNode.getNodeValue();
                         try {
-                            int i = value.startsWith("0x") ?
-                                    Integer.parseInt(value.substring(2), 16 /* radix */) :
-                                    Integer.parseInt(value);
+                            // Integer.decode cannot handle "ffffffff", see JDK issue 6624867
+                            int i = (int) (long) Long.decode(value);
 
                             Map<String, Integer> map = mEnumFlagValues.get(attrName);
                             if (map == null) {
