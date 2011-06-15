@@ -69,13 +69,19 @@ public class AvdManager {
      * AVD/config.ini key name representing the abi type of the specific avd
      *
      */
-     public final static String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
+    public final static String AVD_INI_ABI_TYPE = "abi.type"; //$NON-NLS-1$
 
-     /**
-      * AVD/config.ini key name representing the CPU architecture of the specific avd
-      *
-      */
-      public final static String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
+    /**
+     * AVD/config.ini key name representing the CPU architecture of the specific avd
+     *
+     */
+    public final static String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
+
+    /**
+     * AVD/config.ini key name representing the CPU architecture of the specific avd
+     *
+     */
+    public final static String AVD_INI_CPU_MODEL = "hw.cpu.model"; //$NON-NLS-1$
 
 
     /**
@@ -580,11 +586,13 @@ public class AvdManager {
             values.put(AVD_INI_ABI_TYPE, abiType);
 
             // and the cpu arch.
-            if (SdkConstants.ABI_ARMEABI.equals(abiType) ||
-                    SdkConstants.ABI_ARMEABI_V7A.equals(abiType)) {
-                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_ARM);
+            if (SdkConstants.ABI_ARMEABI.equals(abiType)) {
+                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_ARCH_ARM);
+            } else if (SdkConstants.ABI_ARMEABI_V7A.equals(abiType)) {
+                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_ARCH_ARM);
+                values.put(AVD_INI_CPU_MODEL, SdkConstants.CPU_MODEL_CORTEX_A8);
             } else if (SdkConstants.ABI_INTEL_ATOM.equals(abiType)) {
-                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_INTEL_ATOM);
+                values.put(AVD_INI_CPU_ARCH, SdkConstants.CPU_ARCH_INTEL_ATOM);
             } else {
                 log.error(null,
                         "ABI %1$s is not supported by this version of the SDK Tools", abiType);
