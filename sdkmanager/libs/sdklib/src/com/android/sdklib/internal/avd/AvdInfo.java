@@ -137,7 +137,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         }
 
         // legacy
-        return SdkConstants.CPU_ARM;
+        return SdkConstants.CPU_ARCH_ARM;
     }
 
     /** Convenience function to return a more user friendly name of the abi type. */
@@ -145,11 +145,14 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         String s = null;
         if (raw.equalsIgnoreCase(SdkConstants.ABI_ARMEABI)) {
             s = "ARM (" + SdkConstants.ABI_ARMEABI + ")";
-        }
-        else if (raw.equalsIgnoreCase(SdkConstants.ABI_INTEL_ATOM)) {
+
+        } else if (raw.equalsIgnoreCase(SdkConstants.ABI_ARMEABI_V7A)) {
+            s = "ARM (" + SdkConstants.ABI_ARMEABI_V7A + ")";
+
+        } else if (raw.equalsIgnoreCase(SdkConstants.ABI_INTEL_ATOM)) {
             s = "Intel Atom (" + SdkConstants.ABI_INTEL_ATOM + ")";
-        }
-        else {
+
+        } else {
             s = raw + " (" + raw + ")";
         }
         return s;

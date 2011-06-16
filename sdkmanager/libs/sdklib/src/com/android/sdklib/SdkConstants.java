@@ -207,9 +207,11 @@ public final class SdkConstants {
     public final static String ABI_ARMEABI = "armeabi";
     public final static String ABI_ARMEABI_V7A = "armeabi-v7a";
     public final static String ABI_INTEL_ATOM = "x86";
-    /** Name of the CPU to support. */
-    public final static String CPU_ARM = "arm";
-    public final static String CPU_INTEL_ATOM = "x86";
+    /** Name of the CPU arch to support. */
+    public final static String CPU_ARCH_ARM = "arm";
+    public final static String CPU_ARCH_INTEL_ATOM = "x86";
+    /** Name of the CPU model to support. */
+    public final static String CPU_MODEL_CORTEX_A8 = "cortex-a8";
 
     /** Name of the SDK skins folder. */
     public final static String FD_SKINS = "skins";
