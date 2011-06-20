@@ -13,27 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.chimpchat.core;
 
-public enum PhysicalButton {
-    HOME("KEYCODE_HOME"),
-    SEARCH("KEYCODE_SEARCH"),
-    MENU("KEYCODE_MENU"),
-    BACK("KEYCODE_BACK"),
-    DPAD_UP("DPAD_UP"),
-    DPAD_DOWN("DPAD_DOWN"),
-    DPAD_LEFT("DPAD_LEFT"),
-    DPAD_RIGHT("DPAD_RIGHT"),
-    DPAD_CENTER("DPAD_CENTER"),
-    ENTER("enter");
+import com.android.chimpchat.ChimpManager;
 
-    private String keyName;
+import com.google.common.collect.Lists;
 
-    private PhysicalButton(String keyName) {
-        this.keyName = keyName;
+/* A class for selecting objects by their id */
+public class SelectorId implements ISelector {
+    private String id;
+    /**
+     * @param id the id to select objects by
+     */
+    public SelectorId(String id){
+        this.id = id;
     }
 
-    public String getKeyName() {
-        return keyName;
+    /**
+     * A method for selecting a view by the given id.
+     * @return The view with the given id
+     */
+    public IChimpView getView(ChimpManager manager) {
+        ChimpView view = new ChimpView(ChimpView.VIEW_ID, Lists.newArrayList(id));
+        view.setManager(manager);
+        return view;
     }
 }

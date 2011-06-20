@@ -16,9 +16,13 @@
  */
 package com.android.chimpchat;
 
-import com.google.common.collect.Lists;
-
+import com.android.chimpchat.core.IChimpView;
 import com.android.chimpchat.core.PhysicalButton;
+import com.android.chimpchat.core.ChimpException;
+import com.android.chimpchat.core.ChimpRect;
+import com.android.chimpchat.core.ChimpView;
+
+import com.google.common.collect.Lists;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,8 +30,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +63,16 @@ public class ChimpManager {
         monkeyWriter =
                 new BufferedWriter(new OutputStreamWriter(monkeySocket.getOutputStream()));
         monkeyReader = new BufferedReader(new InputStreamReader(monkeySocket.getInputStream()));
+    }
+
+    /* Ensure that everything gets shutdown properly */
+    protected void finalize() throws Throwable {
+        try {
+            quit();
+        } finally {
+            close();
+            super.finalize();
+        }
     }
 
     /**
@@ -158,6 +175,7 @@ public class ChimpManager {
      *
      * @param command the monkey command to send to the device
      * @return the (unparsed) response returned from the monkey.
+     * @throws IOException on error communicating with the device
      */
     private String sendMonkeyEventAndGetResponse(String command) throws IOException {
         command = command.trim();
@@ -209,6 +227,7 @@ public class ChimpManager {
      *
      * @param command the monkey command to send to the device
      * @return true on success.
+     * @throws IOException on error communicating with the device
      */
     private boolean sendMonkeyEvent(String command) throws IOException {
         synchronized (this) {
@@ -243,6 +262,7 @@ public class ChimpManager {
      *
      * @param name name of static variable to get
      * @return the value of the variable, or null if there was an error
+     * @throws IOException on error communicating with the device
      */
     public String getVariable(String name) throws IOException {
         synchronized (this) {
@@ -255,7 +275,9 @@ public class ChimpManager {
     }
 
     /**
-     * Function to get the list of static variables from the device.
+     * Function to get the list of variables from the device.
+     * @return the list of variables as a collection of strings
+     * @throws IOException on error communicating with the device
      */
     public Collection<String> listVariable() throws IOException {
         synchronized (this) {
@@ -270,7 +292,7 @@ public class ChimpManager {
 
     /**
      * Tells the monkey that we are done for this session.
-     * @throws IOException
+     * @throws IOException on error communicating with the device
      */
     public void done() throws IOException {
         // this command just drops the connection, so handle it here
@@ -281,12 +303,17 @@ public class ChimpManager {
 
     /**
      * Tells the monkey that we are done forever.
-     * @throws IOException
+     * @throws IOException on error communicating with the device
      */
     public void quit() throws IOException {
         // this command drops the connection, so handle it here
         synchronized (this) {
-            sendMonkeyEventAndGetResponse("quit");
+            try {
+                sendMonkeyEventAndGetResponse("quit");
+            } catch (SocketException e) {
+                // flush was called after the call had been written, so it tried flushing to a
+                // broken pipe.
+            }
         }
     }
 
@@ -296,7 +323,6 @@ public class ChimpManager {
      * @param x the x coordinate of where to click
      * @param y the y coordinate of where to click
      * @return success or not
-     * @throws IOException
      * @throws IOException on error communicating with the device
      */
     public boolean tap(int x, int y) throws IOException {
@@ -308,7 +334,7 @@ public class ChimpManager {
      *
      * @param text the string to type
      * @return success
-     * @throws IOException
+     * @throws IOException on error communicating with the device
      */
     public boolean type(String text) throws IOException {
         // The network protocol can't handle embedded line breaks, so we have to handle it
@@ -336,7 +362,7 @@ public class ChimpManager {
      *
      * @param keyChar the character to type.
      * @return success
-     * @throws IOException
+     * @throws IOException on error communicating with the device
      */
     public boolean type(char keyChar) throws IOException {
         return type(Character.toString(keyChar));
@@ -344,9 +370,86 @@ public class ChimpManager {
 
     /**
      * Wake the device up from sleep.
-     * @throws IOException
+     * @throws IOException on error communicating with the device
      */
     public void wake() throws IOException {
         sendMonkeyEvent("wake");
+    }
+
+
+    /**
+     * Retrieves the list of view ids from the current application.
+     * @return the list of view ids as a collection of strings
+     * @throws IOException on error communicating with the device
+     */
+    public Collection<String> listViewIds() throws IOException {
+        synchronized (this) {
+            String response = sendMonkeyEventAndGetResponse("listviews");
+            if (!parseResponseForSuccess(response)) {
+                Collections.emptyList();
+            }
+            String extras = parseResponseForExtra(response);
+            return Lists.newArrayList(extras.split(" "));
+        }
+    }
+
+    /**
+     * Queries the on-screen view with the given id and returns the response.
+     * It's up to the calling method to parse the returned String.
+     * @param idType The type of ID to query the view by
+     * @param id The view id of the view
+     * @param query the query
+     * @return the response from the query
+     * @throws IOException on error communicating with the device
+     */
+    public String queryView(String idType, List<String> ids, String query) throws IOException {
+        StringBuilder monkeyCommand = new StringBuilder("queryview " + idType + " ");
+        for(String id : ids) {
+            monkeyCommand.append(id).append(" ");
+        }
+        monkeyCommand.append(query);
+        synchronized (this) {
+            String response = sendMonkeyEventAndGetResponse(monkeyCommand.toString());
+            if (!parseResponseForSuccess(response)) {
+                throw new ChimpException(parseResponseForExtra(response));
+            }
+            return parseResponseForExtra(response);
+        }
+    }
+
+    /**
+     * Returns the current root view of the device.
+     * @return the root view of the device
+     */
+    public IChimpView getRootView() throws IOException {
+        synchronized(this) {
+            String response = sendMonkeyEventAndGetResponse("getrootview");
+            String extra = parseResponseForExtra(response);
+            List<String> ids = Arrays.asList(extra.split(" "));
+            if (!parseResponseForSuccess(response) || ids.size() != 2) {
+                throw new ChimpException(extra);
+            }
+            ChimpView root = new ChimpView(ChimpView.ACCESSIBILITY_IDS, ids);
+            root.setManager(this);
+            return root;
+        }
+    }
+
+    /**
+     * Queries the device for a list of views with the given
+     * @return A string containing the accessibility ids of the views with the given text
+     */
+    public String getViewsWithText(String text) throws IOException {
+        synchronized(this) {
+            // Monkey has trouble parsing a single word in quotes
+            if (text.split(" ").length > 1) {
+                text = "\"" + text + "\"";
+            }
+            String response = sendMonkeyEventAndGetResponse("getviewswithtext " + text);
+            if (!parseResponseForSuccess(response)) {
+                throw new ChimpException(parseResponseForExtra(response));
+            }
+            return parseResponseForExtra(response);
+        }
     }
 }

@@ -27,8 +27,13 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.chimpchat.ChimpManager;
 import com.android.chimpchat.adb.LinearInterpolator.Point;
+import com.android.chimpchat.core.ChimpRect;
 import com.android.chimpchat.core.IChimpImage;
 import com.android.chimpchat.core.IChimpDevice;
+import com.android.chimpchat.core.IChimpView;
+import com.android.chimpchat.core.IMultiSelector;
+import com.android.chimpchat.core.ISelector;
+import com.android.chimpchat.core.PhysicalButton;
 import com.android.chimpchat.core.TouchPressType;
 import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
 
@@ -36,6 +41,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -328,6 +334,11 @@ public class AdbChimpDevice implements IChimpDevice {
     }
 
     @Override
+    public void press(PhysicalButton key, TouchPressType type) {
+      press(key.getKeyName(), type);
+    }
+
+    @Override
     public void type(String string) {
         try {
             manager.type(string);
@@ -565,5 +576,36 @@ public class AdbChimpDevice implements IChimpDevice {
                 }
             }
         });
+    }
+
+
+    @Override
+    public Collection<String> getViewIdList() {
+        try {
+            return manager.listViewIds();
+        } catch(IOException e) {
+            LOG.log(Level.SEVERE, "Error retrieving view IDs", e);
+            return new ArrayList<String>();
+        }
+    }
+
+    @Override
+    public IChimpView getView(ISelector selector) {
+        return selector.getView(manager);
+    }
+
+    @Override
+    public Collection<IChimpView> getViews(IMultiSelector selector) {
+        return selector.getViews(manager);
+    }
+
+    @Override
+    public IChimpView getRootView() {
+        try {
+            return manager.getRootView();
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Error retrieving root view");
+            return null;
+        }
     }
 }
