@@ -493,23 +493,30 @@ public class PackagesPage extends UpdaterPage
             return;
         }
 
-
         try {
             enableUi(mGroupPackages, false);
 
             boolean firstLoad = mPkgManager.getPackages().isEmpty();
 
+            // Load package is synchronous but does not block the UI.
+            // Consequently it's entirely possible for the user
+            // to request the app to close whilst the packages are loading. Any
+            // action done after loadPackages must check the UI hasn't been
+            // disposed yet. Otherwise hilarity ensues.
+
             mPkgManager.loadPackages();
 
-            if (firstLoad) {
+            if (firstLoad && !mGroupPackages.isDisposed()) {
                 // set the initial expanded state
                 expandInitial(mCategories);
             }
 
         } finally {
-            enableUi(mGroupPackages, true);
-            updateButtonsState();
-            updateMenuCheckmarks();
+            if (!mGroupPackages.isDisposed()) {
+                enableUi(mGroupPackages, true);
+                updateButtonsState();
+                updateMenuCheckmarks();
+            }
         }
     }
 
@@ -1298,11 +1305,13 @@ public class PackagesPage extends UpdaterPage
             // Dynamically update the table while we load after each source.
             // Since the official Android source gets loaded first, it makes the
             // window look non-empty a lot sooner.
-            mGroupPackages.getDisplay().syncExec(new Runnable() {
-                public void run() {
-                    sortPackages(true /* updateButtons */);
-                }
-            });
+            if (!mGroupPackages.isDisposed()) {
+                mGroupPackages.getDisplay().syncExec(new Runnable() {
+                    public void run() {
+                        sortPackages(true /* updateButtons */);
+                    }
+                });
+            }
         }
 
     }

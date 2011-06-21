@@ -136,9 +136,11 @@ public final class ProgressView implements IProgressUiProvider {
                 // TODO log
 
             } finally {
-                changeState(ProgressView.State.IDLE);
-                mProgressBar.setSelection(0);
-                mProgressBar.setEnabled(false);
+                if (!mProgressBar.isDisposed()) {
+                    changeState(ProgressView.State.IDLE);
+                    mProgressBar.setSelection(0);
+                    mProgressBar.setEnabled(false);
+                }
             }
         }
     }
