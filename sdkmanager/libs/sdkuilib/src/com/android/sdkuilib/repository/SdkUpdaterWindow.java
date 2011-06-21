@@ -18,9 +18,9 @@ package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
-import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.SdkUpdaterWindowImpl1;
 import com.android.sdkuilib.internal.repository.SdkUpdaterWindowImpl2;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class SdkUpdaterWindow {
 
-    /** The actual window implement to which this class delegates. */
+    /** The actual window implementation to which this class delegates. */
     private ISdkUpdaterWindow mWindow;
 
     /**
@@ -87,8 +87,9 @@ public class SdkUpdaterWindow {
             String osSdkRoot,
             SdkInvocationContext context) {
 
-        // TODO right now the new PackagesPage is experimental and not enabled by default
-        if (System.getenv("ANDROID_SDKMAN_EXP") != null) {  //$NON-NLS-1$
+        // The new PackagesPage is not activated by default,
+        // this offers a way to fallback on the old one
+        if (System.getenv("ANDROID_OLD_SDKMAN") == null) {  //$NON-NLS-1$
             mWindow = new SdkUpdaterWindowImpl2(parentShell, sdkLog, osSdkRoot, context);
         } else {
             mWindow = new SdkUpdaterWindowImpl1(parentShell, sdkLog, osSdkRoot, context);

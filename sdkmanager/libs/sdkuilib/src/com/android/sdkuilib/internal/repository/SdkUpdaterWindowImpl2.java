@@ -28,6 +28,7 @@ import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
 import com.android.sdkuilib.internal.widgets.ToggleButton;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
@@ -539,7 +540,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
             AvdManagerWindowImpl1 win = new AvdManagerWindowImpl1(
                     mShell,
                     mUpdaterData,
-                    AvdManagerWindowImpl1.AvdInvocationContext.SDK_MANAGER);
+                    AvdInvocationContext.SDK_MANAGER);
 
             for (Pair<Class<? extends UpdaterPage>, Purpose> page : mExtraPages) {
                 win.registerPage(page.getFirst(), page.getSecond());

@@ -742,14 +742,24 @@
             label="Android SDK and AVD Manager"
             visible="true">
          <action
-               class="com.android.ide.eclipse.adt.internal.actions.SdkAvdManagerAction"
+               class="com.android.ide.eclipse.adt.internal.actions.AvdManagerAction"
                icon="icons/avd_manager.png"
-               id="com.android.ide.eclipse.adt.ui.sdkavdmanager"
-               label="Android SDK and AVD Manager"
+               id="com.android.ide.eclipse.adt.ui.avdmanager"
+               label="AVD Manager"
                menubarPath="Window/additions"
                style="push"
                toolbarPath="android_project"
-               tooltip="Opens the Android SDK and AVD Manager">
+               tooltip="Opens the Android Virtual Device Manager">
+         </action>
+         <action
+               class="com.android.ide.eclipse.adt.internal.actions.SdkManagerAction"
+               icon="icons/sdk_manager.png"
+               id="com.android.ide.eclipse.adt.ui.sdkmanager"
+               label="Android SDK Manager"
+               menubarPath="Window/additions"
+               style="push"
+               toolbarPath="android_project"
+               tooltip="Opens the Android SDK Manager">
          </action>
       </actionSet>
    </extension>

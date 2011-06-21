@@ -24,6 +24,7 @@ import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
+import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -55,38 +56,6 @@ public class AvdManagerWindowImpl1 {
 
     private static final String APP_NAME = "Android Virtual Device Manager";
     private static final String APP_NAME_MAC_MENU = "AVD Manager";
-
-    /**
-     * Enum giving some indication of what is invoking this window.
-     * The behavior and UI will change slightly depending on the context.
-     * <p/>
-     * Note: if you add Android support to your specific IDE, you might want
-     * to specialize this context enum.
-     */
-    public enum AvdInvocationContext {
-        /**
-         * The AVD Manager is invoked from the stand-alone 'android' tool.
-         * In this mode, we present an about box, a settings page.
-         * For SdkMan2, we also have a menu bar and link to the SDK Manager 2.
-         */
-        STANDALONE,
-
-        /**
-         * The AVD Manager is invoked from the SDK Manager.
-         * This is similar to the {@link #STANDALONE} mode except we don't need
-         * to display a menu bar at all since we don't want a menu item linking
-         * back to the SDK Manager and we don't need to redisplay the options
-         * and about which are already on the root window.
-         */
-        SDK_MANAGER,
-
-        /**
-         * The AVD Manager is invoked from an IDE.
-         * In this mode, we do not modify the menu bar.
-         * There is no about box and no settings.
-         */
-        IDE,
-    }
 
 
     private final Shell mParentShell;
