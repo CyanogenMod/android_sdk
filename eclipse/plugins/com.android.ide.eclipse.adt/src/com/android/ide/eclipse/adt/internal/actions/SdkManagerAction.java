@@ -32,10 +32,10 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
- * Delegate for the toolbar/menu action "Android SDK & AVD Manager".
- * It displays the Android SDK & AVD Manager.
+ * Delegate for the toolbar/menu action "Android SDK Manager".
+ * It displays the Android SDK Manager.
  */
-public class SdkAvdManagerAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
+public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
 
     public void dispose() {
         // nothing to dispose.
