@@ -18,7 +18,6 @@ package com.android.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.Path;
 
@@ -51,7 +50,7 @@ import java.util.ArrayList;
  * <tr><td></td><td></td><td></td></tr>
  * </table>
  */
-public final class AaptExecLoopTask extends Task {
+public final class AaptExecLoopTask extends BaseTask {
 
     /**
      * Class representing a &lt;nocompress&gt; node in the main task XML.
@@ -259,8 +258,10 @@ public final class AaptExecLoopTask extends Task {
         // more R classes need to be created for libraries.
         if (mRFolder != null && new File(mRFolder).isDirectory()) {
             libPkgProp = taskProject.getProperty(AntConstants.PROP_PROJECT_LIBS_PKG);
-            // Replace ";" with ":" since that's what aapt expects
-            libPkgProp = libPkgProp.replace(';', ':');
+            if (libPkgProp != null) {
+                // Replace ";" with ":" since that's what aapt expects
+                libPkgProp = libPkgProp.replace(';', ':');
+            }
         }
         // Call aapt. If there are libraries, we'll pass a non-null string of libs.
         callAapt(libPkgProp);
@@ -278,7 +279,31 @@ public final class AaptExecLoopTask extends Task {
 
         final boolean generateRClass = mRFolder != null && new File(mRFolder).isDirectory();
 
+        // Get whether we have libraries
+        Object libResRef = taskProject.getReference(AntConstants.PROP_PROJECT_LIBS_RES_REF);
+
         if (generateRClass) {
+            // If the only reason we're here is to generate R.java and that doesn't need updating
+            // we can skip what comes next. First we grab the dependency file.
+            // Then query to see if an update is needed.
+            ArrayList<File> watchPaths = new ArrayList<File>();
+            // We need to watch for changes in the main project res folder
+            for (Path pathList : mResources) {
+                for (String path : pathList.list()) {
+                    watchPaths.add(new File(path));
+                }
+            }
+            // and if libraries exist, in their res folders
+            if (libResRef instanceof Path) {
+                for (String path : ((Path)libResRef).list()) {
+                    watchPaths.add(new File(path));
+                }
+            }
+            if (initDependencies(mRFolder + File.separator + "R.d", watchPaths)
+                              && dependenciesHaveChanged() == false) {
+                System.out.println("No changed resources. R.java and Manifest.java untouched.");
+                return;
+            }
         } else if (mResourceFilter == null) {
             System.out.println("Creating full resource package...");
         } else {
@@ -347,7 +372,6 @@ public final class AaptExecLoopTask extends Task {
         }
 
         // if the project contains libraries, force auto-add-overlay
-        Object libResRef = taskProject.getReference(AntConstants.PROP_PROJECT_LIBS_RES_REF);
         if (libResRef != null) {
             task.createArg().setValue("--auto-add-overlay");
         }
@@ -417,6 +441,8 @@ public final class AaptExecLoopTask extends Task {
         if (generateRClass) {
             task.createArg().setValue("-J");
             task.createArg().setValue(mRFolder);
+            // Use dependency generation
+            task.createArg().setValue("--generate-dependencies");
         }
 
         // final setup of the task
