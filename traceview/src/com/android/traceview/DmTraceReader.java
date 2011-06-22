@@ -45,6 +45,7 @@ public class DmTraceReader extends TraceReader {
     private MethodData mTopLevel;
     private ArrayList<Call> mCallList;
     private ArrayList<Call> mSwitchList;
+    private HashMap<String, String> mPropertiesMap;
     private HashMap<Integer, MethodData> mMethodMap;
     private HashMap<Integer, ThreadData> mThreadMap;
     private ThreadData[] mSortedThreads;
@@ -60,6 +61,7 @@ public class DmTraceReader extends TraceReader {
     public DmTraceReader(String traceFileName, boolean regression) {
         mTraceFileName = traceFileName;
         mRegression = regression;
+        mPropertiesMap = new HashMap<String, String>();
         mMethodMap = new HashMap<Integer, MethodData>();
         mThreadMap = new HashMap<Integer, ThreadData>();
 
@@ -366,8 +368,18 @@ public class DmTraceReader extends TraceReader {
                 parseMethod(line);
                 break;
             case PARSE_OPTIONS:
+                parseOption(line);
                 break;
             }
+        }
+    }
+
+    void parseOption(String line) {
+        String[] tokens = line.split("=");
+        if (tokens.length == 2) {
+            String key = tokens[0];
+            String value = tokens[1];
+            mPropertiesMap.put(key, value);
         }
     }
 
@@ -598,5 +610,10 @@ public class DmTraceReader extends TraceReader {
     @Override
     public long getEndTime() {
         return mGlobalEndTime;
+    }
+
+    @Override
+    public HashMap<String, String> getProperties() {
+        return mPropertiesMap;
     }
 }
