@@ -44,6 +44,8 @@ public class SyncException extends CanceledException {
         REMOTE_PATH_LENGTH("Remote path is too long."),
         /** error while reading local file. */
         FILE_READ_ERROR("Reading local file failed!"),
+        /** error while writing local file. */
+        FILE_WRITE_ERROR("Writing local file failed!"),
         /** attempting to push a directory. */
         LOCAL_IS_DIRECTORY("Local path is a directory."),
         /** attempting to push a non-existent file. */
