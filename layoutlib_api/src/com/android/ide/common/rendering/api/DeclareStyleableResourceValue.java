@@ -50,6 +50,10 @@ public class DeclareStyleableResourceValue extends ResourceValue {
         return null;
     }
 
+    public Map<String, Map<String, Integer>> getAllAttributes() {
+        return mEnumMap;
+    }
+
     public void addValue(String attribute, String name, Integer value) {
         Map<String, Integer> map;
 

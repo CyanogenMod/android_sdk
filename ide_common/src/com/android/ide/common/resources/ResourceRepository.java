@@ -22,11 +22,14 @@ import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LanguageQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
+import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
+import com.android.io.IAbstractResource;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -458,6 +461,38 @@ public abstract class ResourceRepository {
 
         return set;
     }
+
+    /**
+     * Loads the resources from a resource folder.
+     * <p/>
+     *
+     * @param rootFolder The folder to read the resources from. This is the top level
+     * resource folder (res/)
+     * @throws IOException
+     */
+    public void loadResources(IAbstractFolder rootFolder)
+            throws IOException {
+        IAbstractResource[] files = rootFolder.listMembers();
+        for (IAbstractResource file : files) {
+            if (file instanceof IAbstractFolder) {
+                IAbstractFolder folder = (IAbstractFolder) file;
+                ResourceFolder resFolder = processFolder(folder);
+
+                if (resFolder != null) {
+                    // now we process the content of the folder
+                    IAbstractResource[] children = folder.listMembers();
+
+                    for (IAbstractResource childRes : children) {
+                        if (childRes instanceof IAbstractFile) {
+                            resFolder.processFile((IAbstractFile) childRes,
+                                    ResourceDeltaKind.ADDED);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     protected void removeFile(Collection<ResourceType> types, ResourceFile file) {
         for (ResourceType type : types) {

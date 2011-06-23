@@ -32,6 +32,7 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.KeyboardStateQualifier;
 import com.android.ide.common.resources.configuration.NavigationMethodQualifier;
+import com.android.ide.common.resources.configuration.NavigationStateQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
 import com.android.ide.common.resources.configuration.ScreenHeightQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
@@ -51,6 +52,7 @@ import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
+import com.android.resources.NavigationState;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRatio;
@@ -204,7 +206,7 @@ public class ApiDemosRenderingTest extends SdkTestCase {
 
         // now load the project resources
         ProjectResources project = new ProjectResources(null /*project*/);
-        ResourceManager.getInstance().loadResources(project, resFolder);
+        project.loadResources(resFolder);
 
         // Create a folder configuration that will be used for the rendering:
         FolderConfiguration config = getConfiguration();
@@ -287,8 +289,11 @@ public class ApiDemosRenderingTest extends SdkTestCase {
         config.addQualifier(new TouchScreenQualifier(TouchScreen.FINGER));
         config.addQualifier(new KeyboardStateQualifier(KeyboardState.HIDDEN));
         config.addQualifier(new TextInputMethodQualifier(Keyboard.QWERTY));
+        config.addQualifier(new NavigationStateQualifier(NavigationState.HIDDEN));
         config.addQualifier(new NavigationMethodQualifier(Navigation.TRACKBALL));
         config.addQualifier(new ScreenDimensionQualifier(480, 320));
+
+        config.updateScreenWidthAndHeight();
 
         return config;
     }
