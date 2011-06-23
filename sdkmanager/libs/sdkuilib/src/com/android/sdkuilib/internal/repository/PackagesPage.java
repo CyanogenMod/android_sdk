@@ -94,13 +94,13 @@ public class PackagesPage extends UpdaterPage
 
     enum MenuAction {
         RELOAD                      (SWT.NONE,  "Reload"),
-        SHOW_ADDON_SITES            (SWT.NONE,  "Manage Sources..."),
+        SHOW_ADDON_SITES            (SWT.NONE,  "Manage Add-on Sites..."),
         TOGGLE_SHOW_ARCHIVES        (SWT.CHECK, "Show Archives Details"),
         TOGGLE_SHOW_INSTALLED_PKG   (SWT.CHECK, "Show Installed Packages"),
         TOGGLE_SHOW_OBSOLETE_PKG    (SWT.CHECK, "Show Obsolete Packages"),
         TOGGLE_SHOW_UPDATE_NEW_PKG  (SWT.CHECK, "Show Updates/New Packages"),
         SORT_API_LEVEL              (SWT.RADIO, "Sort by API Level"),
-        SORT_SOURCE                 (SWT.RADIO, "Sort by Source")
+        SORT_SOURCE                 (SWT.RADIO, "Sort by Repository")
         ;
 
         private final int mMenuStyle;
@@ -301,7 +301,7 @@ public class PackagesPage extends UpdaterPage
         mCheckSortApi.setSelection(true);
 
         mCheckSortSource = new Button(mGroupOptions, SWT.RADIO);
-        mCheckSortSource.setToolTipText("Sort by Source");
+        mCheckSortSource.setToolTipText("Sort by Repository");
         mCheckSortSource.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -310,7 +310,7 @@ public class PackagesPage extends UpdaterPage
                 expandInitial(mCategories);
             }
         });
-        mCheckSortSource.setText("Source");
+        mCheckSortSource.setText("Repository");
 
         new Label(mGroupOptions, SWT.NONE);
         new Label(mGroupOptions, SWT.NONE);
@@ -741,7 +741,7 @@ public class PackagesPage extends UpdaterPage
         });
 
         for (SdkSource source : sources) {
-            Object key = source != null ? source : "Installed Packages";
+            Object key = source != null ? source : "Locally Installed Packages";
             Object iconRef = source != null ? source :
                         mUpdaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED);
 
