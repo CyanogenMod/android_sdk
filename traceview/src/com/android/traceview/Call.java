@@ -19,52 +19,30 @@ package com.android.traceview;
 import org.eclipse.swt.graphics.Color;
 
 class Call implements TimeLineView.Block {
-    
-    // Values for bits within the mFlags field.
-    private static final int METHOD_ACTION_MASK = 0x3;
-    private static final int IS_RECURSIVE = 0x10;
+    final private ThreadData mThreadData;
+    final private MethodData mMethodData;
+    final Call mCaller; // the caller, or null if this is the root
 
-    private int mThreadId;
-    private int mFlags;
-    MethodData mMethodData;
-    
-    /** 0-based thread-local start time */
-    long mThreadStartTime;
-    
-    /**  global start time */
-    long mGlobalStartTime;
-
-    /** global end time */
-    long mGlobalEndTime;
-    
     private String mName;
+    private boolean mIsRecursive;
 
-    /**
-     * This constructor is used for the root of a Call tree. The name is
-     * the name of the corresponding thread. 
-     */
-    Call(String name, MethodData methodData) {
-        mName = name;
-        mMethodData = methodData;
-    }
+    long mGlobalStartTime;
+    long mGlobalEndTime;
 
-    Call() {
-    }
-    
-    Call(int threadId, MethodData methodData, long time, int methodAction) {
-        mThreadId = threadId;
+    long mThreadStartTime;
+    long mThreadEndTime;
+
+    long mInclusiveRealTime; // real time spent in this call including its children
+    long mExclusiveRealTime; // real time spent in this call including its children
+
+    long mInclusiveCpuTime; // cpu time spent in this call including its children
+    long mExclusiveCpuTime; // cpu time spent in this call excluding its children
+
+    Call(ThreadData threadData, MethodData methodData, Call caller) {
+        mThreadData = threadData;
         mMethodData = methodData;
-        mThreadStartTime = time;
-        mFlags = methodAction & METHOD_ACTION_MASK;
         mName = methodData.getProfileName();
-    }
-    
-    public void set(int threadId, MethodData methodData, long time, int methodAction) {
-        mThreadId = threadId;
-        mMethodData = methodData;
-        mThreadStartTime = time;
-        mFlags = methodAction & METHOD_ACTION_MASK;
-        mName = methodData.getProfileName();
+        mCaller = caller;
     }
 
     public void updateName() {
@@ -87,20 +65,24 @@ class Call implements TimeLineView.Block {
         return mGlobalEndTime;
     }
 
+    public long getExclusiveCpuTime() {
+        return mExclusiveCpuTime;
+    }
+
+    public long getInclusiveCpuTime() {
+        return mInclusiveCpuTime;
+    }
+
+    public long getExclusiveRealTime() {
+        return mExclusiveRealTime;
+    }
+
+    public long getInclusiveRealTime() {
+        return mInclusiveRealTime;
+    }
+
     public Color getColor() {
         return mMethodData.getColor();
-    }
-
-    public void addExclusiveTime(long elapsed) {
-        mMethodData.addElapsedExclusive(elapsed);
-        if ((mFlags & IS_RECURSIVE) == 0) {
-            mMethodData.addTopExclusive(elapsed);
-        }
-    }
-
-    public void addInclusiveTime(long elapsed, Call parent) {
-        boolean isRecursive = (mFlags & IS_RECURSIVE) != 0;
-        mMethodData.addElapsedInclusive(elapsed, isRecursive, parent);
     }
 
     public String getName() {
@@ -111,31 +93,71 @@ class Call implements TimeLineView.Block {
         mName = name;
     }
 
-    int getThreadId() {
-        return mThreadId;
+    public ThreadData getThreadData() {
+        return mThreadData;
+    }
+
+    public int getThreadId() {
+        return mThreadData.getId();
     }
 
     public MethodData getMethodData() {
         return mMethodData;
     }
 
-    int getMethodAction() {
-        return mFlags & METHOD_ACTION_MASK;
+    public boolean isContextSwitch() {
+        return mMethodData.getId() < 0;
     }
 
-    public void dump() {
-        System.out.printf("%s [%d, %d]\n", mName, mGlobalStartTime, mGlobalEndTime);
+    public boolean isIgnoredBlock() {
+        // Ignore the top-level call or context switches within the top-level call.
+        return mCaller == null || isContextSwitch() && mCaller.mCaller == null;
     }
 
-    public void setRecursive(boolean isRecursive) {
-        if (isRecursive) {
-            mFlags |= IS_RECURSIVE;
-        } else {
-            mFlags &= ~IS_RECURSIVE;
-        }
+    public TimeLineView.Block getParentBlock() {
+        return mCaller;
     }
 
     public boolean isRecursive() {
-        return (mFlags & IS_RECURSIVE) != 0;
+        return mIsRecursive;
+    }
+
+    void setRecursive(boolean isRecursive) {
+        mIsRecursive = isRecursive;
+    }
+
+    void addCpuTime(long elapsedCpuTime) {
+        mExclusiveCpuTime += elapsedCpuTime;
+        mInclusiveCpuTime += elapsedCpuTime;
+    }
+
+    /**
+     * Record time spent in the method call.
+     */
+    void finish() {
+        if (mCaller != null) {
+            mCaller.mInclusiveCpuTime += mInclusiveCpuTime;
+            mCaller.mInclusiveRealTime += mInclusiveRealTime;
+        }
+
+        mMethodData.addElapsedExclusive(mExclusiveCpuTime, mExclusiveRealTime);
+        if (!mIsRecursive) {
+            mMethodData.addTopExclusive(mExclusiveCpuTime, mExclusiveRealTime);
+        }
+        mMethodData.addElapsedInclusive(mInclusiveCpuTime, mInclusiveRealTime,
+                mIsRecursive, mCaller);
+    }
+
+    public static final class TraceAction {
+        public static final int ACTION_ENTER = 0;
+        public static final int ACTION_EXIT = 1;
+
+        public final int mAction;
+        public final Call mCall;
+
+        public TraceAction(int action, Call call) {
+            mAction = action;
+            mCall = call;
+        }
     }
 }

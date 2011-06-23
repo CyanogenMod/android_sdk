@@ -24,7 +24,8 @@ public class ProfileData {
     /** mContext is either the parent or child of mElement */
     protected MethodData mContext;
     protected boolean mElementIsParent;
-    protected long mElapsedInclusive;
+    protected long mElapsedInclusiveCpuTime;
+    protected long mElapsedInclusiveRealTime;
     protected int mNumCalls;
 
     public ProfileData() {
@@ -45,17 +46,23 @@ public class ProfileData {
         return mElement;
     }
 
-    public void addElapsedInclusive(long elapsedInclusive) {
-        mElapsedInclusive += elapsedInclusive;
+    public void addElapsedInclusive(long cpuTime, long realTime) {
+        mElapsedInclusiveCpuTime += cpuTime;
+        mElapsedInclusiveRealTime += realTime;
         mNumCalls += 1;
     }
 
-    public void setElapsedInclusive(long elapsedInclusive) {
-        mElapsedInclusive = elapsedInclusive;
+    public void setElapsedInclusive(long cpuTime, long realTime) {
+        mElapsedInclusiveCpuTime = cpuTime;
+        mElapsedInclusiveRealTime = realTime;
     }
 
-    public long getElapsedInclusive() {
-        return mElapsedInclusive;
+    public long getElapsedInclusiveCpuTime() {
+        return mElapsedInclusiveCpuTime;
+    }
+
+    public long getElapsedInclusiveRealTime() {
+        return mElapsedInclusiveRealTime;
     }
 
     public void setNumCalls(int numCalls) {

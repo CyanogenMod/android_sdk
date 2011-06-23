@@ -279,7 +279,7 @@ public class ProfileView extends Composite implements Observer {
             }
             if (name == "Call") {
                 Call call = (Call) selection.getValue();
-                MethodData md = call.mMethodData;
+                MethodData md = call.getMethodData();
                 highlightMethod(md, true);
                 return;
             }
@@ -304,9 +304,11 @@ public class ProfileView extends Composite implements Observer {
         mTreeViewer.setSelection(sel, true);
         Tree tree = mTreeViewer.getTree();
         TreeItem[] items = tree.getSelection();
-        tree.setTopItem(items[0]);
-        // workaround a Mac bug by adding showItem().
-        tree.showItem(items[0]);
+        if (items.length != 0) {
+            tree.setTopItem(items[0]);
+            // workaround a Mac bug by adding showItem().
+            tree.showItem(items[0]);
+        }
     }
 
     private void expandNode(MethodData md) {
