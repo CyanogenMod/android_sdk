@@ -30,11 +30,10 @@ import java.util.Map;
  */
 public class DeclareStyleableResourceValue extends ResourceValue {
 
-    private Map<String, Map<String, Integer>> mEnumMap;
+    private Map<String, AttrResourceValue> mAttrMap;
 
     public DeclareStyleableResourceValue(ResourceType type, String name, boolean isFramework) {
         super(type, name, isFramework);
-
     }
 
     /**
@@ -43,33 +42,25 @@ public class DeclareStyleableResourceValue extends ResourceValue {
      * @return the map of (name, integer) values.
      */
     public Map<String, Integer> getAttributeValues(String name) {
-        if (mEnumMap != null) {
-            return mEnumMap.get(name);
+        if (mAttrMap != null) {
+            AttrResourceValue attr = mAttrMap.get(name);
+            if (attr != null) {
+                return attr.getAttributeValues();
+            }
         }
 
         return null;
     }
 
-    public Map<String, Map<String, Integer>> getAllAttributes() {
-        return mEnumMap;
+    public Map<String, AttrResourceValue> getAllAttributes() {
+        return mAttrMap;
     }
 
-    public void addValue(String attribute, String name, Integer value) {
-        Map<String, Integer> map;
-
-        if (mEnumMap == null) {
-            mEnumMap = new HashMap<String, Map<String,Integer>>();
-
-            map = new HashMap<String, Integer>();
-            mEnumMap.put(attribute, map);
-        } else {
-            map = mEnumMap.get(attribute);
-            if (map == null) {
-                map = new HashMap<String, Integer>();
-                mEnumMap.put(attribute, map);
-            }
+    public void addValue(AttrResourceValue attr) {
+        if (mAttrMap == null) {
+            mAttrMap = new HashMap<String, AttrResourceValue>();
         }
 
-        map.put(name, value);
+        mAttrMap.put(attr.getName(), attr);
     }
 }

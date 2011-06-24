@@ -283,8 +283,8 @@ public class LayoutLibrary {
      * @see Bridge#init(String, Map)
      */
     public boolean init(Map<String, String> platformProperties,
-            File fontLocation, Map<String,
-            Map<String, Integer>> enumValueMap,
+            File fontLocation,
+            Map<String, Map<String, Integer>> enumValueMap,
             LayoutLog log) {
         if (mBridge != null) {
             return mBridge.init(platformProperties, fontLocation, enumValueMap, log);
