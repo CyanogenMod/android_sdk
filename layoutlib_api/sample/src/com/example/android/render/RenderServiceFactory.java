@@ -18,11 +18,11 @@ package com.example.android.render;
 
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.rendering.LayoutLibrary;
+import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
 import com.android.ide.common.rendering.api.IProjectCallback;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.FrameworkResources;
-import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -59,7 +59,6 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -275,22 +274,40 @@ public class RenderServiceFactory {
         // load the framework resources
         mResources = loadResources(resFolder, log);
 
-        // need to get the styleable info to find the enum/flag map.
-        List<ResourceItem> items = mResources.getResourceItemsOfType(
-                ResourceType.DECLARE_STYLEABLE);
-
+        // get all the attr values.
         HashMap<String, Map<String, Integer>> enumMap = new HashMap<String, Map<String, Integer>>();
 
-        // standard default config.
         FolderConfiguration config = new FolderConfiguration();
-        for (ResourceItem item : items) {
-            ResourceValue value = item.getResourceValue(
-                    ResourceType.DECLARE_STYLEABLE, config, true /*isFramework*/);
+        Map<ResourceType, Map<String, ResourceValue>> res =
+                mResources.getConfiguredResources(config);
+
+        // get the ATTR values
+        Map<String, ResourceValue> attrItems = res.get(ResourceType.ATTR);
+        for (ResourceValue value : attrItems.values()) {
+            if (value instanceof AttrResourceValue) {
+                AttrResourceValue attr = (AttrResourceValue) value;
+                Map<String, Integer> values = attr.getAttributeValues();
+                if (values != null) {
+                    enumMap.put(attr.getName(), values);
+                }
+            }
+        }
+
+        // get the declare-styleable values
+        Map<String, ResourceValue> styleableItems = res.get(ResourceType.DECLARE_STYLEABLE);
+
+        // get the attr from the styleable
+        for (ResourceValue value : styleableItems.values()) {
             if (value instanceof DeclareStyleableResourceValue) {
-                DeclareStyleableResourceValue styleable = (DeclareStyleableResourceValue) value;
-                Map<String, Map<String, Integer>> map = styleable.getAllAttributes();
-                if (map != null) {
-                    enumMap.putAll(map);
+                DeclareStyleableResourceValue dsrc = (DeclareStyleableResourceValue) value;
+                Map<String, AttrResourceValue> attrs = dsrc.getAllAttributes();
+                if (attrs != null && attrs.size() > 0) {
+                    for (AttrResourceValue attr : attrs.values()) {
+                        Map<String, Integer> values = attr.getAttributeValues();
+                        if (values != null) {
+                            enumMap.put(attr.getName(), values);
+                        }
+                    }
                 }
             }
         }

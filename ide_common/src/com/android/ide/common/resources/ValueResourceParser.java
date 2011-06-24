@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources;
 
+import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
@@ -42,7 +43,7 @@ public final class ValueResourceParser extends DefaultHandler {
     private final static int DEFAULT_NS_PREFIX_LEN = DEFAULT_NS_PREFIX.length();
 
     public interface IValueResourceRepository {
-        void addResourceValue(ResourceType type, ResourceValue value);
+        void addResourceValue(ResourceValue value);
     }
 
     private boolean inResources = false;
@@ -50,7 +51,7 @@ public final class ValueResourceParser extends DefaultHandler {
     private ResourceValue mCurrentValue = null;
     private StyleResourceValue mCurrentStyle = null;
     private DeclareStyleableResourceValue mCurrentDeclareStyleable = null;
-    private String mCurrentAttribute = null;
+    private AttrResourceValue mCurrentAttr;
     private IValueResourceRepository mRepository;
     private final boolean mIsFramework;
 
@@ -71,9 +72,12 @@ public final class ValueResourceParser extends DefaultHandler {
             mCurrentValue = null;
             mCurrentStyle = null;
             mCurrentDeclareStyleable = null;
+            mCurrentAttr = null;
         } else if (mDepth == 3) {
             mCurrentValue = null;
-            mCurrentAttribute = null;
+            if (mCurrentDeclareStyleable != null) {
+                mCurrentAttr = null;
+            }
         }
 
         mDepth--;
@@ -90,40 +94,32 @@ public final class ValueResourceParser extends DefaultHandler {
                     inResources = true;
                 }
             } else if (mDepth == 2 && inResources == true) {
-                String typeValue;
-
-                // if the node is <item>, we get the type from the attribute "type"
-                if (NODE_ITEM.equals(qName)) {
-                    typeValue = attributes.getValue(ATTR_TYPE);
-                } else {
-                    // the type is the name of the node.
-                    typeValue = qName;
-                }
-
-                ResourceType type = ResourceType.getEnum(typeValue);
+                ResourceType type = getType(qName, attributes);
 
                 if (type != null) {
-                    if (type != ResourceType.ATTR) {
-                        // get the resource name
-                        String name = attributes.getValue(ATTR_NAME);
-                        if (name != null) {
-                            switch (type) {
-                                case STYLE:
-                                    String parent = attributes.getValue(ATTR_PARENT);
-                                    mCurrentStyle = new StyleResourceValue(type, name, parent,
-                                            mIsFramework);
-                                    mRepository.addResourceValue(type, mCurrentStyle);
-                                    break;
-                                case DECLARE_STYLEABLE:
-                                    mCurrentDeclareStyleable = new DeclareStyleableResourceValue(
-                                            type, name, mIsFramework);
-                                    mRepository.addResourceValue(type, mCurrentDeclareStyleable);
-                                    break;
-                                default:
-                                    mCurrentValue = new ResourceValue(type, name, mIsFramework);
-                                    mRepository.addResourceValue(type, mCurrentValue);
-                                    break;
-                            }
+                    // get the resource name
+                    String name = attributes.getValue(ATTR_NAME);
+                    if (name != null) {
+                        switch (type) {
+                            case STYLE:
+                                String parent = attributes.getValue(ATTR_PARENT);
+                                mCurrentStyle = new StyleResourceValue(type, name, parent,
+                                        mIsFramework);
+                                mRepository.addResourceValue(mCurrentStyle);
+                                break;
+                            case DECLARE_STYLEABLE:
+                                mCurrentDeclareStyleable = new DeclareStyleableResourceValue(
+                                        type, name, mIsFramework);
+                                mRepository.addResourceValue(mCurrentDeclareStyleable);
+                                break;
+                            case ATTR:
+                                mCurrentAttr = new AttrResourceValue(type, name, mIsFramework);
+                                mRepository.addResourceValue(mCurrentAttr);
+                                break;
+                            default:
+                                mCurrentValue = new ResourceValue(type, name, mIsFramework);
+                                mRepository.addResourceValue(mCurrentValue);
+                                break;
                         }
                     }
                 }
@@ -141,10 +137,23 @@ public final class ValueResourceParser extends DefaultHandler {
                         mCurrentValue = new ResourceValue(null, name, mIsFramework);
                         mCurrentStyle.addValue(mCurrentValue);
                     } else if (mCurrentDeclareStyleable != null) {
-                        mCurrentAttribute = name;
+                        mCurrentAttr = new AttrResourceValue(ResourceType.ATTR, name, mIsFramework);
+                        mCurrentDeclareStyleable.addValue(mCurrentAttr);
+                    } else if (mCurrentAttr != null) {
+                        // get the enum/flag value
+                        String value = attributes.getValue(ATTR_VALUE);
+
+                        try {
+                            // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
+                            // use Long.decode instead.
+                            mCurrentAttr.addValue(name, (int)(long)Long.decode(value));
+                        } catch (NumberFormatException e) {
+                            // pass, we'll just ignore this value
+                        }
+
                     }
                 }
-            } else if (mDepth == 4 && mCurrentDeclareStyleable != null) {
+            } else if (mDepth == 4 && mCurrentAttr != null) {
                 // get the enum/flag name
                 String name = attributes.getValue(ATTR_NAME);
                 String value = attributes.getValue(ATTR_VALUE);
@@ -152,8 +161,7 @@ public final class ValueResourceParser extends DefaultHandler {
                 try {
                     // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
                     // use Long.decode instead.
-                    mCurrentDeclareStyleable.addValue(mCurrentAttribute,
-                            name, (int)(long)Long.decode(value));
+                    mCurrentAttr.addValue(name, (int)(long)Long.decode(value));
                 } catch (NumberFormatException e) {
                     // pass, we'll just ignore this value
                 }
@@ -162,6 +170,22 @@ public final class ValueResourceParser extends DefaultHandler {
             super.startElement(uri, localName, qName, attributes);
         }
     }
+
+    private ResourceType getType(String qName, Attributes attributes) {
+        String typeValue;
+
+        // if the node is <item>, we get the type from the attribute "type"
+        if (NODE_ITEM.equals(qName)) {
+            typeValue = attributes.getValue(ATTR_TYPE);
+        } else {
+            // the type is the name of the node.
+            typeValue = qName;
+        }
+
+        ResourceType type = ResourceType.getEnum(typeValue);
+        return type;
+    }
+
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
