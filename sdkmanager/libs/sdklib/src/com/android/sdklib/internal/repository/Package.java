@@ -557,46 +557,83 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * <p/>
      * This {@link #compareTo(Package)} method is purely an implementation detail to
      * perform the right ordering of the packages in the list of available or installed packages.
+     * <p/>
+     * <em>Important</em>: Derived classes should consider overriding {@link #comparisonKey()}
+     * instead of this method.
      */
     public int compareTo(Package other) {
-        int s1 = this.sortingScore();
-        int s2 = other.sortingScore();
-        return s1 - s2;
+        String s1 = this.comparisonKey();
+        String s2 = other.comparisonKey();
+
+        return s1.compareTo(s2);
     }
 
     /**
-     * Computes the score for each package used by {@link #compareTo(Package)}.
+     * Computes a comparison key for each package used by {@link #compareTo(Package)}.
+     * The key is a string.
+     * The base package class return a string that encodes the package type,
+     * the revision number and the platform version, if applicable, in the form:
+     * <pre>
+     *      t:N|v:NNNN.P|r:NNNN|
+     * </pre>
+     * All fields must start by a "letter colon" prefix and end with a vertical pipe (|, ASCII 124).
+     * <p/>
+     * The string format <em>may</em> change between releases and clients should not
+     * store them outside of the session or expect them to be consistent between
+     * different releases. They are purely an internal implementation details of the
+     * {@link #compareTo(Package)} method.
+     * <p/>
+     * Derived classes should get the string from the super class and then append
+     * or <em>insert</em> their own |-separated content.
+     * For example an extra vendor name & path can be inserted before the revision
+     * number, since it has more sorting weight.
      */
-    private int sortingScore() {
-        // up to 31 bits (for signed stuff)
-        int type = 0;             // max type=7 => 3 bits
-        int rev = getRevision();  // 12 bits... 4095
-        int offset = 0;           // 16 bits...
+    protected String comparisonKey() {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("t:");                                                        //$NON-NLS-1$
         if (this instanceof ToolPackage) {
-            type = 6;
+            sb.append(0);
         } else if (this instanceof PlatformToolPackage) {
-            type = 5;
+            sb.append(1);
         } else if (this instanceof DocPackage) {
-            type = 4;
+            sb.append(2);
         } else if (this instanceof PlatformPackage) {
-            type = 3;
+            sb.append(3);
         } else if (this instanceof SamplePackage) {
-            type = 2;
+            sb.append(4);
         } else if (this instanceof AddonPackage) {
-            type = 1;
+            sb.append(5);
         } else {
             // extras and everything else
-            type = 0;
+            sb.append(9);
         }
+        sb.append("|v:");                                                       //$NON-NLS-1$
+
+
+        // We insert the package version here because it is more important
+        // than the revision number. We want package version to be sorted
+        // top-down, so we'll use 10k-api as the sorting key. The day we
+        // get reach 10k APIs, we'll need to revisit this.
 
         if (this instanceof IPackageVersion) {
             AndroidVersion v = ((IPackageVersion) this).getVersion();
-            offset = v.getApiLevel();
-            offset = offset * 2 + (v.isPreview() ? 1 : 0);
-        }
 
-        int n = (type << 28) + (offset << 12) + rev;
-        return 0 - n;
+            sb.append(String.format("%1$04d.%2$d",                              //$NON-NLS-1$
+                    10000 - v.getApiLevel(),
+                    v.isPreview() ? 1 : 0
+                    ));
+        }
+        sb.append("|r:");                                                       //$NON-NLS-1$
+
+
+        // Append revision number
+
+        sb.append(String.format("%1$04d", getRevision()));                      //$NON-NLS-1$
+        sb.append('|');
+
+        return sb.toString();
     }
 
 }

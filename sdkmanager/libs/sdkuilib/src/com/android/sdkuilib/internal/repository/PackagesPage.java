@@ -147,6 +147,7 @@ public class PackagesPage extends UpdaterPage
     private TreeViewerColumn mColumnStatus;
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
+    private boolean mLastSortWasByApi;
 
     public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
         super(parent, swtStyle);
@@ -532,7 +533,7 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void sortPackages(boolean updateButtons) {
-        if (mCheckSortApi != null && !mCheckSortApi.isDisposed() && mCheckSortApi.getSelection()) {
+        if (isSortByApi()) {
             sortByApiLevel();
         } else {
             sortBySource();
@@ -541,6 +542,10 @@ public class PackagesPage extends UpdaterPage
             updateButtonsState();
             updateMenuCheckmarks();
         }
+    }
+
+    private boolean isSortByApi() {
+        return mCheckSortApi != null && !mCheckSortApi.isDisposed() && mCheckSortApi.getSelection();
     }
 
     /**
@@ -556,34 +561,44 @@ public class PackagesPage extends UpdaterPage
             mTreeColumnName.setImage(getImage(ICON_SORT_BY_API));
         }
 
+        // If the sorting mode changed, clear the categories.
+        if (!mLastSortWasByApi) {
+            mLastSortWasByApi = true;
+            mCategories.clear();
+        }
+
         // keep a map of the initial state so that we can detect which items or categories are
         // no longer being used, so that we can removed them at the end of the in-place update.
-        final Map<Integer, Pair<PkgCategory, HashSet<PkgItem>> > unusedItemsMap =
-            new HashMap<Integer, Pair<PkgCategory, HashSet<PkgItem>> >();
-        final Set<PkgCategory> unusedCatSet = new HashSet<PkgCategory>();
+        final Map<Integer, Pair<PkgApiCategory, HashSet<PkgItem>> > unusedItemsMap =
+            new HashMap<Integer, Pair<PkgApiCategory, HashSet<PkgItem>> >();
+        final Set<PkgApiCategory> unusedCatSet = new HashSet<PkgApiCategory>();
 
         // get existing categories
         for (PkgCategory cat : mCategories) {
-            unusedCatSet.add(cat);
-            unusedItemsMap.put(cat.getKey(), Pair.of(cat, new HashSet<PkgItem>(cat.getItems())));
+            if (cat instanceof PkgApiCategory) {
+                PkgApiCategory acat = (PkgApiCategory) cat;
+                unusedCatSet.add(acat);
+                unusedItemsMap.put(acat.getKey(),
+                        Pair.of(acat, new HashSet<PkgItem>(acat.getItems())));
+            }
         }
 
         // always add the tools & extras categories, even if empty (unlikely anyway)
-        if (!unusedItemsMap.containsKey(PkgCategory.KEY_TOOLS)) {
-            PkgCategory cat = new PkgCategory(
-                    PkgCategory.KEY_TOOLS,
-                    "Tools",
+        if (!unusedItemsMap.containsKey(PkgApiCategory.KEY_TOOLS)) {
+            PkgApiCategory cat = new PkgApiCategory(
+                    PkgApiCategory.KEY_TOOLS,
+                    null,
                     imgFactory.getImageByName(ICON_CAT_OTHER));
-            unusedItemsMap.put(PkgCategory.KEY_TOOLS, Pair.of(cat, new HashSet<PkgItem>()));
+            unusedItemsMap.put(PkgApiCategory.KEY_TOOLS, Pair.of(cat, new HashSet<PkgItem>()));
             mCategories.add(cat);
         }
 
-        if (!unusedItemsMap.containsKey(PkgCategory.KEY_EXTRA)) {
-            PkgCategory cat = new PkgCategory(
-                    PkgCategory.KEY_EXTRA,
-                    "Extras",
+        if (!unusedItemsMap.containsKey(PkgApiCategory.KEY_EXTRA)) {
+            PkgApiCategory cat = new PkgApiCategory(
+                    PkgApiCategory.KEY_EXTRA,
+                    null,
                     imgFactory.getImageByName(ICON_CAT_OTHER));
-            unusedItemsMap.put(PkgCategory.KEY_EXTRA, Pair.of(cat, new HashSet<PkgItem>()));
+            unusedItemsMap.put(PkgApiCategory.KEY_EXTRA, Pair.of(cat, new HashSet<PkgItem>()));
             mCategories.add(cat);
         }
 
@@ -597,13 +612,13 @@ public class PackagesPage extends UpdaterPage
             if (apiKey < 1) {
                 Package p = item.getPackage();
                 if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
-                    apiKey = PkgCategory.KEY_TOOLS;
+                    apiKey = PkgApiCategory.KEY_TOOLS;
                 } else {
-                    apiKey = PkgCategory.KEY_EXTRA;
+                    apiKey = PkgApiCategory.KEY_EXTRA;
                 }
             }
 
-            Pair<PkgCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
+            Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
 
             if (mapEntry == null) {
                 // This is a new category. Create it and add it to the map.
@@ -613,28 +628,25 @@ public class PackagesPage extends UpdaterPage
                 // If we don't (e.g. when installing a new platform that isn't yet available
                 // locally in the SDK Manager), it's OK we'll try to find the first platform
                 // package available.
-                String label = null;
+                String platformName = null;
                 if (apiKey != -1) {
                     for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
                         if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
-                            label = target.getVersionName();
-                            if (label != null) {
-                                label = String.format("Android %1$s (API %2$d)", label, apiKey);
-                                break;
-                            }
+                            platformName = target.getVersionName();
+                            break;
                         }
                     }
                 }
 
-                PkgCategory cat = new PkgCategory(
+                PkgApiCategory cat = new PkgApiCategory(
                         apiKey,
-                        label,
+                        platformName,
                         imgFactory.getImageByName(ICON_CAT_PLATFORM));
                 mapEntry = Pair.of(cat, new HashSet<PkgItem>());
                 unusedItemsMap.put(apiKey, mapEntry);
                 mCategories.add(0, cat);
             }
-            PkgCategory cat = mapEntry.getFirst();
+            PkgApiCategory cat = mapEntry.getFirst();
             assert cat != null;
             unusedCatSet.remove(cat);
 
@@ -644,14 +656,13 @@ public class PackagesPage extends UpdaterPage
                 cat.getItems().add(item);
             }
 
-            if (apiKey != -1 && cat.getLabel() == null) {
+            if (apiKey != -1 && cat.getPlatformName() == null) {
                 // Check whether we can get the actual platform version name (e.g. "1.5")
                 // from the first Platform package we find in this category.
                 Package p = item.getPackage();
                 if (p instanceof PlatformPackage) {
-                    String vn = ((PlatformPackage) p).getVersionName();
-                    String name = String.format("Android %1$s (API %2$d)", vn, apiKey);
-                    cat.setLabel(name);
+                    String platformName = ((PlatformPackage) p).getVersionName();
+                    cat.setPlatformName(platformName);
                 }
             }
         }
@@ -667,7 +678,10 @@ public class PackagesPage extends UpdaterPage
 
             // Remove any unused items in the category.
             int apikey = cat.getKey();
-            Pair<PkgCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apikey);
+            Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apikey);
+            if (mapEntry == null) { //DEBUG
+                apikey = (apikey + 1) - 1;
+            }
             assert mapEntry != null;
             HashSet<PkgItem> unusedItems = mapEntry.getSecond();
             for (Iterator<PkgItem> iterItem = cat.getItems().iterator(); iterItem.hasNext(); ) {
@@ -679,13 +693,6 @@ public class PackagesPage extends UpdaterPage
 
             // Sort the items
             Collections.sort(cat.getItems());
-
-            // Fix the category name for any API where we might not have found a platform package.
-            if (cat.getLabel() == null) {
-                int api = cat.getKey();
-                String name = String.format("API %1$d", api);
-                cat.setLabel(name);
-            }
         }
 
         // Sort the categories list.
@@ -716,6 +723,7 @@ public class PackagesPage extends UpdaterPage
             mTreeColumnName.setImage(getImage(ICON_SORT_BY_SOURCE));
         }
 
+        mLastSortWasByApi = false;
         mCategories.clear();
 
         Set<SdkSource> sourceSet = new HashSet<SdkSource>();
@@ -1075,7 +1083,7 @@ public class PackagesPage extends UpdaterPage
                 if (element instanceof PkgCategory) {
                     return ((PkgCategory) element).getLabel();
                 } else if (element instanceof PkgItem) {
-                    return ((PkgItem) element).getName();
+                    return getPkgItemname((PkgItem) element);
                 } else if (element instanceof IDescription) {
                     return ((IDescription) element).getShortDescription();
                 }
@@ -1131,6 +1139,41 @@ public class PackagesPage extends UpdaterPage
             }
 
             return "";  //$NON-NLS-1$
+        }
+
+        private String getPkgItemname(PkgItem item) {
+            String name = item.getName().trim();
+
+            if (isSortByApi()) {
+                // When sorting by API, the package name might contains the API number
+                // or the platform name at the end. If we find it, cut it out since it's
+                // redundant.
+
+                PkgApiCategory cat = (PkgApiCategory) findCategoryForItem(item);
+                String apiLabel = cat.getApiLabel();
+                String platLabel = cat.getPlatformName();
+
+                if (platLabel != null && name.endsWith(platLabel)) {
+                    return name.substring(0, name.length() - platLabel.length());
+
+                } else if (apiLabel != null && name.endsWith(apiLabel)) {
+                    return name.substring(0, name.length() - apiLabel.length());
+                }
+            }
+
+            return name;
+        }
+
+        private PkgCategory findCategoryForItem(PkgItem item) {
+            for (PkgCategory cat : mCategories) {
+                for (PkgItem i : cat.getItems()) {
+                    if (i == item) {
+                        return cat;
+                    }
+                }
+            }
+
+            return null;
         }
 
         @Override
@@ -1263,14 +1306,9 @@ public class PackagesPage extends UpdaterPage
         private final List<PkgItem> mItems = new ArrayList<PkgItem>();
         private String mLabel;
 
-
         // When sorting by Source, key is the hash of the source's name.
         // When storing by API, key is the API level (>=1). Tools and extra have the
-        // special values so they get naturally sorted the way we want them.
-        // (Note: don't use max to avoid integers wrapping in comparisons. We can
-        // revisit the day we get 2^30 platforms.)
-        public final static int KEY_TOOLS = Integer.MAX_VALUE / 2;
-        public final static int KEY_EXTRA = -1;
+        // special values.
 
         public PkgCategory(int key, String label, Object iconRef) {
             mKey = key;
@@ -1296,6 +1334,72 @@ public class PackagesPage extends UpdaterPage
 
         public List<PkgItem> getItems() {
             return mItems;
+        }
+    }
+
+    private static class PkgApiCategory extends PkgCategory {
+
+        /** Platform name, in the form "Android 1.2". Can be null if we don't have the name. */
+        private String mPlatformName;
+
+        // When sorting by Source, key is the hash of the source's name.
+        // When storing by API, key is the API level (>=1). Tools and extra have the
+        // special values so they get naturally sorted the way we want them.
+        // (Note: don't use max to avoid integers wrapping in comparisons. We can
+        // revisit the day we get 2^30 platforms.)
+        public final static int KEY_TOOLS = Integer.MAX_VALUE / 2;
+        public final static int KEY_EXTRA = -1;
+
+        public PkgApiCategory(int apiKey, String platformName, Object iconRef) {
+            super(apiKey, null /*label*/, iconRef);
+            setPlatformName(platformName);
+        }
+
+        public String getPlatformName() {
+            return mPlatformName;
+        }
+
+        public void setPlatformName(String platformName) {
+            if (platformName != null) {
+                // Normal case for actual platform categories
+                mPlatformName = String.format("Android %1$s", platformName);
+                super.setLabel(null);
+            }
+        }
+
+        public String getApiLabel() {
+            int api = getKey();
+            if (api > 0) {
+                return String.format("API %1$d", getKey());
+            }
+            return null;
+        }
+
+        @Override
+        public String getLabel() {
+            String label = super.getLabel();
+            if (label == null) {
+                int key = getKey();
+
+                if (key == KEY_TOOLS) {
+                    label = "Tools";
+                } else if (key == KEY_EXTRA) {
+                    label = "Extras";
+                } else {
+                    if (mPlatformName != null) {
+                        label = String.format("%1$s (%2$s)", mPlatformName, getApiLabel());
+                    } else {
+                        label = getApiLabel();
+                    }
+                }
+                super.setLabel(label);
+            }
+            return label;
+        }
+
+        @Override
+        public void setLabel(String label) {
+            throw new UnsupportedOperationException("Use setPlatformName() instead."); //$NON-NLS-1$
         }
     }
 
