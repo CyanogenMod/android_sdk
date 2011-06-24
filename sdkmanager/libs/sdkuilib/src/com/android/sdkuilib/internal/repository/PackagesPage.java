@@ -26,8 +26,9 @@ import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdkuilib.internal.repository.PackageManager.PkgItem;
-import com.android.sdkuilib.internal.repository.PackageManager.PkgState;
+import com.android.sdkuilib.internal.repository.PackageLoader.ISourceLoadedCallback;
+import com.android.sdkuilib.internal.repository.PackageLoader.PkgItem;
+import com.android.sdkuilib.internal.repository.PackageLoader.PkgState;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.util.Pair;
@@ -65,7 +66,6 @@ import org.eclipse.swt.widgets.TreeColumn;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -74,6 +74,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 
 /**
@@ -122,8 +123,11 @@ public class PackagesPage extends UpdaterPage
 
     private final Map<MenuAction, MenuItem> mMenuActions = new HashMap<MenuAction, MenuItem>();
 
-    private final PackageManagerImpl mPkgManager;
+    private final PackageLoader mPackageLoader;
+
     private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
+    /** Access to this list must be synchronized on {@link #mPackages}. */
+    private final List<PkgItem> mPackages = new ArrayList<PkgItem>();
     private final UpdaterData mUpdaterData;
 
     private boolean mDisplayArchives = false;
@@ -153,14 +157,14 @@ public class PackagesPage extends UpdaterPage
         super(parent, swtStyle);
 
         mUpdaterData = updaterData;
-        mPkgManager = new PackageManagerImpl(updaterData);
+        mPackageLoader = new PackageLoader(updaterData);
         createContents(this);
 
         postCreate();  //$hide$
     }
 
     public void onPageSelected() {
-        if (mPkgManager.getPackages().isEmpty()) {
+        if (mPackages.isEmpty()) {
             // Initialize the package list the first time the page is shown.
             loadPackages();
         }
@@ -494,31 +498,66 @@ public class PackagesPage extends UpdaterPage
             return;
         }
 
-        try {
-            enableUi(mGroupPackages, false);
+        final boolean firstLoad = mPackages.isEmpty();
 
-            boolean firstLoad = mPkgManager.getPackages().isEmpty();
+        // Load package is synchronous but does not block the UI.
+        // Consequently it's entirely possible for the user
+        // to request the app to close whilst the packages are loading. Any
+        // action done after loadPackages must check the UI hasn't been
+        // disposed yet. Otherwise hilarity ensues.
 
-            // Load package is synchronous but does not block the UI.
-            // Consequently it's entirely possible for the user
-            // to request the app to close whilst the packages are loading. Any
-            // action done after loadPackages must check the UI hasn't been
-            // disposed yet. Otherwise hilarity ensues.
+        mPackageLoader.loadPackages(new ISourceLoadedCallback() {
+            public boolean onSouceLoaded(List<PkgItem> newPkgItems) {
+                boolean somethingNew = false;
 
-            mPkgManager.loadPackages();
+                synchronized(mPackages) {
+                    nextNewItem: for (PkgItem newItem : newPkgItems) {
+                        for (PkgItem existingItem : mPackages) {
+                            if (existingItem.isSameItemAs(newItem)) {
+                                // This isn't a new package, we already have it.
+                                continue nextNewItem;
+                            }
+                        }
+                        mPackages.add(newItem);
+                        somethingNew = true;
+                    }
+                }
 
-            if (firstLoad && !mGroupPackages.isDisposed()) {
-                // set the initial expanded state
-                expandInitial(mCategories);
+                if (somethingNew) {
+                    // Dynamically update the table while we load after each source.
+                    // Since the official Android source gets loaded first, it makes the
+                    // window look non-empty a lot sooner.
+                    if (!mGroupPackages.isDisposed()) {
+                        mGroupPackages.getDisplay().syncExec(new Runnable() {
+                            public void run() {
+                                sortPackages(true /* updateButtons */);
+
+                                if (!mGroupPackages.isDisposed()) {
+                                    if (firstLoad) {
+                                        // set the initial expanded state
+                                        expandInitial(mCategories);
+                                    }
+                                    updateButtonsState();
+                                    updateMenuCheckmarks();
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Return true to tell the loader to continue with the next source.
+                // Return false to stop the loader if any UI has been disposed, which can
+                // happen if the user is trying to close the window during the load operation.
+                return !mGroupPackages.isDisposed();
             }
 
-        } finally {
-            if (!mGroupPackages.isDisposed()) {
-                enableUi(mGroupPackages, true);
-                updateButtonsState();
-                updateMenuCheckmarks();
+            public void onLoadCompleted() {
+                if (firstLoad && !mGroupPackages.isDisposed()) {
+                    updateButtonsState();
+                    updateMenuCheckmarks();
+                }
             }
-        }
+        });
     }
 
     private void enableUi(Composite root, boolean enabled) {
@@ -602,67 +641,69 @@ public class PackagesPage extends UpdaterPage
             mCategories.add(cat);
         }
 
-        for (PkgItem item : mPkgManager.getPackages()) {
-            if (!keepItem(item)) {
-                continue;
-            }
-
-            int apiKey = item.getApi();
-
-            if (apiKey < 1) {
-                Package p = item.getPackage();
-                if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
-                    apiKey = PkgApiCategory.KEY_TOOLS;
-                } else {
-                    apiKey = PkgApiCategory.KEY_EXTRA;
+        synchronized (mPackages) {
+            for (PkgItem item : mPackages) {
+                if (!keepItem(item)) {
+                    continue;
                 }
-            }
 
-            Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
+                int apiKey = item.getApi();
 
-            if (mapEntry == null) {
-                // This is a new category. Create it and add it to the map.
-
-                // We need a label for the category.
-                // If we have an API level, try to get the info from the SDK Manager.
-                // If we don't (e.g. when installing a new platform that isn't yet available
-                // locally in the SDK Manager), it's OK we'll try to find the first platform
-                // package available.
-                String platformName = null;
-                if (apiKey != -1) {
-                    for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
-                        if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
-                            platformName = target.getVersionName();
-                            break;
-                        }
+                if (apiKey < 1) {
+                    Package p = item.getPackage();
+                    if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
+                        apiKey = PkgApiCategory.KEY_TOOLS;
+                    } else {
+                        apiKey = PkgApiCategory.KEY_EXTRA;
                     }
                 }
 
-                PkgApiCategory cat = new PkgApiCategory(
-                        apiKey,
-                        platformName,
-                        imgFactory.getImageByName(ICON_CAT_PLATFORM));
-                mapEntry = Pair.of(cat, new HashSet<PkgItem>());
-                unusedItemsMap.put(apiKey, mapEntry);
-                mCategories.add(0, cat);
-            }
-            PkgApiCategory cat = mapEntry.getFirst();
-            assert cat != null;
-            unusedCatSet.remove(cat);
+                Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
 
-            HashSet<PkgItem> unusedItemsSet = mapEntry.getSecond();
-            unusedItemsSet.remove(item);
-            if (!cat.getItems().contains(item)) {
-                cat.getItems().add(item);
-            }
+                if (mapEntry == null) {
+                    // This is a new category. Create it and add it to the map.
 
-            if (apiKey != -1 && cat.getPlatformName() == null) {
-                // Check whether we can get the actual platform version name (e.g. "1.5")
-                // from the first Platform package we find in this category.
-                Package p = item.getPackage();
-                if (p instanceof PlatformPackage) {
-                    String platformName = ((PlatformPackage) p).getVersionName();
-                    cat.setPlatformName(platformName);
+                    // We need a label for the category.
+                    // If we have an API level, try to get the info from the SDK Manager.
+                    // If we don't (e.g. when installing a new platform that isn't yet available
+                    // locally in the SDK Manager), it's OK we'll try to find the first platform
+                    // package available.
+                    String platformName = null;
+                    if (apiKey != -1) {
+                        for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
+                            if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
+                                platformName = target.getVersionName();
+                                break;
+                            }
+                        }
+                    }
+
+                    PkgApiCategory cat = new PkgApiCategory(
+                            apiKey,
+                            platformName,
+                            imgFactory.getImageByName(ICON_CAT_PLATFORM));
+                    mapEntry = Pair.of(cat, new HashSet<PkgItem>());
+                    unusedItemsMap.put(apiKey, mapEntry);
+                    mCategories.add(0, cat);
+                }
+                PkgApiCategory cat = mapEntry.getFirst();
+                assert cat != null;
+                unusedCatSet.remove(cat);
+
+                HashSet<PkgItem> unusedItemsSet = mapEntry.getSecond();
+                unusedItemsSet.remove(item);
+                if (!cat.getItems().contains(item)) {
+                    cat.getItems().add(item);
+                }
+
+                if (apiKey != -1 && cat.getPlatformName() == null) {
+                    // Check whether we can get the actual platform version name (e.g. "1.5")
+                    // from the first Platform package we find in this category.
+                    Package p = item.getPackage();
+                    if (p instanceof PlatformPackage) {
+                        String platformName = ((PlatformPackage) p).getVersionName();
+                        cat.setPlatformName(platformName);
+                    }
                 }
             }
         }
@@ -726,15 +767,25 @@ public class PackagesPage extends UpdaterPage
         mLastSortWasByApi = false;
         mCategories.clear();
 
-        Set<SdkSource> sourceSet = new HashSet<SdkSource>();
-        for (PkgItem item : mPkgManager.getPackages()) {
-            if (keepItem(item)) {
-                sourceSet.add(item.getSource());
+        Map<SdkSource, List<PkgItem>> sourceMap = new HashMap<SdkSource, List<PkgItem>>();
+
+        synchronized(mPackages) {
+            for (PkgItem item : mPackages) {
+                if (keepItem(item)) {
+                    SdkSource source = item.getSource();
+                    List<PkgItem> list = sourceMap.get(source);
+                    if (list == null) {
+                        list = new ArrayList<PkgItem>();
+                        sourceMap.put(source, list);
+                    }
+                    list.add(item);
+                }
             }
         }
 
-        SdkSource[] sources = sourceSet.toArray(new SdkSource[sourceSet.size()]);
-        Arrays.sort(sources, new Comparator<SdkSource>() {
+        // Sort the sources so that we can create categories sorted the same way
+        // (the categories don't link to the sources, so we can't just sort the categories.)
+        Set<SdkSource> sources = new TreeSet<SdkSource>(new Comparator<SdkSource>() {
             public int compare(SdkSource o1, SdkSource o2) {
                 if (o1 == o2) {
                     return 0;
@@ -747,6 +798,7 @@ public class PackagesPage extends UpdaterPage
                 return o1.toString().compareTo(o2.toString());
             }
         });
+        sources.addAll(sourceMap.keySet());
 
         for (SdkSource source : sources) {
             Object key = source != null ? source : "Locally Installed Packages";
@@ -758,7 +810,7 @@ public class PackagesPage extends UpdaterPage
                     key.toString(),
                     iconRef);
 
-            for (PkgItem item : mPkgManager.getPackages()) {
+            for (PkgItem item : sourceMap.get(source)) {
                 if (item.getSource() == source) {
                     cat.getItems().add(item);
                 }
@@ -801,6 +853,10 @@ public class PackagesPage extends UpdaterPage
     /**
      * Performs the initial expansion of the tree. This expands categories that contain
      * at least one installed item and collapses the ones with nothing installed.
+     *
+     * TODO: change this to only change the expanded state on categories that have not
+     * been touched by the user yet. Once we do that, call this every time a new source
+     * is added or the list is reloaded.
      */
     private void expandInitial(Object elem) {
         mTreeViewer.setExpandedState(elem, true);
@@ -989,9 +1045,10 @@ public class PackagesPage extends UpdaterPage
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
+                enableUi(mGroupPackages, true);
+
                 // The local package list has changed, make sure to refresh it
                 mUpdaterData.getLocalSdkParser().clearPackages();
-                // loadPackages will also re-enable the UI
                 loadPackages();
             }
         }
@@ -1055,9 +1112,10 @@ public class PackagesPage extends UpdaterPage
                         }
                     });
                 } finally {
+                    enableUi(mGroupPackages, true);
+
                     // The local package list has changed, make sure to refresh it
                     mUpdaterData.getLocalSdkParser().clearPackages();
-                    // loadPackages will also re-enable the UI
                     loadPackages();
                 }
             }
@@ -1401,28 +1459,6 @@ public class PackagesPage extends UpdaterPage
         public void setLabel(String label) {
             throw new UnsupportedOperationException("Use setPlatformName() instead."); //$NON-NLS-1$
         }
-    }
-
-    private class PackageManagerImpl extends PackageManager {
-
-        public PackageManagerImpl(UpdaterData updaterData) {
-            super(updaterData);
-        }
-
-        @Override
-        public void updatePackageTable() {
-            // Dynamically update the table while we load after each source.
-            // Since the official Android source gets loaded first, it makes the
-            // window look non-empty a lot sooner.
-            if (!mGroupPackages.isDisposed()) {
-                mGroupPackages.getDisplay().syncExec(new Runnable() {
-                    public void run() {
-                        sortPackages(true /* updateButtons */);
-                    }
-                });
-            }
-        }
-
     }
 
 

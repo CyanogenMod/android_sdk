@@ -22,7 +22,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
-import com.android.sdkuilib.internal.repository.PackageManager.IAutoInstallTask;
+import com.android.sdkuilib.internal.repository.PackageLoader.IAutoInstallTask;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.ui.GridDataBuilder;
@@ -66,7 +66,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     private File    mResultPath = null;
     private SettingsController mSettingsController;
     private PackageFilter mPackageFilter;
-    private PackageManager mPackageMananger;
+    private PackageLoader mPackageMananger;
 
     private ProgressBar mProgressBar;
     private Label mStatusText;
@@ -132,6 +132,8 @@ public class AdtUpdateDialog extends SwtBaseDialog {
         shell.setMinimumSize(new Point(450, 100));
         shell.setSize(450, 100);
 
+        mUpdaterData.setWindowShell(shell);
+
         GridLayoutBuilder.create(shell).columns(1);
 
         Composite composite1 = new Composite(shell, SWT.NONE);
@@ -166,19 +168,12 @@ public class AdtUpdateDialog extends SwtBaseDialog {
 
         mUpdaterData.broadcastOnSdkLoaded();
 
-        mPackageMananger = new PackageManager(mUpdaterData) {
-            @Override
-            public void updatePackageTable() {
-                // pass
-            }
-        };
-
+        mPackageMananger = new PackageLoader(mUpdaterData);
     }
 
     @Override
     protected void eventLoop() {
-        mPackageMananger.loadPackages();
-        mPackageMananger.performAutoInstallTask(new IAutoInstallTask() {
+        mPackageMananger.loadPackagesWithInstallTask(new IAutoInstallTask() {
             public boolean acceptPackage(Package pkg) {
                 // Is this the package we want to install?
                 return mPackageFilter.accept(pkg);

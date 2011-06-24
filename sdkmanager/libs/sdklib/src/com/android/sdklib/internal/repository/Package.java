@@ -72,7 +72,9 @@ public abstract class Package implements IDescription, Comparable<Package> {
     public static enum UpdateInfo {
         /** Means that the 2 packages are not the same thing */
         INCOMPATIBLE,
-        /** Means that the 2 packages are the same thing but one does not upgrade the other */
+        /** Means that the 2 packages are the same thing but one does not upgrade the other.
+         *  </p>
+         *  TODO: this name is confusing. We need to dig deeper. */
         NOT_UPDATE,
         /** Means that the 2 packages are the same thing, and one is the upgrade of the other */
         UPDATE;

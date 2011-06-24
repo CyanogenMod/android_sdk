@@ -384,12 +384,16 @@ class UpdaterData implements IUpdaterData {
      * packages in the remote page and then clicking "install selected".
      *
      * @param archives The archives to install. Incompatible ones will be skipped.
+     * @return A list of archives that have been installed. Can be empty but not null.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected void installArchives(final List<ArchiveInfo> archives) {
+    protected List<Archive> installArchives(final List<ArchiveInfo> archives) {
         if (mTaskFactory == null) {
             throw new IllegalArgumentException("Task Factory is null");
         }
+
+        // this will accumulate all the packages installed.
+        final List<Archive> newlyInstalledArchives = new ArrayList<Archive>();
 
         final boolean forceHttp = getSettingsController().getForceHttp();
 
@@ -465,6 +469,7 @@ class UpdaterData implements IUpdaterData {
                                               mSdkManager,
                                               monitor)) {
                             // We installed this archive.
+                            newlyInstalledArchives.add(archive);
                             installedArchives.add(archive);
                             numInstalled++;
 
@@ -552,6 +557,8 @@ class UpdaterData implements IUpdaterData {
                 }
             }
         });
+
+        return newlyInstalledArchives;
     }
 
     /**
@@ -670,8 +677,9 @@ class UpdaterData implements IUpdaterData {
      * @param selectedArchives The list of remote archives to consider for the update.
      *  This can be null, in which case a list of remote archive is fetched from all
      *  available sources.
+     * @return A list of archives that have been installed. Can be null if nothing was done.
      */
-    public void updateOrInstallAll_WithGUI(
+    public List<Archive> updateOrInstallAll_WithGUI(
             Collection<Archive> selectedArchives,
             boolean includeObsoletes) {
 
@@ -705,8 +713,9 @@ class UpdaterData implements IUpdaterData {
 
         ArrayList<ArchiveInfo> result = dialog.getResult();
         if (result != null && result.size() > 0) {
-            installArchives(result);
+            return installArchives(result);
         }
+        return null;
     }
 
     /**
@@ -776,8 +785,9 @@ class UpdaterData implements IUpdaterData {
      * @param includeObsoletes True to also list and install obsolete packages.
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
+     * @return A list of archives that have been installed. Can be null if nothing was done.
      */
-    public void updateOrInstallAll_NoGUI(
+    public List<Archive> updateOrInstallAll_NoGUI(
             Collection<String> pkgFilter,
             boolean includeObsoletes,
             boolean dryMode) {
@@ -849,7 +859,7 @@ class UpdaterData implements IUpdaterData {
             if (archives.size() == 0) {
                 mSdkLog.printf("The package filter removed all packages. There is nothing to install.\n" +
                         "Please consider trying updating again without a package filter.\n");
-                return;
+                return null;
             }
         }
 
@@ -867,11 +877,13 @@ class UpdaterData implements IUpdaterData {
                 }
                 mSdkLog.printf("\nDry mode is on so nothing will actually be installed.\n");
             } else {
-                installArchives(archives);
+                return installArchives(archives);
             }
         } else {
             mSdkLog.printf("There is nothing to install or update.\n");
         }
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")
