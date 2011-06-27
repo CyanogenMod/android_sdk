@@ -19,9 +19,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
-import com.android.monkeyrunner.adb.AdbBackend;
-import com.android.monkeyrunner.core.IMonkeyBackend;
-import com.android.monkeyrunner.stub.StubBackend;
+import com.android.chimpchat.ChimpChat;
 
 import org.python.util.PythonInterpreter;
 
@@ -32,6 +30,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -51,49 +50,33 @@ public class MonkeyRunnerStarter {
     private static final Logger LOG = Logger.getLogger(MonkeyRunnerStarter.class.getName());
     private static final String MONKEY_RUNNER_MAIN_MANIFEST_NAME = "MonkeyRunnerStartupRunner";
 
-    private final IMonkeyBackend backend;
+    private final ChimpChat chimp;
     private final MonkeyRunnerOptions options;
 
     public MonkeyRunnerStarter(MonkeyRunnerOptions options) {
+        Map<String, String> chimp_options = new TreeMap<String, String>();
+        chimp_options.put("backend", options.getBackendName());
         this.options = options;
-        this.backend = MonkeyRunnerStarter.createBackendByName(options.getBackendName());
-        if (this.backend == null) {
-           throw new RuntimeException("Unknown backend");
-        }
+        this.chimp = ChimpChat.getInstance(chimp_options);
+        MonkeyRunner.setChimpChat(chimp);
     }
 
 
-    /**
-     * Creates a specific backend by name.
-     *
-     * @param backendName the name of the backend to create
-     * @return the new backend, or null if none were found.
-     */
-    public static IMonkeyBackend createBackendByName(String backendName) {
-        if ("adb".equals(backendName)) {
-            return new AdbBackend();
-        } else if ("stub".equals(backendName)) {
-            return new StubBackend();
-        } else {
-            return null;
-        }
-    }
 
     private int run() {
         // This system property gets set by the included starter script
         String monkeyRunnerPath = System.getProperty("com.android.monkeyrunner.bindir") +
                 File.separator + "monkeyrunner";
 
-        MonkeyRunner.setBackend(backend);
         Map<String, Predicate<PythonInterpreter>> plugins = handlePlugins();
         if (options.getScriptFile() == null) {
             ScriptRunner.console(monkeyRunnerPath);
+            chimp.shutdown();
             return 0;
         } else {
             int error = ScriptRunner.run(monkeyRunnerPath, options.getScriptFile().getAbsolutePath(),
                     options.getArguments(), plugins);
-            backend.shutdown();
-            MonkeyRunner.setBackend(null);
+            chimp.shutdown();
             return error;
         }
     }
@@ -174,6 +157,9 @@ public class MonkeyRunnerStarter {
         return builder.build();
     }
 
+        /* Similar to above, when this fails, it no longer throws a
+         * runtime exception, but merely will log the failure.
+         */
 
 
     private static final void replaceAllLogFormatters(Formatter form, Level level) {

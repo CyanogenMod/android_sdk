@@ -18,6 +18,7 @@ package com.android.monkeyrunner.easy;
 
 import com.google.common.base.Preconditions;
 
+import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
 import com.android.hierarchyviewerlib.device.ViewNode;
 import com.android.monkeyrunner.JythonUtils;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
@@ -67,19 +68,9 @@ public class By extends PyObject implements ClassDictInit {
         return new By(id);
     }
 
-    /**
-     * Find the selected view from the root view node.
-     */
-    ViewNode find(ViewNode rootNode) {
-        if (rootNode.id.equals(id)) {
-            return rootNode;
-        }
-        for (ViewNode child : rootNode.children) {
-            ViewNode found = find(child);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
+    public ViewNode findView(HierarchyViewer viewer) {
+        return viewer.findViewById(id);
     }
+
+
 }

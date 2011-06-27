@@ -15,13 +15,14 @@
  */
 package com.android.monkeyrunner.controller;
 
-import com.android.monkeyrunner.adb.AdbBackend;
-import com.android.monkeyrunner.core.IMonkeyBackend;
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.ChimpChat;
+import com.android.chimpchat.core.IChimpDevice;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -39,8 +40,10 @@ public class MonkeyController extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                IMonkeyBackend adb = new AdbBackend();
-                final IMonkeyDevice device = adb.waitForConnection();
+                Map<String, String> options = new TreeMap<String, String>();
+                options.put("backend", "adb");
+                ChimpChat chimpchat = ChimpChat.getInstance(options);
+                final IChimpDevice device = chimpchat.waitForConnection();
                 MonkeyControllerFrame mf = new MonkeyControllerFrame(device);
                 mf.setVisible(true);
                 mf.addWindowListener(new WindowAdapter() {

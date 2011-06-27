@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-CHIMPCHAT_LOCAL_DIR := $(call my-dir)
-include $(CHIMPCHAT_LOCAL_DIR)/src/Android.mk
-include $(CHIMPCHAT_LOCAL_DIR)/test/Android.mk
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(call all-subdir-java-files)
+LOCAL_MODULE := chimpchattest
+LOCAL_JAVA_LIBRARIES :=  junit chimpchat ddmlib guavalib
+
+LOCAL_MODULE_TAGS := tests
+
+include $(BUILD_HOST_JAVA_LIBRARY)

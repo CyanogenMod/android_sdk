@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,12 @@ public class AdbBackend implements IChimpBackend {
 
         bridge = AndroidDebugBridge.createBridge(
                 adbLocation, true /* forceNewBridge */);
+    }
+
+    public AdbBackend(String location) {
+        AndroidDebugBridge.init(false /* debugger support */);
+        bridge = AndroidDebugBridge.createBridge(location,
+                                                 true /* force new bridge */);
     }
 
     private String findAdb() {

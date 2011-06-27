@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.monkeyrunner.adb;
+package com.android.chimpchat.adb;
 
 import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Unit Tests for AdbMonkeyDevice.
+ * Unit Tests for AdbChimpDevice.
  */
-public class AdbMonkeyDeviceTest extends TestCase {
+public class AdbChimpDeviceTest extends TestCase {
     private static String MULTILINE_RESULT = "\r\n" +
     "Test results for InstrumentationTestRunner=.\r\n" +
     "Time: 2.242\r\n" +
@@ -37,14 +37,14 @@ public class AdbMonkeyDeviceTest extends TestCase {
     "OK (1 test)";
 
     private static String getResource(String resName) throws IOException {
-        URL resource = Resources.getResource(AdbMonkeyDeviceTest.class, resName);
+        URL resource = Resources.getResource(AdbChimpDeviceTest.class, resName);
         List<String> lines = Resources.readLines(resource, Charset.defaultCharset());
         return Joiner.on("\r\n").join(lines);
     }
 
     public void testSimpleResultParse() throws IOException {
         String result = getResource("instrument_result.txt");
-        Map<String, Object> convertedResult = AdbMonkeyDevice.convertInstrumentResult(result);
+        Map<String, Object> convertedResult = AdbChimpDevice.convertInstrumentResult(result);
 
         assertEquals("one", convertedResult.get("result1"));
         assertEquals("two", convertedResult.get("result2"));
@@ -52,7 +52,7 @@ public class AdbMonkeyDeviceTest extends TestCase {
 
     public void testMultilineResultParse() throws IOException {
         String result = getResource("multiline_instrument_result.txt");
-        Map<String, Object> convertedResult = AdbMonkeyDevice.convertInstrumentResult(result);
+        Map<String, Object> convertedResult = AdbChimpDevice.convertInstrumentResult(result);
 
         assertEquals(MULTILINE_RESULT, convertedResult.get("stream"));
     }

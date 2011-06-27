@@ -16,8 +16,8 @@
 package com.android.monkeyrunner.recorder;
 
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.core.IMonkeyImage;
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.core.IChimpImage;
+import com.android.chimpchat.core.IChimpDevice;
 import com.android.monkeyrunner.recorder.actions.Action;
 import com.android.monkeyrunner.recorder.actions.DragAction;
 import com.android.monkeyrunner.recorder.actions.DragAction.Direction;
@@ -61,7 +61,7 @@ public class MonkeyRecorderFrame extends JFrame {
     private static final Logger LOG =
         Logger.getLogger(MonkeyRecorderFrame.class.getName());
 
-    private final IMonkeyDevice device;
+    private final IChimpDevice device;
 
     private static final long serialVersionUID = 1L;
     private JPanel jContentPane = null;
@@ -93,7 +93,7 @@ public class MonkeyRecorderFrame extends JFrame {
     /**
      * This is the default constructor
      */
-    public MonkeyRecorderFrame(IMonkeyDevice device) {
+    public MonkeyRecorderFrame(IChimpDevice device) {
         this.device = device;
         initialize();
     }
@@ -112,7 +112,7 @@ public class MonkeyRecorderFrame extends JFrame {
     }
 
     private void refreshDisplay() {
-        IMonkeyImage snapshot = device.takeSnapshot();
+        IChimpImage snapshot = device.takeSnapshot();
         currentImage = snapshot.createBufferedImage();
 
         Graphics2D g = scaledImage.createGraphics();

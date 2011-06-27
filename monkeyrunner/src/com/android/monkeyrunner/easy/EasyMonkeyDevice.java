@@ -18,10 +18,11 @@ package com.android.monkeyrunner.easy;
 
 import com.google.common.base.Preconditions;
 
+import com.android.chimpchat.core.TouchPressType;
+import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
 import com.android.hierarchyviewerlib.device.ViewNode;
 import com.android.monkeyrunner.JythonUtils;
 import com.android.monkeyrunner.MonkeyDevice;
-import com.android.monkeyrunner.core.TouchPressType;
 import com.android.monkeyrunner.doc.MonkeyRunnerExported;
 
 import org.eclipse.swt.graphics.Point;
@@ -115,7 +116,7 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
 
         By selector = getSelector(ap, 0);
 
-        ViewNode node = mHierarchyViewer.findView(selector);
+        ViewNode node = selector.findView(mHierarchyViewer);
         Point p = HierarchyViewer.getAbsolutePositionOfView(node);
         PyTuple tuple = new PyTuple(
                 new PyInteger(p.x),
@@ -138,7 +139,7 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
     }
 
     public boolean exists(By selector) {
-        ViewNode node = mHierarchyViewer.findView(selector);
+        ViewNode node = selector.findView(mHierarchyViewer);
         return node != null;
     }
 
@@ -155,7 +156,8 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
     }
 
     public boolean visible(By selector) {
-        return mHierarchyViewer.visible(selector);
+        ViewNode node = selector.findView(mHierarchyViewer);
+        return mHierarchyViewer.visible(node);
     }
 
     @MonkeyRunnerExported(doc = "Obtain the text in the selected input box.",
@@ -171,7 +173,8 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
     }
 
     public String getText(By selector) {
-        return mHierarchyViewer.getText(selector);
+        ViewNode node = selector.findView(mHierarchyViewer);
+        return mHierarchyViewer.getText(node);
     }
 
     @MonkeyRunnerExported(doc = "Gets the id of the focused window.",
@@ -213,7 +216,7 @@ public class EasyMonkeyDevice extends PyObject implements ClassDictInit {
      * @return the (x,y) coordinates of the center
      */
     private Point getElementCenter(By selector) {
-        ViewNode node = mHierarchyViewer.findView(selector);
+        ViewNode node = selector.findView(mHierarchyViewer);
         if (node == null) {
             throw new PyException(Py.ValueError,
                     String.format("View not found: %s", selector));

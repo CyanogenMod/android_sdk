@@ -15,7 +15,7 @@
  */
 package com.android.monkeyrunner.recorder.actions;
 
-import com.android.monkeyrunner.core.IMonkeyDevice;
+import com.android.chimpchat.core.IChimpDevice;
 
 /**
  * All actions that can be recorded must implement this interface.
@@ -41,5 +41,5 @@ public interface Action {
      *
      * @param device the device to execute the action on.
      */
-    void execute(IMonkeyDevice device) throws Exception;
+    void execute(IChimpDevice device) throws Exception;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.io.Serializable;
  * This is used to generate the test data for ImageUtilsTest.
  */
 public class CaptureRawAndConvertedImage {
-    public static class ChimpRunnerRawImage implements Serializable {
+    public static class ChimpRawImage implements Serializable {
         public int version;
         public int bpp;
         public int size;
@@ -49,7 +49,7 @@ public class CaptureRawAndConvertedImage {
 
         public byte[] data;
 
-        public ChimpRunnerRawImage(RawImage rawImage) {
+        public ChimpRawImage(RawImage rawImage) {
             version = rawImage.version;
             bpp = rawImage.bpp;
             size = rawImage.size;
@@ -91,7 +91,7 @@ public class CaptureRawAndConvertedImage {
 
     private static void writeOutImage(RawImage screenshot, String name) throws IOException {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(name));
-        out.writeObject(new ChimpRunnerRawImage(screenshot));
+        out.writeObject(new ChimpRawImage(screenshot));
         out.close();
     }
 

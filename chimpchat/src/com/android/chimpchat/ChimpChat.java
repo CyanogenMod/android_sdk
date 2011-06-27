@@ -19,8 +19,10 @@ package com.android.chimpchat;
 
 import com.android.chimpchat.adb.AdbBackend;
 import com.android.chimpchat.core.IChimpBackend;
+import com.android.chimpchat.core.IChimpDevice;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * ChimpChat is a host-side library that provides an API for communication with
@@ -30,6 +32,7 @@ import java.util.Map;
  */
 public class ChimpChat {
     private final IChimpBackend mBackend;
+    private static String sAdbLocation;
 
     private ChimpChat(IChimpBackend backend) {
         this.mBackend = backend;
@@ -38,10 +41,11 @@ public class ChimpChat {
     /**
      * Generates a new instance of ChimpChat based on the options passed.
      * @param options a map of settings for the new ChimpChat instance
-     * @return a new instance of ChimpChat or null if there was an issue setting up the backend
+     * @return a new instance of ChimpChat or null if errors occur during creation
      */
     public static ChimpChat getInstance(Map<String, String> options) {
-        IChimpBackend backend = ChimpChat.createBackendByName(options.get("backend"));
+        sAdbLocation = options.get("adbLocation");
+        IChimpBackend backend = createBackendByName(options.get("backend"));
         if (backend == null) {
             return null;
         }
@@ -49,12 +53,58 @@ public class ChimpChat {
         return chimpchat;
     }
 
+    /** Generates a new instance of ChimpChat using default settings
+     * @return a new instance of ChimpChat or null if errors occur during creation
+     */
+    public static ChimpChat getInstance() {
+        Map<String, String> options = new TreeMap<String, String>();
+        options.put("backend", "adb");
+        return ChimpChat.getInstance(options);
+    }
 
-    public static IChimpBackend createBackendByName(String backendName) {
+
+    /**
+     * Creates a specific backend by name.
+     *
+     * @param backendName the name of the backend to create
+     * @return the new backend, or null if none were found.
+     */
+
+    private static IChimpBackend createBackendByName(String backendName) {
         if ("adb".equals(backendName)) {
-            return new AdbBackend();
+            if (sAdbLocation == null) {
+                return new AdbBackend();
+            } else {
+                return new AdbBackend(sAdbLocation);
+            }
         } else {
             return null;
         }
+    }
+
+    /**
+     * Retrieves an instance of the device from the backend
+     * @param timeoutMs length of time to wait before timing out
+     * @param deviceId the id of the device you want to connect to
+     * @return an instance of the device
+     */
+    public IChimpDevice waitForConnection(long timeoutMs, String deviceId){
+        return mBackend.waitForConnection(timeoutMs, deviceId);
+    }
+
+    /**
+     * Retrieves an instance of the device from the backend.
+     * Defaults to the longest possible wait time and any available device.
+     * @return an instance of the device
+     */
+    public IChimpDevice waitForConnection(){
+        return mBackend.waitForConnection(Integer.MAX_VALUE, ".*");
+    }
+
+    /**
+     * Shutdown and clean up chimpchat.
+     */
+    public void shutdown(){
+        mBackend.shutdown();
     }
 }
