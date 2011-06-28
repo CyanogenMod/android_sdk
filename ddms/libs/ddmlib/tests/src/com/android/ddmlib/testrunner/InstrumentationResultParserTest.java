@@ -123,6 +123,41 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
+     * Test parsing output for a test that produces repeated metrics values
+     * <p/>
+     * This mimics launch performance test output.
+     */
+    public void testParse_repeatedTestMetrics() {
+        StringBuilder output = new StringBuilder();
+        // add test start output
+        addCommonStatus(output);
+        addStartCode(output);
+
+        addStatusKey(output, "currentiterations", "1");
+        addStatusCode(output, "2");
+        addStatusKey(output, "currentiterations", "2");
+        addStatusCode(output, "2");
+        addStatusKey(output, "currentiterations", "3");
+        addStatusCode(output, "2");
+
+        // add test end
+        addCommonStatus(output);
+        addStatusKey(output, "numiterations", "3");
+        addSuccessCode(output);
+
+        final Capture<Map<String, String>> captureMetrics = new Capture<Map<String, String>>();
+        mMockListener.testRunStarted(RUN_NAME, 1);
+        mMockListener.testStarted(TEST_ID);
+        mMockListener.testEnded(EasyMock.eq(TEST_ID), EasyMock.capture(captureMetrics));
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+
+        assertEquals("3", captureMetrics.getValue().get("currentiterations"));
+        assertEquals("3", captureMetrics.getValue().get("numiterations"));
+    }
+
+    /**
      * Test parsing output for a test failure.
      */
     public void testParse_testFailed() {

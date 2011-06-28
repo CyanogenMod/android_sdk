@@ -97,6 +97,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private static final int START = 1;
         private static final int ERROR = -1;
         private static final int OK = 0;
+        private static final int IN_PROGRESS = 2;
     }
 
     /** Prefixes used to identify output. */
@@ -399,15 +400,17 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     private void parseStatusCode(String line) {
         String value = line.substring(Prefixes.STATUS_CODE.length()).trim();
         TestResult testInfo = getCurrentTestInfo();
+        testInfo.mCode = StatusCodes.ERROR;
         try {
             testInfo.mCode = Integer.parseInt(value);
         } catch (NumberFormatException e) {
             Log.e(LOG_TAG, "Expected integer status code, received: " + value);
         }
-
-        // this means we're done with current test result bundle
-        reportResult(testInfo);
-        clearCurrentTestInfo();
+        if (testInfo.mCode != StatusCodes.IN_PROGRESS) {
+            // this means we're done with current test result bundle
+            reportResult(testInfo);
+            clearCurrentTestInfo();
+        }
     }
 
     /**
@@ -415,6 +418,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      *
      * @see IShellOutputReceiver#isCancelled()
      */
+    @Override
     public boolean isCancelled() {
         return mIsCancelled;
     }
@@ -439,6 +443,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         }
         reportTestRunStarted(testInfo);
         TestIdentifier testId = new TestIdentifier(testInfo.mTestClass, testInfo.mTestName);
+        Map<String, String> metrics;
 
         switch (testInfo.mCode) {
             case StatusCodes.START:
@@ -447,32 +452,36 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 }
                 break;
             case StatusCodes.FAILURE:
+                metrics = getAndResetTestMetrics();
                 for (ITestRunListener listener : mTestListeners) {
                     listener.testFailed(ITestRunListener.TestFailure.FAILURE, testId,
                         getTrace(testInfo));
 
-                    listener.testEnded(testId, getAndResetTestMetrics());
+                    listener.testEnded(testId, metrics);
                 }
                 mNumTestsRun++;
                 break;
             case StatusCodes.ERROR:
+                metrics = getAndResetTestMetrics();
                 for (ITestRunListener listener : mTestListeners) {
                     listener.testFailed(ITestRunListener.TestFailure.ERROR, testId,
                         getTrace(testInfo));
-                    listener.testEnded(testId, getAndResetTestMetrics());
+                    listener.testEnded(testId, metrics);
                 }
                 mNumTestsRun++;
                 break;
             case StatusCodes.OK:
+                metrics = getAndResetTestMetrics();
                 for (ITestRunListener listener : mTestListeners) {
-                    listener.testEnded(testId, getAndResetTestMetrics());
+                    listener.testEnded(testId, metrics);
                 }
                 mNumTestsRun++;
                 break;
             default:
+                metrics = getAndResetTestMetrics();
                 Log.e(LOG_TAG, "Unknown status code received: " + testInfo.mCode);
                 for (ITestRunListener listener : mTestListeners) {
-                    listener.testEnded(testId, getAndResetTestMetrics());
+                    listener.testEnded(testId, metrics);
                 }
                 mNumTestsRun++;
             break;
