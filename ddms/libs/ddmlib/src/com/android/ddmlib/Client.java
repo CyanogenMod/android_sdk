@@ -255,13 +255,14 @@ public class Client {
                     HandleProfiling.sendMPRE(this);
                 }
             } else {
+                int bufferSize = DdmPreferences.getProfilerBufferSizeMb() * 1024 * 1024;
                 if (canStream) {
-                    HandleProfiling.sendMPSS(this, 8*1024*1024, 0 /*flags*/);
+                    HandleProfiling.sendMPSS(this, bufferSize, 0 /*flags*/);
                 } else {
                     String file = "/sdcard/" +
                         mClientData.getClientDescription().replaceAll("\\:.*", "") +
                         DdmConstants.DOT_TRACE;
-                    HandleProfiling.sendMPRS(this, file, 8*1024*1024, 0 /*flags*/);
+                    HandleProfiling.sendMPRS(this, file, bufferSize, 0 /*flags*/);
                 }
             }
         } catch (IOException e) {
