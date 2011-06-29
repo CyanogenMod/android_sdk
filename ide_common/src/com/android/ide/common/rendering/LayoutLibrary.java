@@ -328,8 +328,10 @@ public class LayoutLibrary {
                 // Extended view info was requested but the layoutlib does not support it.
                 // Add it manually.
                 List<ViewInfo> infoList = session.getRootViews();
-                for (ViewInfo info : infoList) {
-                    addExtendedViewInfo(info);
+                if (infoList != null) {
+                    for (ViewInfo info : infoList) {
+                        addExtendedViewInfo(info);
+                    }
                 }
             }
 
