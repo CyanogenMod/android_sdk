@@ -42,6 +42,8 @@ public final class DdmPreferences {
     public final static LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
     /** Default timeout values for adb connection (milliseconds) */
     public static final int DEFAULT_TIMEOUT = 5000; // standard delay, in ms
+    /** Default profiler buffer size (megabytes) */
+    public static final int DEFAULT_PROFILER_BUFFER_SIZE_MB = 8;
     /** Default values for the use of the ADBHOST environment variable. */
     public final static boolean DEFAULT_USE_ADBHOST = false;
     public final static String DEFAULT_ADBHOST_VALUE = "127.0.0.1";
@@ -53,6 +55,7 @@ public final class DdmPreferences {
     private static int sDebugPortBase = DEFAULT_DEBUG_PORT_BASE;
     private static LogLevel sLogLevel = DEFAULT_LOG_LEVEL;
     private static int sTimeOut = DEFAULT_TIMEOUT;
+    private static int sProfilerBufferSizeMb = DEFAULT_PROFILER_BUFFER_SIZE_MB;
 
     private static boolean sUseAdbHost = DEFAULT_USE_ADBHOST;
     private static String sAdbHostValue = DEFAULT_ADBHOST_VALUE;
@@ -161,6 +164,21 @@ public final class DdmPreferences {
      */
     public static void setTimeOut(int timeOut) {
         sTimeOut = timeOut;
+    }
+
+    /**
+     * Returns the profiler buffer size (megabytes).
+     */
+    public static int getProfilerBufferSizeMb() {
+        return sProfilerBufferSizeMb;
+    }
+
+    /**
+     * Sets the profiler buffer size value.
+     * @param bufferSizeMb the buffer size (megabytes).
+     */
+    public static void setProfilerBufferSizeMb(int bufferSizeMb) {
+        sProfilerBufferSizeMb = bufferSizeMb;
     }
 
     /**

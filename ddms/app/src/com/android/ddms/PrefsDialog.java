@@ -86,6 +86,7 @@ public final class PrefsDialog {
     private final static String PREFS_THREAD_REFRESH_INTERVAL = "threadStatusInterval"; //$NON-NLS-1$
     private final static String PREFS_LOG_LEVEL = "ddmsLogLevel"; //$NON-NLS-1$
     private final static String PREFS_TIMEOUT = "timeOut"; //$NON-NLS-1$
+    private final static String PREFS_PROFILER_BUFFER_SIZE_MB = "profilerBufferSizeMb"; //$NON-NLS-1$
     private final static String PREFS_USE_ADBHOST = "useAdbHost"; //$NON-NLS-1$
     private final static String PREFS_ADBHOST_VALUE = "adbHostValue"; //$NON-NLS-1$
 
@@ -154,6 +155,7 @@ public final class PrefsDialog {
         DdmPreferences.setInitialThreadUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_THREAD_UPDATE));
         DdmPreferences.setInitialHeapUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_HEAP_UPDATE));
         DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
+        DdmPreferences.setProfilerBufferSizeMb(mPrefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
         DdmPreferences.setUseAdbHost(mPrefStore.getBoolean(PREFS_USE_ADBHOST));
         DdmPreferences.setAdbHostValue(mPrefStore.getString(PREFS_ADBHOST_VALUE));
 
@@ -204,6 +206,8 @@ public final class PrefsDialog {
         mPrefStore.setDefault(PREFS_LOG_LEVEL, "info"); //$NON-NLS-1$
 
         mPrefStore.setDefault(PREFS_TIMEOUT, DdmPreferences.DEFAULT_TIMEOUT);
+        mPrefStore.setDefault(PREFS_PROFILER_BUFFER_SIZE_MB,
+                DdmPreferences.DEFAULT_PROFILER_BUFFER_SIZE_MB);
 
         // choose a default font for the text output
         FontData fdat = new FontData("Courier", 10, SWT.NORMAL); //$NON-NLS-1$
@@ -247,6 +251,9 @@ public final class PrefsDialog {
                     (String) event.getNewValue());
             } else if (changed.equals(PREFS_TIMEOUT)) {
                 DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
+            } else if (changed.equals(PREFS_PROFILER_BUFFER_SIZE_MB)) {
+                DdmPreferences.setProfilerBufferSizeMb(
+                        mPrefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
             } else if (changed.equals(PREFS_USE_ADBHOST)) {
                 DdmPreferences.setUseAdbHost(mPrefStore.getBoolean(PREFS_USE_ADBHOST));
             } else if (changed.equals(PREFS_ADBHOST_VALUE)) {
@@ -456,6 +463,10 @@ public final class PrefsDialog {
 
             IntegerFieldEditor ife = new IntegerFieldEditor(PREFS_TIMEOUT,
                     "ADB connection time out (ms):", getFieldEditorParent());
+            addField(ife);
+
+            ife = new IntegerFieldEditor(PREFS_PROFILER_BUFFER_SIZE_MB,
+                    "Profiler buffer size (MB):", getFieldEditorParent());
             addField(ife);
 
             dfe = new DirectoryFieldEditor("textSaveDir",
