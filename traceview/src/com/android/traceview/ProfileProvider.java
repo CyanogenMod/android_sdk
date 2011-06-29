@@ -44,26 +44,40 @@ class ProfileProvider implements ITreeContentProvider {
     private TraceReader mReader;
     private Image mSortUp;
     private Image mSortDown;
-    private String mColumnNames[] = { "Name", "Incl %", "Inclusive", "Excl %",
-            "Exclusive", "Calls+Recur\nCalls/Total", "Time/Call" };
-    private int mColumnWidths[] = { 370, 70, 70, 70, 70, 90, 70 };
-    private int mColumnAlignments[] = { SWT.LEFT, SWT.RIGHT, SWT.RIGHT,
-            SWT.RIGHT, SWT.RIGHT, SWT.CENTER, SWT.RIGHT };
+    private String mColumnNames[] = { "Name",
+            "Incl Cpu Time %", "Incl Cpu Time", "Excl Cpu Time %", "Excl Cpu Time",
+            "Incl Real Time %", "Incl Real Time", "Excl Real Time %", "Excl Real Time",
+            "Calls+Recur\nCalls/Total", "Cpu Time/Call", "Real Time/Call" };
+    private int mColumnWidths[] = { 370,
+            100, 100, 100, 100,
+            100, 100, 100, 100,
+            100, 100, 100 };
+    private int mColumnAlignments[] = { SWT.LEFT,
+            SWT.RIGHT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT,
+            SWT.RIGHT, SWT.RIGHT, SWT.RIGHT, SWT.RIGHT,
+            SWT.CENTER, SWT.RIGHT, SWT.RIGHT };
     private static final int COL_NAME = 0;
-    private static final int COL_INCLUSIVE_PER = 1;
-    private static final int COL_INCLUSIVE = 2;
-    private static final int COL_EXCLUSIVE_PER = 3;
-    private static final int COL_EXCLUSIVE = 4;
-    private static final int COL_CALLS = 5;
-    private static final int COL_TIME_PER_CALL = 6;
-    private long mTotalTime;
+    private static final int COL_INCLUSIVE_CPU_TIME_PER = 1;
+    private static final int COL_INCLUSIVE_CPU_TIME = 2;
+    private static final int COL_EXCLUSIVE_CPU_TIME_PER = 3;
+    private static final int COL_EXCLUSIVE_CPU_TIME = 4;
+    private static final int COL_INCLUSIVE_REAL_TIME_PER = 5;
+    private static final int COL_INCLUSIVE_REAL_TIME = 6;
+    private static final int COL_EXCLUSIVE_REAL_TIME_PER = 7;
+    private static final int COL_EXCLUSIVE_REAL_TIME = 8;
+    private static final int COL_CALLS = 9;
+    private static final int COL_CPU_TIME_PER_CALL = 10;
+    private static final int COL_REAL_TIME_PER_CALL = 11;
+    private long mTotalCpuTime;
+    private long mTotalRealTime;
     private Pattern mUppercase;
     private int mPrevMatchIndex = -1;
 
     public ProfileProvider(TraceReader reader) {
         mRoots = reader.getMethods();
         mReader = reader;
-        mTotalTime = reader.getEndTime();
+        mTotalCpuTime = reader.getTotalCpuTime();
+        mTotalRealTime = reader.getTotalRealTime();
         Display display = Display.getCurrent();
         InputStream in = getClass().getClassLoader().getResourceAsStream(
                 "icons/sort_up.png");
@@ -126,7 +140,22 @@ class ProfileProvider implements ITreeContentProvider {
     }
 
     public int[] getColumnWidths() {
-        return mColumnWidths;
+        int[] widths = Arrays.copyOf(mColumnWidths, mColumnWidths.length);
+        if (!mReader.haveCpuTime()) {
+            widths[COL_EXCLUSIVE_CPU_TIME] = 0;
+            widths[COL_EXCLUSIVE_CPU_TIME_PER] = 0;
+            widths[COL_INCLUSIVE_CPU_TIME] = 0;
+            widths[COL_INCLUSIVE_CPU_TIME_PER] = 0;
+            widths[COL_CPU_TIME_PER_CALL] = 0;
+        }
+        if (!mReader.haveRealTime()) {
+            widths[COL_EXCLUSIVE_REAL_TIME] = 0;
+            widths[COL_EXCLUSIVE_REAL_TIME_PER] = 0;
+            widths[COL_INCLUSIVE_REAL_TIME] = 0;
+            widths[COL_INCLUSIVE_REAL_TIME_PER] = 0;
+            widths[COL_REAL_TIME_PER_CALL] = 0;
+        }
+        return widths;
     }
 
     public int[] getColumnAlignments() {
@@ -201,31 +230,58 @@ class ProfileProvider implements ITreeContentProvider {
                 MethodData md = (MethodData) element;
                 if (col == COL_NAME)
                     return md.getProfileName();
-                if (col == COL_EXCLUSIVE) {
-                    double val = md.getElapsedExclusive();
+                if (col == COL_EXCLUSIVE_CPU_TIME) {
+                    double val = md.getElapsedExclusiveCpuTime();
                     val = traceUnits.getScaledValue(val);
                     return String.format("%.3f", val);
                 }
-                if (col == COL_EXCLUSIVE_PER) {
-                    double val = md.getElapsedExclusive();
-                    double per = val * 100.0 / mTotalTime;
+                if (col == COL_EXCLUSIVE_CPU_TIME_PER) {
+                    double val = md.getElapsedExclusiveCpuTime();
+                    double per = val * 100.0 / mTotalCpuTime;
                     return String.format("%.1f%%", per);
                 }
-                if (col == COL_INCLUSIVE) {
-                    double val = md.getElapsedInclusive();
+                if (col == COL_INCLUSIVE_CPU_TIME) {
+                    double val = md.getElapsedInclusiveCpuTime();
                     val = traceUnits.getScaledValue(val);
                     return String.format("%.3f", val);
                 }
-                if (col == COL_INCLUSIVE_PER) {
-                    double val = md.getElapsedInclusive();
-                    double per = val * 100.0 / mTotalTime;
+                if (col == COL_INCLUSIVE_CPU_TIME_PER) {
+                    double val = md.getElapsedInclusiveCpuTime();
+                    double per = val * 100.0 / mTotalCpuTime;
+                    return String.format("%.1f%%", per);
+                }
+                if (col == COL_EXCLUSIVE_REAL_TIME) {
+                    double val = md.getElapsedExclusiveRealTime();
+                    val = traceUnits.getScaledValue(val);
+                    return String.format("%.3f", val);
+                }
+                if (col == COL_EXCLUSIVE_REAL_TIME_PER) {
+                    double val = md.getElapsedExclusiveRealTime();
+                    double per = val * 100.0 / mTotalRealTime;
+                    return String.format("%.1f%%", per);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME) {
+                    double val = md.getElapsedInclusiveRealTime();
+                    val = traceUnits.getScaledValue(val);
+                    return String.format("%.3f", val);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME_PER) {
+                    double val = md.getElapsedInclusiveRealTime();
+                    double per = val * 100.0 / mTotalRealTime;
                     return String.format("%.1f%%", per);
                 }
                 if (col == COL_CALLS)
                     return md.getCalls();
-                if (col == COL_TIME_PER_CALL) {
+                if (col == COL_CPU_TIME_PER_CALL) {
                     int numCalls = md.getTotalCalls();
-                    double val = md.getElapsedInclusive();
+                    double val = md.getElapsedInclusiveCpuTime();
+                    val = val / numCalls;
+                    val = traceUnits.getScaledValue(val);
+                    return String.format("%.3f", val);
+                }
+                if (col == COL_REAL_TIME_PER_CALL) {
+                    int numCalls = md.getTotalCalls();
+                    double val = md.getElapsedInclusiveRealTime();
                     val = val / numCalls;
                     val = traceUnits.getScaledValue(val);
                     return String.format("%.3f", val);
@@ -234,16 +290,29 @@ class ProfileProvider implements ITreeContentProvider {
                 ProfileSelf ps = (ProfileSelf) element;
                 if (col == COL_NAME)
                     return ps.getProfileName();
-                if (col == COL_INCLUSIVE) {
-                    double val = ps.getElapsedInclusive();
+                if (col == COL_INCLUSIVE_CPU_TIME) {
+                    double val = ps.getElapsedInclusiveCpuTime();
                     val = traceUnits.getScaledValue(val);
                     return String.format("%.3f", val);
                 }
-                if (col == COL_INCLUSIVE_PER) {
+                if (col == COL_INCLUSIVE_CPU_TIME_PER) {
                     double total;
-                    double val = ps.getElapsedInclusive();
+                    double val = ps.getElapsedInclusiveCpuTime();
                     MethodData context = ps.getContext();
-                    total = context.getElapsedInclusive();
+                    total = context.getElapsedInclusiveCpuTime();
+                    double per = val * 100.0 / total;
+                    return String.format("%.1f%%", per);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME) {
+                    double val = ps.getElapsedInclusiveRealTime();
+                    val = traceUnits.getScaledValue(val);
+                    return String.format("%.3f", val);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME_PER) {
+                    double total;
+                    double val = ps.getElapsedInclusiveRealTime();
+                    MethodData context = ps.getContext();
+                    total = context.getElapsedInclusiveRealTime();
                     double per = val * 100.0 / total;
                     return String.format("%.1f%%", per);
                 }
@@ -252,16 +321,29 @@ class ProfileProvider implements ITreeContentProvider {
                 ProfileData pd = (ProfileData) element;
                 if (col == COL_NAME)
                     return pd.getProfileName();
-                if (col == COL_INCLUSIVE) {
-                    double val = pd.getElapsedInclusive();
+                if (col == COL_INCLUSIVE_CPU_TIME) {
+                    double val = pd.getElapsedInclusiveCpuTime();
                     val = traceUnits.getScaledValue(val);
                     return String.format("%.3f", val);
                 }
-                if (col == COL_INCLUSIVE_PER) {
+                if (col == COL_INCLUSIVE_CPU_TIME_PER) {
                     double total;
-                    double val = pd.getElapsedInclusive();
+                    double val = pd.getElapsedInclusiveCpuTime();
                     MethodData context = pd.getContext();
-                    total = context.getElapsedInclusive();
+                    total = context.getElapsedInclusiveCpuTime();
+                    double per = val * 100.0 / total;
+                    return String.format("%.1f%%", per);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME) {
+                    double val = pd.getElapsedInclusiveRealTime();
+                    val = traceUnits.getScaledValue(val);
+                    return String.format("%.3f", val);
+                }
+                if (col == COL_INCLUSIVE_REAL_TIME_PER) {
+                    double total;
+                    double val = pd.getElapsedInclusiveRealTime();
+                    MethodData context = pd.getContext();
+                    total = context.getElapsedInclusiveRealTime();
                     double per = val * 100.0 / total;
                     return String.format("%.1f%%", per);
                 }
@@ -330,23 +412,38 @@ class ProfileProvider implements ITreeContentProvider {
                 // Sort names alphabetically
                 sorter.setColumn(MethodData.Sorter.Column.BY_NAME);
                 Arrays.sort(mRoots, sorter);
-            } else if (name == mColumnNames[COL_EXCLUSIVE]) {
-                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE);
+            } else if (name == mColumnNames[COL_EXCLUSIVE_CPU_TIME]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE_CPU_TIME);
                 Arrays.sort(mRoots, sorter);
-            } else if (name == mColumnNames[COL_EXCLUSIVE_PER]) {
-                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE);
+            } else if (name == mColumnNames[COL_EXCLUSIVE_CPU_TIME_PER]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE_CPU_TIME);
                 Arrays.sort(mRoots, sorter);
-            } else if (name == mColumnNames[COL_INCLUSIVE]) {
-                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE);
+            } else if (name == mColumnNames[COL_INCLUSIVE_CPU_TIME]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE_CPU_TIME);
                 Arrays.sort(mRoots, sorter);
-            } else if (name == mColumnNames[COL_INCLUSIVE_PER]) {
-                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE);
+            } else if (name == mColumnNames[COL_INCLUSIVE_CPU_TIME_PER]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE_CPU_TIME);
+                Arrays.sort(mRoots, sorter);
+            } else if (name == mColumnNames[COL_EXCLUSIVE_REAL_TIME]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE_REAL_TIME);
+                Arrays.sort(mRoots, sorter);
+            } else if (name == mColumnNames[COL_EXCLUSIVE_REAL_TIME_PER]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_EXCLUSIVE_REAL_TIME);
+                Arrays.sort(mRoots, sorter);
+            } else if (name == mColumnNames[COL_INCLUSIVE_REAL_TIME]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE_REAL_TIME);
+                Arrays.sort(mRoots, sorter);
+            } else if (name == mColumnNames[COL_INCLUSIVE_REAL_TIME_PER]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_INCLUSIVE_REAL_TIME);
                 Arrays.sort(mRoots, sorter);
             } else if (name == mColumnNames[COL_CALLS]) {
                 sorter.setColumn(MethodData.Sorter.Column.BY_CALLS);
                 Arrays.sort(mRoots, sorter);
-            } else if (name == mColumnNames[COL_TIME_PER_CALL]) {
-                sorter.setColumn(MethodData.Sorter.Column.BY_TIME_PER_CALL);
+            } else if (name == mColumnNames[COL_CPU_TIME_PER_CALL]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_CPU_TIME_PER_CALL);
+                Arrays.sort(mRoots, sorter);
+            } else if (name == mColumnNames[COL_REAL_TIME_PER_CALL]) {
+                sorter.setColumn(MethodData.Sorter.Column.BY_REAL_TIME_PER_CALL);
                 Arrays.sort(mRoots, sorter);
             }
             MethodData.Sorter.Direction direction = sorter.getDirection();

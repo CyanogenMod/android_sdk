@@ -28,7 +28,12 @@ public class ProfileSelf extends ProfileData {
     }
 
     @Override
-    public long getElapsedInclusive() {
-        return mElement.getTopExclusive();
+    public long getElapsedInclusiveCpuTime() {
+        return mElement.getTopExclusiveCpuTime();
+    }
+
+    @Override
+    public long getElapsedInclusiveRealTime() {
+        return mElement.getTopExclusiveRealTime();
     }
 }

@@ -23,158 +23,130 @@ class ThreadData implements TimeLineView.Row {
 
     private int mId;
     private String mName;
-    private long mGlobalStartTime = -1;
-    private long mGlobalEndTime = -1;
-    private long mLastEventTime;
-    private long mCpuTime;
-    private Call mRoot;
-    private Call mCurrent;
-    private Call mLastContextSwitch;
+    private boolean mIsEmpty;
+
+    private Call mRootCall;
     private ArrayList<Call> mStack = new ArrayList<Call>();
-    
+
     // This is a hash of all the methods that are currently on the stack.
     private HashMap<MethodData, Integer> mStackMethods = new HashMap<MethodData, Integer>();
-    
-    // True if no calls have ever been added to this thread
-    private boolean mIsEmpty;
+
+    boolean mHaveGlobalTime;
+    long mGlobalStartTime;
+    long mGlobalEndTime;
+
+    boolean mHaveThreadTime;
+    long mThreadStartTime;
+    long mThreadEndTime;
+
+    long mThreadCurrentTime; // only used while parsing thread-cpu clock
 
     ThreadData(int id, String name, MethodData topLevel) {
         mId = id;
         mName = String.format("[%d] %s", id, name);
-        mRoot = new Call(mName, topLevel);
-        mCurrent = mRoot;
         mIsEmpty = true;
-    }
-
-    public boolean isEmpty() {
-        return mIsEmpty;
+        mRootCall = new Call(this, topLevel, null);
+        mRootCall.setName(mName);
+        mStack.add(mRootCall);
     }
 
     public String getName() {
         return mName;
     }
 
-    public Call getCalltreeRoot() {
-        return mRoot;
+    public Call getRootCall() {
+        return mRootCall;
     }
 
-    void handleCall(Call call, long globalTime) {
-        mIsEmpty = false;
-        long currentTime = call.mThreadStartTime;
-        if (currentTime < mLastEventTime) {
-            System.err
-            .printf(
-                    "ThreadData: '%1$s' call time (%2$d) is less than previous time (%3$d) for thread '%4$s'\n",
-                    call.getName(), currentTime, mLastEventTime, mName);
-            System.exit(1);
-        }
-        long elapsed = currentTime - mLastEventTime;
-        mCpuTime += elapsed;
-        if (call.getMethodAction() == 0) {
-            // This is a method entry.
-            enter(call, elapsed);
-        } else {
-            // This is a method exit.
-            exit(call, elapsed, globalTime);
-        }
-        mLastEventTime = currentTime;
-        mGlobalEndTime = globalTime;
+    /**
+     * Returns true if no calls have ever been recorded for this thread.
+     */
+    public boolean isEmpty() {
+        return mIsEmpty;
     }
 
-    private void enter(Call c, long elapsed) {
-        Call caller = mCurrent;
-        push(c);
-        
-        // Check the stack for a matching method to determine if this call
-        // is recursive.
-        MethodData md = c.mMethodData;
-        Integer num = mStackMethods.get(md);
+    Call enter(MethodData method, ArrayList<TraceAction> trace) {
+        if (mIsEmpty) {
+            mIsEmpty = false;
+            if (trace != null) {
+                trace.add(new TraceAction(TraceAction.ACTION_ENTER, mRootCall));
+            }
+        }
+
+        Call caller = top();
+        Call call = new Call(this, method, caller);
+        mStack.add(call);
+
+        if (trace != null) {
+            trace.add(new TraceAction(TraceAction.ACTION_ENTER, call));
+        }
+
+        Integer num = mStackMethods.get(method);
         if (num == null) {
             num = 0;
         } else if (num > 0) {
-            c.setRecursive(true);
+            call.setRecursive(true);
         }
-        num += 1;
-        mStackMethods.put(md, num);
-        mCurrent = c;
+        mStackMethods.put(method, num + 1);
 
-        // Add the elapsed time to the caller's exclusive time
-        caller.addExclusiveTime(elapsed);
+        return call;
     }
 
-    private void exit(Call c, long elapsed, long globalTime) {
-        mCurrent.mGlobalEndTime = globalTime;
-        Call top = pop();
-        if (top == null) {
-            return;
+    Call exit(MethodData method, ArrayList<TraceAction> trace) {
+        Call call = top();
+        if (call.mCaller == null) {
+            return null;
         }
 
-        if (mCurrent.mMethodData != c.mMethodData) {
-            String error = "Method exit (" + c.getName()
-                    + ") does not match current method (" + mCurrent.getName()
+        if (call.getMethodData() != method) {
+            String error = "Method exit (" + method.getName()
+                    + ") does not match current method (" + call.getMethodData().getName()
                     + ")";
             throw new RuntimeException(error);
-        } else {
-            long duration = c.mThreadStartTime - mCurrent.mThreadStartTime;
-            Call caller = top();
-            mCurrent.addExclusiveTime(elapsed);
-            mCurrent.addInclusiveTime(duration, caller);
-            if (caller == null) {
-                caller = mRoot;
-            }
-            mCurrent = caller;
         }
-    }
 
-    public void push(Call c) {
-        mStack.add(c);
-    }
+        mStack.remove(mStack.size() - 1);
 
-    public Call pop() {
-        ArrayList<Call> stack = mStack;
-        if (stack.size() == 0)
-            return null;
-        Call top = stack.get(stack.size() - 1);
-        stack.remove(stack.size() - 1);
-        
-        // Decrement the count on the method in the hash table and remove
-        // the entry when it goes to zero.
-        MethodData md = top.mMethodData;
-        Integer num = mStackMethods.get(md);
+        if (trace != null) {
+            trace.add(new TraceAction(TraceAction.ACTION_EXIT, call));
+        }
+
+        Integer num = mStackMethods.get(method);
         if (num != null) {
-            num -= 1;
-            if (num <= 0) {
-                mStackMethods.remove(md);
+            if (num == 1) {
+                mStackMethods.remove(method);
             } else {
-                mStackMethods.put(md, num);
+                mStackMethods.put(method, num - 1);
             }
         }
-        return top;
+
+        return call;
     }
 
-    public Call top() {
-        ArrayList<Call> stack = mStack;
-        if (stack.size() == 0)
-            return null;
-        return stack.get(stack.size() - 1);
+    Call top() {
+        return mStack.get(mStack.size() - 1);
     }
 
-    public long endTrace() {
-        // If we have calls on the stack when the trace ends, then clean up
-        // the stack and compute the inclusive time of the methods by pretending
-        // that we are exiting from their methods now.
-        while (mCurrent != mRoot) {
-            long duration = mLastEventTime - mCurrent.mThreadStartTime;
-            pop();
-            Call caller = top();
-            mCurrent.addInclusiveTime(duration, caller);
-            mCurrent.mGlobalEndTime = mGlobalEndTime;
-            if (caller == null) {
-                caller = mRoot;
+    void endTrace(ArrayList<TraceAction> trace) {
+        for (int i = mStack.size() - 1; i >= 1; i--) {
+            Call call = mStack.get(i);
+            call.mGlobalEndTime = mGlobalEndTime;
+            call.mThreadEndTime = mThreadEndTime;
+            if (trace != null) {
+                trace.add(new TraceAction(TraceAction.ACTION_INCOMPLETE, call));
             }
-            mCurrent = caller;
         }
-        return mLastEventTime;
+        mStack.clear();
+        mStackMethods.clear();
+    }
+
+    void updateRootCallTimeBounds() {
+        if (!mIsEmpty) {
+            mRootCall.mGlobalStartTime = mGlobalStartTime;
+            mRootCall.mGlobalEndTime = mGlobalEndTime;
+            mRootCall.mThreadStartTime = mThreadStartTime;
+            mRootCall.mThreadEndTime = mThreadEndTime;
+        }
     }
 
     @Override
@@ -186,43 +158,11 @@ class ThreadData implements TimeLineView.Row {
         return mId;
     }
 
-    public void setCpuTime(long cpuTime) {
-        mCpuTime = cpuTime;
-    }
-
     public long getCpuTime() {
-        return mCpuTime;
+        return mRootCall.mInclusiveCpuTime;
     }
 
-    public void setGlobalStartTime(long globalStartTime) {
-        mGlobalStartTime = globalStartTime;
-    }
-
-    public long getGlobalStartTime() {
-        return mGlobalStartTime;
-    }
-
-    public void setLastEventTime(long lastEventTime) {
-        mLastEventTime = lastEventTime;
-    }
-
-    public long getLastEventTime() {
-        return mLastEventTime;
-    }
-
-    public void setGlobalEndTime(long globalEndTime) {
-        mGlobalEndTime = globalEndTime;
-    }
-
-    public long getGlobalEndTime() {
-        return mGlobalEndTime;
-    }
-
-    public void setLastContextSwitch(Call lastContextSwitch) {
-        mLastContextSwitch = lastContextSwitch;
-    }
-
-    public Call getLastContextSwitch() {
-        return mLastContextSwitch;
+    public long getRealTime() {
+        return mRootCall.mInclusiveRealTime;
     }
 }

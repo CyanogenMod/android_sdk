@@ -35,25 +35,37 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DmTraceReader extends TraceReader {
-
-    private int mVersionNumber = 0;
-    private boolean mDebug = false;
     private static final int TRACE_MAGIC = 0x574f4c53;
+
+    private static final int METHOD_TRACE_ENTER = 0x00; // method entry
+    private static final int METHOD_TRACE_EXIT = 0x01; // method exit
+    private static final int METHOD_TRACE_UNROLL = 0x02; // method exited by exception unrolling
+
+    // When in dual clock mode, we report that a context switch has occurred
+    // when skew between the real time and thread cpu clocks is more than this
+    // many microseconds.
+    private static final long MIN_CONTEXT_SWITCH_TIME_USEC = 100;
+
+    private enum ClockSource {
+        THREAD_CPU, WALL, DUAL,
+    };
+
+    private int mVersionNumber;
     private boolean mRegression;
     private ProfileProvider mProfileProvider;
     private String mTraceFileName;
     private MethodData mTopLevel;
     private ArrayList<Call> mCallList;
-    private ArrayList<Call> mSwitchList;
     private HashMap<String, String> mPropertiesMap;
     private HashMap<Integer, MethodData> mMethodMap;
     private HashMap<Integer, ThreadData> mThreadMap;
     private ThreadData[] mSortedThreads;
     private MethodData[] mSortedMethods;
-    private long mGlobalEndTime;
+    private long mTotalCpuTime;
+    private long mTotalRealTime;
     private MethodData mContextSwitch;
-    private int mOffsetToData;
-    private byte[] mBytes = new byte[8];
+    private int mRecordSize;
+    private ClockSource mClockSource;
 
     // A regex for matching the thread "id name" lines in the .key file
     private static final Pattern mIdNamePattern = Pattern.compile("(\\d+)\t(.*)");  //$NON-NLS-1$
@@ -64,14 +76,15 @@ public class DmTraceReader extends TraceReader {
         mPropertiesMap = new HashMap<String, String>();
         mMethodMap = new HashMap<Integer, MethodData>();
         mThreadMap = new HashMap<Integer, ThreadData>();
+        mCallList = new ArrayList<Call>();
 
         // Create a single top-level MethodData object to hold the profile data
         // for time spent in the unknown caller.
         mTopLevel = new MethodData(0, "(toplevel)");
         mContextSwitch = new MethodData(-1, "(context switch)");
         mMethodMap.put(0, mTopLevel);
+        mMethodMap.put(-1, mContextSwitch);
         generateTrees();
-        // dumpTrees();
     }
 
     void generateTrees() {
@@ -92,38 +105,6 @@ public class DmTraceReader extends TraceReader {
         return mProfileProvider;
     }
 
-    Call readCall(MappedByteBuffer buffer, Call call) {
-        int threadId;
-        int methodId;
-        long time;
-        
-        try {
-            if (mVersionNumber == 1)
-                threadId = buffer.get();
-            else
-                threadId = buffer.getShort();
-            methodId = buffer.getInt();
-            time = buffer.getInt();
-        } catch (BufferUnderflowException ex) {
-            return null;
-        }
-        
-        int methodAction = methodId & 0x03;
-        methodId = methodId & ~0x03;
-        MethodData methodData = mMethodMap.get(methodId);
-        if (methodData == null) {
-            String name = String.format("(0x%1$x)", methodId);  //$NON-NLS-1$
-            methodData = new MethodData(methodId, name);
-        }
-        
-        if (call != null) {
-            call.set(threadId, methodData, time, methodAction);
-        } else {
-            call = new Call(threadId, methodData, time, methodAction);
-        }
-        return call;
-    }
-    
     private MappedByteBuffer mapFile(String filename, long offset) {
         MappedByteBuffer buffer = null;
         try {
@@ -151,165 +132,279 @@ public class DmTraceReader extends TraceReader {
                     magic, TRACE_MAGIC);
             throw new RuntimeException();
         }
+
         // read version
         int version = buffer.getShort();
-        
+        if (version != mVersionNumber) {
+            System.err.printf(
+                    "Error: version number mismatch; got %d in data header but %d in options\n",
+                    version, mVersionNumber);
+            throw new RuntimeException();
+        }
+        if (version < 1 || version > 3) {
+            System.err.printf(
+                    "Error: unsupported trace version number %d.  "
+                    + "Please use a newer version of TraceView to read this file.", version);
+            throw new RuntimeException();
+        }
+
         // read offset
-        mOffsetToData = buffer.getShort() - 16;
-        
+        int offsetToData = buffer.getShort() - 16;
+
         // read startWhen
         buffer.getLong();
-        
-        // Skip over "mOffsetToData" bytes
-        for (int ii = 0; ii < mOffsetToData; ii++) {
+
+        // read record size
+        if (version == 1) {
+            mRecordSize = 9;
+        } else if (version == 2) {
+            mRecordSize = 10;
+        } else {
+            mRecordSize = buffer.getShort();
+            offsetToData -= 2;
+        }
+
+        // Skip over offsetToData bytes
+        while (offsetToData-- > 0) {
             buffer.get();
         }
-        
-        // Save this position so that we can re-read the data later
-        buffer.mark();
     }
 
     private void parseData(long offset) {
         MappedByteBuffer buffer = mapFile(mTraceFileName, offset);
         readDataFileHeader(buffer);
-        parseDataPass1(buffer);
-        
-        buffer.reset();
-        parseDataPass2(buffer);
-    }
-    
-    private void parseDataPass1(MappedByteBuffer buffer) {
-        mSwitchList = new ArrayList<Call>();
 
-        // Read the first call so that we can set "prevThreadData"
-        Call call = new Call();
-        call = readCall(buffer, call);
-        if (call == null)
-            return;
-        long callTime = call.mThreadStartTime;
-        long prevCallTime = 0;
-        ThreadData threadData = mThreadMap.get(call.getThreadId());
-        if (threadData == null) {
-            String name = String.format("[%1$d]", call.getThreadId());  //$NON-NLS-1$
-            threadData = new ThreadData(call.getThreadId(), name, mTopLevel);
-            mThreadMap.put(call.getThreadId(), threadData);
+        ArrayList<TraceAction> trace = null;
+        if (mClockSource == ClockSource.THREAD_CPU) {
+            trace = new ArrayList<TraceAction>();
         }
-        ThreadData prevThreadData = threadData;
-        while (true) {
-            // If a context switch occurred, then insert a placeholder "call"
-            // record so that we can do something reasonable with the global
-            // timestamps.
-            if (prevThreadData != threadData) {
-                Call switchEnter = new Call(prevThreadData.getId(),
-                        mContextSwitch, prevCallTime, 0);
-                prevThreadData.setLastContextSwitch(switchEnter);
-                mSwitchList.add(switchEnter);
-                Call contextSwitch = threadData.getLastContextSwitch();
-                if (contextSwitch != null) {
-                    long prevStartTime = contextSwitch.mThreadStartTime;
-                    long elapsed = callTime - prevStartTime;
-                    long beforeSwitch = elapsed / 2;
-                    long afterSwitch = elapsed - beforeSwitch;
-                    long exitTime = callTime - afterSwitch;
-                    contextSwitch.mThreadStartTime = prevStartTime + beforeSwitch;
-                    Call switchExit = new Call(threadData.getId(),
-                            mContextSwitch, exitTime, 1);
-                    
-                    mSwitchList.add(switchExit);
-                }
-                prevThreadData = threadData;
-            }
 
-            // Read the next call
-            call = readCall(buffer, call);
-            if (call == null) {
+        final boolean haveThreadClock = mClockSource != ClockSource.WALL;
+        final boolean haveGlobalClock = mClockSource != ClockSource.THREAD_CPU;
+
+        // Parse all call records to obtain elapsed time information.
+        ThreadData prevThreadData = null;
+        for (;;) {
+            int threadId;
+            int methodId;
+            long threadTime, globalTime;
+            try {
+                int recordSize = mRecordSize;
+
+                if (mVersionNumber == 1) {
+                    threadId = buffer.get();
+                    recordSize -= 1;
+                } else {
+                    threadId = buffer.getShort();
+                    recordSize -= 2;
+                }
+
+                methodId = buffer.getInt();
+                recordSize -= 4;
+
+                switch (mClockSource) {
+                    case WALL:
+                        threadTime = 0;
+                        globalTime = buffer.getInt();
+                        recordSize -= 4;
+                        break;
+                    case DUAL:
+                        threadTime = buffer.getInt();
+                        globalTime = buffer.getInt();
+                        recordSize -= 8;
+                        break;
+                    default:
+                    case THREAD_CPU:
+                        threadTime = buffer.getInt();
+                        globalTime = 0;
+                        recordSize -= 4;
+                        break;
+                }
+
+                while (recordSize-- > 0) {
+                    buffer.get();
+                }
+            } catch (BufferUnderflowException ex) {
                 break;
             }
-            prevCallTime = callTime;
-            callTime = call.mThreadStartTime;
 
-            threadData = mThreadMap.get(call.getThreadId());
+            int methodAction = methodId & 0x03;
+            methodId = methodId & ~0x03;
+            MethodData methodData = mMethodMap.get(methodId);
+            if (methodData == null) {
+                String name = String.format("(0x%1$x)", methodId);  //$NON-NLS-1$
+                methodData = new MethodData(methodId, name);
+                mMethodMap.put(methodId, methodData);
+            }
+
+            ThreadData threadData = mThreadMap.get(threadId);
             if (threadData == null) {
-                String name = String.format("[%d]", call.getThreadId());
-                threadData = new ThreadData(call.getThreadId(), name, mTopLevel);
-                mThreadMap.put(call.getThreadId(), threadData);
+                String name = String.format("[%1$d]", threadId);  //$NON-NLS-1$
+                threadData = new ThreadData(threadId, name, mTopLevel);
+                mThreadMap.put(threadId, threadData);
             }
-        }
-    }
 
-    void parseDataPass2(MappedByteBuffer buffer) {
-        mCallList = new ArrayList<Call>();
+            long elapsedGlobalTime = 0;
+            if (haveGlobalClock) {
+                if (!threadData.mHaveGlobalTime) {
+                    threadData.mGlobalStartTime = globalTime;
+                    threadData.mHaveGlobalTime = true;
+                } else {
+                    elapsedGlobalTime = globalTime - threadData.mGlobalEndTime;
+                }
+                threadData.mGlobalEndTime = globalTime;
+            }
 
-        // Read the first call so that we can set "prevThreadData"
-        Call call = readCall(buffer, null);
-        long callTime = call.mThreadStartTime;
-        long prevCallTime = callTime;
-        ThreadData threadData = mThreadMap.get(call.getThreadId());
-        ThreadData prevThreadData = threadData;
-        threadData.setGlobalStartTime(0);
-        
-        int nthContextSwitch = 0;
+            if (haveThreadClock) {
+                long elapsedThreadTime = 0;
+                if (!threadData.mHaveThreadTime) {
+                    threadData.mThreadStartTime = threadTime;
+                    threadData.mThreadCurrentTime = threadTime;
+                    threadData.mHaveThreadTime = true;
+                } else {
+                    elapsedThreadTime = threadTime - threadData.mThreadEndTime;
+                }
+                threadData.mThreadEndTime = threadTime;
 
-        // Assign a global timestamp to each event.
-        long globalTime = 0;
-        while (true) {
-            long elapsed = callTime - prevCallTime;
-            if (threadData != prevThreadData) {
-                // Get the next context switch.  This one is entered
-                // by the previous thread.
-                Call contextSwitch = mSwitchList.get(nthContextSwitch++);
-                mCallList.add(contextSwitch);
-                elapsed = contextSwitch.mThreadStartTime - prevCallTime;
-                globalTime += elapsed;
-                elapsed = 0;
-                contextSwitch.mGlobalStartTime = globalTime;
-                prevThreadData.handleCall(contextSwitch, globalTime);
-                
-                if (!threadData.isEmpty()) {
-                    // This context switch is exited by the current thread.
-                    contextSwitch = mSwitchList.get(nthContextSwitch++);
-                    mCallList.add(contextSwitch);
-                    contextSwitch.mGlobalStartTime = globalTime;
-                    elapsed = callTime - contextSwitch.mThreadStartTime;
-                    threadData.handleCall(contextSwitch, globalTime);
+                if (!haveGlobalClock) {
+                    // Detect context switches whenever execution appears to switch from one
+                    // thread to another.  This assumption is only valid on uniprocessor
+                    // systems (which is why we now have a dual clock mode).
+                    // We represent context switches in the trace by pushing a call record
+                    // with MethodData mContextSwitch onto the stack of the previous
+                    // thread.  We arbitrarily set the start and end time of the context
+                    // switch such that the context switch occurs in the middle of the thread
+                    // time and itself accounts for zero thread time.
+                    if (prevThreadData != null && prevThreadData != threadData) {
+                        // Begin context switch from previous thread.
+                        Call switchCall = prevThreadData.enter(mContextSwitch, trace);
+                        switchCall.mThreadStartTime = prevThreadData.mThreadEndTime;
+                        mCallList.add(switchCall);
+
+                        // Return from context switch to current thread.
+                        Call top = threadData.top();
+                        if (top.getMethodData() == mContextSwitch) {
+                            threadData.exit(mContextSwitch, trace);
+                            long beforeSwitch = elapsedThreadTime / 2;
+                            top.mThreadStartTime += beforeSwitch;
+                            top.mThreadEndTime = top.mThreadStartTime;
+                        }
+                    }
+                    prevThreadData = threadData;
+                } else {
+                    // If we have a global clock, then we can detect context switches (or blocking
+                    // calls or cpu suspensions or clock anomalies) by comparing global time to
+                    // thread time for successive calls that occur on the same thread.
+                    // As above, we represent the context switch using a special method call.
+                    long sleepTime = elapsedGlobalTime - elapsedThreadTime;
+                    if (sleepTime > MIN_CONTEXT_SWITCH_TIME_USEC) {
+                        Call switchCall = threadData.enter(mContextSwitch, trace);
+                        long beforeSwitch = elapsedThreadTime / 2;
+                        long afterSwitch = elapsedThreadTime - beforeSwitch;
+                        switchCall.mGlobalStartTime = globalTime - elapsedGlobalTime + beforeSwitch;
+                        switchCall.mGlobalEndTime = globalTime - afterSwitch;
+                        switchCall.mThreadStartTime = threadTime - afterSwitch;
+                        switchCall.mThreadEndTime = switchCall.mThreadStartTime;
+                        threadData.exit(mContextSwitch, trace);
+                        mCallList.add(switchCall);
+                    }
                 }
 
-                // If the thread's global start time has not been set yet,
-                // then set it.
-                if (threadData.getGlobalStartTime() == -1)
-                    threadData.setGlobalStartTime(globalTime);
+                // Add thread CPU time.
+                Call top = threadData.top();
+                top.addCpuTime(elapsedThreadTime);
+            }
+
+            switch (methodAction) {
+                case METHOD_TRACE_ENTER: {
+                    Call call = threadData.enter(methodData, trace);
+                    if (haveGlobalClock) {
+                        call.mGlobalStartTime = globalTime;
+                    }
+                    if (haveThreadClock) {
+                        call.mThreadStartTime = threadTime;
+                    }
+                    mCallList.add(call);
+                    break;
+                }
+                case METHOD_TRACE_EXIT:
+                case METHOD_TRACE_UNROLL: {
+                    Call call = threadData.exit(methodData, trace);
+                    if (call != null) {
+                        if (haveGlobalClock) {
+                            call.mGlobalEndTime = globalTime;
+                        }
+                        if (haveThreadClock) {
+                            call.mThreadEndTime = threadTime;
+                        }
+                    }
+                    break;
+                }
+                default:
+                    throw new RuntimeException("Unrecognized method action: " + methodAction);
+            }
+        }
+
+        // Exit any pending open-ended calls.
+        for (ThreadData threadData : mThreadMap.values()) {
+            threadData.endTrace(trace);
+        }
+
+        // Recreate the global timeline from thread times, if needed.
+        if (!haveGlobalClock) {
+            long globalTime = 0;
+            prevThreadData = null;
+            for (TraceAction traceAction : trace) {
+                Call call = traceAction.mCall;
+                ThreadData threadData = call.getThreadData();
+
+                if (traceAction.mAction == TraceAction.ACTION_ENTER) {
+                    long threadTime = call.mThreadStartTime;
+                    globalTime += call.mThreadStartTime - threadData.mThreadCurrentTime;
+                    call.mGlobalStartTime = globalTime;
+                    if (!threadData.mHaveGlobalTime) {
+                        threadData.mHaveGlobalTime = true;
+                        threadData.mGlobalStartTime = globalTime;
+                    }
+                    threadData.mThreadCurrentTime = threadTime;
+                } else if (traceAction.mAction == TraceAction.ACTION_EXIT) {
+                    long threadTime = call.mThreadEndTime;
+                    globalTime += call.mThreadEndTime - threadData.mThreadCurrentTime;
+                    call.mGlobalEndTime = globalTime;
+                    threadData.mGlobalEndTime = globalTime;
+                    threadData.mThreadCurrentTime = threadTime;
+                } // else, ignore ACTION_INCOMPLETE calls, nothing to do
                 prevThreadData = threadData;
             }
-
-            globalTime += elapsed;
-            call.mGlobalStartTime = globalTime;
-            
-            threadData.handleCall(call, globalTime);
-            mCallList.add(call);
-            
-            // Read the next call
-            call = readCall(buffer, null);
-            if (call == null) {
-                break;
-            }
-            prevCallTime = callTime;
-            callTime = call.mThreadStartTime;
-            threadData = mThreadMap.get(call.getThreadId());
         }
 
-        // Allow each thread to do any cleanup of the call stack.
-        // Also add the elapsed time for each thread to the toplevel
-        // method's inclusive time.
-        for (int id : mThreadMap.keySet()) {
-            threadData = mThreadMap.get(id);
-            long endTime = threadData.endTrace();
-            if (endTime > 0)
-                mTopLevel.addElapsedInclusive(endTime, false, null);
+        // Finish updating all calls and calculate the total time spent.
+        for (int i = mCallList.size() - 1; i >= 0; i--) {
+            Call call = mCallList.get(i);
+
+            // Calculate exclusive real-time by subtracting inclusive real time
+            // accumulated by children from the total span.
+            long realTime = call.mGlobalEndTime - call.mGlobalStartTime;
+            call.mExclusiveRealTime = Math.max(realTime - call.mInclusiveRealTime, 0);
+            call.mInclusiveRealTime = realTime;
+
+            call.finish();
+        }
+        mTotalCpuTime = 0;
+        mTotalRealTime = 0;
+        for (ThreadData threadData : mThreadMap.values()) {
+            Call rootCall = threadData.getRootCall();
+            threadData.updateRootCallTimeBounds();
+            rootCall.finish();
+            mTotalCpuTime += rootCall.mInclusiveCpuTime;
+            mTotalRealTime += rootCall.mInclusiveRealTime;
         }
 
-        mGlobalEndTime = globalTime;
-        
         if (mRegression) {
+            System.out.format("totalCpuTime %dus\n", mTotalCpuTime);
+            System.out.format("totalRealTime %dus\n", mTotalRealTime);
+
+            dumpThreadTimes();
             dumpCallTimes();
         }
     }
@@ -353,7 +448,7 @@ public class DmTraceReader extends TraceReader {
                     continue;
                 }
                 if (line.equals("*end")) {
-                    return offset;
+                    break;
                 }
             }
             switch (mode) {
@@ -372,6 +467,11 @@ public class DmTraceReader extends TraceReader {
                 break;
             }
         }
+
+        if (mClockSource == null) {
+            mClockSource = ClockSource.THREAD_CPU;
+        }
+        return offset;
     }
 
     void parseOption(String line) {
@@ -380,6 +480,16 @@ public class DmTraceReader extends TraceReader {
             String key = tokens[0];
             String value = tokens[1];
             mPropertiesMap.put(key, value);
+
+            if (key.equals("clock")) {
+                if (value.equals("thread-cpu")) {
+                    mClockSource = ClockSource.THREAD_CPU;
+                } else if (value.equals("wall")) {
+                    mClockSource = ClockSource.WALL;
+                } else if (value.equals("dual")) {
+                    mClockSource = ClockSource.DUAL;
+                }
+            }
         }
     }
 
@@ -435,28 +545,20 @@ public class DmTraceReader extends TraceReader {
     }
 
     private void analyzeData() {
+        final TimeBase timeBase = getPreferredTimeBase();
+
         // Sort the threads into decreasing cpu time
         Collection<ThreadData> tv = mThreadMap.values();
         mSortedThreads = tv.toArray(new ThreadData[tv.size()]);
         Arrays.sort(mSortedThreads, new Comparator<ThreadData>() {
             public int compare(ThreadData td1, ThreadData td2) {
-                if (td2.getCpuTime() > td1.getCpuTime())
+                if (timeBase.getTime(td2) > timeBase.getTime(td1))
                     return 1;
-                if (td2.getCpuTime() < td1.getCpuTime())
+                if (timeBase.getTime(td2) < timeBase.getTime(td1))
                     return -1;
                 return td2.getName().compareTo(td1.getName());
             }
         });
-
-        // Analyze the call tree so that we can label the "worst" children.
-        // Also set all the root pointers in each node in the call tree.
-        long sum = 0;
-        for (ThreadData t : mSortedThreads) {
-            if (t.isEmpty() == false) {
-                Call root = t.getCalltreeRoot();
-                root.mGlobalStartTime = t.getGlobalStartTime();
-            }
-        }
 
         // Sort the methods into decreasing inclusive time
         Collection<MethodData> mv = mMethodMap.values();
@@ -464,9 +566,9 @@ public class DmTraceReader extends TraceReader {
         methods = mv.toArray(new MethodData[mv.size()]);
         Arrays.sort(methods, new Comparator<MethodData>() {
             public int compare(MethodData md1, MethodData md2) {
-                if (md2.getElapsedInclusive() > md1.getElapsedInclusive())
+                if (timeBase.getElapsedInclusiveTime(md2) > timeBase.getElapsedInclusiveTime(md1))
                     return 1;
-                if (md2.getElapsedInclusive() < md1.getElapsedInclusive())
+                if (timeBase.getElapsedInclusiveTime(md2) < timeBase.getElapsedInclusiveTime(md1))
                     return -1;
                 return md1.getName().compareTo(md2.getName());
             }
@@ -475,7 +577,7 @@ public class DmTraceReader extends TraceReader {
         // Count the number of methods with non-zero inclusive time
         int nonZero = 0;
         for (MethodData md : methods) {
-            if (md.getElapsedInclusive() == 0)
+            if (timeBase.getElapsedInclusiveTime(md) == 0)
                 break;
             nonZero += 1;
         }
@@ -484,7 +586,7 @@ public class DmTraceReader extends TraceReader {
         mSortedMethods = new MethodData[nonZero];
         int ii = 0;
         for (MethodData md : methods) {
-            if (md.getElapsedInclusive() == 0)
+            if (timeBase.getElapsedInclusiveTime(md) == 0)
                 break;
             md.setRank(ii);
             mSortedMethods[ii++] = md;
@@ -492,7 +594,7 @@ public class DmTraceReader extends TraceReader {
 
         // Let each method analyze its profile data
         for (MethodData md : mSortedMethods) {
-            md.analyzeData();
+            md.analyzeData(timeBase);
         }
 
         // Update all the calls to include the method rank in
@@ -522,67 +624,65 @@ public class DmTraceReader extends TraceReader {
         // entire execution of the thread.
         for (ThreadData threadData : mSortedThreads) {
             if (!threadData.isEmpty() && threadData.getId() != 0) {
-                Call call = new Call(threadData.getId(), mTopLevel,
-                        threadData.getGlobalStartTime(), 0);
-                call.mGlobalStartTime = threadData.getGlobalStartTime();
-                call.mGlobalEndTime = threadData.getGlobalEndTime();
-                record = new TimeLineView.Record(threadData, call);
+                record = new TimeLineView.Record(threadData, threadData.getRootCall());
                 timeRecs.add(record);
             }
         }
 
         for (Call call : mCallList) {
-            if (call.getMethodAction() != 0 || call.getThreadId() == 0)
-                continue;
-            ThreadData threadData = mThreadMap.get(call.getThreadId());
-            record = new TimeLineView.Record(threadData, call);
+            record = new TimeLineView.Record(call.getThreadData(), call);
             timeRecs.add(record);
         }
-        
+
         if (mRegression) {
             dumpTimeRecs(timeRecs);
             System.exit(0);
         }
         return timeRecs;
     }
-        
+
+    private void dumpThreadTimes() {
+        System.out.print("\nThread Times\n");
+        System.out.print("id  t-start    t-end  g-start    g-end     name\n");
+        for (ThreadData threadData : mThreadMap.values()) {
+            System.out.format("%2d %8d %8d %8d %8d  %s\n",
+                    threadData.getId(),
+                    threadData.mThreadStartTime, threadData.mThreadEndTime,
+                    threadData.mGlobalStartTime, threadData.mGlobalEndTime,
+                    threadData.getName());
+        }
+    }
+
     private void dumpCallTimes() {
-        String action;
-        
-        System.out.format("id thread  global start,end   method\n");
+        System.out.print("\nCall Times\n");
+        System.out.print("id  t-start    t-end  g-start    g-end    excl.    incl.  method\n");
         for (Call call : mCallList) {
-            if (call.getMethodAction() == 0) {
-                action = "+";
-            } else {
-                action = " ";
-            }
-            long callTime = call.mThreadStartTime;
-            System.out.format("%2d %6d %8d %8d %s %s\n",
-                    call.getThreadId(), callTime, call.mGlobalStartTime,
-                    call.mGlobalEndTime, action, call.getMethodData().getName());
-//            if (call.getMethodAction() == 0 && call.getGlobalEndTime() < call.getGlobalStartTime()) {
-//                System.out.printf("endtime %d < startTime %d\n",
-//                        call.getGlobalEndTime(), call.getGlobalStartTime());
-//            }
+            System.out.format("%2d %8d %8d %8d %8d %8d %8d  %s\n",
+                    call.getThreadId(), call.mThreadStartTime, call.mThreadEndTime,
+                    call.mGlobalStartTime, call.mGlobalEndTime,
+                    call.mExclusiveCpuTime, call.mInclusiveCpuTime,
+                    call.getMethodData().getName());
         }
     }
     
     private void dumpMethodStats() {
-        System.out.format("\nExclusive Inclusive     Calls  Method\n");
+        System.out.print("\nMethod Stats\n");
+        System.out.print("Excl Cpu  Incl Cpu  Excl Real Incl Real    Calls  Method\n");
         for (MethodData md : mSortedMethods) {
             System.out.format("%9d %9d %9s  %s\n",
-                    md.getElapsedExclusive(), md.getElapsedInclusive(),
+                    md.getElapsedExclusiveCpuTime(), md.getElapsedInclusiveCpuTime(),
+                    md.getElapsedExclusiveRealTime(), md.getElapsedInclusiveRealTime(),
                     md.getCalls(), md.getProfileName());
         }
     }
 
     private void dumpTimeRecs(ArrayList<TimeLineView.Record> timeRecs) {
-        System.out.format("\nid thread  global start,end  method\n");
+        System.out.print("\nTime Records\n");
+        System.out.print("id  t-start    t-end  g-start    g-end  method\n");
         for (TimeLineView.Record record : timeRecs) {
             Call call = (Call) record.block;
-            long callTime = call.mThreadStartTime;
-            System.out.format("%2d %6d %8d %8d  %s\n",
-                    call.getThreadId(), callTime,
+            System.out.format("%2d %8d %8d %8d %8d  %s\n",
+                    call.getThreadId(), call.mThreadStartTime, call.mThreadEndTime,
                     call.mGlobalStartTime, call.mGlobalEndTime,
                     call.getMethodData().getName());
         }
@@ -608,12 +708,48 @@ public class DmTraceReader extends TraceReader {
     }
 
     @Override
-    public long getEndTime() {
-        return mGlobalEndTime;
+    public long getTotalCpuTime() {
+        return mTotalCpuTime;
+    }
+
+    @Override
+    public long getTotalRealTime() {
+        return mTotalRealTime;
+    }
+
+    @Override
+    public boolean haveCpuTime() {
+        return mClockSource != ClockSource.WALL;
+    }
+
+    @Override
+    public boolean haveRealTime() {
+        return mClockSource != ClockSource.THREAD_CPU;
     }
 
     @Override
     public HashMap<String, String> getProperties() {
         return mPropertiesMap;
+    }
+
+    @Override
+    public TimeBase getPreferredTimeBase() {
+        if (mClockSource == ClockSource.WALL) {
+            return TimeBase.REAL_TIME;
+        }
+        return TimeBase.CPU_TIME;
+    }
+
+    @Override
+    public String getClockSource() {
+        switch (mClockSource) {
+            case THREAD_CPU:
+                return "cpu time";
+            case WALL:
+                return "real time";
+            case DUAL:
+                return "real time, dual clock";
+        }
+        return null;
     }
 }

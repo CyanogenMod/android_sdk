@@ -45,8 +45,20 @@ public abstract class TraceReader {
         return null;
     }
 
-    public long getEndTime() {
+    public long getTotalCpuTime() {
         return 0;
+    }
+
+    public long getTotalRealTime() {
+        return 0;
+    }
+
+    public boolean haveCpuTime() {
+        return false;
+    }
+
+    public boolean haveRealTime() {
+        return false;
     }
 
     public HashMap<String, String> getProperties() {
@@ -54,6 +66,14 @@ public abstract class TraceReader {
     }
 
     public ProfileProvider getProfileProvider() {
+        return null;
+    }
+
+    public TimeBase getPreferredTimeBase() {
+        return TimeBase.CPU_TIME;
+    }
+
+    public String getClockSource() {
         return null;
     }
 }
