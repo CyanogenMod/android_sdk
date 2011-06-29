@@ -516,7 +516,13 @@ public final class SyncService {
         // create the stream to write in the file. We use a new try/catch block to differentiate
         // between file and network io exceptions.
         FileOutputStream fos = null;
-        fos = new FileOutputStream(f);
+        try {
+            fos = new FileOutputStream(f);
+        } catch (IOException e) {
+            Log.e("ddms", String.format("Failed to open local file %s for writing, Reason: %s",
+                    f.getAbsolutePath(), e.toString()));
+            throw new SyncException(SyncError.FILE_WRITE_ERROR);
+        }
 
         // the buffer to read the data
         byte[] data = new byte[SYNC_DATA_MAX];
