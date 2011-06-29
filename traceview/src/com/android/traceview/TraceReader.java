@@ -49,6 +49,10 @@ public abstract class TraceReader {
         return 0;
     }
 
+    public HashMap<String, String> getProperties() {
+        return null;
+    }
+
     public ProfileProvider getProfileProvider() {
         return null;
     }
