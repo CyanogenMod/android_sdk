@@ -45,10 +45,10 @@ class PackageLoader {
      * Interface for the callback called by
      * {@link PackageLoader#loadPackages(ISourceLoadedCallback)}.
      * <p/>
-     * After processing each source, the package loader calls {@link #onSouceLoaded(List)}
+     * After processing each source, the package loader calls {@link #onSourceLoaded(List)}
      * with the list of package items found in that source. The client should process that
      * list as it want, typically by accumulating the package items in a list of its own.
-     * By returning true from {@link #onSouceLoaded(List)}, the client tells the loader to
+     * By returning true from {@link #onSourceLoaded(List)}, the client tells the loader to
      * continue and process the next source. By returning false, it tells to stop loading.
      * <p/>
      * The {@link #onLoadCompleted()} method is guaranteed to be called at the end, no
@@ -60,7 +60,7 @@ class PackageLoader {
          * After processing each source, the package loader calls this method with the
          * list of package items found in that source. The client should process that
          * list as it want, typically by accumulating the package items in a list of its own.
-         * By returning true from {@link #onSouceLoaded(List)}, the client tells the loader to
+         * By returning true from {@link #onSourceLoaded(List)}, the client tells the loader to
          * continue and process the next source. By returning false, it tells to stop loading.
          * <p/>
          * <em>Important</em>: This method is called from a sub-thread, so clients who try
@@ -71,7 +71,7 @@ class PackageLoader {
          *  This is a copy and the client can hold to this list or modify it in any way.
          * @return True if the load operation should continue, false if it should stop.
          */
-        public boolean onSouceLoaded(List<PkgItem> pkgItems);
+        public boolean onSourceLoaded(List<PkgItem> pkgItems);
 
         /**
          * This method is guaranteed to be called at the end, no matter how the
@@ -147,7 +147,7 @@ class PackageLoader {
                 // Notify the callback by giving it a copy of the current list.
                 // (in case the callback holds to the list... we still need this list of
                 // ourselves below).
-                if (!sourceLoadedCallback.onSouceLoaded(new ArrayList<PkgItem>(allPkgItems))) {
+                if (!sourceLoadedCallback.onSourceLoaded(new ArrayList<PkgItem>(allPkgItems))) {
                     return;
                 }
             }
@@ -192,7 +192,7 @@ class PackageLoader {
 
                             // Notify the callback a new source has finished loading.
                             // If the callback requests so, stop right away.
-                            if (!sourceLoadedCallback.onSouceLoaded(sourcePkgItems)) {
+                            if (!sourceLoadedCallback.onSourceLoaded(sourcePkgItems)) {
                                 return;
                             }
                         }
@@ -260,7 +260,7 @@ class PackageLoader {
     public void loadPackagesWithInstallTask(final IAutoInstallTask installTask) {
 
         loadPackages(new ISourceLoadedCallback() {
-            public boolean onSouceLoaded(List<PkgItem> pkgItems) {
+            public boolean onSourceLoaded(List<PkgItem> pkgItems) {
                 for (PkgItem item : pkgItems) {
                     Package acceptedPkg = null;
                     switch(item.getState()) {
@@ -538,6 +538,25 @@ class PackageLoader {
 
         public int compareTo(PkgItem pkg) {
             return getPackage().compareTo(pkg.getPackage());
+        }
+
+        /**
+         * Returns true if this package or any of the updating packages contains
+         * the exact given archive.
+         * Important: This compares object references, not object equality.
+         */
+        public boolean hasArchive(Archive archive) {
+            if (mPkg.hasArchive(archive)) {
+                return true;
+            }
+            if (mUpdatePkgs != null && !mUpdatePkgs.isEmpty()) {
+                for (Package p : mUpdatePkgs) {
+                    if (p.hasArchive(archive)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         /** Returns a string representation of this item, useful when debugging. */

@@ -74,6 +74,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
@@ -152,6 +153,7 @@ public class PackagesPage extends UpdaterPage
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
     private boolean mLastSortWasByApi;
+    private boolean mOperationPending;
 
     public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
         super(parent, swtStyle);
@@ -507,7 +509,7 @@ public class PackagesPage extends UpdaterPage
         // disposed yet. Otherwise hilarity ensues.
 
         mPackageLoader.loadPackages(new ISourceLoadedCallback() {
-            public boolean onSouceLoaded(List<PkgItem> newPkgItems) {
+            public boolean onSourceLoaded(List<PkgItem> newPkgItems) {
                 boolean somethingNew = false;
 
                 synchronized(mPackages) {
@@ -558,17 +560,6 @@ public class PackagesPage extends UpdaterPage
                 }
             }
         });
-    }
-
-    private void enableUi(Composite root, boolean enabled) {
-        root.setEnabled(enabled);
-        for (Control child : root.getChildren()) {
-            if (child instanceof Composite) {
-                enableUi((Composite) child, enabled);
-            } else {
-                child.setEnabled(enabled);
-            }
-        }
     }
 
     private void sortPackages(boolean updateButtons) {
@@ -923,7 +914,27 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
+    /**
+     * Indicate an install/delete operation is pending.
+     * This disable the install/delete buttons.
+     * Use {@link #endOperationPending()} to revert.
+     */
+    private void beginOperationPending() {
+        mOperationPending = true;
+        mButtonInstall.setEnabled(false);
+        mButtonDelete.setEnabled(false);
+    }
+
+    private void endOperationPending() {
+        mOperationPending = false;
+        updateButtonsState();
+    }
+
     private void updateButtonsState() {
+        if (mOperationPending) {
+            return;
+        }
+
         boolean canInstall = false;
 
         if (mDisplayArchives) {
@@ -1039,13 +1050,28 @@ public class PackagesPage extends UpdaterPage
 
         if (mUpdaterData != null) {
             try {
-                enableUi(mGroupPackages, false);
+                beginOperationPending();
 
                 mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
-                enableUi(mGroupPackages, true);
+                endOperationPending();
+
+                // Remove any pkg item matching anything we potentially installed
+                // then request the package list to be updated. This will prevent
+                // from having stale entries.
+                synchronized(mPackages) {
+                    for (Archive a : archives) {
+                        for (Iterator<PkgItem> it = mPackages.iterator(); it.hasNext(); ) {
+                            PkgItem pi = it.next();
+                            if (pi.hasArchive(a)) {
+                                it.remove();
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 // The local package list has changed, make sure to refresh it
                 mUpdaterData.getLocalSdkParser().clearPackages();
@@ -1062,15 +1088,18 @@ public class PackagesPage extends UpdaterPage
             return;
         }
 
-        String title = "Delete SDK Package";
+        final String title = "Delete SDK Package";
         String msg = "Are you sure you want to delete:";
-        final List<Archive> archives = new ArrayList<Archive>();
+
+        // A map of archives to deleted versus their internal PkgItem representation
+        final Map<Archive, PkgItem> archives = new TreeMap<Archive, PkgItem>();
 
         for (Object c : checked) {
             if (c instanceof PkgItem) {
-                PkgState state = ((PkgItem) c).getState();
+                PkgItem pi = (PkgItem) c;
+                PkgState state = pi.getState();
                 if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
-                    Package p = ((PkgItem) c).getPackage();
+                    Package p = pi.getPackage();
 
                     Archive[] as = p.getArchives();
                     if (as.length == 1 && as[0] != null && as[0].isLocal()) {
@@ -1080,7 +1109,7 @@ public class PackagesPage extends UpdaterPage
                         File dir = new File(osPath);
                         if (dir.isDirectory()) {
                             msg += "\n - " + p.getShortDescription();
-                            archives.add(archive);
+                            archives.put(archive, pi);
                         }
                     }
                 }
@@ -1091,16 +1120,25 @@ public class PackagesPage extends UpdaterPage
             msg += "\n" + "This cannot be undone.";
             if (MessageDialog.openQuestion(getShell(), title, msg)) {
                 try {
-                    enableUi(mGroupPackages, false);
+                    beginOperationPending();
 
-                    mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
+                    mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
-                            for (Archive a : archives) {
+                            for (Entry<Archive, PkgItem> entry : archives.entrySet()) {
+                                Archive a = entry.getKey();
+
                                 monitor.setDescription("Deleting '%1$s' (%2$s)",
                                         a.getParentPackage().getShortDescription(),
                                         a.getLocalOsPath());
+
+                                // Delete the actual package and its internal representation
                                 a.deleteLocal();
+
+                                synchronized(mPackages) {
+                                    mPackages.remove(entry.getValue());
+                                }
+
                                 monitor.incProgress(1);
                                 if (monitor.isCancelRequested()) {
                                     break;
@@ -1112,7 +1150,7 @@ public class PackagesPage extends UpdaterPage
                         }
                     });
                 } finally {
-                    enableUi(mGroupPackages, true);
+                    endOperationPending();
 
                     // The local package list has changed, make sure to refresh it
                     mUpdaterData.getLocalSdkParser().clearPackages();
