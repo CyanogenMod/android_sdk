@@ -51,30 +51,33 @@ public class SdkSources {
      * Adds a new source to the Sources list.
      */
     public void add(SdkSourceCategory category, SdkSource source) {
+        synchronized(mSources) {
+            ArrayList<SdkSource> list = mSources.get(category);
+            if (list == null) {
+                list = new ArrayList<SdkSource>();
+                mSources.put(category, list);
+            }
 
-        ArrayList<SdkSource> list = mSources.get(category);
-        if (list == null) {
-            list = new ArrayList<SdkSource>();
-            mSources.put(category, list);
+            list.add(source);
         }
-
-        list.add(source);
     }
 
     /**
      * Removes a source from the Sources list.
      */
     public void remove(SdkSource source) {
-        Iterator<Entry<SdkSourceCategory, ArrayList<SdkSource>>> it =
-            mSources.entrySet().iterator();
-        while (it.hasNext()) {
-            Entry<SdkSourceCategory, ArrayList<SdkSource>> entry = it.next();
-            ArrayList<SdkSource> list = entry.getValue();
+        synchronized(mSources) {
+            Iterator<Entry<SdkSourceCategory, ArrayList<SdkSource>>> it =
+                mSources.entrySet().iterator();
+            while (it.hasNext()) {
+                Entry<SdkSourceCategory, ArrayList<SdkSource>> entry = it.next();
+                ArrayList<SdkSource> list = entry.getValue();
 
-            if (list.remove(source)) {
-                if (list.isEmpty()) {
-                    // remove the entry since the source list became empty
-                    it.remove();
+                if (list.remove(source)) {
+                    if (list.isEmpty()) {
+                        // remove the entry since the source list became empty
+                        it.remove();
+                    }
                 }
             }
         }
@@ -84,7 +87,9 @@ public class SdkSources {
      * Removes all the sources in the given category.
      */
     public void removeAll(SdkSourceCategory category) {
-        mSources.remove(category);
+        synchronized(mSources) {
+            mSources.remove(category);
+        }
     }
 
     /**
@@ -100,9 +105,11 @@ public class SdkSources {
             if (cat.getAlwaysDisplay()) {
                 cats.add(cat);
             } else {
-                ArrayList<SdkSource> list = mSources.get(cat);
-                if (list != null && !list.isEmpty()) {
-                    cats.add(cat);
+                synchronized(mSources) {
+                    ArrayList<SdkSource> list = mSources.get(cat);
+                    if (list != null && !list.isEmpty()) {
+                        cats.add(cat);
+                    }
                 }
             }
         }
@@ -115,11 +122,13 @@ public class SdkSources {
      * Might return an empty array, but never returns null.
      */
     public SdkSource[] getSources(SdkSourceCategory category) {
-        ArrayList<SdkSource> list = mSources.get(category);
-        if (list == null) {
-            return new SdkSource[0];
-        } else {
-            return list.toArray(new SdkSource[list.size()]);
+        synchronized(mSources) {
+            ArrayList<SdkSource> list = mSources.get(category);
+            if (list == null) {
+                return new SdkSource[0];
+            } else {
+                return list.toArray(new SdkSource[list.size()]);
+            }
         }
     }
 
@@ -127,22 +136,24 @@ public class SdkSources {
      * Returns an array of the sources across all categories. This is never null.
      */
     public SdkSource[] getAllSources() {
-        int n = 0;
+        synchronized(mSources) {
+            int n = 0;
 
-        for (ArrayList<SdkSource> list : mSources.values()) {
-            n += list.size();
-        }
-
-        SdkSource[] sources = new SdkSource[n];
-
-        int i = 0;
-        for (ArrayList<SdkSource> list : mSources.values()) {
-            for (SdkSource source : list) {
-                sources[i++] = source;
+            for (ArrayList<SdkSource> list : mSources.values()) {
+                n += list.size();
             }
-        }
 
-        return sources;
+            SdkSource[] sources = new SdkSource[n];
+
+            int i = 0;
+            for (ArrayList<SdkSource> list : mSources.values()) {
+                for (SdkSource source : list) {
+                    sources[i++] = source;
+                }
+            }
+
+            return sources;
+        }
     }
 
     /**
@@ -155,9 +166,11 @@ public class SdkSources {
      */
     public SdkSourceCategory getCategory(SdkSource source) {
         if (source != null) {
-            for (Entry<SdkSourceCategory, ArrayList<SdkSource>> entry : mSources.entrySet()) {
-                if (entry.getValue().contains(source)) {
-                    return entry.getKey();
+            synchronized(mSources) {
+                for (Entry<SdkSourceCategory, ArrayList<SdkSource>> entry : mSources.entrySet()) {
+                    if (entry.getValue().contains(source)) {
+                        return entry.getKey();
+                    }
                 }
             }
         }
@@ -175,14 +188,16 @@ public class SdkSources {
      * The search is O(N), which should be acceptable on the expectedly small source list.
      */
     public boolean hasSourceUrl(SdkSource source) {
-        for (ArrayList<SdkSource> list : mSources.values()) {
-            for (SdkSource s : list) {
-                if (s.equals(source)) {
-                    return true;
+        synchronized(mSources) {
+            for (ArrayList<SdkSource> list : mSources.values()) {
+                for (SdkSource s : list) {
+                    if (s.equals(source)) {
+                        return true;
+                    }
                 }
             }
+            return false;
         }
-        return false;
     }
 
     /**
@@ -196,15 +211,17 @@ public class SdkSources {
      * The search is O(N), which should be acceptable on the expectedly small source list.
      */
     public boolean hasSourceUrl(SdkSourceCategory category, SdkSource source) {
-        ArrayList<SdkSource> list = mSources.get(category);
-        if (list != null) {
-            for (SdkSource s : list) {
-                if (s.equals(source)) {
-                    return true;
+        synchronized(mSources) {
+            ArrayList<SdkSource> list = mSources.get(category);
+            if (list != null) {
+                for (SdkSource s : list) {
+                    if (s.equals(source)) {
+                        return true;
+                    }
                 }
             }
+            return false;
         }
-        return false;
     }
 
     /**
