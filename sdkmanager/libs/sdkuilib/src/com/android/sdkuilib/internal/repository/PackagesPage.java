@@ -31,6 +31,8 @@ import com.android.sdkuilib.internal.repository.PackageLoader.PkgItem;
 import com.android.sdkuilib.internal.repository.PackageLoader.PkgState;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -51,8 +53,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -173,26 +173,23 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void createContents(Composite parent) {
-        GridLayout gridLayout = new GridLayout(2, false);
-        gridLayout.marginWidth = 0;
-        gridLayout.marginHeight = 0;
-        parent.setLayout(gridLayout);
+        GridLayoutBuilder.create(parent).noMargins().columns(2);
 
         mGroupSdk = new Composite(parent, SWT.NONE);
-        mGroupSdk.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-        mGroupSdk.setLayout(new GridLayout(2, false));
+        GridDataBuilder.create(mGroupSdk).hFill().vCenter().hGrab().hSpan(2);
+        GridLayoutBuilder.create(mGroupSdk).columns(2);
 
         Label label1 = new Label(mGroupSdk, SWT.NONE);
         label1.setText("SDK Path:");
 
         mTextSdkOsPath = new Text(mGroupSdk, SWT.NONE);
-        mTextSdkOsPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mTextSdkOsPath).hFill().vCenter().hGrab();
         mTextSdkOsPath.setEnabled(false);
 
         mGroupPackages = new Group(parent, SWT.NONE);
-        mGroupPackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+        GridDataBuilder.create(mGroupPackages).fill().grab().hSpan(2);
         mGroupPackages.setText("Packages");
-        mGroupPackages.setLayout(new GridLayout(1, false));
+        GridLayoutBuilder.create(mGroupPackages).columns(1);
 
         mTreeViewer = new CheckboxTreeViewer(mGroupPackages, SWT.BORDER);
 
@@ -205,7 +202,7 @@ public class PackagesPage extends UpdaterPage
         mTree = mTreeViewer.getTree();
         mTree.setLinesVisible(true);
         mTree.setHeaderVisible(true);
-        mTree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        GridDataBuilder.create(mTree).fill().grab();
 
         // column name icon is set in sortPackages() depending on the current filter type
         // (e.g. API level or source)
@@ -235,11 +232,10 @@ public class PackagesPage extends UpdaterPage
         treeColumn4.setText("Status");
 
         mGroupOptions = new Composite(mGroupPackages, SWT.NONE);
-        mGroupOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        GridLayout gl_GroupOptions = new GridLayout(6, false);
-        gl_GroupOptions.marginWidth = 0;
-        gl_GroupOptions.marginHeight = 0;
-        mGroupOptions.setLayout(gl_GroupOptions);
+        GridDataBuilder.create(mGroupOptions).hFill().vCenter().hGrab();
+        GridLayoutBuilder.create(mGroupOptions).columns(6).noMargins();
+
+        // Options line 1, 6 columns
 
         Label label3 = new Label(mGroupOptions, SWT.NONE);
         label3.setText("Show:");
@@ -278,10 +274,10 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterObsolete.setText("Obsolete");
 
         Label placeholder2 = new Label(mGroupOptions, SWT.NONE);
-        placeholder2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(placeholder2).hFill().vCenter().hGrab();
 
         mButtonInstall = new Button(mGroupOptions, SWT.NONE);
-        mButtonInstall.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mButtonInstall).hFill().vCenter().hGrab();
         mButtonInstall.setToolTipText("Install all the selected packages");
         mButtonInstall.setText("Install Selected...");
         mButtonInstall.addSelectionListener(new SelectionAdapter() {
@@ -290,6 +286,8 @@ public class PackagesPage extends UpdaterPage
                 onButtonInstall();  //$hide$
             }
         });
+
+        // Options line 2, 6 columns
 
         Label label2 = new Label(mGroupOptions, SWT.NONE);
         label2.setText("Sort by:");
@@ -323,7 +321,7 @@ public class PackagesPage extends UpdaterPage
         new Label(mGroupOptions, SWT.NONE);
 
         mButtonDelete = new Button(mGroupOptions, SWT.NONE);
-        mButtonDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mButtonDelete).hFill().vCenter().hGrab();
         mButtonDelete.setToolTipText("Delete an installed package");
         mButtonDelete.setText("Delete...");
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
