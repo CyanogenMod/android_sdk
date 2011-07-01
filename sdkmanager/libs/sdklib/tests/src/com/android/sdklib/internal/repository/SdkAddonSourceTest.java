@@ -205,14 +205,14 @@ public class SdkAddonSourceTest extends TestCase {
             }
         }
         assertEquals(
-                "[usb_driver, extra_api_dep, extra0000005f]",
+                "[extra_api_dep, usb_driver, extra0000005f]",
                 Arrays.toString(extraPaths.toArray()));
         assertEquals(
-                "[g, android_vendor, vendor0000005f]",
+                "[android_vendor, g, vendor0000005f]",
                 Arrays.toString(extraVendors.toArray()));
         assertEquals(
-                ("[SDK/extras/g/usb_driver, " +
-                  "SDK/extras/android_vendor/extra_api_dep, " +
+                ("[SDK/extras/android_vendor/extra_api_dep, " +
+                  "SDK/extras/g/usb_driver, " +
                   "SDK/extras/vendor0000005f/extra0000005f]").replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
     }
@@ -296,14 +296,14 @@ public class SdkAddonSourceTest extends TestCase {
             }
         }
         assertEquals(
-                "[usb_driver, extra_api_dep, extra0000005f]",
+                "[extra_api_dep, usb_driver, extra0000005f]",
                 Arrays.toString(extraPaths.toArray()));
         assertEquals(
-                "[g, android_vendor, vendor0000005f]",
+                "[android_vendor, g, vendor0000005f]",
                 Arrays.toString(extraVendors.toArray()));
         assertEquals(
-                ("[SDK/extras/g/usb_driver, " +
-                  "SDK/extras/android_vendor/extra_api_dep, " +
+                ("[SDK/extras/android_vendor/extra_api_dep, " +
+                  "SDK/extras/g/usb_driver, " +
                   "SDK/extras/vendor0000005f/extra0000005f]").replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
     }
