@@ -308,13 +308,13 @@ public class SdkRepoSourceTest extends TestCase {
             }
         }
         assertEquals(
-                "[usb_driver, extra_api_dep]",
+                "[extra_api_dep, usb_driver]",
                 Arrays.toString(extraPaths.toArray()));
         assertEquals(
                 "[, ]",
                 Arrays.toString(extraVendors.toArray()));
         assertEquals(
-                "[SDK/extras/usb_driver, SDK/extras/extra_api_dep]".replace('/', File.separatorChar),
+                "[SDK/extras/extra_api_dep, SDK/extras/usb_driver]".replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
     }
 
@@ -385,13 +385,13 @@ public class SdkRepoSourceTest extends TestCase {
             }
         }
         assertEquals(
-                "[usb_driver, extra_api_dep]",
+                "[extra_api_dep, usb_driver]",
                 Arrays.toString(extraPaths.toArray()));
         assertEquals(
-                "[a, android_vendor]",
+                "[android_vendor, a]",
                 Arrays.toString(extraVendors.toArray()));
         assertEquals(
-                "[SDK/extras/a/usb_driver, SDK/extras/android_vendor/extra_api_dep]"
+                "[SDK/extras/android_vendor/extra_api_dep, SDK/extras/a/usb_driver]"
                  .replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
     }
@@ -487,18 +487,18 @@ public class SdkRepoSourceTest extends TestCase {
             }
         }
         assertEquals(
-                "[usb_driver, extra_api_dep]",
+                "[extra_api_dep, usb_driver]",
                 Arrays.toString(extraPaths.toArray()));
         assertEquals(
-                "[a, android_vendor]",
+                "[android_vendor, a]",
                 Arrays.toString(extraVendors.toArray()));
         assertEquals(
-                "[SDK/extras/a/usb_driver, SDK/extras/android_vendor/extra_api_dep]"
+                "[SDK/extras/android_vendor/extra_api_dep, SDK/extras/a/usb_driver]"
                  .replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
         assertEquals(
-                "[[], " +
-                "[v8/veggies_8.jar, readme.txt, dir1/dir 2 with space/mylib.jar]]",
+                "[[v8/veggies_8.jar, readme.txt, dir1/dir 2 with space/mylib.jar], " +
+                "[]]",
                 Arrays.toString(extraFilePaths.toArray()));
     }
 
