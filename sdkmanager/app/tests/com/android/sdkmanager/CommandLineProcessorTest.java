@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 public class CommandLineProcessorTest extends TestCase {
 
     private StdSdkLog mLog;
-    
+
     /**
      * A mock version of the {@link CommandLineProcessor} class that does not
      * exits and captures its stdout/stderr output.
@@ -35,7 +35,7 @@ public class CommandLineProcessorTest extends TestCase {
         private boolean mHelpCalled;
         private String mStdOut = "";
         private String mStdErr = "";
-        
+
         public MockCommandLineProcessor(ISdkLog logger) {
             super(logger,
                   new String[][] {
@@ -47,45 +47,45 @@ public class CommandLineProcessorTest extends TestCase {
             define(Mode.STRING, true /*mandatory*/,
                     "verb1", "action1", "2", "second", "mandatory flag", null);
         }
-        
+
         @Override
         public void printHelpAndExitForAction(String verb, String directObject,
                 String errorFormat, Object... args) {
             mHelpCalled = true;
             super.printHelpAndExitForAction(verb, directObject, errorFormat, args);
         }
-        
+
         @Override
         protected void exit() {
             mExitCalled = true;
         }
-        
+
         @Override
         protected void stdout(String format, Object... args) {
             String s = String.format(format, args);
             mStdOut += s + "\n";
             // don't call super to avoid printing stuff
         }
-        
+
         @Override
         protected void stderr(String format, Object... args) {
             String s = String.format(format, args);
             mStdErr += s + "\n";
             // don't call super to avoid printing stuff
         }
-        
+
         public boolean wasHelpCalled() {
             return mHelpCalled;
         }
-        
+
         public boolean wasExitCalled() {
             return mExitCalled;
         }
-        
+
         public String getStdOut() {
             return mStdOut;
         }
-        
+
         public String getStdErr() {
             return mStdErr;
         }
@@ -102,8 +102,8 @@ public class CommandLineProcessorTest extends TestCase {
         super.tearDown();
     }
 
-    public final void testPrintHelpAndExit() {
-        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);        
+    public void testPrintHelpAndExit() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
         assertFalse(c.wasExitCalled());
         assertFalse(c.wasHelpCalled());
         assertTrue(c.getStdOut().equals(""));
@@ -114,7 +114,7 @@ public class CommandLineProcessorTest extends TestCase {
         assertTrue(c.getStdErr().equals(""));
         assertTrue(c.wasExitCalled());
 
-        c = new MockCommandLineProcessor(mLog);        
+        c = new MockCommandLineProcessor(mLog);
         assertFalse(c.wasExitCalled());
         assertTrue(c.getStdOut().equals(""));
         assertTrue(c.getStdErr().indexOf("Missing parameter") == -1);
@@ -124,9 +124,9 @@ public class CommandLineProcessorTest extends TestCase {
         assertFalse(c.getStdOut().equals(""));
         assertTrue(c.getStdErr().indexOf("Missing parameter") != -1);
     }
-    
-    public final void testVerbose() {
-        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);        
+
+    public void testVerbose() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
 
         assertFalse(c.isVerbose());
         c.parseArgs(new String[] { "-v" });
@@ -135,31 +135,31 @@ public class CommandLineProcessorTest extends TestCase {
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("Missing verb name.") != -1);
 
-        c = new MockCommandLineProcessor(mLog);        
+        c = new MockCommandLineProcessor(mLog);
         c.parseArgs(new String[] { "--verbose" });
         assertTrue(c.isVerbose());
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("Missing verb name.") != -1);
     }
-    
-    public final void testHelp() {
-        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);        
+
+    public void testHelp() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
 
         c.parseArgs(new String[] { "-h" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("Missing verb name.") == -1);
 
-        c = new MockCommandLineProcessor(mLog);        
+        c = new MockCommandLineProcessor(mLog);
         c.parseArgs(new String[] { "--help" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("Missing verb name.") == -1);
     }
 
-    public final void testMandatory() {
-        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);        
+    public void testMandatory() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
 
         c.parseArgs(new String[] { "verb1", "action1", "-1", "value1", "-2", "value2" });
         assertFalse(c.wasExitCalled());
@@ -168,7 +168,7 @@ public class CommandLineProcessorTest extends TestCase {
         assertEquals("value1", c.getValue("verb1", "action1", "first"));
         assertEquals("value2", c.getValue("verb1", "action1", "second"));
 
-        c = new MockCommandLineProcessor(mLog);        
+        c = new MockCommandLineProcessor(mLog);
         c.parseArgs(new String[] { "verb1", "action1", "-2", "value2" });
         assertFalse(c.wasExitCalled());
         assertFalse(c.wasHelpCalled());
@@ -176,12 +176,58 @@ public class CommandLineProcessorTest extends TestCase {
         assertEquals(null, c.getValue("verb1", "action1", "first"));
         assertEquals("value2", c.getValue("verb1", "action1", "second"));
 
-        c = new MockCommandLineProcessor(mLog);        
+        c = new MockCommandLineProcessor(mLog);
         c.parseArgs(new String[] { "verb1", "action1" });
         assertTrue(c.wasExitCalled());
         assertTrue(c.wasHelpCalled());
         assertTrue(c.getStdErr().indexOf("must be defined") != -1);
         assertEquals(null, c.getValue("verb1", "action1", "first"));
         assertEquals(null, c.getValue("verb1", "action1", "second"));
+    }
+
+    public void testReflowLine() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
+
+        boolean gotNpe = false;
+        try {
+            c.reflowLine(null);
+        } catch(NullPointerException e) {
+            gotNpe = true;
+        } finally {
+            assertTrue(gotNpe);
+        }
+
+        assertEquals("", c.reflowLine(""));
+
+        assertEquals("1234567", c.reflowLine("1234567"));
+
+        assertEquals(
+                "-- verbose, -v: This description for this flag fits in exactly 78 characters.",
+                c.reflowLine("-- verbose, -v: This description for this flag fits in exactly 78 characters."));
+
+        assertEquals(
+                "--verbose, -v  :   This description for this flag fits in more than 78\n" +
+                "                   characters and needs to wrap up at the colon.",
+                c.reflowLine("--verbose, -v  :   This description for this flag fits in more than 78 characters and needs to wrap up at the colon."));
+
+        assertEquals(
+                "If the line needs to wrap but there's no colon marker, the line will just wrap\n" +
+                "    with 4 spaces.",
+                c.reflowLine("If the line needs to wrap but there's no colon marker, the line will just wrap with 4 spaces."));
+
+        assertEquals(
+                "--blah: More than 78 characters and lots of\n" +
+                "        spaces.   ",
+                c.reflowLine("--blah: More than 78 characters and lots of                                spaces.   "));
+
+        assertEquals(
+                "In this case the colon is at the very end of the string and it's not going to\n" +
+                "    wrap as expected:",
+                c.reflowLine("In this case the colon is at the very end of the string and it's not going to wrap as expected:"));
+
+        assertEquals(
+                "--flag:In-this-case-there-is-no-whitespace-and-wrapping-will-cut-just-at-the-7\n" +
+                "       8-mark.",
+                c.reflowLine("--flag:In-this-case-there-is-no-whitespace-and-wrapping-will-cut-just-at-the-78-mark."));
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.sdkmanager;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.ISdkLog;
 
 import java.util.HashMap;
@@ -108,15 +110,20 @@ class CommandLineProcessor {
         mLog = logger;
         mActions = actions;
 
+        /*
+         * usage should fit in 80 columns, including the space to print the options:
+         * "  -v --verbose  7890123456789012345678901234567890123456789012345678901234567890"
+         */
+
         define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "v", KEY_VERBOSE,
-                "Verbose mode: errors, warnings and informational messages are printed.",
-                false);
+                           "Verbose mode, shows errors, warnings and all messages.",
+                           false);
         define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "s", KEY_SILENT,
-                "Silent mode: only errors are printed out.",
-                false);
+                           "Silent mode, shows errors only.",
+                           false);
         define(Mode.BOOLEAN, false, GLOBAL_FLAG_VERB, NO_VERB_OBJECT, "h", KEY_HELP,
-                "Help on a specific command.",
-                false);
+                           "Help on a specific command.",
+                           false);
     }
 
     /**
@@ -504,7 +511,7 @@ class CommandLineProcessor {
             stdout("\nValid actions are composed of a verb and an optional direct object:");
             for (String[] action : mActions) {
                 if (verb == null || verb.equals(action[ACTION_VERB_INDEX])) {
-                    stdout("- %1$6s %2$-14s: %3$s",
+                    stdout("- %1$6s %2$-13s: %3$s",
                             action[ACTION_VERB_INDEX],
                             action[ACTION_OBJECT_INDEX],
                             action[ACTION_DESC_INDEX]);
@@ -580,23 +587,20 @@ class CommandLineProcessor {
                 // width "manually" in the printf format string.
                 String longArgWidth = Integer.toString(longArgLen + 2);
 
-                // For multi-line descriptions, pad new lines with the necessary whitespace.
-                String desc = arg.getDescription();
-                desc = desc.replaceAll("\n",                                           //$NON-NLS-1$
-                        String.format("\n      %" + longArgWidth + "s", " ")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
                 // Print a line in the form " -1_letter_arg --long_arg description"
                 // where either the 1-letter arg or the long arg are optional.
-                stdout("  %1$-2s %2$-" + longArgWidth + "s %3$s%4$s%5$s",              //$NON-NLS-1$
+                String output = String.format(
+                        "  %1$-2s %2$-" + longArgWidth + "s: %3$s%4$s%5$s", //$NON-NLS-1$ //$NON-NLS-2$
                         arg.getShortArg().length() > 0 ?
                                 "-" + arg.getShortArg() :                              //$NON-NLS-1$
                                 "",                                                    //$NON-NLS-1$
                         arg.getLongArg().length() > 0 ?
                                 "--" + arg.getLongArg() :                              //$NON-NLS-1$
                                 "",                                                    //$NON-NLS-1$
-                        desc,
+                        arg.getDescription(),
                         value,
                         required);
+                stdout(output);
                 numOptions++;
             }
         }
@@ -607,6 +611,7 @@ class CommandLineProcessor {
     }
 
     //----
+
 
     /**
      * The mode of an argument specifies the type of variable it represents,
@@ -874,7 +879,9 @@ class CommandLineProcessor {
      * @param args Format arguments.
      */
     protected void stdout(String format, Object...args) {
-        mLog.printf(format + '\n', args);
+        String output = String.format(format, args);
+        output = reflowLine(output);
+        mLog.printf("%s\n", output);    //$NON-NLS-1$
     }
 
     /**
@@ -887,4 +894,74 @@ class CommandLineProcessor {
     protected void stderr(String format, Object...args) {
         mLog.error(null, format, args);
     }
+
+
+    /**
+     * Reformats the line so that it fits in 78 characters max.
+     * <p/>
+     * When wrapping the second line and following, prefix the string with a number of
+     * spaces. This will use the first colon (:) to determine the prefix size
+     * or use 4 as a minimum if there are no colons in the string.
+     *
+     * @param line The line to reflow. Must be non-null.
+     * @return A new line to print as-is, that contains \n as needed.
+     */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected String reflowLine(String line) {
+        final int maxLen = 78;
+
+        // Most of time the line will fit in the given length and this will be a no-op
+        int n = line.length();
+        if (n <= maxLen) {
+            return line;
+        }
+
+        int prefixSize = line.indexOf(':') + 1;
+        // If there' some spacing after the colon, use the same when wrapping
+        if (prefixSize > 0 && prefixSize < maxLen) {
+            while(prefixSize < n && line.charAt(prefixSize) == ' ') {
+                prefixSize++;
+            }
+        } else {
+            prefixSize = 4;
+        }
+        String prefix = String.format(
+                "%-" + Integer.toString(prefixSize) + "s",      //$NON-NLS-1$ //$NON-NLS-2$
+                " ");                                           //$NON-NLS-1$
+
+        StringBuilder output = new StringBuilder(n + prefixSize);
+
+        while (n > 0) {
+            if (n <= maxLen) {
+                output.append(line);
+                break;
+            }
+
+            // Line is longer than the max length, find the first character before and after
+            // the whitespace where we want to break the line.
+            int posNext = maxLen;
+            while (posNext < n && line.charAt(posNext) == ' ') {
+                posNext++;
+            }
+            while (posNext > 0 && line.charAt(posNext - 1) != ' ') {
+                posNext--;
+            }
+
+            if (posNext == 0 || posNext >= n) {
+                // We found no whitespace separator. This should generally not occur.
+                posNext = maxLen;
+            }
+            int posPrev = posNext;
+            while (posPrev > 0 && line.charAt(posPrev - 1) == ' ') {
+                posPrev--;
+            }
+
+            output.append(line.substring(0, posPrev)).append('\n');
+            line = prefix + line.substring(posNext);
+            n -= posNext;
+        }
+
+        return output.toString();
+    }
+
 }
