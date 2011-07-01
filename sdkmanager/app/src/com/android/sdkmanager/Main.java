@@ -288,13 +288,11 @@ public class Main {
                 updateAdb();
 
             }
-        } else if (SdkCommandLine.VERB_DISPLAY.equals(verb)) {
-            if (SdkCommandLine.OBJECT_AVD.equals(directObject)) {
-                showAvdManagerWindow();
+        } else if (SdkCommandLine.VERB_SDK.equals(verb)) {
+            showSdkManagerWindow(false /*autoUpdate*/);
 
-            } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
-                showSdkManagerWindow(false /*autoUpdate*/);
-            }
+        } else if (SdkCommandLine.VERB_AVD.equals(verb)) {
+            showAvdManagerWindow();
 
         } else if (SdkCommandLine.VERB_DELETE.equals(verb) &&
                 SdkCommandLine.OBJECT_AVD.equals(directObject)) {
