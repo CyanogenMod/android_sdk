@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -132,6 +133,10 @@ public class AddonsListFetcher {
             if (exception[0] instanceof FileNotFoundException) {
                 // FNF has no useful getMessage, so we need to special handle it.
                 reason = "File not found";
+            } else if (exception[0] instanceof UnknownHostException &&
+                    exception[0].getMessage() != null) {
+                // This has no useful getMessage yet could really use one
+                reason = String.format("Unknown Host %1$s", exception[0].getMessage());
             } else if (exception[0] instanceof SSLKeyException) {
                 // That's a common error and we have a pref for it.
                 reason = "HTTPS SSL error. You might want to force download through HTTP in the settings.";

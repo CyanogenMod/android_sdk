@@ -31,6 +31,8 @@ import com.android.sdkuilib.internal.repository.PackageLoader.PkgItem;
 import com.android.sdkuilib.internal.repository.PackageLoader.PkgState;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.ui.GridDataBuilder;
+import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -51,8 +53,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -74,6 +74,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
@@ -152,6 +153,7 @@ public class PackagesPage extends UpdaterPage
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
     private boolean mLastSortWasByApi;
+    private boolean mOperationPending;
 
     public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
         super(parent, swtStyle);
@@ -171,26 +173,23 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void createContents(Composite parent) {
-        GridLayout gridLayout = new GridLayout(2, false);
-        gridLayout.marginWidth = 0;
-        gridLayout.marginHeight = 0;
-        parent.setLayout(gridLayout);
+        GridLayoutBuilder.create(parent).noMargins().columns(2);
 
         mGroupSdk = new Composite(parent, SWT.NONE);
-        mGroupSdk.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-        mGroupSdk.setLayout(new GridLayout(2, false));
+        GridDataBuilder.create(mGroupSdk).hFill().vCenter().hGrab().hSpan(2);
+        GridLayoutBuilder.create(mGroupSdk).columns(2);
 
         Label label1 = new Label(mGroupSdk, SWT.NONE);
         label1.setText("SDK Path:");
 
         mTextSdkOsPath = new Text(mGroupSdk, SWT.NONE);
-        mTextSdkOsPath.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mTextSdkOsPath).hFill().vCenter().hGrab();
         mTextSdkOsPath.setEnabled(false);
 
         mGroupPackages = new Group(parent, SWT.NONE);
-        mGroupPackages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+        GridDataBuilder.create(mGroupPackages).fill().grab().hSpan(2);
         mGroupPackages.setText("Packages");
-        mGroupPackages.setLayout(new GridLayout(1, false));
+        GridLayoutBuilder.create(mGroupPackages).columns(1);
 
         mTreeViewer = new CheckboxTreeViewer(mGroupPackages, SWT.BORDER);
 
@@ -203,7 +202,7 @@ public class PackagesPage extends UpdaterPage
         mTree = mTreeViewer.getTree();
         mTree.setLinesVisible(true);
         mTree.setHeaderVisible(true);
-        mTree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        GridDataBuilder.create(mTree).fill().grab();
 
         // column name icon is set in sortPackages() depending on the current filter type
         // (e.g. API level or source)
@@ -233,11 +232,10 @@ public class PackagesPage extends UpdaterPage
         treeColumn4.setText("Status");
 
         mGroupOptions = new Composite(mGroupPackages, SWT.NONE);
-        mGroupOptions.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        GridLayout gl_GroupOptions = new GridLayout(6, false);
-        gl_GroupOptions.marginWidth = 0;
-        gl_GroupOptions.marginHeight = 0;
-        mGroupOptions.setLayout(gl_GroupOptions);
+        GridDataBuilder.create(mGroupOptions).hFill().vCenter().hGrab();
+        GridLayoutBuilder.create(mGroupOptions).columns(6).noMargins();
+
+        // Options line 1, 6 columns
 
         Label label3 = new Label(mGroupOptions, SWT.NONE);
         label3.setText("Show:");
@@ -276,10 +274,10 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterObsolete.setText("Obsolete");
 
         Label placeholder2 = new Label(mGroupOptions, SWT.NONE);
-        placeholder2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(placeholder2).hFill().vCenter().hGrab();
 
         mButtonInstall = new Button(mGroupOptions, SWT.NONE);
-        mButtonInstall.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mButtonInstall).hFill().vCenter().hGrab();
         mButtonInstall.setToolTipText("Install all the selected packages");
         mButtonInstall.setText("Install Selected...");
         mButtonInstall.addSelectionListener(new SelectionAdapter() {
@@ -288,6 +286,8 @@ public class PackagesPage extends UpdaterPage
                 onButtonInstall();  //$hide$
             }
         });
+
+        // Options line 2, 6 columns
 
         Label label2 = new Label(mGroupOptions, SWT.NONE);
         label2.setText("Sort by:");
@@ -321,7 +321,7 @@ public class PackagesPage extends UpdaterPage
         new Label(mGroupOptions, SWT.NONE);
 
         mButtonDelete = new Button(mGroupOptions, SWT.NONE);
-        mButtonDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        GridDataBuilder.create(mButtonDelete).hFill().vCenter().hGrab();
         mButtonDelete.setToolTipText("Delete an installed package");
         mButtonDelete.setText("Delete...");
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
@@ -507,7 +507,7 @@ public class PackagesPage extends UpdaterPage
         // disposed yet. Otherwise hilarity ensues.
 
         mPackageLoader.loadPackages(new ISourceLoadedCallback() {
-            public boolean onSouceLoaded(List<PkgItem> newPkgItems) {
+            public boolean onSourceLoaded(List<PkgItem> newPkgItems) {
                 boolean somethingNew = false;
 
                 synchronized(mPackages) {
@@ -558,17 +558,6 @@ public class PackagesPage extends UpdaterPage
                 }
             }
         });
-    }
-
-    private void enableUi(Composite root, boolean enabled) {
-        root.setEnabled(enabled);
-        for (Control child : root.getChildren()) {
-            if (child instanceof Composite) {
-                enableUi((Composite) child, enabled);
-            } else {
-                child.setEnabled(enabled);
-            }
-        }
     }
 
     private void sortPackages(boolean updateButtons) {
@@ -923,7 +912,27 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
+    /**
+     * Indicate an install/delete operation is pending.
+     * This disable the install/delete buttons.
+     * Use {@link #endOperationPending()} to revert.
+     */
+    private void beginOperationPending() {
+        mOperationPending = true;
+        mButtonInstall.setEnabled(false);
+        mButtonDelete.setEnabled(false);
+    }
+
+    private void endOperationPending() {
+        mOperationPending = false;
+        updateButtonsState();
+    }
+
     private void updateButtonsState() {
+        if (mOperationPending) {
+            return;
+        }
+
         boolean canInstall = false;
 
         if (mDisplayArchives) {
@@ -1039,13 +1048,28 @@ public class PackagesPage extends UpdaterPage
 
         if (mUpdaterData != null) {
             try {
-                enableUi(mGroupPackages, false);
+                beginOperationPending();
 
                 mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
-                enableUi(mGroupPackages, true);
+                endOperationPending();
+
+                // Remove any pkg item matching anything we potentially installed
+                // then request the package list to be updated. This will prevent
+                // from having stale entries.
+                synchronized(mPackages) {
+                    for (Archive a : archives) {
+                        for (Iterator<PkgItem> it = mPackages.iterator(); it.hasNext(); ) {
+                            PkgItem pi = it.next();
+                            if (pi.hasArchive(a)) {
+                                it.remove();
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 // The local package list has changed, make sure to refresh it
                 mUpdaterData.getLocalSdkParser().clearPackages();
@@ -1062,15 +1086,18 @@ public class PackagesPage extends UpdaterPage
             return;
         }
 
-        String title = "Delete SDK Package";
+        final String title = "Delete SDK Package";
         String msg = "Are you sure you want to delete:";
-        final List<Archive> archives = new ArrayList<Archive>();
+
+        // A map of archives to deleted versus their internal PkgItem representation
+        final Map<Archive, PkgItem> archives = new TreeMap<Archive, PkgItem>();
 
         for (Object c : checked) {
             if (c instanceof PkgItem) {
-                PkgState state = ((PkgItem) c).getState();
+                PkgItem pi = (PkgItem) c;
+                PkgState state = pi.getState();
                 if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
-                    Package p = ((PkgItem) c).getPackage();
+                    Package p = pi.getPackage();
 
                     Archive[] as = p.getArchives();
                     if (as.length == 1 && as[0] != null && as[0].isLocal()) {
@@ -1080,7 +1107,7 @@ public class PackagesPage extends UpdaterPage
                         File dir = new File(osPath);
                         if (dir.isDirectory()) {
                             msg += "\n - " + p.getShortDescription();
-                            archives.add(archive);
+                            archives.put(archive, pi);
                         }
                     }
                 }
@@ -1091,16 +1118,25 @@ public class PackagesPage extends UpdaterPage
             msg += "\n" + "This cannot be undone.";
             if (MessageDialog.openQuestion(getShell(), title, msg)) {
                 try {
-                    enableUi(mGroupPackages, false);
+                    beginOperationPending();
 
-                    mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
+                    mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
-                            for (Archive a : archives) {
+                            for (Entry<Archive, PkgItem> entry : archives.entrySet()) {
+                                Archive a = entry.getKey();
+
                                 monitor.setDescription("Deleting '%1$s' (%2$s)",
                                         a.getParentPackage().getShortDescription(),
                                         a.getLocalOsPath());
+
+                                // Delete the actual package and its internal representation
                                 a.deleteLocal();
+
+                                synchronized(mPackages) {
+                                    mPackages.remove(entry.getValue());
+                                }
+
                                 monitor.incProgress(1);
                                 if (monitor.isCancelRequested()) {
                                     break;
@@ -1112,7 +1148,7 @@ public class PackagesPage extends UpdaterPage
                         }
                     });
                 } finally {
-                    enableUi(mGroupPackages, true);
+                    endOperationPending();
 
                     // The local package list has changed, make sure to refresh it
                     mUpdaterData.getLocalSdkParser().clearPackages();

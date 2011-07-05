@@ -241,6 +241,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
 
     /**
      * Parses an XML node to process the <archives> element.
+     * Always return a non-null array. The array may be empty.
      */
     private Archive[] parseArchives(Node archivesNode) {
         ArrayList<Archive> archives = new ArrayList<Archive>();
@@ -349,6 +350,19 @@ public abstract class Package implements IDescription, Comparable<Package> {
      */
     public Archive[] getArchives() {
         return mArchives;
+    }
+
+    /**
+     * Returns true if this package contains the exact given archive.
+     * Important: This compares object references, not object equality.
+     */
+    public boolean hasArchive(Archive archive) {
+        for (Archive a : mArchives) {
+            if (a == archive) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -538,7 +552,6 @@ public abstract class Package implements IDescription, Comparable<Package> {
         // not an upgrade but not incompatible either.
         return UpdateInfo.NOT_UPDATE;
     }
-
 
     /**
      * Returns an ordering like this: <br/>
