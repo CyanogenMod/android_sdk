@@ -165,4 +165,25 @@ public class SdkCommandLineTest extends TestCase {
         assertEquals("myProject", c.getParamName());
         assertFalse(c.isVerbose());
     }
+
+    public final void testDirectSdk() {
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
+        c.parseArgs(new String[] { "sdk" });
+        assertFalse(c.wasHelpCalled());
+        assertFalse(c.wasExitCalled());
+        assertEquals("sdk", c.getVerb());
+        assertEquals("", c.getDirectObject());
+        assertFalse(c.isVerbose());
+    }
+
+    public final void testDirectAvd() {
+        MockSdkCommandLine c = new MockSdkCommandLine(mLog);
+        c.parseArgs(new String[] { "avd" });
+        assertFalse(c.wasHelpCalled());
+        assertFalse(c.wasExitCalled());
+        assertEquals("avd", c.getVerb());
+        assertEquals("", c.getDirectObject());
+        assertFalse(c.isVerbose());
+    }
+
 }

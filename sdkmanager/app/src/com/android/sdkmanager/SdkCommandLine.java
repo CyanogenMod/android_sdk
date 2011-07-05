@@ -43,7 +43,8 @@ class SdkCommandLine extends CommandLineProcessor {
     public final static String VERB_MOVE    = "move";                               //$NON-NLS-1$
     public final static String VERB_DELETE  = "delete";                             //$NON-NLS-1$
     public final static String VERB_UPDATE  = "update";                             //$NON-NLS-1$
-    public final static String VERB_DISPLAY = "display";                            //$NON-NLS-1$
+    public final static String VERB_SDK     = "sdk";                                //$NON-NLS-1$
+    public final static String VERB_AVD     = "avd";                                //$NON-NLS-1$
 
     public static final String OBJECT_SDK            = "sdk";                       //$NON-NLS-1$
     public static final String OBJECT_AVD            = "avd";                       //$NON-NLS-1$
@@ -146,11 +147,11 @@ class SdkCommandLine extends CommandLineProcessor {
             { VERB_UPDATE, OBJECT_SDK,
                 "Updates the SDK by suggesting new platforms to install if available." },
 
-            { VERB_DISPLAY, OBJECT_SDK,
+            { VERB_SDK, NO_VERB_OBJECT,
                 "Displays the SDK Manager window." },
-            { VERB_DISPLAY, OBJECT_AVD,
+            { VERB_AVD, NO_VERB_OBJECT,
                 "Displays the AVD Manager window.",
-                OBJECT_AVDS },
+                },
     };
 
     public SdkCommandLine(ISdkLog logger) {
