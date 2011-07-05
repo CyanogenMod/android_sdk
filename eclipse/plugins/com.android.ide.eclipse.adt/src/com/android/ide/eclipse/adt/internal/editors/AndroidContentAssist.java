@@ -435,7 +435,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 }
 
                 UiAttributeNode currAttrNode = null;
-                for (UiAttributeNode attrNode : currentUiNode.getUiAttributes()) {
+                for (UiAttributeNode attrNode : currentUiNode.getAllUiAttributes()) {
                     if (attrNode.getDescriptor().getXmlLocalName().equals(attrName)) {
                         currAttrNode = attrNode;
                         break;

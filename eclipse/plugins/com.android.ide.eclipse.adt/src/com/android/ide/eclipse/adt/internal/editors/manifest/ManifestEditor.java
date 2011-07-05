@@ -316,7 +316,7 @@ public final class ManifestEditor extends AndroidXmlEditor {
 
         for (UiElementNode ui_node : nodeList) {
             if (ui_node.getDescriptor().getXmlName().equals(nodeType)) {
-                for (UiAttributeNode attr : ui_node.getUiAttributes()) {
+                for (UiAttributeNode attr : ui_node.getAllUiAttributes()) {
                     if (attr.getDescriptor().getXmlLocalName().equals(
                             AndroidManifestDescriptors.ANDROID_NAME_ATTR)) {
                         if (attr.getCurrentValue().equals(className)) {

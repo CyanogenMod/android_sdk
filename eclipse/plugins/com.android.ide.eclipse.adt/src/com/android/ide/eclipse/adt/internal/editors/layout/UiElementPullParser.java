@@ -225,7 +225,7 @@ public class UiElementPullParser extends BasePullParser {
         UiElementNode node = getCurrentNode();
 
         if (node != null) {
-            Collection<UiAttributeNode> attributes = node.getUiAttributes();
+            Collection<UiAttributeNode> attributes = node.getAllUiAttributes();
             int count = attributes.size();
 
             return count + (mZeroAttributeIsPadding ? 1 : 0);
