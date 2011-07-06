@@ -119,7 +119,7 @@ public class UiElementNode implements IPropertySource {
     /** A read-only view of the UI children node collection. */
     private List<UiElementNode> mReadOnlyUiChildren;
     /** A read-only view of the UI attributes collection. */
-    private Collection<UiAttributeNode> mReadOnlyUiAttributes;
+    private Collection<UiAttributeNode> mCachedAllUiAttributes;
     /** A map of hidden attribute descriptors. Key is the XML name. */
     private Map<String, AttributeDescriptor> mCachedHiddenAttributes;
     /** An optional list of {@link IUiUpdateListener}. Most element nodes will not have any
@@ -181,7 +181,7 @@ public class UiElementNode implements IPropertySource {
      */
     private void clearAttributes() {
         mUiAttributes = null;
-        mReadOnlyUiAttributes = null;
+        mCachedAllUiAttributes = null;
         mCachedHiddenAttributes = null;
         mUnknownUiAttributes = new HashSet<UiAttributeNode>();
     }
@@ -598,17 +598,27 @@ public class UiElementNode implements IPropertySource {
     }
 
     /**
+     * Returns a collection containing all the known attributes as well as
+     * all the unknown ui attributes.
+     *
      * @return A read-only version of the attributes collection.
      */
-    public Collection<UiAttributeNode> getUiAttributes() {
-        if (mReadOnlyUiAttributes == null) {
-            mReadOnlyUiAttributes = Collections.unmodifiableCollection(
-                    getInternalUiAttributes().values());
+    public Collection<UiAttributeNode> getAllUiAttributes() {
+        if (mCachedAllUiAttributes == null) {
+
+            List<UiAttributeNode> allValues =
+                new ArrayList<UiAttributeNode>(getInternalUiAttributes().values());
+            allValues.addAll(mUnknownUiAttributes);
+
+            mCachedAllUiAttributes = Collections.unmodifiableCollection(allValues);
         }
-        return mReadOnlyUiAttributes;
+        return mCachedAllUiAttributes;
     }
 
     /**
+     * Returns all the unknown ui attributes, that is those we found defined in the
+     * actual XML but that we don't have descriptors for.
+     *
      * @return A read-only version of the unknown attributes collection.
      */
     public Collection<UiAttributeNode> getUnknownUiAttributes() {
@@ -637,8 +647,7 @@ public class UiElementNode implements IPropertySource {
         }
 
         // get the error value from the attributes.
-        Collection<UiAttributeNode> attributes = getInternalUiAttributes().values();
-        for (UiAttributeNode attribute : attributes) {
+        for (UiAttributeNode attribute : getAllUiAttributes()) {
             if (attribute.hasError()) {
                 return true;
             }
@@ -880,11 +889,7 @@ public class UiElementNode implements IPropertySource {
      * This is called by the UI when the embedding part needs to be committed.
      */
     public void commit() {
-        for (UiAttributeNode uiAttr : getInternalUiAttributes().values()) {
-            uiAttr.commit();
-        }
-
-        for (UiAttributeNode uiAttr : mUnknownUiAttributes) {
+        for (UiAttributeNode uiAttr : getAllUiAttributes()) {
             uiAttr.commit();
         }
     }
@@ -896,13 +901,7 @@ public class UiElementNode implements IPropertySource {
      * loaded from the model.
      */
     public boolean isDirty() {
-        for (UiAttributeNode uiAttr : getInternalUiAttributes().values()) {
-            if (uiAttr.isDirty()) {
-                return true;
-            }
-        }
-
-        for (UiAttributeNode uiAttr : mUnknownUiAttributes) {
+        for (UiAttributeNode uiAttr : getAllUiAttributes()) {
             if (uiAttr.isDirty()) {
                 return true;
             }
@@ -1368,7 +1367,7 @@ public class UiElementNode implements IPropertySource {
         }
 
         // Clone the current list of unknown attributes. We'll then remove from this list when
-        // we still attributes which are still unknown. What will be left are the old unknown
+        // we find attributes which are still unknown. What will be left are the old unknown
         // attributes that have been deleted in the current XML attribute list.
         @SuppressWarnings("unchecked")
         HashSet<UiAttributeNode> deleted = (HashSet<UiAttributeNode>) mUnknownUiAttributes.clone();
@@ -1418,6 +1417,7 @@ public class UiElementNode implements IPropertySource {
             // Remove from the internal list unknown attributes that have been deleted from the xml
             for (UiAttributeNode a : deleted) {
                 mUnknownUiAttributes.remove(a);
+                mCachedAllUiAttributes = null;
             }
         }
     }
@@ -1435,6 +1435,7 @@ public class UiElementNode implements IPropertySource {
         UiAttributeNode uiAttr = desc.createUiNode(this);
         uiAttr.setDirty(true);
         mUnknownUiAttributes.add(uiAttr);
+        mCachedAllUiAttributes = null;
         return uiAttr;
     }
 
@@ -1539,10 +1540,7 @@ public class UiElementNode implements IPropertySource {
      */
     public boolean commitDirtyAttributesToXml() {
         boolean result = false;
-        HashMap<AttributeDescriptor, UiAttributeNode> attributeMap = getInternalUiAttributes();
-
-        for (Entry<AttributeDescriptor, UiAttributeNode> entry : attributeMap.entrySet()) {
-            UiAttributeNode uiAttr = entry.getValue();
+        for (UiAttributeNode uiAttr : getAllUiAttributes()) {
             if (uiAttr.isDirty()) {
                 result |= commitAttributeToXml(uiAttr, uiAttr.getCurrentValue());
                 uiAttr.setDirty(false);
@@ -1668,21 +1666,21 @@ public class UiElementNode implements IPropertySource {
 
         // Try with all internal attributes
         UiAttributeNode uiAttr = setInternalAttrValue(
-                getInternalUiAttributes().values(), attrXmlName, attrNsUri, value, override);
+                getAllUiAttributes(), attrXmlName, attrNsUri, value, override);
         if (uiAttr != null) {
             return uiAttr;
         }
 
-        // Look at existing unknown (a.k.a. custom) attributes
-        uiAttr = setInternalAttrValue(
-                getUnknownUiAttributes(), attrXmlName, attrNsUri, value, override);
-
         if (uiAttr == null) {
             // Failed to find the attribute. For non-android attributes that is mostly expected,
-            // in which case we just create a new custom one.
+            // in which case we just create a new custom one. As a side effect, we'll find the
+            // attribute descriptor via getAllUiAttributes().
+            addUnknownAttribute(attrXmlName, attrXmlName, attrNsUri);
 
-            uiAttr = addUnknownAttribute(attrXmlName, attrXmlName, attrNsUri);
-            // FIXME: The will create the attribute, but not actually set the value on it...
+            // We've created the attribute, but not actually set the value on it, so let's do it.
+            // Try with the updated internal attributes.
+            uiAttr = setInternalAttrValue(
+                    getAllUiAttributes(), attrXmlName, attrNsUri, value, override);
         }
 
         return uiAttr;

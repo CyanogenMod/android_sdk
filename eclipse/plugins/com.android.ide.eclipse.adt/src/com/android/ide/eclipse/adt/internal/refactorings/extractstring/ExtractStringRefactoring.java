@@ -755,7 +755,7 @@ public class ExtractStringRefactoring extends Refactoring {
                 name = name.substring(pos + 1);
             }
 
-            for (UiAttributeNode attrNode : currentUiNode.getUiAttributes()) {
+            for (UiAttributeNode attrNode : currentUiNode.getAllUiAttributes()) {
                 if (attrNode.getDescriptor().getXmlLocalName().equals(name)) {
                     AttributeDescriptor desc = attrNode.getDescriptor();
                     if (desc instanceof ReferenceAttributeDescriptor) {

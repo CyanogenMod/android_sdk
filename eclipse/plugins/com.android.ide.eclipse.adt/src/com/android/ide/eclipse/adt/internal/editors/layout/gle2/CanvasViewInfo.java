@@ -462,7 +462,7 @@ public class CanvasViewInfo implements IPropertySource {
 
         SimpleElement e = new SimpleElement(fqcn, parentFqcn, bounds, parentBounds);
 
-        for (UiAttributeNode attr : uiNode.getUiAttributes()) {
+        for (UiAttributeNode attr : uiNode.getAllUiAttributes()) {
             String value = attr.getCurrentValue();
             if (value != null && value.length() > 0) {
                 AttributeDescriptor attrDesc = attr.getDescriptor();

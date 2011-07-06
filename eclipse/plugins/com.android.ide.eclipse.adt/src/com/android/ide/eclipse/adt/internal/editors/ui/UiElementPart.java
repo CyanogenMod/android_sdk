@@ -244,7 +244,7 @@ public class UiElementPart extends ManifestSectionPart {
     @Override
     public boolean isDirty() {
         if (mUiElementNode != null && !super.isDirty()) {
-            for (UiAttributeNode ui_attr : mUiElementNode.getUiAttributes()) {
+            for (UiAttributeNode ui_attr : mUiElementNode.getAllUiAttributes()) {
                 if (ui_attr.isDirty()) {
                     markDirty();
                     break;
@@ -269,7 +269,7 @@ public class UiElementPart extends ManifestSectionPart {
         if (mUiElementNode != null) {
             mEditor.wrapEditXmlModel(new Runnable() {
                 public void run() {
-                    for (UiAttributeNode ui_attr : mUiElementNode.getUiAttributes()) {
+                    for (UiAttributeNode ui_attr : mUiElementNode.getAllUiAttributes()) {
                         ui_attr.commit();
                     }
                 }

@@ -79,7 +79,7 @@ public class UiElementNodeTest extends TestCase {
         assertSame(mManifestDesc, ui.getDescriptor());
         assertNull(ui.getUiParent());
         assertEquals(0, ui.getUiChildren().size());
-        assertEquals(0, ui.getUiAttributes().size());
+        assertEquals(0, ui.getAllUiAttributes().size());
     }
 
     /**
@@ -139,14 +139,14 @@ public class UiElementNodeTest extends TestCase {
         ui.loadFromXmlNode(root);
         assertEquals("manifest", ui.getDescriptor().getXmlName());
         assertEquals(1, ui.getUiChildren().size());
-        assertEquals(0, ui.getUiAttributes().size());
+        assertEquals(0, ui.getAllUiAttributes().size());
 
         // get /manifest/application
         Iterator<UiElementNode> ui_child_it = ui.getUiChildren().iterator();
         UiElementNode application = ui_child_it.next();
         assertEquals("application", application.getDescriptor().getXmlName());
         assertEquals(0, application.getUiChildren().size());
-        assertEquals(0, application.getUiAttributes().size());
+        assertEquals(0, application.getAllUiAttributes().size());
     }
 
 
@@ -161,21 +161,21 @@ public class UiElementNodeTest extends TestCase {
         ui.loadFromXmlNode(root);
         assertEquals("manifest", ui.getDescriptor().getXmlName());
         assertEquals(2, ui.getUiChildren().size());
-        assertEquals(0, ui.getUiAttributes().size());
+        assertEquals(0, ui.getAllUiAttributes().size());
 
         // get /manifest/application
         Iterator<UiElementNode> ui_child_it = ui.getUiChildren().iterator();
         UiElementNode application = ui_child_it.next();
         assertEquals("application", application.getDescriptor().getXmlName());
         assertEquals(0, application.getUiChildren().size());
-        assertEquals(0, application.getUiAttributes().size());
+        assertEquals(0, application.getAllUiAttributes().size());
         assertEquals(0, application.getUiSiblingIndex());
 
         // get /manifest/permission
         UiElementNode first_permission = ui_child_it.next();
         assertEquals("permission", first_permission.getDescriptor().getXmlName());
         assertEquals(0, first_permission.getUiChildren().size());
-        assertEquals(0, first_permission.getUiAttributes().size());
+        assertEquals(0, first_permission.getAllUiAttributes().size());
         assertEquals(1, first_permission.getUiSiblingIndex());
     }
 
@@ -206,58 +206,58 @@ public class UiElementNodeTest extends TestCase {
         ui.loadFromXmlNode(root);
         assertEquals("manifest", ui.getDescriptor().getXmlName());
         assertEquals(3, ui.getUiChildren().size());
-        assertEquals(0, ui.getUiAttributes().size());
+        assertEquals(0, ui.getAllUiAttributes().size());
 
         // get /manifest/application
         Iterator<UiElementNode> ui_child_it = ui.getUiChildren().iterator();
         UiElementNode application = ui_child_it.next();
         assertEquals("application", application.getDescriptor().getXmlName());
         assertEquals(4, application.getUiChildren().size());
-        assertEquals(0, application.getUiAttributes().size());
+        assertEquals(0, application.getAllUiAttributes().size());
 
         // get /manifest/application/activity #1
         Iterator<UiElementNode> app_child_it = application.getUiChildren().iterator();
         UiElementNode first_activity = app_child_it.next();
         assertEquals("activity", first_activity.getDescriptor().getXmlName());
         assertEquals(0, first_activity.getUiChildren().size());
-        assertEquals(0, first_activity.getUiAttributes().size());
+        assertEquals(0, first_activity.getAllUiAttributes().size());
 
         // get /manifest/application/activity #2
         UiElementNode second_activity = app_child_it.next();
         assertEquals("activity", second_activity.getDescriptor().getXmlName());
         assertEquals(1, second_activity.getUiChildren().size());
-        assertEquals(0, second_activity.getUiAttributes().size());
+        assertEquals(0, second_activity.getAllUiAttributes().size());
 
         // get /manifest/application/activity #2/intent-filter #1
         Iterator<UiElementNode> activity_child_it = second_activity.getUiChildren().iterator();
         UiElementNode intent_filter = activity_child_it.next();
         assertEquals("intent-filter", intent_filter.getDescriptor().getXmlName());
         assertEquals(0, intent_filter.getUiChildren().size());
-        assertEquals(0, intent_filter.getUiAttributes().size());
+        assertEquals(0, intent_filter.getAllUiAttributes().size());
 
         // get /manifest/application/provider #1
         UiElementNode first_provider = app_child_it.next();
         assertEquals("provider", first_provider.getDescriptor().getXmlName());
         assertEquals(0, first_provider.getUiChildren().size());
-        assertEquals(0, first_provider.getUiAttributes().size());
+        assertEquals(0, first_provider.getAllUiAttributes().size());
 
         // get /manifest/application/provider #2
         UiElementNode second_provider = app_child_it.next();
         assertEquals("provider", second_provider.getDescriptor().getXmlName());
         assertEquals(0, second_provider.getUiChildren().size());
-        assertEquals(0, second_provider.getUiAttributes().size());
+        assertEquals(0, second_provider.getAllUiAttributes().size());
 
         // get /manifest/permission #1
         UiElementNode first_permission = ui_child_it.next();
         assertEquals("permission", first_permission.getDescriptor().getXmlName());
         assertEquals(0, first_permission.getUiChildren().size());
-        assertEquals(0, first_permission.getUiAttributes().size());
+        assertEquals(0, first_permission.getAllUiAttributes().size());
 
         // get /manifest/permission #1
         UiElementNode second_permission = ui_child_it.next();
         assertEquals("permission", second_permission.getDescriptor().getXmlName());
         assertEquals(0, second_permission.getUiChildren().size());
-        assertEquals(0, second_permission.getUiAttributes().size());
+        assertEquals(0, second_permission.getAllUiAttributes().size());
     }
 
 
