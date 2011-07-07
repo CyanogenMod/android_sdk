@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.Position;
@@ -43,7 +44,7 @@ public class SelectionHandles implements Iterable<SelectionHandle> {
     public SelectionHandles(SelectionItem item) {
         mItem = item;
 
-        createHandles();
+        createHandles(item.getCanvas());
     }
 
     /**
@@ -69,7 +70,7 @@ public class SelectionHandles implements Iterable<SelectionHandle> {
      * Create the {@link SelectionHandle} objects for the selection item, according to its
      * {@link ResizePolicy}.
      */
-    private void createHandles() {
+    private void createHandles(LayoutCanvas canvas) {
         NodeProxy selectedNode = mItem.getNode();
         Rect r = selectedNode.getBounds();
         if (!r.isValid()) {
@@ -88,9 +89,17 @@ public class SelectionHandles implements Iterable<SelectionHandle> {
             int y1 = r.y;
             int w = r.w;
             int h = r.h;
-
             int x2 = x1 + w;
             int y2 = y1 + h;
+
+            Margins insets = canvas.getInsets(mItem.getNode().getFqcn());
+            if (insets != null) {
+                x1 += insets.left;
+                x2 -= insets.right;
+                y1 += insets.top;
+                y2 -= insets.bottom;
+            }
+
             int mx = (x1 + x2) / 2;
             int my = (y1 + y2) / 2;
 

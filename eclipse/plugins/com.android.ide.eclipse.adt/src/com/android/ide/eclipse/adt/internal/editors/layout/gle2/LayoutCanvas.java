@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.common.rendering.api.Capability;
@@ -30,9 +31,11 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.resources.Density;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.filesystem.EFS;
@@ -83,8 +86,8 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
+import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.texteditor.ITextEditor;
@@ -589,7 +592,7 @@ public class LayoutCanvas extends Canvas {
         redraw();
     }
 
-    /* package */ double getScale() {
+    public double getScale() {
         return mHScale.getScale();
     }
 
@@ -1333,6 +1336,25 @@ public class LayoutCanvas extends Canvas {
                 uiNew.createXmlNode();
             }
         });
+    }
+
+    /**
+     * Returns the insets associated with views of the given fully qualified name, for the
+     * current theme and screen type.
+     *
+     * @param fqcn the fully qualified name to the widget type
+     * @return the insets, or null if unknown
+     */
+    public Margins getInsets(String fqcn) {
+        if (ViewMetadataRepository.INSETS_SUPPORTED) {
+            ConfigurationComposite configComposite =
+                    mLayoutEditor.getGraphicalEditor().getConfigurationComposite();
+            String theme = configComposite.getTheme();
+            Density density = configComposite.getDensity();
+            return ViewMetadataRepository.getInsets(fqcn, density, theme);
+        } else {
+            return null;
+        }
     }
 
     private void debugPrintf(String message, Object... params) {

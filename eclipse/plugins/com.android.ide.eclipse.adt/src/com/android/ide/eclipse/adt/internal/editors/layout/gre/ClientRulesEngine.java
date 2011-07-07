@@ -24,6 +24,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IValidator;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -162,6 +163,10 @@ class ClientRulesEngine implements IClientRulesEngine {
 
             public FillPreference getFillPreference() {
                 return ViewMetadataRepository.get().getFillPreference(fqcn);
+            }
+
+            public Margins getInsets() {
+                return mRulesEngine.getEditor().getCanvasControl().getInsets(fqcn);
             }
         };
     }

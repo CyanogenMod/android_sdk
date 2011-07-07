@@ -35,6 +35,13 @@ public interface IViewMetadata {
     public String getDisplayName();
 
     /**
+     * Gets the insets for this view
+     *
+     * @return the insets for this view
+     */
+    public Margins getInsets();
+
+    /**
      * Returns the {@link FillPreference} of this view
      *
      * @return the {@link FillPreference} of this view
