@@ -306,24 +306,29 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
             // would fail to load. The MenuBarWrapper below helps to make
             // that indirection.
 
-            new MenuBarWrapper(APP_NAME, menuTools) {
-                @Override
-                public void onPreferencesMenuSelected() {
-                    showRegisteredPage(Purpose.SETTINGS);
-                }
-
-                @Override
-                public void onAboutMenuSelected() {
-                    showRegisteredPage(Purpose.ABOUT_BOX);
-                }
-
-                @Override
-                public void printError(String format, Object... args) {
-                    if (mUpdaterData != null) {
-                        mUpdaterData.getSdkLog().error(null, format, args);
+            try {
+                new MenuBarWrapper(APP_NAME, menuTools) {
+                    @Override
+                    public void onPreferencesMenuSelected() {
+                        showRegisteredPage(Purpose.SETTINGS);
                     }
-                }
-            };
+
+                    @Override
+                    public void onAboutMenuSelected() {
+                        showRegisteredPage(Purpose.ABOUT_BOX);
+                    }
+
+                    @Override
+                    public void printError(String format, Object... args) {
+                        if (mUpdaterData != null) {
+                            mUpdaterData.getSdkLog().error(null, format, args);
+                        }
+                    }
+                };
+            } catch (Exception e) {
+                mUpdaterData.getSdkLog().error(e, "Failed to setup menu bar");
+                e.printStackTrace();
+            }
         }
     }
 
