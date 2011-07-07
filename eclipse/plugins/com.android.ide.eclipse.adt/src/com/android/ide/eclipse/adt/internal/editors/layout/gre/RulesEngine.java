@@ -575,6 +575,21 @@ public class RulesEngine {
         return mInsertType;
     }
 
+    // ---- Deletion ----
+
+    public void callOnRemovingChildren(AndroidXmlEditor editor, NodeProxy parentNode,
+            List<NodeProxy> children) {
+        if (parentNode != null) {
+            UiViewElementNode parentUiNode = parentNode.getNode();
+            IViewRule parentRule = loadRule(parentUiNode);
+            if (parentRule != null) {
+                @SuppressWarnings({"unchecked", "cast", "rawtypes"})
+                List<INode> childrenList = (List<INode>) (List) children;
+                parentRule.onRemovingChildren(childrenList, parentNode);
+            }
+        }
+    }
+
     // ---- private ---
 
     /**

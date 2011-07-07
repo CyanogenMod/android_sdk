@@ -229,6 +229,21 @@ public interface IViewRule {
     void onChildInserted(INode child, INode parent, InsertType insertType);
 
     /**
+     * Called when one or more children are about to be deleted by the user. Note that
+     * children deleted programmatically from view rules (via
+     * {@link INode#removeChild(INode)}) will not notify about deletion.
+     * <p>
+     * Note that this method will be called under an edit lock, so rules can directly
+     * add/remove nodes and attributes as part of the deletion handling (and their
+     * actions will be part of the same undo-unit.)
+     *
+     * @param deleted a nonempty list of children about to be deleted
+     * @param parent the parent of the deleted children (which still contains the children
+     *            since this method is called before the deletion is performed)
+     */
+    void onRemovingChildren(List<INode> deleted, INode parent);
+
+    /**
      * Called by the IDE on the parent layout when a child widget is being resized. This
      * is called once at the beginning of the resizing operation. A horizontal edge,
      * or a vertical edge, or both, can be resized simultaneously.

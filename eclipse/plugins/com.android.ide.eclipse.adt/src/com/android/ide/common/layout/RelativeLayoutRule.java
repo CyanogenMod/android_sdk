@@ -18,6 +18,7 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_GRAVITY;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
@@ -36,6 +37,8 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_V
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
+import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 
 import com.android.ide.common.api.DropFeedback;
@@ -43,6 +46,7 @@ import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
@@ -60,8 +64,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An {@link IViewRule} for android.widget.RelativeLayout and all its derived
@@ -130,11 +136,11 @@ public class RelativeLayoutRule extends BaseLayoutRule {
         super.paintSelectionFeedback(graphics, parentNode, childNodes);
 
         boolean showDependents = true;
-        if (RelativeLayoutRule.sShowStructure) {
+        if (sShowStructure) {
             childNodes = Arrays.asList(parentNode.getChildren());
             // Avoid painting twice - both as incoming and outgoing
             showDependents = false;
-        } else if (!RelativeLayoutRule.sShowConstraints) {
+        } else if (!sShowConstraints) {
             return;
         }
 
@@ -236,6 +242,44 @@ public class RelativeLayoutRule extends BaseLayoutRule {
         //if (fqcn.equals(FQCN_EDIT_TEXT)) {
         //    node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WIDTH, "100dp"); //$NON-NLS-1$
         //}
+    }
+
+    @Override
+    public void onRemovingChildren(List<INode> deleted, INode parent) {
+        super.onRemovingChildren(deleted, parent);
+
+        // Remove any attachments pointing to the deleted nodes.
+
+        // Produce set of attribute values that we want to delete if
+        // present in a layout attribute
+        Set<String> removeValues = new HashSet<String>(deleted.size() * 2);
+        for (INode node : deleted) {
+            String id = node.getStringAttr(ANDROID_URI, ATTR_ID);
+            if (id != null) {
+                removeValues.add(id);
+                if (id.startsWith(NEW_ID_PREFIX)) {
+                    removeValues.add(ID_PREFIX + stripIdPrefix(id));
+                } else {
+                    removeValues.add(NEW_ID_PREFIX + stripIdPrefix(id));
+                }
+            }
+        }
+
+        for (INode child : parent.getChildren()) {
+            if (deleted.contains(child)) {
+                continue;
+            }
+            for (IAttribute attribute : child.getLiveAttributes()) {
+                if (attribute.getName().startsWith(ATTR_LAYOUT_PREFIX) &&
+                        ANDROID_URI.equals(attribute.getUri())) {
+                    String value = attribute.getValue();
+                    if (removeValues.contains(value)) {
+                        // Unset this reference to a deleted widget.
+                        child.setAttribute(ANDROID_URI, attribute.getName(), null);
+                    }
+                }
+            }
+        }
     }
 
     // ==== Resize Support ====
