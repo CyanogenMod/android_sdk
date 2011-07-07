@@ -250,7 +250,7 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                loadPackages();
+                refreshViewerInput();
             }
         });
         mCheckFilterNew.setSelection(true);
@@ -260,7 +260,7 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterInstalled.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                loadPackages();
+                refreshViewerInput();
             }
         });
         mCheckFilterInstalled.setSelection(true);
@@ -272,7 +272,7 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterObsolete.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                loadPackages();
+                refreshViewerInput();
             }
         });
         mCheckFilterObsolete.setSelection(false);
@@ -310,9 +310,11 @@ public class PackagesPage extends UpdaterPage
         mCheckSortApi.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                loadPackages();
-                // Reset the expanded state when changing sort algorithm
-                expandInitial(mTreeViewer.getInput());
+                if (mCheckSortApi.getSelection()) {
+                    refreshViewerInput();
+                    copySelection(true /*toApi*/);
+                    syncViewerSelection();
+                }
             }
         });
         mCheckSortApi.setText("API level");
@@ -324,9 +326,11 @@ public class PackagesPage extends UpdaterPage
         mCheckSortSource.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                loadPackages();
-                // Reset the expanded state when changing sort algorithm
-                expandInitial(mTreeViewer.getInput());
+                if (mCheckSortSource.getSelection()) {
+                    refreshViewerInput();
+                    copySelection(false /*toApi*/);
+                    syncViewerSelection();
+                }
             }
         });
 
@@ -395,7 +399,10 @@ public class PackagesPage extends UpdaterPage
                     break;
                 case TOGGLE_SHOW_ARCHIVES:
                     mDisplayArchives = !mDisplayArchives;
-                    loadPackages();
+                    // Force the viewer to be refreshed
+                    mTreeViewer.setInput(null);
+                    refreshViewerInput();
+                    syncViewerSelection();
                     break;
                 case TOGGLE_SHOW_INSTALLED_PKG:
                     button = mCheckFilterInstalled;
@@ -542,14 +549,21 @@ public class PackagesPage extends UpdaterPage
         mDiffLogic.mPackageLoader.loadPackages(new ISourceLoadedCallback() {
             // We'll need to refresh the tree if the tree is not display the categories
             // for the current sort type.
-            boolean needsRefresh =
-                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi());
 
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
-                if (mDiffLogic.updateSourcePackages(displaySortByApi, source, newPackages) ||
-                        needsRefresh) {
-                    refreshViewerSync();
-                    needsRefresh = false;
+                // This runs in a thread and must not access UI directly.
+                final boolean changed = mDiffLogic.updateSourcePackages(
+                        displaySortByApi, source, newPackages);
+
+                if (!mGroupPackages.isDisposed()) {
+                    mGroupPackages.getDisplay().syncExec(new Runnable() {
+                        public void run() {
+                            if (changed ||
+                                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
+                                refreshViewerInput();
+                            }
+                        }
+                    });
                 }
 
                 // Return true to tell the loader to continue with the next source.
@@ -559,41 +573,53 @@ public class PackagesPage extends UpdaterPage
             }
 
             public void onLoadCompleted() {
-                if (mDiffLogic.updateEnd(displaySortByApi) || needsRefresh) {
-                    refreshViewerSync();
-                    needsRefresh = false;
+                // This runs in a thread and must not access UI directly.
+                final boolean changed = mDiffLogic.updateEnd(displaySortByApi);
+
+                if (!mGroupPackages.isDisposed()) {
+                    mGroupPackages.getDisplay().syncExec(new Runnable() {
+                        public void run() {
+                            if (changed ||
+                                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
+                                refreshViewerInput();
+                            }
+
+                            if (mDiffLogic.isFirstLoadComplete() && !mGroupPackages.isDisposed()) {
+                                // At the end of the first load, if nothing is selected then
+                                // automatically select all new and update packages.
+                                Object[] checked = mTreeViewer.getCheckedElements();
+                                if (checked == null || checked.length == 0) {
+                                    onSelectNewUpdates();
+                                }
+                            }
+                        }
+                    });
                 }
             }
         });
     }
 
-    private void refreshViewerSync() {
+    private void refreshViewerInput() {
         // Dynamically update the table while we load after each source.
         // Since the official Android source gets loaded first, it makes the
         // window look non-empty a lot sooner.
         if (!mGroupPackages.isDisposed()) {
-            mGroupPackages.getDisplay().syncExec(new Runnable() {
-                public void run() {
-                    if (!mGroupPackages.isDisposed()) {
 
-                        List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
-                        if (mTreeViewer.getInput() != cats) {
-                            // set initial input
-                            mTreeViewer.setInput(cats);
-                        } else {
-                            // refresh existing, which preserves the expanded state, the selection
-                            // and the checked state.
-                            mTreeViewer.refresh();
-                        }
+            List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
+            if (mTreeViewer.getInput() != cats) {
+                // set initial input
+                mTreeViewer.setInput(cats);
+            } else {
+                // refresh existing, which preserves the expanded state, the selection
+                // and the checked state.
+                mTreeViewer.refresh();
+            }
 
-                        // set the initial expanded state
-                        expandInitial(mTreeViewer.getInput());
+            // set the initial expanded state
+            expandInitial(mTreeViewer.getInput());
 
-                        updateButtonsState();
-                        updateMenuCheckmarks();
-                    }
-                }
-            });
+            updateButtonsState();
+            updateMenuCheckmarks();
         }
     }
 
@@ -680,35 +706,88 @@ public class PackagesPage extends UpdaterPage
      * When checking a package, only its compatible archives are checked.
      */
     private void onTreeCheckStateChanged(CheckStateChangedEvent event) {
-        boolean b = event.getChecked();
+        boolean checked = event.getChecked();
         Object elem = event.getElement();
 
         assert event.getSource() == mTreeViewer;
 
-        // when deselecting, we just deselect all children too
-        if (b == false) {
-            mTreeViewer.setSubtreeChecked(elem, b);
-            updateButtonsState();
-            return;
-        }
-
-        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
-
         // When selecting, we want to only select compatible archives and expand the super nodes.
-        checkExpandItem(elem, provider);
-
+        checkAndExpandItem(elem, checked, true/*fixChildren*/, true/*fixParent*/);
         updateButtonsState();
     }
 
-    private void checkExpandItem(Object elem, ITreeContentProvider provider) {
-        if (elem instanceof PkgCategory || elem instanceof PkgItem) {
-            mTreeViewer.setExpandedState(elem, true);
-            for (Object pkg : provider.getChildren(elem)) {
-                mTreeViewer.setChecked(pkg, true);
-                checkExpandItem(pkg, provider);
+    private void checkAndExpandItem(
+            Object elem,
+            boolean checked,
+            boolean fixChildren,
+            boolean fixParent) {
+        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+
+        // fix the item itself
+        if (checked != mTreeViewer.getChecked(elem)) {
+            mTreeViewer.setChecked(elem, checked);
+        }
+        if (elem instanceof PkgItem) {
+            // update the PkgItem to reflect the selection
+            ((PkgItem) elem).setChecked(checked);
+        }
+
+        if (!checked) {
+            if (fixChildren) {
+                // when de-selecting, we deselect all children too
+                mTreeViewer.setSubtreeChecked(elem, checked);
+                for (Object child : provider.getChildren(elem)) {
+                    checkAndExpandItem(child, checked, fixChildren, false/*fixParent*/);
+                }
             }
-        } else if (elem instanceof Package) {
-            selectCompatibleArchives(elem, provider);
+
+            // fix the parent when deselecting
+            if (fixParent) {
+                Object parent = provider.getParent(elem);
+                if (parent != null && mTreeViewer.getChecked(parent)) {
+                    mTreeViewer.setChecked(parent, false);
+                }
+            }
+            return;
+        }
+
+        // When selecting, we also select sub-items (for a category)
+        if (fixChildren) {
+            if (elem instanceof PkgCategory || elem instanceof PkgItem) {
+                Object[] children = provider.getChildren(elem);
+                for (Object child : children) {
+                    checkAndExpandItem(child, true, fixChildren, false/*fixParent*/);
+                }
+                // only fix the parent once the last sub-item is set
+                if (elem instanceof PkgCategory) {
+                    if (children.length > 0) {
+                        checkAndExpandItem(
+                                children[0], true, false/*fixChildren*/, true/*fixParent*/);
+                    } else {
+                        mTreeViewer.setChecked(elem, false);
+                    }
+                }
+            } else if (elem instanceof Package) {
+                // in details mode, we auto-select compatible packages
+                selectCompatibleArchives(elem, provider);
+            }
+        }
+
+        if (fixParent && checked && elem instanceof PkgItem) {
+            Object parent = provider.getParent(elem);
+            if (!mTreeViewer.getChecked(parent)) {
+                Object[] children = provider.getChildren(parent);
+                boolean allChecked = children.length > 0;
+                for (Object e : children) {
+                    if (!mTreeViewer.getChecked(e)) {
+                        allChecked = false;
+                        break;
+                    }
+                }
+                if (allChecked) {
+                    mTreeViewer.setChecked(parent, true);
+                }
+            }
         }
     }
 
@@ -716,6 +795,86 @@ public class PackagesPage extends UpdaterPage
         for (Object archive : provider.getChildren(pkg)) {
             if (archive instanceof Archive) {
                 mTreeViewer.setChecked(archive, ((Archive) archive).isCompatible());
+            }
+        }
+    }
+
+    /**
+     * Checks all PkgItems that are either new or have updates.
+     */
+    private void onSelectNewUpdates() {
+        // This does not update the tree itself, syncViewerSelection does it below.
+        mDiffLogic.checkNewUpdateItems();
+        syncViewerSelection();
+        updateButtonsState();
+    }
+
+    /**
+     * Deselect all checked PkgItems.
+     */
+    private void onDeselectAll() {
+        // This does not update the tree itself, syncViewerSelection does it below.
+        mDiffLogic.uncheckAllItems();
+        syncViewerSelection();
+        updateButtonsState();
+    }
+
+    /**
+     * When switching between the tree-by-api and the tree-by-source, copy the selection
+     * (aka the checked items) from one list to the other.
+     * This does not update the tree itself.
+     */
+    private void copySelection(boolean fromSourceToApi) {
+        List<PkgItem> fromItems = mDiffLogic.getAllPkgItems(!fromSourceToApi, fromSourceToApi);
+        List<PkgItem> toItems = mDiffLogic.getAllPkgItems(fromSourceToApi, !fromSourceToApi);
+
+        // deselect all targets
+        for (PkgItem item : toItems) {
+            item.setChecked(false);
+        }
+
+        // mark new one from the source
+        for (PkgItem source : fromItems) {
+            if (source.isChecked()) {
+                // There should typically be a corresponding item in the target side
+                for (PkgItem target : toItems) {
+                    if (target.isSameMainPackageAs(source.getMainPackage())) {
+                        target.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Synchronize the 'checked' state of PkgItems in the tree with their internal isChecked state.
+     */
+    private void syncViewerSelection() {
+        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+
+        for (Object cat : provider.getElements(mTreeViewer.getInput())) {
+            Object[] children = provider.getElements(cat);
+            boolean allChecked = children.length > 0;
+            for (Object child : children) {
+                if (child instanceof PkgItem) {
+                    PkgItem item = (PkgItem) child;
+                    boolean checked = item.isChecked();
+                    allChecked &= checked;
+
+                    if (checked != mTreeViewer.getChecked(item)) {
+                        if (checked) {
+                            if (!mTreeViewer.getExpandedState(cat)) {
+                                mTreeViewer.setExpandedState(cat, true);
+                            }
+                        }
+                        checkAndExpandItem(item, checked, true/*fixChildren*/, false/*fixParent*/);
+                    }
+                }
+            }
+
+            if (allChecked != mTreeViewer.getChecked(cat)) {
+                mTreeViewer.setChecked(cat, allChecked);
             }
         }
     }
@@ -800,34 +959,6 @@ public class PackagesPage extends UpdaterPage
         }
 
         mButtonDelete.setEnabled(canDelete);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void onSelectNewUpdates() {
-        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
-
-        List<PkgCategory> cats = (List<PkgCategory>) mTreeViewer.getInput();
-        synchronized (cats) {
-            for (PkgCategory cat : cats) {
-                boolean selected = false;
-                for (PkgItem item : cat.getItems()) {
-                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
-                        mTreeViewer.setChecked(item, true);
-                        checkExpandItem(item, provider);
-                        selected = true;
-                    }
-                }
-                if (selected) {
-                    mTreeViewer.setExpandedState(cat, true);
-                }
-            }
-        }
-        updateButtonsState();
-    }
-
-    private void onDeselectAll() {
-        mTreeViewer.setCheckedElements(new Object[0]);
-        updateButtonsState();
     }
 
     private void onButtonInstall() {
@@ -1141,7 +1272,6 @@ public class PackagesPage extends UpdaterPage
     private class PkgContentProvider implements ITreeContentProvider {
 
         public Object[] getChildren(Object parentElement) {
-
             if (parentElement instanceof ArrayList<?>) {
                 return ((ArrayList<?>) parentElement).toArray();
 
@@ -1171,9 +1301,19 @@ public class PackagesPage extends UpdaterPage
             return new Object[0];
         }
 
+        @SuppressWarnings("unchecked")
         public Object getParent(Object element) {
-            // Pass. We don't try to compute the parent element and so far
-            // that doesn't seem to affect the behavior of the tree widget.
+            // This operation is a tad expensive, so we do the minimum
+            // and don't try to cover all cases.
+
+            if (element instanceof PkgItem) {
+                for (PkgCategory cat : (List<PkgCategory>) mTreeViewer.getInput()) {
+                    if (cat.getItems().contains(element)) {
+                        return cat;
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -1327,9 +1467,9 @@ public class PackagesPage extends UpdaterPage
         public String getApiLabel() {
             int api = ((Integer) getKey()).intValue();
             if (api == KEY_TOOLS) {
-                return "TOOLS"; //$NON-NLS-1$ for internal use only
+                return "TOOLS";             //$NON-NLS-1$ // for internal debug use only
             } else if (api == KEY_EXTRA) {
-                return "EXTRAS"; //$NON-NLS-1$ for internal use only
+                return "EXTRAS";            //$NON-NLS-1$ // for internal debug use only
             } else {
                 return String.format("API %1$d", getKey());
             }
@@ -1431,10 +1571,39 @@ public class PackagesPage extends UpdaterPage
     static class PackagesDiffLogic {
         final PackageLoader mPackageLoader;
         final UpdaterData mUpdaterData;
+        private boolean mFirstLoadComplete = true;
 
         public PackagesDiffLogic(UpdaterData updaterData) {
             mUpdaterData = updaterData;
             mPackageLoader = new PackageLoader(updaterData);
+        }
+
+        /** Return mFirstLoadComplete and resets it to false.
+         * All following calls will returns false. */
+        public boolean isFirstLoadComplete() {
+            boolean b = mFirstLoadComplete;
+            mFirstLoadComplete = false;
+            return b;
+        }
+
+        /**
+         * Mark all new and update PkgItems as checked
+         */
+        public void checkNewUpdateItems() {
+            for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
+                if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                    item.setChecked(true);
+                }
+            }
+        }
+
+        /**
+         * Mark all PkgItems as not checked.
+         */
+        public void uncheckAllItems() {
+            for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
+                item.setChecked(false);
+            }
         }
 
         /**
@@ -1527,6 +1696,30 @@ public class PackagesPage extends UpdaterPage
 
         public List<PkgCategory> getCategories(boolean displayIsSortByApi) {
             return displayIsSortByApi ? mOpApi.getCategories() : mOpSource.getCategories();
+        }
+
+        public List<PkgItem> getAllPkgItems(boolean byApi, boolean bySource) {
+            List<PkgItem> items = new ArrayList<PkgItem>();
+
+            if (byApi) {
+                List<PkgCategory> cats = getCategories(true /*displayIsSortByApi*/);
+                synchronized (cats) {
+                    for (PkgCategory cat : cats) {
+                        items.addAll(cat.getItems());
+                    }
+                }
+            }
+
+            if (bySource) {
+                List<PkgCategory> cats = getCategories(false /*displayIsSortByApi*/);
+                synchronized (cats) {
+                    for (PkgCategory cat : cats) {
+                        items.addAll(cat.getItems());
+                    }
+                }
+            }
+
+            return items;
         }
 
         public void updateStart() {
