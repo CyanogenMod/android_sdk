@@ -848,7 +848,8 @@ public class LayoutCanvas extends Canvas {
         CanvasViewInfo vi = mViewHierarchy.findViewInfoAt(p);
 
         // We don't hover on the root since it's not a widget per see and it is always there.
-        if (vi != null && vi.isRoot()) {
+        // We also skip spacers...
+        if (vi != null && (vi.isRoot() || vi.isHidden())) {
             vi = null;
         }
 
