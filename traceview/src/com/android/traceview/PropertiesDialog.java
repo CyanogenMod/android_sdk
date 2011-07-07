@@ -68,6 +68,7 @@ public class PropertiesDialog extends Dialog {
         TableViewerColumn propertyColumn = new TableViewerColumn(tableViewer, SWT.NONE);
         propertyColumn.getColumn().setText("Property");
         propertyColumn.setLabelProvider(new ColumnLabelProvider() {
+            @Override
             @SuppressWarnings("unchecked")
             public String getText(Object element) {
                 Entry<String, String> entry = (Entry<String, String>) element;
@@ -79,6 +80,7 @@ public class PropertiesDialog extends Dialog {
         TableViewerColumn valueColumn = new TableViewerColumn(tableViewer, SWT.NONE);
         valueColumn.getColumn().setText("Value");
         valueColumn.setLabelProvider(new ColumnLabelProvider() {
+            @Override
             @SuppressWarnings("unchecked")
             public String getText(Object element) {
                 Entry<String, String> entry = (Entry<String, String>) element;
