@@ -456,6 +456,16 @@ class ClientRulesEngine implements IClientRulesEngine {
         return (int) (px * 160 / dpi);
     }
 
+    public int dpToPx(int dp) {
+        ConfigurationComposite config = mRulesEngine.getEditor().getConfigurationComposite();
+        float dpi = config.getDensity().getDpiValue();
+        return (int) (dp * dpi / 160);
+    }
+
+    public int screenToLayout(int pixels) {
+        return (int) (pixels / mRulesEngine.getEditor().getCanvasControl().getScale());
+    }
+
     String createNewFragmentClass(IJavaProject javaProject) {
         NewClassWizardPage page = new NewClassWizardPage();
 

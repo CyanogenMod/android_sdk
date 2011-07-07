@@ -144,7 +144,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             return null;
         }
 
-        String attrs = type.getDefaultAttrs(mMainPage.getProject());
+        String attrs = type.getDefaultAttrs(mMainPage.getProject(), root);
 
         String child = type.getChild(mMainPage.getProject(), root);
         return createXmlFile(file, xmlns, root, attrs, child);
@@ -223,7 +223,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
      */
     public static boolean canCreateXmlFile(ResourceFolderType folderType) {
         TypeInfo typeInfo = NewXmlFileCreationPage.getTypeInfo(folderType);
-        return typeInfo != null && (typeInfo.getDefaultRoot() != null ||
+        return typeInfo != null && (typeInfo.getDefaultRoot(null /*project*/) != null ||
                 typeInfo.getRootSeed() instanceof String);
     }
 
@@ -239,11 +239,11 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             ResourceFolderType folderType) {
         TypeInfo type = NewXmlFileCreationPage.getTypeInfo(folderType);
         String xmlns = type.getXmlns();
-        String root = type.getDefaultRoot();
+        String root = type.getDefaultRoot(project);
         if (root == null) {
             root = type.getRootSeed().toString();
         }
-        String attrs = type.getDefaultAttrs(project);
+        String attrs = type.getDefaultAttrs(project, root);
         return createXmlFile(file, xmlns, root, attrs, null);
     }
 

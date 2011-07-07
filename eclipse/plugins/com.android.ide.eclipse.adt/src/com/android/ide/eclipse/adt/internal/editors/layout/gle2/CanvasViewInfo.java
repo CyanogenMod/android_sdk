@@ -22,6 +22,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.MergeCookie;
 import com.android.ide.common.rendering.api.ViewInfo;
@@ -446,6 +447,10 @@ public class CanvasViewInfo implements IPropertySource {
      * @return true if this is a hidden view
      */
     public boolean isHidden() {
+        if (GridLayoutRule.sDebugGridLayout) {
+            return false;
+        }
+
         return FQCN_SPACE.equals(mName);
     }
 

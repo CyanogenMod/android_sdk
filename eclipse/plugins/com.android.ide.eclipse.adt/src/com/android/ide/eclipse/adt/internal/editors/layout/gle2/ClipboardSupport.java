@@ -16,8 +16,8 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.IDragElement;
-import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
@@ -205,14 +205,14 @@ public class ClipboardSupport {
         mCanvas.getLayoutEditor().wrapUndoEditXmlModel(title, new Runnable() {
             public void run() {
                 // Segment the deleted nodes into clusters of siblings
-                Map<NodeProxy, List<NodeProxy>> clusters =
-                        new HashMap<NodeProxy, List<NodeProxy>>();
+                Map<NodeProxy, List<INode>> clusters =
+                        new HashMap<NodeProxy, List<INode>>();
                 for (SelectionItem cs : selection) {
                     NodeProxy node = cs.getNode();
                     INode parent = node.getParent();
-                    List<NodeProxy> children = clusters.get(parent);
+                    List<INode> children = clusters.get(parent);
                     if (children == null) {
-                        children = new ArrayList<NodeProxy>();
+                        children = new ArrayList<INode>();
                         clusters.put((NodeProxy) parent, children);
                     }
                     children.add(node);
@@ -221,9 +221,9 @@ public class ClipboardSupport {
                 // Notify parent views about children getting deleted
                 RulesEngine rulesEngine = mCanvas.getRulesEngine();
                 LayoutEditor editor = mCanvas.getLayoutEditor();
-                for (Map.Entry<NodeProxy, List<NodeProxy>> entry : clusters.entrySet()) {
+                for (Map.Entry<NodeProxy, List<INode>> entry : clusters.entrySet()) {
                     NodeProxy parent = entry.getKey();
-                    List<NodeProxy> children = entry.getValue();
+                    List<INode> children = entry.getValue();
                     assert children != null && children.size() > 0;
                     rulesEngine.callOnRemovingChildren(editor, parent, children);
                 }

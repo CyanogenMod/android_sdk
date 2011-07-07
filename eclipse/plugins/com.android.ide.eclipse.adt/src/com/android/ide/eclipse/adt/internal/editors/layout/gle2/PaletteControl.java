@@ -743,12 +743,13 @@ public class PaletteControl extends Composite {
                 int height = mImageLayoutBounds.height;
                 assert mImageLayoutBounds.x == 0;
                 assert mImageLayoutBounds.y == 0;
-                double scale = mEditor.getCanvasControl().getScale();
-
-                int x = (int) (-scale * width / 2);
-                int y = (int) (-scale * height / 2);
                 bounds = new Rect(0, 0, width, height);
-                dragBounds = new Rect(x, y, width, height);
+                double scale = mEditor.getCanvasControl().getScale();
+                int scaledWidth = (int) (scale * width);
+                int scaledHeight = (int) (scale * height);
+                int x = -scaledWidth / 2;
+                int y = -scaledHeight / 2;
+                dragBounds = new Rect(x, y, scaledWidth, scaledHeight);
             }
 
             SimpleElement se = new SimpleElement(

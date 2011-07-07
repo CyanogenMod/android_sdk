@@ -146,6 +146,10 @@ public class TestGraphics implements IGraphics {
         mDrawn.add("drawArrow(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")");
     }
 
+    public void drawPoint(int x, int y) {
+        mDrawn.add("drawPoint(" + x + "," + y + ")");
+    }
+
     private static String rectToString(Rect rect) {
         return "Rect[" + rect.x + "," + rect.y + "," + rect.w + "," + rect.h + "]";
     }

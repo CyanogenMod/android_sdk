@@ -196,6 +196,8 @@ class DependencyGraph {
                 // Cycle - what do we do to highlight this?
                 List<Constraint> path = getPathTo(start.node, view.node, vertical);
                 if (path != null) {
+                    // TODO: display to the user somehow. We need log access for the
+                    // view rules.
                     System.out.println(Constraint.describePath(path, null, null));
                 }
             } else {

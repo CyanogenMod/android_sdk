@@ -71,6 +71,12 @@ class ResizeState {
     /** Whether the user has snapped to the match_parent height */
     public boolean fillHeight;
 
+    /** Custom field for use by subclasses */
+    public Object clientData;
+
+    /** Keyboard mask */
+    public int modifierMask;
+
     /**
      * Constructs a new {@link ResizeState}
      *

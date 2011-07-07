@@ -38,13 +38,13 @@
             relatedTo="EditText,AutoCompleteTextView,MultiAutoCompleteTextView">
             <view
                 name="Large Text"
-                init="android:textAppearance=?android:attr/textAppearanceLarge" />
+                init="android:textAppearance=?android:attr/textAppearanceLarge,android:text=Large Text" />
             <view
                 name="Medium Text"
-                init="android:textAppearance=?android:attr/textAppearanceMedium" />
+                init="android:textAppearance=?android:attr/textAppearanceMedium,android:text=Medium Text" />
             <view
                 name="Small Text"
-                init="android:textAppearance=?android:attr/textAppearanceSmall" />
+                init="android:textAppearance=?android:attr/textAppearanceSmall,android:text=Small Text" />
         </view>
         <view
             class="android.widget.Button"
@@ -156,6 +156,10 @@
     <category
         name="Layouts">
         <view
+            class="android.widget.GridLayout"
+            fill="opposite"
+            render="skip" />
+        <view
             class="android.widget.LinearLayout"
             name="LinearLayout (Vertical)"
             init="android:orientation=vertical"
@@ -190,6 +194,10 @@
             class="android.widget.TableRow"
             fill="opposite"
             resize="vertical"
+            render="skip" />
+        <view
+            class="android.widget.Space"
+            fill="opposite"
             render="skip" />
     </category>
     <category
@@ -326,6 +334,9 @@
             render="skip" />
         <view
             class="android.gesture.GestureOverlayView"
+            render="skip" />
+        <view
+            class="android.view.TextureView"
             render="skip" />
         <view
             class="android.view.SurfaceView"

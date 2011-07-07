@@ -18,13 +18,37 @@ package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ABOVE;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BOTTOM;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_LEFT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_BOTTOM;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_LEFT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_RIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_PARENT_TOP;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_RIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_TOP;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_IN_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_BOTTOM;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_RIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_TOP;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_LEFT_OF;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_X;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_Y;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
@@ -78,7 +102,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
     // The Margin layout parameters are available for LinearLayout, FrameLayout, RelativeLayout,
     // and their subclasses.
-    protected MenuAction createMarginAction(final INode parentNode,
+    protected final MenuAction createMarginAction(final INode parentNode,
             final List<? extends INode> children) {
 
         final List<? extends INode> targets = children == null || children.size() == 0 ?
@@ -119,7 +143,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
     // Both LinearLayout and RelativeLayout have a gravity (but RelativeLayout applies it
     // to the parent whereas for LinearLayout it's on the children)
-    protected MenuAction createGravityAction(final List<? extends INode> targets, final
+    protected final MenuAction createGravityAction(final List<? extends INode> targets, final
             String attributeName) {
         if (targets != null && targets.size() > 0) {
             final INode first = targets.get(0);
@@ -254,14 +278,20 @@ public class BaseLayoutRule extends BaseViewRule {
     // ==== Utility methods used by derived layouts ====
 
     /**
-     * Draws the bounds of the given elements and all its children elements in
-     * the canvas with the specified offset.
+     * Draws the bounds of the given elements and all its children elements in the canvas
+     * with the specified offset.
+     *
+     * @param gc the graphics context
+     * @param element the element to be drawn
+     * @param offsetX a horizontal delta to add to the current bounds of the element when
+     *            drawing it
+     * @param offsetY a vertical delta to add to the current bounds of the element when
+     *            drawing it
      */
-    protected void drawElement(IGraphics gc, IDragElement element, int offsetX, int offsetY) {
+    public void drawElement(IGraphics gc, IDragElement element, int offsetX, int offsetY) {
         Rect b = element.getBounds();
         if (b.isValid()) {
-            b = b.copy().offsetBy(offsetX, offsetY);
-            gc.drawRect(b);
+            gc.drawRect(b.x + offsetX, b.y + offsetY, b.x + offsetX + b.w, b.y + offsetY + b.h);
         }
 
         for (IDragElement inner : element.getInnerElements()) {
@@ -411,28 +441,37 @@ public class BaseLayoutRule extends BaseViewRule {
     }
 
     private static final String[] EXCLUDED_ATTRIBUTES = new String[] {
+        // Common
+        ATTR_LAYOUT_GRAVITY,
+
         // from AbsoluteLayout
-        "layout_x",                      //$NON-NLS-1$
-        "layout_y",                      //$NON-NLS-1$
+        ATTR_LAYOUT_X,
+        ATTR_LAYOUT_Y,
 
         // from RelativeLayout
-        "layout_above",                  //$NON-NLS-1$
-        "layout_below",                  //$NON-NLS-1$
-        "layout_toLeftOf",               //$NON-NLS-1$
-        "layout_toRightOf",              //$NON-NLS-1$
-        "layout_alignBaseline",          //$NON-NLS-1$
-        "layout_alignTop",               //$NON-NLS-1$
-        "layout_alignBottom",            //$NON-NLS-1$
-        "layout_alignLeft",              //$NON-NLS-1$
-        "layout_alignRight",             //$NON-NLS-1$
-        "layout_alignParentTop",         //$NON-NLS-1$
-        "layout_alignParentBottom",      //$NON-NLS-1$
-        "layout_alignParentLeft",        //$NON-NLS-1$
-        "layout_alignParentRight",       //$NON-NLS-1$
-        "layout_alignWithParentMissing", //$NON-NLS-1$
-        "layout_centerHorizontal",       //$NON-NLS-1$
-        "layout_centerInParent",         //$NON-NLS-1$
-        "layout_centerVertical",         //$NON-NLS-1$
+        ATTR_LAYOUT_ABOVE,
+        ATTR_LAYOUT_BELOW,
+        ATTR_LAYOUT_TO_LEFT_OF,
+        ATTR_LAYOUT_TO_RIGHT_OF,
+        ATTR_LAYOUT_ALIGN_BASELINE,
+        ATTR_LAYOUT_ALIGN_TOP,
+        ATTR_LAYOUT_ALIGN_BOTTOM,
+        ATTR_LAYOUT_ALIGN_LEFT,
+        ATTR_LAYOUT_ALIGN_RIGHT,
+        ATTR_LAYOUT_ALIGN_PARENT_TOP,
+        ATTR_LAYOUT_ALIGN_PARENT_BOTTOM,
+        ATTR_LAYOUT_ALIGN_PARENT_LEFT,
+        ATTR_LAYOUT_ALIGN_PARENT_RIGHT,
+        ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING,
+        ATTR_LAYOUT_CENTER_HORIZONTAL,
+        ATTR_LAYOUT_CENTER_IN_PARENT,
+        ATTR_LAYOUT_CENTER_VERTICAL,
+
+        // From GridLayout
+        ATTR_LAYOUT_ROW,
+        ATTR_LAYOUT_ROW_SPAN,
+        ATTR_LAYOUT_COLUMN,
+        ATTR_LAYOUT_COLUMN_SPAN
     };
 
     /**
@@ -614,84 +653,88 @@ public class BaseLayoutRule extends BaseViewRule {
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 ResizeState resizeState = (ResizeState) feedback.userData;
                 if (resizeState != null && resizeState.bounds != null) {
-                    gc.useStyle(DrawingStyle.RESIZE_PREVIEW);
-                    Rect b = resizeState.bounds;
-                    gc.drawRect(b);
-
-                    if (resizeState.horizontalFillSegment != null) {
-                        gc.useStyle(DrawingStyle.GUIDELINE);
-                        Segment s = resizeState.horizontalFillSegment;
-                        gc.drawLine(s.from, s.at, s.to, s.at);
-                    }
-                    if (resizeState.verticalFillSegment != null) {
-                        gc.useStyle(DrawingStyle.GUIDELINE);
-                        Segment s = resizeState.verticalFillSegment;
-                        gc.drawLine(s.at, s.from, s.at, s.to);
-                    }
-
-                    if (resizeState.wrapBounds != null) {
-                        gc.useStyle(DrawingStyle.GUIDELINE);
-                        int wrapWidth = resizeState.wrapBounds.w;
-                        int wrapHeight = resizeState.wrapBounds.h;
-
-                        // Show the "wrap_content" guideline.
-                        // If we are showing both the wrap_width and wrap_height lines
-                        // then we show at most the rectangle formed by the two lines;
-                        // otherwise we show the entire width of the line
-                        if (resizeState.horizontalEdgeType != null) {
-                            int y = -1;
-                            switch (resizeState.horizontalEdgeType) {
-                                case TOP:
-                                    y = b.y + b.h - wrapHeight;
-                                    break;
-                                case BOTTOM:
-                                    y = b.y + wrapHeight;
-                                    break;
-                                default: assert false : resizeState.horizontalEdgeType;
-                            }
-                            if (resizeState.verticalEdgeType != null) {
-                                switch (resizeState.verticalEdgeType) {
-                                    case LEFT:
-                                        gc.drawLine(b.x + b.w - wrapWidth, y, b.x + b.w, y);
-                                        break;
-                                    case RIGHT:
-                                        gc.drawLine(b.x, y, b.x + wrapWidth, y);
-                                        break;
-                                    default: assert false : resizeState.verticalEdgeType;
-                                }
-                            } else {
-                                gc.drawLine(b.x, y, b.x + b.w, y);
-                            }
-                        }
-                        if (resizeState.verticalEdgeType != null) {
-                            int x = -1;
-                            switch (resizeState.verticalEdgeType) {
-                                case LEFT:
-                                    x = b.x + b.w - wrapWidth;
-                                    break;
-                                case RIGHT:
-                                    x = b.x + wrapWidth;
-                                    break;
-                                default: assert false : resizeState.verticalEdgeType;
-                            }
-                            if (resizeState.horizontalEdgeType != null) {
-                                switch (resizeState.horizontalEdgeType) {
-                                    case TOP:
-                                        gc.drawLine(x, b.y + b.h - wrapHeight, x, b.y + b.h);
-                                        break;
-                                    case BOTTOM:
-                                        gc.drawLine(x, b.y, x, b.y + wrapHeight);
-                                        break;
-                                    default: assert false : resizeState.horizontalEdgeType;
-                                }
-                            } else {
-                                gc.drawLine(x, b.y, x, b.y + b.h);
-                            }
-                        }
-                    }
+                    paintResizeFeedback(gc, node, resizeState);
                 }
             }
         });
+    }
+
+    protected void paintResizeFeedback(IGraphics gc, INode node, ResizeState resizeState) {
+        gc.useStyle(DrawingStyle.RESIZE_PREVIEW);
+        Rect b = resizeState.bounds;
+        gc.drawRect(b);
+
+        if (resizeState.horizontalFillSegment != null) {
+            gc.useStyle(DrawingStyle.GUIDELINE);
+            Segment s = resizeState.horizontalFillSegment;
+            gc.drawLine(s.from, s.at, s.to, s.at);
+        }
+        if (resizeState.verticalFillSegment != null) {
+            gc.useStyle(DrawingStyle.GUIDELINE);
+            Segment s = resizeState.verticalFillSegment;
+            gc.drawLine(s.at, s.from, s.at, s.to);
+        }
+
+        if (resizeState.wrapBounds != null) {
+            gc.useStyle(DrawingStyle.GUIDELINE);
+            int wrapWidth = resizeState.wrapBounds.w;
+            int wrapHeight = resizeState.wrapBounds.h;
+
+            // Show the "wrap_content" guideline.
+            // If we are showing both the wrap_width and wrap_height lines
+            // then we show at most the rectangle formed by the two lines;
+            // otherwise we show the entire width of the line
+            if (resizeState.horizontalEdgeType != null) {
+                int y = -1;
+                switch (resizeState.horizontalEdgeType) {
+                    case TOP:
+                        y = b.y + b.h - wrapHeight;
+                        break;
+                    case BOTTOM:
+                        y = b.y + wrapHeight;
+                        break;
+                    default: assert false : resizeState.horizontalEdgeType;
+                }
+                if (resizeState.verticalEdgeType != null) {
+                    switch (resizeState.verticalEdgeType) {
+                        case LEFT:
+                            gc.drawLine(b.x + b.w - wrapWidth, y, b.x + b.w, y);
+                            break;
+                        case RIGHT:
+                            gc.drawLine(b.x, y, b.x + wrapWidth, y);
+                            break;
+                        default: assert false : resizeState.verticalEdgeType;
+                    }
+                } else {
+                    gc.drawLine(b.x, y, b.x + b.w, y);
+                }
+            }
+            if (resizeState.verticalEdgeType != null) {
+                int x = -1;
+                switch (resizeState.verticalEdgeType) {
+                    case LEFT:
+                        x = b.x + b.w - wrapWidth;
+                        break;
+                    case RIGHT:
+                        x = b.x + wrapWidth;
+                        break;
+                    default: assert false : resizeState.verticalEdgeType;
+                }
+                if (resizeState.horizontalEdgeType != null) {
+                    switch (resizeState.horizontalEdgeType) {
+                        case TOP:
+                            gc.drawLine(x, b.y + b.h - wrapHeight, x, b.y + b.h);
+                            break;
+                        case BOTTOM:
+                            gc.drawLine(x, b.y, x, b.y + wrapHeight);
+                            break;
+                        default: assert false : resizeState.horizontalEdgeType;
+                    }
+                } else {
+                    gc.drawLine(x, b.y, x, b.y + b.h);
+                }
+            }
+        }
     }
 
     public static final int getMaxMatchDistance() {
@@ -704,6 +747,7 @@ public class BaseLayoutRule extends BaseViewRule {
             Rect newBounds, int modifierMask) {
         ResizeState state = (ResizeState) feedback.userData;
         state.bounds = newBounds;
+        state.modifierMask = modifierMask;
 
         // Match on wrap bounds
         state.wrapWidth = state.wrapHeight = false;
