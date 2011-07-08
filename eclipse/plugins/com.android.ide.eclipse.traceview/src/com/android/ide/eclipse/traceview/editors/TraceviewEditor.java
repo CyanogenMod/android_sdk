@@ -15,15 +15,16 @@
  */
 package com.android.ide.eclipse.traceview.editors;
 
+import com.android.ide.eclipse.traceview.TraceviewPlugin;
 import com.android.traceview.ColorController;
 import com.android.traceview.DmTraceReader;
 import com.android.traceview.MethodData;
 import com.android.traceview.ProfileView;
-import com.android.traceview.ProfileView.MethodHandler;
 import com.android.traceview.SelectionController;
 import com.android.traceview.TimeLineView;
 import com.android.traceview.TraceReader;
 import com.android.traceview.TraceUnits;
+import com.android.traceview.ProfileView.MethodHandler;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -35,7 +36,9 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -56,6 +59,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
@@ -66,6 +70,7 @@ import org.eclipse.ui.part.EditorPart;
 import org.eclipse.ui.part.FileEditorInput;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 public class TraceviewEditor extends EditorPart implements MethodHandler {
@@ -257,37 +262,46 @@ public class TraceviewEditor extends EditorPart implements MethodHandler {
     @Override
     public void createPartControl(Composite parent) {
         mParent = parent;
-        TraceReader reader = new DmTraceReader(mFilename, false);
-        reader.getTraceUnits().setTimeScale(TraceUnits.TimeScale.MilliSeconds);
+        try {
+            TraceReader reader = new DmTraceReader(mFilename, false);
+            reader.getTraceUnits().setTimeScale(TraceUnits.TimeScale.MilliSeconds);
 
-        mContents = new Composite(mParent, SWT.NONE);
+            mContents = new Composite(mParent, SWT.NONE);
 
-        Display display = mContents.getDisplay();
-        ColorController.assignMethodColors(display, reader.getMethods());
-        SelectionController selectionController = new SelectionController();
+            Display display = mContents.getDisplay();
+            ColorController.assignMethodColors(display, reader.getMethods());
+            SelectionController selectionController = new SelectionController();
 
-        GridLayout gridLayout = new GridLayout(1, false);
-        gridLayout.marginWidth = 0;
-        gridLayout.marginHeight = 0;
-        gridLayout.horizontalSpacing = 0;
-        gridLayout.verticalSpacing = 0;
-        mContents.setLayout(gridLayout);
+            GridLayout gridLayout = new GridLayout(1, false);
+            gridLayout.marginWidth = 0;
+            gridLayout.marginHeight = 0;
+            gridLayout.horizontalSpacing = 0;
+            gridLayout.verticalSpacing = 0;
+            mContents.setLayout(gridLayout);
 
-        Color darkGray = display.getSystemColor(SWT.COLOR_DARK_GRAY);
+            Color darkGray = display.getSystemColor(SWT.COLOR_DARK_GRAY);
 
-        // Create a sash form to separate the timeline view (on top)
-        // and the profile view (on bottom)
-        SashForm sashForm1 = new SashForm(mContents, SWT.VERTICAL);
-        sashForm1.setBackground(darkGray);
-        sashForm1.SASH_WIDTH = 3;
-        GridData data = new GridData(GridData.FILL_BOTH);
-        sashForm1.setLayoutData(data);
+            // Create a sash form to separate the timeline view (on top)
+            // and the profile view (on bottom)
+            SashForm sashForm1 = new SashForm(mContents, SWT.VERTICAL);
+            sashForm1.setBackground(darkGray);
+            sashForm1.SASH_WIDTH = 3;
+            GridData data = new GridData(GridData.FILL_BOTH);
+            sashForm1.setLayoutData(data);
 
-        // Create the timeline view
-        new TimeLineView(sashForm1, reader, selectionController);
+            // Create the timeline view
+            new TimeLineView(sashForm1, reader, selectionController);
 
-        // Create the profile view
-        new ProfileView(sashForm1, reader, selectionController).setMethodHandler(this);
+            // Create the profile view
+            new ProfileView(sashForm1, reader, selectionController).setMethodHandler(this);
+        } catch (IOException e) {
+            Label l = new Label(parent, 0);
+            l.setText("Failed to read the stack trace.");
+
+            Status status = new Status(IStatus.ERROR, TraceviewPlugin.PLUGIN_ID,
+                    "Failed to read the stack trace.", e);
+            TraceviewPlugin.getDefault().getLog().log(status);
+        }
 
         mParent.layout();
     }
