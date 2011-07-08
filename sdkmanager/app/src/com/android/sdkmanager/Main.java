@@ -903,6 +903,28 @@ public class Main {
     }
 
     /**
+     * Displays the ABIs valid for the given target.
+     */
+    private void displayAbiList(IAndroidTarget target, String message) {
+        String[] abis = target.getAbiList();
+        mSdkLog.printf(message);
+        if (abis != null) {
+            boolean first = true;
+            for (String skin : abis) {
+                if (first == false) {
+                    mSdkLog.printf(", ");
+                } else {
+                    first = false;
+                }
+                mSdkLog.printf(skin);
+            }
+            mSdkLog.printf("\n");
+        } else {
+            mSdkLog.printf("no ABIs.\n");
+        }
+    }
+
+    /**
      * Displays the list of available AVDs for the given AvdManager.
      *
      * @param avdManager
@@ -1105,14 +1127,26 @@ public class Main {
                 oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
             }
 
-            // NOTE: need to update with command line processor selectivity
+            String abiType = mSdkCommandLine.getParamAbi();
+            if (target != null && (abiType == null || abiType.length() == 0)) {
+                String[] abis = target.getAbiList();
+                if (abis != null && abis.length == 1) {
+                    // Auto-select the single ABI available
+                    abiType = abis[0];
+                    mSdkLog.printf("Auto-selecting single ABI %1$s", abiType);
+                } else {
+                    displayAbiList(target, "Valid ABIs: ");
+                    errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
+                            SdkCommandLine.KEY_ABI);
 
-            String preferredAbi = SdkConstants.ABI_ARMEABI;
+                }
+            }
+
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
             AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
                     avdName,
                     target,
-                    preferredAbi,
+                    abiType,
                     skin,
                     mSdkCommandLine.getParamSdCard(),
                     hardwareConfig,
