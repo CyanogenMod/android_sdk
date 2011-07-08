@@ -33,7 +33,6 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
-import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -125,13 +124,7 @@ public class PackagesPage extends UpdaterPage
 
     private final Map<MenuAction, MenuItem> mMenuActions = new HashMap<MenuAction, MenuItem>();
 
-    private final PackageLoader mPackageLoader;
-
-    private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
-    /** Access to this list must be synchronized on {@link #mPackages}. */
-    private final List<PkgItem> mPackages = new ArrayList<PkgItem>();
-    private final UpdaterData mUpdaterData;
-
+    private final PackagesPageLogic mLogic;
     private boolean mDisplayArchives = false;
 
     private Text mTextSdkOsPath;
@@ -153,21 +146,24 @@ public class PackagesPage extends UpdaterPage
     private TreeViewerColumn mColumnStatus;
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
-    private boolean mLastSortWasByApi;
     private boolean mOperationPending;
 
     public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
         super(parent, swtStyle);
 
-        mUpdaterData = updaterData;
-        mPackageLoader = new PackageLoader(updaterData);
-        createContents(this);
+        mLogic = new PackagesPageLogic(updaterData) {
+            @Override
+            boolean keepItem(PkgItem item) {
+                return PackagesPage.this.keepItem(item);
+            }
+        };
 
+        createContents(this);
         postCreate();  //$hide$
     }
 
     public void onPageSelected() {
-        if (mPackages.isEmpty()) {
+        if (mLogic.mAllPkgItems.isEmpty()) {
             // Initialize the package list the first time the page is shown.
             loadPackages();
         }
@@ -309,7 +305,7 @@ public class PackagesPage extends UpdaterPage
             public void widgetSelected(SelectionEvent e) {
                 sortPackages(true /*updateButtons*/);
                 // Reset the expanded state when changing sort algorithm
-                expandInitial(mCategories);
+                expandInitial(mLogic.mCurrentCategories);
             }
         });
         mCheckSortApi.setText("API level");
@@ -323,7 +319,7 @@ public class PackagesPage extends UpdaterPage
             public void widgetSelected(SelectionEvent e) {
                 sortPackages(true /*updateButtons*/);
                 // Reset the expanded state when changing sort algorithm
-                expandInitial(mCategories);
+                expandInitial(mLogic.mCurrentCategories);
             }
         });
 
@@ -354,8 +350,8 @@ public class PackagesPage extends UpdaterPage
     }
 
     private Image getImage(String filename) {
-        if (mUpdaterData != null) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+        if (mLogic.mUpdaterData != null) {
+            ImageFactory imgFactory = mLogic.mUpdaterData.getImageFactory();
             if (imgFactory != null) {
                 return imgFactory.getImageByName(filename);
             }
@@ -382,7 +378,7 @@ public class PackagesPage extends UpdaterPage
                     loadPackages();
                     break;
                 case SHOW_ADDON_SITES:
-                    AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
+                    AddonSitesDialog d = new AddonSitesDialog(getShell(), mLogic.mUpdaterData);
                     if (d.open()) {
                         loadPackages();
                     }
@@ -487,8 +483,8 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void postCreate() {
-        if (mUpdaterData != null) {
-            mTextSdkOsPath.setText(mUpdaterData.getOsSdkRoot());
+        if (mLogic.mUpdaterData != null) {
+            mTextSdkOsPath.setText(mLogic.mUpdaterData.getOsSdkRoot());
         }
 
         mTreeViewer.setContentProvider(new PkgContentProvider());
@@ -515,31 +511,31 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void loadPackages() {
-        if (mUpdaterData == null) {
+        if (mLogic.mUpdaterData == null) {
             return;
         }
 
-        final boolean firstLoad = mPackages.isEmpty();
+        final boolean firstLoad = mLogic.mAllPkgItems.isEmpty();
 
-        // Load package is synchronous but does not block the UI.
+        // LoadPackage is synchronous but does not block the UI.
         // Consequently it's entirely possible for the user
         // to request the app to close whilst the packages are loading. Any
         // action done after loadPackages must check the UI hasn't been
         // disposed yet. Otherwise hilarity ensues.
 
-        mPackageLoader.loadPackages(new ISourceLoadedCallback() {
+        mLogic.mPackageLoader.loadPackages(new ISourceLoadedCallback() {
             public boolean onSourceLoaded(List<PkgItem> newPkgItems) {
                 boolean somethingNew = false;
 
-                synchronized(mPackages) {
+                synchronized(mLogic.mAllPkgItems) {
                     nextNewItem: for (PkgItem newItem : newPkgItems) {
-                        for (PkgItem existingItem : mPackages) {
+                        for (PkgItem existingItem : mLogic.mAllPkgItems) {
                             if (existingItem.isSameItemAs(newItem)) {
                                 // This isn't a new package, we already have it.
                                 continue nextNewItem;
                             }
                         }
-                        mPackages.add(newItem);
+                        mLogic.mAllPkgItems.add(newItem);
                         somethingNew = true;
                     }
                 }
@@ -556,7 +552,7 @@ public class PackagesPage extends UpdaterPage
                                 if (!mGroupPackages.isDisposed()) {
                                     if (firstLoad) {
                                         // set the initial expanded state
-                                        expandInitial(mCategories);
+                                        expandInitial(mLogic.mCurrentCategories);
                                     }
                                     updateButtonsState();
                                     updateMenuCheckmarks();
@@ -599,165 +595,20 @@ public class PackagesPage extends UpdaterPage
 
     /**
      * Recompute the tree by sorting all the packages by API.
-     * This does an update in-place of the mCategories list so that the table
+     * This does an update in-place of the mApiCategories list so that the table
      * can preserve its state (checked / expanded / selected) properly.
      */
     private void sortByApiLevel() {
-
-        ImageFactory imgFactory = mUpdaterData.getImageFactory();
 
         if (!mTreeColumnName.isDisposed()) {
             mTreeColumnName.setImage(getImage(ICON_SORT_BY_API));
         }
 
-        // If the sorting mode changed, clear the categories.
-        if (!mLastSortWasByApi) {
-            mLastSortWasByApi = true;
-            mCategories.clear();
-        }
+        mLogic.sortByApiLevel();
 
-        // keep a map of the initial state so that we can detect which items or categories are
-        // no longer being used, so that we can removed them at the end of the in-place update.
-        final Map<Integer, Pair<PkgApiCategory, HashSet<PkgItem>> > unusedItemsMap =
-            new HashMap<Integer, Pair<PkgApiCategory, HashSet<PkgItem>> >();
-        final Set<PkgApiCategory> unusedCatSet = new HashSet<PkgApiCategory>();
-
-        // get existing categories
-        for (PkgCategory cat : mCategories) {
-            if (cat instanceof PkgApiCategory) {
-                PkgApiCategory acat = (PkgApiCategory) cat;
-                unusedCatSet.add(acat);
-                unusedItemsMap.put(acat.getKey(),
-                        Pair.of(acat, new HashSet<PkgItem>(acat.getItems())));
-            }
-        }
-
-        // always add the tools & extras categories, even if empty (unlikely anyway)
-        if (!unusedItemsMap.containsKey(PkgApiCategory.KEY_TOOLS)) {
-            PkgApiCategory cat = new PkgApiCategory(
-                    PkgApiCategory.KEY_TOOLS,
-                    null,
-                    imgFactory.getImageByName(ICON_CAT_OTHER));
-            unusedItemsMap.put(PkgApiCategory.KEY_TOOLS, Pair.of(cat, new HashSet<PkgItem>()));
-            mCategories.add(cat);
-        }
-
-        if (!unusedItemsMap.containsKey(PkgApiCategory.KEY_EXTRA)) {
-            PkgApiCategory cat = new PkgApiCategory(
-                    PkgApiCategory.KEY_EXTRA,
-                    null,
-                    imgFactory.getImageByName(ICON_CAT_OTHER));
-            unusedItemsMap.put(PkgApiCategory.KEY_EXTRA, Pair.of(cat, new HashSet<PkgItem>()));
-            mCategories.add(cat);
-        }
-
-        synchronized (mPackages) {
-            for (PkgItem item : mPackages) {
-                if (!keepItem(item)) {
-                    continue;
-                }
-
-                int apiKey = item.getApi();
-
-                if (apiKey < 1) {
-                    Package p = item.getPackage();
-                    if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
-                        apiKey = PkgApiCategory.KEY_TOOLS;
-                    } else {
-                        apiKey = PkgApiCategory.KEY_EXTRA;
-                    }
-                }
-
-                Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apiKey);
-
-                if (mapEntry == null) {
-                    // This is a new category. Create it and add it to the map.
-
-                    // We need a label for the category.
-                    // If we have an API level, try to get the info from the SDK Manager.
-                    // If we don't (e.g. when installing a new platform that isn't yet available
-                    // locally in the SDK Manager), it's OK we'll try to find the first platform
-                    // package available.
-                    String platformName = null;
-                    if (apiKey != -1) {
-                        for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
-                            if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
-                                platformName = target.getVersionName();
-                                break;
-                            }
-                        }
-                    }
-
-                    PkgApiCategory cat = new PkgApiCategory(
-                            apiKey,
-                            platformName,
-                            imgFactory.getImageByName(ICON_CAT_PLATFORM));
-                    mapEntry = Pair.of(cat, new HashSet<PkgItem>());
-                    unusedItemsMap.put(apiKey, mapEntry);
-                    mCategories.add(0, cat);
-                }
-                PkgApiCategory cat = mapEntry.getFirst();
-                assert cat != null;
-                unusedCatSet.remove(cat);
-
-                HashSet<PkgItem> unusedItemsSet = mapEntry.getSecond();
-                unusedItemsSet.remove(item);
-                if (!cat.getItems().contains(item)) {
-                    cat.getItems().add(item);
-                }
-
-                if (apiKey != -1 && cat.getPlatformName() == null) {
-                    // Check whether we can get the actual platform version name (e.g. "1.5")
-                    // from the first Platform package we find in this category.
-                    Package p = item.getPackage();
-                    if (p instanceof PlatformPackage) {
-                        String platformName = ((PlatformPackage) p).getVersionName();
-                        cat.setPlatformName(platformName);
-                    }
-                }
-            }
-        }
-
-        for (Iterator<PkgCategory> iterCat = mCategories.iterator(); iterCat.hasNext(); ) {
-            PkgCategory cat = iterCat.next();
-
-            // Remove any unused categories.
-            if (unusedCatSet.contains(cat)) {
-                iterCat.remove();
-                continue;
-            }
-
-            // Remove any unused items in the category.
-            int apikey = cat.getKey();
-            Pair<PkgApiCategory, HashSet<PkgItem>> mapEntry = unusedItemsMap.get(apikey);
-            if (mapEntry == null) { //DEBUG
-                apikey = (apikey + 1) - 1;
-            }
-            assert mapEntry != null;
-            HashSet<PkgItem> unusedItems = mapEntry.getSecond();
-            for (Iterator<PkgItem> iterItem = cat.getItems().iterator(); iterItem.hasNext(); ) {
-                PkgItem item = iterItem.next();
-                if (unusedItems.contains(item)) {
-                    iterItem.remove();
-                }
-            }
-
-            // Sort the items
-            Collections.sort(cat.getItems());
-        }
-
-        // Sort the categories list.
-        Collections.sort(mCategories, new Comparator<PkgCategory>() {
-            public int compare(PkgCategory cat1, PkgCategory cat2) {
-                // We always want categories in order tools..platforms..extras.
-                // For platform, we compare in descending order (o2-o1).
-                return cat2.getKey() - cat1.getKey();
-            }
-        });
-
-        if (mTreeViewer.getInput() != mCategories) {
+        if (mTreeViewer.getInput() != mLogic.mCurrentCategories) {
             // set initial input
-            mTreeViewer.setInput(mCategories);
+            mTreeViewer.setInput(mLogic.mCurrentCategories);
         } else {
             // refresh existing, which preserves the expanded state, the selection
             // and the checked state.
@@ -774,64 +625,17 @@ public class PackagesPage extends UpdaterPage
             mTreeColumnName.setImage(getImage(ICON_SORT_BY_SOURCE));
         }
 
-        mLastSortWasByApi = false;
-        mCategories.clear();
-
-        Map<SdkSource, List<PkgItem>> sourceMap = new HashMap<SdkSource, List<PkgItem>>();
-
-        synchronized(mPackages) {
-            for (PkgItem item : mPackages) {
-                if (keepItem(item)) {
-                    SdkSource source = item.getSource();
-                    List<PkgItem> list = sourceMap.get(source);
-                    if (list == null) {
-                        list = new ArrayList<PkgItem>();
-                        sourceMap.put(source, list);
-                    }
-                    list.add(item);
-                }
-            }
-        }
-
-        // Sort the sources so that we can create categories sorted the same way
-        // (the categories don't link to the sources, so we can't just sort the categories.)
-        Set<SdkSource> sources = new TreeSet<SdkSource>(new Comparator<SdkSource>() {
-            public int compare(SdkSource o1, SdkSource o2) {
-                if (o1 == o2) {
-                    return 0;
-                } else if (o1 == null && o2 != null) {
-                    return -1;
-                } else if (o1 != null && o2 == null) {
-                    return 1;
-                }
-                assert o1 != null;
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
-        sources.addAll(sourceMap.keySet());
-
-        for (SdkSource source : sources) {
-            Object key = source != null ? source : "Locally Installed Packages";
-            Object iconRef = source != null ? source :
-                        mUpdaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED);
-
-            PkgCategory cat = new PkgCategory(
-                    key.hashCode(),
-                    key.toString(),
-                    iconRef);
-
-            for (PkgItem item : sourceMap.get(source)) {
-                if (item.getSource() == source) {
-                    cat.getItems().add(item);
-                }
-            }
-
-            mCategories.add(cat);
-        }
+        mLogic.sortBySource();
 
         // We don't support in-place incremental updates so the table gets reset
         // each time we load when sorted by source.
-        mTreeViewer.setInput(mCategories);
+        if (mTreeViewer.getInput() != mLogic.mCurrentCategories) {
+            mTreeViewer.setInput(mLogic.mCurrentCategories);
+        } else {
+            // refresh existing, which preserves the expanded state, the selection
+            // and the checked state.
+            mTreeViewer.refresh();
+        }
     }
 
     /**
@@ -851,8 +655,7 @@ public class PackagesPage extends UpdaterPage
         }
 
         if (!mCheckFilterNew.getSelection()) {
-            if (item.getState() == PkgState.NEW ||
-                    item.getState() == PkgState.HAS_UPDATE) {
+            if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
                 return false;
             }
         }
@@ -875,8 +678,7 @@ public class PackagesPage extends UpdaterPage
             if (pkg instanceof PkgCategory) {
                 PkgCategory cat = (PkgCategory) pkg;
                 for (PkgItem item : cat.getItems()) {
-                    if (item.getState() == PkgState.INSTALLED
-                            || item.getState() == PkgState.HAS_UPDATE) {
+                    if (item.getState() == PkgState.INSTALLED) {
                         expandInitial(pkg);
                         break;
                     }
@@ -986,7 +788,7 @@ public class PackagesPage extends UpdaterPage
                             break;
                         }
                     } else if (c instanceof PkgItem) {
-                        if (((PkgItem) c).getPackage().hasCompatibleArchive()) {
+                        if (((PkgItem) c).getMainPackage().hasCompatibleArchive()) {
                             canInstall = true;
                             break;
                         }
@@ -1004,7 +806,7 @@ public class PackagesPage extends UpdaterPage
             for (Object c : checked) {
                 if (c instanceof PkgItem) {
                     PkgState state = ((PkgItem) c).getState();
-                    if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
+                    if (state == PkgState.INSTALLED) {
                         canDelete = true;
                         break;
                     }
@@ -1017,12 +819,11 @@ public class PackagesPage extends UpdaterPage
 
     private void onSelectNewUpdates() {
         ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
-        synchronized(mPackages) {
-            for (PkgCategory cat : mCategories) {
+        synchronized(mLogic.mAllPkgItems) {
+            for (PkgCategory cat : mLogic.mCurrentCategories) {
                 boolean selected = false;
                 for (PkgItem item : cat.getItems()) {
-                    PkgState state = item.getState();
-                    if (state == PkgState.NEW || state == PkgState.HAS_UPDATE) {
+                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
                         mTreeViewer.setChecked(item, true);
                         checkExpandItem(item, provider);
                         selected = true;
@@ -1071,14 +872,14 @@ public class PackagesPage extends UpdaterPage
                         // This is an update package
                         p = (Package) c;
                     } else if (c instanceof PkgItem) {
-                        p = ((PkgItem) c).getPackage();
+                        p = ((PkgItem) c).getMainPackage();
 
                         PkgItem pi = (PkgItem) c;
-                        if (pi.getState() == PkgState.HAS_UPDATE) {
-                            List<Package> updates = pi.getUpdatePkgs();
+                        if (pi.getState() == PkgState.INSTALLED) {
+                            Package updPkg = pi.getUpdatePkg();
+                            if (updPkg != null) {
                             // If there's one and only one update, auto-select it instead.
-                            if (updates != null && updates.size() == 1) {
-                                p = updates.get(0);
+                                p = updPkg;
                             }
                         }
                     }
@@ -1093,11 +894,11 @@ public class PackagesPage extends UpdaterPage
             }
         }
 
-        if (mUpdaterData != null) {
+        if (mLogic.mUpdaterData != null) {
             try {
                 beginOperationPending();
 
-                mUpdaterData.updateOrInstallAll_WithGUI(
+                mLogic.mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
             } finally {
@@ -1106,9 +907,9 @@ public class PackagesPage extends UpdaterPage
                 // Remove any pkg item matching anything we potentially installed
                 // then request the package list to be updated. This will prevent
                 // from having stale entries.
-                synchronized(mPackages) {
+                synchronized(mLogic.mAllPkgItems) {
                     for (Archive a : archives) {
-                        for (Iterator<PkgItem> it = mPackages.iterator(); it.hasNext(); ) {
+                        for (Iterator<PkgItem> it = mLogic.mAllPkgItems.iterator(); it.hasNext(); ) {
                             PkgItem pi = it.next();
                             if (pi.hasArchive(a)) {
                                 it.remove();
@@ -1119,7 +920,7 @@ public class PackagesPage extends UpdaterPage
                 }
 
                 // The local package list has changed, make sure to refresh it
-                mUpdaterData.getLocalSdkParser().clearPackages();
+                mLogic.mUpdaterData.getLocalSdkParser().clearPackages();
                 loadPackages();
             }
         }
@@ -1143,8 +944,8 @@ public class PackagesPage extends UpdaterPage
             if (c instanceof PkgItem) {
                 PkgItem pi = (PkgItem) c;
                 PkgState state = pi.getState();
-                if (state == PkgState.INSTALLED || state == PkgState.HAS_UPDATE) {
-                    Package p = pi.getPackage();
+                if (state == PkgState.INSTALLED) {
+                    Package p = pi.getMainPackage();
 
                     Archive[] as = p.getArchives();
                     if (as.length == 1 && as[0] != null && as[0].isLocal()) {
@@ -1167,7 +968,7 @@ public class PackagesPage extends UpdaterPage
                 try {
                     beginOperationPending();
 
-                    mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
+                    mLogic.mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
                             for (Entry<Archive, PkgItem> entry : archives.entrySet()) {
@@ -1180,8 +981,8 @@ public class PackagesPage extends UpdaterPage
                                 // Delete the actual package and its internal representation
                                 a.deleteLocal();
 
-                                synchronized(mPackages) {
-                                    mPackages.remove(entry.getValue());
+                                synchronized(mLogic.mAllPkgItems) {
+                                    mLogic.mAllPkgItems.remove(entry.getValue());
                                 }
 
                                 monitor.incProgress(1);
@@ -1198,7 +999,7 @@ public class PackagesPage extends UpdaterPage
                     endOperationPending();
 
                     // The local package list has changed, make sure to refresh it
-                    mUpdaterData.getLocalSdkParser().clearPackages();
+                    mLogic.mUpdaterData.getLocalSdkParser().clearPackages();
                     loadPackages();
                 }
             }
@@ -1244,8 +1045,7 @@ public class PackagesPage extends UpdaterPage
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
 
-                    if (pkg.getState() == PkgState.INSTALLED ||
-                            pkg.getState() == PkgState.HAS_UPDATE) {
+                    if (pkg.getState() == PkgState.INSTALLED) {
                         return Integer.toString(pkg.getRevision());
                     }
                 }
@@ -1257,19 +1057,16 @@ public class PackagesPage extends UpdaterPage
 
                     switch(pkg.getState()) {
                     case INSTALLED:
-                        return "Installed";
-                    case HAS_UPDATE:
-                        List<Package> updates = pkg.getUpdatePkgs();
-                        if (updates.size() == 1) {
-                            return String.format("Update available: rev. %1$s",
-                                    updates.get(0).getRevision());
-                        } else {
-                            // This case should not happen in *our* typical release workflow.
-                            return "Multiple updates available";
+                        Package update = pkg.getUpdatePkg();
+                        if (update != null) {
+                            return String.format(
+                                    "Update available: rev. %1$s",
+                                    update.getRevision());
                         }
+                        return "Installed";
+
                     case NEW:
                         return "Not installed";
-                        // TODO display pkg.getRevision() in a tooltip
                     }
                     return pkg.getState().toString();
 
@@ -1279,7 +1076,7 @@ public class PackagesPage extends UpdaterPage
                 }
             }
 
-            return "";  //$NON-NLS-1$
+            return "";
         }
 
         private String getPkgItemname(PkgItem item) {
@@ -1306,7 +1103,7 @@ public class PackagesPage extends UpdaterPage
         }
 
         private PkgCategory findCategoryForItem(PkgItem item) {
-            for (PkgCategory cat : mCategories) {
+            for (PkgCategory cat : mLogic.mCurrentCategories) {
                 for (PkgItem i : cat.getItems()) {
                     if (i == item) {
                         return cat;
@@ -1319,23 +1116,26 @@ public class PackagesPage extends UpdaterPage
 
         @Override
         public Image getImage(Object element) {
-            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+            ImageFactory imgFactory = mLogic.mUpdaterData.getImageFactory();
 
             if (imgFactory != null) {
                 if (mColumn == mColumnName) {
                     if (element instanceof PkgCategory) {
                         return imgFactory.getImageForObject(((PkgCategory) element).getIconRef());
                     } else if (element instanceof PkgItem) {
-                        return imgFactory.getImageForObject(((PkgItem) element).getPackage());
+                        return imgFactory.getImageForObject(((PkgItem) element).getMainPackage());
                     }
                     return imgFactory.getImageForObject(element);
 
                 } else if (mColumn == mColumnStatus && element instanceof PkgItem) {
-                    switch(((PkgItem) element).getState()) {
+                    PkgItem pi = (PkgItem) element;
+                    switch(pi.getState()) {
                     case INSTALLED:
-                        return imgFactory.getImageByName(ICON_PKG_INSTALLED);
-                    case HAS_UPDATE:
-                        return imgFactory.getImageByName(ICON_PKG_UPDATE);
+                        if (pi.hasUpdatePkg()) {
+                            return imgFactory.getImageByName(ICON_PKG_UPDATE);
+                        } else {
+                            return imgFactory.getImageByName(ICON_PKG_INSTALLED);
+                        }
                     case NEW:
                         return imgFactory.getImageByName(ICON_PKG_NEW);
                     }
@@ -1370,15 +1170,15 @@ public class PackagesPage extends UpdaterPage
                 return ((PkgCategory) parentElement).getItems().toArray();
 
             } else if (parentElement instanceof PkgItem) {
-                List<Package> pkgs = ((PkgItem) parentElement).getUpdatePkgs();
-
-                // Display update packages as sub-items if there's more than one
-                // or if the archive/details mode is activated.
-                if (pkgs != null && (pkgs.size() > 1 || mDisplayArchives)) {
-                    return pkgs.toArray();
-                }
-
                 if (mDisplayArchives) {
+
+                    Package pkg = ((PkgItem) parentElement).getUpdatePkg();
+
+                    // Display update packages as sub-items if the details mode is activated.
+                    if (pkg != null) {
+                        return new Object[] { pkg };
+                    }
+
                     return ((PkgItem) parentElement).getArchives();
                 }
 
@@ -1406,15 +1206,14 @@ public class PackagesPage extends UpdaterPage
                 return true;
 
             } else if (parentElement instanceof PkgItem) {
-                List<Package> pkgs = ((PkgItem) parentElement).getUpdatePkgs();
-
-                // Display update packages as sub-items if there's more than one
-                // or if the archive/details mode is activated.
-                if (pkgs != null && (pkgs.size() > 1 || mDisplayArchives)) {
-                    return !pkgs.isEmpty();
-                }
-
                 if (mDisplayArchives) {
+                    Package pkg = ((PkgItem) parentElement).getUpdatePkg();
+
+                    // Display update packages as sub-items if the details mode is activated.
+                    if (pkg != null) {
+                        return true;
+                    }
+
                     Archive[] archives = ((PkgItem) parentElement).getArchives();
                     return archives.length > 0;
                 }
@@ -1441,7 +1240,7 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
-    private static class PkgCategory {
+    static class PkgCategory {
         private final int mKey;
         private final Object mIconRef;
         private final List<PkgItem> mItems = new ArrayList<PkgItem>();
@@ -1475,6 +1274,35 @@ public class PackagesPage extends UpdaterPage
 
         public List<PkgItem> getItems() {
             return mItems;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s <key=%08x, label=%s, #items=%d>",
+                    this.getClass().getSimpleName(),
+                    mKey,
+                    mLabel,
+                    mItems.size());
+        }
+
+        /** {@link PkgCategory} are equal if their internal key is the same. */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + mKey;
+            return result;
+        }
+
+        /** {@link PkgCategory} are equal if their internal key is the same. */
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            PkgCategory other = (PkgCategory) obj;
+            if (mKey != other.mKey) return false;
+            return true;
         }
     }
 
@@ -1510,10 +1338,13 @@ public class PackagesPage extends UpdaterPage
 
         public String getApiLabel() {
             int api = getKey();
-            if (api > 0) {
+            if (api == KEY_TOOLS) {
+                return "TOOLS"; //$NON-NLS-1$ for internal use only
+            } else if (api == KEY_EXTRA) {
+                return "EXTRAS"; //$NON-NLS-1$ for internal use only
+            } else {
                 return String.format("API %1$d", getKey());
             }
-            return null;
         }
 
         @Override
@@ -1540,7 +1371,16 @@ public class PackagesPage extends UpdaterPage
 
         @Override
         public void setLabel(String label) {
-            throw new UnsupportedOperationException("Use setPlatformName() instead."); //$NON-NLS-1$
+            throw new UnsupportedOperationException("Use setPlatformName() instead.");
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s <API=%s, label=%s, #items=%d>",
+                    this.getClass().getSimpleName(),
+                    getApiLabel(),
+                    getLabel(),
+                    getItems().size());
         }
     }
 
@@ -1562,6 +1402,296 @@ public class PackagesPage extends UpdaterPage
     public void postInstallHook() {
         // nothing to be done for now.
     }
+
+
+    /**
+     * Helper class that separate the logic of package management from the UI
+     * so that we can test it using head-less unit tests.
+     */
+    static abstract class PackagesPageLogic {
+        final PackageLoader mPackageLoader;
+        final UpdaterData mUpdaterData;
+
+        final List<PkgCategory> mApiCategories = new ArrayList<PkgCategory>();
+        final List<PkgCategory> mSourceCategories = new ArrayList<PkgCategory>();
+        List<PkgCategory> mCurrentCategories = mApiCategories;
+        /** Access to this list must be synchronized on {@link #mAllPkgItems}. */
+        final List<PkgItem> mAllPkgItems = new ArrayList<PkgItem>();
+
+        public PackagesPageLogic(UpdaterData updaterData) {
+            mUpdaterData = updaterData;
+            mPackageLoader = new PackageLoader(updaterData);
+        }
+
+        /**
+         * Recompute the tree by sorting all the packages by API.
+         * This does an update in-place of the mApiCategories list so that the table
+         * can preserve its state (checked / expanded / selected) properly.
+         */
+        void sortByApiLevel() {
+            ImageFactory imgFactory = mUpdaterData.getImageFactory();
+
+            mCurrentCategories = mApiCategories;
+
+            // We'll do an in-place update: first make a map of existing categories and
+            // whatever pkg items they contain. Then prepare the new categories we want
+            // which is all the existing categories + tools & extra (creating them the first time).
+            // We mark all the existing items as "unused" then remove from the unused set the
+            // items that we want to keep. At the end, whatever is left in the unused maps
+            // are obsolete items we remove from the tree.
+
+            // Keep a map of the initial state so that we can detect which items or categories are
+            // no longer being used, so that we can remove them at the end of the in-place update.
+
+            final Map<Integer, PkgApiCategory> categoryKeyMap = new HashMap<Integer, PkgApiCategory>();
+            final Set<Integer> unusedCategoryKey = new HashSet<Integer>();
+            final Set<Package> unusedPackages = new HashSet<Package>();
+
+            // Get existing categories and packages
+            for (PkgCategory cat : mApiCategories) {
+                if (cat instanceof PkgApiCategory) {
+                    PkgApiCategory acat = (PkgApiCategory) cat;
+                    categoryKeyMap.put(acat.getKey(), acat);
+                    unusedCategoryKey.add(acat.getKey());
+
+                    for (PkgItem pi : cat.getItems()) {
+                        unusedPackages.add(pi.getMainPackage());
+                        if (pi.hasUpdatePkg()) {
+                            unusedPackages.add(pi.getUpdatePkg());
+                        }
+                    }
+                }
+            }
+
+            // Always add the tools & extras categories, even if empty (unlikely anyway)
+            if (!unusedCategoryKey.contains(PkgApiCategory.KEY_TOOLS)) {
+                PkgApiCategory acat = new PkgApiCategory(
+                        PkgApiCategory.KEY_TOOLS,
+                        null,
+                        imgFactory.getImageByName(ICON_CAT_OTHER));
+                mApiCategories.add(acat);
+                categoryKeyMap.put(acat.getKey(), acat);
+                unusedCategoryKey.add(acat.getKey());
+            }
+
+            if (!unusedCategoryKey.contains(PkgApiCategory.KEY_EXTRA)) {
+                PkgApiCategory acat = new PkgApiCategory(
+                        PkgApiCategory.KEY_EXTRA,
+                        null,
+                        imgFactory.getImageByName(ICON_CAT_OTHER));
+                mApiCategories.add(acat);
+                categoryKeyMap.put(acat.getKey(), acat);
+                unusedCategoryKey.add(acat.getKey());
+            }
+
+            // Go through the new package item list
+            synchronized (mAllPkgItems) {
+                for (PkgItem newItem : mAllPkgItems) {
+                    // Is this a package we want to display? That may change depending on the
+                    // display filter (obsolete, new/updates, etc.)
+                    if (!keepItem(newItem)) {
+                        continue;
+                    }
+
+                    // Get the category for this item.
+                    int apiKey = newItem.getApi();
+
+                    if (apiKey < 1) {
+                        Package p = newItem.getMainPackage();
+                        if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
+                            apiKey = PkgApiCategory.KEY_TOOLS;
+                        } else {
+                            apiKey = PkgApiCategory.KEY_EXTRA;
+                        }
+                    }
+
+                    PkgApiCategory cat = categoryKeyMap.get(apiKey);
+
+                    if (cat == null) {
+                        // This is a new category. Create it and add it to the map.
+
+                        // We need a label for the category.
+                        // If we have an API level, try to get the info from the SDK Manager.
+                        // If we don't (e.g. when installing a new platform that isn't yet available
+                        // locally in the SDK Manager), it's OK we'll try to find the first platform
+                        // package available.
+                        String platformName = null;
+                        if (apiKey != -1) {
+                            for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
+                                if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
+                                    platformName = target.getVersionName();
+                                    break;
+                                }
+                            }
+                        }
+
+                        cat = new PkgApiCategory(
+                                apiKey,
+                                platformName,
+                                imgFactory.getImageByName(ICON_CAT_PLATFORM));
+                        mApiCategories.add(0, cat);
+                        categoryKeyMap.put(cat.getKey(), cat);
+                    } else {
+                        // Remove the category key from the unused list.
+                        unusedCategoryKey.remove(apiKey);
+                    }
+
+                    // Add the item to the category or merge as an update of an existing package
+                    boolean found = false;
+                    if (newItem.getState() == PkgState.NEW) {
+                        for (PkgItem pi : cat.getItems()) {
+                            Package p = newItem.getMainPackage();
+                            if (pi.isSameItemAs(newItem) ||
+                                    pi.isSameMainPackageAs(p)) {
+                                // It's the same item or
+                                // it's not exactly the same item but the main package is the same.
+                                unusedPackages.remove(pi.getMainPackage());
+                                found = true;
+
+                            } else if (pi.mergeUpdate(p)) {
+                                // The new package is an update for the existing package.
+                                unusedPackages.remove(pi.getMainPackage());
+                                unusedPackages.remove(pi.getUpdatePkg());
+                                found = true;
+                            }
+                            if (found) {
+                                break;
+                            }
+                        }
+                    } else {
+                        // We do not try to merge installed packages. This prevents a bug in
+                        // the edge case where a new update might be present in the package
+                        // list before the installed item it would update. If we were trying
+                        // to merge the installed item into the new package, the installed item
+                        // would most likely be hidden because it would have a lesser revision.
+                        // This case is not supposed to happen but if it does, we 'd better have
+                        // a dup than a missing displayed package.
+
+                        for (PkgItem pi : cat.getItems()) {
+                            if (pi.isSameItemAs(newItem)) {
+                                unusedPackages.remove(newItem.getMainPackage());
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found) {
+                        cat.getItems().add(newItem);
+                        unusedPackages.remove(newItem.getMainPackage());
+                        unusedPackages.remove(newItem.getUpdatePkg());
+                    }
+
+                    if (apiKey != -1 && cat.getPlatformName() == null) {
+                        // Check whether we can get the actual platform version name (e.g. "1.5")
+                        // from the first Platform package we find in this category.
+                        Package p = newItem.getMainPackage();
+                        if (p instanceof PlatformPackage) {
+                            String platformName = ((PlatformPackage) p).getVersionName();
+                            cat.setPlatformName(platformName);
+                        }
+                    }
+                }
+            }
+
+            // Now go through all the remaining categories used for the tree and clear unused items.
+            for (Iterator<PkgCategory> iterCat = mApiCategories.iterator(); iterCat.hasNext(); ) {
+                PkgCategory cat = iterCat.next();
+
+                // Remove any unused categories.
+                if (unusedCategoryKey.contains(cat.getKey())) {
+                    iterCat.remove();
+                    continue;
+                }
+
+                // Remove any unused items in the category.
+                for (Iterator<PkgItem> iterItem = cat.getItems().iterator(); iterItem.hasNext(); ) {
+                    PkgItem item = iterItem.next();
+
+                    if (unusedPackages.contains(item.getMainPackage())) {
+                        iterItem.remove();
+                    } else if (item.hasUpdatePkg() && unusedPackages.contains(item.getUpdatePkg())) {
+                        item.removeUpdate();
+                    }
+                }
+
+                // Sort the items
+                Collections.sort(cat.getItems());
+            }
+
+            // Sort the categories list.
+            Collections.sort(mApiCategories, new Comparator<PkgCategory>() {
+                public int compare(PkgCategory cat1, PkgCategory cat2) {
+                    // We always want categories in order tools..platforms..extras.
+                    // For platform, we compare in descending order (o2-o1).
+                    return cat2.getKey() - cat1.getKey();
+                }
+            });
+        }
+
+        /**
+         * Recompute the tree by sorting all packages by source.
+         */
+        void sortBySource() {
+
+            mCurrentCategories = mSourceCategories;
+
+            Map<SdkSource, List<PkgItem>> sourceMap = new HashMap<SdkSource, List<PkgItem>>();
+
+            synchronized(mAllPkgItems) {
+                for (PkgItem item : mAllPkgItems) {
+                    if (keepItem(item)) {
+                        SdkSource source = item.getSource();
+                        List<PkgItem> list = sourceMap.get(source);
+                        if (list == null) {
+                            list = new ArrayList<PkgItem>();
+                            sourceMap.put(source, list);
+                        }
+                        list.add(item);
+                    }
+                }
+            }
+
+            // Sort the sources so that we can create categories sorted the same way
+            // (the categories don't link to the sources, so we can't just sort the categories.)
+            Set<SdkSource> sources = new TreeSet<SdkSource>(new Comparator<SdkSource>() {
+                public int compare(SdkSource o1, SdkSource o2) {
+                    if (o1 == o2) {
+                        return 0;
+                    } else if (o1 == null && o2 != null) {
+                        return -1;
+                    } else if (o1 != null && o2 == null) {
+                        return 1;
+                    }
+                    assert o1 != null;
+                    return o1.toString().compareTo(o2.toString());
+                }
+            });
+            sources.addAll(sourceMap.keySet());
+
+            for (SdkSource source : sources) {
+                Object key = source != null ? source : "Locally Installed Packages";
+                Object iconRef = source != null ? source :
+                            mUpdaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED);
+
+                PkgCategory cat = new PkgCategory(
+                        key.hashCode(),
+                        key.toString(),
+                        iconRef);
+
+                for (PkgItem item : sourceMap.get(source)) {
+                    if (item.getSource() == source) {
+                        cat.getItems().add(item);
+                    }
+                }
+
+                mSourceCategories.add(cat);
+            }
+        }
+
+        abstract boolean keepItem(PkgItem item);
+    }
+
 
     // --- End of hiding from SWT Designer ---
     //$hide<<$

@@ -117,10 +117,6 @@ public class MockPlatformPackage extends PlatformPackage {
             return "";
         }
 
-        public String getName() {
-            return "mock platform target";
-        }
-
         public IOptionalLibrary[] getOptionalLibraries() {
             return null;
         }
@@ -165,8 +161,20 @@ public class MockPlatformPackage extends PlatformPackage {
             return 0;
         }
 
+        /**
+         * Returns a vendor that depends on the parent *platform* API.
+         * This works well in Unit Tests where we'll typically have different
+         * platforms as unique identifiers.
+         */
         public String getVendor() {
-            return null;
+            return "vendor " + Integer.toString(mApiLevel);
+        }
+
+        /**
+         * Create a synthetic name using the target API level.
+         */
+        public String getName() {
+            return "platform r" + Integer.toString(mApiLevel);
         }
 
         public AndroidVersion getVersion() {
