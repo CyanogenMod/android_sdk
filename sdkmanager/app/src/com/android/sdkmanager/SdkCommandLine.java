@@ -82,6 +82,7 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_SNAPSHOT     = "snapshot";                       //$NON-NLS-1$
     public static final String KEY_COMPACT      = "compact";                        //$NON-NLS-1$
     public static final String KEY_EOL_NULL     = "null";                           //$NON-NLS-1$
+    public static final String KEY_ABI          = "abi";                            //$NON-NLS-1$
 
     /**
      * Action definitions for SdkManager command line.
@@ -203,6 +204,10 @@ class SdkCommandLine extends CommandLineProcessor {
         define(Mode.BOOLEAN, false,
                 VERB_CREATE, OBJECT_AVD, "a", KEY_SNAPSHOT,                         //$NON-NLS-1$
                 "Place a snapshots file in the AVD, to enable persistence.", false);
+        define(Mode.STRING, false,
+                VERB_CREATE, OBJECT_AVD, "b", KEY_ABI,                           //$NON-NLS-1$
+                "The ABI to use for the AVD. The default is to auto-select the ABI if the platform has only one ABI for its system images.",
+                null);
 
         // --- delete avd ---
 
@@ -533,6 +538,11 @@ class SdkCommandLine extends CommandLineProcessor {
     /** Helper to retrieve the --filter value. */
     public String getParamFilter() {
         return ((String) getValue(null, null, KEY_FILTER));
+    }
+
+    /** Helper to retrieve the --abi value. */
+    public String getParamAbi() {
+        return ((String) getValue(null, null, KEY_ABI));
     }
 
     /** Helper to retrieve the --proxy-host value. */
