@@ -253,8 +253,16 @@ public class MainWindow extends ApplicationWindow {
                 }
             }
 
-            reader = new DmTraceReader(traceName, regression);
+            try {
+                reader = new DmTraceReader(traceName, regression);
+            } catch (IOException e) {
+                System.err.printf("Failed to read the trace file");
+                e.printStackTrace();
+                System.exit(1);
+                return;
+            }
         }
+
         reader.getTraceUnits().setTimeScale(TraceUnits.TimeScale.MilliSeconds);
 
         Display.setAppName("Traceview");

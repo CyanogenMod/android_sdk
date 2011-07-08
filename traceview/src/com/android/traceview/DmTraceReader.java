@@ -70,7 +70,7 @@ public class DmTraceReader extends TraceReader {
     // A regex for matching the thread "id name" lines in the .key file
     private static final Pattern mIdNamePattern = Pattern.compile("(\\d+)\t(.*)");  //$NON-NLS-1$
 
-    public DmTraceReader(String traceFileName, boolean regression) {
+    public DmTraceReader(String traceFileName, boolean regression) throws IOException {
         mTraceFileName = traceFileName;
         mRegression = regression;
         mPropertiesMap = new HashMap<String, String>();
@@ -87,15 +87,10 @@ public class DmTraceReader extends TraceReader {
         generateTrees();
     }
 
-    void generateTrees() {
-        try {
-            long offset = parseKeys();
-            parseData(offset);
-            analyzeData();
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        }
+    void generateTrees() throws IOException {
+        long offset = parseKeys();
+        parseData(offset);
+        analyzeData();
     }
 
     @Override
@@ -105,25 +100,17 @@ public class DmTraceReader extends TraceReader {
         return mProfileProvider;
     }
 
-    private MappedByteBuffer mapFile(String filename, long offset) {
+    private MappedByteBuffer mapFile(String filename, long offset) throws IOException {
         MappedByteBuffer buffer = null;
-        try {
-            FileInputStream dataFile = new FileInputStream(filename);
-            File file = new File(filename);
-            FileChannel fc = dataFile.getChannel();
-            buffer = fc.map(FileChannel.MapMode.READ_ONLY, offset, file.length() - offset);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-        } catch (FileNotFoundException ex) {
-            System.err.println(ex.getMessage());
-            System.exit(1);
-        } catch (IOException ex) {
-            System.err.println(ex.getMessage());
-            System.exit(1);
-        }
-        
+        FileInputStream dataFile = new FileInputStream(filename);
+        File file = new File(filename);
+        FileChannel fc = dataFile.getChannel();
+        buffer = fc.map(FileChannel.MapMode.READ_ONLY, offset, file.length() - offset);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
         return buffer;
     }
-    
+
     private void readDataFileHeader(MappedByteBuffer buffer) {
         int magic = buffer.getInt();
         if (magic != TRACE_MAGIC) {
@@ -170,7 +157,7 @@ public class DmTraceReader extends TraceReader {
         }
     }
 
-    private void parseData(long offset) {
+    private void parseData(long offset) throws IOException {
         MappedByteBuffer buffer = mapFile(mTraceFileName, offset);
         readDataFileHeader(buffer);
 
@@ -430,7 +417,7 @@ public class DmTraceReader extends TraceReader {
             if (line == null) {
                 throw new IOException("Key section does not have an *end marker");
             }
-            
+
             // Calculate how much we have read from the file so far.  The
             // extra byte is for the line ending not included by readLine().
             offset += line.length() + 1;
@@ -602,7 +589,7 @@ public class DmTraceReader extends TraceReader {
         for (Call call : mCallList) {
             call.updateName();
         }
-        
+
         if (mRegression) {
             dumpMethodStats();
         }
@@ -664,7 +651,7 @@ public class DmTraceReader extends TraceReader {
                     call.getMethodData().getName());
         }
     }
-    
+
     private void dumpMethodStats() {
         System.out.print("\nMethod Stats\n");
         System.out.print("Excl Cpu  Incl Cpu  Excl Real Incl Real    Calls  Method\n");
