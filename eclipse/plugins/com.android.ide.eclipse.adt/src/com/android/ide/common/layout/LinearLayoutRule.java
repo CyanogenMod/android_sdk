@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -1078,7 +1079,9 @@ public class LinearLayoutRule extends BaseLayoutRule {
     @VisibleForTesting
     static String formatFloatAttribute(float value) {
         if (value != (int) value) {
-            return String.format("%.2f", value); //$NON-NLS-1$
+            // Run String.format without a locale, because we don't want locale-specific
+            // conversions here like separating the decimal part with a comma instead of a dot!
+            return String.format((Locale) null, "%.2f", value); //$NON-NLS-1$
         } else {
             return Integer.toString((int) value);
         }

@@ -30,11 +30,12 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.MenuAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
-import com.android.ide.common.api.MenuAction.Choices;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** Test the {@link LinearLayoutRule} */
@@ -378,6 +379,24 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
         assertEquals("1.52", LinearLayoutRule.formatFloatAttribute(1.516542f));
         assertEquals("-1.51", LinearLayoutRule.formatFloatAttribute(-1.51f));
         assertEquals("-1", LinearLayoutRule.formatFloatAttribute(-1f));
+    }
+
+    public void testFormatFloatValueLocale() throws Exception {
+        // Ensure that the layout float values aren't affected by
+        // locale settings, like using commas instead of of periods
+        Locale originalDefaultLocale = Locale.getDefault();
+
+        try {
+            Locale.setDefault(Locale.FRENCH);
+
+            // Ensure that this is a locale which uses a comma instead of a period:
+            assertEquals("5,24", String.format("%.2f", 5.236f));
+
+            // Ensure that the formatFloatAttribute is immune
+            assertEquals("1.50", LinearLayoutRule.formatFloatAttribute(1.5f));
+        } finally {
+            Locale.setDefault(originalDefaultLocale);
+        }
     }
 
     // Left to test:
