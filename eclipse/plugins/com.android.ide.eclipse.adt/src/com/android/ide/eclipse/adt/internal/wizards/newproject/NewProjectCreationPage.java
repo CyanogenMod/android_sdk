@@ -31,11 +31,12 @@ import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCreationPage.TestInfo;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 import com.android.sdklib.xml.ManifestData.Activity;
@@ -1032,7 +1033,8 @@ public class NewProjectCreationPage extends WizardPage {
         // We do if one of two conditions are met:
         if (target != null) {
             boolean setMinSdk = false;
-            int apiLevel = target.getVersion().getApiLevel();
+            AndroidVersion version = target.getVersion();
+            int apiLevel = version.getApiLevel();
             // 1. Has the user not manually edited the SDK field yet? If so, keep
             //    updating it to the selected value.
             if (!mMinSdkModifiedByUser) {
@@ -1053,9 +1055,15 @@ public class NewProjectCreationPage extends WizardPage {
                 }
             }
             if (setMinSdk) {
+                String minSdk;
+                if (version.isPreview()) {
+                    minSdk = version.getCodename();
+                } else {
+                    minSdk = Integer.toString(apiLevel);
+                }
                 try {
                     mInternalMinSdkUpdate = true;
-                    mMinSdkVersionField.setText(Integer.toString(apiLevel));
+                    mMinSdkVersionField.setText(minSdk);
                 } finally {
                     mInternalMinSdkUpdate = false;
                 }
