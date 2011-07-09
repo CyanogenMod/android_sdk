@@ -44,9 +44,9 @@ import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.resources.Density;
 import com.android.resources.NightMode;
 import com.android.resources.ResourceFolderType;
@@ -1080,11 +1080,11 @@ public class ConfigurationComposite extends Composite {
     }
 
     private ConfigMatch selectConfigMatch(List<ConfigMatch> matches) {
-        // API 11+ : look for a x-large device.
-        if (mProjectTarget.getVersion().getApiLevel() >= 11) {
-            // TODO: Revisit this once phones can run higher APIs.
-            // Maybe check the compatible-screen tag in the manifest to figure out what kind of
-            // device should be used for display.
+        // API 11-12: look for a x-large device
+        int apiLevel = mProjectTarget.getVersion().getApiLevel();
+        if (apiLevel >= 11 && apiLevel < 13) {
+            // TODO: Maybe check the compatible-screen tag in the manifest to figure out
+            // what kind of device should be used for display.
             Collections.sort(matches, new TabletConfigComparator());
         } else {
             // lets look for a high density device
