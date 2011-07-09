@@ -17,12 +17,14 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
+import com.android.ide.common.api.INode;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -36,7 +38,10 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.widgets.Composite;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The {@link ClipboardSupport} class manages the native clipboard, providing operations
@@ -199,6 +204,30 @@ public class ClipboardSupport {
         // resetting the selection.
         mCanvas.getLayoutEditor().wrapUndoEditXmlModel(title, new Runnable() {
             public void run() {
+                // Segment the deleted nodes into clusters of siblings
+                Map<NodeProxy, List<NodeProxy>> clusters =
+                        new HashMap<NodeProxy, List<NodeProxy>>();
+                for (SelectionItem cs : selection) {
+                    NodeProxy node = cs.getNode();
+                    INode parent = node.getParent();
+                    List<NodeProxy> children = clusters.get(parent);
+                    if (children == null) {
+                        children = new ArrayList<NodeProxy>();
+                        clusters.put((NodeProxy) parent, children);
+                    }
+                    children.add(node);
+                }
+
+                // Notify parent views about children getting deleted
+                RulesEngine rulesEngine = mCanvas.getRulesEngine();
+                LayoutEditor editor = mCanvas.getLayoutEditor();
+                for (Map.Entry<NodeProxy, List<NodeProxy>> entry : clusters.entrySet()) {
+                    NodeProxy parent = entry.getKey();
+                    List<NodeProxy> children = entry.getValue();
+                    assert children != null && children.size() > 0;
+                    rulesEngine.callOnRemovingChildren(editor, parent, children);
+                }
+
                 for (SelectionItem cs : selection) {
                     CanvasViewInfo vi = cs.getViewInfo();
                     // You can't delete the root element

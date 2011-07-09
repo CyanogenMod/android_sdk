@@ -29,6 +29,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IGraphics;
@@ -42,7 +43,6 @@ import com.android.ide.common.api.MenuAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
-import com.android.ide.common.api.IAttributeInfo.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -458,7 +458,7 @@ public class BaseViewRule implements IViewRule {
      * Returns true if the given node is "filled" (e.g. has layout width set to match
      * parent or fill parent
      */
-    protected boolean isFilled(INode node, String attribute) {
+    protected final boolean isFilled(INode node, String attribute) {
         String value = node.getStringAttr(ANDROID_URI, attribute);
         return VALUE_MATCH_PARENT.equals(value) || VALUE_FILL_PARENT.equals(value);
     }
@@ -469,7 +469,7 @@ public class BaseViewRule implements IViewRule {
      *
      * @return match_parent or fill_parent depending on which is supported by the project
      */
-    protected String getFillParentValueName() {
+    protected final String getFillParentValueName() {
         return supportsMatchParent() ? VALUE_MATCH_PARENT : VALUE_FILL_PARENT;
     }
 
@@ -478,7 +478,7 @@ public class BaseViewRule implements IViewRule {
      *
      * @return true if the project supports match_parent instead of just fill_parent
      */
-    protected boolean supportsMatchParent() {
+    protected final boolean supportsMatchParent() {
         // fill_parent was renamed match_parent in API level 8
         return mRulesEngine.getMinApiLevel() >= 8;
     }
@@ -647,7 +647,7 @@ public class BaseViewRule implements IViewRule {
      *
      * @return a source attribute to use for sample images, never null
      */
-    protected String getSampleImageSrc() {
+    protected final String getSampleImageSrc() {
         // For now, we point to the sample icon which is written into new Android projects
         // created in ADT. We could alternatively look into the project resources folder
         // and try to pick something else, or even return some builtin image resource
@@ -660,6 +660,9 @@ public class BaseViewRule implements IViewRule {
     }
 
     public void onChildInserted(INode node, INode parent, InsertType insertType) {
+    }
+
+    public void onRemovingChildren(List<INode> deleted, INode parent) {
     }
 
     public static String stripIdPrefix(String id) {
