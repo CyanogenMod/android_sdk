@@ -817,23 +817,43 @@ public final class ProjectHelper {
     /**
      * Build project incrementally. If fullBuild is not set, then the packaging steps in
      * the post compiler are skipped. (Though resource deltas are still processed).
+     *
      * @param project The project to be built.
      * @param monitor A eclipse runtime progress monitor to be updated by the builders.
-     * @param fullBuild Set whether to run the packaging (dexing and building apk) steps of
-     *                  the post compiler.
+     * @param fullBuild Set whether to
+     * run the packaging (dexing and building apk) steps of the
+     *                  post compiler.
+     * @param buildDeps Set whether to run builders on the dependencies of the project
      * @throws CoreException
      */
-    public static void build(IProject project, IProgressMonitor monitor, boolean fullBuild)
+    public static void build(IProject project, IProgressMonitor monitor,
+                             boolean fullBuild, boolean buildDeps)
                             throws CoreException {
+        // Get list of projects that we depend on
+        List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
+        if (buildDeps) {
+            try {
+                androidProjectList = getAndroidProjectDependencies(
+                                        BaseProjectHelper.getJavaProject(project));
+            } catch (JavaModelException e) {
+                AdtPlugin.printErrorToConsole(project, e);
+            }
+            // Recursively build dependencies
+            for (IJavaProject dependency : androidProjectList) {
+                build(dependency.getProject(), monitor, fullBuild, true);
+            }
+        }
+
         // Do an incremental build to pick up all the deltas
         project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
-        // If the preferences indicate not to use post compiler optimization then the
-        // incremental build will have done everything necessary
+
+        // If the preferences indicate not to use post compiler optimization
+        // then the incremental build will have done everything necessary
         if (fullBuild && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
             // Create the map to pass to the PostC builder
             Map<String, String> args = new TreeMap<String, String>();
             args.put(PostCompilerBuilder.POST_C_REQUESTED, ""); //$NON-NLS-1$
-            // Get Post Compiler to do packaging
+            // Get Post Compiler for this project
             project.build(IncrementalProjectBuilder.FULL_BUILD,
                           PostCompilerBuilder.ID, args, monitor);
         }
@@ -841,8 +861,10 @@ public final class ProjectHelper {
 
     /**
      * Build the project incrementally. Post compilation step will not occur.
+     * Projects that this project depends on will not be built.
      * This is equivalent to calling
-     * <code>build(project, monitor, false)</code>
+     * <code>build(project, monitor, false, false)</code>
+     *
      * @param project The project to be built.
      * @param monitor A eclipse runtime progress monitor to be updated by the builders.
      * @throws CoreException
@@ -851,6 +873,6 @@ public final class ProjectHelper {
     public static void build(IProject project, IProgressMonitor monitor)
                              throws CoreException {
         // Disable full building by default
-        build(project, monitor, false);
+        build(project, monitor, false, false);
     }
 }
