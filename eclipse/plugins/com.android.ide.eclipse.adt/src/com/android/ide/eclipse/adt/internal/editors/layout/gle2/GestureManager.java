@@ -706,7 +706,7 @@ public class GestureManager {
 
                 if (!insideSelection) {
                     CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
-                    if (vi != null && !vi.isRoot()) {
+                    if (vi != null && !vi.isRoot() && !vi.isHidden()) {
                         selectionManager.selectSingle(vi);
                         insideSelection = true;
                     }
@@ -726,7 +726,7 @@ public class GestureManager {
                     } else {
                         // Only drag non-root items.
                         for (SelectionItem cs : selections) {
-                            if (!cs.isRoot()) {
+                            if (!cs.isRoot() && !cs.isHidden()) {
                                 mDragSelection.add(cs);
                             }
                         }
@@ -737,7 +737,7 @@ public class GestureManager {
             // If you are dragging a non-selected item, select it
             if (mDragSelection.isEmpty()) {
                 CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
-                if (vi != null && !vi.isRoot()) {
+                if (vi != null && !vi.isRoot() && !vi.isHidden()) {
                     selectionManager.selectSingle(vi);
                     mDragSelection.addAll(selections);
                 }
@@ -761,7 +761,8 @@ public class GestureManager {
 
             // If you drag on the -background-, we make that into a marquee
             // selection
-            if (!e.doit || (imageCount == 1 && mDragSelection.get(0).isRoot())) {
+            if (!e.doit || (imageCount == 1
+                    && (mDragSelection.get(0).isRoot() || mDragSelection.get(0).isHidden()))) {
                 boolean toggle = (mLastStateMask & (SWT.CTRL | SWT.SHIFT | SWT.COMMAND)) != 0;
                 startGesture(controlPoint,
                         new MarqueeGesture(mCanvas, toggle), mLastStateMask);

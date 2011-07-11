@@ -53,6 +53,7 @@ public class LayoutConstants {
     public static final String SCROLL_VIEW = "ScrollView";              //$NON-NLS-1$
     public static final String RADIO_BUTTON = "RadioButton";            //$NON-NLS-1$
     public static final String RADIO_GROUP = "RadioGroup";              //$NON-NLS-1$
+    public static final String SPACE = "Space";                         //$NON-NLS-1$
     public static final String EXPANDABLE_LIST_VIEW = "ExpandableListView";//$NON-NLS-1$
     public static final String GESTURE_OVERLAY_VIEW = "GestureOverlayView";//$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
@@ -204,6 +205,9 @@ public class LayoutConstants {
 
     /** The fully qualified class name of a RadioGroup */
     public static final String FQCN_RADIO_GROUP = "android.widgets.RadioGroup";  //$NON-NLS-1$
+
+    /** The fully qualified class name of a Space */
+    public static final String FQCN_SPACE = "android.widget.Space"; //$NON-NLS-1$
 
     public static final String ATTR_SRC = "src"; //$NON-NLS-1$
 

@@ -83,6 +83,16 @@ class SelectionItem {
     }
 
     /**
+     * Returns true if this item represents a widget that should not be manipulated by the
+     * user.
+     *
+     * @return True if this widget should not be manipulated directly by the user
+     */
+    public boolean isHidden() {
+        return mCanvasViewInfo.isHidden();
+    }
+
+    /**
      * Returns the selected view info. Cannot be null.
      *
      * @return the selected view info. Cannot be null.

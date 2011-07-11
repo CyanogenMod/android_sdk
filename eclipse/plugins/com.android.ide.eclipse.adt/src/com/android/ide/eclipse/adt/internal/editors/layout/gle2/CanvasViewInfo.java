@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
 import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
@@ -203,8 +204,9 @@ public class CanvasViewInfo implements IPropertySource {
 
     /**
      * Returns all the children of the canvas view info where each child corresponds to a
-     * unique node. This is intended for use by the outline for example, where only the
-     * actual nodes are displayed, not the views themselves.
+     * unique node that the user can see and select. This is intended for use by the
+     * outline for example, where only the actual nodes are displayed, not the views
+     * themselves.
      * <p>
      * Most views have their own nodes, so this is generally the same as
      * {@link #getChildren}, except in the case where you for example include a view that
@@ -215,6 +217,8 @@ public class CanvasViewInfo implements IPropertySource {
      *         never null
      */
     public List<CanvasViewInfo> getUniqueChildren() {
+        boolean haveHidden = false;
+
         for (CanvasViewInfo info : mChildren) {
             if (info.mNodeSiblings != null) {
                 // We have secondary children; must create a new collection containing
@@ -229,6 +233,19 @@ public class CanvasViewInfo implements IPropertySource {
                 }
                 return children;
             }
+
+            haveHidden |= info.isHidden();
+        }
+
+        if (haveHidden) {
+            List<CanvasViewInfo> children = new ArrayList<CanvasViewInfo>(mChildren.size());
+            for (CanvasViewInfo vi : mChildren) {
+                if (!vi.isHidden()) {
+                    children.add(vi);
+                }
+            }
+
+            return children;
         }
 
         return mChildren;
@@ -260,6 +277,7 @@ public class CanvasViewInfo implements IPropertySource {
      * Returns the name of the {@link CanvasViewInfo}.
      * Could be null, although unlikely.
      * Experience shows this is the full qualified Java name of the View.
+     * TODO: Rename this method to getFqcn.
      *
      * @return the name of the view info, or null
      *
@@ -407,12 +425,28 @@ public class CanvasViewInfo implements IPropertySource {
      * @return True if this is a tiny layout or invisible view
      */
     public boolean isInvisible() {
+        if (isHidden()) {
+            // Don't expand and highlight hidden widgets
+            return false;
+        }
+
         if (mAbsRect.width < SELECTION_MIN_SIZE || mAbsRect.height < SELECTION_MIN_SIZE) {
             return mUiViewNode != null && (mUiViewNode.getDescriptor().hasChildren() ||
                     mAbsRect.width <= 0 || mAbsRect.height <= 0);
         }
 
         return false;
+    }
+
+    /**
+     * Returns true if this {@link CanvasViewInfo} represents a widget that should be
+     * hidden, such as a {@code <Space>} which are typically not manipulated by the user
+     * through dragging etc.
+     *
+     * @return true if this is a hidden view
+     */
+    public boolean isHidden() {
+        return FQCN_SPACE.equals(mName);
     }
 
     /**

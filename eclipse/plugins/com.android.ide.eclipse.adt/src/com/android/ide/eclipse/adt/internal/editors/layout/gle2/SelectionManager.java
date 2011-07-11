@@ -335,6 +335,10 @@ public class SelectionManager implements ISelectionProvider {
 
         CanvasViewInfo vi = mCanvas.getViewHierarchy().findViewInfoAt(p);
 
+        if (vi != null && vi.isHidden()) {
+            vi = vi.getParent();
+        }
+
         if (isMultiClick && !isCycleClick) {
             // Case where shift is pressed: pointed object is toggled.
 
@@ -551,6 +555,9 @@ public class SelectionManager implements ISelectionProvider {
 
         mSelections.clear();
         for (CanvasViewInfo viewInfo : viewInfos) {
+            if (viewInfo.isHidden()) {
+                continue;
+            }
             mSelections.add(createSelection(viewInfo));
         }
 
@@ -814,6 +821,10 @@ public class SelectionManager implements ISelectionProvider {
         for (INode node : nodes) {
             CanvasViewInfo viewInfo = mCanvas.getViewHierarchy().findViewInfoFor(node);
             if (viewInfo != null) {
+                if (nodes.size() > 1 && viewInfo.isHidden()) {
+                    // Skip spacers - unless you're dropping just one
+                    continue;
+                }
                 newChildren.add(viewInfo);
             }
         }
