@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_PKG_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.CALENDAR_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
@@ -499,7 +500,9 @@ public final class ProjectCallback extends LegacyCallback {
         if (fqcn.endsWith(LIST_VIEW)) { // including EXPANDABLE_LIST_VIEW
             return fqcn;
         } else if (fqcn.equals(FQCN_GRID_VIEW)) {
-                return fqcn;
+            return fqcn;
+        } else if (fqcn.equals(FQCN_SPINNER)) {
+            return fqcn;
         } else if (fqcn.startsWith(ANDROID_PKG_PREFIX)) {
             return null;
         }
@@ -577,6 +580,9 @@ public final class ProjectCallback extends LegacyCallback {
         AdapterBinding binding = new AdapterBinding(count);
         if (listFqcn.endsWith(EXPANDABLE_LIST_VIEW)) {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_EXPANDABLE_LIST_ITEM,
+                    true /* isFramework */, 1));
+        } else if (listFqcn.equals(FQCN_SPINNER)) {
+            binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_SPINNER_ITEM,
                     true /* isFramework */, 1));
         } else {
             binding.addItem(new DataBindingItem(LayoutMetadata.DEFAULT_LIST_ITEM,

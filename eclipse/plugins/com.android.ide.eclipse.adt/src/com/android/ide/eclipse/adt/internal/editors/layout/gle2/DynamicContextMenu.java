@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.SPINNER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
 import com.android.ide.common.api.IMenuCallback;
@@ -49,8 +50,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
@@ -248,9 +249,11 @@ import java.util.regex.Pattern;
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
             String name = node.getDescriptor().getXmlLocalName();
             boolean isGrid = name.equals(GRID_VIEW);
-            if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW) || isGrid) {
+            boolean isSpinner = name.equals(SPINNER);
+            if (name.equals(LIST_VIEW) || name.equals(EXPANDABLE_LIST_VIEW)
+                    || isGrid || isSpinner) {
                 mMenuManager.insertBefore(endId, new Separator());
-                mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas, isGrid));
+                mMenuManager.insertBefore(endId, new ListViewTypeMenu(mCanvas, isGrid, isSpinner));
                 return;
             } else if (name.equals(VIEW_FRAGMENT) && selection.size() == 1) {
                 mMenuManager.insertBefore(endId, new Separator());

@@ -50,17 +50,22 @@ public class ListViewTypeMenu extends SubmenuAction {
     private final LayoutCanvas mCanvas;
     /** When true, this menu is for a grid rather than a simple list */
     private boolean mGrid;
+    /** When true, this menu is for a spinner rather than a simple list */
+    private boolean mSpinner;
 
     /**
      * Creates a "Preview List Content" menu
      *
      * @param canvas associated canvas
      * @param isGrid whether the menu is for a grid rather than a list
+     * @param isSpinner whether the menu is for a spinner rather than a list
      */
-    public ListViewTypeMenu(LayoutCanvas canvas, boolean isGrid) {
-        super(isGrid ? "Preview Grid Content" : "Preview List Content");
+    public ListViewTypeMenu(LayoutCanvas canvas, boolean isGrid, boolean isSpinner) {
+        super(isGrid ? "Preview Grid Content" : isSpinner ? "Preview Spinner Layout"
+                : "Preview List Content");
         mCanvas = canvas;
         mGrid = isGrid;
+        mSpinner = isSpinner;
     }
 
     @Override
@@ -77,6 +82,17 @@ public class ListViewTypeMenu extends SubmenuAction {
                     selected = selected.substring(ANDROID_LAYOUT_PREFIX.length());
                 }
             }
+
+            if (mSpinner) {
+                action = new SetListTypeAction("Spinner Item",
+                        "simple_spinner_item", selected); //$NON-NLS-1$
+                new ActionContributionItem(action).fill(menu, -1);
+                action = new SetListTypeAction("Spinner Dropdown Item",
+                        "simple_spinner_dropdown_item", selected); //$NON-NLS-1$
+                new ActionContributionItem(action).fill(menu, -1);
+                return;
+            }
+
             action = new SetListTypeAction("Simple List Item",
                     "simple_list_item_1", selected); //$NON-NLS-1$
             new ActionContributionItem(action).fill(menu, -1);
