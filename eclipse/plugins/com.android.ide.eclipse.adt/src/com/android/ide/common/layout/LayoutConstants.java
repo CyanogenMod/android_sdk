@@ -50,6 +50,7 @@ public class LayoutConstants {
     public static final String EDIT_TEXT = "EditText";                  //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                     //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                  //$NON-NLS-1$
+    public static final String SPINNER = "Spinner";                     //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";              //$NON-NLS-1$
     public static final String RADIO_BUTTON = "RadioButton";            //$NON-NLS-1$
     public static final String RADIO_GROUP = "RadioGroup";              //$NON-NLS-1$
@@ -193,6 +194,9 @@ public class LayoutConstants {
 
     /** The fully qualified class name of an ExpandableListView */
     public static final String FQCN_EXPANDABLE_LIST_VIEW = "android.widget.ExpandableListView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a Spinner view */
+    public static final String FQCN_SPINNER = "android.widget.Spinner"; //$NON-NLS-1$
 
     /** The fully qualified class name of a GestureOverlayView */
     public static final String FQCN_GESTURE_OVERLAY_VIEW = "android.gesture.GestureOverlayView"; //$NON-NLS-1$

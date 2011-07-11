@@ -49,6 +49,8 @@ public class LayoutMetadata {
     public static final String DEFAULT_EXPANDABLE_LIST_ITEM = "simple_expandable_list_item_2"; //$NON-NLS-1$
     /** The default layout to use for list items in plain list views */
     public static final String DEFAULT_LIST_ITEM = "simple_list_item_2"; //$NON-NLS-1$
+    /** The default layout to use for list items in spinners */
+    public static final String DEFAULT_SPINNER_ITEM = "simple_spinner_item"; //$NON-NLS-1$
 
     /** The string to start metadata comments with */
     private static final String COMMENT_PROLOGUE = " Preview: ";
