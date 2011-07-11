@@ -178,6 +178,12 @@ public class LayoutConstants {
     /** The fully qualified class name of a RadioButton view */
     public static final String FQCN_RADIO_BUTTON = "android.widget.RadioButton"; //$NON-NLS-1$
 
+    /** The fully qualified class name of a ToggleButton view */
+    public static final String FQCN_TOGGLE_BUTTON = "android.widget.ToggleButton"; //$NON-NLS-1$
+
+    /** The fully qualified class name of a Spinner view */
+    public static final String FQCN_SPINNER = "android.widget.Spinner"; //$NON-NLS-1$
+
     /** The fully qualified class name of an AdapterView */
     public static final String FQCN_ADAPTER_VIEW = "android.widget.AdapterView"; //$NON-NLS-1$
 

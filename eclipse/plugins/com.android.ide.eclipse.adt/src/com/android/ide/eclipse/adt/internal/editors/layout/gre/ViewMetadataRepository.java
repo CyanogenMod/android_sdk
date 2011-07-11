@@ -18,17 +18,22 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_BUTTON;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPINNER;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_TOGGLE_BUTTON;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
+import com.android.ide.common.api.Margins;
+import com.android.ide.common.api.ResizePolicy;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.resources.Density;
 import com.android.util.Pair;
 
 import org.w3c.dom.Document;
@@ -697,4 +702,96 @@ public class ViewMetadataRepository {
             }
         }
     }
+
+    /**
+     * Are insets supported yet? This flag indicates whether the {@link #getInsets} method
+     * can return valid data, such that clients can avoid doing any work computing the
+     * current theme or density if there's no chance that valid insets will be returned
+     */
+    public static final boolean INSETS_SUPPORTED = false;
+
+    /**
+     * Returns the insets of widgets with the given fully qualified name, in the given
+     * theme and the given screen density.
+     *
+     * @param fqcn the fully qualified name of the view
+     * @param density the screen density
+     * @param theme the theme name
+     * @return the insets of the visual bounds relative to the view info bounds, or null
+     *         if not known or if there are no insets
+     */
+    public static Margins getInsets(String fqcn, Density density, String theme) {
+        if (INSETS_SUPPORTED) {
+            // Some sample data measured manually for common themes and widgets.
+            if (fqcn.equals(FQCN_BUTTON)) {
+                if (density == Density.HIGH) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, WVGA
+                        return new Margins(5, 5, 5, 5);
+                    } else {
+                        // Theme.Light, WVGA
+                        return new Margins(4, 4, 0, 7);
+                    }
+                } else if (density == Density.MEDIUM) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, WVGA
+                        return new Margins(3, 3, 3, 3);
+                    } else {
+                        // Theme.Light, HVGA
+                        return new Margins(2, 2, 0, 4);
+                    }
+                } else if (density == Density.LOW) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, QVGA
+                        return new Margins(2, 2, 2, 2);
+                    } else {
+                        // Theme.Light, QVGA
+                        return new Margins(1, 3, 0, 4);
+                    }
+                }
+            } else if (fqcn.equals(FQCN_TOGGLE_BUTTON)) {
+                if (density == Density.HIGH) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, WVGA
+                        return new Margins(5, 5, 5, 5);
+                    } else {
+                        // Theme.Light, WVGA
+                        return new Margins(2, 2, 0, 5);
+                    }
+                } else if (density == Density.MEDIUM) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, WVGA
+                        return new Margins(3, 3, 3, 3);
+                    } else {
+                        // Theme.Light, HVGA
+                        return new Margins(0, 1, 0, 3);
+                    }
+                } else if (density == Density.LOW) {
+                    if (theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Holo, Theme.Holo.Light, QVGA
+                        return new Margins(2, 2, 2, 2);
+                    } else {
+                        // Theme.Light, QVGA
+                        return new Margins(2, 2, 0, 4);
+                    }
+                }
+            } else if (fqcn.equals(FQCN_SPINNER)) {
+                if (density == Density.HIGH) {
+                    if (!theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Light, WVGA
+                        return new Margins(3, 4, 2, 8);
+                    } // Doesn't render on Holo!
+                } else if (density == Density.MEDIUM) {
+                    if (!theme.startsWith(HOLO_PREFIX)) {
+                        // Theme.Light, HVGA
+                        return new Margins(1, 1, 0, 4);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static final String HOLO_PREFIX = "Theme.Holo"; //$NON-NLS-1$
 }

@@ -17,7 +17,9 @@
 package com.android.ide.common.api;
 
 /**
- * Set of margins for a node.
+ * Set of margins - distances to outer left, top, right and bottom edges. These objects
+ * can be used for both actual <b>margins</b> as well as insets - and in general any
+ * deltas to the bounds of a rectangle.
  */
 public class Margins {
     /** The left margin */

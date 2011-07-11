@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
@@ -189,7 +190,21 @@ public class SelectionOverlay extends Overlay {
         }
 
         gc.useStyle(DrawingStyle.SELECTION);
-        gc.drawRect(r);
+
+        Margins insets = mCanvas.getInsets(selectedNode.getFqcn());
+        int x1 = r.x;
+        int y1 = r.y;
+        int x2 = r.x2() + 1;
+        int y2 = r.y2() + 1;
+
+        if (insets != null) {
+            x1 += insets.left;
+            x2 -= insets.right;
+            y1 += insets.top;
+            y2 -= insets.bottom;
+        }
+
+        gc.drawRect(x1, y1, x2, y2);
 
         // Paint sibling rectangles, if applicable
         CanvasViewInfo view = item.getViewInfo();
