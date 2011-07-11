@@ -153,7 +153,7 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
         new Label(container, SWT.NONE);
         mErrorLabel = new Label(container, SWT.WRAP);
         mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
-
+        mErrorLabel.setForeground(parent.getDisplay().getSystemColor(SWT.COLOR_RED));
         return container;
     }
 
@@ -185,7 +185,7 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
                     // Users are allowed to enter non-numbers here, not an error
                 }
                 if (isNumber) {
-                    String message = String.format("Hint: Use \"%1$sdip\" instead", input);
+                    String message = String.format("Hint: Use \"%1$sdp\" instead", input);
                     mErrorLabel.setText(message);
                 } else {
                     mErrorLabel.setText("");

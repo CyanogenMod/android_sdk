@@ -49,6 +49,7 @@ public class LayoutConstants {
     public static final String LIST_VIEW = "ListView";                  //$NON-NLS-1$
     public static final String EDIT_TEXT = "EditText";                  //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                     //$NON-NLS-1$
+    public static final String GRID_LAYOUT = "GridLayout";              //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                  //$NON-NLS-1$
     public static final String SPINNER = "Spinner";                     //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";              //$NON-NLS-1$
@@ -99,6 +100,20 @@ public class LayoutConstants {
     public static final String ATTR_LAYOUT_BELOW = "layout_below";              //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ABOVE = "layout_above";              //$NON-NLS-1$
 
+    // GridLayout
+    public static final String ATTR_ROW_COUNT = "rowCount";                         //$NON-NLS-1$
+    public static final String ATTR_COLUMN_COUNT = "columnCount";                   //$NON-NLS-1$
+    public static final String ATTR_USE_DEFAULT_MARGINS = "useDefaultMargins";      //$NON-NLS-1$
+    public static final String ATTR_MARGINS_INCLUDED_IN_ALIGNMENT = "marginsIncludedInAlignment"; //$NON-NLS-1$
+
+    // GridLayout layout params
+    public static final String ATTR_LAYOUT_ROW = "layout_row";                      //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";             //$NON-NLS-1$
+    //public static final String ATTR_LAYOUT_ROW_WEIGHT = "layout_rowWeight";         //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_COLUMN = "layout_column";                //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan";       //$NON-NLS-1$
+    //public static final String ATTR_LAYOUT_COLUMN_WEIGHT = "layout_columnWeight";   //$NON-NLS-1$
+
     public static final String ATTR_LAYOUT_Y = "layout_y";                      //$NON-NLS-1$
     public static final String ATTR_LAYOUT_X = "layout_x";                      //$NON-NLS-1$
     public static final String ATTR_NAME = "name";                              //$NON-NLS-1$
@@ -109,6 +124,17 @@ public class LayoutConstants {
     public static final String VALUE_FALSE= "false";                            //$NON-NLS-1$
     public static final String VALUE_N_DP = "%ddp";                             //$NON-NLS-1$
     public static final String VALUE_ZERO_DP = "0dp";                           //$NON-NLS-1$
+    public static final String VALUE_ONE_DP = "1dp";                            //$NON-NLS-1$
+    public static final String VALUE_TOP = "top";                               //$NON-NLS-1$
+    public static final String VALUE_LEFT = "left";                             //$NON-NLS-1$
+    public static final String VALUE_RIGHT = "right";                           //$NON-NLS-1$
+    public static final String VALUE_BOTTOM = "bottom";                         //$NON-NLS-1$
+    public static final String VALUE_CENTER_VERTICAL = "center_vertical";       //$NON-NLS-1$
+    public static final String VALUE_CENTER_HORIZONTAL = "center_horizontal";   //$NON-NLS-1$
+    public static final String VALUE_FILL_HORIZONTAL = "fill_horizontal";       //$NON-NLS-1$
+    public static final String VALUE_FILL_VERTICAL = "fill_vertical";           //$NON-NLS-1$
+    public static final String VALUE_0 = "0";                                   //$NON-NLS-1$
+    public static final String VALUE_1 = "1";                                   //$NON-NLS-1$
 
     // Gravity values. These have the GRAVITY_ prefix in front of value because we already
     // have VALUE_CENTER_HORIZONTAL defined for layouts, and its definition conflicts

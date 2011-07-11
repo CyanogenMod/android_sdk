@@ -24,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_WEIGHT_SUM;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_1;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
@@ -579,7 +580,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 // In a horizontal layout, make views that would fill horizontally in a
                 // vertical layout have a non-zero weight instead. This will make the item
                 // fill but only enough to allow other views to be shown as well.
-                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, "1"); //$NON-NLS-1$
+                node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, VALUE_1);
             }
             if (fill.fillVertically(vertical)) {
                 node.setAttribute(ANDROID_URI, ATTR_LAYOUT_HEIGHT, fillParent);

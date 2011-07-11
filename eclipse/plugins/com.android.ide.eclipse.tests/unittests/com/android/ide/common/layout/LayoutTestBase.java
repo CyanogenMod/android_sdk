@@ -281,6 +281,16 @@ public class LayoutTestBase extends TestCase {
             fail("Not supported in tests yet");
             return null;
         }
+
+        public int screenToLayout(int pixels) {
+            fail("Not supported in tests yet");
+            return 0;
+        }
+
+        public int dpToPx(int dp) {
+            fail("Not supported in tests yet");
+            return 0;
+        }
     }
 
     public void testDummy() {

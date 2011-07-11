@@ -15,10 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_MARGIN;
 import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.PIXEL_RADIUS;
 
 import com.android.ide.common.api.INode;
+import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
@@ -823,6 +825,11 @@ public class SelectionManager implements ISelectionProvider {
             if (viewInfo != null) {
                 if (nodes.size() > 1 && viewInfo.isHidden()) {
                     // Skip spacers - unless you're dropping just one
+                    continue;
+                }
+                if (GridLayoutRule.sDebugGridLayout && viewInfo.getName().equals(FQCN_SPACE)) {
+                    // In debug mode they might not be marked as hidden but we never never
+                    // want to select these guys
                     continue;
                 }
                 newChildren.add(viewInfo);

@@ -99,6 +99,15 @@ public class BaseViewRule implements IViewRule {
         return null;
     }
 
+    /**
+     * Returns the {@link IClientRulesEngine} associated with this {@link IViewRule}
+     *
+     * @return the {@link IClientRulesEngine} associated with this {@link IViewRule}
+     */
+    public IClientRulesEngine getRulesEngine() {
+        return mRulesEngine;
+    }
+
     // === Context Menu ===
 
     /**

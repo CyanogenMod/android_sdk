@@ -52,6 +52,16 @@ public enum SwtDrawingStyle {
     GUIDELINE_DASHED(new RGB(0x00, 0xAA, 0x00), 192, SWT.LINE_CUSTOM),
 
     /**
+     * The style definition corresponding to {@link DrawingStyle#DISTANCE}
+     */
+    DISTANCE(new RGB(0xFF, 0x00, 0x00), 192 - 32, SWT.LINE_SOLID),
+
+    /**
+     * The style definition corresponding to {@link DrawingStyle#GRID}
+     */
+    GRID(new RGB(0xAA, 0xAA, 0xAA), 128, SWT.LINE_SOLID),
+
+    /**
      * The style definition corresponding to {@link DrawingStyle#HOVER}
      */
     HOVER(null, 0, new RGB(0xFF, 0xFF, 0xFF), 40, 1, SWT.LINE_DOT),
@@ -242,6 +252,10 @@ public enum SwtDrawingStyle {
                 return GUIDELINE_SHADOW;
             case GUIDELINE_DASHED:
                 return GUIDELINE_DASHED;
+            case DISTANCE:
+                return DISTANCE;
+            case GRID:
+                return GRID;
             case HOVER:
                 return HOVER;
             case HOVER_SELECTION:

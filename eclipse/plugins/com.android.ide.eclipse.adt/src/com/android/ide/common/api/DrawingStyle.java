@@ -49,6 +49,16 @@ public enum DrawingStyle {
     GUIDELINE_DASHED,
 
     /**
+     * The style used to draw distance annotations
+     */
+    DISTANCE,
+
+    /**
+     * The style used to draw grids
+     */
+    GRID,
+
+    /**
      * The style used for hovered views (e.g. when the mouse is directly on top
      * of the view)
      */

@@ -178,6 +178,10 @@ public interface IViewRule {
 
     /**
      * Called when drop is released over the target to perform the actual drop.
+     * <p>
+     * TODO: Document that this method will be called under an edit lock so you can
+     * directly manipulate the nodes without wrapping it in an
+     * {@link INode#editXml(String, INodeHandler)} call
      */
     void onDropped(INode targetNode,
             IDragElement[] elements,

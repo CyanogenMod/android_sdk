@@ -179,6 +179,25 @@ public interface IClientRulesEngine {
     public int pxToDp(int px);
 
     /**
+     * Converts a device independent pixel to a screen pixel for the current screen density
+     *
+     * @param dp the device independent pixel dimension
+     * @return the corresponding pixel dimension
+     */
+    public int dpToPx(int dp);
+
+    /**
+     * Converts an IDE screen pixel distance to the corresponding layout distance. This
+     * can be used to draw annotations on the graphics object that should be unaffected by
+     * the zoom, or handle mouse events within a certain pixel distance regardless of the
+     * screen zoom.
+     *
+     * @param pixels the size in IDE screen pixels
+     * @return the corresponding pixel distance in the layout coordinate system
+     */
+    public int screenToLayout(int pixels);
+
+    /**
      * Measure the preferred or actual ("wrap_content") size of the given nodes.
      *
      * @param parent the parent whose children should be measured

@@ -83,6 +83,12 @@ public final class GuidelinePainter implements IFeedbackPainter {
                 }
             }
             gc.drawRect(state.mBounds);
+
+            // Draw baseline preview too
+            if (feedback.dragBaseline != -1) {
+                int y = state.mBounds.y + feedback.dragBaseline;
+                gc.drawLine(state.mBounds.x, y, state.mBounds.x2(), y);
+            }
         }
 
         List<String> strings = new ArrayList<String>();

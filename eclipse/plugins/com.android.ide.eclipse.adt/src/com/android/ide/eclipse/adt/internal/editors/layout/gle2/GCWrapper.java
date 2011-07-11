@@ -488,6 +488,17 @@ public class GCWrapper implements IGraphics {
         return color;
     }
 
+    // dots
+
+    public void drawPoint(int x, int y) {
+        checkGC();
+        useStrokeAlpha();
+        x = mHScale.translate(x);
+        y = mVScale.translate(y);
+
+        getGc().drawPoint(x, y);
+    }
+
     // arrows
 
     private static final int MIN_LENGTH = 10;

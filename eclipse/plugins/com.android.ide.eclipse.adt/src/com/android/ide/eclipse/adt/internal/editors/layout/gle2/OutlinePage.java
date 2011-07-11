@@ -17,6 +17,10 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_SRC;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
@@ -30,6 +34,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.layout.BaseLayoutRule;
+import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
@@ -520,6 +525,42 @@ public class OutlinePage extends ContentOutlinePage
                 Node xmlNode = node.getXmlNode();
                 if (xmlNode instanceof Element) {
                     Element e = (Element) xmlNode;
+
+                    // Temporary diagnostics code when developing GridLayout
+                    if (GridLayoutRule.sDebugGridLayout && e.getParentNode() != null
+                            && e.getParentNode().getNodeName() != null) {
+                        if (e.getParentNode().getNodeName().equals("GridLayout")) { //$NON-NLS-1$
+                            // Attach row/column info
+                            styledString.append(" - cell (", QUALIFIER_STYLER);
+                            String row = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_ROW);
+                            if (row.length() == 0) {
+                                row = "?";
+                            }
+                            String column = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_COLUMN);
+                            if (column.length() == 0) {
+                                column = "?";
+                            }
+                            String rowSpan = e.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_ROW_SPAN);
+                            String columnSpan = e.getAttributeNS(ANDROID_URI,
+                                    ATTR_LAYOUT_COLUMN_SPAN);
+                            if (rowSpan.length() == 0) {
+                                rowSpan = "1";
+                            }
+                            if (columnSpan.length() == 0) {
+                                columnSpan = "1";
+                            }
+
+                            styledString.append(row, QUALIFIER_STYLER);
+                            styledString.append(',', QUALIFIER_STYLER);
+                            styledString.append(column, QUALIFIER_STYLER);
+                            styledString.append("), span=(", QUALIFIER_STYLER);
+                            styledString.append(columnSpan, QUALIFIER_STYLER);
+                            styledString.append(',', QUALIFIER_STYLER);
+                            styledString.append(rowSpan, QUALIFIER_STYLER);
+                            styledString.append(')', QUALIFIER_STYLER);
+                        }
+                    }
+
                     if (e.hasAttributeNS(ANDROID_URI, ATTR_TEXT)) {
                         // Show the text attribute
                         String text = e.getAttributeNS(ANDROID_URI, ATTR_TEXT);

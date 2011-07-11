@@ -56,6 +56,14 @@ public interface IGraphics {
     void drawArrow(int x1, int y1, int x2, int y2, int size);
 
     /**
+     * Draws a dot at the given position.
+     *
+     * @param x The x coordinate of the dot
+     * @param y The y coordinate of the dot
+     */
+    void drawPoint(int x, int y);
+
+    /**
      * Draws a rectangle outline between 2 points, using the current foreground
      * color and alpha.
      */
@@ -190,6 +198,9 @@ public interface IGraphics {
      * This operation requires the operating system's advanced
      * graphics subsystem which may not be available on some
      * platforms.
+     * <p>
+     * TODO: Consider removing this method; it will usually be ignored because
+     * most graphics operations apply the alpha from the current drawing style
      */
     void setAlpha(int alpha);
 

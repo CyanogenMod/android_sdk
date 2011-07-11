@@ -18,6 +18,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import static com.android.ide.common.layout.LayoutConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
@@ -181,8 +182,13 @@ class NewXmlFileCreationPage extends WizardPage {
             return mRootSeed;
         }
 
-        /** Returns the default root element that should be selected by default. Can be null. */
-        String getDefaultRoot() {
+        /**
+         * Returns the default root element that should be selected by default. Can be
+         * null.
+         *
+         * @param project the associated project, or null if not known
+         */
+        String getDefaultRoot(IProject project) {
             return mDefaultRoot;
         }
 
@@ -210,8 +216,9 @@ class NewXmlFileCreationPage extends WizardPage {
          * root element of the generated XML file. When null, no extra attributes are inserted.
          *
          * @param project the project to get the attributes for
+         * @param root the selected root element string, never null
          */
-        String getDefaultAttrs(IProject project) {
+        String getDefaultAttrs(IProject project, String root) {
             return mDefaultAttrs;
         }
 
@@ -246,16 +253,33 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes a screen layout.",              // tooltip
                 ResourceFolderType.LAYOUT,                                  // folder type
                 AndroidTargetData.DESCRIPTOR_LAYOUT,                        // root seed
-                "LinearLayout",                                             // default root
+                LINEAR_LAYOUT,                                              // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
                 "",                                                         // not used, see below
                 1                                                           // target API level
                 ) {
+
+                @Override
+                String getDefaultRoot(IProject project) {
+                    // TODO: Use GridLayout by default for new SDKs
+                    // (when we've ironed out all the usability issues)
+                    //Sdk currentSdk = Sdk.getCurrent();
+                    //if (project != null && currentSdk != null) {
+                    //    IAndroidTarget target = currentSdk.getTarget(project);
+                    //    // fill_parent was renamed match_parent in API level 8
+                    //    if (target != null && target.getVersion().getApiLevel() >= 13) {
+                    //        return GRID_LAYOUT;
+                    //    }
+                    //}
+
+                    return LINEAR_LAYOUT;
+                };
+
                 // The default attributes must be determined dynamically since whether
                 // we use match_parent or fill_parent depends on the API level of the
                 // project
                 @Override
-                String getDefaultAttrs(IProject project) {
+                String getDefaultAttrs(IProject project, String root) {
                     Sdk currentSdk = Sdk.getCurrent();
                     String fill = VALUE_FILL_PARENT;
                     if (currentSdk != null) {
@@ -266,11 +290,18 @@ class NewXmlFileCreationPage extends WizardPage {
                         }
                     }
 
-                    return String.format(
-                            "android:orientation=\"vertical\"\n"       //$NON-NLS-1$
-                            + "android:layout_width=\"%1$s\"\n"        //$NON-NLS-1$
+                    // Only set "vertical" orientation of LinearLayouts by default;
+                    // for GridLayouts for example we want to rely on the real default
+                    // of the layout
+                    String size = String.format(
+                            "android:layout_width=\"%1$s\"\n"        //$NON-NLS-1$
                             + "android:layout_height=\"%2$s\"",        //$NON-NLS-1$
                             fill, fill);
+                    if (LINEAR_LAYOUT.equals(root)) {
+                        return "android:orientation=\"vertical\"\n" + size; //$NON-NLS-1$
+                    } else {
+                        return size;
+                    }
                 }
 
                 @Override
@@ -278,7 +309,7 @@ class NewXmlFileCreationPage extends WizardPage {
                     // Create vertical linear layouts inside new scroll views
                     if (SCROLL_VIEW.equals(root) || HORIZONTAL_SCROLL_VIEW.equals(root)) {
                         return "    <LinearLayout "         //$NON-NLS-1$
-                            + getDefaultAttrs(project).replace('\n', ' ')
+                            + getDefaultAttrs(project, root).replace('\n', ' ')
                             + "></LinearLayout>\n";         //$NON-NLS-1$
                     }
                     return null;
@@ -1226,7 +1257,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 }
 
                 int index = 0; // default is to select the first one
-                String defaultRoot = type.getDefaultRoot();
+                String defaultRoot = type.getDefaultRoot(getProject());
                 if (defaultRoot != null) {
                     index = roots.indexOf(defaultRoot);
                 }
