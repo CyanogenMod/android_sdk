@@ -235,7 +235,11 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
     protected String getResizeUpdateMessage(ResizeState resizeState, INode child, INode parent,
             Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
         Rect parentBounds = parent.getBounds();
-        return String.format("Set bounds to (x = %d, y = %d, width = %s, height = %s)",
+        if (horizontalEdge == SegmentType.BOTTOM && verticalEdge == SegmentType.RIGHT) {
+            return super.getResizeUpdateMessage(resizeState, child, parent, newBounds,
+                    horizontalEdge, verticalEdge);
+        }
+        return String.format("x=%d, y=%d\nwidth=%s, height=%s",
                 mRulesEngine.pxToDp(newBounds.x - parentBounds.x),
                 mRulesEngine.pxToDp(newBounds.y - parentBounds.y),
                 resizeState.getWidthAttribute(), resizeState.getHeightAttribute());

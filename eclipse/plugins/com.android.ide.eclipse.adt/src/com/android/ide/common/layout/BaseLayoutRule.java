@@ -33,21 +33,21 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
+import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
+import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.IFeedbackPainter;
 import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.MenuAction.ChoiceProvider;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.Segment;
 import com.android.ide.common.api.SegmentType;
-import com.android.ide.common.api.IAttributeInfo.Format;
-import com.android.ide.common.api.IDragElement.IDragAttribute;
-import com.android.ide.common.api.MenuAction.ChoiceProvider;
 import com.android.ide.common.layout.relative.MarginType;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
@@ -756,7 +756,7 @@ public class BaseLayoutRule extends BaseViewRule {
             }
         }
 
-        feedback.message = getResizeUpdateMessage(state, child, parent,
+        feedback.tooltip = getResizeUpdateMessage(state, child, parent,
                 newBounds, state.horizontalEdgeType, state.verticalEdgeType);
     }
 
@@ -791,8 +791,14 @@ public class BaseLayoutRule extends BaseViewRule {
         String width = resizeState.getWidthAttribute();
         String height = resizeState.getHeightAttribute();
 
-        // U+00D7: Unicode for multiplication sign
-        return String.format("Resize to %s \u00D7 %s", width, height);
+        if (horizontalEdge == null) {
+            return width;
+        } else if (verticalEdge == null) {
+            return height;
+        } else {
+            // U+00D7: Unicode for multiplication sign
+            return String.format("%s \u00D7 %s", width, height);
+        }
     }
 
     /**

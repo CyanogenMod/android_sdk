@@ -23,6 +23,7 @@ import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SelectionHandle.Position;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.util.Pair;
 
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.GC;
@@ -118,6 +119,11 @@ public class ResizeGesture extends Gesture {
         }
 
         mCanvas.getSelectionOverlay().setHidden(false);
+    }
+
+    @Override
+    public Pair<Boolean, Boolean> getTooltipPosition() {
+        return Pair.of(mHorizontalEdge != SegmentType.TOP, mVerticalEdge != SegmentType.LEFT);
     }
 
     /**
