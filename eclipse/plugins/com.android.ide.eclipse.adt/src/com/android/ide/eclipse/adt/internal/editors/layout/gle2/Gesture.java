@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.util.Pair;
+
 import org.eclipse.swt.events.KeyEvent;
 
 import java.util.Collections;
@@ -138,5 +140,17 @@ public abstract class Gesture {
      */
     public boolean keyReleased(KeyEvent event) {
         return false;
+    }
+
+    /**
+     * Returns whether tooltips should be display below and to the right of the mouse
+     * cursor.
+     *
+     * @return a pair of booleans, the first indicating whether the tooltip should be
+     *         below and the second indicating whether the tooltip should be displayed to
+     *         the right of the mouse cursor.
+     */
+    public Pair<Boolean, Boolean> getTooltipPosition() {
+        return Pair.of(true, true);
     }
 }

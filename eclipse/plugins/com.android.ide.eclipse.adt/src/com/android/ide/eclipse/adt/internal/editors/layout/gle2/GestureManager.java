@@ -70,6 +70,9 @@ public class GestureManager {
     /** A listener for drag source events. */
     private final DragSourceListener mDragSourceListener = new CanvasDragSourceListener();
 
+    /** Tooltip shown during the gesture, or null */
+    private GestureToolTip mTooltip;
+
     /**
      * The list of overlays associated with {@link #mCurrentGesture}. Will be
      * null before it has been initialized lazily by the paint routine (the
@@ -363,7 +366,6 @@ public class GestureManager {
     /**
      * Update the Eclipse status message with any feedback messages from the given
      * {@link DropFeedback} object, or clean up if there is no more feedback to process
-     *
      * @param feedback the feedback whose message we want to display, or null to clear the
      *            message if previously set
      */
@@ -392,6 +394,18 @@ public class GestureManager {
             mDisplayingMessage = null;
             status.setMessage(null);
             status.setErrorMessage(null);
+        }
+
+        // Tooltip
+        if (feedback != null && feedback.tooltip != null) {
+            if (mTooltip == null) {
+                Pair<Boolean,Boolean> position = mCurrentGesture.getTooltipPosition();
+                mTooltip = new GestureToolTip(mCanvas, position.getFirst(), position.getSecond());
+            }
+            mTooltip.update(feedback.tooltip);
+        } else if (mTooltip != null) {
+            mTooltip.dispose();
+            mTooltip = null;
         }
     }
 

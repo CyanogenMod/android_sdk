@@ -1007,7 +1007,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
         if (resizeState.useWeight) {
             String weight = formatFloatAttribute(resizeState.mWeight);
-            String dimension = String.format("layout weight %1$s", weight);
+            String dimension = String.format("weight %1$s", weight);
 
             String width;
             String height;
@@ -1019,8 +1019,14 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 height = resizeState.getHeightAttribute();
             }
 
-            // U+00D7: Unicode for multiplication sign
-            return String.format("Resize to %s \u00D7 %s", width, height);
+            if (horizontalEdge == null) {
+                return width;
+            } else if (verticalEdge == null) {
+                return height;
+            } else {
+                // U+00D7: Unicode for multiplication sign
+                return String.format("%s \u00D7 %s", width, height);
+            }
         } else {
             return super.getResizeUpdateMessage(state, child, parent, newBounds,
                     horizontalEdge, verticalEdge);

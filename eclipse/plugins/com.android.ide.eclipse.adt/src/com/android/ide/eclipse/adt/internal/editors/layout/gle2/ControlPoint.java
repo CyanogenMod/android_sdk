@@ -22,6 +22,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.graphics.Point;
 
 /**
  * A {@link ControlPoint} is a coordinate in the canvas control which corresponds
@@ -181,5 +182,14 @@ public final class ControlPoint {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Returns this point as an SWT point in the display coordinate system
+     *
+     * @return this point as an SWT point in the display coordinate system
+     */
+    public Point toDisplayPoint() {
+        return mCanvas.toDisplay(x, y);
     }
 }
