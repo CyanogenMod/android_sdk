@@ -446,6 +446,24 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
         return new String(c).replace("-", " ");  //$NON-NLS-1$  //$NON-NLS-2$
     }
 
+    /**
+     * Returns true if this node defines the given attribute
+     *
+     * @param namespaceUri the namespace URI of the target attribute
+     * @param attributeName the attribute name
+     * @return true if this element defines an attribute of the given name and namespace
+     */
+    public boolean definesAttribute(String namespaceUri, String attributeName) {
+        for (AttributeDescriptor desc : mAttributes) {
+            if (desc.getXmlLocalName().equals(attributeName) &&
+                    desc.getNamespaceUri().equals(namespaceUri)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Implements Comparable<ElementDescriptor>:
     public int compareTo(ElementDescriptor o) {
         return mUiName.compareToIgnoreCase(o.mUiName);
