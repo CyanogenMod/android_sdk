@@ -195,9 +195,6 @@ public class LayoutConstants {
     /** The fully qualified class name of an ExpandableListView */
     public static final String FQCN_EXPANDABLE_LIST_VIEW = "android.widget.ExpandableListView"; //$NON-NLS-1$
 
-    /** The fully qualified class name of a Spinner view */
-    public static final String FQCN_SPINNER = "android.widget.Spinner"; //$NON-NLS-1$
-
     /** The fully qualified class name of a GestureOverlayView */
     public static final String FQCN_GESTURE_OVERLAY_VIEW = "android.gesture.GestureOverlayView"; //$NON-NLS-1$
 
