@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -47,8 +48,8 @@ import org.eclipse.swt.graphics.Image;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -710,8 +711,11 @@ public final class DescriptorsUtils {
                     false /* override */);
         }
 
-        // Don't set default text value into edit texts - they typically start out blank
-        if (!descriptor.getXmlLocalName().equals(EDIT_TEXT)) {
+        // Set a text attribute on textual widgets -- but only on those that define a text
+        // attribute
+        if (descriptor.definesAttribute(ANDROID_URI, ATTR_TEXT)
+                // Don't set default text value into edit texts - they typically start out blank
+                && !descriptor.getXmlLocalName().equals(EDIT_TEXT)) {
             String type = getBasename(descriptor.getUiName());
             node.setAttributeValue(
                 ATTR_TEXT,
