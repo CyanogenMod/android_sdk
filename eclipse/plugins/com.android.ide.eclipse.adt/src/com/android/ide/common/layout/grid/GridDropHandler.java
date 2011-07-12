@@ -154,6 +154,20 @@ public class GridDropHandler {
             mColumnMatch = columnMatches.size() > 0 ? columnMatches.get(0) : null;
             mRowMatch = rowMatches.size() > 0 ? rowMatches.get(0) : null;
 
+            String columnDescription = mColumnMatch != null ? mColumnMatch.getDisplayName() : null;
+            String rowDescription = mRowMatch != null ? mRowMatch.getDisplayName() : null;
+            if (columnDescription != null) {
+                if (rowDescription != null) {
+                    feedback.tooltip = columnDescription + '\n' + rowDescription;
+                } else {
+                    feedback.tooltip = columnDescription;
+                }
+            } else if (rowDescription != null) {
+                feedback.tooltip = rowDescription;
+            } else {
+                feedback.tooltip = null;
+            }
+
             feedback.invalidTarget = mColumnMatch == null || mRowMatch == null;
         } else {
             // Find which cell we're inside.
