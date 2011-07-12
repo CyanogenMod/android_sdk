@@ -30,6 +30,7 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.relative.DependencyGraph.Constraint;
 
 import java.util.ArrayList;
@@ -103,18 +104,30 @@ public final class GuidelinePainter implements IFeedbackPainter {
                 state.mBottomMargin, ATTR_LAYOUT_MARGIN_BOTTOM);
 
         if (strings.size() > 0) {
-            gc.useStyle(DrawingStyle.HELP);
-            Rect b = state.layout.getBounds();
-            int x, y;
-            if (b.w > b.h) {
-                x = b.x + 3;
-                y = b.y2() + 6;
-            } else {
-                x = b.x2() + 6;
-                y = b.y + 3;
+            // Update the drag tooltip
+            StringBuilder sb = new StringBuilder(200);
+            for (String s : strings) {
+                if (sb.length() > 0) {
+                    sb.append('\n');
+                }
+                sb.append(s);
             }
+            feedback.tooltip = sb.toString();
 
-            gc.drawBoxedStrings(x, y, strings);
+            // Set the tooltip orientation to ensure that it does not interfere with
+            // the constraint arrows
+            if (state.mCurrentLeftMatch != null) {
+                feedback.tooltipX = SegmentType.RIGHT;
+            } else if (state.mCurrentRightMatch != null) {
+                feedback.tooltipX = SegmentType.LEFT;
+            }
+            if (state.mCurrentTopMatch != null) {
+                feedback.tooltipY = SegmentType.BOTTOM;
+            } else if (state.mCurrentBottomMatch != null) {
+                feedback.tooltipY = SegmentType.TOP;
+            }
+        } else {
+            feedback.tooltip = null;
         }
 
         if (state.mHorizontalCycle != null) {

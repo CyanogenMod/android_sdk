@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
@@ -398,11 +399,19 @@ public class GestureManager {
 
         // Tooltip
         if (feedback != null && feedback.tooltip != null) {
-            if (mTooltip == null) {
-                Pair<Boolean,Boolean> position = mCurrentGesture.getTooltipPosition();
-                mTooltip = new GestureToolTip(mCanvas, position.getFirst(), position.getSecond());
+            Pair<Boolean,Boolean> position = mCurrentGesture.getTooltipPosition();
+            boolean below = position.getFirst();
+            if (feedback.tooltipY != null) {
+                below = feedback.tooltipY == SegmentType.BOTTOM;
             }
-            mTooltip.update(feedback.tooltip);
+            boolean toRightOf = position.getSecond();
+            if (feedback.tooltipX != null) {
+                toRightOf = feedback.tooltipX == SegmentType.RIGHT;
+            }
+            if (mTooltip == null) {
+                mTooltip = new GestureToolTip(mCanvas, below, toRightOf);
+            }
+            mTooltip.update(feedback.tooltip, below, toRightOf);
         } else if (mTooltip != null) {
             mTooltip.dispose();
             mTooltip = null;

@@ -34,6 +34,9 @@ import org.eclipse.swt.widgets.Shell;
  * have setter methods to update the text or position without recreating the tip.
  */
 public class GestureToolTip {
+    /** Minimum number of milliseconds to wait between alignment changes */
+    private static final int TIMEOUT_MS = 750;
+
     /**
      * The alpha to use for the tooltip window (which sadly will apply to the tooltip text
      * as well.)
@@ -58,11 +61,23 @@ public class GestureToolTip {
     /** The font shown in the label; held here such that it can be disposed of after use */
     private Font mFont;
 
-    /** Should the tooltip be displayed below the cursor? */
+    /** Is the tooltip positioned below the given anchor? */
     private boolean mBelow;
 
-    /** Should the tooltip be displayed to the right of the cursor? */
+    /** Is the tooltip positioned to the right of the given anchor? */
     private boolean mToRightOf;
+
+    /** Is an alignment change pending? */
+    private boolean mTimerPending;
+
+    /** The new value for {@link #mBelow} when the timer expires */
+    private boolean mPendingBelow;
+
+    /** The new value for {@link #mToRightOf} when the timer expires */
+    private boolean mPendingRight;
+
+    /** The time stamp (from {@link System#currentTimeMillis()} of the last alignment change */
+    private long mLastAlignmentTime;
 
     /**
      * Creates a new tooltip over the given parent with the given relative position.
@@ -75,6 +90,7 @@ public class GestureToolTip {
     public GestureToolTip(Composite parent, boolean below, boolean toRightOf) {
         mBelow = below;
         mToRightOf = toRightOf;
+        mLastAlignmentTime = System.currentTimeMillis();
 
         mShell = new Shell(parent.getShell(), SWT.ON_TOP | SWT.TOOL | SWT.NO_FOCUS);
         mShell.setLayout(new FillLayout());
@@ -94,15 +110,29 @@ public class GestureToolTip {
         mLabel.setFont(mFont);
 
         mShell.setVisible(false);
-
     }
 
     /**
-     * Show the tooltip at the given position and with the given text
+     * Show the tooltip at the given position and with the given text. Note that the
+     * position may not be applied immediately; to prevent flicker alignment changes
+     * are queued up with a timer (unless it's been a while since the last change, in
+     * which case the update is applied immediately.)
      *
      * @param text the new text to be displayed
+     * @param below if true, display the tooltip below the mouse cursor otherwise above
+     * @param toRightOf if true, display the tooltip to the right of the mouse cursor,
+     *            otherwise to the left
      */
-    public void update(String text) {
+    public void update(final String text, boolean below, boolean toRightOf) {
+        // If the alignment has not changed recently, just apply the change immediately
+        // instead of within a delay
+        if (!mTimerPending && (below != mBelow || toRightOf != mToRightOf)
+                && (System.currentTimeMillis() - mLastAlignmentTime >= TIMEOUT_MS)) {
+            mBelow = below;
+            mToRightOf = toRightOf;
+            mLastAlignmentTime = System.currentTimeMillis();
+        }
+
         Point location = mShell.getDisplay().getCursorLocation();
 
         mLabel.setText(text);
@@ -124,6 +154,9 @@ public class GestureToolTip {
         mShell.pack(changed);
         Point size = mShell.getSize();
 
+        // Position the tooltip to the left or right, and above or below, according
+        // to the saved state of these flags, not the current parameters. We don't want
+        // to flicker, instead we react on a timer to changes in alignment below.
         if (mBelow) {
             location.y += OFFSET_Y;
         } else {
@@ -142,6 +175,32 @@ public class GestureToolTip {
 
         if (!mShell.isVisible()) {
             mShell.setVisible(true);
+        }
+
+        // Has the orientation changed?
+        mPendingBelow = below;
+        mPendingRight = toRightOf;
+        if (below != mBelow || toRightOf != mToRightOf) {
+            // Yes, so schedule a timer (unless one is already scheduled)
+            if (!mTimerPending) {
+                mTimerPending = true;
+                final Runnable timer = new Runnable() {
+                    public void run() {
+                        mTimerPending = false;
+                        // Check whether the alignment is still different than the target
+                        // (since we may change back and forth repeatedly during the timeout)
+                        if (mBelow != mPendingBelow || mToRightOf != mPendingRight) {
+                            mBelow = mPendingBelow;
+                            mToRightOf = mPendingRight;
+                            mLastAlignmentTime = System.currentTimeMillis();
+                            if (mShell != null && mShell.isVisible()) {
+                                update(text, mBelow, mToRightOf);
+                            }
+                        }
+                    }
+                };
+                mShell.getDisplay().timerExec(TIMEOUT_MS, timer);
+            }
         }
     }
 

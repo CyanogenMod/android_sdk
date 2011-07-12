@@ -639,7 +639,6 @@ public class MoveGesture extends DropGesture {
                         updateDropFeedback(df, event);
                         df = mCanvas.getRulesEngine().callOnDropMove(targetNode,
                                 mCurrentDragElements, df, new Point(p.x, p.y));
-                        mCanvas.getGestureManager().updateMessage(df);
                     }
 
                     if (df != null &&
