@@ -305,21 +305,35 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    protected void paintResizeFeedback(IGraphics gc, INode node, ResizeState resizeState) {
+    protected void paintResizeFeedback(IGraphics gc, INode node, ResizeState state) {
         if (!sGridMode) {
-            INode layout = resizeState.layout;
-            GridModel grid = getGrid(resizeState, layout);
-            GridLayoutPainter.paintResizeFeedback(gc, layout, grid);
+            GridModel grid = getGrid(state);
+            GridLayoutPainter.paintResizeFeedback(gc, state.layout, grid);
         }
 
-        super.paintResizeFeedback(gc, node, resizeState);
+        if (resizingWidget(state)) {
+            super.paintResizeFeedback(gc, node, state);
+        } else {
+            GridModel grid = getGrid(state);
+            int startColumn = grid.getColumn(state.bounds.x);
+            int endColumn = grid.getColumn(state.bounds.x2());
+            int columnSpan = endColumn - startColumn + 1;
+
+            int startRow = grid.getRow(state.bounds.y);
+            int endRow = grid.getRow(state.bounds.y2());
+            int rowSpan = endRow - startRow + 1;
+
+            Rect cellBounds = grid.getCellBounds(startRow, startColumn, rowSpan, columnSpan);
+            gc.useStyle(DrawingStyle.RESIZE_PREVIEW);
+            gc.drawRect(cellBounds);
+        }
     }
 
     /** Returns the grid size cached on the given {@link ResizeState} object */
-    private GridModel getGrid(ResizeState resizeState, INode layout) {
+    private GridModel getGrid(ResizeState resizeState) {
         GridModel grid = (GridModel) resizeState.clientData;
         if (grid == null) {
-            grid = new GridModel(mRulesEngine, layout);
+            grid = new GridModel(mRulesEngine, resizeState.layout);
             resizeState.clientData = grid;
         }
 
@@ -334,8 +348,7 @@ public class GridLayoutRule extends BaseLayoutRule {
             super.setNewSizeBounds(state, node, layout, oldBounds, newBounds, horizontalEdge,
                     verticalEdge);
         } else {
-            Pair<Integer, Integer> spans = computeResizeSpans(state, node, layout, oldBounds,
-                    newBounds, horizontalEdge, verticalEdge);
+            Pair<Integer, Integer> spans = computeResizeSpans(state);
             int rowSpan = spans.getFirst();
             int columnSpan = spans.getSecond();
             GridModel.setColumnSpanAttribute(node, columnSpan);
@@ -346,8 +359,7 @@ public class GridLayoutRule extends BaseLayoutRule {
     @Override
     protected String getResizeUpdateMessage(ResizeState state, INode child, INode parent,
             Rect newBounds, SegmentType horizontalEdge, SegmentType verticalEdge) {
-        Pair<Integer, Integer> spans = computeResizeSpans(state, child, parent,
-                child.getBounds(), newBounds, horizontalEdge, verticalEdge);
+        Pair<Integer, Integer> spans = computeResizeSpans(state);
         if (resizingWidget(state)) {
             String width = state.getWidthAttribute();
             String height = state.getHeightAttribute();
@@ -375,21 +387,16 @@ public class GridLayoutRule extends BaseLayoutRule {
      * Computes the new column and row spans as the result of the current resizing
      * operation
      */
-    private Pair<Integer, Integer> computeResizeSpans(ResizeState state, INode node,
-            INode layout, Rect oldBounds, Rect newBounds, SegmentType horizontalEdge,
-            SegmentType verticalEdge) {
-        int rowSpan = 1;
-        int columnSpan = 1;
-
-        GridModel grid = getGrid(state, layout);
+    private Pair<Integer, Integer> computeResizeSpans(ResizeState state) {
+        GridModel grid = getGrid(state);
 
         int startColumn = grid.getColumn(state.bounds.x);
         int endColumn = grid.getColumn(state.bounds.x2());
-        columnSpan = endColumn - startColumn + 1;
+        int columnSpan = endColumn - startColumn + 1;
 
         int startRow = grid.getRow(state.bounds.y);
         int endRow = grid.getRow(state.bounds.y2());
-        rowSpan = endRow - startRow + 1;
+        int rowSpan = endRow - startRow + 1;
 
         return Pair.of(rowSpan, columnSpan);
     }
