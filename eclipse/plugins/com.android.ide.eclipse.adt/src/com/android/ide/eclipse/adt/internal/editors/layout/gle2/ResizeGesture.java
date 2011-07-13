@@ -80,6 +80,7 @@ public class ResizeGesture extends Gesture {
         Rect newBounds = getNewBounds(pos);
         mFeedback = rulesEngine.callOnResizeBegin(mChildNode, mParentNode, newBounds,
                 mHorizontalEdge, mVerticalEdge);
+        update(pos);
         mCanvas.getGestureManager().updateMessage(mFeedback);
     }
 
