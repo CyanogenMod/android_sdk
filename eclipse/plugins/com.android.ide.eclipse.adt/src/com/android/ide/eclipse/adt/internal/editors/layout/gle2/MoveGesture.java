@@ -606,8 +606,6 @@ public class MoveGesture extends DropGesture {
                                                                   mCurrentDragElements);
 
                     if (df != null) {
-                        mCanvas.getGestureManager().updateMessage(df);
-
                         // We should also dispatch an onDropMove() call to the initial enter
                         // position, such that the view is notified of the position where
                         // we are within the node immediately (before we for example attempt
