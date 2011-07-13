@@ -1080,9 +1080,9 @@ public class ConfigurationComposite extends Composite {
     }
 
     private ConfigMatch selectConfigMatch(List<ConfigMatch> matches) {
-        // API 11-12: look for a x-large device
+        // API 11-13: look for a x-large device
         int apiLevel = mProjectTarget.getVersion().getApiLevel();
-        if (apiLevel >= 11 && apiLevel < 13) {
+        if (apiLevel >= 11 && apiLevel < 14) {
             // TODO: Maybe check the compatible-screen tag in the manifest to figure out
             // what kind of device should be used for display.
             Collections.sort(matches, new TabletConfigComparator());
