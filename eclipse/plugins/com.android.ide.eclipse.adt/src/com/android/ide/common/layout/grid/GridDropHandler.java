@@ -151,11 +151,18 @@ public class GridDropHandler {
             Collections.sort(rowMatches);
             Collections.sort(columnMatches);
 
-            mColumnMatch = columnMatches.size() > 0 ? columnMatches.get(0) : null;
-            mRowMatch = rowMatches.size() > 0 ? rowMatches.get(0) : null;
-
-            String columnDescription = mColumnMatch != null ? mColumnMatch.getDisplayName() : null;
-            String rowDescription = mRowMatch != null ? mRowMatch.getDisplayName() : null;
+            mColumnMatch = null;
+            mRowMatch = null;
+            String columnDescription = null;
+            String rowDescription = null;
+            if (columnMatches.size() > 0) {
+                mColumnMatch = columnMatches.get(0);
+                columnDescription = mColumnMatch.getDisplayName(mGrid.layout);
+            }
+            if (rowMatches.size() > 0) {
+                mRowMatch = rowMatches.get(0);
+                rowDescription = mRowMatch.getDisplayName(mGrid.layout);
+            }
             if (columnDescription != null) {
                 if (rowDescription != null) {
                     feedback.tooltip = columnDescription + '\n' + rowDescription;
