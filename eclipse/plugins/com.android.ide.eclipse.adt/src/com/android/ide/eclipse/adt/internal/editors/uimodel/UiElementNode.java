@@ -49,6 +49,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
+import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -84,6 +85,7 @@ import java.util.Set;
  * The class implements {@link IPropertySource}, in order to fill the Eclipse property tab when
  * an element is selected. The {@link AttributeDescriptor} are used property descriptors.
  */
+@SuppressWarnings("restriction") // XML model
 public class UiElementNode implements IPropertySource {
 
     /** List of prefixes removed from android:id strings when creating short descriptions. */
@@ -947,6 +949,15 @@ public class UiElementNode implements IPropertySource {
         }
 
         mXmlNode = doc.createElement(elementName);
+
+        // If this element does not have children, mark it as an empty tag
+        // such that the XML looks like <tag/> instead of <tag></tag>
+        if (!mDescriptor.hasChildren()) {
+            if (mXmlNode instanceof ElementImpl) {
+                ElementImpl element = (ElementImpl) mXmlNode;
+                element.setEmptyTag(true);
+            }
+        }
 
         Node xmlNextSibling = null;
 
