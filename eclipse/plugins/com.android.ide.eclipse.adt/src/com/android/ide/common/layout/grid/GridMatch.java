@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.layout.grid;
 
+import static com.android.ide.common.layout.grid.GridModel.UNDEFINED;
+
 import com.android.ide.common.api.SegmentType;
 
 /**
@@ -73,6 +75,56 @@ class GridMatch implements Comparable<GridMatch> {
 
         // Prefer some types of matches over other matches
         return getPriority() - o.getPriority();
+    }
+
+    /**
+     * Describes the match for the user
+     *
+     * @return a short description for the user of the match
+     */
+    public String getDisplayName() {
+        switch (type) {
+            case BASELINE:
+                return String.format("Align baseline in row %1$d", cellIndex);
+            case CENTER_HORIZONTAL:
+                return "Center horizontally";
+            case LEFT:
+                if (!createCell) {
+                    return String.format("Insert into column %1$d", cellIndex);
+                }
+                if (margin != UNDEFINED) {
+                    if (cellIndex == 0) {
+                        return "Add one margin distance from the left";
+                    }
+                    return String.format("Add next to column %1$d", cellIndex);
+                }
+                return String.format("Align left at x=%1$d", matchedLine);
+            case RIGHT:
+                if (!createCell) {
+                    return String.format("Insert right-aligned into column %1$d", cellIndex);
+                }
+                return String.format("Align right at x=%1$d", matchedLine);
+            case TOP:
+                if (!createCell) {
+                    return String.format("Insert into row %1$d", cellIndex);
+                }
+                if (margin != UNDEFINED) {
+                    if (cellIndex == 0) {
+                        return "Add one margin distance from the top";
+                    }
+                    return String.format("Add below row %1$d", cellIndex);
+                }
+                return String.format("Align top at y=%1d", matchedLine);
+            case BOTTOM:
+                if (!createCell) {
+                    return String.format("Insert into bottom of row %1$d", cellIndex);
+                }
+                return String.format("Align bottom at y=%1d", matchedLine);
+            case CENTER_VERTICAL:
+            case UNKNOWN:
+            default:
+                return null;
+        }
     }
 
     /**
