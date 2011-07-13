@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -142,15 +141,14 @@ class PackageLoader {
             }
 
             // get local packages and offer them to the callback
-            final List<PkgItem> allPkgItems =  loadLocalPackages();
-            if (!allPkgItems.isEmpty()) {
-                // Notify the callback by giving it a copy of the current list.
-                // (in case the callback holds to the list... we still need this list of
-                // ourselves below).
-                if (!sourceLoadedCallback.onSourceLoaded(new ArrayList<PkgItem>(allPkgItems))) {
+            List<PkgItem> localPkgItems =  loadLocalPackages();
+            if (!localPkgItems.isEmpty()) {
+                if (!sourceLoadedCallback.onSourceLoaded(localPkgItems)) {
                     return;
                 }
             }
+
+            final int[] numPackages = { localPkgItems.size() };
 
             // get remote packages
             final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
@@ -170,25 +168,12 @@ class PackageLoader {
                             }
 
                             List<PkgItem> sourcePkgItems = new ArrayList<PkgItem>();
-
-                            nextPkg: for(Package pkg : pkgs) {
-                                boolean isUpdate = false;
-                                for (PkgItem pi: allPkgItems) {
-                                    if (pi.isSamePackageAs(pkg)) {
-                                        continue nextPkg;
-                                    }
-                                    if (pi.isUpdatedBy(pkg)) {
-                                        isUpdate = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!isUpdate) {
-                                    PkgItem pi = new PkgItem(pkg, PkgState.NEW);
-                                    sourcePkgItems.add(pi);
-                                    allPkgItems.add(pi);
-                                }
+                            for(Package pkg : pkgs) {
+                                PkgItem pi = new PkgItem(pkg, PkgState.NEW);
+                                sourcePkgItems.add(pi);
                             }
+
+                            numPackages[0] += sourcePkgItems.size();
 
                             // Notify the callback a new source has finished loading.
                             // If the callback requests so, stop right away.
@@ -200,7 +185,7 @@ class PackageLoader {
                         monitor.logError("Loading source failed: %1$s", e.toString());
                     } finally {
                         monitor.setDescription("Done loading %1$d packages from %2$d sources",
-                                allPkgItems.size(),
+                                numPackages[0],
                                 sources.length);
                     }
                 }
@@ -265,23 +250,18 @@ class PackageLoader {
                     Package acceptedPkg = null;
                     switch(item.getState()) {
                     case NEW:
-                        if (installTask.acceptPackage(item.getPackage())) {
-                            acceptedPkg = item.getPackage();
+                        if (installTask.acceptPackage(item.getMainPackage())) {
+                            acceptedPkg = item.getMainPackage();
                         }
-                        break;
-                    case HAS_UPDATE:
-                        for (Package upd : item.getUpdatePkgs()) {
-                            if (installTask.acceptPackage(upd)) {
-                                acceptedPkg = upd;
-                                break;
-                            }
+                        if (item.hasUpdatePkg() && installTask.acceptPackage(item.getUpdatePkg())) {
+                            acceptedPkg = item.getUpdatePkg();
                         }
                         break;
                     case INSTALLED:
-                        if (installTask.acceptPackage(item.getPackage())) {
+                        if (installTask.acceptPackage(item.getMainPackage())) {
                             // If the caller is accepting an installed package,
                             // return a success and give the package's install path
-                            acceptedPkg = item.getPackage();
+                            acceptedPkg = item.getMainPackage();
                             Archive[] a = acceptedPkg.getArchives();
                             // an installed package should have one local compatible archive
                             if (a.length == 1 && a[0].isCompatible()) {
@@ -366,7 +346,7 @@ class PackageLoader {
 
                     // Try to locate the installed package in the new package list
                     for (PkgItem localItem : localPkgItems) {
-                        Package localPkg = localItem.getPackage();
+                        Package localPkg = localItem.getMainPackage();
                         if (localPkg.canBeUpdatedBy(packageToInstall) == UpdateInfo.NOT_UPDATE) {
                             Archive[] localArchive = localPkg.getArchives();
                             if (localArchive.length == 1 && localArchive[0].isCompatible()) {
@@ -397,117 +377,65 @@ class PackageLoader {
      */
     public enum PkgState {
         /**
-         * Package is locally installed and has no update available on remote sites.
+         * Package is locally installed and may or may not have an update.
          */
         INSTALLED,
 
         /**
-         * Package is installed and has an update available.
-         * In this case, {@link PkgItem#getUpdatePkgs()} provides the list of 1 or more
-         * packages that can update this {@link PkgItem}.
-         * <p/>
-         * Although not structurally enforced, it can be reasonably expected that
-         * the original package and the updating packages all come from the same source.
-         */
-        HAS_UPDATE,
-
-        /**
-         * There's a new package available on the remote site that isn't
-         * installed locally.
+         * There's a new package available on the remote site that isn't installed locally.
          */
         NEW
     }
 
     /**
-     * A {@link PkgItem} represents one {@link Package} combined with its state.
+     * A {@link PkgItem} represents one main {@link Package} combined with its state
+     * and an optional update package.
      * <p/>
-     * It can be either a locally installed package, or a remotely available package.
-     * If the later, it can be either a new package or an update for a locally installed one.
-     * <p/>
-     * In the case of an update, the {@link PkgItem#getPackage()} represents the currently
-     * installed package and there's a separate list of {@link PkgItem#getUpdatePkgs()} that
-     * links to the updating packages. Note that in a typical repository there should only
-     * one update for a given installed package however the system is designed to be more
-     * generic and allow many.
+     * The main package is final and cannot change since it's what "defines" this PkgItem.
+     * The state or update package can change later.
      */
     public static class PkgItem implements Comparable<PkgItem> {
-        private final Package mPkg;
         private PkgState mState;
-        private List<Package> mUpdatePkgs;
+        private final Package mMainPkg;
+        private Package mUpdatePkg;
 
-        public PkgItem(Package pkg, PkgState state) {
-            mPkg = pkg;
+        /**
+         * Create a new {@link PkgItem} for this main package.
+         * The main package is final and cannot change since it's what "defines" this PkgItem.
+         * The state or update package can change later.
+         */
+        public PkgItem(Package mainPkg, PkgState state) {
+            mMainPkg = mainPkg;
             mState = state;
-            assert mPkg != null;
+            assert mMainPkg != null;
         }
 
         public boolean isObsolete() {
-            return mPkg.isObsolete();
+            return mMainPkg.isObsolete();
         }
 
-        public boolean isSameItemAs(PkgItem item) {
-            boolean same = this.mState == item.mState;
-            if (same) {
-                same = isSamePackageAs(item.getPackage());
-            }
-            // check updating packages are the same
-            if (same) {
-                List<Package> u1 = getUpdatePkgs();
-                List<Package> u2 = item.getUpdatePkgs();
-                same = (u1 == null && u2 == null) ||
-                       (u1 != null && u2 != null);
-                if (same && u1 != null && u2 != null) {
-                    int n = u1.size();
-                    same = n == u2.size();
-                    if (same) {
-                        for (int i = 0; same && i < n; i++) {
-                            Package p1 = u1.get(i);
-                            Package p2 = u2.get(i);
-                            same = p1.canBeUpdatedBy(p2) == UpdateInfo.NOT_UPDATE;
-                        }
-                    }
-                }
-            }
-
-            return same;
+        public Package getUpdatePkg() {
+            return mUpdatePkg;
         }
 
-        public boolean isSamePackageAs(Package pkg) {
-            return mPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE;
-        }
-
-        /**
-         * Check whether the 'pkg' argument updates this package.
-         * If it does, record it as a sub-package.
-         * Returns true if it was recorded as an update, false otherwise.
-         */
-        public boolean isUpdatedBy(Package pkg) {
-            if (mPkg.canBeUpdatedBy(pkg) == UpdateInfo.UPDATE) {
-                if (mUpdatePkgs == null) {
-                    mUpdatePkgs = new ArrayList<Package>();
-                }
-                mUpdatePkgs.add(pkg);
-                mState = PkgState.HAS_UPDATE;
-                return true;
-            }
-
-            return false;
+        public boolean hasUpdatePkg() {
+            return mState == PkgState.INSTALLED && mUpdatePkg != null;
         }
 
         public String getName() {
-            return mPkg.getListDescription();
+            return mMainPkg.getListDescription();
         }
 
         public int getRevision() {
-            return mPkg.getRevision();
+            return mMainPkg.getRevision();
         }
 
         public String getDescription() {
-            return mPkg.getDescription();
+            return mMainPkg.getDescription();
         }
 
-        public Package getPackage() {
-            return mPkg;
+        public Package getMainPackage() {
+            return mMainPkg;
         }
 
         public PkgState getState() {
@@ -516,65 +444,146 @@ class PackageLoader {
 
         public SdkSource getSource() {
             if (mState == PkgState.NEW) {
-                return mPkg.getParentSource();
+                return mMainPkg.getParentSource();
             } else {
                 return null;
             }
         }
 
         public int getApi() {
-            return mPkg instanceof IPackageVersion ?
-                    ((IPackageVersion) mPkg).getVersion().getApiLevel() :
+            return mMainPkg instanceof IPackageVersion ?
+                    ((IPackageVersion) mMainPkg).getVersion().getApiLevel() :
                         -1;
         }
 
-        public List<Package> getUpdatePkgs() {
-            return mUpdatePkgs;
-        }
-
         public Archive[] getArchives() {
-            return mPkg.getArchives();
+            return mMainPkg.getArchives();
         }
 
         public int compareTo(PkgItem pkg) {
-            return getPackage().compareTo(pkg.getPackage());
+            return getMainPackage().compareTo(pkg.getMainPackage());
         }
 
         /**
-         * Returns true if this package or any of the updating packages contains
+         * Returns true if this package or its updating packages contains
          * the exact given archive.
          * Important: This compares object references, not object equality.
          */
         public boolean hasArchive(Archive archive) {
-            if (mPkg.hasArchive(archive)) {
+            if (mMainPkg.hasArchive(archive)) {
                 return true;
             }
-            if (mUpdatePkgs != null && !mUpdatePkgs.isEmpty()) {
-                for (Package p : mUpdatePkgs) {
-                    if (p.hasArchive(archive)) {
-                        return true;
-                    }
-                }
+            if (mUpdatePkg != null && mUpdatePkg.hasArchive(archive)) {
+                return true;
             }
             return false;
+        }
+
+        /**
+         * Checks whether the main packages are of the same type and are
+         * not an update of each other.
+         */
+        public boolean isSameMainPackageAs(Package pkg) {
+            return mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE;
+        }
+
+        /**
+         * Checks whether too {@link PkgItem} are the same.
+         * This checks both items have the same state, both main package are similar
+         * and that they have the same updating packages.
+         */
+        public boolean isSameItemAs(PkgItem item) {
+            if (this == item) {
+                return true;
+            }
+            boolean same = this.mState == item.mState;
+            if (same) {
+                same = isSameMainPackageAs(item.getMainPackage());
+            }
+
+            if (same) {
+                // check updating packages are the same
+                Package p1 = this.mUpdatePkg;
+                Package p2 = item.getUpdatePkg();
+                same = (p1 == p2) || (p1 == null && p2 == null) || (p1 != null && p2 != null);
+
+                if (same && p1 != null) {
+                    same = p1.canBeUpdatedBy(p2) == UpdateInfo.NOT_UPDATE;
+                }
+            }
+
+            return same;
+        }
+
+        /**
+         * Equality is defined as {@link #isSameItemAs(PkgItem)}: state, main package
+         * and update package must be the similar.
+         */
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof PkgItem) && this.isSameItemAs((PkgItem) obj);
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((mState     == null) ? 0 : mState.hashCode());
+            result = prime * result + ((mMainPkg   == null) ? 0 : mMainPkg.hashCode());
+            result = prime * result + ((mUpdatePkg == null) ? 0 : mUpdatePkg.hashCode());
+            return result;
+        }
+
+        /**
+         * Check whether the 'pkg' argument is an update for this package.
+         * If it is, record it as an updating package.
+         * If there's already an updating package, only keep the most recent update.
+         * Returns true if it is update (even if there was already an update and this
+         * ended up not being the most recent), false if incompatible or not an update.
+         *
+         * This should only be used for installed packages.
+         */
+        public boolean mergeUpdate(Package pkg) {
+            if (mUpdatePkg == pkg) {
+                return true;
+            }
+            if (mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.UPDATE) {
+                if (mUpdatePkg == null) {
+                    mUpdatePkg = pkg;
+                } else if (mUpdatePkg.canBeUpdatedBy(pkg) == UpdateInfo.UPDATE) {
+                    // If we have more than one, keep only the most recent update
+                    mUpdatePkg = pkg;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        public void removeUpdate() {
+            mUpdatePkg = null;
         }
 
         /** Returns a string representation of this item, useful when debugging. */
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder(mState.toString());
+            StringBuilder sb = new StringBuilder();
+            sb.append('<');
+            sb.append(mState.toString());
 
-            if (mPkg != null) {
+            if (mMainPkg != null) {
                 sb.append(", pkg:"); //$NON-NLS-1$
-                sb.append(mPkg.toString());
+                sb.append(mMainPkg.toString());
             }
 
-            if (mUpdatePkgs != null && !mUpdatePkgs.isEmpty()) {
+            if (mUpdatePkg != null) {
                 sb.append(", updated by:"); //$NON-NLS-1$
-                sb.append(Arrays.toString(mUpdatePkgs.toArray()));
+                sb.append(mUpdatePkg.toString());
             }
 
+            sb.append('>');
             return sb.toString();
         }
+
     }
 }

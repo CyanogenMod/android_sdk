@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
@@ -159,7 +161,8 @@ public class ExtraPackage extends MinToolsPackage
         }
     }
 
-    private ExtraPackage(SdkSource source,
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected ExtraPackage(SdkSource source,
             Properties props,
             String vendor,
             String path,
