@@ -90,7 +90,12 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected PlatformPackage(IAndroidTarget target, Properties props) {
-        super(  null,                       //source
+        this(null /*source*/, target, props);
+    }
+
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected PlatformPackage(SdkSource source, IAndroidTarget target, Properties props) {
+        super(  source,                     //source
                 props,                      //properties
                 target.getRevision(),       //revision
                 null,                       //license

@@ -443,11 +443,7 @@ class PackageLoader {
         }
 
         public SdkSource getSource() {
-            if (mState == PkgState.NEW) {
-                return mMainPkg.getParentSource();
-            } else {
-                return null;
-            }
+            return mMainPkg.getParentSource();
         }
 
         public int getApi() {
@@ -484,7 +480,11 @@ class PackageLoader {
          * not an update of each other.
          */
         public boolean isSameMainPackageAs(Package pkg) {
-            return mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE;
+            if (mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
+                // package revision numbers must match
+                return mMainPkg.getRevision() == pkg.getRevision();
+            }
+            return false;
         }
 
         /**

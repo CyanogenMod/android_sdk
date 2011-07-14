@@ -33,8 +33,18 @@ public class MockPlatformToolPackage extends PlatformToolPackage {
      * By design, this creates a package with one and only one archive.
      */
     public MockPlatformToolPackage(int revision) {
+        this(null /*source*/, revision);
+    }
+
+    /**
+     * Creates a {@link MockPlatformToolPackage} with the given revision and hardcoded defaults
+     * for everything else.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
+     */
+    public MockPlatformToolPackage(SdkSource source, int revision) {
         super(
-            null, // source,
+            source, // source,
             null, // props,
             revision,
             null, // license,

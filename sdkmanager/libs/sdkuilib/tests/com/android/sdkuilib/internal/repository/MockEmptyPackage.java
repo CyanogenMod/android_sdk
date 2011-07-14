@@ -19,15 +19,24 @@ package com.android.sdkuilib.internal.repository;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 
 import java.io.File;
 import java.util.Properties;
 
+/**
+ * A mock empty package, of no particular subpackage type.
+ * {@link #sameItemAs(Package)} will return true if these packages have the same handle.
+ */
 class MockEmptyPackage extends Package {
     private final String mTestHandle;
 
+    /**
+     * Create a new {@link MockEmptyPackage}.
+     * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
+     */
     public MockEmptyPackage(String testHandle) {
         super(
             null /*source*/,
@@ -43,9 +52,35 @@ class MockEmptyPackage extends Package {
         mTestHandle = testHandle;
     }
 
+    /**
+     * Create a new {@link MockEmptyPackage}.
+     * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
+     * @param revision The revision of the package, printed in the short description.
+     */
     public MockEmptyPackage(String testHandle, int revision) {
         super(
             null /*source*/,
+            null /*props*/,
+            revision,
+            null /*license*/,
+            null /*description*/,
+            null /*descUrl*/,
+            Os.ANY /*archiveOs*/,
+            Arch.ANY /*archiveArch*/,
+            null /*archiveOsPath*/
+            );
+        mTestHandle = testHandle;
+    }
+
+    /**
+     * Create a new {@link MockEmptyPackage}.
+     * @param source The source associate with this package.
+     * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
+     * @param revision The revision of the package, printed in the short description.
+     */
+    public MockEmptyPackage(SdkSource source, String testHandle, int revision) {
+        super(
+            source,
             null /*props*/,
             revision,
             null /*license*/,
@@ -89,12 +124,14 @@ class MockEmptyPackage extends Package {
     @Override
     public String getShortDescription() {
         StringBuilder sb = new StringBuilder(this.getClass().getSimpleName());
+        sb.append(" '").append(mTestHandle).append('\'');
         if (getRevision() > 0) {
             sb.append(" rev=").append(getRevision());
         }
         return sb.toString();
     }
 
+    /** Returns true if these packages have the same handle. */
     @Override
     public boolean sameItemAs(Package pkg) {
         return (pkg instanceof MockEmptyPackage) &&

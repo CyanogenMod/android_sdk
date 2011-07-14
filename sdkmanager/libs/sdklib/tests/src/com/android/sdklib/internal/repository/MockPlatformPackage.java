@@ -39,7 +39,7 @@ public class MockPlatformPackage extends PlatformPackage {
      * By design, this package contains one and only one archive.
      */
     public MockPlatformPackage(int apiLevel, int revision) {
-        this(new MockPlatformTarget(apiLevel, revision), null /*props*/);
+        this(null /*source*/, new MockPlatformTarget(apiLevel, revision), null /*props*/);
     }
 
     /**
@@ -51,12 +51,18 @@ public class MockPlatformPackage extends PlatformPackage {
      * By design, this package contains one and only one archive.
      */
     public MockPlatformPackage(int apiLevel, int revision, int min_tools_rev) {
-        this(new MockPlatformTarget(apiLevel, revision), createProps(min_tools_rev));
+        this(null /*source*/,
+             new MockPlatformTarget(apiLevel, revision),
+             createProps(min_tools_rev));
+    }
+
+    public MockPlatformPackage(SdkSource source, int apiLevel, int revision, int min_tools_rev) {
+        this(source, new MockPlatformTarget(apiLevel, revision), createProps(min_tools_rev));
     }
 
     /** A little trick to be able to capture the target new after passing it to the super. */
-    private MockPlatformPackage(IAndroidTarget target, Properties props) {
-        super(target, props);
+    private MockPlatformPackage(SdkSource source, IAndroidTarget target, Properties props) {
+        super(source, target, props);
         mTarget = target;
     }
 
@@ -82,7 +88,6 @@ public class MockPlatformPackage extends PlatformPackage {
         public MockPlatformTarget(int apiLevel, int revision) {
             mApiLevel = apiLevel;
             mRevision = revision;
-
         }
 
         public String getClasspathName() {

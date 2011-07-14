@@ -22,7 +22,7 @@ import com.android.sdklib.internal.repository.Archive.Os;
 import java.util.Properties;
 
 /**
- * A mock {@link ToolPackage} for testing.
+ * A mock {@link ExtraPackage} for testing.
  *
  * By design, this package contains one and only one archive.
  */
@@ -35,8 +35,13 @@ public class MockExtraPackage extends ExtraPackage {
      * By design, this creates a package with one and only one archive.
      */
     public MockExtraPackage(String vendor, String path, int revision, int min_platform_tools_rev) {
+        this(null /*source*/, vendor, path, revision, min_platform_tools_rev);
+    }
+
+    public MockExtraPackage(SdkSource source,
+            String vendor, String path, int revision, int min_platform_tools_rev) {
         super(
-            null, // source,
+            source,
             createProps(min_platform_tools_rev), // props,
             vendor,
             path,
