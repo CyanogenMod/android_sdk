@@ -20,6 +20,7 @@ import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.Rect;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an XML element with a name, attributes and inner elements.
@@ -39,8 +40,8 @@ public class SimpleElement implements IDragElement {
     private final String mParentFqcn;
     private final Rect mBounds;
     private final Rect mParentBounds;
-    private final ArrayList<IDragAttribute> mAttributes = new ArrayList<IDragAttribute>();
-    private final ArrayList<IDragElement> mElements = new ArrayList<IDragElement>();
+    private final List<IDragAttribute> mAttributes = new ArrayList<IDragAttribute>();
+    private final List<IDragElement> mElements = new ArrayList<IDragElement>();
 
     private IDragAttribute[] mCachedAttributes = null;
     private IDragElement[] mCachedElements = null;
