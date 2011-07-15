@@ -83,8 +83,8 @@ public final class ExportHelper {
 
         // the export, takes the output of the precompiler & Java builders so it's
         // important to call build in case the auto-build option of the workspace is disabled.
-        // Also enable post compilation
-        ProjectHelper.build(project, monitor, true);
+        // Also enable post compilation and dependency building
+        ProjectHelper.build(project, monitor, true, true);
 
         // if either key or certificate is null, ensure the other is null.
         if (key == null) {

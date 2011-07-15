@@ -139,10 +139,11 @@ public class LaunchConfigDelegate extends LaunchConfigurationDelegate {
             return;
         }
 
-        // make sure the project is built and PostCompilerBuilder runs.
+        // make sure the project and its dependencies are built
+        // and PostCompilerBuilder runs.
         // This is a synchronous call which returns when the
         // build is done.
-        ProjectHelper.build(project, monitor, true);
+        ProjectHelper.build(project, monitor, true, true);
 
         // check if the project has errors, and abort in this case.
         if (ProjectHelper.hasError(project, true)) {
