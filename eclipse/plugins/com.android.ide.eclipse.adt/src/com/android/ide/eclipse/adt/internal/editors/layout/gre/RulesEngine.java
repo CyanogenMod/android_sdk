@@ -535,7 +535,7 @@ public class RulesEngine {
         // (For example, a ScrollView parent can go and set all its children's layout params to
         // fill the parent.)
         if (!editor.isEditXmlModelPending()) {
-            editor.wrapUndoEditXmlModel("Customize creation", new Runnable() {
+            editor.wrapEditXmlModel(new Runnable() {
                 public void run() {
                     callCreateHooks(editor, insertType,
                             parentRule, parentNode, childRule, newNode);
