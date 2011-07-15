@@ -743,6 +743,7 @@ public class RulesEngine {
             ClassLoader classLoader;
             if (realFqcn.startsWith("android.") || //$NON-NLS-1$
                     realFqcn.equals(VIEW_MERGE) ||
+                    realFqcn.endsWith(".GridLayout") || //$NON-NLS-1$ // Temporary special case
                     // FIXME: Remove this special case as soon as we pull
                     // the MapViewRule out of this code base and bundle it
                     // with the add ons
@@ -763,7 +764,6 @@ public class RulesEngine {
                 }
                 ruleClassName = packageName + "." + //$NON-NLS-1$
                     baseName + "Rule"; //$NON-NLS-1$
-
             } else {
                 // Initialize the user-classpath for 3rd party IViewRules, if necessary
                 if (mUserClassLoader == null) {
