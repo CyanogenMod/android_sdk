@@ -16,6 +16,14 @@
 
 package com.android.assetstudiolib;
 
+import com.android.resources.Density;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.imageio.ImageIO;
+
 /**
  * The base Generator class.
  */
@@ -24,23 +32,21 @@ public class GraphicGenerator {
      * Options used for all generators.
      */
     public static class Options {
-        /**
-         * The screen density of the icon.
-         */
-        public static enum Density {
-            LDPI("ldpi", 120), MDPI("mdpi", 160), HDPI("hdpi", 240), XHDPI("xhdpi", 320);
+    }
 
-            public String id;
-            public int dpi;
+    public static float getScaleFactor(Density density) {
+        return density.getDpiValue() / (float) Density.DEFAULT_DENSITY;
+    }
 
-            Density(String id, int dpi) {
-                this.id = id;
-                this.dpi = dpi;
-            }
-
-            public float scaleFactor() {
-                return (float) this.dpi / 160;
-            }
-        }
+    /**
+     * Returns one of the built in stencil images, or null
+     *
+     * @param relativePath stencil path such as "launcher-stencil/square/web/back.png"
+     * @return the image, or null
+     * @throws IOException if an unexpected I/O error occurs
+     */
+    public static BufferedImage getStencilImage(String relativePath) throws IOException {
+        InputStream is = GraphicGenerator.class.getResourceAsStream(relativePath);
+        return ImageIO.read(is);
     }
 }

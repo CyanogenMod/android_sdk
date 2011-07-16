@@ -16,7 +16,7 @@ BACK=`echo $DEST | sed 's@[^/]*@..@g'`
 
 mkdir -p $DEST
 
-LIBS="sdkstats androidprefs common layoutlib_api ide_common ninepatch sdklib sdkuilib"
+LIBS="sdkstats androidprefs common layoutlib_api ide_common ninepatch sdklib sdkuilib assetstudio"
 
 echo "make java libs ..."
 make -j3 showcommands $LIBS || die "ADT: Fail to build one of $LIBS."

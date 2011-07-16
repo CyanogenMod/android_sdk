@@ -16,6 +16,8 @@
 
 package com.android.assetstudiolib;
 
+import com.android.resources.Density;
+
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -36,16 +38,17 @@ public class LauncherIconGenerator extends GraphicGenerator {
 
     public LauncherIconGenerator(GraphicGeneratorContext context, Options options) {
         mOptions = options;
-        mBackImage = context.loadImageResource("launcher-stencil/"
-                + options.shape.id + "/" + options.density.id + "/back.png");
-        mForeImage = context.loadImageResource("launcher-stencil/"
-                + options.shape.id + "/" + options.density.id + "/" + options.style.id + ".png");
-        mMaskImage = context.loadImageResource("launcher-stencil/"
-                + options.shape.id + "/" + options.density.id + "/mask.png");
+        mBackImage = context.loadImageResource("/images/launcher_stencil/"
+                + options.shape.id + "/" + options.density.getResourceValue() + "/back.png");
+        mForeImage = context.loadImageResource("/images/launcher_stencil/"
+                + options.shape.id + "/" + options.density.getResourceValue() + "/"
+                + options.style.id + ".png");
+        mMaskImage = context.loadImageResource("/images/launcher_stencil/"
+                + options.shape.id + "/" + options.density.getResourceValue() + "/mask.png");
     }
 
     public BufferedImage generate() {
-        final float scaleFactor = mOptions.density.scaleFactor();
+        final float scaleFactor = GraphicGenerator.getScaleFactor(mOptions.density);
         Rectangle imageRect = Util.scaleRectangle(BASE_IMAGE_RECT, scaleFactor);
         Rectangle targetRect = Util.scaleRectangle(BASE_TARGET_RECT, scaleFactor);
 
@@ -80,7 +83,7 @@ public class LauncherIconGenerator extends GraphicGenerator {
         public boolean crop = true;
         public Shape shape = Shape.SQUARE;
         public Style style = Style.SIMPLE;
-        public GraphicGenerator.Options.Density density = GraphicGenerator.Options.Density.XHDPI;
+        public Density density = Density.XHIGH;
 
         public static enum Shape {
             CIRCLE("circle"), SQUARE("square");
