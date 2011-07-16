@@ -831,7 +831,11 @@ public class OutlinePage extends ContentOutlinePage
                             elements, DND.DROP_MOVE);
                     canvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
                         public void run() {
-                            canvas.getRulesEngine().setInsertType(InsertType.MOVE);
+                            InsertType insertType = InsertType.MOVE_INTO;
+                            if (dragSelection.get(0).getNode().getParent() == targetNode) {
+                                insertType = InsertType.MOVE_WITHIN;
+                            }
+                            canvas.getRulesEngine().setInsertType(insertType);
                             int index = target.getSecond();
                             BaseLayoutRule.insertAt(targetNode, elements, false, index);
                             canvas.getClipboardSupport().deleteSelection("Remove", dragSelection);

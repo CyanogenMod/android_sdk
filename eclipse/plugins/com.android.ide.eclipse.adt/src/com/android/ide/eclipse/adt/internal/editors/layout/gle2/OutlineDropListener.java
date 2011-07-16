@@ -124,17 +124,10 @@ import java.util.Set;
         final int indexFinal = index;
         canvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
             public void run() {
-                Object sourceCanvas = GlobalCanvasDragInfo.getInstance().getSourceCanvas();
-                InsertType insertType;
-                if (event.detail == DND.DROP_MOVE) {
-                    insertType = InsertType.MOVE;
-                } else if (sourceCanvas != null) {
-                    insertType = InsertType.PASTE;
-                } else {
-                    insertType = InsertType.CREATE;
-                }
+                InsertType insertType = MoveGesture.getInsertType(event, targetNode);
                 canvas.getRulesEngine().setInsertType(insertType);
 
+                Object sourceCanvas = GlobalCanvasDragInfo.getInstance().getSourceCanvas();
                 boolean createNew = event.detail == DND.DROP_COPY || sourceCanvas != canvas;
                 BaseLayoutRule.insertAt(targetNode, elements, createNew, indexFinal);
 

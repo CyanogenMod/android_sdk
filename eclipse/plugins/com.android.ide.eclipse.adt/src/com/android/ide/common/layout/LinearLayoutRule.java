@@ -565,6 +565,12 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
     @Override
     public void onChildInserted(INode node, INode parent, InsertType insertType) {
+        if (insertType == InsertType.MOVE_WITHIN) {
+            // Don't adjust widths/heights/weights when just moving within a single
+            // LinearLayout
+            return;
+        }
+
         // Attempt to set fill-properties on newly added views such that for example,
         // in a vertical layout, a text field defaults to filling horizontally, but not
         // vertically.
@@ -580,6 +586,9 @@ public class LinearLayoutRule extends BaseLayoutRule {
                 // In a horizontal layout, make views that would fill horizontally in a
                 // vertical layout have a non-zero weight instead. This will make the item
                 // fill but only enough to allow other views to be shown as well.
+                // (However, for drags within the same layout we do not touch
+                // the weight, since it might already have been tweaked to a particular
+                // value)
                 node.setAttribute(ANDROID_URI, ATTR_LAYOUT_WEIGHT, VALUE_1);
             }
             if (fill.fillVertically(vertical)) {

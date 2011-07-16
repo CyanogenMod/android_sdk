@@ -30,8 +30,12 @@ public enum InsertType {
      */
     CREATE_PREVIEW,
 
-    /** The view is being inserted here because it was moved from somewhere else */
-    MOVE,
+    /** The view is being inserted here because it was moved from somewhere else within
+     * the same layout */
+    MOVE_WITHIN,
+
+    /** The view is being inserted here because it was moved from some other layout */
+    MOVE_INTO,
 
     /**
      * The view is being inserted here as a result of a copy/paste from elsewhere
