@@ -357,6 +357,9 @@ public final class SdkConstants {
     /** SDK property: ant templates revision */
     public final static String PROP_SDK_ANT_TEMPLATES_REVISION = "sdk.ant.templates.revision"; //$NON-NLS-1$
 
+    /** SDK property: default skin */
+    public final static String PROP_SDK_DEFAULT_SKIN = "sdk.skin.default"; //$NON-NLS-1$
+
 
     /* Android Class Constants */
     public final static String CLASS_ACTIVITY = "android.app.Activity"; //$NON-NLS-1$
