@@ -226,13 +226,20 @@ final class PlatformTarget implements IAndroidTarget {
     }
 
     public String getDefaultSkin() {
+        // only one skin? easy.
         if (mSkins.length == 1) {
             return mSkins[0];
         }
 
+        // look for the skin name in the platform props
+        String skinName = mProperties.get(SdkConstants.PROP_SDK_DEFAULT_SKIN);
+        if (skinName != null) {
+            return skinName;
+        }
+
+        // otherwise try to find a good default.
         if (mVersion.getApiLevel() >= 4) {
-            // at this time, this is the default skin for all the platforms.
-            // TODO: make it configurable using a file in the platform folder.
+            // at this time, this is the default skin for all older platforms that had 2+ skins.
             return "WVGA800";
         }
 
