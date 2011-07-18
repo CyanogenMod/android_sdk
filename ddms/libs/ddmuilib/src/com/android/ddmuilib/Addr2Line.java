@@ -16,7 +16,8 @@
 
 package com.android.ddmuilib;
 
-import com.android.ddmlib.*;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.NativeStackCallInfo;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -138,9 +139,14 @@ public class Addr2Line {
             symbols = DdmUiPreferences.getSymbolDirectory();
         }
 
+        String addr2Line = System.getenv("ANDROID_ADDR2LINE");
+        if (addr2Line == null) {
+            addr2Line = DdmUiPreferences.getAddr2Line();
+        }
+
         // build the command line
         String[] command = new String[5];
-        command[0] = DdmUiPreferences.getAddr2Line();
+        command[0] = addr2Line;
         command[1] = "-C";
         command[2] = "-f";
         command[3] = "-e";

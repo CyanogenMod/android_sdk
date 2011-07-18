@@ -51,6 +51,8 @@ public final class NativeAllocationInfo {
         sAllocFunctionFilter.add("chk_memalign"); //$NON-NLS-1$
         sAllocFunctionFilter.add("Malloc"); //$NON-NLS-1$
         sAllocFunctionFilter.add("leak_memalign"); //$NON-NLS-1$
+        sAllocFunctionFilter.add("strcmp"); //$NON-NLS-1$
+        sAllocFunctionFilter.add("dlrealloc"); //$NON-NLS-1$
     }
 
     private final int mSize;
@@ -247,7 +249,7 @@ public final class NativeAllocationInfo {
                 long addr = addrIterator.next();
                 NativeStackCallInfo info = sourceIterator.next();
                 if (addr != 0 && info != null) {
-                    if (isRelevant(info.getMethodName())) {
+                    if (isRelevant(info.getMethodName(), addr)) {
                         return info;
                     }
                 }
@@ -265,14 +267,16 @@ public final class NativeAllocationInfo {
     /**
      * Returns true if the method name is relevant.
      * @param methodName the method name to test.
+     * @param addr the original address. This is used because sometimes the name of the method is
+     * the address itself which is not relevant
      */
-    private boolean isRelevant(String methodName) {
+    private boolean isRelevant(String methodName, long addr) {
         for (String filter : sAllocFunctionFilter) {
             if (methodName.contains(filter)) {
                 return false;
             }
         }
 
-        return true;
+        return methodName.equals(Long.toString(addr, 16)) == false;
     }
 }
