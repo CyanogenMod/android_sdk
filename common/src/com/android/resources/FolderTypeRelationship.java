@@ -53,7 +53,9 @@ public final class FolderTypeRelationship {
         add(ResourceType.INTEGER, ResourceFolderType.VALUES);
         add(ResourceType.INTERPOLATOR, ResourceFolderType.INTERPOLATOR);
         add(ResourceType.LAYOUT, ResourceFolderType.LAYOUT);
+        add(ResourceType.ID, ResourceFolderType.LAYOUT);
         add(ResourceType.MENU, ResourceFolderType.MENU);
+        add(ResourceType.ID, ResourceFolderType.MENU);
         add(ResourceType.MIPMAP, ResourceFolderType.MIPMAP);
         add(ResourceType.PLURALS, ResourceFolderType.VALUES);
         add(ResourceType.PUBLIC, ResourceFolderType.VALUES);

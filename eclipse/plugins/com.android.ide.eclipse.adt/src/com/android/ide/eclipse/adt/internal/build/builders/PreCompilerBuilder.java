@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErrorListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -253,6 +254,8 @@ public class PreCompilerBuilder extends BaseBuilder {
                 } else {
                     dv = new PreCompilerDeltaVisitor(this, sourceFolderPathList, mProcessors);
                     delta.accept(dv);
+                    // Notify the ResourceManager:
+                    ResourceManager.getInstance().processDelta(delta);
 
                     // record the state
                     mMustCompileResources |= dv.getCompileResources();

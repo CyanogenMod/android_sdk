@@ -23,9 +23,8 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFolderListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IRawDeltaListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
@@ -41,6 +40,8 @@ import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
@@ -111,10 +112,7 @@ public final class ResourceManager {
     public static void setup(GlobalProjectMonitor monitor) {
         monitor.addResourceEventListener(sThis.mResourceEventListener);
         monitor.addProjectListener(sThis.mProjectListener);
-
-        int mask = IResourceDelta.ADDED | IResourceDelta.REMOVED | IResourceDelta.CHANGED;
-        monitor.addFolderListener(sThis.mFolderListener, mask);
-        monitor.addFileListener(sThis.mFileListener, mask);
+        monitor.addRawDeltaListener(sThis.mRawDeltaListener);
 
         CompiledResourcesMonitor.setupMonitor(monitor);
     }
@@ -157,6 +155,45 @@ public final class ResourceManager {
         }
     }
 
+    /**
+     * Update the resource repository with a delta
+     * @param delta the resource changed delta to process.
+     */
+    public void processDelta(IResourceDelta delta) {
+        // Skip over deltas that don't fit our mask
+        int mask = IResourceDelta.ADDED | IResourceDelta.REMOVED | IResourceDelta.CHANGED;
+        int kind = delta.getKind();
+        if ( (mask & kind) == 0) {
+            return;
+        }
+        // If our delta was handed to us from the PreCompiler then it's a single delta
+        // with lots of children. GlobalProjectMonitor will hand us a delta for each
+        // item in the tree of modifications so we only need to recurse into delta
+        // children if we're autobuilding.
+        if (ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding()) {
+            IResourceDelta[] children = delta.getAffectedChildren();
+            for (IResourceDelta child : children)  {
+                processDelta(child);
+            }
+        }
+
+        // Process this delta
+        IResource r = delta.getResource();
+        int type = r.getType();
+
+        if (type == IResource.FILE) {
+            updateFile((IFile)r, delta.getMarkerDeltas(), kind);
+        } else if (type == IResource.FOLDER) {
+            updateFolder((IFolder)r, kind);
+        } // We only care about files and folders.
+          // Project deltas are handled by our project listener
+    }
+
+    /**
+     * Private implementation of a resource event listener that registers with
+     * GlobalProjectMonitor.
+     *
+     */
     private class ResourceEventListener implements IResourceEventListener {
         private final List<IProject> mChangedProjects = new ArrayList<IProject>();
 
@@ -166,8 +203,6 @@ public final class ResourceManager {
                 synchronized (mMap) {
                     resources = mMap.get(project);
                 }
-
-                resources.postUpdate();
             }
 
             mChangedProjects.clear();
@@ -188,160 +223,150 @@ public final class ResourceManager {
      * Delegate listener for resource changes. This is called before and after any calls to the
      * project and file listeners (for a given resource change event).
      */
-    private ResourceEventListener mResourceEventListener = new ResourceEventListener();
-
+    private final ResourceEventListener mResourceEventListener = new ResourceEventListener();
 
     /**
-     * Implementation of the {@link IFolderListener} as an internal class so that the methods
-     * do not appear in the public API of {@link ResourceManager}.
+     * Update a resource folder that we know about
+     * @param folder the folder that was updated
+     * @param kind the delta type (added/removed/updated)
      */
-    private IFolderListener mFolderListener = new IFolderListener() {
-        public void folderChanged(IFolder folder, int kind) {
-            ProjectResources resources;
+    private void updateFolder(IFolder folder, int kind) {
+        ProjectResources resources;
 
-            final IProject project = folder.getProject();
+        final IProject project = folder.getProject();
 
-            try {
-                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // can't get the project nature? return!
+        try {
+            if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                 return;
             }
+        } catch (CoreException e) {
+            // can't get the project nature? return!
+            return;
+        }
 
-            mResourceEventListener.addProject(project);
+        mResourceEventListener.addProject(project);
 
-            switch (kind) {
-                case IResourceDelta.ADDED:
-                    // checks if the folder is under res.
-                    IPath path = folder.getFullPath();
+        switch (kind) {
+            case IResourceDelta.ADDED:
+                // checks if the folder is under res.
+                IPath path = folder.getFullPath();
 
-                    // the path will be project/res/<something>
-                    if (path.segmentCount() == 3) {
-                        if (isInResFolder(path)) {
-                            // get the project and its resource object.
-                            synchronized (mMap) {
-                                resources = mMap.get(project);
+                // the path will be project/res/<something>
+                if (path.segmentCount() == 3) {
+                    if (isInResFolder(path)) {
+                        // get the project and its resource object.
+                        synchronized (mMap) {
+                            resources = mMap.get(project);
 
-                                // if it doesn't exist, we create it.
-                                if (resources == null) {
-                                    resources = new ProjectResources(project);
-                                    mMap.put(project, resources);
-                                }
-                            }
-
-                            ResourceFolder newFolder = resources.processFolder(
-                                    new IFolderWrapper(folder));
-                            if (newFolder != null) {
-                                notifyListenerOnFolderChange(project, newFolder, kind);
+                            // if it doesn't exist, we create it.
+                            if (resources == null) {
+                                resources = new ProjectResources(project);
+                                mMap.put(project, resources);
                             }
                         }
-                    }
-                    break;
-                case IResourceDelta.CHANGED:
-                    // only call the listeners.
-                    synchronized (mMap) {
-                        resources = mMap.get(folder.getProject());
-                    }
-                    if (resources != null) {
-                        ResourceFolder resFolder = resources.getResourceFolder(folder);
-                        if (resFolder != null) {
-                            notifyListenerOnFolderChange(project, resFolder, kind);
-                        }
-                    }
-                    break;
-                case IResourceDelta.REMOVED:
-                    synchronized (mMap) {
-                        resources = mMap.get(folder.getProject());
-                    }
-                    if (resources != null) {
-                        // lets get the folder type
-                        ResourceFolderType type = ResourceFolderType.getFolderType(
-                                folder.getName());
 
-                        ResourceFolder removedFolder = resources.removeFolder(type,
+                        ResourceFolder newFolder = resources.processFolder(
                                 new IFolderWrapper(folder));
-                        if (removedFolder != null) {
-                            notifyListenerOnFolderChange(project, removedFolder, kind);
+                        if (newFolder != null) {
+                            notifyListenerOnFolderChange(project, newFolder, kind);
                         }
                     }
-                    break;
-            }
+                }
+                break;
+            case IResourceDelta.CHANGED:
+                // only call the listeners.
+                synchronized (mMap) {
+                    resources = mMap.get(folder.getProject());
+                }
+                if (resources != null) {
+                    ResourceFolder resFolder = resources.getResourceFolder(folder);
+                    if (resFolder != null) {
+                        notifyListenerOnFolderChange(project, resFolder, kind);
+                    }
+                }
+                break;
+            case IResourceDelta.REMOVED:
+                synchronized (mMap) {
+                    resources = mMap.get(folder.getProject());
+                }
+                if (resources != null) {
+                    // lets get the folder type
+                    ResourceFolderType type = ResourceFolderType.getFolderType(
+                            folder.getName());
+
+                    ResourceFolder removedFolder = resources.removeFolder(type,
+                            new IFolderWrapper(folder));
+                    if (removedFolder != null) {
+                        notifyListenerOnFolderChange(project, removedFolder, kind);
+                    }
+                }
+                break;
         }
-    };
+    }
 
     /**
-     * Implementation of the {@link IFileListener} as an internal class so that the methods
-     * do not appear in the public API of {@link ResourceManager}.
+     * Called when a delta indicates that a file has changed.
+     * Depending on the file being changed, and the type of change
+     * (ADDED, REMOVED, CHANGED), the file change is processed to update the resource
+     * manager data.
+     *
+     * @param file The file that changed.
+     * @param markerDeltas The marker deltas for the file.
+     * @param kind The change kind. This is equivalent to
+     * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
      */
-    private IFileListener mFileListener = new IFileListener() {
-        /* (non-Javadoc)
-         * Sent when a file changed. Depending on the file being changed, and the type of change
-         * (ADDED, REMOVED, CHANGED), the file change is processed to update the resource
-         * manager data.
-         *
-         * @param file The file that changed.
-         * @param markerDeltas The marker deltas for the file.
-         * @param kind The change kind. This is equivalent to
-         * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
-         *
-         * @see IFileListener#fileChanged
-         */
-        public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
-            final IProject project = file.getProject();
+    private void updateFile(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+        final IProject project = file.getProject();
 
-            try {
-                if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
-                    return;
-                }
-            } catch (CoreException e) {
-                // can't get the project nature? return!
+        try {
+            if (project.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
                 return;
             }
+        } catch (CoreException e) {
+            // can't get the project nature? return!
+            return;
+        }
 
-            // get the project resources
-            ProjectResources resources;
-            synchronized (mMap) {
-                resources = mMap.get(project);
-            }
+        // get the project resources
+        ProjectResources resources;
+        synchronized (mMap) {
+            resources = mMap.get(project);
+        }
 
-            if (resources == null) {
-                return;
-            }
+        if (resources == null) {
+            return;
+        }
 
-            // checks if the file is under res/something.
-            IPath path = file.getFullPath();
+        // checks if the file is under res/something.
+        IPath path = file.getFullPath();
 
-            if (path.segmentCount() == 4) {
-                if (isInResFolder(path)) {
-                    IContainer container = file.getParent();
-                    if (container instanceof IFolder) {
+        if (path.segmentCount() == 4) {
+            if (isInResFolder(path)) {
+                IContainer container = file.getParent();
+                if (container instanceof IFolder) {
 
-                        ResourceFolder folder = resources.getResourceFolder(
-                                (IFolder)container);
+                    ResourceFolder folder = resources.getResourceFolder(
+                            (IFolder)container);
 
-                        // folder can be null as when the whole folder is deleted, the
-                        // REMOVED event for the folder comes first. In this case, the
-                        // folder will have taken care of things.
-                        if (folder != null) {
-                            ResourceFile resFile = folder.processFile(
-                                    new IFileWrapper(file),
-                                    ResourceHelper.getResourceDeltaKind(kind));
-                            notifyListenerOnFileChange(project, resFile, kind);
-                        }
+                    // folder can be null as when the whole folder is deleted, the
+                    // REMOVED event for the folder comes first. In this case, the
+                    // folder will have taken care of things.
+                    if (folder != null) {
+                        ResourceFile resFile = folder.processFile(
+                                new IFileWrapper(file),
+                                ResourceHelper.getResourceDeltaKind(kind));
+                        notifyListenerOnFileChange(project, resFile, kind);
                     }
                 }
             }
         }
-    };
-
+    }
 
     /**
      * Implementation of the {@link IProjectListener} as an internal class so that the methods
      * do not appear in the public API of {@link ResourceManager}.
      */
-    private IProjectListener mProjectListener = new IProjectListener() {
+    private final IProjectListener mProjectListener = new IProjectListener() {
         public void projectClosed(IProject project) {
             synchronized (mMap) {
                 mMap.remove(project);
@@ -364,6 +389,21 @@ public final class ResourceManager {
 
         public void projectRenamed(IProject project, IPath from) {
             // renamed project get a delete/open event too, so this can be ignored.
+        }
+    };
+
+    /**
+     * Implementation of {@link IRawDeltaListener} as an internal class so that the methods
+     * do not appear in the public API of {@link ResourceManager}. Delta processing can be
+     * accessed through the {@link ResourceManager#visitDelta(IResourceDelta delta)} method.
+     */
+    private final IRawDeltaListener mRawDeltaListener = new IRawDeltaListener() {
+        public void visitDelta(IResourceDelta delta) {
+            // If we're autobuilding, then PreCompilerBuilder will pass us deltas
+            if (ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding()) {
+                return;
+            }
+            processDelta(delta);
         }
     };
 
@@ -475,8 +515,6 @@ public final class ResourceManager {
                             }
                         }
                     }
-
-                    projectResources.postUpdate();
                 } catch (CoreException e) {
                     // This happens if the project is closed or if the folder doesn't exist.
                     // Since we already test for that, we can ignore this exception.
