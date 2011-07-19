@@ -23,10 +23,10 @@ import com.android.ide.eclipse.adt.internal.build.AaptExecException;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AaptResultException;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
@@ -116,7 +116,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 mOutputFolder = javaProject.getOutputLocation();
                 mSourceFolders = BaseProjectHelper.getSourceClasspaths(javaProject);
             } catch (JavaModelException e) {
-            } finally {
             }
         }
 
@@ -203,6 +202,20 @@ public class PostCompilerBuilder extends BaseBuilder {
         // Clear the project of the generic markers
         removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_PACKAGE);
         removeMarkersFromContainer(project, AdtConstants.MARKER_PACKAGING);
+
+        // also remove the files in the output folder (but not the Eclipse output folder).
+        IFolder javaOutput = BaseProjectHelper.getJavaOutputFolder(project);
+        IFolder androidOutput = BaseProjectHelper.getAndroidOutputFolder(project);
+
+        if (javaOutput.equals(androidOutput) == false) {
+            // get the content
+            IResource[] members = androidOutput.members();
+            for (IResource member : members) {
+                if (member.equals(javaOutput) == false) {
+                    member.delete(true /*force*/, monitor);
+                }
+            }
+        }
     }
 
     // build() returns a list of project from which this project depends for future compilation.
@@ -245,9 +258,8 @@ public class PostCompilerBuilder extends BaseBuilder {
             // Top level check to make sure the build can move forward.
             abortOnBadSetup(javaProject);
 
-            // get the output folder, this method returns the path with a trailing
-            // separator
-            IFolder outputFolder = BaseProjectHelper.getOutputFolder(project);
+            // get the android output folder
+            IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
 
             // now we need to get the classpath list
             List<IPath> sourceList = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -276,7 +288,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
                 } else {
-                    dv = new PostCompilerDeltaVisitor(this, sourceList, outputFolder);
+                    dv = new PostCompilerDeltaVisitor(this, sourceList, androidOutputFolder);
                     delta.accept(dv);
 
                     // save the state
@@ -342,7 +354,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             // remove older packaging markers.
             removeMarkersFromContainer(javaProject.getProject(), AdtConstants.MARKER_PACKAGING);
 
-            if (outputFolder == null) {
+            if (androidOutputFolder == null) {
                 // mark project and exit
                 markProject(AdtConstants.MARKER_PACKAGING, Messages.Failed_To_Get_Output,
                         IMarker.SEVERITY_ERROR);
@@ -377,7 +389,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             if (mPackageResources == false) {
                 // check the full resource package
-                tmp = outputFolder.findMember(AdtConstants.FN_RESOURCES_AP_);
+                tmp = androidOutputFolder.findMember(AdtConstants.FN_RESOURCES_AP_);
                 if (tmp == null || tmp.exists() == false) {
                     mPackageResources = true;
                     mBuildFinalPackage = true;
@@ -386,7 +398,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // check classes.dex is present. If not we force to recreate it.
             if (mConvertToDex == false) {
-                tmp = outputFolder.findMember(SdkConstants.FN_APK_CLASSES_DEX);
+                tmp = androidOutputFolder.findMember(SdkConstants.FN_APK_CLASSES_DEX);
                 if (tmp == null || tmp.exists() == false) {
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
@@ -396,7 +408,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             // also check the final file(s)!
             String finalPackageName = ProjectHelper.getApkFilename(project, null /*config*/);
             if (mBuildFinalPackage == false) {
-                tmp = outputFolder.findMember(finalPackageName);
+                tmp = androidOutputFolder.findMember(finalPackageName);
                 if (tmp == null || (tmp instanceof IFile &&
                         tmp.exists() == false)) {
                     String msg = String.format(Messages.s_Missing_Repackaging, finalPackageName);
@@ -410,7 +422,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             // because they are missing
 
             // refresh the output directory first
-            IContainer ic = outputFolder.getParent();
+            IContainer ic = androidOutputFolder.getParent();
             if (ic != null) {
                 ic.refreshLocal(IResource.DEPTH_ONE, monitor);
             }
@@ -443,18 +455,18 @@ public class PostCompilerBuilder extends BaseBuilder {
                     return allRefProjects;
                 }
 
-                IPath binLocation = outputFolder.getLocation();
-                if (binLocation == null) {
+                IPath androidBinLocation = androidOutputFolder.getLocation();
+                if (androidBinLocation == null) {
                     markProject(AdtConstants.MARKER_PACKAGING, Messages.Output_Missing,
                             IMarker.SEVERITY_ERROR);
                     return allRefProjects;
                 }
-                String osBinPath = binLocation.toOSString();
+                String osAndroidBinPath = androidBinLocation.toOSString();
 
                 // Remove the old .apk.
                 // This make sure that if the apk is corrupted, then dx (which would attempt
                 // to open it), will not fail.
-                String osFinalPackagePath = osBinPath + File.separator + finalPackageName;
+                String osFinalPackagePath = osAndroidBinPath + File.separator + finalPackageName;
                 File finalPackage = new File(osFinalPackagePath);
 
                 // if delete failed, this is not really a problem, as the final package generation
@@ -469,7 +481,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                     try {
                         helper.packageResources(manifestFile, libProjects, null /*resfilter*/,
-                                0 /*versionCode */, osBinPath,
+                                0 /*versionCode */, osAndroidBinPath,
                                 AdtConstants.FN_RESOURCES_AP_);
                     } catch (AaptExecException e) {
                         BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING,
@@ -501,14 +513,16 @@ public class PostCompilerBuilder extends BaseBuilder {
                     saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
                 }
 
+                String classesDexPath = osAndroidBinPath + File.separator +
+                        SdkConstants.FN_APK_CLASSES_DEX;
+
                 // then we check if we need to package the .class into classes.dex
                 if (mConvertToDex) {
                     try {
                         String[] dxInputPaths = helper.getCompiledCodePaths(
                                 true /*includeProjectOutputs*/, mResourceMarker);
 
-                        helper.executeDx(javaProject, dxInputPaths, osBinPath + File.separator +
-                                SdkConstants.FN_APK_CLASSES_DEX);
+                        helper.executeDx(javaProject, dxInputPaths, classesDexPath);
                     } catch (DexException e) {
                         String message = e.getMessage();
 
@@ -539,11 +553,9 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // and classes.dex.
                 // This is the default package with all the resources.
 
-                String classesDexPath = osBinPath + File.separator +
-                        SdkConstants.FN_APK_CLASSES_DEX;
                 try {
                     helper.finalDebugPackage(
-                        osBinPath + File.separator + AdtConstants.FN_RESOURCES_AP_,
+                            osAndroidBinPath + File.separator + AdtConstants.FN_RESOURCES_AP_,
                         classesDexPath, osFinalPackagePath,
                         javaProject, libProjects, referencedJavaProjects, mResourceMarker);
                 } catch (KeytoolException e) {
@@ -602,7 +614,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // we are done.
 
                 // get the resource to bin
-                outputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
+                androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
 
                 // build has been done. reset the state of the builder
                 mBuildFinalPackage = false;

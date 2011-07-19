@@ -838,6 +838,40 @@ public final class Sdk  {
                 // of which can happen here since we're processing a Project opened event.
             }
 
+            // convert older projects which use bin as the eclipse output folder into projects
+            // using bin/classes
+            IFolder javaOutput = BaseProjectHelper.getJavaOutputFolder(openedProject);
+            IFolder androidOutput = BaseProjectHelper.getAndroidOutputFolder(openedProject);
+            if (javaOutput.equals(androidOutput)) {
+                final IFolder newJavaOutput = javaOutput.getFolder(SdkConstants.FD_CLASSES_OUTPUT);
+                if (newJavaOutput.exists() == false) {
+                    Job job = new Job("Project bin convertion") {
+                        @Override
+                        protected IStatus run(IProgressMonitor monitor) {
+                            try {
+                                newJavaOutput.create(true /*force*/, true /*local*/,
+                                        monitor);
+
+                                // set the java output to this project.
+                                IJavaProject javaProject = JavaCore.create(openedProject);
+                                javaProject.setOutputLocation(newJavaOutput.getFullPath(),
+                                        monitor);
+
+                                openedProject.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
+                            } catch (CoreException e) {
+                                return e.getStatus();
+                            }
+
+                            return Status.OK_STATUS;
+                        }
+                    };
+                    job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
+                    job.schedule();
+
+                }
+            }
+
+
             ProjectState openedState = getProjectState(openedProject);
             if (openedState != null) {
                 if (openedState.hasLibraries()) {

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.actions;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -277,19 +278,20 @@ public class MultiApkExportAction implements IObjectActionDelegate {
 
             // get the manifest file
             IFile manifestFile = project.getFile(SdkConstants.FN_ANDROID_MANIFEST_XML);
-            // get the project bin folder
-            IFolder projectBinFolder = wsRoot.getFolder(javaProject.getOutputLocation());
-            String projectBinFolderPath = projectBinFolder.getLocation().toOSString();
+
+            // get the project bin folder for android files.
+            IFolder androidBinFolder = BaseProjectHelper.getAndroidOutputFolder(project);
+            String androidBinFolderPath = androidBinFolder.getLocation().toOSString();
 
             // package the resources
             helper.packageResources(manifestFile, libProjects,
                     softVariant != null ? softVariant.getValue() : null,
-                    compositeVersionCode, projectBinFolderPath, pkgName);
+                    compositeVersionCode, androidBinFolderPath, pkgName);
 
             apk.setOutputName(softVariant != null ? softVariant.getKey() : null, outputName);
 
             // do the final export.
-            IFile dexFile = projectBinFolder.getFile(SdkConstants.FN_APK_CLASSES_DEX);
+            IFile dexFile = androidBinFolder.getFile(SdkConstants.FN_APK_CLASSES_DEX);
             String outputFile = binFolder.getFile(outputName).getLocation().toOSString();
 
             // get the list of referenced projects.
@@ -297,7 +299,7 @@ public class MultiApkExportAction implements IObjectActionDelegate {
             List<IJavaProject> referencedJavaProjects = BuildHelper.getJavaProjects(javaRefs);
 
             helper.finalPackage(
-                    new File(projectBinFolderPath, pkgName).getAbsolutePath(),
+                    new File(androidBinFolderPath, pkgName).getAbsolutePath(),
                     dexFile.getLocation().toOSString(),
                     outputFile,
                     javaProject,

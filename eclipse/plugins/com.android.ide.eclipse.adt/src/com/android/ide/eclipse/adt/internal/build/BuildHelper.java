@@ -364,8 +364,13 @@ public class BuildHelper {
         }
     }
 
-    public String[] getProjectOutputs() throws CoreException {
-        IFolder outputFolder = BaseProjectHelper.getOutputFolder(mProject);
+    /**
+     * Return a list of the project output for compiled Java code.
+     * @return
+     * @throws CoreException
+     */
+    public String[] getProjectJavaOutputs() throws CoreException {
+        IFolder outputFolder = BaseProjectHelper.getJavaOutputFolder(mProject);
 
         // get the list of referenced projects output to add
         List<IProject> javaProjects = ProjectHelper.getReferencedProjects(mProject);
@@ -373,7 +378,7 @@ public class BuildHelper {
 
         // get the project output, and since it's a new list object, just add the outputFolder
         // of the project directly to it.
-        List<String> projectOutputs = getProjectOutputs(referencedJavaProjects);
+        List<String> projectOutputs = getProjectJavaOutputs(referencedJavaProjects);
 
         projectOutputs.add(0, outputFolder.getLocation().toOSString());
 
@@ -403,7 +408,7 @@ public class BuildHelper {
         String[] compiledPaths;
 
         if (includeProjectOutputs) {
-            String[] projectOutputs = getProjectOutputs();
+            String[] projectOutputs = getProjectJavaOutputs();
 
             compiledPaths = new String[libraries.length + projectOutputs.length];
 
@@ -964,7 +969,7 @@ public class BuildHelper {
      * @return a new list object containing the output folder paths.
      * @throws CoreException
      */
-    private List<String> getProjectOutputs(List<IJavaProject> referencedJavaProjects)
+    private List<String> getProjectJavaOutputs(List<IJavaProject> referencedJavaProjects)
             throws CoreException {
         ArrayList<String> list = new ArrayList<String>();
 

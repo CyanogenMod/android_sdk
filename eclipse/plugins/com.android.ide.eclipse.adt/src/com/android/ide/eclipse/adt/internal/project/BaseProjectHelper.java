@@ -444,13 +444,14 @@ public final class BaseProjectHelper {
     }
 
     /**
-     * Returns the {@link IFolder} representing the output for the project.
+     * Returns the {@link IFolder} representing the output for the project for Android specific
+     * files.
      * <p>
      * The project must be a java project and be opened, or the method will return null.
      * @param project the {@link IProject}
      * @return an IFolder item or null.
      */
-    public final static IFolder getOutputFolder(IProject project) {
+    public final static IFolder getJavaOutputFolder(IProject project) {
         try {
             if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
                 // get a java project from the normal project object
@@ -470,4 +471,42 @@ public final class BaseProjectHelper {
         }
         return null;
     }
+
+    /**
+     * Returns the {@link IFolder} representing the output for the project for compiled Java
+     * files.
+     * <p>
+     * The project must be a java project and be opened, or the method will return null.
+     * @param project the {@link IProject}
+     * @return an IFolder item or null.
+     */
+    public final static IFolder getAndroidOutputFolder(IProject project) {
+        try {
+            if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
+                // get a java project from the normal project object
+                IJavaProject javaProject = JavaCore.create(project);
+
+                IPath path = javaProject.getOutputLocation();
+                IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
+                IResource outputResource = wsRoot.findMember(path);
+
+                if (outputResource != null) { // really shouldn't happen
+                    // if the output folder is directly a child of the project,
+                    // then use it directly.
+                    if (outputResource.getParent().equals(project)) {
+                        return (IFolder) outputResource;
+                    }
+
+                    // otherwise returns the parent folder of the java output folder.
+                    return (IFolder) outputResource.getParent();
+                }
+            }
+        } catch (JavaModelException e) {
+            // Let's do nothing and return null
+        } catch (CoreException e) {
+            // Let's do nothing and return null
+        }
+        return null;
+    }
+
 }

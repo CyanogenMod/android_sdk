@@ -40,7 +40,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -55,7 +54,6 @@ final class ProjectCheckPage extends ExportWizardPage {
     private final static String IMG_WARNING = "warning.png"; //$NON-NLS-1$
 
     private final ExportWizard mWizard;
-    private Display mDisplay;
     private Image mError;
     private Image mWarning;
     private boolean mHasMessage = false;
@@ -76,7 +74,6 @@ final class ProjectCheckPage extends ExportWizardPage {
     public void createControl(Composite parent) {
         mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(),
                 new NonLibraryProjectOnlyFilter());
-        mDisplay = parent.getDisplay();
 
         GridLayout gl = null;
         GridData gd = null;
@@ -170,26 +167,11 @@ final class ProjectCheckPage extends ExportWizardPage {
                     }
 
                     // check the project output
-                    IFolder outputIFolder = BaseProjectHelper.getOutputFolder(project);
-                    if (outputIFolder != null) {
-                        String outputOsPath =  outputIFolder.getLocation().toOSString();
-                        String apkFilePath =  outputOsPath + File.separator + project.getName() +
-                                AdtConstants.DOT_ANDROID_PACKAGE;
-
-                        File f = new File(apkFilePath);
-                        try {
-                            f.createNewFile();
-                        } catch (IOException e) {
-                            addError(mErrorComposite,
-                                     String.format("Could not open %1$s/%2$s/%1$s%3$s for writing!",
-                                                   project.getName(), outputIFolder.getName(),
-                                                   AdtConstants.DOT_ANDROID_PACKAGE));
-                        }
-                    } else {
+                    IFolder outputIFolder = BaseProjectHelper.getJavaOutputFolder(project);
+                    if (outputIFolder == null) {
                         addError(mErrorComposite,
                                 "Unable to get the output folder of the project!");
                     }
-
 
                     // project is an android project, we check the debuggable attribute.
                     ManifestData manifestData = AndroidManifestHelper.parseForData(project);

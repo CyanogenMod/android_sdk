@@ -136,6 +136,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     private static final String BIN_DIRECTORY =
         SdkConstants.FD_OUTPUT + AdtConstants.WS_SEP;
+    private static final String BIN_CLASSES_DIRECTORY =
+        SdkConstants.FD_OUTPUT + AdtConstants.WS_SEP +
+        SdkConstants.FD_CLASSES_OUTPUT + AdtConstants.WS_SEP;
     private static final String RES_DIRECTORY =
         SdkConstants.FD_RESOURCES + AdtConstants.WS_SEP;
     private static final String ASSETS_DIRECTORY =
@@ -190,7 +193,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private static final String STRING_HELLO_WORLD = "hello";       //$NON-NLS-1$
 
     private static final String[] DEFAULT_DIRECTORIES = new String[] {
-            BIN_DIRECTORY, RES_DIRECTORY, ASSETS_DIRECTORY };
+            BIN_DIRECTORY, BIN_CLASSES_DIRECTORY, RES_DIRECTORY, ASSETS_DIRECTORY };
     private static final String[] RES_DIRECTORIES = new String[] {
             DRAWABLE_DIRECTORY, LAYOUT_DIRECTORY, VALUES_DIRECTORY };
     private static final String[] RES_DENSITY_ENABLED_DIRECTORIES = new String[] {
@@ -706,7 +709,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     monitor);
 
             // Set output location
-            javaProject.setOutputLocation(project.getFolder(BIN_DIRECTORY).getFullPath(),
+            javaProject.setOutputLocation(project.getFolder(BIN_CLASSES_DIRECTORY).getFullPath(),
                     monitor);
         }
 

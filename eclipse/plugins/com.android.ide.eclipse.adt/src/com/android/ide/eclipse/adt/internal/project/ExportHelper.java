@@ -34,18 +34,15 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.xml.AndroidManifest;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -160,7 +157,7 @@ public final class ExportHelper {
 
             if (runProguard) {
                 // the output of the main project (and any java-only project dependency)
-                String[] projectOutputs = helper.getProjectOutputs();
+                String[] projectOutputs = helper.getProjectJavaOutputs();
 
                 // create a jar from the output of these projects
                 File inputJar = File.createTempFile(TEMP_PREFIX, AdtConstants.DOT_JAR);
@@ -268,64 +265,44 @@ public final class ExportHelper {
     public static void exportUnsignedReleaseApk(final IProject project) {
         Shell shell = Display.getCurrent().getActiveShell();
 
-        // get the java project to get the output directory
-        IFolder outputFolder = BaseProjectHelper.getOutputFolder(project);
-        if (outputFolder != null) {
-            IPath binLocation = outputFolder.getLocation();
+        // create a default file name for the apk.
+        String fileName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
 
-            // make the full path to the package
-            String fileName = project.getName() + AdtConstants.DOT_ANDROID_PACKAGE;
+        // Pop up the file save window to get the file location
+        FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
 
-            File file = new File(binLocation.toOSString() + File.separator + fileName);
+        fileDialog.setText("Export Project");
+        fileDialog.setFileName(fileName);
 
-            if (file.exists() == false || file.isFile() == false) {
-                MessageDialog.openError(Display.getCurrent().getActiveShell(),
-                        "Android IDE Plug-in",
-                        String.format("Failed to export %1$s: %2$s doesn't exist!",
-                                project.getName(), file.getPath()));
-                return;
-            }
+        final String saveLocation = fileDialog.open();
+        if (saveLocation != null) {
+            new Job("Android Release Export") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    try {
+                        exportReleaseApk(project,
+                                new File(saveLocation),
+                                null, //key
+                                null, //certificate
+                                monitor);
 
-            // ok now pop up the file save window
-            FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
+                        // this is unsigned export. Let's tell the developers to run zip align
+                        AdtPlugin.displayWarning("Android IDE Plug-in", String.format(
+                                "An unsigned package of the application was saved at\n%1$s\n\n" +
+                                "Before publishing the application you will need to:\n" +
+                                "- Sign the application with your release key,\n" +
+                                "- run zipalign on the signed package. ZipAlign is located in <SDK>/tools/\n\n" +
+                                "Aligning applications allows Android to use application resources\n" +
+                                "more efficiently.", saveLocation));
 
-            fileDialog.setText("Export Project");
-            fileDialog.setFileName(fileName);
-
-            final String saveLocation = fileDialog.open();
-            if (saveLocation != null) {
-                new Job("Android Release Export") {
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        try {
-                            exportReleaseApk(project,
-                                    new File(saveLocation),
-                                    null, //key
-                                    null, //certificate
-                                    monitor);
-
-                            // this is unsigned export. Let's tell the developers to run zip align
-                            AdtPlugin.displayWarning("Android IDE Plug-in", String.format(
-                                    "An unsigned package of the application was saved at\n%1$s\n\n" +
-                                    "Before publishing the application you will need to:\n" +
-                                    "- Sign the application with your release key,\n" +
-                                    "- run zipalign on the signed package. ZipAlign is located in <SDK>/tools/\n\n" +
-                                    "Aligning applications allows Android to use application resources\n" +
-                                    "more efficiently.", saveLocation));
-
-                            return Status.OK_STATUS;
-                        } catch (CoreException e) {
-                            AdtPlugin.displayError("Android IDE Plug-in", String.format(
-                                    "Error exporting application:\n\n%1$s", e.getMessage()));
-                            return e.getStatus();
-                        }
+                        return Status.OK_STATUS;
+                    } catch (CoreException e) {
+                        AdtPlugin.displayError("Android IDE Plug-in", String.format(
+                                "Error exporting application:\n\n%1$s", e.getMessage()));
+                        return e.getStatus();
                     }
-                }.schedule();
-            }
-        } else {
-            MessageDialog.openError(shell, "Android IDE Plug-in",
-                    String.format("Failed to export %1$s: Could not get project output location",
-                            project.getName()));
+                }
+            }.schedule();
         }
     }
 
