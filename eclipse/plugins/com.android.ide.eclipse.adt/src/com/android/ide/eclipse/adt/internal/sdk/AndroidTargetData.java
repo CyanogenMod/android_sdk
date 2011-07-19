@@ -383,4 +383,10 @@ public class AndroidTargetData {
         mAttributeValues.remove(name);
         mAttributeValues.put(name, values);
     }
+
+    public void dispose() {
+        if (mLayoutLibrary != null) {
+            mLayoutLibrary.dispose();
+        }
+    }
 }
