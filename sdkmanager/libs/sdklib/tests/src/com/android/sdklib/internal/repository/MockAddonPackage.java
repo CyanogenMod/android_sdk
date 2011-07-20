@@ -49,6 +49,16 @@ public class MockAddonPackage extends AddonPackage {
         super(new MockAddonTarget(name, basePlatform.getTarget(), revision), null /*props*/);
     }
 
+    public MockAddonPackage(
+            SdkSource source,
+            String name,
+            MockPlatformPackage basePlatform,
+            int revision) {
+        super(source,
+              new MockAddonTarget(name, basePlatform.getTarget(), revision),
+              null /*props*/);
+    }
+
     /**
      * A mock AddonTarget.
      * This reimplements the minimum needed from the interface for our limited testing needs.

@@ -16,6 +16,8 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
@@ -75,7 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.Map.Entry;
 
 /**
@@ -909,7 +910,8 @@ public class PackagesPage extends UpdaterPage
                 // from having stale entries.
                 synchronized(mLogic.mAllPkgItems) {
                     for (Archive a : archives) {
-                        for (Iterator<PkgItem> it = mLogic.mAllPkgItems.iterator(); it.hasNext(); ) {
+                        for (Iterator<PkgItem> it = mLogic.mAllPkgItems.iterator();
+                                 it.hasNext(); ) {
                             PkgItem pi = it.next();
                             if (pi.hasArchive(a)) {
                                 it.remove();
@@ -1240,23 +1242,20 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
-    static class PkgCategory {
-        private final int mKey;
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    static abstract class PkgCategory {
+        private final Object mKey;
         private final Object mIconRef;
         private final List<PkgItem> mItems = new ArrayList<PkgItem>();
         private String mLabel;
 
-        // When sorting by Source, key is the hash of the source's name.
-        // When storing by API, key is the API level (>=1). Tools and extra have the
-        // special values.
-
-        public PkgCategory(int key, String label, Object iconRef) {
+        public PkgCategory(Object key, String label, Object iconRef) {
             mKey = key;
             mLabel = label;
             mIconRef = iconRef;
         }
 
-        public int getKey() {
+        public Object getKey() {
             return mKey;
         }
 
@@ -1280,28 +1279,30 @@ public class PackagesPage extends UpdaterPage
         public String toString() {
             return String.format("%s <key=%08x, label=%s, #items=%d>",
                     this.getClass().getSimpleName(),
-                    mKey,
+                    mKey == null ? "null" : mKey.toString(),
                     mLabel,
                     mItems.size());
         }
 
-        /** {@link PkgCategory} are equal if their internal key is the same. */
+        /** {@link PkgCategory}s are equal if their internal keys are equal. */
         @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + mKey;
+            result = prime * result + ((mKey == null) ? 0 : mKey.hashCode());
             return result;
         }
 
-        /** {@link PkgCategory} are equal if their internal key is the same. */
+        /** {@link PkgCategory}s are equal if their internal keys are equal. */
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
             PkgCategory other = (PkgCategory) obj;
-            if (mKey != other.mKey) return false;
+            if (mKey == null) {
+                if (other.mKey != null) return false;
+            } else if (!mKey.equals(other.mKey)) return false;
             return true;
         }
     }
@@ -1337,7 +1338,7 @@ public class PackagesPage extends UpdaterPage
         }
 
         public String getApiLabel() {
-            int api = getKey();
+            int api = ((Integer) getKey()).intValue();
             if (api == KEY_TOOLS) {
                 return "TOOLS"; //$NON-NLS-1$ for internal use only
             } else if (api == KEY_EXTRA) {
@@ -1351,7 +1352,7 @@ public class PackagesPage extends UpdaterPage
         public String getLabel() {
             String label = super.getLabel();
             if (label == null) {
-                int key = getKey();
+                int key = ((Integer) getKey()).intValue();
 
                 if (key == KEY_TOOLS) {
                     label = "Tools";
@@ -1384,6 +1385,37 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
+    private static class PkgSourceCategory extends PkgCategory {
+
+        /**
+         * A special {@link SdkSource} object that represents the locally installed
+         * items, or more exactly a lack of remote source. Value is {@code null}.
+         */
+        public final static SdkSource UNKNOWN_SOURCE = null;
+        private final SdkSource mSource;
+
+        public PkgSourceCategory(SdkSource source, UpdaterData updaterData) {
+            super(
+                source, // the source is the key and it can be null
+                source == UNKNOWN_SOURCE ? "Local Packages" : source.toString(),
+                source == UNKNOWN_SOURCE ?
+                        updaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED) :
+                            source);
+            mSource = source;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s <source=%s, #items=%d>",
+                    this.getClass().getSimpleName(),
+                    mSource == UNKNOWN_SOURCE ? "Local" : mSource.toString(),
+                    getItems().size());
+        }
+
+        public SdkSource getSource() {
+            return mSource;
+        }
+    }
 
     // --- Implementation of ISdkChangeListener ---
 
@@ -1424,14 +1456,66 @@ public class PackagesPage extends UpdaterPage
         }
 
         /**
-         * Recompute the tree by sorting all the packages by API.
-         * This does an update in-place of the mApiCategories list so that the table
-         * can preserve its state (checked / expanded / selected) properly.
+         * Private interface used by {@link PackagesPageLogic#sort(ISortOperation)}.
+         * The sort() method only focuses on the incremental update part of the sort.
+         * The operation interface tells what to sort, how to extract keys from items
+         * to bucket them in categeories, how to create categories, what categories are
+         * by default and finally how to sort these categories.
          */
-        void sortByApiLevel() {
+        private interface ISortOperation {
+            /** The list of categories to update in-place. */
+            List<PkgCategory> getCategories();
+
+            /** Create all the default categories (e.g. local installed packages, tools. etc.) */
+            void addDefaultCategories(
+                    List<PkgCategory> currentCategories,
+                    Map<Object, PkgCategory> categoryKeyMap,
+                    Set<Object> unusedCategoryKey,
+                    ImageFactory imgFactory);
+
+            /** Extracts the category key from a given item. */
+            public Object getCategoryKey(PkgItem item);
+
+            /** Creates a new category object for the given key. */
+            PkgCategory createCategory(Object catKey, ImageFactory imgFactory);
+
+            /** Process a new item and merge it into the existing categories. */
+            boolean mergeNewItem(
+                    PkgItem newItem,
+                    PkgCategory cat,
+                    List<PkgCategory> cats,
+                    Set<Package> unusedPackages);
+
+            /**
+             * Post process items/categories after an item from mAllPkgItems as been filtered.
+             * Used by the API sort to see if we can infer the category name from a platform
+             * package when we don't have this info in the package manager.
+             */
+            void postProcessItem(Object catKey, PkgCategory category, PkgItem item);
+
+            /** Final step, sort the list of categories. */
+            void sortCategoryList(List<PkgCategory> categoryList);
+        }
+
+        /**
+         * Recompute the tree by sorting all the {@link PkgItem}s into the category buckets.
+         * This does an update in-place of the mCurrentCategories list so that the table
+         * can preserve its state (checked / expanded / selected) properly.
+         * <p/>
+         * Since this is shared between both the per-API and the per-source sort, care must
+         * be taken to either not change the displayed PkgItem or make the change compatible
+         * with both displays. Otherwise it looks odd when the displayed items change
+         * when changing the sorting mode in the UI.
+         * FIXME currently there's an issue about that wrt items that have available updates.
+         *
+         * @param op The actual details of the sort, which allows us to
+         *   reuse the same method for both sorting by API or by SdkSource.
+         * @see ISortOperation
+         */
+        private void sort(ISortOperation op) {
             ImageFactory imgFactory = mUpdaterData.getImageFactory();
 
-            mCurrentCategories = mApiCategories;
+            List<PkgCategory> cats = mCurrentCategories = op.getCategories();
 
             // We'll do an in-place update: first make a map of existing categories and
             // whatever pkg items they contain. Then prepare the new categories we want
@@ -1443,46 +1527,24 @@ public class PackagesPage extends UpdaterPage
             // Keep a map of the initial state so that we can detect which items or categories are
             // no longer being used, so that we can remove them at the end of the in-place update.
 
-            final Map<Integer, PkgApiCategory> categoryKeyMap = new HashMap<Integer, PkgApiCategory>();
-            final Set<Integer> unusedCategoryKey = new HashSet<Integer>();
-            final Set<Package> unusedPackages = new HashSet<Package>();
+            final Map<Object, PkgCategory> categoryKeyMap = new HashMap<Object, PkgCategory>();
+            final Set<Object> unusedCategoryKey = new HashSet<Object>();
+            final Set<Package> unusedPackages =   new HashSet<Package>();
 
             // Get existing categories and packages
-            for (PkgCategory cat : mApiCategories) {
-                if (cat instanceof PkgApiCategory) {
-                    PkgApiCategory acat = (PkgApiCategory) cat;
-                    categoryKeyMap.put(acat.getKey(), acat);
-                    unusedCategoryKey.add(acat.getKey());
+            for (PkgCategory cat : cats) {
+                categoryKeyMap.put(cat.getKey(), cat);
+                unusedCategoryKey.add(cat.getKey());
 
-                    for (PkgItem pi : cat.getItems()) {
-                        unusedPackages.add(pi.getMainPackage());
-                        if (pi.hasUpdatePkg()) {
-                            unusedPackages.add(pi.getUpdatePkg());
-                        }
+                for (PkgItem pi : cat.getItems()) {
+                    unusedPackages.add(pi.getMainPackage());
+                    if (pi.hasUpdatePkg()) {
+                        unusedPackages.add(pi.getUpdatePkg());
                     }
                 }
             }
 
-            // Always add the tools & extras categories, even if empty (unlikely anyway)
-            if (!unusedCategoryKey.contains(PkgApiCategory.KEY_TOOLS)) {
-                PkgApiCategory acat = new PkgApiCategory(
-                        PkgApiCategory.KEY_TOOLS,
-                        null,
-                        imgFactory.getImageByName(ICON_CAT_OTHER));
-                mApiCategories.add(acat);
-                categoryKeyMap.put(acat.getKey(), acat);
-                unusedCategoryKey.add(acat.getKey());
-            }
-
-            if (!unusedCategoryKey.contains(PkgApiCategory.KEY_EXTRA)) {
-                PkgApiCategory acat = new PkgApiCategory(
-                        PkgApiCategory.KEY_EXTRA,
-                        null,
-                        imgFactory.getImageByName(ICON_CAT_OTHER));
-                mApiCategories.add(acat);
-                categoryKeyMap.put(acat.getKey(), acat);
-                unusedCategoryKey.add(acat.getKey());
-            }
+            op.addDefaultCategories(cats, categoryKeyMap, unusedCategoryKey, imgFactory);
 
             // Go through the new package item list
             synchronized (mAllPkgItems) {
@@ -1493,88 +1555,23 @@ public class PackagesPage extends UpdaterPage
                         continue;
                     }
 
-                    // Get the category for this item.
-                    int apiKey = newItem.getApi();
-
-                    if (apiKey < 1) {
-                        Package p = newItem.getMainPackage();
-                        if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
-                            apiKey = PkgApiCategory.KEY_TOOLS;
-                        } else {
-                            apiKey = PkgApiCategory.KEY_EXTRA;
-                        }
-                    }
-
-                    PkgApiCategory cat = categoryKeyMap.get(apiKey);
+                    Object catKey = op.getCategoryKey(newItem);
+                    PkgCategory cat = categoryKeyMap.get(catKey);
 
                     if (cat == null) {
-                        // This is a new category. Create it and add it to the map.
-
-                        // We need a label for the category.
-                        // If we have an API level, try to get the info from the SDK Manager.
-                        // If we don't (e.g. when installing a new platform that isn't yet available
-                        // locally in the SDK Manager), it's OK we'll try to find the first platform
-                        // package available.
-                        String platformName = null;
-                        if (apiKey != -1) {
-                            for (IAndroidTarget target : mUpdaterData.getSdkManager().getTargets()) {
-                                if (target.isPlatform() && target.getVersion().getApiLevel() == apiKey) {
-                                    platformName = target.getVersionName();
-                                    break;
-                                }
-                            }
-                        }
-
-                        cat = new PkgApiCategory(
-                                apiKey,
-                                platformName,
-                                imgFactory.getImageByName(ICON_CAT_PLATFORM));
-                        mApiCategories.add(0, cat);
+                        // This is a new category. Create it and add it to the list.
+                        cat = op.createCategory(catKey, imgFactory);
+                        // It should not matter where we add to the list since we'll sort
+                        // the categories at the end.
+                        cats.add(cat);
                         categoryKeyMap.put(cat.getKey(), cat);
                     } else {
                         // Remove the category key from the unused list.
-                        unusedCategoryKey.remove(apiKey);
+                        unusedCategoryKey.remove(catKey);
                     }
 
-                    // Add the item to the category or merge as an update of an existing package
-                    boolean found = false;
-                    if (newItem.getState() == PkgState.NEW) {
-                        for (PkgItem pi : cat.getItems()) {
-                            Package p = newItem.getMainPackage();
-                            if (pi.isSameItemAs(newItem) ||
-                                    pi.isSameMainPackageAs(p)) {
-                                // It's the same item or
-                                // it's not exactly the same item but the main package is the same.
-                                unusedPackages.remove(pi.getMainPackage());
-                                found = true;
-
-                            } else if (pi.mergeUpdate(p)) {
-                                // The new package is an update for the existing package.
-                                unusedPackages.remove(pi.getMainPackage());
-                                unusedPackages.remove(pi.getUpdatePkg());
-                                found = true;
-                            }
-                            if (found) {
-                                break;
-                            }
-                        }
-                    } else {
-                        // We do not try to merge installed packages. This prevents a bug in
-                        // the edge case where a new update might be present in the package
-                        // list before the installed item it would update. If we were trying
-                        // to merge the installed item into the new package, the installed item
-                        // would most likely be hidden because it would have a lesser revision.
-                        // This case is not supposed to happen but if it does, we 'd better have
-                        // a dup than a missing displayed package.
-
-                        for (PkgItem pi : cat.getItems()) {
-                            if (pi.isSameItemAs(newItem)) {
-                                unusedPackages.remove(newItem.getMainPackage());
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
+                    // Check whether the item is already present or merge it if it's an update
+                    boolean found = op.mergeNewItem(newItem, cat, cats, unusedPackages);
 
                     if (!found) {
                         cat.getItems().add(newItem);
@@ -1582,20 +1579,12 @@ public class PackagesPage extends UpdaterPage
                         unusedPackages.remove(newItem.getUpdatePkg());
                     }
 
-                    if (apiKey != -1 && cat.getPlatformName() == null) {
-                        // Check whether we can get the actual platform version name (e.g. "1.5")
-                        // from the first Platform package we find in this category.
-                        Package p = newItem.getMainPackage();
-                        if (p instanceof PlatformPackage) {
-                            String platformName = ((PlatformPackage) p).getVersionName();
-                            cat.setPlatformName(platformName);
-                        }
-                    }
+                    op.postProcessItem(catKey, cat, newItem);
                 }
             }
 
             // Now go through all the remaining categories used for the tree and clear unused items.
-            for (Iterator<PkgCategory> iterCat = mApiCategories.iterator(); iterCat.hasNext(); ) {
+            for (Iterator<PkgCategory> iterCat = cats.iterator(); iterCat.hasNext(); ) {
                 PkgCategory cat = iterCat.next();
 
                 // Remove any unused categories.
@@ -1610,7 +1599,8 @@ public class PackagesPage extends UpdaterPage
 
                     if (unusedPackages.contains(item.getMainPackage())) {
                         iterItem.remove();
-                    } else if (item.hasUpdatePkg() && unusedPackages.contains(item.getUpdatePkg())) {
+                    } else if (item.hasUpdatePkg() &&
+                            unusedPackages.contains(item.getUpdatePkg())) {
                         item.removeUpdate();
                     }
                 }
@@ -1619,76 +1609,282 @@ public class PackagesPage extends UpdaterPage
                 Collections.sort(cat.getItems());
             }
 
-            // Sort the categories list.
-            Collections.sort(mApiCategories, new Comparator<PkgCategory>() {
-                public int compare(PkgCategory cat1, PkgCategory cat2) {
+            op.sortCategoryList(cats);
+        }
+
+
+        /**
+         * Recompute the tree by sorting all the packages by API.
+         */
+        void sortByApiLevel() {
+            sort(new ISortOperation() {
+                public List<PkgCategory> getCategories() {
+                    return mApiCategories;
+                }
+
+                public void addDefaultCategories(
+                        List<PkgCategory> currentCategories,
+                        Map<Object, PkgCategory> categoryKeyMap,
+                        Set<Object> unusedCategoryKey,
+                        ImageFactory imgFactory) {
+                    // Always add the tools & extras categories, even if empty (unlikely anyway)
+                    if (!unusedCategoryKey.contains(PkgApiCategory.KEY_TOOLS)) {
+                        PkgApiCategory acat = new PkgApiCategory(
+                                PkgApiCategory.KEY_TOOLS,
+                                null,
+                                imgFactory.getImageByName(ICON_CAT_OTHER));
+                        currentCategories.add(acat);
+                        categoryKeyMap.put(acat.getKey(), acat);
+                        unusedCategoryKey.add(acat.getKey());
+                    }
+
+                    if (!unusedCategoryKey.contains(PkgApiCategory.KEY_EXTRA)) {
+                        PkgApiCategory acat = new PkgApiCategory(
+                                PkgApiCategory.KEY_EXTRA,
+                                null,
+                                imgFactory.getImageByName(ICON_CAT_OTHER));
+                        currentCategories.add(acat);
+                        categoryKeyMap.put(acat.getKey(), acat);
+                        unusedCategoryKey.add(acat.getKey());
+                    }
+                }
+
+                public Object getCategoryKey(PkgItem item) {
+                    // Get the category for this item.
+                    int apiKey = item.getApi();
+
+                    if (apiKey < 1) {
+                        Package p = item.getMainPackage();
+                        if (p instanceof ToolPackage || p instanceof PlatformToolPackage) {
+                            apiKey = PkgApiCategory.KEY_TOOLS;
+                        } else {
+                            apiKey = PkgApiCategory.KEY_EXTRA;
+                        }
+                    }
+                    return apiKey;
+                }
+
+                public PkgCategory createCategory(
+                        Object catKey,
+                        ImageFactory imgFactory) {
+
+                    PkgCategory cat = null;
+
+                    assert catKey instanceof Integer;
+                    int apiKey = ((Integer) catKey).intValue();
+
+                    // We need a label for the category.
+                    // If we have an API level, try to get the info from the SDK Manager.
+                    // If we don't (e.g. when installing a new platform that isn't yet available
+                    // locally in the SDK Manager), it's OK we'll try to find the first platform
+                    // package available.
+                    String platformName = null;
+                    if (apiKey >= 1 && apiKey != PkgApiCategory.KEY_TOOLS) {
+                        for (IAndroidTarget target :
+                                mUpdaterData.getSdkManager().getTargets()) {
+                            if (target.isPlatform() &&
+                                    target.getVersion().getApiLevel() == apiKey) {
+                                platformName = target.getVersionName();
+                                break;
+                            }
+                        }
+                    }
+
+                    cat = new PkgApiCategory(
+                            apiKey,
+                            platformName,
+                            imgFactory.getImageByName(ICON_CAT_PLATFORM));
+
+                    return cat;
+                }
+
+                public boolean mergeNewItem(
+                        PkgItem newItem,
+                        PkgCategory cat,
+                        List<PkgCategory> cats,
+                        Set<Package> unusedPackages) {
+
+                    // Behavior for a merge when sorting by API:
+                    // - New items can only be merged with their own category.
+                    // - Normally we expect installed items to be processed first (before new
+                    //   item which will update them), by design (since the local list is always
+                    //   processed first.) If for any reason this isn't the case, we'll show a
+                    //   duplicate right now. That means if we're processing an installed item,
+                    //   we won't try to merge it.
+
+                    for (PkgItem pi : cat.getItems()) {
+                        Package p = newItem.getMainPackage();
+                        if (pi.isSameItemAs(newItem) || pi.isSameMainPackageAs(p)) {
+                            // It's the same item or
+                            // it's not exactly the same item but the main package
+                            // is the same.
+                            unusedPackages.remove(pi.getMainPackage());
+                            return true;
+                        } else if (newItem.getState() == PkgState.NEW && pi.mergeUpdate(p)) {
+                            // The new package is an update for the existing package.
+                            unusedPackages.remove(pi.getMainPackage());
+                            unusedPackages.remove(pi.getUpdatePkg());
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                public void postProcessItem(
+                        Object catKey,
+                        PkgCategory category,
+                        PkgItem item) {
+                    assert catKey instanceof Integer;
+                    int apiKey = ((Integer) catKey).intValue();
+
+                    assert category instanceof PkgApiCategory;
+                    PkgApiCategory cat = (PkgApiCategory) category;
+
+                    if (apiKey != -1 && cat.getPlatformName() == null) {
+                        // Check whether we can get the actual platform version name (e.g. "1.5")
+                        // from the first Platform package we find in this category.
+                        Package p = item.getMainPackage();
+                        if (p instanceof PlatformPackage) {
+                            String platformName = ((PlatformPackage) p).getVersionName();
+                            cat.setPlatformName(platformName);
+                        }
+                    }
+                }
+
+                public void sortCategoryList(List<PkgCategory> categoryList) {
+                    // Sort the categories list.
                     // We always want categories in order tools..platforms..extras.
                     // For platform, we compare in descending order (o2-o1).
-                    return cat2.getKey() - cat1.getKey();
+                    // This order is achieved by having the category keys ordered as
+                    // needed for the sort to just do what we expect.
+
+                    Collections.sort(categoryList, new Comparator<PkgCategory>() {
+                        public int compare(PkgCategory cat1, PkgCategory cat2) {
+                            assert cat1 instanceof PkgApiCategory;
+                            assert cat2 instanceof PkgApiCategory;
+                            int api1 = ((Integer) cat1.getKey()).intValue();
+                            int api2 = ((Integer) cat2.getKey()).intValue();
+                            return api2 - api1;
+                        }
+                    });
                 }
             });
         }
 
         /**
          * Recompute the tree by sorting all packages by source.
+         *
+         * Behavior for a merge when sorting by source:
+         * - Items are grouped under their source even if installed.
+         *   The 'local' source is only for installed items with no source.
          */
         void sortBySource() {
+            sort(new ISortOperation() {
+                public List<PkgCategory> getCategories() {
+                    return mSourceCategories;
+                }
 
-            mCurrentCategories = mSourceCategories;
+                public void addDefaultCategories(
+                        List<PkgCategory> currentCategories,
+                        Map<Object, PkgCategory> categoryKeyMap,
+                        Set<Object> unusedCategoryKey,
+                        ImageFactory imgFactory) {
 
-            Map<SdkSource, List<PkgItem>> sourceMap = new HashMap<SdkSource, List<PkgItem>>();
-
-            synchronized(mAllPkgItems) {
-                for (PkgItem item : mAllPkgItems) {
-                    if (keepItem(item)) {
-                        SdkSource source = item.getSource();
-                        List<PkgItem> list = sourceMap.get(source);
-                        if (list == null) {
-                            list = new ArrayList<PkgItem>();
-                            sourceMap.put(source, list);
-                        }
-                        list.add(item);
+                    // Always add the local categories, even if empty (unlikely anyway)
+                    if (!unusedCategoryKey.contains(PkgSourceCategory.UNKNOWN_SOURCE)) {
+                        PkgSourceCategory cat = new PkgSourceCategory(
+                                PkgSourceCategory.UNKNOWN_SOURCE,
+                                mUpdaterData);
+                        currentCategories.add(cat);
+                        categoryKeyMap.put(cat.getKey(), cat);
+                        unusedCategoryKey.add(cat.getKey());
                     }
                 }
-            }
 
-            // Sort the sources so that we can create categories sorted the same way
-            // (the categories don't link to the sources, so we can't just sort the categories.)
-            Set<SdkSource> sources = new TreeSet<SdkSource>(new Comparator<SdkSource>() {
-                public int compare(SdkSource o1, SdkSource o2) {
-                    if (o1 == o2) {
-                        return 0;
-                    } else if (o1 == null && o2 != null) {
-                        return -1;
-                    } else if (o1 != null && o2 == null) {
-                        return 1;
+                public Object getCategoryKey(PkgItem item) {
+                    return item.getSource();
+                }
+
+                public PkgCategory createCategory(
+                        Object catKey,
+                        ImageFactory imgFactory) {
+
+                    assert catKey instanceof SdkSource;
+
+                    PkgCategory cat = new PkgSourceCategory(
+                            (SdkSource) catKey,
+                            mUpdaterData);
+
+                    return cat;
+                }
+
+                public boolean mergeNewItem(
+                        PkgItem newItem,
+                        PkgCategory cat,
+                        List<PkgCategory> cats,
+                        Set<Package> unusedPackages) {
+
+                    for (PkgItem pi : cat.getItems()) {
+                        Package p = newItem.getMainPackage();
+                        if (pi.isSameItemAs(newItem) || pi.isSameMainPackageAs(p)) {
+                            // It's the same item or
+                            // it's not exactly the same item but the main package
+                            // is the same.
+                            unusedPackages.remove(pi.getMainPackage());
+                            return true;
+                        } else if (newItem.getState() == PkgState.NEW && pi.mergeUpdate(p)) {
+                            // The new package is an update for the existing package.
+                            unusedPackages.remove(pi.getMainPackage());
+                            unusedPackages.remove(pi.getUpdatePkg());
+                            return true;
+                        }
                     }
-                    assert o1 != null;
-                    return o1.toString().compareTo(o2.toString());
+
+                    return false;
+                }
+
+                public void postProcessItem(
+                        Object catKey,
+                        PkgCategory category,
+                        PkgItem item) {
+                    // pass
+                }
+
+                public void sortCategoryList(List<PkgCategory> categoryList) {
+
+                    // Sort the sources in ascending source name order,
+                    // with the local packages always first.
+
+                    Collections.sort(categoryList, new Comparator<PkgCategory>() {
+                        public int compare(PkgCategory cat1, PkgCategory cat2) {
+                            assert cat1 instanceof PkgSourceCategory;
+                            assert cat2 instanceof PkgSourceCategory;
+
+                            SdkSource src1 = ((PkgSourceCategory) cat1).getSource();
+                            SdkSource src2 = ((PkgSourceCategory) cat2).getSource();
+
+                            if (src1 == src2) {
+                                return 0;
+                            } else if (src1 == PkgSourceCategory.UNKNOWN_SOURCE) {
+                                return -1;
+                            } else if (src2 == PkgSourceCategory.UNKNOWN_SOURCE) {
+                                return 1;
+                            }
+                            assert src1 != null; // true because LOCAL_SOURCE==null
+                            assert src2 != null;
+                            return src1.toString().compareTo(src2.toString());
+                        }
+                    });
                 }
             });
-            sources.addAll(sourceMap.keySet());
-
-            for (SdkSource source : sources) {
-                Object key = source != null ? source : "Locally Installed Packages";
-                Object iconRef = source != null ? source :
-                            mUpdaterData.getImageFactory().getImageByName(ICON_PKG_INSTALLED);
-
-                PkgCategory cat = new PkgCategory(
-                        key.hashCode(),
-                        key.toString(),
-                        iconRef);
-
-                for (PkgItem item : sourceMap.get(source)) {
-                    if (item.getSource() == source) {
-                        cat.getItems().add(item);
-                    }
-                }
-
-                mSourceCategories.add(cat);
-            }
         }
 
+        /**
+         * Used by {@link #sort(ISortOperation)} to determine if a given item from
+         * the input {@link #mAllPkgItems} should be displayed or not. This is what
+         * allows us to filter items in our out of the tree displayed depending on
+         * user flags, without actually reloading anything.
+         */
         abstract boolean keepItem(PkgItem item);
     }
 

@@ -35,8 +35,18 @@ public class MockToolPackage extends ToolPackage {
      * By design, this creates a package with one and only one archive.
      */
     public MockToolPackage(int revision, int min_platform_tools_rev) {
+        this(null /*source*/, revision, min_platform_tools_rev);
+    }
+
+    /**
+     * Creates a {@link MockToolPackage} with the given revision and hardcoded defaults
+     * for everything else.
+     * <p/>
+     * By design, this creates a package with one and only one archive.
+     */
+    public MockToolPackage(SdkSource source, int revision, int min_platform_tools_rev) {
         super(
-            null, // source,
+            source, // source,
             createProps(min_platform_tools_rev), // props,
             revision,
             null, // license,

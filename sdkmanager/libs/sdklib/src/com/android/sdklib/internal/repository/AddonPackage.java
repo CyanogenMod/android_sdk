@@ -114,7 +114,12 @@ public class AddonPackage extends Package
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
     protected AddonPackage(IAndroidTarget target, Properties props) {
-        super(  null,                       //source
+        this(null /*source*/, target, props);
+    }
+
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected AddonPackage(SdkSource source, IAndroidTarget target, Properties props) {
+        super(  source,                     //source
                 props,                      //properties
                 target.getRevision(),       //revision
                 null,                       //license
