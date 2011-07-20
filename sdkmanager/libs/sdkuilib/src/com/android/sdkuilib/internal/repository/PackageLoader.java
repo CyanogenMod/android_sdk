@@ -442,6 +442,10 @@ class PackageLoader {
             return mState;
         }
 
+        public void setState(PkgState state) {
+            mState = state;
+        }
+
         public SdkSource getSource() {
             return mMainPkg.getParentSource();
         }
