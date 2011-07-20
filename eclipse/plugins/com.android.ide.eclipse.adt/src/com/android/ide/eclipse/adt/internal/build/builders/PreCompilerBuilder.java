@@ -633,8 +633,12 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
                 }
             }
+            String libPackages = null;
+            if (libJavaPackages != null) {
+                libPackages = libJavaPackages.toString();
+            }
             execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                    mainPackageFolder, libResFolders, libJavaPackages.toString());
+                    mainPackageFolder, libResFolders, libPackages);
         }
     }
 
@@ -651,13 +655,13 @@ public class PreCompilerBuilder extends BaseBuilder {
      * If <var>customJavaPackage</var> is not null, this must match the new destination triggered
      * by its value.
      * @param libResFolders the list of res folders for the library.
-     * @param customJavaPackage an optional javapackage to replace the main project java package.
+     * @param libraryPackages an optional list of javapackages to replace the main project java package.
      * can be null.
      * @throws AbortBuildException
      */
     private void execAapt(IProject project, IAndroidTarget projectTarget, String osOutputPath,
             String osResPath, String osManifestPath, IFolder packageFolder,
-            ArrayList<IFolder> libResFolders, String customJavaPackage) throws AbortBuildException {
+            ArrayList<IFolder> libResFolders, String libraryPackages) throws AbortBuildException {
         // We actually need to delete the manifest.java as it may become empty and
         // in this case aapt doesn't generate an empty one, but instead doesn't
         // touch it.
@@ -677,9 +681,9 @@ public class PreCompilerBuilder extends BaseBuilder {
             array.add("--auto-add-overlay"); //$NON-NLS-1$
         }
 
-        if (customJavaPackage != null) {
+        if (libraryPackages != null) {
             array.add("--extra-packages"); //$NON-NLS-1$
-            array.add(customJavaPackage);
+            array.add(libraryPackages);
         }
 
         array.add("-J"); //$NON-NLS-1$
