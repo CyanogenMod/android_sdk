@@ -91,6 +91,8 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                     // before the postInstallHook is called.
 
                     if (sdk != null) {
+                        sdk.unloadTargetData(true /*preventReload*/);
+
                         DexWrapper dx = sdk.getDexWrapper();
                         dx.unload();
                     }
