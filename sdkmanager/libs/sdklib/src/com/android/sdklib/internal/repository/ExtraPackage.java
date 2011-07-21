@@ -29,6 +29,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -563,5 +564,51 @@ public class ExtraPackage extends MinToolsPackage
         }
 
         return null;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + mMinApiLevel;
+        result = prime * result + ((mPath == null) ? 0 : mPath.hashCode());
+        result = prime * result + Arrays.hashCode(mProjectFiles);
+        result = prime * result + ((mVendor == null) ? 0 : mVendor.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof ExtraPackage)) {
+            return false;
+        }
+        ExtraPackage other = (ExtraPackage) obj;
+        if (mMinApiLevel != other.mMinApiLevel) {
+            return false;
+        }
+        if (mPath == null) {
+            if (other.mPath != null) {
+                return false;
+            }
+        } else if (!mPath.equals(other.mPath)) {
+            return false;
+        }
+        if (!Arrays.equals(mProjectFiles, other.mProjectFiles)) {
+            return false;
+        }
+        if (mVendor == null) {
+            if (other.mVendor != null) {
+                return false;
+            }
+        } else if (!mVendor.equals(other.mVendor)) {
+            return false;
+        }
+        return true;
     }
 }

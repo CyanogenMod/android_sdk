@@ -253,4 +253,34 @@ public class DocPackage extends Package implements IPackageVersion {
         // not an upgrade but not incompatible either.
         return UpdateInfo.NOT_UPDATE;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof DocPackage)) {
+            return false;
+        }
+        DocPackage other = (DocPackage) obj;
+        if (mVersion == null) {
+            if (other.mVersion != null) {
+                return false;
+            }
+        } else if (!mVersion.equals(other.mVersion)) {
+            return false;
+        }
+        return true;
+    }
 }

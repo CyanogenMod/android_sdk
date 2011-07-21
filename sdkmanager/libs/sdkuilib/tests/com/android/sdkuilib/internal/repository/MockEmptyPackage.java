@@ -138,4 +138,33 @@ class MockEmptyPackage extends Package {
             mTestHandle.equals(((MockEmptyPackage) pkg).mTestHandle);
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((mTestHandle == null) ? 0 : mTestHandle.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof MockEmptyPackage)) {
+            return false;
+        }
+        MockEmptyPackage other = (MockEmptyPackage) obj;
+        if (mTestHandle == null) {
+            if (other.mTestHandle != null) {
+                return false;
+            }
+        } else if (!mTestHandle.equals(other.mTestHandle)) {
+            return false;
+        }
+        return true;
+    }
 }

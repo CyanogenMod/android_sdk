@@ -20,7 +20,6 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.sdklib.internal.repository.LocalSdkParser;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
@@ -44,10 +43,9 @@ class PackageLoader {
      * Interface for the callback called by
      * {@link PackageLoader#loadPackages(ISourceLoadedCallback)}.
      * <p/>
-     * After processing each source, the package loader calls {@link #onSourceLoaded(List)}
-     * with the list of package items found in that source. The client should process that
-     * list as it want, typically by accumulating the package items in a list of its own.
-     * By returning true from {@link #onSourceLoaded(List)}, the client tells the loader to
+     * After processing each source, the package loader calls {@link #onUpdateSource}
+     * with the list of packages found in that source.
+     * By returning true from {@link #onUpdateSource}, the client tells the loader to
      * continue and process the next source. By returning false, it tells to stop loading.
      * <p/>
      * The {@link #onLoadCompleted()} method is guaranteed to be called at the end, no
@@ -57,20 +55,19 @@ class PackageLoader {
     public interface ISourceLoadedCallback {
         /**
          * After processing each source, the package loader calls this method with the
-         * list of package items found in that source. The client should process that
-         * list as it want, typically by accumulating the package items in a list of its own.
-         * By returning true from {@link #onSourceLoaded(List)}, the client tells the loader to
-         * continue and process the next source. By returning false, it tells to stop loading.
+         * list of packages found in that source.
+         * By returning true from {@link #onUpdateSource}, the client tells
+         * the loader to continue and process the next source.
+         * By returning false, it tells to stop loading.
          * <p/>
-         * <em>Important</em>: This method is called from a sub-thread, so clients who try
-         * to access any UI widgets must wrap their calls into {@link Display#syncExec(Runnable)}
-         * or {@link Display#asyncExec(Runnable)}.
+         * <em>Important</em>: This method is called from a sub-thread, so clients which
+         * try to access any UI widgets must wrap their calls into
+         * {@link Display#syncExec(Runnable)} or {@link Display#asyncExec(Runnable)}.
          *
-         * @param pkgItems All the package items loaded from the last processed source.
-         *  This is a copy and the client can hold to this list or modify it in any way.
+         * @param packages All the packages loaded from the source. Never null.
          * @return True if the load operation should continue, false if it should stop.
          */
-        public boolean onSourceLoaded(List<PkgItem> pkgItems);
+        public boolean onUpdateSource(SdkSource source, Package[] packages);
 
         /**
          * This method is guaranteed to be called at the end, no matter how the
@@ -141,14 +138,15 @@ class PackageLoader {
             }
 
             // get local packages and offer them to the callback
-            List<PkgItem> localPkgItems =  loadLocalPackages();
-            if (!localPkgItems.isEmpty()) {
-                if (!sourceLoadedCallback.onSourceLoaded(localPkgItems)) {
-                    return;
-                }
+            Package[] localPkgs = mUpdaterData.getInstalledPackages();
+            if (localPkgs == null) {
+                localPkgs = new Package[0];
+            }
+            if (!sourceLoadedCallback.onUpdateSource(null, localPkgs)) {
+                return;
             }
 
-            final int[] numPackages = { localPkgItems.size() };
+            final int[] numPackages = { localPkgs == null ? 0 : localPkgs.length };
 
             // get remote packages
             final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
@@ -167,17 +165,11 @@ class PackageLoader {
                                 continue;
                             }
 
-                            List<PkgItem> sourcePkgItems = new ArrayList<PkgItem>();
-                            for(Package pkg : pkgs) {
-                                PkgItem pi = new PkgItem(pkg, PkgState.NEW);
-                                sourcePkgItems.add(pi);
-                            }
-
-                            numPackages[0] += sourcePkgItems.size();
+                            numPackages[0] += pkgs.length;
 
                             // Notify the callback a new source has finished loading.
                             // If the callback requests so, stop right away.
-                            if (!sourceLoadedCallback.onSourceLoaded(sourcePkgItems)) {
+                            if (!sourceLoadedCallback.onUpdateSource(source, pkgs)) {
                                 return;
                             }
                         }
@@ -193,26 +185,6 @@ class PackageLoader {
         } finally {
             sourceLoadedCallback.onLoadCompleted();
         }
-    }
-
-    /**
-     * Internal method that returns all installed packages from the {@link LocalSdkParser}
-     * associated with the {@link UpdaterData}.
-     * <p/>
-     * Note that the {@link LocalSdkParser} maintains a cache, so callers need to clear
-     * it if they know they changed the local installation.
-     *
-     * @return A new list of {@link PkgItem}. May be empty but never null.
-     */
-    private List<PkgItem> loadLocalPackages() {
-        List<PkgItem> pkgItems = new ArrayList<PkgItem>();
-
-        for (Package pkg : mUpdaterData.getInstalledPackages()) {
-            PkgItem pi = new PkgItem(pkg, PkgState.INSTALLED);
-            pkgItems.add(pi);
-        }
-
-        return pkgItems;
     }
 
     /**
@@ -245,59 +217,44 @@ class PackageLoader {
     public void loadPackagesWithInstallTask(final IAutoInstallTask installTask) {
 
         loadPackages(new ISourceLoadedCallback() {
-            public boolean onSourceLoaded(List<PkgItem> pkgItems) {
-                for (PkgItem item : pkgItems) {
-                    Package acceptedPkg = null;
-                    switch(item.getState()) {
-                    case NEW:
-                        if (installTask.acceptPackage(item.getMainPackage())) {
-                            acceptedPkg = item.getMainPackage();
-                        }
-                        if (item.hasUpdatePkg() && installTask.acceptPackage(item.getUpdatePkg())) {
-                            acceptedPkg = item.getUpdatePkg();
-                        }
-                        break;
-                    case INSTALLED:
-                        if (installTask.acceptPackage(item.getMainPackage())) {
+            public boolean onUpdateSource(SdkSource source, Package[] packages) {
+                for (Package pkg : packages) {
+                    if (pkg.isLocal()) {
+                        // This is a local (aka installed) package
+                        if (installTask.acceptPackage(pkg)) {
                             // If the caller is accepting an installed package,
                             // return a success and give the package's install path
-                            acceptedPkg = item.getMainPackage();
-                            Archive[] a = acceptedPkg.getArchives();
+                            Archive[] a = pkg.getArchives();
                             // an installed package should have one local compatible archive
                             if (a.length == 1 && a[0].isCompatible()) {
                                 installTask.setResult(
-                                        acceptedPkg,
+                                        pkg,
                                         true /*success*/,
                                         new File(a[0].getLocalOsPath()));
-
-                                // return false to tell loadPackages() that we don't
-                                // need to continue processing any more sources.
-                                return false;
                             }
+                            // return false to tell loadPackages() that we don't
+                            // need to continue processing any more sources.
+                            return false;
+                        }
+
+                    } else {
+                        // This is a remote package
+                        if (installTask.acceptPackage(pkg)) {
+                            // The caller is accepting this remote package. Let's try to install it.
+
+                            for (Archive archive : pkg.getArchives()) {
+                                if (archive.isCompatible()) {
+                                    installArchive(archive);
+                                    break;
+                                }
+                            }
+                            // return false to tell loadPackages() that we don't
+                            // need to continue processing any more sources.
+                            return false;
                         }
                     }
-
-                    if (acceptedPkg != null) {
-                        // Try to install this package if it has one compatible archive.
-                        Archive archiveToInstall = null;
-
-                        for (Archive a2 : acceptedPkg.getArchives()) {
-                            if (a2.isCompatible()) {
-                                archiveToInstall = a2;
-                                break;
-                            }
-                        }
-
-                        if (archiveToInstall != null) {
-                            installArchive(archiveToInstall);
-                        }
-
-                        // return false to tell loadPackages() that we don't
-                        // need to continue processing any more sources.
-                        return false;
-                    }
-
                 }
+
                 // Tell loadPackages() to process the next source.
                 return true;
             }
@@ -342,11 +299,10 @@ class PackageLoader {
 
                     // The local package list has changed, make sure to refresh it
                     mUpdaterData.getLocalSdkParser().clearPackages();
-                    final List<PkgItem> localPkgItems = loadLocalPackages();
+                    final Package[] localPkgs = mUpdaterData.getInstalledPackages();
 
                     // Try to locate the installed package in the new package list
-                    for (PkgItem localItem : localPkgItems) {
-                        Package localPkg = localItem.getMainPackage();
+                    for (Package localPkg : localPkgs) {
                         if (localPkg.canBeUpdatedBy(packageToInstall) == UpdateInfo.NOT_UPDATE) {
                             Archive[] localArchive = localPkg.getArchives();
                             if (localArchive.length == 1 && localArchive[0].isCompatible()) {
@@ -419,7 +375,7 @@ class PackageLoader {
         }
 
         public boolean hasUpdatePkg() {
-            return mState == PkgState.INSTALLED && mUpdatePkg != null;
+            return mUpdatePkg != null;
         }
 
         public String getName() {

@@ -32,6 +32,7 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -69,6 +70,44 @@ public class AddonPackage extends Package
 
         public String getDescription() {
             return mDescription;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((mDescription == null) ? 0 : mDescription.hashCode());
+            result = prime * result + ((mName == null) ? 0 : mName.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (!(obj instanceof Lib)) {
+                return false;
+            }
+            Lib other = (Lib) obj;
+            if (mDescription == null) {
+                if (other.mDescription != null) {
+                    return false;
+                }
+            } else if (!mDescription.equals(other.mDescription)) {
+                return false;
+            }
+            if (mName == null) {
+                if (other.mName != null) {
+                    return false;
+                }
+            } else if (!mName.equals(other.mName)) {
+                return false;
+            }
+            return true;
         }
     }
 
@@ -388,5 +427,63 @@ public class AddonPackage extends Package
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((mLayoutlibVersion == null) ? 0 : mLayoutlibVersion.hashCode());
+        result = prime * result + Arrays.hashCode(mLibs);
+        result = prime * result + ((mName == null) ? 0 : mName.hashCode());
+        result = prime * result + ((mVendor == null) ? 0 : mVendor.hashCode());
+        result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof AddonPackage)) {
+            return false;
+        }
+        AddonPackage other = (AddonPackage) obj;
+        if (mLayoutlibVersion == null) {
+            if (other.mLayoutlibVersion != null) {
+                return false;
+            }
+        } else if (!mLayoutlibVersion.equals(other.mLayoutlibVersion)) {
+            return false;
+        }
+        if (!Arrays.equals(mLibs, other.mLibs)) {
+            return false;
+        }
+        if (mName == null) {
+            if (other.mName != null) {
+                return false;
+            }
+        } else if (!mName.equals(other.mName)) {
+            return false;
+        }
+        if (mVendor == null) {
+            if (other.mVendor != null) {
+                return false;
+            }
+        } else if (!mVendor.equals(other.mVendor)) {
+            return false;
+        }
+        if (mVersion == null) {
+            if (other.mVersion != null) {
+                return false;
+            }
+        } else if (!mVersion.equals(other.mVersion)) {
+            return false;
+        }
+        return true;
     }
 }
