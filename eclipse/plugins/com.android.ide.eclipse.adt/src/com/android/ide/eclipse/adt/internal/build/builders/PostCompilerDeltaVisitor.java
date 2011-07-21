@@ -59,6 +59,13 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
 
     /**
      * compile flag. This is set to true if one of the changed/added/removed
+     * files is a .png file. Upon visiting all the delta resources, if this
+     * flag is true, then we know we'll have to run "aapt crunch".
+     */
+    private boolean mUpdateCrunchCache = false;
+
+    /**
+     * compile flag. This is set to true if one of the changed/added/removed
      * file is a resource file. Upon visiting all the delta resources, if
      * this flag is true, then we know we'll have to make the intermediate
      * apk file.
@@ -120,6 +127,10 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
         return mConvertToDex;
     }
 
+    public boolean getUpdateCrunchCache() {
+        return mUpdateCrunchCache;
+    }
+
     public boolean getPackageResources() {
         return mPackageResources;
     }
@@ -137,7 +148,7 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
      */
     public boolean visit(IResourceDelta delta) throws CoreException {
         // if all flags are true, we can stop going through the resource delta.
-        if (mConvertToDex && mPackageResources && mMakeFinalPackage) {
+        if (mConvertToDex && mUpdateCrunchCache && mPackageResources && mMakeFinalPackage) {
             return false;
         }
 
@@ -218,6 +229,12 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
             // (we don't care about folder being added/removed, only content
             // is important)
             if (type == IResource.FILE) {
+                // Check if this is a .png file. Any modification will
+                // trigger a cache update
+                String ext = resource.getFileExtension();
+                if (AdtConstants.EXT_PNG.equalsIgnoreCase(ext)) {
+                    mUpdateCrunchCache = true;
+                }
                 mPackageResources = true;
                 mMakeFinalPackage = true;
                 return false;
@@ -225,7 +242,7 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
 
             // for folders, return true only if we don't already know we have to
             // package the resources.
-            return mPackageResources == false;
+            return mPackageResources == false || mUpdateCrunchCache == false;
         } else if (mAssetPath != null && mAssetPath.isPrefixOf(path)) {
             // this is the assets folder that was modified.
             // we don't care what content was changed. All we care

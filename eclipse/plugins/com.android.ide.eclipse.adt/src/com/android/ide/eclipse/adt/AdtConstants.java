@@ -83,6 +83,8 @@ public class AdtConstants {
     public final static String EXT_DEX = "dex"; //$NON-NLS-1$
     /** Extension for temporary resource files, ie "ap_ */
     public final static String EXT_RES = "ap_"; //$NON-NLS-1$
+    /** Extension for pre-processable images. Right now pngs */
+    public final static String EXT_PNG = "png"; //$NON-NLS-1$
 
     private final static String DOT = "."; //$NON-NLS-1$
 
@@ -148,6 +150,10 @@ public class AdtConstants {
 
     /** Absolute path of the resource folder, e.g. "/res".<br> This is a workspace path. */
     public final static String WS_RESOURCES = WS_SEP + SdkConstants.FD_RESOURCES;
+
+    /** Absolute path of the crunch cache folder, e.g. "/bin/res".<br> This is a workspace path. */
+    public final static String WS_CRUNCHCACHE = WS_SEP + SdkConstants.FD_OUTPUT
+                                                       + WS_SEP + SdkConstants.FD_RESOURCES;
 
     /** Absolute path of the resource folder, e.g. "/assets".<br> This is a workspace path. */
     public final static String WS_ASSETS = WS_SEP + SdkConstants.FD_ASSETS;

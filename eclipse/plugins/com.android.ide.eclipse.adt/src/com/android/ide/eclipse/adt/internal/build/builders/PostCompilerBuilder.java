@@ -69,6 +69,7 @@ public class PostCompilerBuilder extends BaseBuilder {
     public static final String ID = "com.android.ide.eclipse.adt.ApkBuilder"; //$NON-NLS-1$
 
     private static final String PROPERTY_CONVERT_TO_DEX = "convertToDex"; //$NON-NLS-1$
+    private static final String PROPERTY_UPDATE_CRUNCH_CACHE = "updateCrunchCache"; //$NON-NLS-1$
     private static final String PROPERTY_PACKAGE_RESOURCES = "packageResources"; //$NON-NLS-1$
     private static final String PROPERTY_BUILD_APK = "buildApk"; //$NON-NLS-1$
 
@@ -83,6 +84,13 @@ public class PostCompilerBuilder extends BaseBuilder {
      * flag is true, then we know we'll have to make the "classes.dex" file.
      */
     private boolean mConvertToDex = false;
+
+    /**
+     * PNG Cache update flag. This is set to true if one of the changed/added/removed
+     * files is a .png file. Upon visiting all the delta resources, if this
+     * flag is true, then we know we'll have to update the PNG cache
+     */
+    private boolean mUpdateCrunchCache = false;
 
     /**
      * Package resources flag. This is set to true if one of the changed/added/removed
@@ -226,6 +234,18 @@ public class PostCompilerBuilder extends BaseBuilder {
         // get a project object
         IProject project = getProject();
 
+        // Benchmarking start
+        long startBuildTime = 0;
+        if (BuildHelper.BENCHMARK_FLAG) {
+            // End JavaC Timer
+            String msg = "BENCHMARK ADT: Ending Compilation \n BENCHMARK ADT: Time Elapsed: " +    //$NON-NLS-1$
+                         (System.nanoTime() - BuildHelper.sStartJavaCTime)/Math.pow(10, 6) + "ms"; //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
+            msg = "BENCHMARK ADT: Starting PostCompilation";                                        //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
+            startBuildTime = System.nanoTime();
+        }
+
         // list of referenced projects. This is a mix of java projects and library projects
         // and is computed below.
         IProject[] allRefProjects = null;
@@ -274,6 +294,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Apk_Build);
 
+                mUpdateCrunchCache = true;
                 mPackageResources = true;
                 mConvertToDex = true;
                 mBuildFinalPackage = true;
@@ -284,6 +305,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // go through the resources and see if something changed.
                 IResourceDelta delta = getDelta(project);
                 if (delta == null) {
+                    mUpdateCrunchCache = true;
                     mPackageResources = true;
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
@@ -292,6 +314,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     delta.accept(dv);
 
                     // save the state
+                    mUpdateCrunchCache |= dv.getUpdateCrunchCache();
                     mPackageResources |= dv.getPackageResources();
                     mConvertToDex |= dv.getConvertToDex();
                     mBuildFinalPackage |= dv.getMakeFinalPackage();
@@ -339,6 +362,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // store the build status in the persistent storage
             saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , mConvertToDex);
+            saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
             saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
             saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
 
@@ -474,7 +498,32 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // notified.
                 finalPackage.delete();
 
-                // first we check if we need to package the resources.
+                // Check if we need to update the PNG cache
+                if (mUpdateCrunchCache) {
+                    try {
+                        helper.updateCrunchCache();
+                    } catch (AaptExecException e) {
+                        BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING,
+                                e.getMessage(), IMarker.SEVERITY_ERROR);
+                        return allRefProjects;
+                    } catch (AaptResultException e) {
+                        // attempt to parse the error output
+                        String[] aaptOutput = e.getOutput();
+                        boolean parsingError = AaptParser.parseOutput(aaptOutput, project);
+                        // if we couldn't parse the output we display it in the console.
+                        if (parsingError) {
+                            AdtPlugin.printErrorToConsole(project, (Object[]) aaptOutput);
+                        }
+                    }
+
+                    // crunch has been done. Reset state
+                    mUpdateCrunchCache = false;
+
+                    // and store it
+                    saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
+                }
+
+                // Check if we need to package the resources.
                 if (mPackageResources) {
                     // remove some aapt_package only markers.
                     removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_PACKAGE);
@@ -653,6 +702,17 @@ public class PostCompilerBuilder extends BaseBuilder {
             markProject(AdtConstants.MARKER_PACKAGING, msg, IMarker.SEVERITY_ERROR);
         }
 
+        // Benchmarking end
+        if (BuildHelper.BENCHMARK_FLAG) {
+            String msg = "BENCHMARK ADT: Ending PostCompilation. \n BENCHMARK ADT: Time Elapsed: " + //$NON-NLS-1$
+                         ((System.nanoTime() - startBuildTime)/Math.pow(10, 6)) + "ms";              //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
+            // End Overall Timer
+            msg = "BENCHMARK ADT: Done with everything! \n BENCHMARK ADT: Time Elapsed: " +          //$NON-NLS-1$
+                  (System.nanoTime() - BuildHelper.sStartOverallTime)/Math.pow(10, 6) + "ms";        //$NON-NLS-1$
+            AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, project, msg);
+        }
+
         return allRefProjects;
     }
 
@@ -663,6 +723,7 @@ public class PostCompilerBuilder extends BaseBuilder {
         // load the build status. We pass true as the default value to
         // force a recompile in case the property was not found
         mConvertToDex = loadProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , true);
+        mUpdateCrunchCache = loadProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, true);
         mPackageResources = loadProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, true);
         mBuildFinalPackage = loadProjectBooleanProperty(PROPERTY_BUILD_APK, true);
     }

@@ -83,7 +83,9 @@
     <property name="out.absolute.dir" location="${out.dir}" />
     <property name="out.classes.dir" value="${out.absolute.dir}/classes" />
     <property name="out.classes.absolute.dir" location="${out.classes.dir}" />
-
+    <property name="out.resource.dir" location="${out.dir}/res" />
+    <property name="out.resource.absolute.dir" location="${out.resource.dir}" />
+    
     <!-- Intermediate files -->
     <property name="dex.file.name" value="classes.dex" />
     <property name="intermediate.dex.file"
@@ -159,6 +161,9 @@
             <isset property="key.alias.password" />
         </and>
     </condition>
+
+    <!-- properties for packaging -->
+    <property name="build.packaging.nocrunch" value="true" />
 
     <!-- Tools -->
     <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
@@ -492,12 +497,24 @@
         </if>
     </target>
 
+<!-- Updates the pre-processed PNG cache -->
+    <target name="-crunch">
+        <exec executable="${aapt}">
+            <arg value="crunch" />
+            <arg value="-v" />
+            <arg value="-S" />
+            <arg path="${resource.absolute.dir}" />
+            <arg value="-C" />
+            <arg path="${out.resource.absolute.dir}" />
+        </exec>
+    </target>
+
     <!-- Puts the project's resources into the output package file
          This actually can create multiple resource package in case
          Some custom apk with specific configuration have been
          declared in default.properties.
          -->
-    <target name="-package-resources">
+    <target name="-package-resources" depends="-crunch">
         <echo>Packaging resources</echo>
         <aapt executable="${aapt}"
                 command="package"
@@ -507,8 +524,10 @@
                 assets="${asset.absolute.dir}"
                 androidjar="${android.jar}"
                 apkfolder="${out.absolute.dir}"
+                nocrunch="${build.packaging.nocrunch}"
                 resourcefilename="${resource.package.file.name}"
                 resourcefilter="${aapt.resource.filter}">
+            <res path="${out.resource.absolute.dir}" />
             <res path="${resource.absolute.dir}" />
             <!-- <nocompress /> forces no compression on any files in assets or res/raw -->
             <!-- <nocompress extension="xml" /> forces no compression on specific file extensions in assets and res/raw -->
