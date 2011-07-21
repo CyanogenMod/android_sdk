@@ -134,13 +134,13 @@ public class AndroidPropertyPage extends PropertyPage implements IWorkbenchPrope
             boolean mustSaveProp = false;
 
             IAndroidTarget newTarget = mSelector.getSelected();
-            if (newTarget != state.getTarget()) {
+            if (state == null || newTarget != state.getTarget()) {
                 mPropertiesWorkingCopy.setProperty(ProjectProperties.PROPERTY_TARGET,
                         newTarget.hashString());
                 mustSaveProp = true;
             }
 
-            if (mIsLibrary.getSelection() != state.isLibrary()) {
+            if (state == null || mIsLibrary.getSelection() != state.isLibrary()) {
                 mPropertiesWorkingCopy.setProperty(ProjectProperties.PROPERTY_LIBRARY,
                         Boolean.toString(mIsLibrary.getSelection()));
                 mustSaveProp = true;
