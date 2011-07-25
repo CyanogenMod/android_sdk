@@ -54,6 +54,14 @@ public class PackagesPageLogicTest extends TestCase {
     }
 
     // ----
+    //
+    // Test Details Note: the way load is implemented in PackageLoader, the
+    // loader processes each source and then for each source the packages are added
+    // to a list and the sorting algorithm is called with that list. Thus for
+    // one load, many calls to the sortByX/Y happen, with the list progressively
+    // being populated.
+    // However when the user switches sorting algorithm, the package list is not
+    // reloaded and is processed at once.
 
     public void testSortByApi_Empty() {
         assertTrue(m.mAllPkgItems.isEmpty());
@@ -64,8 +72,9 @@ public class PackagesPageLogicTest extends TestCase {
 
     public void testSortByApi_SamePackage() {
         assertTrue(m.mAllPkgItems.isEmpty());
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("some pkg", 1), PkgState.INSTALLED));
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
 
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "some pkg", 1), PkgState.INSTALLED));
         m.sortByApiLevel();
 
         assertEquals(
@@ -74,8 +83,7 @@ public class PackagesPageLogicTest extends TestCase {
                getTree(m));
 
         // Same package as the one installed, so we don't display it
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("some pkg", 1), PkgState.NEW));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "some pkg", 1), PkgState.NEW));
         m.sortByApiLevel();
 
         assertEquals(
@@ -86,9 +94,10 @@ public class PackagesPageLogicTest extends TestCase {
 
     public void testSortByApi_AddPackages() {
         assertTrue(m.mAllPkgItems.isEmpty());
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("that pkg", 1), PkgState.INSTALLED));
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("this pkg", 1), PkgState.NEW));
-
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "that pkg", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "this pkg", 1), PkgState.NEW));
         m.sortByApiLevel();
 
         assertEquals(
@@ -100,11 +109,11 @@ public class PackagesPageLogicTest extends TestCase {
 
     public void testSortByApi_Update1() {
         assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
 
         // Typical case: user has a locally installed package in revision 1
         // The display list after sort should show that instaled package.
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 1), PkgState.INSTALLED));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
         m.sortByApiLevel();
 
         assertEquals(
@@ -116,9 +125,8 @@ public class PackagesPageLogicTest extends TestCase {
         // Edge case: another source reveals an update in revision 2.
         // The display list after sort should show an update as available with rev 4
         // and rev 2 should be ignored since we have a better one.
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 4), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 2), PkgState.NEW));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 4), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
         m.sortByApiLevel();
 
         assertEquals(
@@ -129,11 +137,12 @@ public class PackagesPageLogicTest extends TestCase {
 
     public void testSortByApi_Reload() {
         assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
 
         // First load reveals a package local package and its update
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 1), PkgState.INSTALLED));
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 2), PkgState.NEW));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
         m.sortByApiLevel();
 
         assertEquals(
@@ -145,9 +154,9 @@ public class PackagesPageLogicTest extends TestCase {
         // objects but not the same references.
         m.mAllPkgItems.clear();
         assertTrue(m.mAllPkgItems.isEmpty());
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 1), PkgState.INSTALLED));
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 2), PkgState.NEW));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
         m.sortByApiLevel();
 
         assertEquals(
@@ -158,14 +167,14 @@ public class PackagesPageLogicTest extends TestCase {
 
     public void testSortByApi_InstallAfterNew() {
         assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
 
         // We expect updates to appear AFTER the packages the installed items will update.
         // (This is pretty much guaranteed since local packages are processed first.)
         // The reverse order is not supported by the sorting algorithm and both will be shown.
 
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 2), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage("type1", 1), PkgState.INSTALLED));
-
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
         m.sortByApiLevel();
 
         assertEquals(
@@ -175,8 +184,74 @@ public class PackagesPageLogicTest extends TestCase {
                getTree(m));
     }
 
+    public void testSortByApi_InstallPackage() {
+        assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+
+        // First load reveals a new package
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortByApiLevel();
+
+        assertEquals(
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // Install it. Load reveals a package local package and its update
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortByApiLevel();
+
+        assertEquals(
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // Now we have an update
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
+        m.sortByApiLevel();
+
+        assertEquals(
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
+               getTree(m));
+    }
+
+    public void testSortByApi_DeletePackage() {
+        assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+
+        // We have an installed package
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortByApiLevel();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortByApiLevel();
+
+        assertEquals(
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // User now deletes the installed package.
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortByApiLevel();
+
+        assertEquals(
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+    }
+
     public void testSortByApi_CompleteUpdate() {
         assertTrue(m.mAllPkgItems.isEmpty());
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
 
         // Resulting categories are sorted by Tools, descending platform API and finally Extras.
         // Addons are sorted by name within their API.
@@ -194,7 +269,7 @@ public class PackagesPageLogicTest extends TestCase {
 
         // Load a few extra packages
         m.mAllPkgItems.add(new PkgItem(
-                new MockExtraPackage("carrier", "custom_rom", 1, 0), PkgState.NEW));
+                new MockExtraPackage(src1, "carrier", "custom_rom", 1, 0), PkgState.NEW));
 
         // We call sortByApiLevel() multiple times to simulate the fact it works as an
         // incremental diff. In real usage, it is called after each source is loaded so
@@ -210,9 +285,9 @@ public class PackagesPageLogicTest extends TestCase {
                getTree(m));
 
         m.mAllPkgItems.add(new PkgItem(
-                new MockExtraPackage("android", "usb_driver", 4, 3), PkgState.INSTALLED));
+                new MockExtraPackage(src1, "android", "usb_driver", 4, 3), PkgState.INSTALLED));
         m.mAllPkgItems.add(new PkgItem(
-                new MockExtraPackage("android", "usb_driver", 5, 3), PkgState.NEW));
+                new MockExtraPackage(src1, "android", "usb_driver", 5, 3), PkgState.NEW));
 
         m.sortByApiLevel();
 
@@ -228,9 +303,9 @@ public class PackagesPageLogicTest extends TestCase {
         // Platforms and addon are sorted in a category based on their API level
         MockPlatformPackage p1;
         MockPlatformPackage p2;
-        m.mAllPkgItems.add(new PkgItem(p1 = new MockPlatformPackage(1, 2, 3), PkgState.INSTALLED));
-        m.mAllPkgItems.add(new PkgItem(p2 = new MockPlatformPackage(2, 4, 3), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(     new MockPlatformPackage(3, 6, 3), PkgState.INSTALLED));
+        m.mAllPkgItems.add(new PkgItem(p1 = new MockPlatformPackage(src1, 1, 2, 3), PkgState.INSTALLED));
+        m.mAllPkgItems.add(new PkgItem(p2 = new MockPlatformPackage(src1, 2, 4, 3), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(     new MockPlatformPackage(src1, 3, 6, 3), PkgState.INSTALLED));
 
         m.sortByApiLevel();
 
@@ -249,13 +324,13 @@ public class PackagesPageLogicTest extends TestCase {
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
                getTree(m));
 
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon C", p2, 9), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon A", p1, 5), PkgState.INSTALLED));
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon A", p1, 6), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon B", p2, 7), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon C", p2, 9), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon A", p1, 5), PkgState.INSTALLED));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon A", p1, 6), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon B", p2, 7), PkgState.NEW));
         // the rev 8 update will be ignored since there's a rev 9 coming after
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon B", p2, 8), PkgState.NEW));
-        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage("addon B", p2, 9), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon B", p2, 8), PkgState.NEW));
+        m.mAllPkgItems.add(new PkgItem(new MockAddonPackage(src1, "addon B", p2, 9), PkgState.NEW));
 
         m.sortByApiLevel();
 
@@ -413,6 +488,71 @@ public class PackagesPageLogicTest extends TestCase {
                 "PkgSourceCategory <source=repo1 (repo.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type1' rev=2>\n",
+               getTree(m));
+    }
+
+    public void testSortBySource_InstallPackage() {
+        assertTrue(m.mAllPkgItems.isEmpty());
+
+        // First load reveals a new package
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+
+        m.sortBySource();
+
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=1>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // Install it. The display only shows the installed one, 'hiding' the remote package
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortBySource();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortBySource();
+
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // Now we have an update
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortBySource();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 2), PkgState.NEW));
+        m.sortBySource();
+
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
+               getTree(m));
+    }
+
+    public void testSortBySource_DeletePackage() {
+        assertTrue(m.mAllPkgItems.isEmpty());
+
+        // Start with an installed package and its matching remote package
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.INSTALLED));
+        m.sortBySource();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortBySource();
+
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
+               getTree(m));
+
+        // User now deletes the installed package.
+        m.mAllPkgItems.clear();
+        m.mAllPkgItems.add(new PkgItem(new MockEmptyPackage(src1, "type1", 1), PkgState.NEW));
+        m.sortBySource();
+
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=1>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
                getTree(m));
     }
 

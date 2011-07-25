@@ -1479,7 +1479,16 @@ public class PackagesPage extends UpdaterPage
             /** Creates a new category object for the given key. */
             PkgCategory createCategory(Object catKey, ImageFactory imgFactory);
 
-            /** Process a new item and merge it into the existing categories. */
+            /**
+             * Process a new item and merge it into the existing categories,
+             * return true if the item was already in the category items list.
+             *
+             * @return True if the {@code newItem} was found in the category's item list.
+             *   When returning true, the method should remove the package(s) from
+             *   {@code unusedPackages}.
+             *   If the method return false, the caller will add {@code newItem} to the
+             *   category's items list.
+             */
             boolean mergeNewItem(
                     PkgItem newItem,
                     PkgCategory cat,
@@ -1826,10 +1835,23 @@ public class PackagesPage extends UpdaterPage
 
                     for (PkgItem pi : cat.getItems()) {
                         Package p = newItem.getMainPackage();
-                        if (pi.isSameItemAs(newItem) || pi.isSameMainPackageAs(p)) {
-                            // It's the same item or
-                            // it's not exactly the same item but the main package
-                            // is the same.
+                        if (pi.isSameItemAs(newItem)) {
+                            // It's the same item, keep it.
+                            unusedPackages.remove(pi.getMainPackage());
+                            return true;
+                        } else if (pi.isSameMainPackageAs(p)) {
+                            // It's not exactly the same item but the main package is the same.
+                            // This happens when trying to merge an item which state has changed
+                            // or its update list has changed.
+
+                            if (newItem.getState() == PkgState.INSTALLED &&
+                                    pi.getState() == PkgState.NEW) {
+                                // In source-list mode, installed items 'hide' new items.
+                                // In this case, return false so that the caller add the newItem
+                                // to the category.
+                                return false;
+                            }
+
                             unusedPackages.remove(pi.getMainPackage());
                             return true;
                         } else if (newItem.getState() == PkgState.NEW && pi.mergeUpdate(p)) {
