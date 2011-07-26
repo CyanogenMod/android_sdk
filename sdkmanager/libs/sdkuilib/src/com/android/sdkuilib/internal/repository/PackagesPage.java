@@ -382,6 +382,9 @@ public class PackagesPage extends UpdaterPage
 
                 switch (action) {
                 case RELOAD:
+                    // Clear all source caches, otherwise loading will use the cached data
+                    mDiffLogic.mUpdaterData.getLocalSdkParser().clearPackages();
+                    mDiffLogic.mUpdaterData.getSources().clearAllPackages();
                     loadPackages();
                     break;
                 case SHOW_ADDON_SITES:
