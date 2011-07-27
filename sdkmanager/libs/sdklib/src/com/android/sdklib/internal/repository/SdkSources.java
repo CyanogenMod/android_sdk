@@ -157,6 +157,22 @@ public class SdkSources {
     }
 
     /**
+     * Each source keeps a local cache of whatever it loaded recently.
+     * This calls {@link SdkSource#clearPackages()} on all the available sources,
+     * and the next call to {@link SdkSource#getPackages()} will actually reload
+     * the remote package list.
+     */
+    public void clearAllPackages() {
+        synchronized(mSources) {
+            for (ArrayList<SdkSource> list : mSources.values()) {
+                for (SdkSource source : list) {
+                    source.clearPackages();
+                }
+            }
+        }
+    }
+
+    /**
      * Returns the category of a given source, or null if the source is unknown.
      * <p/>
      * Note that this method uses object identity to find a given source, and does

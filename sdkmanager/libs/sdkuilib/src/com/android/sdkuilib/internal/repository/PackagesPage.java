@@ -49,6 +49,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -189,6 +190,12 @@ public class PackagesPage extends UpdaterPage
         GridLayoutBuilder.create(mGroupPackages).columns(1);
 
         mTreeViewer = new CheckboxTreeViewer(mGroupPackages, SWT.BORDER);
+        mTreeViewer.addFilter(new ViewerFilter() {
+            @Override
+            public boolean select(Viewer viewer, Object parentElement, Object element) {
+                return filterViewerItem(element);
+            }
+        });
 
         mTreeViewer.addCheckStateListener(new ICheckStateListener() {
             public void checkStateChanged(CheckStateChangedEvent event) {
@@ -375,6 +382,9 @@ public class PackagesPage extends UpdaterPage
 
                 switch (action) {
                 case RELOAD:
+                    // Clear all source caches, otherwise loading will use the cached data
+                    mDiffLogic.mUpdaterData.getLocalSdkParser().clearPackages();
+                    mDiffLogic.mUpdaterData.getSources().clearAllPackages();
                     loadPackages();
                     break;
                 case SHOW_ADDON_SITES:
@@ -522,6 +532,12 @@ public class PackagesPage extends UpdaterPage
         // disposed yet. Otherwise hilarity ensues.
 
         final boolean useSortByApi = isSortByApi();
+
+        if (!mTreeColumnName.isDisposed()) {
+            mTreeColumnName.setImage(
+                    getImage(useSortByApi ? ICON_SORT_BY_API : ICON_SORT_BY_SOURCE));
+        }
+
         final UpdateOp op = mDiffLogic.updateStart(useSortByApi);
         mDiffLogic.mPackageLoader.loadPackages(new ISourceLoadedCallback() {
             boolean needsRefresh = mDiffLogic.isSortByApi() == useSortByApi;
@@ -583,22 +599,42 @@ public class PackagesPage extends UpdaterPage
     /**
      * Decide whether to keep an item in the current tree based on user-chosen filter options.
      */
-    private boolean keepItem(PkgItem item) {
-        if (!mCheckFilterObsolete.getSelection()) {
-            if (item.isObsolete()) {
+    private boolean filterViewerItem(Object treeElement) {
+        if (treeElement instanceof PkgCategory) {
+            PkgCategory cat = (PkgCategory) treeElement;
+
+            if (!cat.getItems().isEmpty()) {
+                // A category is hidden if all of its content is hidden.
+                // However empty categories are always visible.
+                for (PkgItem item : cat.getItems()) {
+                    if (filterViewerItem(item)) {
+                        // We found at least one element that is visible.
+                        return true;
+                    }
+                }
                 return false;
             }
         }
 
-        if (!mCheckFilterInstalled.getSelection()) {
-            if (item.getState() == PkgState.INSTALLED) {
-                return false;
-            }
-        }
+        if (treeElement instanceof PkgItem) {
+            PkgItem item = (PkgItem) treeElement;
 
-        if (!mCheckFilterNew.getSelection()) {
-            if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
-                return false;
+            if (!mCheckFilterObsolete.getSelection()) {
+                if (item.isObsolete()) {
+                    return false;
+                }
+            }
+
+            if (!mCheckFilterInstalled.getSelection()) {
+                if (item.getState() == PkgState.INSTALLED) {
+                    return false;
+                }
+            }
+
+            if (!mCheckFilterNew.getSelection()) {
+                if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                    return false;
+                }
             }
         }
 
@@ -1009,7 +1045,6 @@ public class PackagesPage extends UpdaterPage
                 // When sorting by API, the package name might contains the API number
                 // or the platform name at the end. If we find it, cut it out since it's
                 // redundant.
-                // TODO deal with obsolete packages
 
                 PkgApiCategory cat = (PkgApiCategory) findCategoryForItem(item);
                 String apiLabel = cat.getApiLabel();
@@ -1020,8 +1055,17 @@ public class PackagesPage extends UpdaterPage
 
                 } else if (apiLabel != null && name.endsWith(apiLabel)) {
                     return name.substring(0, name.length() - apiLabel.length());
+
+                } else if (platLabel != null && item.isObsolete() && name.indexOf(platLabel) > 0) {
+                    // For obsolete items, the format is "<base name> <platform name> (Obsolete)"
+                    // so in this case only accept removing a platform name that is not at
+                    // the end.
+                    name = name.replace(platLabel, ""); //$NON-NLS-1$
                 }
             }
+
+            // Collapse potential duplicated spacing
+            name = name.replaceAll(" +", " "); //$NON-NLS-1$ //$NON-NLS-2$
 
             return name;
         }
