@@ -467,7 +467,7 @@ public class GridModel {
                     }
                     if (declaredRow < row) {
                         // Must jump to the next column to accommodate the new column
-                        assert nextColumn > row;
+                        assert nextColumn > column;
                         column = nextColumn;
                     }
                     row = declaredRow;
