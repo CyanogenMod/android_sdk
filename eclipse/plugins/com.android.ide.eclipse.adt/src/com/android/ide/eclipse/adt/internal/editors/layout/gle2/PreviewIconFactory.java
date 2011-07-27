@@ -350,7 +350,6 @@ public class PreviewIconFactory {
                     }
                     AdtPlugin.log(IStatus.WARNING, "Failed to render set of icons for %1$s",
                             sb.toString());
-                    System.out.println(sb.toString());
 
                     if (session.getResult().getException() != null) {
                         AdtPlugin.log(session.getResult().getException(),

@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.wizard.IWizardContainer;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.graphics.Point;
@@ -274,16 +275,76 @@ public class AdtProjectTest extends SdkTestCase {
     }
 
     protected int getCaretOffset(String fileContent, String caretLocation) {
-        assertTrue(caretLocation, caretLocation.contains("^"));
+        assertTrue(caretLocation, caretLocation.contains("^")); //$NON-NLS-1$
 
-        int caretDelta = caretLocation.indexOf("^");
+        int caretDelta = caretLocation.indexOf("^"); //$NON-NLS-1$
         assertTrue(caretLocation, caretDelta != -1);
-        String caretContext = caretLocation.substring(0, caretDelta)
-            + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+
+        // String around caret/range without the range and caret marker characters
+        String caretContext;
+        if (caretLocation.contains("[^")) { //$NON-NLS-1$
+            caretDelta--;
+            assertTrue(caretLocation, caretLocation.startsWith("[^", caretDelta)); //$NON-NLS-1$
+            int caretRangeEnd = caretLocation.indexOf(']', caretDelta + 2);
+            assertTrue(caretLocation, caretRangeEnd != -1);
+            caretContext = caretLocation.substring(0, caretDelta)
+                    + caretLocation.substring(caretDelta + 2, caretRangeEnd)
+                    + caretLocation.substring(caretRangeEnd + 1);
+        } else {
+            caretContext = caretLocation.substring(0, caretDelta)
+                    + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+        }
+
         int caretContextIndex = fileContent.indexOf(caretContext);
         assertTrue("Caret content " + caretContext + " not found in file",
                 caretContextIndex != -1);
         return caretContextIndex + caretDelta;
+    }
+
+    /**
+     * If the given caret location string contains a selection range, select that range in
+     * the given viewer
+     *
+     * @param viewer the viewer to contain the selection
+     * @param caretLocation the location string
+     */
+    protected int updateCaret(ISourceViewer viewer, String caretLocation) {
+        assertTrue(caretLocation, caretLocation.contains("^")); //$NON-NLS-1$
+
+        int caretDelta = caretLocation.indexOf("^"); //$NON-NLS-1$
+        assertTrue(caretLocation, caretDelta != -1);
+        String text = viewer.getTextWidget().getText();
+
+        int length = 0;
+
+        // String around caret/range without the range and caret marker characters
+        String caretContext;
+
+        if (caretLocation.contains("[^")) { //$NON-NLS-1$
+            caretDelta--;
+            assertTrue(caretLocation, caretLocation.startsWith("[^", caretDelta)); //$NON-NLS-1$
+
+            int caretRangeEnd = caretLocation.indexOf(']', caretDelta + 2);
+            assertTrue(caretLocation, caretRangeEnd != -1);
+            length = caretRangeEnd - caretDelta - 2;
+            assertTrue(length > 0);
+            caretContext = caretLocation.substring(0, caretDelta)
+                    + caretLocation.substring(caretDelta + 2, caretRangeEnd)
+                    + caretLocation.substring(caretRangeEnd + 1);
+        } else {
+            caretContext = caretLocation.substring(0, caretDelta)
+                    + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+        }
+
+        int caretContextIndex = text.indexOf(caretContext);
+
+        assertTrue("Caret content " + caretContext + " not found in file",
+                caretContextIndex != -1);
+
+        int offset = caretContextIndex + caretDelta;
+        viewer.setSelectedRange(offset, length);
+
+        return offset;
     }
 
     protected String addSelection(String newFileContents, Point selectedRange) {

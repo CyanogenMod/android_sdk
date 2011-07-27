@@ -1,4 +1,5 @@
 Code completion in broken2.xml for style=^:
+"@style/"
 "@android:"
 "@drawable/"
 "@layout/"
