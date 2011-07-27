@@ -361,6 +361,7 @@ public class MoveGesture extends DropGesture {
                         mFeedback,
                         new Point(canvasPoint.x, canvasPoint.y),
                         insertType);
+                mTargetNode.applyPendingChanges();
                 // Clean up drag if applicable
                 if (event.detail == DND.DROP_MOVE) {
                     GlobalCanvasDragInfo.getInstance().removeSource();

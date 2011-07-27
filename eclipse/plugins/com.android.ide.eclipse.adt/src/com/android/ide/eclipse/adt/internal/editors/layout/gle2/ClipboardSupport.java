@@ -16,8 +16,8 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.IDragElement;
-import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
+import com.android.ide.common.api.INode;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
@@ -226,6 +226,7 @@ public class ClipboardSupport {
                     List<INode> children = entry.getValue();
                     assert children != null && children.size() > 0;
                     rulesEngine.callOnRemovingChildren(editor, parent, children);
+                    parent.applyPendingChanges();
                 }
 
                 for (SelectionItem cs : selection) {

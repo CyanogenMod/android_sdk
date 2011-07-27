@@ -1045,6 +1045,8 @@ public class UiElementNode implements IPropertySource {
         // Set all initial attributes in the XML node if they are not empty.
         // Iterate on the descriptor list to get the desired order and then use the
         // internal values, if any.
+        List<UiAttributeNode> addAttributes = new ArrayList<UiAttributeNode>();
+
         for (AttributeDescriptor attrDesc : getAttributeDescriptors()) {
             if (attrDesc instanceof XmlnsAttributeDescriptor) {
                 XmlnsAttributeDescriptor desc = (XmlnsAttributeDescriptor) attrDesc;
@@ -1055,8 +1057,29 @@ public class UiElementNode implements IPropertySource {
                 mXmlNode.getAttributes().setNamedItemNS(attr);
             } else {
                 UiAttributeNode uiAttr = getInternalUiAttributes().get(attrDesc);
-                commitAttributeToXml(uiAttr, uiAttr.getCurrentValue());
+
+                // Don't apply the attribute immediately, instead record this attribute
+                // such that we can gather all attributes and sort them first.
+                // This is necessary because the XML model will *append* all attributes
+                // so we want to add them in a particular order.
+                // (Note that we only have to worry about UiAttributeNodes with non null
+                // values, since this is a new node and we therefore don't need to attempt
+                // to remove existing attributes)
+                String value = uiAttr.getCurrentValue();
+                if (value != null && value.length() > 0) {
+                    addAttributes.add(uiAttr);
+                }
             }
+        }
+
+        // Sort and apply the attributes in order, because the Eclipse XML model will always
+        // append the XML attributes, so by inserting them in our desired order they will
+        // appear that way in the XML
+        Collections.sort(addAttributes);
+
+        for (UiAttributeNode node : addAttributes) {
+            commitAttributeToXml(node, node.getCurrentValue());
+            node.setDirty(false);
         }
 
         if (mUiParent != null) {
@@ -1518,12 +1541,18 @@ public class UiElementNode implements IPropertySource {
                 if (doc != null) {
                     Attr attr;
                     if (attrNsUri != null && attrNsUri.length() > 0) {
-                        attr = doc.createAttributeNS(attrNsUri, attrLocalName);
-                        attr.setPrefix(lookupNamespacePrefix(element, attrNsUri));
-                        attrMap.setNamedItemNS(attr);
+                        attr = (Attr) attrMap.getNamedItemNS(attrNsUri, attrLocalName);
+                        if (attr == null) {
+                            attr = doc.createAttributeNS(attrNsUri, attrLocalName);
+                            attr.setPrefix(lookupNamespacePrefix(element, attrNsUri));
+                            attrMap.setNamedItemNS(attr);
+                        }
                     } else {
-                        attr = doc.createAttribute(attrLocalName);
-                        attrMap.setNamedItem(attr);
+                        attr = (Attr) attrMap.getNamedItem(attrLocalName);
+                        if (attr == null) {
+                            attr = doc.createAttribute(attrLocalName);
+                            attrMap.setNamedItem(attr);
+                        }
                     }
                     attr.setValue(newValue);
                     return true;
@@ -1549,14 +1578,110 @@ public class UiElementNode implements IPropertySource {
      * @return True if one or more values were actually modified or removed,
      *         false if nothing changed.
      */
+    @SuppressWarnings("null") // Eclipse is confused by the logic and gets it wrong
     public boolean commitDirtyAttributesToXml() {
         boolean result = false;
+        List<UiAttributeNode> dirtyAttributes = new ArrayList<UiAttributeNode>();
         for (UiAttributeNode uiAttr : getAllUiAttributes()) {
             if (uiAttr.isDirty()) {
-                result |= commitAttributeToXml(uiAttr, uiAttr.getCurrentValue());
-                uiAttr.setDirty(false);
+                String value = uiAttr.getCurrentValue();
+                if (value != null && value.length() > 0) {
+                    // Defer the new attributes: set these last and in order
+                    dirtyAttributes.add(uiAttr);
+                } else {
+                    result |= commitAttributeToXml(uiAttr, value);
+                    uiAttr.setDirty(false);
+                }
             }
         }
+        if (dirtyAttributes.size() > 0) {
+            result = true;
+
+            Collections.sort(dirtyAttributes);
+
+            // The Eclipse XML model will *always* append new attributes.
+            // Therefore, if any of the dirty attributes are new, they will appear
+            // after any existing, clean attributes on the element. To fix this,
+            // we need to first remove any of these attributes, then insert them
+            // back in the right order.
+            Node element = prepareCommit();
+            if (element == null) {
+                return result;
+            }
+
+            String firstName = dirtyAttributes.get(0).getDescriptor().getXmlLocalName();
+            NamedNodeMap attributes = ((Element) element).getAttributes();
+            List<Attr> move = new ArrayList<Attr>();
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attribute = (Attr) attributes.item(i);
+                if (UiAttributeNode.compareAttributes(attribute.getLocalName(), firstName) > 0) {
+                    move.add(attribute);
+                }
+            }
+
+            for (Attr attribute : move) {
+                if (attribute.getNamespaceURI() != null) {
+                    attributes.removeNamedItemNS(attribute.getNamespaceURI(),
+                            attribute.getLocalName());
+                } else {
+                    attributes.removeNamedItem(attribute.getName());
+                }
+            }
+
+            // Merge back the removed DOM attribute nodes and the new UI attribute nodes.
+            // In cases where the attribute DOM name and the UI attribute names equal,
+            // skip the DOM nodes and just apply the UI attributes.
+            int domAttributeIndex = 0;
+            int domAttributeIndexMax = move.size();
+            int uiAttributeIndex = 0;
+            int uiAttributeIndexMax = dirtyAttributes.size();
+
+            while (true) {
+                Attr domAttribute;
+                UiAttributeNode uiAttribute;
+
+                int compare;
+                if (uiAttributeIndex < uiAttributeIndexMax) {
+                    if (domAttributeIndex < domAttributeIndexMax) {
+                        domAttribute = move.get(domAttributeIndex);
+                        uiAttribute = dirtyAttributes.get(uiAttributeIndex);
+
+                        String domAttributeName = domAttribute.getLocalName();
+                        String uiAttributeName = uiAttribute.getDescriptor().getXmlLocalName();
+                        compare = UiAttributeNode.compareAttributes(domAttributeName,
+                                uiAttributeName);
+                    } else {
+                        compare = 1;
+                        uiAttribute = dirtyAttributes.get(uiAttributeIndex);
+                        domAttribute = null;
+                    }
+                } else if (domAttributeIndex < domAttributeIndexMax) {
+                    compare = -1;
+                    domAttribute = move.get(domAttributeIndex);
+                    uiAttribute = null;
+                } else {
+                    break;
+                }
+
+                if (compare < 0) {
+                    if (domAttribute.getNamespaceURI() != null) {
+                        attributes.setNamedItemNS(domAttribute);
+                    } else {
+                        attributes.setNamedItem(domAttribute);
+                    }
+                    domAttributeIndex++;
+                } else {
+                    assert compare >= 0;
+                    if (compare == 0) {
+                        domAttributeIndex++;
+                    }
+                    commitAttributeToXml(uiAttribute, uiAttribute.getCurrentValue());
+                    uiAttribute.setDirty(false);
+                    uiAttributeIndex++;
+                }
+            }
+        }
+
         return result;
     }
 

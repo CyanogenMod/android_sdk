@@ -43,7 +43,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -53,6 +55,8 @@ public class NodeProxy implements INode {
     private final UiViewElementNode mNode;
     private final Rect mBounds;
     private final NodeFactory mFactory;
+    /** Map from URI to Map(key=>value) (where no namespace uses "" as a key) */
+    private Map<String, Map<String, String>> mPendingAttributes;
 
     /**
      * Creates a new {@link INode} that wraps an {@link UiViewElementNode} that is
@@ -208,6 +212,7 @@ public class NodeProxy implements INode {
 
                             // Finally execute the closure that will act on the XML
                             c.handle(NodeProxy.this);
+                            applyPendingChanges();
                         }
                     });
         }
@@ -295,9 +300,24 @@ public class NodeProxy implements INode {
 
     public boolean setAttribute(String uri, String name, String value) {
         checkEditOK();
-
         UiAttributeNode attr = mNode.setAttributeValue(name, uri, value, true /* override */);
-        mNode.commitDirtyAttributesToXml();
+
+        if (uri == null) {
+            uri = ""; //$NON-NLS-1$
+        }
+
+        Map<String, String> map = null;
+        if (mPendingAttributes == null) {
+            // Small initial size: we don't expect many different namespaces
+            mPendingAttributes = new HashMap<String, Map<String, String>>(3);
+        } else {
+            map = mPendingAttributes.get(uri);
+        }
+        if (map == null) {
+            map = new HashMap<String, String>();
+            mPendingAttributes.put(uri, map);
+        }
+        map.put(name, value);
 
         return attr != null;
     }
@@ -307,6 +327,16 @@ public class NodeProxy implements INode {
 
         if (attrName == null) {
             return null;
+        }
+
+        if (mPendingAttributes != null) {
+            Map<String, String> map = mPendingAttributes.get(uri == null ? "" : uri); //$NON-NLS-1$
+            if (map != null) {
+                String value = map.get(attrName);
+                if (value != null) {
+                    return value;
+                }
+            }
         }
 
         if (uiNode.getXmlNode() != null) {
@@ -413,4 +443,25 @@ public class NodeProxy implements INode {
                 );
     }
 
+    /**
+     * If there are any pending changes in these nodes, apply them now
+     *
+     * @return true if any modifications were made
+     */
+    public boolean applyPendingChanges() {
+        boolean modified = false;
+
+        // Flush all pending attributes
+        if (mPendingAttributes != null) {
+            mNode.commitDirtyAttributesToXml();
+            modified = true;
+            mPendingAttributes = null;
+
+        }
+        for (INode child : getChildren()) {
+            modified |= ((NodeProxy) child).applyPendingChanges();
+        }
+
+        return modified;
+    }
 }

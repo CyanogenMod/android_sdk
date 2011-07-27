@@ -17,6 +17,7 @@ package com.android.ide.common.layout;
 
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.android.ide.common.api.INode.IAttribute;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 
 /** Test/mock implementation of {@link IAttribute} and {@link IDragAttribute} */
 public class TestAttribute implements IAttribute, IDragAttribute {
@@ -50,5 +51,7 @@ public class TestAttribute implements IAttribute, IDragAttribute {
         return "TestAttribute [name=" + mName + ", uri=" + mUri + ", value=" + mValue + "]";
     }
 
-
+    public int compareTo(IDragAttribute o) {
+        return UiAttributeNode.compareAttributes(mName, o.getName());
+    }
 }

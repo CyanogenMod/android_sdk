@@ -130,6 +130,7 @@ import java.util.Set;
                 Object sourceCanvas = GlobalCanvasDragInfo.getInstance().getSourceCanvas();
                 boolean createNew = event.detail == DND.DROP_COPY || sourceCanvas != canvas;
                 BaseLayoutRule.insertAt(targetNode, elements, createNew, indexFinal);
+                targetNode.applyPendingChanges();
 
                 // Clean up drag if applicable
                 if (event.detail == DND.DROP_MOVE) {

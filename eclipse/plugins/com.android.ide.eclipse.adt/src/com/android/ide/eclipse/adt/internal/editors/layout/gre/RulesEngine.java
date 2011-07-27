@@ -555,6 +555,10 @@ public class RulesEngine {
         if (childRule != null) {
             childRule.onCreate(newNode, parentNode, insertType);
         }
+
+        if (parentNode != null) {
+            ((NodeProxy) parentNode).applyPendingChanges();
+        }
     }
 
     /**

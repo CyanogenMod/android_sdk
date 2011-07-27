@@ -838,6 +838,7 @@ public class OutlinePage extends ContentOutlinePage
                             canvas.getRulesEngine().setInsertType(insertType);
                             int index = target.getSecond();
                             BaseLayoutRule.insertAt(targetNode, elements, false, index);
+                            targetNode.applyPendingChanges();
                             canvas.getClipboardSupport().deleteSelection("Remove", dragSelection);
                         }
                     });

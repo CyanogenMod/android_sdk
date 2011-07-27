@@ -16,12 +16,20 @@
 
 package com.android.ide.eclipse.adt.internal.editors.uimodel;
 
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
+
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.IManagedForm;
 import org.w3c.dom.Node;
+
+import java.util.Comparator;
 
 /**
  * Represents an XML attribute that can be modified by the XML editor's user interface.
@@ -32,7 +40,7 @@ import org.w3c.dom.Node;
  * This is an abstract class. Derived classes must implement the creation of the UI
  * and manage its synchronization with the XML.
  */
-public abstract class UiAttributeNode {
+public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
 
     private AttributeDescriptor mDescriptor;
     private UiElementNode mUiParent;
@@ -73,12 +81,14 @@ public abstract class UiAttributeNode {
      * <p/>
      * Subclasses should set the to true as a result of user interaction with the widgets in
      * the section and then should set to false when the commit() method completed.
+     *
+     * @param isDirty the new value to set the dirty-flag to
      */
     public void setDirty(boolean isDirty) {
-        boolean old_value = mIsDirty;
+        boolean wasDirty = mIsDirty;
         mIsDirty = isDirty;
         // TODO: for unknown attributes, getParent() != null && getParent().getEditor() != null
-        if (old_value != isDirty) {
+        if (wasDirty != isDirty) {
             AndroidXmlEditor editor = getUiParent().getEditor();
             if (editor != null) {
                 editor.editorDirtyStateChanged();
@@ -141,9 +151,9 @@ public abstract class UiAttributeNode {
      * so it will call this to refresh the attribute anyway. It's up to the
      * UI implementation to minimize refreshes.
      *
-     * @param xml_attribute_node
+     * @param node the node to read the value from
      */
-    public abstract void updateValue(Node xml_attribute_node);
+    public abstract void updateValue(Node node);
 
     /**
      * Called by the user interface when the editor is saved or its state changed
@@ -160,4 +170,63 @@ public abstract class UiAttributeNode {
      * </ul>
      */
     public abstract void commit();
+
+    // ---- Implements Comparable ----
+    public int compareTo(UiAttributeNode o) {
+        return compareAttributes(mDescriptor.getXmlLocalName(), o.mDescriptor.getXmlLocalName());
+    }
+
+    /**
+     * Returns {@link Comparator} values for ordering attributes in the following
+     * order:
+     * <ul>
+     *   <li> id
+     *   <li> style
+     *   <li> layout_width
+     *   <li> layout_height
+     *   <li> other layout params, sorted alphabetically
+     *   <li> other attributes, sorted alphabetically
+     * </ul>
+     *
+     * @param name1 the first attribute name to compare
+     * @param name2 the second attribute name to compare
+     * @return a negative number if name1 should be ordered before name2
+     */
+    public static int compareAttributes(String name1, String name2) {
+      int priority1 = getAttributePriority(name1);
+      int priority2 = getAttributePriority(name2);
+      if (priority1 != priority2) {
+          return priority1 - priority2;
+      }
+
+      // Sort remaining attributes alphabetically
+      return name1.compareTo(name2);
+    }
+
+    /** Returns a sorting priority for the given attribute name */
+    private static int getAttributePriority(String name) {
+        if (ATTR_ID.equals(name)) {
+            return 10;
+        }
+
+        if (ATTR_STYLE.equals(name)) {
+            return 20;
+        }
+
+        if (name.startsWith(ATTR_LAYOUT_PREFIX)) {
+            // Width and height are special cased because we (a) want width and height
+            // before the other layout attributes, and (b) we want width to sort before height
+            // even though it comes after it alphabetically.
+            if (name.equals(ATTR_LAYOUT_WIDTH)) {
+                return 30;
+            }
+            if (name.equals(ATTR_LAYOUT_HEIGHT)) {
+                return 40;
+            }
+
+            return 50;
+        }
+
+        return 60;
+    }
 }
