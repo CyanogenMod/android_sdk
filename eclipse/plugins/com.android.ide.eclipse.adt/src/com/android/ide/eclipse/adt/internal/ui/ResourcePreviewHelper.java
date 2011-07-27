@@ -29,6 +29,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.resources.ResourceType;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.DialogTray;
 import org.eclipse.jface.dialogs.TrayDialog;
 import org.eclipse.swt.SWT;
@@ -122,53 +123,63 @@ public class ResourcePreviewHelper {
             }
 
             BufferedImage image = null;
-            if (type == ResourceType.COLOR) {
-                ResourceResolver resources = mEditor.getResourceResolver();
-                ResourceValue value = resources.findResValue(resource, false);
-                if (value != null) {
-                    RGB color = ResourceHelper.resolveColor(resources, value);
-                    if (color != null) {
-                        image = ImageUtils.createColoredImage(WIDTH, HEIGHT, color);
-                    }
-                }
-            } else {
-                assert type == ResourceType.DRAWABLE;
-
-                ResourceResolver resources = mEditor.getResourceResolver();
-                ResourceValue drawable = resources.findResValue(resource, false);
-                if (drawable != null) {
-                    String path = drawable.getValue();
-
-                    // Special-case image files (other than 9-patch files) and render these
-                    // directly, in order to provide proper aspect ratio handling and
-                    // to handle scaling to show the full contents:
-                    if (ImageUtils.hasImageExtension(path)
-                            && !endsWithIgnoreCase(path, DOT_9PNG)) {
-                        File file = new File(path);
-                        if (file.exists()) {
-                            try {
-                                image = ImageIO.read(file);
-                                int width = image.getWidth();
-                                int height = image.getHeight();
-                                if (width > WIDTH || height > HEIGHT) {
-                                    double xScale = WIDTH / (double) width;
-                                    double yScale = HEIGHT / (double) height;
-                                    double scale = Math.min(xScale, yScale);
-                                    image = ImageUtils.scale(image, scale, scale);
-                                }
-                            } catch (IOException e) {
-                                AdtPlugin.log(e, "Can't read preview image %1$s", path);
-                            }
+            try {
+                if (type == ResourceType.COLOR) {
+                    ResourceResolver resources = mEditor.getResourceResolver();
+                    ResourceValue value = resources.findResValue(resource, false);
+                    if (value != null) {
+                        RGB color = ResourceHelper.resolveColor(resources, value);
+                        if (color != null) {
+                            image = ImageUtils.createColoredImage(WIDTH, HEIGHT, color);
                         }
                     }
+                } else {
+                    assert type == ResourceType.DRAWABLE;
 
-                    if (image == null) {
-                        RenderService renderService = RenderService.create(mEditor);
-                        renderService.setSize(WIDTH, HEIGHT);
-                        image = renderService.renderDrawable(drawable);
+                    ResourceResolver resources = mEditor.getResourceResolver();
+                    ResourceValue drawable = resources.findResValue(resource, false);
+                    if (drawable != null) {
+                        String path = drawable.getValue();
+
+                        // Special-case image files (other than 9-patch files) and render these
+                        // directly, in order to provide proper aspect ratio handling and
+                        // to handle scaling to show the full contents:
+                        if (ImageUtils.hasImageExtension(path)
+                                && !endsWithIgnoreCase(path, DOT_9PNG)) {
+                            File file = new File(path);
+                            if (file.exists()) {
+                                try {
+                                    image = ImageIO.read(file);
+                                    int width = image.getWidth();
+                                    int height = image.getHeight();
+                                    if (width > WIDTH || height > HEIGHT) {
+                                        double xScale = WIDTH / (double) width;
+                                        double yScale = HEIGHT / (double) height;
+                                        double scale = Math.min(xScale, yScale);
+                                        image = ImageUtils.scale(image, scale, scale);
+                                    }
+                                } catch (IOException e) {
+                                    AdtPlugin.log(e, "Can't read preview image %1$s", path);
+                                }
+                            }
+                        }
+
+                        if (image == null) {
+                            RenderService renderService = RenderService.create(mEditor);
+                            renderService.setSize(WIDTH, HEIGHT);
+                            image = renderService.renderDrawable(drawable);
+                        }
                     }
                 }
+            } catch (Throwable t) {
+                // Some kind of rendering error occurred. However, we don't want to use
+                //    AdtPlugin.log(t, "Can't generate preview for %1$s", resource);
+                // because if it's a severe type of error (such as an InternalError shown
+                // in issue #18623) then a dialog will pop up and interfere with the
+                // preview, so just log a warning (unfortunately without the trace) instead.
+                AdtPlugin.log(IStatus.WARNING, "Can't generate preview for %1$s", resource);
             }
+
             Display display = mEditor.getSite().getShell().getDisplay();
             if (image != null) {
                 mPreviewImageControl.setImage(SwtUtils.convertToSwt(display, image, true, -1));
