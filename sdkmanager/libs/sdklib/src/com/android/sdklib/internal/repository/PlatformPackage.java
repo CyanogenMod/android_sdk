@@ -261,4 +261,51 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
 
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result +
+                    ((mLayoutlibVersion == null) ? 0 : mLayoutlibVersion.hashCode());
+        result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
+        result = prime * result + ((mVersionName == null) ? 0 : mVersionName.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof PlatformPackage)) {
+            return false;
+        }
+        PlatformPackage other = (PlatformPackage) obj;
+        if (mLayoutlibVersion == null) {
+            if (other.mLayoutlibVersion != null) {
+                return false;
+            }
+        } else if (!mLayoutlibVersion.equals(other.mLayoutlibVersion)) {
+            return false;
+        }
+        if (mVersion == null) {
+            if (other.mVersion != null) {
+                return false;
+            }
+        } else if (!mVersion.equals(other.mVersion)) {
+            return false;
+        }
+        if (mVersionName == null) {
+            if (other.mVersionName != null) {
+                return false;
+            }
+        } else if (!mVersionName.equals(other.mVersionName)) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -352,4 +352,30 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
         // get the return code from the process
         return process.waitFor();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + mMinPlatformToolsRevision;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof ToolPackage)) {
+            return false;
+        }
+        ToolPackage other = (ToolPackage) obj;
+        if (mMinPlatformToolsRevision != other.mMinPlatformToolsRevision) {
+            return false;
+        }
+        return true;
+    }
 }

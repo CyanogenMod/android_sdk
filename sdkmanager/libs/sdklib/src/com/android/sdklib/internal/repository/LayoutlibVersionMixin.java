@@ -97,4 +97,34 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
     public Pair<Integer, Integer> getLayoutlibVersion() {
         return mLayoutlibVersion;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((mLayoutlibVersion == null) ? 0 : mLayoutlibVersion.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof LayoutlibVersionMixin)) {
+            return false;
+        }
+        LayoutlibVersionMixin other = (LayoutlibVersionMixin) obj;
+        if (mLayoutlibVersion == null) {
+            if (other.mLayoutlibVersion != null) {
+                return false;
+            }
+        } else if (!mLayoutlibVersion.equals(other.mLayoutlibVersion)) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -384,4 +384,92 @@ public class Archive implements IDescription, Comparable<Archive> {
         }
         return 0;
     }
+
+    /**
+     * Note: An {@link Archive}'s hash code does NOT depend on the parent {@link Package} hash code.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((mArch == null) ? 0 : mArch.hashCode());
+        result = prime * result + ((mChecksum == null) ? 0 : mChecksum.hashCode());
+        result = prime * result + ((mChecksumType == null) ? 0 : mChecksumType.hashCode());
+        result = prime * result + (mIsLocal ? 1231 : 1237);
+        result = prime * result + ((mLocalOsPath == null) ? 0 : mLocalOsPath.hashCode());
+        result = prime * result + ((mOs == null) ? 0 : mOs.hashCode());
+        result = prime * result + (int) (mSize ^ (mSize >>> 32));
+        result = prime * result + ((mUrl == null) ? 0 : mUrl.hashCode());
+        return result;
+    }
+
+    /**
+     * Note: An {@link Archive}'s equality does NOT depend on the parent {@link Package} equality.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Archive)) {
+            return false;
+        }
+        Archive other = (Archive) obj;
+        if (mArch == null) {
+            if (other.mArch != null) {
+                return false;
+            }
+        } else if (!mArch.equals(other.mArch)) {
+            return false;
+        }
+        if (mChecksum == null) {
+            if (other.mChecksum != null) {
+                return false;
+            }
+        } else if (!mChecksum.equals(other.mChecksum)) {
+            return false;
+        }
+        if (mChecksumType == null) {
+            if (other.mChecksumType != null) {
+                return false;
+            }
+        } else if (!mChecksumType.equals(other.mChecksumType)) {
+            return false;
+        }
+        if (mIsLocal != other.mIsLocal) {
+            return false;
+        }
+        if (mLocalOsPath == null) {
+            if (other.mLocalOsPath != null) {
+                return false;
+            }
+        } else if (!mLocalOsPath.equals(other.mLocalOsPath)) {
+            return false;
+        }
+        if (mOs == null) {
+            if (other.mOs != null) {
+                return false;
+            }
+        } else if (!mOs.equals(other.mOs)) {
+            return false;
+        }
+        if (mSize != other.mSize) {
+            return false;
+        }
+        if (mUrl == null) {
+            if (other.mUrl != null) {
+                return false;
+            }
+        } else if (!mUrl.equals(other.mUrl)) {
+            return false;
+        }
+        return true;
+    }
 }

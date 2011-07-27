@@ -98,4 +98,30 @@ public abstract class MinToolsPackage extends Package implements IMinToolsDepend
             props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(getMinToolsRevision()));
         }
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + mMinToolsRevision;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof MinToolsPackage)) {
+            return false;
+        }
+        MinToolsPackage other = (MinToolsPackage) obj;
+        if (mMinToolsRevision != other.mMinToolsRevision) {
+            return false;
+        }
+        return true;
+    }
 }
