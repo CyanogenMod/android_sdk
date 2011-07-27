@@ -19,8 +19,8 @@ package com.android.ide.eclipse.adt.internal.resources;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
@@ -49,14 +49,20 @@ public class ResourceNameValidator implements IInputValidator {
      */
     private boolean mIsFileType;
 
+    /**
+     * True if the resource type can point to image resources
+     */
+    private boolean mIsImageType;
+
     /** If true, allow .xml as a name suffix */
     private boolean mAllowXmlExtension;
 
     private ResourceNameValidator(boolean allowXmlExtension, Set<String> existing,
-            boolean isFileType) {
+            boolean isFileType, boolean isImageType) {
         mAllowXmlExtension = allowXmlExtension;
         mExisting = existing;
         mIsFileType = isFileType;
+        mIsImageType = isImageType;
     }
 
     public String isValid(String newText) {
@@ -70,8 +76,17 @@ public class ResourceNameValidator implements IInputValidator {
                 newText = newText.substring(0, newText.length() - DOT_XML.length());
             }
 
-            if (newText.indexOf('.') != -1 && !newText.endsWith(AdtConstants.DOT_XML)) {
-                return String.format("The filename must end with %1$s.", DOT_XML);
+            if (mAllowXmlExtension && mIsImageType
+                    && ImageUtils.hasImageExtension(newText)) {
+                newText = newText.substring(0, newText.lastIndexOf('.'));
+            }
+
+            if (newText.indexOf('.') != -1 && !newText.endsWith(DOT_XML)) {
+                if (mIsImageType) {
+                    return "The filename must end with .xml or .png";
+                } else {
+                    return "The filename must end with .xml";
+                }
             }
 
             // Resource names must be valid Java identifiers, since they will
@@ -126,7 +141,8 @@ public class ResourceNameValidator implements IInputValidator {
     public static ResourceNameValidator create(boolean allowXmlExtension,
             ResourceFolderType type) {
         boolean isFileType = type != ResourceFolderType.VALUES;
-        return new ResourceNameValidator(allowXmlExtension, null, isFileType);
+        return new ResourceNameValidator(allowXmlExtension, null, isFileType,
+                type == ResourceFolderType.DRAWABLE);
     }
 
     /**
@@ -142,7 +158,8 @@ public class ResourceNameValidator implements IInputValidator {
     public static ResourceNameValidator create(boolean allowXmlExtension, Set<String> existing,
             ResourceType type) {
         boolean isFileType = ResourceHelper.isFileBasedResourceType(type);
-        return new ResourceNameValidator(allowXmlExtension, existing, isFileType);
+        return new ResourceNameValidator(allowXmlExtension, existing, isFileType,
+                type == ResourceType.DRAWABLE);
     }
 
     /**
@@ -165,6 +182,7 @@ public class ResourceNameValidator implements IInputValidator {
         }
 
         boolean isFileType = ResourceHelper.isFileBasedResourceType(type);
-        return new ResourceNameValidator(allowXmlExtension, existing, isFileType);
+        return new ResourceNameValidator(allowXmlExtension, existing, isFileType,
+                type == ResourceType.DRAWABLE);
     }
 }

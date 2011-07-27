@@ -16,6 +16,8 @@
 
 package com.android.assetstudiolib;
 
+import com.android.resources.Density;
+
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -36,7 +38,7 @@ public class MenuIconGenerator extends GraphicGenerator {
     }
 
     public BufferedImage generate() {
-        final float scaleFactor = mOptions.density.scaleFactor();
+        final float scaleFactor = GraphicGenerator.getScaleFactor(mOptions.density);
         Rectangle imageRect = Util.scaleRectangle(BASE_IMAGE_RECT, scaleFactor);
         Rectangle targetRect = Util.scaleRectangle(BASE_TARGET_RECT, scaleFactor);
 
@@ -85,6 +87,6 @@ public class MenuIconGenerator extends GraphicGenerator {
 
     public static class Options {
         public BufferedImage sourceImage;
-        public GraphicGenerator.Options.Density density = GraphicGenerator.Options.Density.XHDPI;
+        public Density density = Density.XHIGH;
     }
 }

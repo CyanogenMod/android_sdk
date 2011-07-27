@@ -247,7 +247,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         return createXmlFile(file, xmlns, root, attrs, null);
     }
 
-    private static boolean createWsParentDirectory(IContainer wsPath) {
+    public static boolean createWsParentDirectory(IContainer wsPath) {
         if (wsPath.getType() == IResource.FOLDER) {
             if (wsPath.exists()) {
                 return true;
