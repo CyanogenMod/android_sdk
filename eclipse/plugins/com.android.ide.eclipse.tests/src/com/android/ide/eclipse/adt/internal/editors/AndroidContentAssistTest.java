@@ -432,6 +432,24 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkLayoutCompletion("completion9.xml",  "^<Button");
     }
 
+    public void testCompletion65() throws Exception {
+        // Test completion replacement when there is a selection
+        // (see issue http://code.google.com/p/android/issues/detail?id=18607 )
+        checkLayoutCompletion("completion10.xml", "\"[^wrap_content]\"");
+    }
+
+    public void testCompletion66() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "17[^sp]");
+    }
+
+    public void testCompletion67() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "17[^sp]");
+    }
+
+    public void testCompletion68() throws Exception {
+        checkResourceCompletion("completionvalues1.xml", "[^false]");
+    }
+
     // ---- Test *applying* code completion ----
 
 
@@ -704,6 +722,21 @@ public class AndroidContentAssistTest extends AdtProjectTest {
                 "android:layout_marginRight");
     }
 
+    public void testApplyCompletion42() throws Exception {
+        // Test completion replacement when there is a selection
+        // (see issue http://code.google.com/p/android/issues/detail?id=18607 )
+        checkApplyLayoutCompletion("completion10.xml", "\"[^wrap_content]\"", "fill_parent");
+    }
+
+    public void testApplyCompletion43() throws Exception {
+        // Same as testApplyCompletion42 but with a smaller selection range
+        checkApplyLayoutCompletion("completion10.xml", "\"[^wrap_c]ontent\"", "fill_parent");
+    }
+
+    public void testApplyCompletion44() throws Exception {
+        checkApplyResourceCompletion("completionvalues1.xml", "[^false]", "true");
+    }
+
     // --- Code Completion test infrastructure ----
 
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
@@ -768,9 +801,6 @@ public class AndroidContentAssistTest extends AdtProjectTest {
     private ICompletionProposal[] complete(IFile file, String caretLocation,
             AndroidContentAssist assist) throws Exception {
 
-        // Determine the offset
-        int offset = getCaretOffset(file, caretLocation);
-
         // Open file
         IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
         assertNotNull(page);
@@ -778,6 +808,9 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         assertTrue(editor instanceof AndroidXmlEditor);
         AndroidXmlEditor layoutEditor = (AndroidXmlEditor) editor;
         ISourceViewer viewer = layoutEditor.getStructuredSourceViewer();
+
+        // Determine the offset, and possibly make text range selections as well
+        int offset = updateCaret(viewer, caretLocation);
 
         // Run code completion
         ICompletionProposal[] proposals = assist.computeCompletionProposals(viewer, offset);

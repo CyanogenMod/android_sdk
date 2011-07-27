@@ -3,6 +3,7 @@ Code completion in completion1.xml for style="@android:^style/Widget.Button":
 @android:anim/
 @android:animator/
 @android:array/
+@android:attr/
 @android:bool/
 @android:color/
 @android:declare-styleable/

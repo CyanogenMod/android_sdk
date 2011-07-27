@@ -45,14 +45,12 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
-import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.NamedNodeMap;
@@ -195,7 +193,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 return;
             }
 
-            int selectionLength = getSelectionLength(viewer);
             int replaceLength = parent.length() - wordPrefix.length();
             boolean isNew = replaceLength == 0 && nextNonspaceChar(viewer, offset) == '<';
             // Special case: if we are right before the beginning of a new
@@ -214,19 +211,8 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             addMatchingProposals(proposals, choices, offset,
                     parentNode != null ? parentNode : null, wordPrefix, needTag,
                     false /* isAttribute */, isNew, false /*isComplete*/,
-                    selectionLength + replaceLength);
+                    replaceLength);
         }
-    }
-
-    private int getSelectionLength(ITextViewer viewer) {
-        // get the selection length
-        int selectionLength = 0;
-        ISelection selection = viewer.getSelectionProvider().getSelection();
-        if (selection instanceof TextSelection) {
-            TextSelection textSelection = (TextSelection) selection;
-            selectionLength = textSelection.getLength();
-        }
-        return selectionLength;
     }
 
     private void computeAttributeProposals(List<ICompletionProposal> proposals, ITextViewer viewer,
@@ -247,7 +233,6 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             return;
         }
 
-        int selectionLength = getSelectionLength(viewer);
         int replaceLength = info.replaceLength;
         if (info.correctedPrefix != null) {
             wordPrefix = info.correctedPrefix;
@@ -259,7 +244,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
 
         addMatchingProposals(proposals, choices, offset, parentNode != null ? parentNode : null,
                 wordPrefix, needTag, true /* isAttribute */, isNew, info.skipEndTag,
-                selectionLength + replaceLength);
+                replaceLength);
     }
 
     private char computeElementNeedTag(ITextViewer viewer, int offset, String wordPrefix) {
@@ -541,20 +526,13 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                ISourceViewer viewer = mEditor.getStructuredSourceViewer();
                char needTag = computeElementNeedTag(viewer, offset, wordPrefix);
 
-               // get the selection length
-               int selectionLength = 0;
-               ISelection selection = viewer.getSelectionProvider().getSelection();
-               if (selection instanceof TextSelection) {
-                   TextSelection textSelection = (TextSelection) selection;
-                   selectionLength = textSelection.getLength();
-               }
                int replaceLength = 0;
                addMatchingProposals(proposals, choices,
                        offset, parentNode, wordPrefix, needTag,
                                false /* isAttribute */,
                                false /*isNew*/,
                                false /*isComplete*/,
-                               selectionLength + replaceLength);
+                               replaceLength);
            }
        }
     }

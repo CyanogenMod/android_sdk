@@ -15,7 +15,6 @@ Code completion in completion9.xml for ^<Button:
 <ExpandableListView ></ExpandableListView>
 <FrameLayout ></FrameLayout>
 <Gallery />
-<GestureOverlayView /> : GestureOverlayView specific attributes.
 <GridView ></GridView>
 <HorizontalScrollView ></HorizontalScrollView>
 <ImageButton />
@@ -57,6 +56,7 @@ Code completion in completion9.xml for ^<Button:
 <WebView />
 <ZoomButton />
 <ZoomControls />
+<android.gesture.GestureOverlayView ></android.gesture.GestureOverlayView> : GestureOverlayView specific attributes.
 <fragment /> : A Fragment is a piece of an application's user interface or behavior  that can be placed in an Activity
 <include /> : Lets you statically include XML layouts inside other XML layouts.
 <merge ></merge> : A root tag useful for XML layouts inflated using a ViewStub.
