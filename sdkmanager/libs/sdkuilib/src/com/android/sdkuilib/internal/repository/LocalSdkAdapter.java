@@ -17,6 +17,7 @@
 package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.IDescription;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -93,7 +94,8 @@ class LocalSdkAdapter  {
          */
         public Object[] getElements(Object inputElement) {
             if (inputElement == LocalSdkAdapter.this) {
-                Package[] packages = mUpdaterData.getInstalledPackages();
+                Package[] packages = mUpdaterData.getInstalledPackages(
+                        new NullTaskMonitor(mUpdaterData.getSdkLog()));
 
                 if (packages != null) {
                     return packages;

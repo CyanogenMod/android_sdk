@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.ISdkLog;
+
 
 /**
  * A monitor interface for a {@link ITask}.
@@ -42,8 +44,10 @@ package com.android.sdklib.internal.repository;
  *   provided: error, normal and verbose. An UI may hide the log till an error is
  *   logged and/or might hide the verbose text unless a flag is checked by the user.
  *   This is set using {@link #log}, {@link #logError} and {@link #logVerbose}.
+ * <p/>
+ * A monitor is also an {@link ISdkLog} implementation.
  */
-public interface ITaskMonitor {
+public interface ITaskMonitor extends ISdkLog {
 
     /**
      * Sets the description in the current task dialog.
@@ -80,6 +84,12 @@ public interface ITaskMonitor {
      * the next calls or behave incoherently.
      */
     public void setProgressMax(int max);
+
+    /**
+     * Returns the max valie of the progress bar, as last set by {@link #setProgressMax(int)}.
+     * Returns 0 if the max has never been set yet.
+     */
+    public int getProgressMax();
 
     /**
      * Increments the current value of the progress bar.
@@ -121,5 +131,4 @@ public interface ITaskMonitor {
      * @return true if YES was clicked.
      */
     public boolean displayPrompt(final String title, final String message);
-
 }

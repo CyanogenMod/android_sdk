@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 
 /**
  * An {@link ITaskFactory} that creates a new {@link ProgressTask} dialog
@@ -35,7 +36,11 @@ public final class ProgressViewFactory implements ITaskFactory {
     }
 
     public void start(String title, ITask task) {
+        start(title, null /*monitor*/, task);
+    }
+
+    public void start(String title, ITaskMonitor parentMonitor, ITask task) {
         assert mProgressView != null;
-        mProgressView.startTask(title, task);
+        mProgressView.startTask(title, parentMonitor, task);
     }
 }
