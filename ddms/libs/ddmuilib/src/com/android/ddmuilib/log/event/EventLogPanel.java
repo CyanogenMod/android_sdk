@@ -591,7 +591,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     }
 
     private void resetUiFromUiThread() {
-        synchronized(mLock) {
+        synchronized (mLock) {
             for (EventDisplay eventDisplay : mEventDisplays) {
                 eventDisplay.resetUI();
             }

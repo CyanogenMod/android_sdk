@@ -80,12 +80,12 @@ public abstract class SdkTestCase extends TestCase {
             catch (InterruptedException e) {
                 // ignore
             }
-            synchronized(sdkLock) {
+            synchronized (sdkLock) {
                 loadStatus = adt.getSdkLoadStatus();
             }
         }
         Sdk sdk = null;
-        synchronized(sdkLock) {
+        synchronized (sdkLock) {
             assertEquals(LoadStatus.LOADED, loadStatus);
             sdk = Sdk.getCurrent();
         }
