@@ -23,6 +23,7 @@ import com.android.assetstudiolib.GraphicGenerator;
 import com.android.assetstudiolib.GraphicGeneratorContext;
 import com.android.assetstudiolib.LauncherIconGenerator;
 import com.android.assetstudiolib.LauncherIconGenerator.Options.Style;
+import com.android.assetstudiolib.TextRenderUtil;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
@@ -166,7 +167,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         foregroundComposite.setLayout(glForegroundComposite);
 
         mImageRadio = new Button(foregroundComposite, SWT.FLAT | SWT.TOGGLE);
-        mImageRadio.setSelection(true);
+        mImageRadio.setSelection(false);
         mImageRadio.addSelectionListener(this);
         mImageRadio.setText("Image");
 
@@ -214,8 +215,9 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         textLabel.setText("Text:");
 
         mText = new Text(mTextForm, SWT.BORDER);
-        mText.setText("Label");
-        mText.setLayoutData(pathLayoutData);
+        mText.setText("Aa");
+        mText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+        mText.addModifyListener(this);
 
         Label fontLabel = new Label(mTextForm, SWT.NONE);
         fontLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -240,8 +242,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         new Label(configurationArea, SWT.NONE);
 
         mPaddingSlider = new Slider(configurationArea, SWT.NONE);
+        mPaddingSlider.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
         mPaddingSlider.setEnabled(false);
-        mPaddingSlider.setLayoutData(pathLayoutData);
         // This doesn't work right -- not sure why. For now just use a plain slider
         // and subtract from it to get the real range.
         //mPaddingSlider.setValues(0, -10, 50, 0, 1, 10);
@@ -367,8 +369,13 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         updateColor(display, new RGB(0x00, 0x00, 0x00), false /*background*/);
 
         // Start out showing the image form
-        mImageRadio.setSelection(true);
-        chooseForegroundTab(mImageRadio, mImageForm);
+        //mImageRadio.setSelection(true);
+        //chooseForegroundTab(mImageRadio, mImageForm);
+        // No, start out showing the text, since the user doesn't have to enter anything
+        // initially and we still get images
+        mTextRadio.setSelection(true);
+        chooseForegroundTab(mTextRadio, mTextForm);
+
         validatePage();
     }
 
@@ -397,6 +404,12 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 mImagePathText.setText(sImagePath);
             }
             validatePage();
+
+            requestUpdatePreview(true /*quickly*/);
+
+            if (mTextRadio.getSelection()) {
+                mText.setFocus();
+            }
         }
     }
 
@@ -414,8 +427,13 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 // Preserve across wizard sessions
                 sImagePath = path;
             }
+        } else if (mTextRadio.getSelection()) {
+            String text = mText.getText().trim();
+            if (text.length() == 0) {
+                error = "Enter text";
+            }
         } else {
-            error = "Clipart and Text not yet implemented";
+            error = "Clipart not yet implemented";
         }
 
         setPageComplete(error == null);
@@ -435,6 +453,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
     public void modifyText(ModifyEvent e) {
         if (e.getSource() == mImagePathText) {
+            requestUpdatePreview(false);
+        } else if (e.getSource() == mText) {
             requestUpdatePreview(false);
         }
 
@@ -539,8 +559,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private void updateFontLabel(Font f) {
         FontData[] fd = f.getFontData();
         FontData primary = fd[0];
-        String description = String.format("%1$s %2$s", primary.name,
-                Integer.toString((int) primary.height));
+        String description = String.format("%1$s", primary.name);
         mFontButton.setText(description);
     }
 
@@ -558,8 +577,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             awtStyle = java.awt.Font.BOLD;
         }
 
-        int dpi = mFontButton.getDisplay().getDPI().y;
-        int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
+        // Always use a large font for the rendering, even though user is typically
+        // picking small font sizes in the font chooser
+        //int dpi = mFontButton.getDisplay().getDPI().y;
+        //int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
+        int height = new TextRenderUtil.Options().fontSize;
 
         return new java.awt.Font(fontData.getName(), awtStyle, height);
     }
@@ -635,21 +657,33 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         // Map of ids to images: Preserve insertion order (the densities)
         Map<String, BufferedImage> imageMap = new LinkedHashMap<String, BufferedImage>();
 
-        // Load the image
-        // TODO: Only do this when the source image type is image
-        String path = mImagePathText.getText().trim();
-        if (path.length() == 0) {
-            setErrorMessage("Enter a filename");
-            return Collections.emptyMap();
-        }
-        File file = new File(path);
-        if (!file.exists()) {
-            setErrorMessage(String.format("%1$s does not exist", file.getPath()));
-            return Collections.emptyMap();
-        }
+        BufferedImage sourceImage = null;
+        if (mImageRadio.getSelection()) {
+            // Load the image
+            // TODO: Only do this when the source image type is image
+            String path = mImagePathText.getText().trim();
+            if (path.length() == 0) {
+                setErrorMessage("Enter a filename");
+                return Collections.emptyMap();
+            }
+            File file = new File(path);
+            if (!file.exists()) {
+                setErrorMessage(String.format("%1$s does not exist", file.getPath()));
+                return Collections.emptyMap();
+            }
 
-        setErrorMessage(null);
-        BufferedImage sourceImage =  getImage(path, false);
+            setErrorMessage(null);
+            sourceImage = getImage(path, false);
+        } else if (mTextRadio.getSelection()) {
+            String text = mText.getText();
+            TextRenderUtil.Options options = new TextRenderUtil.Options();
+            options.font = getSelectedFont();
+            sourceImage = TextRenderUtil.renderTextImage(text, options);
+        } else {
+            assert mClipartRadio.getSelection();
+            // Not yet supported
+            return imageMap;
+        }
 
         LauncherIconGenerator.Options options = new LauncherIconGenerator.Options();
         options.shape = mCircleButton.getSelection() ? CIRCLE : SQUARE;
