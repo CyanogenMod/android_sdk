@@ -426,21 +426,35 @@ public final class BaseProjectHelper {
             IProject project = javaProject.getProject();
 
             // check if it's an android project based on its nature
-            try {
-                if (project.hasNature(AdtConstants.NATURE_DEFAULT)) {
-                    if (filter == null || filter.accept(project)) {
-                        androidProjectList.add(javaProject);
-                    }
+            if (isAndroidProject(project)) {
+                if (filter == null || filter.accept(project)) {
+                    androidProjectList.add(javaProject);
                 }
-            } catch (CoreException e) {
-                // this exception, thrown by IProject.hasNature(), means the project either doesn't
-                // exist or isn't opened. So, in any case we just skip it (the exception will
-                // bypass the ArrayList.add()
             }
         }
 
         // return the android projects list.
         return androidProjectList.toArray(new IJavaProject[androidProjectList.size()]);
+    }
+
+    /**
+     * Returns true if the given project is an Android project (e.g. is a Java project
+     * that also has the Android nature)
+     *
+     * @param project the project to test
+     * @return true if the given project is an Android project
+     */
+    public static boolean isAndroidProject(IProject project) {
+        // check if it's an android project based on its nature
+        try {
+            return project.hasNature(AdtConstants.NATURE_DEFAULT);
+        } catch (CoreException e) {
+            // this exception, thrown by IProject.hasNature(), means the project either doesn't
+            // exist or isn't opened. So, in any case we just skip it (the exception will
+            // bypass the ArrayList.add()
+        }
+
+        return false;
     }
 
     /**

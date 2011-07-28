@@ -29,7 +29,6 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
@@ -56,7 +55,7 @@ import java.util.regex.Pattern;
 /**
  * @see ExtractStringRefactoring
  */
-class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage {
+class ExtractStringInputPage extends UserInputWizardPage {
 
     /** Last res file path used, shared across the session instances but specific to the
      *  current project. The default for unknown projects is {@link #DEFAULT_RES_FILE_PATH}. */
@@ -286,7 +285,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
     /**
      * Utility method to guess a suitable new XML ID based on the selected string.
      */
-    private String guessId(String text) {
+    public static String guessId(String text) {
         if (text == null) {
             return "";  //$NON-NLS-1$
         }
@@ -315,7 +314,7 @@ class ExtractStringInputPage extends UserInputWizardPage implements IWizardPage 
      * Validates fields of the wizard input page. Displays errors as appropriate and
      * enable the "Next" button (or not) by calling {@link #setPageComplete(boolean)}.
      *
-     * If validation succeeds, this udpates the text id & value in the refactoring object.
+     * If validation succeeds, this updates the text id & value in the refactoring object.
      *
      * @return True if the page has been positively validated. It may still have warnings.
      */

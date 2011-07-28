@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 import static com.android.sdklib.SdkConstants.FD_SOURCES;
 
 import com.android.ide.common.resources.ResourceFile;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks.ResourceLink;
@@ -231,7 +232,7 @@ public class HyperlinksTest extends AdtProjectTest {
         // Open the first link
         IHyperlink link = links[0];
         link.open();
-        IEditorPart newEditor = Hyperlinks.getEditor();
+        IEditorPart newEditor = AdtUtils.getActiveEditor();
         // Ensure that this isn't an invalid file (e.g. opening the SDK platform files
         // with incorrect content binding could cause this)
         assertTrue(!(newEditor instanceof ErrorEditorPart));

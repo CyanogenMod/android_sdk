@@ -16,6 +16,14 @@
 
 package com.android.ide.eclipse.adt;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+
 
 /** Utility methods for ADT */
 public class AdtUtils {
@@ -103,5 +111,41 @@ public class AdtUtils {
         }
 
         return d[m][n];
+    }
+
+    /**
+     * Returns the current editor (the currently visible and active editor), or null if
+     * not found
+     *
+     * @return the current editor, or null
+     */
+    public static IEditorPart getActiveEditor() {
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null) {
+            IWorkbenchPage page = window.getActivePage();
+            if (page != null) {
+                return page.getActiveEditor();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the file for the current editor, if any.
+     *
+     * @return the file for the current editor, or null if none
+     */
+    public static IFile getActiveFile() {
+        IEditorPart editor = getActiveEditor();
+        if (editor != null) {
+            IEditorInput input = editor.getEditorInput();
+            if (input instanceof IFileEditorInput) {
+                IFileEditorInput fileInput = (IFileEditorInput) input;
+                return fileInput.getFile();
+            }
+        }
+
+        return null;
     }
 }

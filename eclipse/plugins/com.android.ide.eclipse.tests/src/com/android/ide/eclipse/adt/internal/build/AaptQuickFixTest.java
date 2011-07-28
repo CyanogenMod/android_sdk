@@ -22,9 +22,9 @@ import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -180,7 +180,7 @@ public class AaptQuickFixTest extends AdtProjectTest {
         assertNotNull(path.toPortableString(), newFile);
 
         // Ensure that the newly created file was opened
-        IEditorPart currentFile = Hyperlinks.getEditor();
+        IEditorPart currentFile = AdtUtils.getActiveEditor();
         assertEquals(newFile.getProjectRelativePath(),
              ((FileEditorInput) currentFile.getEditorInput()).getFile().getProjectRelativePath());
 
@@ -267,7 +267,7 @@ public class AaptQuickFixTest extends AdtProjectTest {
 
         // Open the file to ensure we can get an XML model with getExistingModelForEdit:
         AdtPlugin.openFile(file, null);
-        IEditorPart newEditor = Hyperlinks.getEditor();
+        IEditorPart newEditor = AdtUtils.getActiveEditor();
         assertTrue(newEditor instanceof AndroidXmlEditor);
 
         AndroidXmlEditor xmlEditor = (AndroidXmlEditor) newEditor;

@@ -45,6 +45,7 @@ import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
@@ -118,11 +119,8 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.MultiPageEditorPart;
@@ -779,7 +777,7 @@ public class Hyperlinks {
     private static Pair<IFile, IRegion> findIdDefinition(IProject project, String id) {
         // FIRST look in the same file as the originating request, that's where you usually
         // want to jump
-        IFile self = getFile();
+        IFile self = AdtUtils.getActiveFile();
         if (self != null && EXT_XML.equals(self.getFileExtension())) {
             Pair<IFile, IRegion> target = findIdInXml(id, self);
             if (target != null) {
@@ -1363,7 +1361,7 @@ public class Hyperlinks {
     }
 
     /** Returns the editor applicable to this hyperlink detection */
-    public static IEditorPart getEditor() {
+    private static IEditorPart getEditor() {
         // I would like to be able to find this via getAdapter(TextEditor.class) but
         // couldn't find a way to initialize the editor context from
         // AndroidSourceViewerConfig#getHyperlinkDetectorTargets (which only has
@@ -1372,34 +1370,12 @@ public class Hyperlinks {
         // Therefore, for now, use a hack. This hack is reasonable because hyperlink
         // resolvers are only run for the front-most visible window in the active
         // workbench.
-        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-            IWorkbenchPage page = window.getActivePage();
-            if (page != null) {
-                return page.getActiveEditor();
-            }
-        }
-
-        return null;
-    }
-
-    /** Returns the file where the link request originated */
-    private static IFile getFile() {
-        IEditorPart editor = getEditor();
-        if (editor != null) {
-            IEditorInput input = editor.getEditorInput();
-            if (input instanceof IFileEditorInput) {
-                IFileEditorInput fileInput = (IFileEditorInput) input;
-                return fileInput.getFile();
-            }
-        }
-
-        return null;
+        return AdtUtils.getActiveEditor();
     }
 
     /** Returns the project applicable to this hyperlink detection */
     private static IProject getProject() {
-        IFile file = getFile();
+        IFile file = AdtUtils.getActiveFile();
         if (file != null) {
             return file.getProject();
         }
