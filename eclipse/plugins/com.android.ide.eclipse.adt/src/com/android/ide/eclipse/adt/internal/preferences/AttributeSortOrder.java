@@ -1,0 +1,92 @@
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Eclipse Public License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.eclipse.org/org/documents/epl-v10.php
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.ide.eclipse.adt.internal.preferences;
+
+import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
+
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
+
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.w3c.dom.Attr;
+
+import java.util.Comparator;
+
+/** Order to use when sorting attributes */
+public enum AttributeSortOrder {
+    NO_SORTING("none"),     //$NON-NLS-1$
+    ALPHABETICAL("alpha"),  //$NON-NLS-1$
+    LOGICAL("logical");     //$NON-NLS-1$
+
+    AttributeSortOrder(String key) {
+        this.key = key;
+    }
+
+    public final String key;
+
+    public Comparator<Attr> getAttributeComparator() {
+        switch (this) {
+            case ALPHABETICAL:
+                return ALPHABETICAL_COMPARATOR;
+            case NO_SORTING:
+                return EXISTING_ORDER_COMPARATOR;
+            case LOGICAL:
+            default:
+                return SORTED_ORDER_COMPARATOR;
+        }
+    }
+
+    /** Comparator which can be used to sort attributes in the coding style priority order */
+    private static final Comparator<Attr> SORTED_ORDER_COMPARATOR = new Comparator<Attr>() {
+        public int compare(Attr attr1, Attr attr2) {
+            // Namespace declarations should always go first
+            if (XMLNS.equals(attr1.getPrefix())) {
+                if (XMLNS.equals(attr2.getPrefix())) {
+                    return 0;
+                }
+                return -1;
+            } else if (XMLNS.equals(attr2.getPrefix())) {
+                return 1;
+            }
+
+            // Sort by preferred attribute order
+            return UiAttributeNode.compareAttributes(attr1.getLocalName(),
+                    attr2.getLocalName());
+        }
+    };
+
+    /**
+     * Comparator which can be used to "sort" attributes into their existing source order
+     * (which is not the same as the node map iteration order in the DOM model)
+     */
+    @SuppressWarnings("restriction")
+    private static final Comparator<Attr> EXISTING_ORDER_COMPARATOR = new Comparator<Attr>() {
+        public int compare(Attr attr1, Attr attr2) {
+            IndexedRegion region1 = (IndexedRegion) attr1;
+            IndexedRegion region2 = (IndexedRegion) attr2;
+
+            return region1.getStartOffset() - region2.getStartOffset();
+        }
+    };
+
+    /**
+     * Comparator which can be used to sort attributes into alphabetical order
+     */
+    private static final Comparator<Attr> ALPHABETICAL_COMPARATOR = new Comparator<Attr>() {
+        public int compare(Attr attr1, Attr attr2) {
+            return attr1.getLocalName().compareTo(attr2.getLocalName());
+        }
+    };
+}

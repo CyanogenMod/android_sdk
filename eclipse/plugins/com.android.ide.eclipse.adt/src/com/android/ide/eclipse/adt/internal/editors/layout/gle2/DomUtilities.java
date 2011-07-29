@@ -48,6 +48,65 @@ import java.util.Set;
 
 @SuppressWarnings("restriction") // No replacement for restricted XML model yet
 public class DomUtilities {
+    private static final String AMPERSAND_ENTITY = "&amp;"; //$NON-NLS-1$
+
+    /**
+     * Finds the nearest common parent of the two given nodes (which could be one of the
+     * two nodes as well)
+     *
+     * @param node1 the first node to test
+     * @param node2 the second node to test
+     * @return the nearest common parent of the two given nodes
+     */
+    public static Node getCommonAncestor(Node node1, Node node2) {
+        while (node2 != null) {
+            Node current = node1;
+            while (current != null && current != node2) {
+                current = current.getParentNode();
+            }
+            if (current == node2) {
+                return current;
+            }
+            node2 = node2.getParentNode();
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the depth of the given node (with the document node having depth 0,
+     * and the document element having depth 1)
+     *
+     * @param node the node to test
+     * @return the depth in the document
+     */
+    public static int getDepth(Node node) {
+        int depth = -1;
+        while (node != null) {
+            depth++;
+            node = node.getParentNode();
+        }
+
+        return depth;
+    }
+
+    /**
+     * Returns true if the given node has one or more element children
+     *
+     * @param node the node to test for element children
+     * @return true if the node has one or more element children
+     */
+    public static boolean hasElementChildren(Node node) {
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Returns the XML DOM node corresponding to the given offset of the given
      * document.
@@ -339,18 +398,51 @@ public class DomUtilities {
 
         int n = attrValue.length();
         StringBuilder sb = new StringBuilder(2 * n);
+        appendXmlAttributeValue(sb, attrValue);
+        return sb.toString();
+    }
+
+    /**
+     * Appends text to the given {@link StringBuilder} and escapes it as required for a
+     * DOM attribute node.
+     *
+     * @param sb the string builder
+     * @param attrValue the attribute value to be appended and escaped
+     */
+    public static void appendXmlAttributeValue(StringBuilder sb, String attrValue) {
+        int n = attrValue.length();
         for (int i = 0; i < n; i++) {
             char c = attrValue.charAt(i);
             if (c == '"') {
                 sb.append("&quot;"); //$NON-NLS-1$
             } else if (c == '\'') {
                 sb.append("&apos;"); //$NON-NLS-1$
+            } else if (c == '&') {
+                sb.append(AMPERSAND_ENTITY);
             } else {
                 sb.append(c);
             }
         }
+    }
 
-        return sb.toString();
+    /**
+     * Appends text to the given {@link StringBuilder} and escapes it as required for a
+     * DOM text node.
+     *
+     * @param sb the string builder
+     * @param textValue the text value to be appended and escaped
+     */
+    public static void appendXmlTextValue(StringBuilder sb, String textValue) {
+        for (int i = 0, n = textValue.length(); i < n; i++) {
+            char c = textValue.charAt(i);
+            if (c == '<') {
+                sb.append("&lt;");  //$NON-NLS-1$
+            } else if (c == '&') {
+                sb.append(AMPERSAND_ENTITY);
+            } else {
+                sb.append(c);
+            }
+        }
     }
 
     /** Utility used by {@link #getFreeWidgetId(Element)} */
