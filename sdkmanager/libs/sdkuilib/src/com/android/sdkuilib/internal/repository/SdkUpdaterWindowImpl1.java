@@ -127,7 +127,7 @@ public class SdkUpdaterWindowImpl1 implements ISdkUpdaterWindow {
     }
 
     private void createShell() {
-        mShell = new Shell(mParentShell, SWT.SHELL_TRIM);
+        mShell = new Shell(mParentShell, SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
