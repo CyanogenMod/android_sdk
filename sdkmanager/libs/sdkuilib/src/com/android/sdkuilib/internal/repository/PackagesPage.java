@@ -799,7 +799,7 @@ public class PackagesPage extends UpdaterPage
 
     private void onSelectNewUpdates() {
         ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
-        synchronized(mDiffLogic.mCurrentCategories) {
+        synchronized (mDiffLogic.mCurrentCategories) {
             for (PkgCategory cat : mDiffLogic.mCurrentCategories) {
                 boolean selected = false;
                 for (PkgItem item : cat.getItems()) {
