@@ -33,7 +33,6 @@ import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdkuilib.internal.repository.PackageLoader.ISourceLoadedCallback;
 import com.android.sdkuilib.internal.repository.PackageLoader.PkgItem;
 import com.android.sdkuilib.internal.repository.PackageLoader.PkgState;
-import com.android.sdkuilib.internal.repository.PackagesPage.PackagesDiffLogic.UpdateOp;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.ui.GridDataBuilder;
@@ -164,7 +163,8 @@ public class PackagesPage extends UpdaterPage
     }
 
     public void onPageSelected() {
-        if (mDiffLogic.mCurrentCategories == null || mDiffLogic.mCurrentCategories.isEmpty()) {
+        List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
+        if (cats == null || cats.isEmpty()) {
             // Initialize the package list the first time the page is shown.
             loadPackages();
         }
@@ -312,7 +312,7 @@ public class PackagesPage extends UpdaterPage
             public void widgetSelected(SelectionEvent e) {
                 loadPackages();
                 // Reset the expanded state when changing sort algorithm
-                expandInitial(mDiffLogic.mCurrentCategories);
+                expandInitial(mTreeViewer.getInput());
             }
         });
         mCheckSortApi.setText("API level");
@@ -326,7 +326,7 @@ public class PackagesPage extends UpdaterPage
             public void widgetSelected(SelectionEvent e) {
                 loadPackages();
                 // Reset the expanded state when changing sort algorithm
-                expandInitial(mDiffLogic.mCurrentCategories);
+                expandInitial(mTreeViewer.getInput());
             }
         });
 
@@ -531,19 +531,23 @@ public class PackagesPage extends UpdaterPage
         // action done after loadPackages must check the UI hasn't been
         // disposed yet. Otherwise hilarity ensues.
 
-        final boolean useSortByApi = isSortByApi();
+        final boolean displaySortByApi = isSortByApi();
 
         if (!mTreeColumnName.isDisposed()) {
             mTreeColumnName.setImage(
-                    getImage(useSortByApi ? ICON_SORT_BY_API : ICON_SORT_BY_SOURCE));
+                    getImage(displaySortByApi ? ICON_SORT_BY_API : ICON_SORT_BY_SOURCE));
         }
 
-        final UpdateOp op = mDiffLogic.updateStart(useSortByApi);
+        mDiffLogic.updateStart();
         mDiffLogic.mPackageLoader.loadPackages(new ISourceLoadedCallback() {
-            boolean needsRefresh = mDiffLogic.isSortByApi() == useSortByApi;
+            // We'll need to refresh the tree if the tree is not display the categories
+            // for the current sort type.
+            boolean needsRefresh =
+                mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi());
 
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
-                if (mDiffLogic.updateSourcePackages(op, source, newPackages) || needsRefresh) {
+                if (mDiffLogic.updateSourcePackages(displaySortByApi, source, newPackages) ||
+                        needsRefresh) {
                     refreshViewerSync();
                     needsRefresh = false;
                 }
@@ -555,7 +559,7 @@ public class PackagesPage extends UpdaterPage
             }
 
             public void onLoadCompleted() {
-                if (mDiffLogic.updateEnd(op) || needsRefresh) {
+                if (mDiffLogic.updateEnd(displaySortByApi) || needsRefresh) {
                     refreshViewerSync();
                     needsRefresh = false;
                 }
@@ -572,9 +576,10 @@ public class PackagesPage extends UpdaterPage
                 public void run() {
                     if (!mGroupPackages.isDisposed()) {
 
-                        if (mTreeViewer.getInput() != mDiffLogic.mCurrentCategories) {
+                        List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
+                        if (mTreeViewer.getInput() != cats) {
                             // set initial input
-                            mTreeViewer.setInput(mDiffLogic.mCurrentCategories);
+                            mTreeViewer.setInput(cats);
                         } else {
                             // refresh existing, which preserves the expanded state, the selection
                             // and the checked state.
@@ -582,7 +587,7 @@ public class PackagesPage extends UpdaterPage
                         }
 
                         // set the initial expanded state
-                        expandInitial(mDiffLogic.mCurrentCategories);
+                        expandInitial(mTreeViewer.getInput());
 
                         updateButtonsState();
                         updateMenuCheckmarks();
@@ -797,10 +802,13 @@ public class PackagesPage extends UpdaterPage
         mButtonDelete.setEnabled(canDelete);
     }
 
+    @SuppressWarnings("unchecked")
     private void onSelectNewUpdates() {
         ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
-        synchronized (mDiffLogic.mCurrentCategories) {
-            for (PkgCategory cat : mDiffLogic.mCurrentCategories) {
+
+        List<PkgCategory> cats = (List<PkgCategory>) mTreeViewer.getInput();
+        synchronized (cats) {
+            for (PkgCategory cat : cats) {
                 boolean selected = false;
                 for (PkgItem item : cat.getItems()) {
                     if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
@@ -1073,7 +1081,8 @@ public class PackagesPage extends UpdaterPage
         }
 
         private PkgCategory findCategoryForItem(PkgItem item) {
-            for (PkgCategory cat : mDiffLogic.mCurrentCategories) {
+            List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
+            for (PkgCategory cat : cats) {
                 for (PkgItem i : cat.getItems()) {
                     if (i == item) {
                         return cat;
@@ -1423,10 +1432,6 @@ public class PackagesPage extends UpdaterPage
         final PackageLoader mPackageLoader;
         final UpdaterData mUpdaterData;
 
-        final List<PkgCategory> mApiCategories = new ArrayList<PkgCategory>();
-        final List<PkgCategory> mSourceCategories = new ArrayList<PkgCategory>();
-        List<PkgCategory> mCurrentCategories = mApiCategories;
-
         public PackagesDiffLogic(UpdaterData updaterData) {
             mUpdaterData = updaterData;
             mPackageLoader = new PackageLoader(updaterData);
@@ -1436,78 +1441,113 @@ public class PackagesPage extends UpdaterPage
          * An update operation, customized to either sort by API or sort by source.
          */
         abstract class UpdateOp {
-            public final Set<SdkSource> mVisitedSources = new HashSet<SdkSource>();
+            private final Set<SdkSource> mVisitedSources = new HashSet<SdkSource>();
+            protected final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
+
+            /** Retrieve the sorted category list. */
+            public List<PkgCategory> getCategories() {
+                return mCategories;
+            }
 
             /** Retrieve the category key for the given package, either local or remote. */
             public abstract Object getCategoryKey(Package pkg);
+
             /** Modified {@code currentCategories} to add default categories. */
-            public abstract void addDefaultCategories(List<PkgCategory> currentCategories);
+            public abstract void addDefaultCategories();
+
             /** Creates the category for the given key and returns it. */
             public abstract PkgCategory createCategory(Object catKey);
+
             /** Sorts the category list (but not the items within the categories.) */
-            public abstract void sortCategoryList(List<PkgCategory> categoryList);
+            public abstract void sortCategoryList();
+
             /** Called after items of a given category have changed. Used to sort the
              * items and/or adjust the category name. */
-            public abstract void postCategoryItemsChanged(List<PkgCategory> categoryList);
+            public abstract void postCategoryItemsChanged();
+
             /** Add the new package or merge it as an update or does nothing if this package
              * is already part of the category items.
              * Returns true if the category item list has changed. */
             public abstract boolean mergeNewPackage(Package newPackage, PkgCategory cat);
-        }
 
-        public boolean isSortByApi() {
-            return mCurrentCategories == mApiCategories;
-        }
+            public void updateStart() {
+                mVisitedSources.clear();
 
-        public UpdateOp updateStart(boolean sortByApi) {
-            mCurrentCategories = sortByApi ? mApiCategories : mSourceCategories;
-
-            UpdateOp info = sortByApi ? (new UpdateOpApi()) : (new UpdateOpSource());
-
-            // Note that default categories are created after the unused ones so that
-            // the callback can decide whether they should be marked as unused or not.
-            for (PkgCategory cat : mCurrentCategories) {
-                cat.setUnused(true);
-            }
-
-            info.addDefaultCategories(mCurrentCategories);
-
-            return info;
-        }
-
-        public boolean updateSourcePackages(UpdateOp op, SdkSource source, Package[] newPackages) {
-            if (newPackages.length > 0) {
-                op.mVisitedSources.add(source);
-            }
-            if (source == null) {
-                return processLocals(op, newPackages);
-            } else {
-                return processSource(op, source, newPackages);
-            }
-        }
-
-        public boolean updateEnd(UpdateOp op) {
-            boolean hasChanged = false;
-
-            // Remove unused categories
-            for (Iterator<PkgCategory> catIt = mCurrentCategories.iterator(); catIt.hasNext(); ) {
-                PkgCategory cat = catIt.next();
-                if (cat.isUnused()) {
-                    catIt.remove();
-                    hasChanged  = true;
-                    continue;
+                // Note that default categories are created after the unused ones so that
+                // the callback can decide whether they should be marked as unused or not.
+                for (PkgCategory cat : mCategories) {
+                    cat.setUnused(true);
                 }
 
-                // Remove all items which source we have not been visited. They are obsolete.
-                for (Iterator<PkgItem> itemIt = cat.getItems().iterator(); itemIt.hasNext(); ) {
-                    PkgItem item = itemIt.next();
-                    if (!op.mVisitedSources.contains(item.getSource())) {
-                        itemIt.remove();
-                        hasChanged  = true;
+                addDefaultCategories();
+            }
+
+            public boolean updateSourcePackages(SdkSource source, Package[] newPackages) {
+                if (newPackages.length > 0) {
+                    mVisitedSources.add(source);
+                }
+                if (source == null) {
+                    return processLocals(this, newPackages);
+                } else {
+                    return processSource(this, source, newPackages);
+                }
+            }
+
+            public boolean updateEnd() {
+                boolean hasChanged = false;
+
+                // Remove unused categories
+                synchronized (mCategories) {
+                    for (Iterator<PkgCategory> catIt = mCategories.iterator(); catIt.hasNext(); ) {
+                        PkgCategory cat = catIt.next();
+                        if (cat.isUnused()) {
+                            catIt.remove();
+                            hasChanged  = true;
+                            continue;
+                        }
+
+                        // Remove all items which obsolete source we have not been visited.
+                        for (Iterator<PkgItem> itemIt = cat.getItems().iterator();
+                                itemIt.hasNext(); ) {
+                            PkgItem item = itemIt.next();
+                            if (!mVisitedSources.contains(item.getSource())) {
+                                itemIt.remove();
+                                hasChanged  = true;
+                            }
+                        }
                     }
                 }
+                return hasChanged;
             }
-            return hasChanged;
+
+        }
+
+        private final UpdateOpApi    mOpApi    = new UpdateOpApi();
+        private final UpdateOpSource mOpSource = new UpdateOpSource();
+
+        public List<PkgCategory> getCategories(boolean displayIsSortByApi) {
+            return displayIsSortByApi ? mOpApi.getCategories() : mOpSource.getCategories();
+        }
+
+        public void updateStart() {
+            mOpApi.updateStart();
+            mOpSource.updateStart();
+        }
+
+        public boolean updateSourcePackages(
+                boolean displayIsSortByApi,
+                SdkSource source,
+                Package[] newPackages) {
+
+            boolean apiListChanged = mOpApi.updateSourcePackages(source, newPackages);
+            boolean sourceListChanged = mOpSource.updateSourcePackages(source, newPackages);
+            return displayIsSortByApi ? apiListChanged : sourceListChanged;
+        }
+
+        public boolean updateEnd(boolean displayIsSortByApi) {
+            boolean apiListChanged = mOpApi.updateEnd();
+            boolean sourceListChanged = mOpSource.updateEnd();
+            return displayIsSortByApi ? apiListChanged : sourceListChanged;
         }
 
         /** Process all local packages. Returns true if something changed.
@@ -1520,7 +1560,7 @@ public class PackagesPage extends UpdaterPage
             assert newPackages.size() == packages.length;
 
             // Upgrade 'new' items to 'installed' for any local package we already know about
-            for (PkgCategory cat : mCurrentCategories) {
+            for (PkgCategory cat : op.getCategories()) {
                 List<PkgItem> items = cat.getItems();
                 for (int i = 0; i < items.size(); i++) {
                     PkgItem item = items.get(i);
@@ -1548,7 +1588,7 @@ public class PackagesPage extends UpdaterPage
             }
 
             // Downgrade 'installed' items to 'new' if their package isn't listed anymore
-            for (PkgCategory cat : mCurrentCategories) {
+            for (PkgCategory cat : op.getCategories()) {
                 for (PkgItem item : cat.getItems()) {
                     if (item.getState() == PkgState.INSTALLED &&
                             !newPackages.contains(item.getMainPackage())) {
@@ -1561,13 +1601,13 @@ public class PackagesPage extends UpdaterPage
             // Create new 'installed' items for any local package we haven't processed yet
             for (Package newPackage : unusedPackages) {
                 Object catKey = op.getCategoryKey(newPackage);
-                PkgCategory cat = findCurrentCategory(mCurrentCategories, catKey);
+                PkgCategory cat = findCurrentCategory(op.getCategories(), catKey);
 
                 if (cat == null) {
                     // This is a new category. Create it and add it to the list.
                     cat = op.createCategory(catKey);
-                    mCurrentCategories.add(cat);
-                    op.sortCategoryList(mCurrentCategories);
+                    op.getCategories().add(cat);
+                    op.sortCategoryList();
                 }
 
                 cat.getItems().add(new PkgItem(newPackage, PkgState.INSTALLED));
@@ -1576,7 +1616,7 @@ public class PackagesPage extends UpdaterPage
             }
 
             if (hasChanged) {
-                op.postCategoryItemsChanged(mCurrentCategories);
+                op.postCategoryItemsChanged();
             }
 
             return hasChanged;
@@ -1593,7 +1633,7 @@ public class PackagesPage extends UpdaterPage
             assert newPackages.size() == packages.length;
 
             // Remove any items or updates that are no longer in the source's packages
-            for (PkgCategory cat : mCurrentCategories) {
+            for (PkgCategory cat : op.getCategories()) {
                 List<PkgItem> items = cat.getItems();
                 for (int i = 0; i < items.size(); i++) {
                     PkgItem item = items.get(i);
@@ -1631,13 +1671,13 @@ public class PackagesPage extends UpdaterPage
             // Add any new unknown packages
             for (Package newPackage : unusedPackages) {
                 Object catKey = op.getCategoryKey(newPackage);
-                PkgCategory cat = findCurrentCategory(mCurrentCategories, catKey);
+                PkgCategory cat = findCurrentCategory(op.getCategories(), catKey);
 
                 if (cat == null) {
                     // This is a new category. Create it and add it to the list.
                     cat = op.createCategory(catKey);
-                    mCurrentCategories.add(cat);
-                    op.sortCategoryList(mCurrentCategories);
+                    op.getCategories().add(cat);
+                    op.sortCategoryList();
                 }
 
                 // Add the new package or merge it as an update
@@ -1645,7 +1685,7 @@ public class PackagesPage extends UpdaterPage
             }
 
             if (hasChanged) {
-                op.postCategoryItemsChanged(mCurrentCategories);
+                op.postCategoryItemsChanged();
             }
 
             return hasChanged;
@@ -1682,11 +1722,11 @@ public class PackagesPage extends UpdaterPage
             }
 
             @Override
-            public void addDefaultCategories(List<PkgCategory> currentCategories) {
+            public void addDefaultCategories() {
                 boolean needTools = true;
                 boolean needExtras = true;
 
-                for (PkgCategory cat : currentCategories) {
+                for (PkgCategory cat : mCategories) {
                     if (cat.getKey().equals(PkgApiCategory.KEY_TOOLS)) {
                         // Mark them as no unused to prevent their removal in updateEnd().
                         cat.setUnused(false);
@@ -1703,7 +1743,9 @@ public class PackagesPage extends UpdaterPage
                             PkgApiCategory.KEY_TOOLS,
                             null,
                             mUpdaterData.getImageFactory().getImageByName(ICON_CAT_OTHER));
-                    currentCategories.add(acat);
+                    synchronized (mCategories) {
+                        mCategories.add(acat);
+                    }
                 }
 
                 if (needExtras) {
@@ -1711,7 +1753,9 @@ public class PackagesPage extends UpdaterPage
                             PkgApiCategory.KEY_EXTRA,
                             null,
                             mUpdaterData.getImageFactory().getImageByName(ICON_CAT_OTHER));
-                    currentCategories.add(acat);
+                    synchronized (mCategories) {
+                        mCategories.add(acat);
+                    }
                 }
             }
 
@@ -1774,28 +1818,30 @@ public class PackagesPage extends UpdaterPage
             }
 
             @Override
-            public void sortCategoryList(List<PkgCategory> categoryList) {
+            public void sortCategoryList() {
                 // Sort the categories list.
                 // We always want categories in order tools..platforms..extras.
                 // For platform, we compare in descending order (o2-o1).
                 // This order is achieved by having the category keys ordered as
                 // needed for the sort to just do what we expect.
 
-                Collections.sort(categoryList, new Comparator<PkgCategory>() {
-                    public int compare(PkgCategory cat1, PkgCategory cat2) {
-                        assert cat1 instanceof PkgApiCategory;
-                        assert cat2 instanceof PkgApiCategory;
-                        int api1 = ((Integer) cat1.getKey()).intValue();
-                        int api2 = ((Integer) cat2.getKey()).intValue();
-                        return api2 - api1;
-                    }
-                });
+                synchronized (mCategories) {
+                    Collections.sort(mCategories, new Comparator<PkgCategory>() {
+                        public int compare(PkgCategory cat1, PkgCategory cat2) {
+                            assert cat1 instanceof PkgApiCategory;
+                            assert cat2 instanceof PkgApiCategory;
+                            int api1 = ((Integer) cat1.getKey()).intValue();
+                            int api2 = ((Integer) cat2.getKey()).intValue();
+                            return api2 - api1;
+                        }
+                    });
+                }
             }
 
             @Override
-            public void postCategoryItemsChanged(List<PkgCategory> categoryList) {
+            public void postCategoryItemsChanged() {
                 // Sort the items
-                for (PkgCategory cat : mCurrentCategories) {
+                for (PkgCategory cat : mCategories) {
                     Collections.sort(cat.getItems());
 
                     // When sorting by API, we can't always get the platform name
@@ -1841,8 +1887,8 @@ public class PackagesPage extends UpdaterPage
             }
 
             @Override
-            public void addDefaultCategories(List<PkgCategory> currentCategories) {
-                for (PkgCategory cat : currentCategories) {
+            public void addDefaultCategories() {
+                for (PkgCategory cat : mCategories) {
                     if (cat.getKey().equals(PkgSourceCategory.UNKNOWN_SOURCE)) {
                         // Already present.
                         return;
@@ -1855,7 +1901,9 @@ public class PackagesPage extends UpdaterPage
                         mUpdaterData);
                 // Mark it as unused so that it can be cleared in updateEnd() if not used.
                 cat.setUnused(true);
-                currentCategories.add(cat);
+                synchronized (mCategories) {
+                    mCategories.add(cat);
+                }
             }
 
             @Override
@@ -1892,36 +1940,38 @@ public class PackagesPage extends UpdaterPage
             }
 
             @Override
-            public void sortCategoryList(List<PkgCategory> categoryList) {
+            public void sortCategoryList() {
                 // Sort the sources in ascending source name order,
                 // with the local packages always first.
 
-                Collections.sort(categoryList, new Comparator<PkgCategory>() {
-                    public int compare(PkgCategory cat1, PkgCategory cat2) {
-                        assert cat1 instanceof PkgSourceCategory;
-                        assert cat2 instanceof PkgSourceCategory;
+                synchronized (mCategories) {
+                    Collections.sort(mCategories, new Comparator<PkgCategory>() {
+                        public int compare(PkgCategory cat1, PkgCategory cat2) {
+                            assert cat1 instanceof PkgSourceCategory;
+                            assert cat2 instanceof PkgSourceCategory;
 
-                        SdkSource src1 = ((PkgSourceCategory) cat1).getSource();
-                        SdkSource src2 = ((PkgSourceCategory) cat2).getSource();
+                            SdkSource src1 = ((PkgSourceCategory) cat1).getSource();
+                            SdkSource src2 = ((PkgSourceCategory) cat2).getSource();
 
-                        if (src1 == src2) {
-                            return 0;
-                        } else if (src1 == PkgSourceCategory.UNKNOWN_SOURCE) {
-                            return -1;
-                        } else if (src2 == PkgSourceCategory.UNKNOWN_SOURCE) {
-                            return 1;
+                            if (src1 == src2) {
+                                return 0;
+                            } else if (src1 == PkgSourceCategory.UNKNOWN_SOURCE) {
+                                return -1;
+                            } else if (src2 == PkgSourceCategory.UNKNOWN_SOURCE) {
+                                return 1;
+                            }
+                            assert src1 != null; // true because LOCAL_SOURCE==null
+                            assert src2 != null;
+                            return src1.toString().compareTo(src2.toString());
                         }
-                        assert src1 != null; // true because LOCAL_SOURCE==null
-                        assert src2 != null;
-                        return src1.toString().compareTo(src2.toString());
-                    }
-                });
+                    });
+                }
             }
 
             @Override
-            public void postCategoryItemsChanged(List<PkgCategory> categoryList) {
+            public void postCategoryItemsChanged() {
                 // Sort the items
-                for (PkgCategory cat : mCurrentCategories) {
+                for (PkgCategory cat : mCategories) {
                     Collections.sort(cat.getItems());
                 }
             }
