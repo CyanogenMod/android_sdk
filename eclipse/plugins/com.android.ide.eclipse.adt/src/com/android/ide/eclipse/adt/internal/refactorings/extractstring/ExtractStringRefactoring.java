@@ -719,7 +719,7 @@ public class ExtractStringRefactoring extends Refactoring {
      * @return The attribute value, without quotes. Whitespace is not trimmed, if any.
      *         String may be empty, but not null.
      */
-    private String unquoteAttrValue(String attrValue) {
+    static String unquoteAttrValue(String attrValue) {
         int len = attrValue.length();
         int len1 = len - 1;
         if (len >= 2 &&

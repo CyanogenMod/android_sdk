@@ -36,6 +36,7 @@ carlo
 cf
 changeset
 checkbox
+checkboxes
 classloader
 classpath
 clickable
@@ -185,6 +186,7 @@ rect
 redo
 refactor
 refactoring
+regex
 regexp
 regexps
 registry
@@ -231,6 +233,7 @@ syncs
 synthetically
 tad
 temp
+textfield
 textfields
 thematically
 themed

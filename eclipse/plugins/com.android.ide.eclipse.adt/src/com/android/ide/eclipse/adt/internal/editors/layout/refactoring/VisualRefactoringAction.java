@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 
@@ -30,10 +31,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 
 abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate {
@@ -76,13 +75,13 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
 
         if (selection instanceof ITextSelection) {
             mTextSelection = (ITextSelection) selection;
-            editor = getActiveEditor();
+            editor = AdtUtils.getActiveEditor();
             mFile = getSelectedFile(editor);
         } else if (selection instanceof ITreeSelection) {
              Object firstElement = ((ITreeSelection)selection).getFirstElement();
              if (firstElement instanceof CanvasViewInfo) {
                  mTreeSelection = (ITreeSelection) selection;
-                 editor = getActiveEditor();
+                 editor = AdtUtils.getActiveEditor();
                  mFile = getSelectedFile(editor);
              }
         }
@@ -100,21 +99,6 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
      * Create a new instance of our refactoring and a wizard to configure it.
      */
     public abstract void run(IAction action);
-
-    /**
-     * Returns the active editor (hopefully matching our selection) or null.
-     */
-    private IEditorPart getActiveEditor() {
-        IWorkbenchWindow wwin = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (wwin != null) {
-            IWorkbenchPage page = wwin.getActivePage();
-            if (page != null) {
-                return page.getActiveEditor();
-            }
-        }
-
-        return null;
-    }
 
     /**
      * Returns the active {@link IFile} (hopefully matching our selection) or null.

@@ -607,6 +607,14 @@
                 class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.RefactoringAssistant"
                 target="org.eclipse.wst.xml.XML_DEFAULT" />
    </extension>
+    <extension point="org.eclipse.jdt.ui.quickAssistProcessors">
+        <quickAssistProcessor
+           id="AndroidJavaAssistant"
+           name="Android Java Quick Assistant"
+           requiredSourceLevel="1.5"
+           class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.JavaQuickAssistant">
+        </quickAssistProcessor>
+    </extension>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page

@@ -21,10 +21,10 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.editors.xml.Hyperlinks;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
@@ -158,7 +158,7 @@ public class LayoutMetadataTest extends AdtProjectTest {
             throws Exception, PartInitException {
         IFile file = getLayoutFile(getProject(), filename);
         AdtPlugin.openFile(file, null);
-        IEditorPart newEditor = Hyperlinks.getEditor();
+        IEditorPart newEditor = AdtUtils.getActiveEditor();
         assertTrue(newEditor instanceof AndroidXmlEditor);
         AndroidXmlEditor xmlEditor = (AndroidXmlEditor) newEditor;
         IStructuredDocument document = xmlEditor.getStructuredDocument();
