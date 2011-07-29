@@ -21,6 +21,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import java.util.ArrayList;
@@ -87,7 +88,10 @@ public class SdkUpdaterNoWindow {
         // Setup the default sources including the getenv overrides.
         mUpdaterData.setupDefaultSources();
 
-        mUpdaterData.getLocalSdkParser().parseSdk(osSdkRoot, sdkManager, sdkLog);
+        mUpdaterData.getLocalSdkParser().parseSdk(
+                osSdkRoot,
+                sdkManager,
+                new NullTaskMonitor(sdkLog));
     }
 
     /**
@@ -143,11 +147,35 @@ public class SdkUpdaterNoWindow {
     }
 
     /**
-     * A custom implementation of {@link ITaskFactory} that provides {@link ConsoleTask} objects.
+     * A custom implementation of {@link ITaskFactory} that
+     * provides {@link ConsoleTaskMonitor} objects.
      */
     private class ConsoleTaskFactory implements ITaskFactory {
         public void start(String title, ITask task) {
-            new ConsoleTask(title, task);
+            start(title, null /*parentMonitor*/, task);
+        }
+
+        public void start(String title, ITaskMonitor parentMonitor, ITask task) {
+            if (parentMonitor == null) {
+                task.run(new ConsoleTaskMonitor(title, task));
+            } else {
+                // Use all the reminder of the parent monitor.
+                if (parentMonitor.getProgressMax() == 0) {
+                    parentMonitor.setProgressMax(1);
+                }
+
+                ITaskMonitor sub = parentMonitor.createSubMonitor(
+                        parentMonitor.getProgressMax() - parentMonitor.getProgress());
+                try {
+                    task.run(sub);
+                } finally {
+                    int delta =
+                        sub.getProgressMax() - sub.getProgress();
+                    if (delta > 0) {
+                        sub.incProgress(delta);
+                    }
+                }
+            }
         }
     }
 
@@ -155,7 +183,7 @@ public class SdkUpdaterNoWindow {
      * A custom implementation of {@link ITaskMonitor} that defers all output to the
      * super {@link SdkUpdaterNoWindow#mSdkLog}.
      */
-    private class ConsoleTask implements ITaskMonitor {
+    private class ConsoleTaskMonitor implements ITaskMonitor {
 
         private static final double MAX_COUNT = 10000.0;
         private double mIncCoef = 0;
@@ -164,11 +192,10 @@ public class SdkUpdaterNoWindow {
         private String mLastProgressBase = null;
 
         /**
-         * Creates a new {@link ConsoleTask} with the given title.
+         * Creates a new {@link ConsoleTaskMonitor} with the given title.
          */
-        public ConsoleTask(String title, ITask task) {
+        public ConsoleTaskMonitor(String title, ITask task) {
             mSdkLog.printf("%s:\n", title);
-            task.run(this);
         }
 
         /**
@@ -222,6 +249,20 @@ public class SdkUpdaterNoWindow {
             // The ConsoleTask does not display verbose log messages.
         }
 
+        // --- ISdkLog ---
+
+        public void error(Throwable t, String errorFormat, Object... args) {
+            mSdkLog.error(t, errorFormat, args);
+        }
+
+        public void warning(String warningFormat, Object... args) {
+            mSdkLog.warning(warningFormat, args);
+        }
+
+        public void printf(String msgFormat, Object... args) {
+            mSdkLog.printf(msgFormat, args);
+        }
+
         /**
          * Sets the max value of the progress bar.
          *
@@ -236,6 +277,10 @@ public class SdkUpdaterNoWindow {
             // we use the max to compute a coefficient for inc deltas.
             mIncCoef = max > 0 ? MAX_COUNT / max : 0;
             assert mIncCoef > 0;
+        }
+
+        public int getProgressMax() {
+            return mIncCoef > 0 ? (int) (MAX_COUNT / mIncCoef) : 0;
         }
 
         /**
@@ -307,7 +352,7 @@ public class SdkUpdaterNoWindow {
 
     private static class ConsoleSubTaskMonitor implements IConsoleSubTaskMonitor {
 
-        private final ConsoleTask mRoot;
+        private final ConsoleTaskMonitor mRoot;
         private final IConsoleSubTaskMonitor mParent;
         private final double mStart;
         private final double mSpan;
@@ -323,7 +368,7 @@ public class SdkUpdaterNoWindow {
          * @param start The start value in the root's coordinates
          * @param span The span value in the root's coordinates
          */
-        public ConsoleSubTaskMonitor(ConsoleTask root,
+        public ConsoleSubTaskMonitor(ConsoleTaskMonitor root,
                 IConsoleSubTaskMonitor parent,
                 double start,
                 double span) {
@@ -360,6 +405,10 @@ public class SdkUpdaterNoWindow {
             assert mSubCoef > 0;
         }
 
+        public int getProgressMax() {
+            return mSubCoef > 0 ? (int) (mSpan / mSubCoef) : 0;
+        }
+
         public int getProgress() {
             assert mSubCoef > 0;
             return mSubCoef > 0 ? (int)((mSubValue - mStart) / mSubCoef) : 0;
@@ -391,6 +440,20 @@ public class SdkUpdaterNoWindow {
                     this,
                     mSubValue,
                     tickCount * mSubCoef);
+        }
+
+        // --- ISdkLog ---
+
+        public void error(Throwable t, String errorFormat, Object... args) {
+            mRoot.error(t, errorFormat, args);
+        }
+
+        public void warning(String warningFormat, Object... args) {
+            mRoot.warning(warningFormat, args);
+        }
+
+        public void printf(String msgFormat, Object... args) {
+            mRoot.printf(msgFormat, args);
         }
     }
 }

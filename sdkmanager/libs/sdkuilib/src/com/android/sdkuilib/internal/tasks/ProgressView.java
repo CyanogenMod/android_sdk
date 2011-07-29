@@ -104,39 +104,63 @@ public final class ProgressView implements IProgressUiProvider {
     }
 
     /**
-     * Starts the task and block till it's either finished or cancelled.
+     * Starts the task and block till it's either finished or canceled.
+     * This can be called from a non-UI thread safely.
      */
-    public void startTask(final String title, final ITask task) {
+    public void startTask(
+            final String title,
+            final ITaskMonitor parentMonitor,
+            final ITask task) {
         if (task != null) {
             try {
-                mLabel.setText(title);
-                mProgressBar.setSelection(0);
-                mProgressBar.setEnabled(true);
-                changeState(ProgressView.State.ACTIVE);
+                if (parentMonitor == null && !mProgressBar.isDisposed()) {
+                    mLabel.setText(title);
+                    mProgressBar.setSelection(0);
+                    mProgressBar.setEnabled(true);
+                    changeState(ProgressView.State.ACTIVE);
+                }
 
                 Runnable r = new Runnable() {
                     public void run() {
-                        task.run(new TaskMonitorImpl(ProgressView.this));
+                        if (parentMonitor == null) {
+                            task.run(new TaskMonitorImpl(ProgressView.this));
+
+                        } else {
+                            // Use all the reminder of the parent monitor.
+                            if (parentMonitor.getProgressMax() == 0) {
+                                parentMonitor.setProgressMax(1);
+                            }
+                            ITaskMonitor sub = parentMonitor.createSubMonitor(
+                                    parentMonitor.getProgressMax() - parentMonitor.getProgress());
+                            try {
+                                task.run(sub);
+                            } finally {
+                                int delta =
+                                    sub.getProgressMax() - sub.getProgress();
+                                if (delta > 0) {
+                                    sub.incProgress(delta);
+                                }
+                            }
+                        }
                     }
                 };
 
-                Thread t = new Thread(r, title);
+                final Thread t = new Thread(r, title);
                 t.start();
 
-                // Process the app's event loop whilst we wait for the thread to finish
-                Display display = mProgressBar.getDisplay();
-                while (!mProgressBar.isDisposed() && t.isAlive()) {
-                    if (!display.readAndDispatch()) {
-                        display.sleep();
+                if (parentMonitor == null && !mProgressBar.isDisposed()) {
+                    // Process the app's event loop whilst we wait for the thread to finish
+                    while (!mProgressBar.isDisposed() && t.isAlive()) {
+                        if (!mProgressBar.getDisplay().readAndDispatch()) {
+                            mProgressBar.getDisplay().sleep();
+                        }
                     }
                 }
-
-
             } catch (Exception e) {
                 // TODO log
 
             } finally {
-                if (!mProgressBar.isDisposed()) {
+                if (parentMonitor == null && !mProgressBar.isDisposed()) {
                     changeState(ProgressView.State.IDLE);
                     mProgressBar.setSelection(0);
                     mProgressBar.setEnabled(false);

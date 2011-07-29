@@ -20,6 +20,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
@@ -172,7 +173,8 @@ public class RepoSourcesAdapter {
             } else if (parentElement instanceof SdkSourceCategory) {
                 SdkSourceCategory cat = (SdkSourceCategory) parentElement;
                 if (cat == SdkSourceCategory.ADDONS_3RD_PARTY) {
-                    mUpdaterData.loadRemoteAddonsList();
+                    mUpdaterData.loadRemoteAddonsList(
+                            new NullTaskMonitor(mUpdaterData.getSdkLog()));
                 }
 
                 SdkSource[] sources = mUpdaterData.getSources().getSources(cat);
@@ -314,7 +316,8 @@ public class RepoSourcesAdapter {
      */
     private Package[] filterUpdateOnlyPackages(Package[] remotePackages) {
         // get the installed packages
-        Package[] installedPackages = mUpdaterData.getInstalledPackages();
+        Package[] installedPackages = mUpdaterData.getInstalledPackages(
+                new NullTaskMonitor(mUpdaterData.getSdkLog()));
 
         // we'll populate this package list with either upgrades or new packages.
         ArrayList<Package> filteredList = new ArrayList<Package>();

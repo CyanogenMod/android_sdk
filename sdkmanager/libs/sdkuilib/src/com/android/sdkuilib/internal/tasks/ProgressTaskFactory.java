@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
+import com.android.sdklib.internal.repository.ITaskMonitor;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -34,6 +35,31 @@ public final class ProgressTaskFactory implements ITaskFactory {
     }
 
     public void start(String title, ITask task) {
-        new ProgressTask(mShell, title, task);
+        start(title, null /*parentMonitor*/, task);
+    }
+
+    public void start(String title, ITaskMonitor parentMonitor, ITask task) {
+
+        if (parentMonitor == null) {
+            new ProgressTask(mShell, title, task);
+
+        } else {
+            // Use all the reminder of the parent monitor.
+            if (parentMonitor.getProgressMax() == 0) {
+                parentMonitor.setProgressMax(1);
+            }
+
+            ITaskMonitor sub = parentMonitor.createSubMonitor(
+                    parentMonitor.getProgressMax() - parentMonitor.getProgress());
+            try {
+                task.run(sub);
+            } finally {
+                int delta =
+                    sub.getProgressMax() - sub.getProgress();
+                if (delta > 0) {
+                    sub.incProgress(delta);
+                }
+            }
+        }
     }
 }

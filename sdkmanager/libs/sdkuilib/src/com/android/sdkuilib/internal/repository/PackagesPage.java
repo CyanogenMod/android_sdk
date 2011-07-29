@@ -650,15 +650,17 @@ public class PackagesPage extends UpdaterPage
      * is added or the list is reloaded.
      */
     private void expandInitial(Object elem) {
-        mTreeViewer.setExpandedState(elem, true);
-        for (Object pkg :
-                ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
-            if (pkg instanceof PkgCategory) {
-                PkgCategory cat = (PkgCategory) pkg;
-                for (PkgItem item : cat.getItems()) {
-                    if (item.getState() == PkgState.INSTALLED) {
-                        expandInitial(pkg);
-                        break;
+        if (mTreeViewer != null && !mTreeViewer.getTree().isDisposed()) {
+            mTreeViewer.setExpandedState(elem, true);
+            for (Object pkg :
+                    ((ITreeContentProvider) mTreeViewer.getContentProvider()).getChildren(elem)) {
+                if (pkg instanceof PkgCategory) {
+                    PkgCategory cat = (PkgCategory) pkg;
+                    for (PkgItem item : cat.getItems()) {
+                        if (item.getState() == PkgState.INSTALLED) {
+                            expandInitial(pkg);
+                            break;
+                        }
                     }
                 }
             }

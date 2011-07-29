@@ -60,6 +60,10 @@ public class MockMonitor implements ITaskMonitor {
     public void setProgressMax(int max) {
     }
 
+    public int getProgressMax() {
+        return 0;
+    }
+
     public void setDescription(String format, Object... args) {
         mCapturedDescriptions += String.format(format, args) + "\n";    //$NON-NLS-1$
     }
@@ -81,5 +85,14 @@ public class MockMonitor implements ITaskMonitor {
 
     public ITaskMonitor createSubMonitor(int tickCount) {
         return null;
+    }
+
+    public void error(Throwable t, String errorFormat, Object... args) {
+    }
+
+    public void printf(String msgFormat, Object... args) {
+    }
+
+    public void warning(String warningFormat, Object... args) {
     }
 }

@@ -32,6 +32,7 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.LocalSdkParser;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkAddonSource;
@@ -367,14 +368,14 @@ class UpdaterData implements IUpdaterData {
      * The package list is cached in the {@link LocalSdkParser} and will be reset when
      * {@link #reloadSdk()} is invoked.
      */
-    public Package[] getInstalledPackages() {
+    public Package[] getInstalledPackages(ITaskMonitor monitor) {
         LocalSdkParser parser = getLocalSdkParser();
 
         Package[] packages = parser.getPackages();
 
         if (packages == null) {
             // load on demand the first time
-            packages = parser.parseSdk(getOsSdkRoot(), getSdkManager(), getSdkLog());
+            packages = parser.parseSdk(getOsSdkRoot(), getSdkManager(), monitor);
         }
 
         return packages;
@@ -404,7 +405,7 @@ class UpdaterData implements IUpdaterData {
             public void run(ITaskMonitor monitor) {
 
                 final int progressPerArchive = 2 * ArchiveInstaller.NUM_MONITOR_INC;
-                monitor.setProgressMax(archives.size() * progressPerArchive);
+                monitor.setProgressMax(1 + archives.size() * progressPerArchive);
                 monitor.setDescription("Preparing to install archives");
 
                 boolean installedAddon = false;
@@ -414,7 +415,7 @@ class UpdaterData implements IUpdaterData {
 
                 // Mark all current local archives as already installed.
                 HashSet<Archive> installedArchives = new HashSet<Archive>();
-                for (Package p : getInstalledPackages()) {
+                for (Package p : getInstalledPackages(monitor.createSubMonitor(1))) {
                     for (Archive a : p.getArchives()) {
                         installedArchives.add(a);
                     }
@@ -695,7 +696,7 @@ class UpdaterData implements IUpdaterData {
                 includeObsoletes);
 
         if (selectedArchives == null) {
-            loadRemoteAddonsList();
+            loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
             ul.addNewPlatforms(
                     archives,
                     getSources(),
@@ -708,7 +709,8 @@ class UpdaterData implements IUpdaterData {
 
         Collections.sort(archives);
 
-        SdkUpdaterChooserDialog dialog = new SdkUpdaterChooserDialog(getWindowShell(), this, archives);
+        SdkUpdaterChooserDialog dialog =
+            new SdkUpdaterChooserDialog(getWindowShell(), this, archives);
         dialog.open();
 
         ArrayList<ArchiveInfo> result = dialog.getResult();
@@ -729,7 +731,7 @@ class UpdaterData implements IUpdaterData {
      */
     private List<ArchiveInfo> getRemoteArchives_NoGUI(boolean includeObsoletes) {
         refreshSources(true);
-        loadRemoteAddonsList();
+        loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
 
         SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
         List<ArchiveInfo> archives = ul.computeUpdates(
@@ -970,15 +972,15 @@ class UpdaterData implements IUpdaterData {
     /**
      * Loads the remote add-ons list.
      */
-    public void loadRemoteAddonsList() {
+    public void loadRemoteAddonsList(ITaskMonitor monitor) {
 
         if (mStateFetchRemoteAddonsList != 0) {
             return;
         }
 
-        mTaskFactory.start("Load Add-ons List", new ITask() {
-            public void run(ITaskMonitor monitor) {
-                loadRemoteAddonsListInTask(monitor);
+        mTaskFactory.start("Load Add-ons List", monitor, new ITask() {
+            public void run(ITaskMonitor subMonitor) {
+                loadRemoteAddonsListInTask(subMonitor);
             }
         });
     }

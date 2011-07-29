@@ -46,8 +46,7 @@ public class LocalSdkParser {
     }
 
     /**
-     * Returns the packages found by the last call to
-     * {@link #parseSdk(String, SdkManager, ISdkLog)}.
+     * Returns the packages found by the last call to {@link #parseSdk}.
      * <p/>
      * This returns initially returns null.
      * Once the parseSdk() method has been called, this returns a possibly empty but non-null array.
@@ -58,7 +57,7 @@ public class LocalSdkParser {
 
     /**
      * Clear the internal packages list. After this call, {@link #getPackages()} will return
-     * null till {@link #parseSdk(String, SdkManager, ISdkLog)} is called.
+     * null till {@link #parseSdk} is called.
      */
     public void clearPackages() {
         mPackages = null;
@@ -72,33 +71,41 @@ public class LocalSdkParser {
      *
      * @param osSdkRoot The path to the SDK folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
-     * @param log An SDK logger object. Cannot be null.
+     * @param monitor A monitor to track progress. Cannot be null.
      * @return The packages found. Can be retrieved later using {@link #getPackages()}.
      */
-    public Package[] parseSdk(String osSdkRoot, SdkManager sdkManager, ISdkLog log) {
+    public Package[] parseSdk(
+            String osSdkRoot,
+            SdkManager sdkManager,
+            ITaskMonitor monitor) {
         ArrayList<Package> packages = new ArrayList<Package>();
         HashSet<File> visited = new HashSet<File>();
 
+        monitor.setProgressMax(8);
+
         File dir = new File(osSdkRoot, SdkConstants.FD_DOCS);
-        Package pkg = scanDoc(dir, log);
+        Package pkg = scanDoc(dir, monitor);
         if (pkg != null) {
             packages.add(pkg);
             visited.add(dir);
         }
+        monitor.incProgress(1);
 
         dir = new File(osSdkRoot, SdkConstants.FD_TOOLS);
-        pkg = scanTools(dir, log);
+        pkg = scanTools(dir, monitor);
         if (pkg != null) {
             packages.add(pkg);
             visited.add(dir);
         }
+        monitor.incProgress(1);
 
         dir = new File(osSdkRoot, SdkConstants.FD_PLATFORM_TOOLS);
-        pkg = scanPlatformTools(dir, log);
+        pkg = scanPlatformTools(dir, monitor);
         if (pkg != null) {
             packages.add(pkg);
             visited.add(dir);
         }
+        monitor.incProgress(1);
 
         File samplesRoot = new File(osSdkRoot, SdkConstants.FD_SAMPLES);
 
@@ -130,7 +137,7 @@ public class LocalSdkParser {
                     pkg = AddonPackage.create(target, props);
                 }
             } catch (Exception e) {
-                log.error(e, null);
+                monitor.error(e, null);
             }
 
             if (pkg != null) {
@@ -138,11 +145,16 @@ public class LocalSdkParser {
                 visited.add(new File(target.getLocation()));
             }
         }
+        monitor.incProgress(1);
 
-        scanMissingAddons(sdkManager, visited, packages, log);
-        scanMissingSamples(osSdkRoot, visited, packages, log);
-        scanExtras(osSdkRoot, visited, packages, log);
-        scanExtrasDirectory(osSdkRoot, visited, packages, log);
+        scanMissingAddons(sdkManager, visited, packages, monitor);
+        monitor.incProgress(1);
+        scanMissingSamples(osSdkRoot, visited, packages, monitor);
+        monitor.incProgress(1);
+        scanExtras(osSdkRoot, visited, packages, monitor);
+        monitor.incProgress(1);
+        scanExtrasDirectory(osSdkRoot, visited, packages, monitor);
+        monitor.incProgress(1);
 
         Collections.sort(packages);
 

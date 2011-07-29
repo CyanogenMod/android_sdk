@@ -20,6 +20,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
@@ -137,48 +138,50 @@ class PackageLoader {
                 return;
             }
 
-            // get local packages and offer them to the callback
-            Package[] localPkgs = mUpdaterData.getInstalledPackages();
-            if (localPkgs == null) {
-                localPkgs = new Package[0];
-            }
-            if (!sourceLoadedCallback.onUpdateSource(null, localPkgs)) {
-                return;
-            }
-
-            final int[] numPackages = { localPkgs == null ? 0 : localPkgs.length };
-
-            // get remote packages
-            final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
-            mUpdaterData.loadRemoteAddonsList();
             mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
                 public void run(ITaskMonitor monitor) {
+                    monitor.setProgressMax(10);
+
+                    // get local packages and offer them to the callback
+                    Package[] localPkgs =
+                        mUpdaterData.getInstalledPackages(monitor.createSubMonitor(1));
+                    if (localPkgs == null) {
+                        localPkgs = new Package[0];
+                    }
+                    if (!sourceLoadedCallback.onUpdateSource(null, localPkgs)) {
+                        return;
+                    }
+
+                    // get remote packages
+                    boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
+                    mUpdaterData.loadRemoteAddonsList(monitor.createSubMonitor(1));
+
                     SdkSource[] sources = mUpdaterData.getSources().getAllSources();
                     try {
-                        for (SdkSource source : sources) {
-                            Package[] pkgs = source.getPackages();
-                            if (pkgs == null) {
-                                source.load(monitor, forceHttp);
-                                pkgs = source.getPackages();
-                            }
-                            if (pkgs == null) {
-                                continue;
-                            }
+                        if (sources != null && sources.length > 0) {
+                            ITaskMonitor subMonitor = monitor.createSubMonitor(8);
+                            subMonitor.setProgressMax(sources.length);
+                            for (SdkSource source : sources) {
+                                Package[] pkgs = source.getPackages();
+                                if (pkgs == null) {
+                                    source.load(subMonitor.createSubMonitor(1), forceHttp);
+                                    pkgs = source.getPackages();
+                                }
+                                if (pkgs == null) {
+                                    continue;
+                                }
 
-                            numPackages[0] += pkgs.length;
-
-                            // Notify the callback a new source has finished loading.
-                            // If the callback requests so, stop right away.
-                            if (!sourceLoadedCallback.onUpdateSource(source, pkgs)) {
-                                return;
+                                // Notify the callback a new source has finished loading.
+                                // If the callback requests so, stop right away.
+                                if (!sourceLoadedCallback.onUpdateSource(source, pkgs)) {
+                                    return;
+                                }
                             }
                         }
                     } catch(Exception e) {
                         monitor.logError("Loading source failed: %1$s", e.toString());
                     } finally {
-                        monitor.setDescription("Done loading %1$d packages from %2$d sources",
-                                numPackages[0],
-                                sources.length);
+                        monitor.setDescription("Done loading packages.");
                     }
                 }
             });
@@ -299,7 +302,8 @@ class PackageLoader {
 
                     // The local package list has changed, make sure to refresh it
                     mUpdaterData.getLocalSdkParser().clearPackages();
-                    final Package[] localPkgs = mUpdaterData.getInstalledPackages();
+                    final Package[] localPkgs = mUpdaterData.getInstalledPackages(
+                            new NullTaskMonitor(mUpdaterData.getSdkLog()));
 
                     // Try to locate the installed package in the new package list
                     for (Package localPkg : localPkgs) {

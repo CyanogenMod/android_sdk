@@ -463,7 +463,10 @@ public class ExtraPackage extends MinToolsPackage
 
         // First find if this extra is already installed. If so, reuse the same directory.
         LocalSdkParser localParser = new LocalSdkParser();
-        Package[] pkgs = localParser.parseSdk(osSdkRoot, sdkManager, new NullSdkLog());
+        Package[] pkgs = localParser.parseSdk(
+                osSdkRoot,
+                sdkManager,
+                new NullTaskMonitor(new NullSdkLog()));
 
         for (Package pkg : pkgs) {
             if (sameItemAs(pkg) && pkg instanceof ExtraPackage) {

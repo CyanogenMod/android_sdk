@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository;
 
+import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ArchiveInstaller;
@@ -23,6 +24,7 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.MockEmptySdkManager;
+import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
@@ -85,55 +87,20 @@ class MockUpdaterData extends UpdaterData {
 
     private class MockTaskFactory implements ITaskFactory {
         public void start(String title, ITask task) {
+            start(title, null /*parentMonitor*/, task);
+        }
+
+        public void start(String title, ITaskMonitor parentMonitor, ITask task) {
             new MockTask(task);
         }
     }
 
     //------------
 
-    private static class MockTask implements ITaskMonitor {
+    private static class MockTask extends NullTaskMonitor {
         public MockTask(ITask task) {
+            super(new NullSdkLog());
             task.run(this);
-        }
-
-        public ITaskMonitor createSubMonitor(int tickCount) {
-            return this;
-        }
-
-        public boolean displayPrompt(String title, String message) {
-            return false;
-        }
-
-        public int getProgress() {
-            return 0;
-        }
-
-        public void incProgress(int delta) {
-            // ignore
-        }
-
-        public boolean isCancelRequested() {
-            return false;
-        }
-
-        public void setDescription(String format, Object... args) {
-            // ignore
-        }
-
-        public void setProgressMax(int max) {
-            // ignore
-        }
-
-        public void log(String format, Object... args) {
-            // ignore
-        }
-
-        public void logError(String format, Object... args) {
-            // ignore
-        }
-
-        public void logVerbose(String format, Object... args) {
-            // ignore
         }
     }
 
