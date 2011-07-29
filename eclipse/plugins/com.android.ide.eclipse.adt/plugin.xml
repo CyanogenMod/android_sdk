@@ -598,9 +598,6 @@
             class="com.android.ide.eclipse.adt.internal.editors.color.ColorSourceViewerConfig"
             target="com.android.ide.eclipse.editors.color.ColorEditor">
       </sourceViewerConfiguration>
-      <quickOutlineConfiguration
-            class="com.android.ide.eclipse.adt.internal.editors.AndroidQuickOutlineConfiguration"
-            target="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor,com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor" />
       <provisionalConfiguration
                 type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
                 class="com.android.ide.eclipse.adt.internal.build.AaptQuickFix"
