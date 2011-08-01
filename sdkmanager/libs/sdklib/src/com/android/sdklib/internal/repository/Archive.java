@@ -351,10 +351,22 @@ public class Archive implements IDescription, Comparable<Archive> {
      * Generates a longer description for this archive.
      */
     public String getLongDescription() {
-        return String.format("%1$s\nSize: %2$d MiB\nSHA1: %3$s",
-                getShortDescription(),
-                Math.round(getSize() / (1024*1024)),
-                getChecksum());
+        long size = getSize();
+        String sizeStr;
+        if (size < 1024) {
+            sizeStr = String.format("%d Bytes", size);
+        } else if (size < 1024 * 1024) {
+            sizeStr = String.format("%d KiB", Math.round(size / 1024.0));
+        } else if (size < 1024 * 1024 * 1024) {
+            sizeStr = String.format("%.1f MiB",
+                    Math.round(10.0 * size / (1024 * 1024.0))/ 10.0);
+        } else {
+            sizeStr = String.format("%.1f GiB",
+                    Math.round(10.0 * size / (1024 * 1024 * 1024.0))/ 10.0);
+        }
+
+        return String.format("%1$s\nSize: %2$s\nSHA1: %3$s",
+                getShortDescription(), sizeStr, getChecksum());
     }
 
     /**
