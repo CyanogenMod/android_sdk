@@ -191,11 +191,13 @@ regexp
 regexps
 registry
 reindent
+reindenting
 remap
 reparse
 reparses
 rescales
 residual
+resilient
 resizability
 resizable
 risky
@@ -226,8 +228,10 @@ stretchiness
 struct
 styleable
 styleables
+subclassed
 subclassing
 submenu
+subregion
 supertype
 syncs
 synthetically
