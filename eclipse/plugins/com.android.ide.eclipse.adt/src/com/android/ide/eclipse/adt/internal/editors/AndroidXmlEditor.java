@@ -16,8 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static org.eclipse.wst.sse.ui.internal.actions.StructuredTextEditorActionConstants.ACTION_NAME_FORMAT_DOCUMENT;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -121,6 +124,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     private boolean mIsCreatingPage = false;
 
     /**
+     * Flag used to ignore XML model updates. For example, the flag is set during
+     * formatting. A format operation should completely preserve the semantics of the XML
+     * so the document listeners can use this flag to skip updating the model when edits
+     * are observed during a formatting operation
+     */
+    protected boolean mIgnoreXmlUpdate;
+
+    /**
      * Flag indicating we're inside {@link #wrapEditXmlModel(Runnable)}.
      * This is a counter, which allows us to nest the edit XML calls.
      * There is no pending operation when the counter is at zero.
@@ -206,6 +217,16 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     protected void xmlModelChanged(Document xml_doc) {
         // pass
+    }
+
+    /**
+     * Controls whether XML models are ignored or not.
+     *
+     * @param ignore when true, ignore all subsequent XML model updates, when false start
+     *            processing XML model updates again
+     */
+    public void setIgnoreXmlUpdate(boolean ignore) {
+        mIgnoreXmlUpdate = ignore;
     }
 
     // ---- Base Class Overrides, Interfaces Implemented ----
@@ -471,6 +492,18 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     @Override
     public void doSave(IProgressMonitor monitor) {
         commitPages(true /* onSave */);
+
+        if (AdtPrefs.getPrefs().isFormatOnSave()) {
+            IAction action = mTextEditor.getAction(ACTION_NAME_FORMAT_DOCUMENT);
+            if (action != null) {
+                try {
+                    mIgnoreXmlUpdate = true;
+                    action.run();
+                } finally {
+                    mIgnoreXmlUpdate = false;
+                }
+            }
+        }
 
         // The actual "save" operation is done by the Structured XML Editor
         getEditor(mTextPageIndex).doSave(monitor);

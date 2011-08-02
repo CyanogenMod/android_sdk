@@ -41,7 +41,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -70,9 +69,6 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
 
     /** Root node of the UI element hierarchy */
     private UiDocumentNode mUiRootNode;
-
-    /** Flag used to ignore XML model updates */
-    private boolean mIgnoreXmlUpdate;
 
     private GraphicalEditorPart mGraphicalEditor;
     private int mGraphicalEditorIndex;
@@ -287,21 +283,6 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
         // When changing an input file of an the editor, the titlebar is not refreshed to
         // show the new path/to/file being edited. So we force a refresh
         firePropertyChange(IWorkbenchPart.PROP_TITLE);
-    }
-
-    /**
-     * Controls whether XML models are ignored or not. Can be used in conjunction with the
-     * {@link #refreshXmlModel()} method to suppress many smaller individual edits and
-     * then flush a large model update at the end. This is for example used for
-     * refactoring, such that we don't update the model as each individual
-     * {@link TextEdit} is applied, and instead we process them all in a single refresh at
-     * the end.
-     *
-     * @param ignore when true, ignore all subsequent XML model updates, when false start
-     *            processing XML model updates again
-     */
-    public void setIgnoreXmlUpdate(boolean ignore) {
-        mIgnoreXmlUpdate = ignore;
     }
 
     /** Performs a complete refresh of the XML model */

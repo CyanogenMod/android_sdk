@@ -17,6 +17,9 @@
 package com.android.ide.eclipse.adt.internal.editors;
 
 
+import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormatter;
+import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormattingStrategy;
+
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.ITextViewer;
@@ -26,6 +29,7 @@ import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.formatter.IContentFormatter;
+import org.eclipse.jface.text.formatter.MultiPassContentFormatter;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.wst.sse.core.text.IStructuredPartitions;
 import org.eclipse.wst.xml.core.text.IXMLPartitions;
@@ -39,7 +43,7 @@ import java.util.Map;
 /**
  * Base Source Viewer Configuration for Android resources.
  */
-@SuppressWarnings("restriction") // XMLContentAssistProcessor
+@SuppressWarnings("restriction") // XMLContentAssistProcessor etc
 public class AndroidSourceViewerConfig extends StructuredTextViewerConfigurationXML {
 
     /** Content Assist Processor to use for all handled partitions. */
@@ -111,8 +115,15 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
 
     @Override
     public IContentFormatter getContentFormatter(ISourceViewer sourceViewer) {
-        // TODO content formatter for android xml
-        return super.getContentFormatter(sourceViewer);
+        IContentFormatter formatter = super.getContentFormatter(sourceViewer);
+
+        if (formatter instanceof MultiPassContentFormatter) {
+            ((MultiPassContentFormatter) formatter).setMasterStrategy(
+                    new AndroidXmlFormattingStrategy());
+            return formatter;
+        } else {
+            return new AndroidXmlFormatter();
+        }
     }
 
     @Override

@@ -36,6 +36,19 @@ public class DomUtilitiesTest extends TestCase {
         assertEquals("&apos;", DomUtilities.toXmlAttributeValue("'"));
         assertEquals("foo&quot;b&apos;&apos;ar",
                 DomUtilities.toXmlAttributeValue("foo\"b''ar"));
+        assertEquals("<&quot;&apos;>&amp;", DomUtilities.toXmlAttributeValue("<\"'>&"));
+    }
+
+    public void testAppendXmlAttributeValue() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        DomUtilities.appendXmlAttributeValue(sb, "<\"'>&");
+        assertEquals("<&quot;&apos;>&amp;", sb.toString());
+    }
+
+    public void testAppendXmlTextValue() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        DomUtilities.appendXmlTextValue(sb, "<\"'>&");
+        assertEquals("&lt;\"'>&amp;", sb.toString());
     }
 
     public void testIsEquivalent() throws Exception {
@@ -114,5 +127,96 @@ public class DomUtilitiesTest extends TestCase {
 
         assertFalse(DomUtilities.isContiguous(Arrays.asList(foo, baz)));
         assertFalse(DomUtilities.isContiguous(Arrays.asList(root, baz)));
+    }
+
+    public void testGetCommonAncestor() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.newDocument();
+
+        //            A
+        //          /   \
+        //         B     C
+        //              / \
+        //             D   E
+
+        document.appendChild(document.createElement("A"));
+        Element a = document.getDocumentElement();
+        assertSame(a, DomUtilities.getCommonAncestor(a, a));
+
+        Element b = document.createElement("B");
+        a.appendChild(b);
+        Element c = document.createElement("C");
+        a.appendChild(c);
+        Element d = document.createElement("D");
+        c.appendChild(d);
+        Element e = document.createElement("E");
+        c.appendChild(e);
+
+        assertSame(a, DomUtilities.getCommonAncestor(a, b));
+        assertSame(a, DomUtilities.getCommonAncestor(b, a));
+        assertSame(a, DomUtilities.getCommonAncestor(b, c));
+        assertSame(a, DomUtilities.getCommonAncestor(b, d));
+        assertSame(a, DomUtilities.getCommonAncestor(b, e));
+        assertSame(a, DomUtilities.getCommonAncestor(a, e));
+
+        assertSame(c, DomUtilities.getCommonAncestor(d, e));
+        assertSame(c, DomUtilities.getCommonAncestor(c, e));
+        assertSame(c, DomUtilities.getCommonAncestor(d, c));
+        assertSame(c, DomUtilities.getCommonAncestor(c, c));
+    }
+
+    public void testGetDepth() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.newDocument();
+
+        //            A
+        //          /   \
+        //         B     C
+        //              / \
+        //             D   E
+
+        document.appendChild(document.createElement("A"));
+        Element a = document.getDocumentElement();
+        assertSame(a, DomUtilities.getCommonAncestor(a, a));
+        Element b = document.createElement("B");
+        a.appendChild(b);
+        Element c = document.createElement("C");
+        a.appendChild(c);
+        Element d = document.createElement("D");
+        c.appendChild(d);
+        Element e = document.createElement("E");
+        c.appendChild(e);
+
+        assertEquals(0, DomUtilities.getDepth(document));
+
+        assertEquals(1, DomUtilities.getDepth(a));
+        assertEquals(2, DomUtilities.getDepth(b));
+        assertEquals(2, DomUtilities.getDepth(c));
+        assertEquals(3, DomUtilities.getDepth(d));
+        assertEquals(3, DomUtilities.getDepth(e));
+    }
+
+    public void testHasChildren() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.newDocument();
+        assertFalse(DomUtilities.hasElementChildren(document));
+        document.appendChild(document.createElement("A"));
+        Element a = document.getDocumentElement();
+        assertFalse(DomUtilities.hasElementChildren(a));
+        a.appendChild(document.createTextNode("foo"));
+        assertFalse(DomUtilities.hasElementChildren(a));
+        Element b = document.createElement("B");
+        a.appendChild(b);
+        assertTrue(DomUtilities.hasElementChildren(a));
+        assertFalse(DomUtilities.hasElementChildren(b));
     }
 }

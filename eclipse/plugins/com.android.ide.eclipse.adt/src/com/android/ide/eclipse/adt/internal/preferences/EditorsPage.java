@@ -16,13 +16,21 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.ALPHABETICAL;
+import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.LOGICAL;
+import static com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder.NO_SORTING;
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringButtonFieldEditor;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -31,6 +39,10 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
  * Preference page for the editors.
  */
 public class EditorsPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+    private BooleanFieldEditor mIndentEditor;
+    private BooleanFieldEditor mRemoveEmptyEditor;
+    private BooleanFieldEditor mOneAttrPerLineEditor;
+    private BooleanFieldEditor mSpaceBeforeCloseEditor;
 
     public EditorsPage() {
         super(GRID);
@@ -43,11 +55,96 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
 
     @Override
     protected void createFieldEditors() {
+        Composite parent = getFieldEditorParent();
+
         addField(new DensityFieldEditor(AdtPrefs.PREFS_MONITOR_DENSITY,
-                "Monitor Density", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_XML,
+                "Monitor Density", parent));
+
+        final MyBooleanFieldEditor editor = new MyBooleanFieldEditor(
+                AdtPrefs.PREFS_USE_CUSTOM_XML_FORMATTER,
+                "Format XML files using the standard Android XML style rather than the\n" +
+                "configured Eclipse XML style (additional options below)",
+                parent);
+        addField(editor);
+
+        // Add a listener which fires whenever the checkbox for the custom formatter
+        // is toggled -- this will be used to enable/disable the formatting related options
+        // on the page. To do this we subclass the BooleanFieldEditor to make the protected
+        // method getChangeControl public (so we can access it and add a listener on it).
+        // This is pretty ugly but I found several posts in the Eclipse forums asking
+        // how to do it and they were all unanswered. (No, calling setPropertyChangeListener
+        // does not work.)
+        Button checkbox = editor.getChangeControl(parent);
+        checkbox.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                updateCustomFormattingOptions(editor.getBooleanValue());
+            }
+        });
+
+        mIndentEditor = new BooleanFieldEditor(AdtPrefs.PREFS_USE_ECLIPSE_INDENT,
+                "Use Eclipse setting for indentation width and space or tab character "
+                + "indentation\n(Android default is 4 space characters)",
+                parent);
+        addField(mIndentEditor);
+
+        mRemoveEmptyEditor = new BooleanFieldEditor(AdtPrefs.PREVS_REMOVE_EMPTY_LINES,
+                "Always remove empty lines between elements",
+                parent);
+        addField(mRemoveEmptyEditor);
+
+        mOneAttrPerLineEditor = new BooleanFieldEditor(AdtPrefs.PREFS_ONE_ATTR_PER_LINE,
+                "Allow single attributes to appear on the same line as their elements",
+                parent);
+        addField(mOneAttrPerLineEditor);
+
+        mSpaceBeforeCloseEditor = new BooleanFieldEditor(AdtPrefs.PREFS_SPACE_BEFORE_CLOSE,
+                "Add a space before the > or /> in opening tags",
+                parent);
+        addField(mSpaceBeforeCloseEditor);
+
+        addField(new RadioGroupFieldEditor(AdtPrefs.PREFS_ATTRIBUTE_SORT,
+                "Sort Attributes", 1,
+                new String[][] {
+                    { "&Logical (id, style, layout attributes, remaining attributes alphabetically)",
+                        LOGICAL.key },
+                    { "&Alphabetical", ALPHABETICAL.key },
+                    { "&None", NO_SORTING.key },
+                },
+                parent, true));
+
+        addField(new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_GUI_XML,
                 "Automatically format the XML edited by the visual layout editor",
-                getFieldEditorParent()));
+                parent));
+
+        addField(new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_ON_SAVE,
+                "Format on Save",
+                parent));
+
+        boolean enabled = getPreferenceStore().getBoolean(AdtPrefs.PREFS_USE_CUSTOM_XML_FORMATTER);
+        updateCustomFormattingOptions(enabled);
+    }
+
+    private void updateCustomFormattingOptions(boolean enabled) {
+        Composite parent = getFieldEditorParent();
+        mIndentEditor.setEnabled(enabled, parent);
+        mRemoveEmptyEditor.setEnabled(enabled, parent);
+        mOneAttrPerLineEditor.setEnabled(enabled, parent);
+        mSpaceBeforeCloseEditor.setEnabled(enabled, parent);
+    }
+
+    /**
+     * Overridden solely so that I can get access to the checkbox button to listen to
+     * state changes
+     */
+    private class MyBooleanFieldEditor extends BooleanFieldEditor {
+        public MyBooleanFieldEditor(String name, String label, Composite parent) {
+            super(name, label, parent);
+        }
+        @Override
+        protected Button getChangeControl(Composite parent) {
+            return super.getChangeControl(parent);
+        }
     }
 
     /**
