@@ -148,7 +148,17 @@ public final class ProgressView implements IProgressUiProvider {
                 final Thread t = new Thread(r, title);
                 t.start();
 
-                if (parentMonitor == null && !mProgressBar.isDisposed()) {
+                // If for some reason the UI has been disposed, just abort the thread.
+                if (mProgressBar.isDisposed()) {
+                    return;
+                }
+
+                if (TaskMonitorImpl.isTaskMonitorImpl(parentMonitor)) {
+                    // If there's a parent monitor and it's our own class, we know this parent
+                    // monitor is already running an event loop, so don't run a second one,
+                    // and instead just wait for the thread.
+                    t.join();
+                } else {
                     // Process the app's event loop whilst we wait for the thread to finish
                     while (!mProgressBar.isDisposed() && t.isAlive()) {
                         if (!mProgressBar.getDisplay().readAndDispatch()) {
