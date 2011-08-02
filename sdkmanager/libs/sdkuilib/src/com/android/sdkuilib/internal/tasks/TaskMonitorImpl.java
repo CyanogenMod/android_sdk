@@ -38,6 +38,14 @@ class TaskMonitorImpl implements ITaskMonitor {
     private final IProgressUiProvider mUi;
 
     /**
+     * Returns true if the given {@code monitor} is an instance of {@link TaskMonitorImpl}
+     * or its private SubTaskMonitor.
+     */
+    public static boolean isTaskMonitorImpl(ITaskMonitor monitor) {
+        return monitor instanceof TaskMonitorImpl || monitor instanceof SubTaskMonitor;
+    }
+
+    /**
      * Constructs a new {@link TaskMonitorImpl} that relies on the given
      * {@link IProgressUiProvider} to change the user interface.
      * @param ui The {@link IProgressUiProvider}. Cannot be null.
