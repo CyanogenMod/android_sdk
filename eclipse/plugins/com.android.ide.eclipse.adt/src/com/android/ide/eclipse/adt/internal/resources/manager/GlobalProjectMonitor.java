@@ -131,6 +131,14 @@ public final class GlobalProjectMonitor {
     }
 
     /**
+     * Interface for a listener that gets passed the raw delta without processing.
+     *
+     */
+    public interface IRawDeltaListener {
+        public void visitDelta(IResourceDelta delta);
+    }
+
+    /**
      * Base listener bundle to associate a listener to an event mask.
      */
     private static class ListenerBundle {
@@ -176,6 +184,9 @@ public final class GlobalProjectMonitor {
     private final ArrayList<IResourceEventListener> mEventListeners =
         new ArrayList<IResourceEventListener>();
 
+    private final ArrayList<IRawDeltaListener> mRawDeltaListeners =
+        new ArrayList<IRawDeltaListener>();
+
     private IWorkspace mWorkspace;
 
     /**
@@ -184,6 +195,11 @@ public final class GlobalProjectMonitor {
     private final class DeltaVisitor implements IResourceDeltaVisitor {
 
         public boolean visit(IResourceDelta delta) {
+            // notify the raw delta listeners
+            for (IRawDeltaListener listener : mRawDeltaListeners) {
+                listener.visitDelta(delta);
+            }
+            // Find the other resource listeners to notify
             IResource r = delta.getResource();
             int type = r.getType();
             if (type == IResource.FILE) {
@@ -395,7 +411,23 @@ public final class GlobalProjectMonitor {
         mEventListeners.remove(listener);
     }
 
-    private IResourceChangeListener mResourceChangeListener = new IResourceChangeListener() {
+    /**
+     * Adds a raw delta listener.
+     * @param listener The listener to receive the deltas.
+     */
+    public synchronized void addRawDeltaListener(IRawDeltaListener listener) {
+        mRawDeltaListeners.add(listener);
+    }
+
+    /**
+     * Removes an existing Raw Delta listener.
+     * @param listener the listener to remove.
+     */
+    public synchronized void removeRawDeltaListener(IRawDeltaListener listener) {
+        mRawDeltaListeners.remove(listener);
+    }
+
+    private final IResourceChangeListener mResourceChangeListener = new IResourceChangeListener() {
         /**
          * Processes the workspace resource change events.
          *

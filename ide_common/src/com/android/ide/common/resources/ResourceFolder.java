@@ -73,7 +73,9 @@ public final class ResourceFolder implements Configurable {
                 // create a ResourceFile for it.
 
                 // check if that's a single or multi resource type folder. For now we define this by
-                // the number of possible resource type output by files in the folder. This does
+                // the number of possible resource type output by files in the folder.
+                // We have a special case for layout/menu folders which can also generate IDs.
+                // This does
                 // not make the difference between several resource types from a single file or
                 // the ability to have 2 files in the same folder generating 2 different types of
                 // resource. The former is handled by MultiResourceFile properly while we don't
@@ -82,6 +84,10 @@ public final class ResourceFolder implements Configurable {
 
                 if (types.size() == 1) {
                     resFile = new SingleResourceFile(file, this);
+                } else if (types.contains(ResourceType.LAYOUT)){
+                    resFile = new IdGeneratingResourceFile(file, this, ResourceType.LAYOUT);
+                } else if (types.contains(ResourceType.MENU)) {
+                    resFile = new IdGeneratingResourceFile(file, this, ResourceType.MENU);
                 } else {
                     resFile = new MultiResourceFile(file, this);
                 }

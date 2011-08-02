@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.common.resources.IntArrayWrapper;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
@@ -32,6 +32,7 @@ import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
@@ -78,7 +79,9 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      * @see IFileListener#fileChanged
      */
     public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
-        if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)) {
+        // Don't execute if we're autobuilding, let the precompiler take care of the delta
+        if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)
+                && ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding() == false) {
             loadAndParseRClass(file.getProject());
         }
     }
