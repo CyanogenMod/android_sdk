@@ -38,11 +38,13 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.SWT;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IViewPart;
@@ -91,6 +93,7 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
         IProject project = getProject();
 
         // Write out the images into the project
+        boolean yesToAll = false;
         List<IFile> createdFiles = new ArrayList<IFile>();
         for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
             String id = entry.getKey();
@@ -99,7 +102,34 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
                     + id + WS_SEP + name + DOT_PNG);
             IFile file = project.getFile(dest);
             if (file.exists()) {
-                // TODO: Warn that the file already exists and ask the user what to do?
+                // Warn that the file already exists and ask the user what to do
+                if (!yesToAll) {
+                    MessageDialog dialog = new MessageDialog(null, "File Already Exists", null,
+                            String.format("%1$s already exists.\nWould you like to replace it?",
+                                    file.getProjectRelativePath().toOSString()),
+                            MessageDialog.QUESTION, new String[] {
+                                    // Yes will be moved to the end because it's the default
+                                    "Yes", "No", "Cancel", "Yes to All"
+                            }, 0);
+                    int result = dialog.open();
+                    switch (result) {
+                        case 0:
+                            // Yes
+                            break;
+                        case 3:
+                            // Yes to all
+                            yesToAll = true;
+                            break;
+                        case 1:
+                            // No
+                            continue;
+                        case SWT.DEFAULT:
+                        case 2:
+                            // Cancel
+                            return false;
+                    }
+                }
+
                 try {
                     file.delete(true, new NullProgressMonitor());
                 } catch (CoreException e) {

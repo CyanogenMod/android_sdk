@@ -24,6 +24,7 @@ import com.android.assetstudiolib.GraphicGeneratorContext;
 import com.android.assetstudiolib.LauncherIconGenerator;
 import com.android.assetstudiolib.LauncherIconGenerator.Options.Style;
 import com.android.assetstudiolib.TextRenderUtil;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
@@ -35,19 +36,22 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -69,6 +73,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -112,9 +117,12 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private RGB mBgColor;
     private RGB mFgColor;
     private Text mText;
+    private String mSelectedClipart;
 
     /** Most recently set image path: preserved across wizard sessions */
     private static String sImagePath;
+    private Button mChooseClipart;
+    private Composite mClipartPreviewPanel;
 
     /**
      * Create the wizard.
@@ -172,7 +180,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mImageRadio.setText("Image");
 
         mClipartRadio = new Button(foregroundComposite, SWT.FLAT | SWT.TOGGLE);
-        mClipartRadio.setEnabled(false);
+        //mClipartRadio.setEnabled(false);
         mClipartRadio.setText("Clipart");
         mClipartRadio.addSelectionListener(this);
 
@@ -204,8 +212,20 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mPickImageButton.setText("Browse...");
         mPickImageButton.addSelectionListener(this);
 
-        mClipartForm = new Composite(mForegroundArea, SWT.V_SCROLL);
-        mClipartForm.setLayout(new FillLayout(SWT.HORIZONTAL));
+        mClipartForm = new Composite(mForegroundArea, SWT.NONE);
+        mClipartForm.setLayout(new GridLayout(2, false));
+
+        mChooseClipart = new Button(mClipartForm, SWT.FLAT);
+        mChooseClipart.setText("Choose...");
+        mChooseClipart.addSelectionListener(this);
+
+        mClipartPreviewPanel = new Composite(mClipartForm, SWT.NONE);
+        RowLayout rlClipartPreviewPanel = new RowLayout(SWT.HORIZONTAL);
+        rlClipartPreviewPanel.marginBottom = 0;
+        rlClipartPreviewPanel.marginTop = 0;
+        rlClipartPreviewPanel.center = true;
+        mClipartPreviewPanel.setLayout(rlClipartPreviewPanel);
+        mClipartPreviewPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
         mTextForm = new Composite(mForegroundArea, SWT.NONE);
         mTextForm.setLayout(new GridLayout(2, false));
@@ -433,7 +453,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 error = "Enter text";
             }
         } else {
-            error = "Clipart not yet implemented";
+            //error = "Clipart not yet implemented";
+            assert mClipartRadio.getSelection();
+            if (mSelectedClipart == null) {
+                error = "Select clip art";
+            }
         }
 
         setPageComplete(error == null);
@@ -511,6 +535,91 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         } else if (source == mGlossyRadio) {
             mSimpleRadio.setSelection(false);
             mFancyRadio.setSelection(false);
+        }
+
+        if (source == mChooseClipart) {
+            MessageDialog dialog = new MessageDialog(mChooseClipart.getShell(),
+                    "Choose Clip Art",
+                    null, "Choose Clip Art Image:", MessageDialog.NONE,
+                    new String[] { "Close" }, 0) {
+                @Override
+                protected Control createCustomArea(Composite parent) {
+                    // Outer form which just establishes a width for the inner form which
+                    // wraps in a RowLayout
+                    Composite outer = new Composite(parent, SWT.NONE);
+                    GridLayout gridLayout = new GridLayout();
+                    outer.setLayout(gridLayout);
+
+                    Composite chooserForm = new Composite(outer, SWT.NONE);
+                    GridData gd = new GridData();
+                    gd.grabExcessVerticalSpace = true;
+                    gd.widthHint = 450;
+                    chooserForm.setLayoutData(gd);
+                    RowLayout clipartFormLayout = new RowLayout(SWT.HORIZONTAL);
+                    clipartFormLayout.center = true;
+                    clipartFormLayout.wrap = true;
+                    chooserForm.setLayout(clipartFormLayout);
+
+                    MouseAdapter clickListener = new MouseAdapter() {
+                        @SuppressWarnings("unused")
+                        @Override
+                        public void mouseDown(MouseEvent event) {
+                            // Clicked on some of the sample art
+                            if (event.widget instanceof ImageControl) {
+                                ImageControl image = (ImageControl) event.widget;
+                                mSelectedClipart = (String) image.getData();
+                                close();
+
+                                for (Control c : mClipartPreviewPanel.getChildren()) {
+                                    c.dispose();
+                                }
+                                if (mClipartPreviewPanel.getChildren().length == 0) {
+                                    try {
+                                        BufferedImage icon =
+                                                GraphicGenerator.getClipartIcon(mSelectedClipart);
+                                        if (icon != null) {
+                                            Display display = mClipartForm.getDisplay();
+                                            Image swtImage = SwtUtils.convertToSwt(display, icon,
+                                                    false, -1);
+                                            new ImageControl(mClipartPreviewPanel,
+                                                    SWT.NONE, swtImage);
+                                        }
+                                    } catch (IOException e1) {
+                                        AdtPlugin.log(e1, null);
+                                    }
+                                    mClipartPreviewPanel.pack();
+                                    mClipartPreviewPanel.layout();
+                                }
+
+                                updatePreview();
+                            }
+                        }
+                    };
+                    Display display = chooserForm.getDisplay();
+                    Color hoverColor = display.getSystemColor(SWT.COLOR_RED);
+                    Iterator<String> clipartImages = GraphicGenerator.getClipartNames();
+                    while (clipartImages.hasNext()) {
+                        String name = clipartImages.next();
+                        try {
+                            BufferedImage icon = GraphicGenerator.getClipartIcon(name);
+                            if (icon != null) {
+                                Image swtImage = SwtUtils.convertToSwt(display, icon, false, -1);
+                                ImageControl img = new ImageControl(chooserForm,
+                                        SWT.NONE, swtImage);
+                                img.setData(name);
+                                img.setHoverColor(hoverColor);
+                                img.addMouseListener(clickListener);
+                            }
+                        } catch (IOException e1) {
+                            AdtPlugin.log(e1, null);
+                        }
+                    }
+                    outer.pack();
+                    outer.layout();
+                    return outer;
+                }
+            };
+            dialog.open();
         }
 
         if (source == mBgButton) {
@@ -681,8 +790,13 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             sourceImage = TextRenderUtil.renderTextImage(text, options);
         } else {
             assert mClipartRadio.getSelection();
-            // Not yet supported
-            return imageMap;
+            assert mSelectedClipart != null;
+            try {
+                sourceImage = GraphicGenerator.getClipartImage(mSelectedClipart);
+            } catch (IOException e) {
+                AdtPlugin.log(e, null);
+                return imageMap;
+            }
         }
 
         LauncherIconGenerator.Options options = new LauncherIconGenerator.Options();
