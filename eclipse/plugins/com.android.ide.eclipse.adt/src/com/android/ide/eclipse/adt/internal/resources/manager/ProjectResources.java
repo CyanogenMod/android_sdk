@@ -17,7 +17,6 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.InlineResourceItem;
 import com.android.ide.common.resources.IntArrayWrapper;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceItem;
@@ -32,7 +31,6 @@ import com.android.util.Pair;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -290,74 +288,5 @@ public class ProjectResources extends ResourceRepository {
         mResourceValueMap = resourceValueMap;
         mResIdValueToNameMap = resIdValueToNameMap;
         mStyleableValueToNameMap = styleableValueMap;
-        mergeIdResources();
-    }
-
-    @Override
-    protected void postUpdate() {
-        super.postUpdate();
-        mergeIdResources();
-    }
-
-    /**
-     * Merges the list of ID resource coming from R.java and the list of ID resources
-     * coming from XML declaration into the cached list {@link #mIdResourceList}.
-     */
-    void mergeIdResources() {
-        if (mResourceValueMap == null) {
-            return;
-        }
-
-        // get the current ID values
-        List<ResourceItem> resources = mResourceMap.get(ResourceType.ID);
-
-        // get the ID values coming from the R class.
-        Map<String, Integer> rResources = mResourceValueMap.get(ResourceType.ID);
-
-        if (rResources != null) {
-            Map<String, Integer> copy;
-
-            if (resources == null) {
-                resources = new ArrayList<ResourceItem>(rResources.entrySet().size());
-                mResourceMap.put(ResourceType.ID, resources);
-                copy = rResources;
-            } else {
-                // make a copy of the compiled Resources.
-                // As we loop on the full resources, we'll check with this copy map and remove
-                // from it all the resources we find in the full list.
-                // At the end, whatever is in the copy of the compile list is not in the full map,
-                // and should be added as inlined resource items.
-                copy = new HashMap<String, Integer>(rResources);
-
-                for (int i = 0 ; i < resources.size(); ) {
-                    ResourceItem item = resources.get(i);
-                    String name = item.getName();
-                    if (item.isDeclaredInline()) {
-                        // This ID is declared inline in the full resource map.
-                        // Check if it's also in the compiled version, in which case we can keep it.
-                        // Otherwise, if it doesn't exist in the compiled map, remove it from the
-                        // full map.
-                        // Since we're going to remove it from the copy map either way, we can use
-                        // remove to test if it's there
-                        if (copy.remove(name) != null) {
-                            // there is a match in the compiled list, do nothing, keep current one.
-                            i++;
-                        } else {
-                            // the ID is now gone, remove it from the list
-                            resources.remove(i);
-                        }
-                    } else {
-                        // not an inline item, remove it from the copy.
-                        copy.remove(name);
-                        i++;
-                    }
-                }
-            }
-
-            // now add what's left in copy to the list
-            for (String name : copy.keySet()) {
-                resources.add(new InlineResourceItem(name));
-            }
-        }
     }
 }
