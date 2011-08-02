@@ -559,7 +559,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private void updateFontLabel(Font f) {
         FontData[] fd = f.getFontData();
         FontData primary = fd[0];
-        String description = String.format("%1$s", primary.name);
+        String description = String.format("%1$s", primary.getName());
         mFontButton.setText(description);
     }
 
