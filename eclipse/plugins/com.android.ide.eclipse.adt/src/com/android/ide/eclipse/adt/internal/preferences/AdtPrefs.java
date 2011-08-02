@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
+
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
@@ -48,9 +49,17 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
 
     public final static String PREFS_MONITOR_DENSITY = AdtPlugin.PLUGIN_ID + ".monitorDensity"; //$NON-NLS-1$
 
-    public final static String PREFS_FORMAT_XML = AdtPlugin.PLUGIN_ID + ".formatXml"; //$NON-NLS-1$
+    public final static String PREFS_FORMAT_GUI_XML = AdtPlugin.PLUGIN_ID + ".formatXml"; //$NON-NLS-1$
+    public final static String PREFS_USE_CUSTOM_XML_FORMATTER = AdtPlugin.PLUGIN_ID + ".androidForm"; //$NON-NLS-1$
 
     public final static String PREFS_PALETTE_MODE = AdtPlugin.PLUGIN_ID + ".palette"; //$NON-NLS-1$
+
+    public final static String PREFS_USE_ECLIPSE_INDENT = AdtPlugin.PLUGIN_ID + ".eclipseIndent"; //$NON-NLS-1$
+    public final static String PREVS_REMOVE_EMPTY_LINES = AdtPlugin.PLUGIN_ID + ".removeEmpty"; //$NON-NLS-1$
+    public final static String PREFS_ONE_ATTR_PER_LINE = AdtPlugin.PLUGIN_ID + ".oneAttrPerLine"; //$NON-NLS-1$
+    public final static String PREFS_SPACE_BEFORE_CLOSE = AdtPlugin.PLUGIN_ID + ".spaceBeforeClose"; //$NON-NLS-1$
+    public final static String PREFS_FORMAT_ON_SAVE = AdtPlugin.PLUGIN_ID + ".formatOnSave"; //$NON-NLS-1$
+    public final static String PREFS_ATTRIBUTE_SORT = AdtPlugin.PLUGIN_ID + ".attrSort"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -67,9 +76,17 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mBuildForceResResfresh = false;
     private boolean mBuildForceErrorOnNativeLibInJar = true;
     private boolean mBuildSkipPostCompileOnFileSave = true;
-    private boolean mFormatXml = false;
     private float mMonitorDensity = 0.f;
     private String mPalette;
+
+    private boolean mFormatGuiXml;
+    private boolean mCustomXmlFormatter;
+    private boolean mUseEclipseIndent;
+    private boolean mRemoveEmptyLines;
+    private boolean mOneAttributeOnFirstLine;
+    private boolean mSpaceBeforeClose;
+    private boolean mFormatOnSave;
+    private AttributeSortOrder mAttributeSort;
 
     public static enum BuildVerbosity {
         /** Build verbosity "Always". Those messages are always displayed, even in silent mode */
@@ -165,12 +182,46 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
             mMonitorDensity = mStore.getFloat(PREFS_MONITOR_DENSITY);
         }
 
-        if (property == null || PREFS_FORMAT_XML.equals(property)) {
-            mFormatXml = mStore.getBoolean(PREFS_FORMAT_XML);
+        if (property == null || PREFS_FORMAT_GUI_XML.equals(property)) {
+            mFormatGuiXml = mStore.getBoolean(PREFS_FORMAT_GUI_XML);
+        }
+
+        if (property == null || PREFS_USE_CUSTOM_XML_FORMATTER.equals(property)) {
+            mCustomXmlFormatter = mStore.getBoolean(PREFS_USE_CUSTOM_XML_FORMATTER);
         }
 
         if (property == null || PREFS_PALETTE_MODE.equals(property)) {
             mPalette = mStore.getString(PREFS_PALETTE_MODE);
+        }
+
+        if (property == null || PREFS_USE_ECLIPSE_INDENT.equals(property)) {
+            mUseEclipseIndent = mStore.getBoolean(PREFS_USE_ECLIPSE_INDENT);
+        }
+
+        if (property == null || PREVS_REMOVE_EMPTY_LINES.equals(property)) {
+            mRemoveEmptyLines = mStore.getBoolean(PREVS_REMOVE_EMPTY_LINES);
+        }
+
+        if (property == null || PREFS_ONE_ATTR_PER_LINE.equals(property)) {
+            mOneAttributeOnFirstLine = mStore.getBoolean(PREFS_ONE_ATTR_PER_LINE);
+        }
+
+        if (property == null || PREFS_ATTRIBUTE_SORT.equals(property)) {
+            String order = mStore.getString(PREFS_ATTRIBUTE_SORT);
+            mAttributeSort = AttributeSortOrder.LOGICAL;
+            if (AttributeSortOrder.ALPHABETICAL.key.equals(order)) {
+                mAttributeSort = AttributeSortOrder.ALPHABETICAL;
+            } else if (AttributeSortOrder.NO_SORTING.key.equals(order)) {
+                mAttributeSort = AttributeSortOrder.NO_SORTING;
+            }
+        }
+
+        if (property == null || PREFS_SPACE_BEFORE_CLOSE.equals(property)) {
+            mSpaceBeforeClose = mStore.getBoolean(PREFS_SPACE_BEFORE_CLOSE);
+        }
+
+        if (property == null || PREFS_FORMAT_ON_SAVE.equals(property)) {
+            mFormatOnSave = mStore.getBoolean(PREFS_FORMAT_ON_SAVE);
         }
     }
 
@@ -190,8 +241,39 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         return mBuildForceResResfresh;
     }
 
-    public boolean getFormatXml() {
-        return mFormatXml;
+    public boolean getFormatGuiXml() {
+        return mFormatGuiXml;
+    }
+
+    public boolean getUseCustomXmlFormatter() {
+        return mCustomXmlFormatter;
+    }
+
+    public boolean isUseEclipseIndent() {
+        return mUseEclipseIndent;
+    }
+
+    public boolean isRemoveEmptyLines() {
+        return mRemoveEmptyLines;
+    }
+
+    public boolean isOneAttributeOnFirstLine() {
+        return mOneAttributeOnFirstLine;
+    }
+
+    public AttributeSortOrder getAttributeSort() {
+        if (mAttributeSort == null) {
+            return AttributeSortOrder.LOGICAL;
+        }
+        return mAttributeSort;
+    }
+
+    public boolean isSpaceBeforeClose() {
+        return mSpaceBeforeClose;
+    }
+
+    public boolean isFormatOnSave() {
+        return mFormatOnSave;
     }
 
     public boolean getBuildForceErrorOnNativeLibInJar() {
@@ -239,7 +321,16 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_HOME_PACKAGE, "android.process.acore"); //$NON-NLS-1$
 
         store.setDefault(PREFS_MONITOR_DENSITY, 0.f);
-        store.setDefault(PREFS_FORMAT_XML, false);
+        store.setDefault(PREFS_FORMAT_GUI_XML, false);
+        store.setDefault(PREFS_USE_CUSTOM_XML_FORMATTER, true);
+        store.setDefault(PREFS_ONE_ATTR_PER_LINE, true);
+        store.setDefault(PREFS_SPACE_BEFORE_CLOSE, true);
+
+        // Defaults already handled; no need to write into map:
+        //store.setDefault(PREFS_ATTRIBUTE_SORT, AttributeSortOrder.LOGICAL.key);
+        //store.setDefault(PREFS_USE_ECLIPSE_INDENT, false);
+        //store.setDefault(PREVS_REMOVE_EMPTY_LINES, false);
+        //store.setDefault(PREFS_FORMAT_ON_SAVE, false);
 
         try {
             store.setDefault(PREFS_DEFAULT_DEBUG_KEYSTORE,

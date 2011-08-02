@@ -322,7 +322,7 @@ public abstract class VisualRefactoring extends Refactoring {
 
         try {
             IEditorPart part = IDE.openEditor(mEditor.getEditorSite().getPage(), file);
-            if (part instanceof AndroidXmlEditor && AdtPrefs.getPrefs().getFormatXml()) {
+            if (part instanceof AndroidXmlEditor && AdtPrefs.getPrefs().getFormatGuiXml()) {
                 AndroidXmlEditor newEditor = (AndroidXmlEditor) part;
                 newEditor.reformatDocument();
             }

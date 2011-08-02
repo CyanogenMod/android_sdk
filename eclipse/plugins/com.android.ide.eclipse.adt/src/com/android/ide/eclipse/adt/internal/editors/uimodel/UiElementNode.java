@@ -2108,7 +2108,7 @@ public class UiElementNode implements IPropertySource {
      * errors, or if the user has turned off XML auto-formatting.
      */
     private void reformat() {
-        if (mHasError || !AdtPrefs.getPrefs().getFormatXml()) {
+        if (mHasError || !AdtPrefs.getPrefs().getFormatGuiXml()) {
             return;
         }
 
