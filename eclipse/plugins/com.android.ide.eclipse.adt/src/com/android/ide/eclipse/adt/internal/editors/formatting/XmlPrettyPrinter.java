@@ -56,16 +56,20 @@ class XmlPrettyPrinter {
     private StringBuilder mOut;
     /** String to insert for a single indentation level */
     private String mIndentString;
+    /** Line separator to use */
+    private String mLineSeparator;
 
     /**
      * Creates a new {@link XmlPrettyPrinter}
      *
      * @param prefs the preferences to format with
      * @param style the style to format with
+     * @param lineSeparator the line separator to use, such as "\n"
      */
-    XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style) {
+    XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style, String lineSeparator) {
         mPrefs = prefs;
         mStyle = style;
+        mLineSeparator = lineSeparator;
     }
 
     /**
@@ -179,7 +183,7 @@ class XmlPrettyPrinter {
     private void printProcessingInstruction(Node node) {
         mOut.append("<?xml "); //$NON-NLS-1$
         mOut.append(node.getNodeValue().trim());
-        mOut.append('?').append('>').append('\n');
+        mOut.append('?').append('>').append(mLineSeparator);
     }
 
     private void printDocType(Node node) {
@@ -187,7 +191,7 @@ class XmlPrettyPrinter {
         if (node instanceof DocumentTypeImpl) {
             String content = ((DocumentTypeImpl) node).getSource();
             mOut.append(content);
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
         }
     }
 
@@ -195,7 +199,8 @@ class XmlPrettyPrinter {
         indent(depth);
         mOut.append("<![CDATA["); //$NON-NLS-1$
         mOut.append(node.getNodeValue());
-        mOut.append("]]>\n");     //$NON-NLS-1$
+        mOut.append("]]>");     //$NON-NLS-1$
+        mOut.append(mLineSeparator);
     }
 
     private void printText(Node node) {
@@ -212,7 +217,7 @@ class XmlPrettyPrinter {
             DomUtilities.appendXmlTextValue(mOut, text);
 
             if (mStyle != XmlFormatStyle.RESOURCE) {
-                mOut.append('\n');
+                mOut.append(mLineSeparator);
             }
         }
     }
@@ -228,8 +233,8 @@ class XmlPrettyPrinter {
                     || (curr.getNodeType() == Node.TEXT_NODE
                             && curr.getNodeValue().trim().length() == 0
                             && (curr.getPreviousSibling() == null
-                                || curr.getPreviousSibling().getNodeType() == Node.ELEMENT_NODE))) {
-                mOut.append('\n');
+                               || curr.getPreviousSibling().getNodeType() == Node.ELEMENT_NODE))) {
+                mOut.append(mLineSeparator);
             }
         }
 
@@ -241,10 +246,12 @@ class XmlPrettyPrinter {
             indent(depth);
             mOut.append("<!-- ");  //$NON-NLS-1$
             mOut.append(trimmed);
-            mOut.append(" -->\n"); //$NON-NLS-1$
+            mOut.append(" -->"); //$NON-NLS-1$
+            mOut.append(mLineSeparator);
         } else {
             indent(depth);
-            mOut.append("<!--\n"); //$NON-NLS-1$
+            mOut.append("<!--"); //$NON-NLS-1$
+            mOut.append(mLineSeparator);
             int index = 0;
             int end = comment.length();
             int recentNewline = 0;
@@ -277,16 +284,17 @@ class XmlPrettyPrinter {
             if (start < end) {
                 mOut.append(comment.substring(start, end));
             }
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
             indent(depth);
-            mOut.append("-->\n"); //$NON-NLS-1$
+            mOut.append("-->"); //$NON-NLS-1$
+            mOut.append(mLineSeparator);
         }
     }
 
     private void printOpenElementTag(int depth, Node node) {
         Element element = (Element) node;
         if (newlineBeforeElementOpen(element, depth)) {
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
         }
         if (indentBeforeElementOpen(element, depth)) {
             indent(depth);
@@ -304,7 +312,7 @@ class XmlPrettyPrinter {
             if (singleLine) {
                 mOut.append(' ');
             } else {
-                mOut.append('\n');
+                mOut.append(mLineSeparator);
             }
 
             // Sort the attributes
@@ -328,7 +336,7 @@ class XmlPrettyPrinter {
                 // Don't add a newline at the last attribute line; the > should
                 // immediately follow the last attribute
                 if (attribute != last) {
-                    mOut.append(singleLine ? ' ' : '\n');
+                    mOut.append(singleLine ? " " : mLineSeparator); //$NON-NLS-1$
                 }
             }
         }
@@ -348,7 +356,7 @@ class XmlPrettyPrinter {
         mOut.append('>');
 
         if (newlineAfterElementOpen(element, depth, isClosed)) {
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
         }
     }
 
@@ -363,7 +371,7 @@ class XmlPrettyPrinter {
         // resource file format
         // If the element had element children, separate the end tag from them
         if (newlineBeforeElementClose(element, depth)) {
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
         }
         if (indentBeforeElementClose(element, depth)) {
             indent(depth);
@@ -373,7 +381,7 @@ class XmlPrettyPrinter {
         mOut.append('>');
 
         if (newlineAfterElementClose(element, depth)) {
-            mOut.append('\n');
+            mOut.append(mLineSeparator);
         }
     }
 
@@ -452,7 +460,9 @@ class XmlPrettyPrinter {
     }
 
     private boolean indentBeforeElementClose(Element element, int depth) {
-        return mOut.charAt(mOut.length() - 1) == '\n';
+        char lastOutChar = mOut.charAt(mOut.length() - 1);
+        char lastDelimiterChar = mLineSeparator.charAt(mLineSeparator.length() - 1);
+        return lastOutChar == lastDelimiterChar;
     }
 
     private boolean newlineAfterElementOpen(Element element, int depth, boolean isClosed) {
