@@ -28,6 +28,7 @@ import com.android.sdklib.SdkConstants;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.TypedPosition;
 import org.eclipse.jface.text.formatter.ContextBasedFormattingStrategy;
 import org.eclipse.jface.text.formatter.IFormattingContext;
@@ -189,7 +190,8 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
 
         XmlFormatStyle style = guessStyle(model, domDocument);
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style);
+        String delimiter = TextUtilities.getDefaultLineDelimiter(document);
+        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
 
         StringBuilder sb = new StringBuilder(length);
         printer.prettyPrint(initialDepth, root, startNode, endNode, sb);
