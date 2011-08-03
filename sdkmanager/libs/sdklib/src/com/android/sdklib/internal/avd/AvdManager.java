@@ -527,8 +527,7 @@ public class AvdManager {
             File userdataSrc = new File(imagePath, USERDATA_IMG);
 
             if (userdataSrc.exists() == false && target.isPlatform() == false) {
-                imagePath =
-                    target.getParent().getImagePath(abiType);
+                imagePath = target.getParent().getImagePath(abiType);
                 userdataSrc = new File(imagePath, USERDATA_IMG);
             }
 
@@ -836,9 +835,8 @@ public class AvdManager {
         return null;
     }
 
-    /** Copy the nominated file to the given destination.
-     * @param source
-     * @param destination
+    /**
+     * Copy the nominated file to the given destination.
      *
      * @throws FileNotFoundException
      * @throws IOException
