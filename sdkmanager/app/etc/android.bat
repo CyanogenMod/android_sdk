@@ -60,6 +60,7 @@ if not "%1"=="" goto EndTempCopy
     copy /B /D /Y lib\sdk*               %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\common.jar         %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\commons-compress*  %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\swtmenubar.jar     %tmp_dir%\lib\        > nul
 
     rem jar_path and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
     set tools_dir=%cd%
@@ -77,6 +78,7 @@ if exist %swt_path% goto SetPath
 
 :SetPath
 rem Finally exec the java program and end here.
-call %java_exe% -Dcom.android.sdkmanager.toolsdir="%tools_dir%" -Dcom.android.sdkmanager.workdir=%work_dir% -classpath "%jar_path%;%swt_path%\swt.jar" com.android.sdkmanager.Main %*
+REM set REMOTE_DEBUG=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000
+call %java_exe% %REMOTE_DEBUG% -Dcom.android.sdkmanager.toolsdir="%tools_dir%" -Dcom.android.sdkmanager.workdir=%work_dir% -classpath "%jar_path%;%swt_path%\swt.jar" com.android.sdkmanager.Main %*
 
 rem EOF
