@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 public class XmlPrettyPrinterTest extends TestCase {
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
-            String xml, String expected) throws Exception {
+            String xml, String expected, String delimiter) throws Exception {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         InputSource is = new InputSource(new StringReader(xml));
@@ -50,7 +50,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         });
         Document document = builder.parse(is);
 
-        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style);
+        XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
 
         StringBuilder sb = new StringBuilder(1000);
         printer.prettyPrint(-1, document, document, document, sb);
@@ -61,6 +61,10 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertEquals(expected, formatted);
     }
 
+    private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
+            String xml, String expected) throws Exception {
+        checkFormat(prefs, style, xml, expected, "\n"); //$NON-NLS-1$
+    }
     private void checkFormat(XmlFormatStyle style, String xml, String expected)
             throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
@@ -208,5 +212,19 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    -->\n" +
                 "\n" +
                 "</LinearLayout>");
+    }
+
+    public void testWindowsDelimiters() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
+                "<LinearLayout>\r\n" +
+                "\r\n" +
+                "    <Button\r\n" +
+                "        foo=\"bar\">\r\n" +
+                "    </Button>\r\n" +
+                "\r\n" +
+                "</LinearLayout>",
+                "\r\n");
     }
 }
