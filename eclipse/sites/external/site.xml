@@ -3,16 +3,16 @@
    <description url="https://dl-ssl.google.com/android/eclipse/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_13.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="13.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_14.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="14.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ddms_13.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="13.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ddms_14.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="14.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.hierarchyviewer_13.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="13.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.hierarchyviewer_14.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="14.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.traceview_13.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="13.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.traceview_14.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="14.0.0.qualifier">
       <category name="developer"/>
    </feature>
    <category-def name="developer" label="Developer Tools">
