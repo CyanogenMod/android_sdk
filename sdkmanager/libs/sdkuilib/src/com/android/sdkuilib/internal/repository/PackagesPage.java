@@ -1587,12 +1587,75 @@ public class PackagesPage extends UpdaterPage
         }
 
         /**
-         * Mark all new and update PkgItems as checked
+         * Mark all new and update PkgItems as checked.
+         * <p/>
+         * Try to be smart and check whether any platform is installed.
+         * The heuristic is:
+         * <ul>
+         * <li> For extras with no platform dependency, or for tools & platform-tools,
+         *          just select new and updates.
+         * <li> For anything that depends on a platform:
+         * <li> Always select the top platform and all its packages.
+         * <li> If some platform is partially installed, selected anything new/update for it.
+         * </ul>
          */
         public void checkNewUpdateItems() {
+            int maxApi = 0;
+            Set<Integer> installedPlatforms = new HashSet<Integer>();
+            Map<Integer, List<PkgItem>> platformItems = new HashMap<Integer, List<PkgItem>>();
+
+            // sort items in platforms... directly deal with items with no platform
             for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
-                if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
-                    item.setChecked(true);
+
+                // Get the main package's API level. We don't need to look at the updates
+                // since by definition they should target the same API level.
+                int api = 0;
+                Package p = item.getMainPackage();
+                if (p instanceof IPackageVersion) {
+                    api = ((IPackageVersion) p).getVersion().getApiLevel();
+                }
+
+                if (api > 0) {
+                    maxApi = Math.max(maxApi, api);
+
+                    // keep track of what platform is currently installed and its items
+                    if (item.getState() == PkgState.INSTALLED) {
+                        installedPlatforms.add(api);
+                    }
+                    List<PkgItem> items = platformItems.get(api);
+                    if (items == null) {
+                        platformItems.put(api, items = new ArrayList<PkgItem>());
+                    }
+                    items.add(item);
+                } else {
+                    // not a plaform package...
+                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                        item.setChecked(true);
+                    }
+                }
+            }
+
+            // If there are some platforms installed. Pickup anything new in them.
+            for (Integer api : installedPlatforms) {
+                List<PkgItem> items = platformItems.get(api);
+                if (items != null) {
+                    for (PkgItem item : items) {
+                        if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                            item.setChecked(true);
+                        }
+                    }
+                }
+            }
+
+            // Whether we have platforms installed or not, select everything from the top platform.
+            if (maxApi > 0) {
+                List<PkgItem> items = platformItems.get(maxApi);
+                if (items != null) {
+                    for (PkgItem item : items) {
+                        if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                            item.setChecked(true);
+                        }
+                    }
                 }
             }
         }
