@@ -99,7 +99,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                     int textStart = findTextStart(doc, lineStart, offset);
 
                     IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(textStart);
-                    if (region != null && region.getType() == XML_TAG_NAME) {
+                    if (region != null && region.getType().equals(XML_TAG_NAME)) {
                         Pair<Integer,Integer> balance = getBalance(doc, textStart, offset);
                         int tagBalance = balance.getFirst();
                         int bracketBalance = balance.getSecond();
@@ -134,7 +134,8 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                                 if (right != null && right.getType().equals(XML_END_TAG_OPEN)) {
                                     targetBalance = -1;
                                 }
-                                int openTag = findTagBackwards(doc, offset, targetBalance);
+                                int openTag = AndroidXmlCharacterMatcher.findTagBackwards(doc,
+                                        offset, targetBalance);
                                 if (openTag != -1) {
                                     // Look up the indentation of the given line
                                     lineIndent = AndroidXmlEditor.getIndentAtOffset(doc, openTag);
@@ -196,7 +197,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
      *         whichever is smallest
      * @throws BadLocationException if the offsets are invalid
      */
-    protected int findTextStart(IDocument document, int lineStart, int lineEnd)
+    private static int findTextStart(IDocument document, int lineStart, int lineEnd)
             throws BadLocationException {
         for (int offset = lineStart; offset < lineEnd; offset++) {
             char c = document.getChar(offset);
@@ -247,7 +248,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
      * @param biasLeft whether we should look at the token on the left or on the right
      * @return the subregion at the given offset, or null if not found
      */
-    private ITextRegion getRegionAt(IStructuredDocument doc, int offset,
+    private static ITextRegion getRegionAt(IStructuredDocument doc, int offset,
             boolean biasLeft) {
         if (biasLeft) {
             offset--;
@@ -269,7 +270,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
      * @param end the offset of the ending character (exclusive)
      * @return the balance of tags and brackets
      */
-    private Pair<Integer, Integer> getBalance(IStructuredDocument doc,
+    private static Pair<Integer, Integer> getBalance(IStructuredDocument doc,
             int start, int end) {
         // Balance of open and closing tags
         // <foo></foo> has tagBalance = 0, <foo> has tagBalance = 1
@@ -319,65 +320,11 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
     }
 
     /**
-     * Finds the corresponding open tag by searching backwards until the tag balance
-     * reaches a given target.
-     *
-     * @param doc the document
-     * @param offset the ending offset (where the search begins searching backwards from)
-     * @param targetTagBalance the balance to end the search at
-     */
-    private int findTagBackwards(IStructuredDocument doc, int offset, int targetTagBalance) {
-        // Balance of open and closing tags
-        int tagBalance = 0;
-        // Balance of open and closing brackets
-        IStructuredDocumentRegion region =
-                doc.getRegionAtCharacterOffset(offset);
-        if (region != null) {
-            boolean inEmptyTag = true;
-
-            while (region != null) {
-                int regionStart = region.getStartOffset();
-                ITextRegionList subRegions = region.getRegions();
-                for (int i = subRegions.size() - 1; i >= 0; i--) {
-                    ITextRegion subRegion = subRegions.get(i);
-                    int subRegionStart = regionStart + subRegion.getStart();
-                    if (subRegionStart >= offset) {
-                        continue;
-                    }
-                    String type = subRegion.getType();
-
-                    // Iterate backwards and keep track of the tag balance such that
-                    // we can find the corresponding opening tag
-
-                    if (XML_TAG_OPEN.equals(type)) {
-                        if (!inEmptyTag) {
-                            tagBalance--;
-                        }
-                        if (tagBalance == targetTagBalance) {
-                            return subRegionStart;
-                        }
-                    } else if (XML_END_TAG_OPEN.equals(type)) {
-                        tagBalance++;
-                    } else if (XML_EMPTY_TAG_CLOSE.equals(type)) {
-                        inEmptyTag = true;
-                    } else if (XML_TAG_CLOSE.equals(type)) {
-                        inEmptyTag = false;
-                    }
-                }
-
-                region = region.getPrevious();
-            }
-        }
-
-        return -1;
-    }
-
-    /**
      * Determine if we're in smart insert mode (if so, don't do any edit magic)
      *
      * @return true if the editor is in smart mode (or if it's an unknown editor type)
      */
-    private boolean isSmartInsertMode() {
+    private static boolean isSmartInsertMode() {
         ITextEditor textEditor = AdtUtils.getActiveTextEditor();
         if (textEditor instanceof ITextEditorExtension3) {
             ITextEditorExtension3 editor = (ITextEditorExtension3) textEditor;
