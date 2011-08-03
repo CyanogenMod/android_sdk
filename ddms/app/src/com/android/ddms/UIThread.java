@@ -46,6 +46,8 @@ import com.android.ddmuilib.explorer.DeviceExplorer;
 import com.android.ddmuilib.handler.BaseFileHandler;
 import com.android.ddmuilib.handler.MethodProfilingHandler;
 import com.android.ddmuilib.log.event.EventLogPanel;
+import com.android.ddmuilib.logcat.LogCatPanel;
+import com.android.ddmuilib.logcat.LogCatReceiver;
 import com.android.ddmuilib.logcat.LogColors;
 import com.android.ddmuilib.logcat.LogFilter;
 import com.android.ddmuilib.logcat.LogPanel;
@@ -232,6 +234,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     }
 
     private LogPanel mLogPanel; /* only valid when useOldLogCatView() == true */
+    private LogCatPanel mLogCatPanel; /* only valid when useOldLogCatView() == false */
 
     private ToolItemAction mCreateFilterAction;
     private ToolItemAction mDeleteFilterAction;
@@ -959,6 +962,8 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         if (useOldLogCatView()) {
             createBottomPanel(bottomPanel);
+        } else {
+            createLogCatView(bottomPanel);
         }
 
         // form layout data
@@ -1359,6 +1364,15 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         mLogPanel.startLogCat(mCurrentDevice);
     }
 
+    private void createLogCatView(Composite parent) {
+        mLogCatPanel = new LogCatPanel(new LogCatReceiver());
+        mLogCatPanel.createPanel(parent);
+
+        if (mCurrentDevice != null) {
+            mLogCatPanel.deviceSelected(mCurrentDevice);
+        }
+    }
+
     /*
      * Create the contents of the left panel: a table of VMs.
      */
@@ -1701,6 +1715,8 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             mEmulatorPanel.deviceSelected(mCurrentDevice);
             if (useOldLogCatView()) {
                 mLogPanel.deviceSelected(mCurrentDevice);
+            } else {
+                mLogCatPanel.deviceSelected(mCurrentDevice);
             }
             if (mEventLogPanel != null) {
                 mEventLogPanel.deviceSelected(mCurrentDevice);
