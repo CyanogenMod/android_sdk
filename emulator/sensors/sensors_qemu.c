@@ -340,8 +340,8 @@ data__poll(struct sensors_poll_device_t *dev, sensors_event_t* values)
             continue;
         }
 
-        /* "magnetic:<x>:<y>:<z>" is sent for the params of the magnetic field */
-        if (sscanf(buff, "magnetic:%g:%g:%g", params+0, params+1, params+2) == 3) {
+        /* "magnetic-field:<x>:<y>:<z>" is sent for the params of the magnetic field */
+        if (sscanf(buff, "magnetic-field:%g:%g:%g", params+0, params+1, params+2) == 3) {
             new_sensors |= SENSORS_MAGNETIC_FIELD;
             data->sensors[ID_MAGNETIC_FIELD].magnetic.x = params[0];
             data->sensors[ID_MAGNETIC_FIELD].magnetic.y = params[1];
