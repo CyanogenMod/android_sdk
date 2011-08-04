@@ -814,6 +814,113 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, false /*displaySortByApi*/));
     }
 
+    public void testCheckNewUpdateItems_SelectInitial() {
+        // Populate the list with typical items: tools, platforms tools, extras, 2 platforms.
+        // With nothing installed, this should pick the tools, extras and the top platform.
+
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+
+        m.updateStart();
+        MockPlatformPackage p1;
+        MockPlatformPackage p2;
+
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, 10, 3),
+                new MockPlatformToolPackage(src1, 3),
+                new MockExtraPackage(src1, "android", "usb_driver", 5, 3),
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+                p2 = new MockPlatformPackage(src1, 2, 4, 3),    // API 2
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
+                new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon B", p2, 7),
+                new MockExtraPackage(src2, "carrier", "custom_rom", 1, 0),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        m.checkNewUpdateItems();
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- < * NEW, pkg:Android SDK Tools, revision 10>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgApiCategory <API=API 2, label=Android android-2 (API 2), #items=2>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
+                "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
+                "PkgApiCategory <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
+                "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=5>\n" +
+                "-- < * NEW, pkg:Android SDK Tools, revision 10>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
+                "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
+                "PkgSourceCategory <source=repo2 (repo.com), #items=3>\n" +
+                "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // API 1 was not suggested for install since it was totally uninstalled.
+        // Now if at least one item of API 1 is installed, the rest will be offered for install too.
+        m.clear();
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*source*/, new Package[] {
+                new MockToolPackage(src1, 10, 3),
+                // addon for API 1 is installed but not the platform
+                new MockAddonPackage(src2, "addon A", p1, 5),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, 10, 3),
+                new MockPlatformToolPackage(src1, 3),
+                new MockExtraPackage(src1, "android", "usb_driver", 5, 3),
+                p1,    // API 1
+                p2,    // API 2
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
+                new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon B", p2, 7),
+                new MockExtraPackage(src2, "carrier", "custom_rom", 1, 0),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        m.checkNewUpdateItems();
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgApiCategory <API=API 2, label=Android android-2 (API 2), #items=2>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
+                "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
+                "PkgApiCategory <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
+                "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=5>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
+                "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
+                "-- < * NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
+                "PkgSourceCategory <source=repo2 (repo.com), #items=3>\n" +
+                "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
     public void testCheckUncheckAllItems() {
         // Populate the list with a couple items and an update
         SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");

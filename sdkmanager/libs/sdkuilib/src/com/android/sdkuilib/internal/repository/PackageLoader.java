@@ -544,7 +544,7 @@ class PackageLoader {
             sb.append('<');
 
             if (mChecked) {
-                sb.append(" * ");
+                sb.append(" * "); //$NON-NLS-1$
             }
 
             sb.append(mState.toString());

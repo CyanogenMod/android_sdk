@@ -1578,6 +1578,16 @@ public class PackagesPage extends UpdaterPage
             mPackageLoader = new PackageLoader(updaterData);
         }
 
+        /**
+         * Removes all the internal state and resets the object.
+         * Useful for testing.
+         */
+        public void clear() {
+            mFirstLoadComplete = true;
+            mOpApi.clear();
+            mOpSource.clear();
+        }
+
         /** Return mFirstLoadComplete and resets it to false.
          * All following calls will returns false. */
         public boolean isFirstLoadComplete() {
@@ -1675,6 +1685,12 @@ public class PackagesPage extends UpdaterPage
         abstract class UpdateOp {
             private final Set<SdkSource> mVisitedSources = new HashSet<SdkSource>();
             protected final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
+
+            /** Removes all internal state. */
+            public void clear() {
+                mVisitedSources.clear();
+                mCategories.clear();
+            }
 
             /** Retrieve the sorted category list. */
             public List<PkgCategory> getCategories() {
