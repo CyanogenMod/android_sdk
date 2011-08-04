@@ -502,9 +502,11 @@ public abstract class ResourceRepository {
 
     protected void removeFile(ResourceType type, ResourceFile file) {
         List<ResourceItem> list = mResourceMap.get(type);
-        for (int i = 0 ; i < list.size(); i++) {
-            ResourceItem item = list.get(i);
-            item.removeFile(file);
+        if (list != null) {
+            for (int i = 0 ; i < list.size(); i++) {
+                ResourceItem item = list.get(i);
+                item.removeFile(file);
+            }
         }
     }
 
