@@ -221,7 +221,17 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     }
 
 
-    private LogPanel mLogPanel;
+    /**
+     * Flag to indicate whether to use the old or the new logcat view. This is a
+     * temporary workaround that will be removed once the new view is complete.
+     */
+    private static final String USE_NEW_LOGCAT_VIEW =
+            System.getenv("ANDROID_USE_NEW_LOGCAT_VIEW");
+    private boolean useOldLogCatView() {
+        return USE_NEW_LOGCAT_VIEW == null;
+    }
+
+    private LogPanel mLogPanel; /* only valid when useOldLogCatView() == true */
 
     private ToolItemAction mCreateFilterAction;
     private ToolItemAction mDeleteFilterAction;
@@ -497,7 +507,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             if (!mDisplay.readAndDispatch())
                 mDisplay.sleep();
         }
-        mLogPanel.stopLogCat(true);
+        if (useOldLogCatView()) {
+            mLogPanel.stopLogCat(true);
+        }
 
         mDevicePanel.dispose();
         for (TablePanel panel : mPanels) {
@@ -944,7 +956,10 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         panelArea.setLayout(new FormLayout());
 
         createTopPanel(topPanel, darkGray);
-        createBottomPanel(bottomPanel);
+
+        if (useOldLogCatView()) {
+            createBottomPanel(bottomPanel);
+        }
 
         // form layout data
         FormData data = new FormData();
@@ -993,7 +1008,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         mTableListener = new TableFocusListener();
 
         // now set up the listener in the various panels
-        mLogPanel.setTableFocusListener(mTableListener);
+        if (useOldLogCatView()) {
+            mLogPanel.setTableFocusListener(mTableListener);
+        }
         mEventLogPanel.setTableFocusListener(mTableListener);
         for (TablePanel p : mPanels) {
             if (p != null) {
@@ -1682,7 +1699,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
             }
 
             mEmulatorPanel.deviceSelected(mCurrentDevice);
-            mLogPanel.deviceSelected(mCurrentDevice);
+            if (useOldLogCatView()) {
+                mLogPanel.deviceSelected(mCurrentDevice);
+            }
             if (mEventLogPanel != null) {
                 mEventLogPanel.deviceSelected(mCurrentDevice);
             }
