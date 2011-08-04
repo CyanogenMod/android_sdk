@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman2;
 
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskFactory;
-import com.android.sdkuilib.internal.repository.PackagesPage.MenuAction;
+import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
+import com.android.sdkuilib.internal.repository.ISettingsPage;
+import com.android.sdkuilib.internal.repository.MenuBarWrapper;
+import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage.MenuAction;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.internal.widgets.ImgDisabledButton;

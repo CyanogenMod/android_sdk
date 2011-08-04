@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** A mock UpdaterData that simply records what would have been installed. */
-class MockUpdaterData extends UpdaterData {
+public class MockUpdaterData extends UpdaterData {
 
     public final static String SDK_PATH = "/tmp/SDK";
 

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.SwtBaseDialog;
 

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman1;
 
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;
@@ -32,7 +33,7 @@ import org.eclipse.swt.graphics.Image;
 /**
  * Table adapters to use the local SDK list.
  */
-class LocalSdkAdapter  {
+public class LocalSdkAdapter  {
 
     private final UpdaterData mUpdaterData;
 

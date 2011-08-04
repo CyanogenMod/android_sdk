@@ -406,6 +406,70 @@ final class Device implements IDevice {
         mMountPoints.put(name, value);
     }
 
+    public void pushFile(String local, String remote)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        try {
+            String targetFileName = getFileName(local);
+
+            Log.d(targetFileName, String.format("Uploading %1$s onto device '%2$s'",
+                    targetFileName, getSerialNumber()));
+
+            SyncService sync = getSyncService();
+            if (sync != null) {
+                String message = String.format("Uploading file onto device '%1$s'",
+                        getSerialNumber());
+                Log.d(LOG_TAG, message);
+                sync.pushFile(local, remote, SyncService.getNullProgressMonitor());
+            } else {
+                throw new IOException("Unable to open sync connection!");
+            }
+        } catch (TimeoutException e) {
+            Log.e(LOG_TAG, "Error during Sync: timeout.");
+            throw e;
+
+        } catch (SyncException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
+        }
+    }
+
+    public void pullFile(String remote, String local)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        try {
+            String targetFileName = getFileName(remote);
+
+            Log.d(targetFileName, String.format("Downloading %1$s from device '%2$s'",
+                    targetFileName, getSerialNumber()));
+
+            SyncService sync = getSyncService();
+            if (sync != null) {
+                String message = String.format("Downloding file from device '%1$s'",
+                        getSerialNumber());
+                Log.d(LOG_TAG, message);
+                sync.pullFile(remote, local, SyncService.getNullProgressMonitor());
+            } else {
+                throw new IOException("Unable to open sync connection!");
+            }
+        } catch (TimeoutException e) {
+            Log.e(LOG_TAG, "Error during Sync: timeout.");
+            throw e;
+
+        } catch (SyncException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
+
+        }
+    }
+
     public String installPackage(String packageFilePath, boolean reinstall)
             throws InstallException {
         try {

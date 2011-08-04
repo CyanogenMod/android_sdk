@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman2;
 
 
 import com.android.sdklib.AndroidVersion;
@@ -22,7 +22,9 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
-import com.android.sdkuilib.internal.repository.PackageLoader.IAutoInstallTask;
+import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.IAutoInstallTask;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.ui.GridDataBuilder;
