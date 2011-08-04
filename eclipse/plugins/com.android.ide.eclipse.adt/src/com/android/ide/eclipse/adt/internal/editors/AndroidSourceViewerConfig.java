@@ -20,6 +20,7 @@ package com.android.ide.eclipse.adt.internal.editors;
 import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormatter;
 import com.android.ide.eclipse.adt.internal.editors.formatting.AndroidXmlFormattingStrategy;
 
+import org.eclipse.jface.text.DefaultAutoIndentStrategy;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.ITextViewer;
@@ -69,6 +70,7 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
      *        processors are applicable
      * @return IContentAssistProcessors or null if should not be supported
      */
+    @SuppressWarnings("deprecation") // XMLContentAssistProcessor
     @Override
     protected IContentAssistProcessor[] getContentAssistProcessors(
             ISourceViewer sourceViewer, String partitionType) {
@@ -106,11 +108,24 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
         return super.getTextHover(sourceViewer, contentType);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public IAutoEditStrategy[] getAutoEditStrategies(
             ISourceViewer sourceViewer, String contentType) {
-        // TODO auto edit strategies for android xml
-        return super.getAutoEditStrategies(sourceViewer, contentType);
+        IAutoEditStrategy[] strategies = super.getAutoEditStrategies(sourceViewer, contentType);
+        List<IAutoEditStrategy> s = new ArrayList<IAutoEditStrategy>(strategies.length + 1);
+        s.add(new AndroidXmlAutoEditStrategy());
+
+        // Add other registered strategies, except the builtin indentation strategy which is
+        // now handled by the above AndroidXmlAutoEditStrategy
+        for (IAutoEditStrategy strategy : strategies) {
+            if (strategy instanceof DefaultAutoIndentStrategy) {
+                continue;
+            }
+            s.add(strategy);
+        }
+
+        return s.toArray(new IAutoEditStrategy[s.size()]);
     }
 
     @Override
