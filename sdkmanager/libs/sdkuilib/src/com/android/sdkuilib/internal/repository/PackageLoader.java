@@ -358,6 +358,7 @@ class PackageLoader {
         private PkgState mState;
         private final Package mMainPkg;
         private Package mUpdatePkg;
+        private boolean mChecked;
 
         /**
          * Create a new {@link PkgItem} for this main package.
@@ -372,6 +373,14 @@ class PackageLoader {
 
         public boolean isObsolete() {
             return mMainPkg.isObsolete();
+        }
+
+        public boolean isChecked() {
+            return mChecked;
+        }
+
+        public void setChecked(boolean checked) {
+            mChecked = checked;
         }
 
         public Package getUpdatePkg() {
@@ -533,6 +542,11 @@ class PackageLoader {
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append('<');
+
+            if (mChecked) {
+                sb.append(" * ");
+            }
+
             sb.append(mState.toString());
 
             if (mMainPkg != null) {
