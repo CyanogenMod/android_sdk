@@ -26,13 +26,13 @@ import org.eclipse.swt.dnd.Clipboard;
  */
 public interface ITableFocusListener {
 
-	public interface IFocusedTableActivator {
-		public void copy(Clipboard clipboard);
+    public interface IFocusedTableActivator {
+        public void copy(Clipboard clipboard);
 
-		public void selectAll();
-	}
+        public void selectAll();
+    }
 
-	public void focusGained(IFocusedTableActivator activator);
+    public void focusGained(IFocusedTableActivator activator);
 
-	public void focusLost(IFocusedTableActivator activator);
+    public void focusLost(IFocusedTableActivator activator);
 }
