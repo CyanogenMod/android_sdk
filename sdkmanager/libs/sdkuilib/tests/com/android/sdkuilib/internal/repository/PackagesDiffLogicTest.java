@@ -761,6 +761,147 @@ public class PackagesDiffLogicTest extends TestCase {
 
     // ----
 
+    public void testIsFirstLoadComplete() {
+        // isFirstLoadComplete is a simple toggle that goes from true to false when read once
+        assertTrue(m.isFirstLoadComplete());
+        assertFalse(m.isFirstLoadComplete());
+        assertFalse(m.isFirstLoadComplete());
+    }
+
+    public void testCheckNewUpdateItems() {
+        // Populate the list with a few items and an update
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockEmptyPackage(src1, "has update", 1),
+                new MockEmptyPackage(src1, "no update", 4)
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockEmptyPackage(src1, "has update", 2),
+                new MockEmptyPackage(src1, "new stuff", 3),
+        });
+        m.updateEnd(true /*sortByApi*/);
+        // Nothing is checked at first
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now request to check new and update items
+        m.checkNewUpdateItems();
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=3>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- < * NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=3>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- < * NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testCheckUncheckAllItems() {
+        // Populate the list with a couple items and an update
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockEmptyPackage(src1, "type1", 1)
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockEmptyPackage(src1, "type1", 2),
+                new MockEmptyPackage(src1, "type3", 3),
+        });
+        m.updateEnd(true /*sortByApi*/);
+        // Nothing is checked at first
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, true /*displaySortByApi*/));
+
+        // Manually check the items in the sort-by-API case, but not the source
+        for (PkgItem item : m.getAllPkgItems(true /*byApi*/, false /*bySource*/)) {
+            item.setChecked(true);
+        }
+
+        // by-api sort should be checked but not by source
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // now uncheck them all
+        m.uncheckAllItems();
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Manually check the items in both by-api and by-source
+        for (PkgItem item : m.getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
+            item.setChecked(true);
+        }
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=2>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // now uncheck them all
+        m.uncheckAllItems();
+
+        assertEquals(
+                "PkgApiCategory <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgApiCategory <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgSourceCategory <source=repo1 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    // ----
+
     /**
      * Simulates the display we would have in the Packages Tree.
      * This always depends on mCurrentCategories like the tree does.
