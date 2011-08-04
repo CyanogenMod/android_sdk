@@ -23,6 +23,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 
 /** Utility methods for ADT */
@@ -125,6 +126,25 @@ public class AdtUtils {
             IWorkbenchPage page = window.getActivePage();
             if (page != null) {
                 return page.getActiveEditor();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the current text editor (the currently visible and active editor), or null
+     * if not found.
+     *
+     * @return the current text editor, or null
+     */
+    public static ITextEditor getActiveTextEditor() {
+        IEditorPart editor = getActiveEditor();
+        if (editor != null) {
+            if (editor instanceof ITextEditor) {
+                return (ITextEditor) editor;
+            } else {
+                return (ITextEditor) editor.getAdapter(ITextEditor.class);
             }
         }
 

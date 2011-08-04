@@ -606,6 +606,10 @@
                 type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
                 class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.RefactoringAssistant"
                 target="org.eclipse.wst.xml.XML_DEFAULT" />
+      <provisionalConfiguration
+                type="characterpairmatcher"
+                class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCharacterMatcher"
+                target="org.eclipse.core.runtime.xml" />
    </extension>
     <extension point="org.eclipse.jdt.ui.quickAssistProcessors">
         <quickAssistProcessor

@@ -221,7 +221,9 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             while (index > 0) {
                 char c = document.getChar(index - 1);
                 if (c == '\n') {
-                    replaceStart = index + 1;
+                    if (index < replaceStart) {
+                        replaceStart = index + 1;
+                    }
                     break;
                 } else if (!Character.isWhitespace(c)) {
                     // The replaced node does not start on its own line; in that case,
