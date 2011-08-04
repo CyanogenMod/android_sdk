@@ -1709,7 +1709,18 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
                 version.getMinor(), version.getMicro());
 
-        SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+        // get the version of eclipse by getting the version of one of the runtime plugins.
+        ResourcesPlugin resPlugin = ResourcesPlugin.getPlugin();
+
+        String eclipseVersionString = (String) resPlugin.getBundle().getHeaders().get(
+                Constants.BUNDLE_VERSION);
+
+        // parse the string using the Version class.
+        Version eclipseVersion = new Version(eclipseVersionString);
+        eclipseVersionString = String.format("%1$d.%2$d",  //$NON-NLS-1$
+                eclipseVersion.getMajor(), eclipseVersion.getMinor());
+
+        SdkStatsService.ping("adt", versionString, eclipseVersionString, getDisplay()); //$NON-NLS-1$
     }
 
     /**
