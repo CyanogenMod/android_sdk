@@ -17,8 +17,8 @@
 package com.android.sdkuilib.repository;
 
 import com.android.sdklib.ISdkLog;
-import com.android.sdkuilib.internal.repository.AvdManagerWindowImpl1;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
+import com.android.sdkuilib.internal.repository.sdkman2.AvdManagerWindowImpl1;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;

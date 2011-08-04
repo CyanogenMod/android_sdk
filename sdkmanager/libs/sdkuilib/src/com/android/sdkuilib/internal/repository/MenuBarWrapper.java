@@ -19,6 +19,7 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.menubar.IMenuBarCallback;
 import com.android.menubar.MenuBarEnhancer;
+import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
 
 import org.eclipse.swt.widgets.Menu;
 
@@ -30,7 +31,7 @@ import org.eclipse.swt.widgets.Menu;
  * {@link SdkUpdaterWindowImpl2} make the call conditional, otherwise the updater
  * window class would fail to load when the SwtMenuBar library isn't found.
  */
-abstract class MenuBarWrapper {
+public abstract class MenuBarWrapper {
 
     public MenuBarWrapper(String appName, Menu menu) {
         MenuBarEnhancer.setupMenu(appName, menu, new IMenuBarCallback() {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
@@ -30,10 +30,13 @@ import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkRepoSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdkuilib.internal.repository.PackageLoader.ISourceLoadedCallback;
-import com.android.sdkuilib.internal.repository.PackageLoader.PkgItem;
-import com.android.sdkuilib.internal.repository.PackageLoader.PkgState;
+import com.android.sdkuilib.internal.repository.IPageListener;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.ISourceLoadedCallback;
+import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.PkgItem;
+import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.PkgState;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;

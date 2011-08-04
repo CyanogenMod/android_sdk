@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman1;
 
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.widgets.AvdSelector;
 import com.android.sdkuilib.internal.widgets.AvdSelector.DisplayMode;
 import com.android.sdkuilib.repository.ISdkChangeListener;

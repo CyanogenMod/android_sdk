@@ -47,6 +47,10 @@ import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
+import com.android.sdkuilib.internal.repository.sdkman1.LocalSdkAdapter;
+import com.android.sdkuilib.internal.repository.sdkman1.RemotePackagesPage;
+import com.android.sdkuilib.internal.repository.sdkman1.RepoSourcesAdapter;
+import com.android.sdkuilib.internal.repository.sdkman1.SdkUpdaterWindowImpl1;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -68,7 +72,7 @@ import java.util.Map;
 /**
  * Data shared between {@link SdkUpdaterWindowImpl1} and its pages.
  */
-class UpdaterData implements IUpdaterData {
+public class UpdaterData implements IUpdaterData {
     private String mOsSdkRoot;
 
     private final ISdkLog mSdkLog;
@@ -1046,7 +1050,7 @@ class UpdaterData implements IUpdaterData {
      * Safely invoke all the registered {@link ISdkChangeListener#onSdkLoaded()}.
      * This can be called from any thread.
      */
-    /*package*/ void broadcastOnSdkLoaded() {
+    public void broadcastOnSdkLoaded() {
         if (mWindowShell != null && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
                 public void run() {

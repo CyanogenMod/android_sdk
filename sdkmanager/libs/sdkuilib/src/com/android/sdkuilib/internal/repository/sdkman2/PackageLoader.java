@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
@@ -24,6 +24,7 @@ import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdkuilib.internal.repository.UpdaterData;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;

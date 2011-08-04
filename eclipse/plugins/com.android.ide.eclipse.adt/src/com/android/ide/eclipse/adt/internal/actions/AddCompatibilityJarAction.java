@@ -22,7 +22,7 @@ import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.io.OsHelper;
-import com.android.sdkuilib.internal.repository.AdtUpdateDialog;
+import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
