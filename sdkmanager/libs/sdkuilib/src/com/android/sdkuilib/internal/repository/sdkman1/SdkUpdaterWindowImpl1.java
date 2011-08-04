@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman1;
 
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
+import com.android.sdkuilib.internal.repository.IPageListener;
+import com.android.sdkuilib.internal.repository.ISdkUpdaterWindow;
+import com.android.sdkuilib.internal.repository.ISettingsPage;
+import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.tasks.ProgressTaskFactory;

@@ -21,7 +21,7 @@ package com.android.sdkuilib.internal.repository;
 /**
  * Interface for lifecycle events of pages.
  */
-interface IPageListener {
+public interface IPageListener {
 
     /**
      * The page was just selected and brought to front.

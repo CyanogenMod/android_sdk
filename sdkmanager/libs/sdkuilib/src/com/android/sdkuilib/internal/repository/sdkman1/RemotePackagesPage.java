@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman1;
 
 
 import com.android.sdklib.internal.repository.Archive;
@@ -23,6 +23,9 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkAddonSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
+import com.android.sdkuilib.internal.repository.SettingsController;
+import com.android.sdkuilib.internal.repository.UpdaterData;
+import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.jface.dialogs.IInputValidator;

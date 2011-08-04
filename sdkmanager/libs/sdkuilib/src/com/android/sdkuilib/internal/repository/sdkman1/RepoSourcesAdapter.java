@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdkuilib.internal.repository.sdkman1;
 
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
@@ -25,6 +25,7 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 
 import org.eclipse.jface.viewers.IContentProvider;

@@ -20,7 +20,7 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
-import com.android.sdkuilib.internal.repository.RepoSourcesAdapter;
+import com.android.sdkuilib.internal.repository.sdkman1.RepoSourcesAdapter;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
