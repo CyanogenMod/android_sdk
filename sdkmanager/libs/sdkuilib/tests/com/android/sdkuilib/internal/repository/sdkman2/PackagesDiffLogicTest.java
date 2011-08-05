@@ -298,6 +298,41 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, true /*displaySortByApi*/));
     }
 
+    public void testSortByApi_NoRemoteSources() {
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+
+        // We have a couple installed packages
+        m.updateStart();
+        // local packages
+        assertTrue(m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(src1, 10, 3),
+                new MockPlatformToolPackage(src1, 3),
+                new MockExtraPackage(src2, "carrier", "custom_rom", 1, 0),
+                new MockExtraPackage(src2, "android", "usb_driver", 5, 3),
+        }));
+        // and no remote sources have been loaded (e.g. because there's no network)
+        assertFalse(m.updateEnd(true /*sortByApi*/));
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android USB Driver package, revision 5>\n" +
+                "-- <INSTALLED, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, true /*displaySortByApi*/));
+
+        assertEquals(
+                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategorySource <source=repo2 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android USB Driver package, revision 5>\n" +
+                "-- <INSTALLED, pkg:Carrier Custom Rom package, revision 1>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
     public void testSortByApi_CompleteUpdate() {
         SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
         SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
