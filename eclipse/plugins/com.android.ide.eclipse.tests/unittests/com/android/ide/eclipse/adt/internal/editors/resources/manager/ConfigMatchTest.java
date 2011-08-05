@@ -81,6 +81,9 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 null, // language
                 null, // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 null, // screen size
                 null, // screen ratio
                 null, // screen orientation
@@ -102,6 +105,9 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 null, // screen size
                 null, // screen ratio
                 null, // screen orientation
@@ -123,6 +129,9 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 null, // screen size
                 null, // screen ratio
                 null, // screen orientation
@@ -144,6 +153,9 @@ public class ConfigMatchTest extends TestCase {
                 null, // network code
                 "en", // language
                 null, // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 null, // screen size
                 null, // screen ratio
                 ScreenOrientation.LANDSCAPE.getResourceValue(), // screen orientation
@@ -165,6 +177,9 @@ public class ConfigMatchTest extends TestCase {
                 "mnc435", // network code
                 "en", // language
                 "rUS", // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 "normal", // screen size
                 "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getResourceValue(), // screen orientation
@@ -194,6 +209,9 @@ public class ConfigMatchTest extends TestCase {
                 "mnc435", // network code
                 "en", // language
                 "rUS", // region
+                null, // smallest width dp
+                null, // width dp
+                null, // height dp
                 "normal", // screen size
                 "notlong", // screen ratio
                 ScreenOrientation.LANDSCAPE.getResourceValue(), // screen orientation
