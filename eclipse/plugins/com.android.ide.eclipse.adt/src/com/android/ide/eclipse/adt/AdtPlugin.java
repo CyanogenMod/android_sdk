@@ -1849,30 +1849,33 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * @param region an optional region which if set will be selected and shown to the
      *            user
      * @param showEditorTab if true, front the editor tab after opening the file
+     * @return the editor that was opened, or null if no editor was opened
      * @throws PartInitException if something goes wrong
      */
-    public static void openFile(IFile file, IRegion region, boolean showEditorTab)
+    public static IEditorPart openFile(IFile file, IRegion region, boolean showEditorTab)
             throws PartInitException {
         IWorkbench workbench = PlatformUI.getWorkbench();
         if (workbench == null) {
-            return;
+            return null;
         }
         IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
         if (activeWorkbenchWindow == null) {
-            return;
+            return null;
         }
         IWorkbenchPage page = activeWorkbenchWindow.getActivePage();
         if (page == null) {
-            return;
+            return null;
         }
         IEditorPart targetEditor = IDE.openEditor(page, file, true);
         if (targetEditor instanceof AndroidXmlEditor) {
             AndroidXmlEditor editor = (AndroidXmlEditor) targetEditor;
             if (region != null) {
-                editor.show(region.getOffset(), region.getLength());
+                editor.show(region.getOffset(), region.getLength(), showEditorTab);
             } else if (showEditorTab) {
                 editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
             }
         }
+
+        return targetEditor;
     }
 }

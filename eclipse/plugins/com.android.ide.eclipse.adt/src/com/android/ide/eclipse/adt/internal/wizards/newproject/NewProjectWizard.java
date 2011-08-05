@@ -20,6 +20,10 @@ import com.android.AndroidConstants;
 import com.android.ide.common.layout.LayoutConstants;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -876,6 +880,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 manifestTemplate = manifestTemplate.replaceAll(PH_USES_SDK, "");
             }
 
+            // Reformat the file according to the user's formatting settings
+            // This is disabled for now since the non-file-based pretty printing uses
+            // the JDK XML parser instead of the Eclipse parser, and the JDK parser does
+            // not track "empty tags", so <uses-sdk/> turns into <uses-sdk></uses-sdk>
+            //manifestTemplate = reformat(XmlFormatStyle.MANIFEST, manifestTemplate);
+
             // Save in the project as UTF-8
             InputStream stream = new ByteArrayInputStream(
                     manifestTemplate.getBytes("UTF-8")); //$NON-NLS-1$
@@ -931,6 +941,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             stringDefinitionTemplate = stringDefinitionTemplate.replace(PH_STRINGS,
                                                                         stringNodes.toString());
 
+            // reformat the file according to the user's formatting settings
+            stringDefinitionTemplate = reformat(XmlFormatStyle.RESOURCE, stringDefinitionTemplate);
+
             // write the file as UTF-8
             InputStream stream = new ByteArrayInputStream(
                     stringDefinitionTemplate.getBytes("UTF-8")); //$NON-NLS-1$
@@ -938,6 +951,16 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         }
     }
 
+    /** Reformats the given contents with the current formatting settings */
+    private String reformat(XmlFormatStyle style, String contents) {
+        if (AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
+            XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+            return XmlPrettyPrinter.prettyPrint(contents, formatPrefs, style,
+                    null /*lineSeparator*/);
+        } else {
+            return contents;
+        }
+    }
 
     /**
      * Adds default application icon to the project.
@@ -1072,7 +1095,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             String activityJava = activityName + AdtConstants.DOT_JAVA;
             IFile file = pkgFolder.getFile(activityJava);
             if (!file.exists()) {
-                copyFile(JAVA_ACTIVITY_TEMPLATE, file, java_activity_parameters, monitor);
+                copyFile(JAVA_ACTIVITY_TEMPLATE, file, java_activity_parameters, monitor, false);
             }
         }
 
@@ -1080,7 +1103,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         IFolder layoutfolder = project.getFolder(RES_DIRECTORY).getFolder(LAYOUT_DIRECTORY);
         IFile file = layoutfolder.getFile(MAIN_LAYOUT_XML);
         if (!file.exists()) {
-            copyFile(LAYOUT_TEMPLATE, file, parameters, monitor);
+            copyFile(LAYOUT_TEMPLATE, file, parameters, monitor, true);
             if (activityName != null) {
                 dictionary.put(STRING_HELLO_WORLD, "Hello World, " + activityName + "!");
             } else {
@@ -1175,7 +1198,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      *         length.
      */
     private void copyFile(String resourceFilename, IFile destFile,
-            Map<String, Object> parameters, IProgressMonitor monitor)
+            Map<String, Object> parameters, IProgressMonitor monitor, boolean reformat)
             throws CoreException, IOException {
 
         // Read existing file.
@@ -1184,6 +1207,14 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         // Replace all keyword parameters
         template = replaceParameters(template, parameters);
+
+        if (reformat) {
+            // Guess the formatting style based on the file location
+            XmlFormatStyle style = XmlFormatStyle.getForFile(destFile.getProjectRelativePath());
+            if (style != null) {
+                template = reformat(style, template);
+            }
+        }
 
         // Save in the project as UTF-8
         InputStream stream = new ByteArrayInputStream(template.getBytes("UTF-8")); //$NON-NLS-1$

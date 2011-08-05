@@ -35,8 +35,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -346,7 +346,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes a color state list.",           // tooltip
                 ResourceFolderType.COLOR,                                   // folder type
                 AndroidTargetData.DESCRIPTOR_COLOR,                         // root seed
-                null,                                                       // default root
+                "selector",  //$NON-NLS-1$                                  // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
                 null,                                                       // default attributes
                 1                                                           // target API level
@@ -355,7 +355,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes an animator.",                  // tooltip
                 ResourceFolderType.ANIMATOR,                                // folder type
                 AndroidTargetData.DESCRIPTOR_ANIMATOR,                      // root seed
-                "set",                                                      // default root
+                "set", //$NON-NLS-1$                                        // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
                 null,                                                       // default attributes
                 11                                                           // target API level
@@ -364,7 +364,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 "An XML file that describes an animation.",                 // tooltip
                 ResourceFolderType.ANIM,                                    // folder type
                 AndroidTargetData.DESCRIPTOR_ANIM,                          // root seed
-                "set",                                                      // default root
+                "set", //$NON-NLS-1$                                        // default root
                 null,                                                       // xmlns
                 null,                                                       // default attributes
                 1                                                           // target API level

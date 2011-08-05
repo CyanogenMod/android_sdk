@@ -1026,14 +1026,31 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      *
      * @param start the beginning offset
      * @param length the length of the region to show
+     * @param frontTab if true, front the tab, otherwise just make the selection but don't
+     *     change the active tab
      */
-    public void show(int start, int length) {
+    public void show(int start, int length, boolean frontTab) {
         IEditorPart textPage = getEditor(mTextPageIndex);
         if (textPage instanceof StructuredTextEditor) {
             StructuredTextEditor editor = (StructuredTextEditor) textPage;
-            setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+            if (frontTab) {
+                setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+            }
             editor.selectAndReveal(start, length);
+            if (frontTab) {
+                editor.setFocus();
+            }
         }
+    }
+
+    /**
+     * Returns true if this editor has more than one page (usually a graphical view and an
+     * editor)
+     *
+     * @return true if this editor has multiple pages
+     */
+    public boolean hasMultiplePages() {
+        return getPageCount() > 1;
     }
 
     /**
