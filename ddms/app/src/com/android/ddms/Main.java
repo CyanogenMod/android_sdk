@@ -74,7 +74,7 @@ public class Main {
         // the "ping" argument means to check in with the server and exit
         // the application name and version number must also be supplied
         if (args.length >= 3 && args[0].equals("ping")) {
-            SdkStatsService.ping(args[1], args[2], null);
+            SdkStatsService.ping(args[1], args[2], null /*eclipseVersion*/, null);
             return;
         } else if (args.length > 0) {
             Log.e("ddms", "Unknown argument: " + args[0]);
@@ -134,7 +134,7 @@ public class Main {
             p.load(new FileInputStream(sourceProp));
             sRevision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (sRevision != null && sRevision.length() > 0) {
-                SdkStatsService.ping("ddms", sRevision, null);  //$NON-NLS-1$
+                SdkStatsService.ping("ddms", sRevision, null /*eclipseVersion*/, null);  //$NON-NLS-1$
             }
         } catch (FileNotFoundException e) {
             // couldn't find the file? don't ping.
