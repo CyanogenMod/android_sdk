@@ -25,6 +25,7 @@ import org.w3c.dom.Attr;
 import java.util.Comparator;
 
 /** Order to use when sorting attributes */
+@SuppressWarnings("restriction") // IndexedRegion
 public enum AttributeSortOrder {
     NO_SORTING("none"),     //$NON-NLS-1$
     ALPHABETICAL("alpha"),  //$NON-NLS-1$
@@ -71,7 +72,6 @@ public enum AttributeSortOrder {
      * Comparator which can be used to "sort" attributes into their existing source order
      * (which is not the same as the node map iteration order in the DOM model)
      */
-    @SuppressWarnings("restriction")
     private static final Comparator<Attr> EXISTING_ORDER_COMPARATOR = new Comparator<Attr>() {
         public int compare(Attr attr1, Attr attr2) {
             IndexedRegion region1 = (IndexedRegion) attr1;
@@ -82,10 +82,21 @@ public enum AttributeSortOrder {
     };
 
     /**
-     * Comparator which can be used to sort attributes into alphabetical order
+     * Comparator which can be used to sort attributes into alphabetical order (but xmlns
+     * is always first)
      */
     private static final Comparator<Attr> ALPHABETICAL_COMPARATOR = new Comparator<Attr>() {
         public int compare(Attr attr1, Attr attr2) {
+            // Namespace declarations should always go first
+            if (XMLNS.equals(attr1.getPrefix())) {
+                if (XMLNS.equals(attr2.getPrefix())) {
+                    return 0;
+                }
+                return -1;
+            } else if (XMLNS.equals(attr2.getPrefix())) {
+                return 1;
+            }
+
             return attr1.getLocalName().compareTo(attr2.getLocalName());
         }
     };
