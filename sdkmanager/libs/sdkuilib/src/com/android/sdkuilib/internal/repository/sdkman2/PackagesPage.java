@@ -868,13 +868,12 @@ public class PackagesPage extends UpdaterPage
 
     /**
      * Indicate an install/delete operation is pending.
-     * This disable the install/delete buttons.
-     * Use {@link #endOperationPending()} to revert.
+     * This disables the install/delete buttons.
+     * Use {@link #endOperationPending()} to revert, typically in a {@code try..finally} block.
      */
     private void beginOperationPending() {
         mOperationPending = true;
-        mButtonInstall.setEnabled(false);
-        mButtonDelete.setEnabled(false);
+        updateButtonsState();
     }
 
     private void endOperationPending() {
@@ -883,10 +882,6 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void updateButtonsState() {
-        if (mOperationPending) {
-            return;
-        }
-
         boolean canInstall = false;
         int numPackages = 0;
 
@@ -929,7 +924,7 @@ public class PackagesPage extends UpdaterPage
             }
         }
 
-        mButtonInstall.setEnabled(canInstall);
+        mButtonInstall.setEnabled(canInstall && !mOperationPending);
         mButtonInstall.setText(
                 numPackages == 0 ? "Install packages..." :
                     numPackages == 1 ? "Install 1 package..." :
@@ -952,7 +947,7 @@ public class PackagesPage extends UpdaterPage
             }
         }
 
-        mButtonDelete.setEnabled(canDelete);
+        mButtonDelete.setEnabled(canDelete && !mOperationPending);
         mButtonDelete.setText(
                 numPackages == 0 ? "Delete packages..." :
                     numPackages == 1 ? "Delete 1 package..." :
