@@ -48,7 +48,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
             String xml, String expected, String delimiter,
-            String startNodeName, String endNodeName) throws Exception {
+            String startNodeName, boolean openTagOnly, String endNodeName) throws Exception {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         InputSource is = new InputSource(new StringReader(xml));
@@ -80,7 +80,7 @@ public class XmlPrettyPrinterTest extends TestCase {
             endNode = findNode(document.getDocumentElement(), endNodeName);
         }
 
-        printer.prettyPrint(-1, document, startNode, endNode, sb);
+        printer.prettyPrint(-1, document, startNode, endNode, sb, false/*openTagOnly*/);
         String formatted = sb.toString();
         if (!expected.equals(formatted)) {
             System.out.println(formatted);
@@ -119,7 +119,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
             String xml, String expected, String delimiter) throws Exception {
-        checkFormat(prefs, style, xml, expected, delimiter, null, null);
+        checkFormat(prefs, style, xml, expected, delimiter, null, false, null);
     }
 
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
@@ -318,7 +318,18 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "    <CheckBox >\n" +
                 "    </CheckBox>\n",
-                "\n", "Button", "CheckBox");
+                "\n", "Button", false, "CheckBox");
+    }
+
+    public void testOpenTagOnly() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
+                "\n" +
+                "    <Button foo=\"bar\" >\n" +
+                "    </Button>\n",
+
+                "\n", "Button", true, "Button");
     }
 
     public void testRange2() throws Exception {
@@ -337,7 +348,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <bar3 >\n" +
                 "        <baz12 >\n" +
                 "        </baz12>\n",
-                "\n", "baz1", "baz12");
+                "\n", "baz1", false, "baz12");
     }
 
     public void testEOLcomments() throws Exception {

@@ -23,7 +23,6 @@ import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
-import com.android.resources.ResourceFolderType;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;
@@ -66,6 +65,10 @@ public class XmlPrettyPrinter {
     private String mIndentString;
     /** Line separator to use */
     private String mLineSeparator;
+    /** If true, we're only formatting an open tag */
+    private boolean mOpenTagOnly;
+    /** List of indentation to use for each given depth */
+    private String[] mIndentationLevels;
 
     /**
      * Creates a new {@link XmlPrettyPrinter}
@@ -73,7 +76,7 @@ public class XmlPrettyPrinter {
      * @param prefs the preferences to format with
      * @param style the style to format with
      * @param lineSeparator the line separator to use, such as "\n" (can be null, in which
-     *     case the system default is looked up via the line.separator property)
+     *            case the system default is looked up via the line.separator property)
      */
     public XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style,
             String lineSeparator) {
@@ -86,15 +89,14 @@ public class XmlPrettyPrinter {
     }
 
     /**
-     * Creates a new {@link XmlPrettyPrinter}
+     * Sets the indentation levels to use (indentation string to use for each depth,
+     * indexed by depth
      *
-     * @param prefs the preferences to format with
-     * @param folderType the type of resource folder containing the XML content to be formatted
-     * @param lineSeparator the line separator to use, such as "\n"
+     * @param indentationLevels an array of strings to use for the various indentation
+     *            levels
      */
-    public XmlPrettyPrinter(XmlFormatPreferences prefs, ResourceFolderType folderType,
-            String lineSeparator) {
-        this(prefs, XmlFormatStyle.getForFolderType(folderType), lineSeparator);
+    public void setIndentationLevels(String[] indentationLevels) {
+        mIndentationLevels = indentationLevels;
     }
 
     /**
@@ -127,7 +129,7 @@ public class XmlPrettyPrinter {
 
             XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, lineSeparator);
             StringBuilder sb = new StringBuilder(1000);
-            printer.prettyPrint(-1, document, null, null, sb);
+            printer.prettyPrint(-1, document, null, null, sb, false/*openTagOnly*/);
             return sb.toString();
         } catch (Exception e) {
             return xml;
@@ -144,17 +146,21 @@ public class XmlPrettyPrinter {
      * @param startNode the node to start formatting at
      * @param endNode the node to end formatting at
      * @param out the {@link StringBuilder} to pretty print into
+     * @param openTagOnly if true, only format the open tag of the startNode (and nothing
+     *     else)
      */
     public void prettyPrint(int rootDepth, Node root, Node startNode, Node endNode,
-            StringBuilder out) {
+            StringBuilder out, boolean openTagOnly) {
         if (startNode == null) {
             startNode = root;
         }
         if (endNode == null) {
             endNode = root;
         }
+        assert !openTagOnly || startNode == endNode;
 
         mStartNode = startNode;
+        mOpenTagOnly = openTagOnly;
         mEndNode = endNode;
         mOut = out;
         mInRange = false;
@@ -171,6 +177,10 @@ public class XmlPrettyPrinter {
 
         if (mInRange) {
             visitBeforeChildren(depth, node);
+            if (mOpenTagOnly && mStartNode == node) {
+                mInRange = false;
+                return;
+            }
         }
 
         NodeList children = node.getChildNodes();
@@ -656,7 +666,20 @@ public class XmlPrettyPrinter {
     }
 
     private void indent(int depth) {
-        for (int i = 0; i < depth; i++) {
+        int i = 0;
+
+        if (mIndentationLevels != null) {
+            for (int j = Math.min(depth, mIndentationLevels.length - 1); j >= 0; j--) {
+                String indent = mIndentationLevels[j];
+                if (indent != null) {
+                    mOut.append(indent);
+                    i = j;
+                    break;
+                }
+            }
+        }
+
+        for (; i < depth; i++) {
             mOut.append(mIndentString);
         }
     }
