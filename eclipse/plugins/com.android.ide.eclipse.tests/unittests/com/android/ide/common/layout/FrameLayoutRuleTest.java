@@ -54,7 +54,7 @@ public class FrameLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_RECIPIENT), drawRect(Rect[0,0,240,480])",
 
                 // Drop Preview
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,0,105,80])]");
+                "useStyle(DROP_PREVIEW), drawRect(0,0,105,80)");
         // Without drag bounds we should just draw guide lines instead
         dragInto(new Rect(0, 0, 0, 0), new Point(30, -10), 4, -1,
                 "useStyle(DROP_RECIPIENT), drawRect(Rect[0,0,240,480])",
