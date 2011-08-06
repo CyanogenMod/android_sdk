@@ -287,13 +287,20 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     /**
      * Guess what style to use to edit the given document - layout, resource, manifest, ... ? */
     private XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
+        // The "layout" style is used for most XML resource file types:
+        // layouts, color-lists and state-lists, animations, drawables, menus, etc
         XmlFormatStyle style = XmlFormatStyle.LAYOUT;
+
+        // The "resource" style is used for most value-based XML files:
+        // strings, dimensions, booleans, colors, integers, plurals,
+        // integer-arrays, string-arrays, and typed-arrays
         if (domDocument.getDocumentElement() != null
                 && ResourcesDescriptors.ROOT_ELEMENT.equals(domDocument.getDocumentElement()
                         .getTagName())) {
             style = XmlFormatStyle.RESOURCE;
         }
 
+        // The "manifest" style is used for manifest files
         String baseLocation = model.getBaseLocation();
         if (baseLocation != null) {
             if (baseLocation.endsWith(SdkConstants.FN_ANDROID_MANIFEST_XML)) {

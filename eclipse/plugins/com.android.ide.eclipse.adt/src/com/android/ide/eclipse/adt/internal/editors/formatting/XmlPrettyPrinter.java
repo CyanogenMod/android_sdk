@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.COLOR_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.DIMEN_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ITEM_TAG;
@@ -64,11 +65,15 @@ class XmlPrettyPrinter {
      *
      * @param prefs the preferences to format with
      * @param style the style to format with
-     * @param lineSeparator the line separator to use, such as "\n"
+     * @param lineSeparator the line separator to use, such as "\n" (can be null, in which
+     *     case the system default is looked up via the line.separator property)
      */
     XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style, String lineSeparator) {
         mPrefs = prefs;
         mStyle = style;
+        if (lineSeparator == null) {
+            lineSeparator = System.getProperty("line.separator"); //$NON-NLS-1$
+        }
         mLineSeparator = lineSeparator;
     }
 
@@ -85,6 +90,13 @@ class XmlPrettyPrinter {
      */
     public void prettyPrint(int rootDepth, Node root, Node startNode, Node endNode,
             StringBuilder out) {
+        if (startNode == null) {
+            startNode = root;
+        }
+        if (endNode == null) {
+            endNode = root;
+        }
+
         mStartNode = startNode;
         mEndNode = endNode;
         mOut = out;
@@ -223,10 +235,42 @@ class XmlPrettyPrinter {
     }
 
     private void printComment(int depth, Node node) {
+        String comment = node.getNodeValue();
+        boolean multiLine = comment.indexOf('\n') != -1;
+        String trimmed = comment.trim();
+
+        // See if this is an "end-of-the-line" comment, e.g. it is not a multi-line
+        // comment and it appears on the same line as an opening or closing element tag;
+        // if so, continue to place it as a suffix comment
+        boolean isSuffixComment = false;
+        if (!multiLine) {
+            Node previous = node.getPreviousSibling();
+            isSuffixComment = true;
+            while (previous != null) {
+                short type = previous.getNodeType();
+                if (type == Node.TEXT_NODE || type == Node.COMMENT_NODE) {
+                    if (previous.getNodeValue().indexOf('\n') != -1) {
+                        isSuffixComment = false;
+                        break;
+                    }
+                } else {
+                    break;
+                }
+                previous = previous.getPreviousSibling();
+            }
+            if (isSuffixComment) {
+                // Remove newline added by element open tag or element close tag
+                if (endsWithLineSeparator()) {
+                    removeLastLineSeparator();
+                }
+                mOut.append(' ');
+            }
+        }
+
         // Put the comment on a line on its own? Only if it does not follow some other comment
         // (e.g. is the first child in an element or follows some other element only separated
         // by whitespace)
-        if (depth > 0) {
+        if (!mPrefs.removeEmptyLines && depth > 0 && !isSuffixComment) {
             Node curr = node.getPreviousSibling();
             if (curr == null
                     || curr.getNodeType() == Node.ELEMENT_NODE
@@ -239,11 +283,10 @@ class XmlPrettyPrinter {
         }
 
         // TODO: Reformat the comment text?
-        String comment = node.getNodeValue();
-        boolean multiLine = comment.indexOf('\n') != -1;
-        String trimmed = comment.trim();
         if (!multiLine && trimmed.length() < 70) {
-            indent(depth);
+            if (!isSuffixComment) {
+                indent(depth);
+            }
             mOut.append("<!-- ");  //$NON-NLS-1$
             mOut.append(trimmed);
             mOut.append(" -->"); //$NON-NLS-1$
@@ -289,6 +332,45 @@ class XmlPrettyPrinter {
             mOut.append("-->"); //$NON-NLS-1$
             mOut.append(mLineSeparator);
         }
+
+        // Preserve whitespace after comment: See if the original document had two or
+        // more newlines after the comment, and if so have a blank line between this
+        // comment and the next
+        Node next = node.getNextSibling();
+        if (!mPrefs.removeEmptyLines && next != null && next.getNodeType() == Node.TEXT_NODE) {
+            String text = next.getNodeValue();
+            int newLinesBeforeText = 0;
+            for (int i = 0, n = text.length(); i < n; i++) {
+                char c = text.charAt(i);
+                if (c == '\n') {
+                    newLinesBeforeText++;
+                    if (newLinesBeforeText == 2) {
+                        // Yes
+                        mOut.append(mLineSeparator);
+                        break;
+                    }
+                } else if (!Character.isWhitespace(c)) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private boolean endsWithLineSeparator() {
+        int separatorLength = mLineSeparator.length();
+        if (mOut.length() >= separatorLength) {
+            for (int i = 0, j = mOut.length() - separatorLength; i < separatorLength; i++) {
+               if (mOut.charAt(j) != mLineSeparator.charAt(i)) {
+                   return false;
+               }
+            }
+        }
+
+        return true;
+    }
+
+    private void removeLastLineSeparator() {
+        mOut.setLength(mOut.length() - mLineSeparator.length());
     }
 
     private void printOpenElementTag(int depth, Node node) {
@@ -304,17 +386,6 @@ class XmlPrettyPrinter {
         NamedNodeMap attributes = element.getAttributes();
         int attributeCount = attributes.getLength();
         if (attributeCount > 0) {
-            // Put the single attribute on the same line as the element tag?
-            boolean singleLine = mPrefs.oneAttributeOnFirstLine && attributeCount == 1
-                    // In resource files we always put all the attributes (which is
-                    // usually just zero, one or two) on the same line
-                    || mStyle == XmlFormatStyle.RESOURCE;
-            if (singleLine) {
-                mOut.append(' ');
-            } else {
-                mOut.append(mLineSeparator);
-            }
-
             // Sort the attributes
             List<Attr> attributeList = new ArrayList<Attr>();
             for (int i = 0, n = attributeCount; i < n; i++) {
@@ -323,9 +394,27 @@ class XmlPrettyPrinter {
             Comparator<Attr> comparator = mPrefs.sortAttributes.getAttributeComparator();
             Collections.sort(attributeList, comparator);
 
+            // Put the single attribute on the same line as the element tag?
+            boolean singleLine = mPrefs.oneAttributeOnFirstLine && attributeCount == 1
+                    // In resource files we always put all the attributes (which is
+                    // usually just zero, one or two) on the same line
+                    || mStyle == XmlFormatStyle.RESOURCE;
+
+            // We also place the namespace declaration on the same line as the root element,
+            // but this doesn't also imply singleLine handling; subsequent attributes end up
+            // on their own lines
+            boolean indentNextAttribute;
+            if (singleLine || (depth == 0 && XMLNS.equals(attributeList.get(0).getPrefix()))) {
+                mOut.append(' ');
+                indentNextAttribute = false;
+            } else {
+                mOut.append(mLineSeparator);
+                indentNextAttribute = true;
+            }
+
             Attr last = attributeList.get(attributeCount - 1);
             for (Attr attribute : attributeList) {
-                if (!singleLine) {
+                if (indentNextAttribute) {
                     indent(depth + 1);
                 }
                 mOut.append(attribute.getName());
@@ -337,6 +426,7 @@ class XmlPrettyPrinter {
                 // immediately follow the last attribute
                 if (attribute != last) {
                     mOut.append(singleLine ? " " : mLineSeparator); //$NON-NLS-1$
+                    indentNextAttribute = true;
                 }
             }
         }
@@ -345,7 +435,9 @@ class XmlPrettyPrinter {
 
         // Add a space before the > or /> ? In resource files, only do this when closing the
         // element
-        if (mPrefs.spaceBeforeClose && (mStyle != XmlFormatStyle.RESOURCE || isClosed)) {
+        if (mPrefs.spaceBeforeClose && (mStyle != XmlFormatStyle.RESOURCE || isClosed)
+                // in <selector> files etc still treat the <item> entries as in resource files
+                && !ITEM_TAG.equals(element.getTagName())) {
             mOut.append(' ');
         }
 
@@ -472,7 +564,7 @@ class XmlPrettyPrinter {
     }
 
     private boolean newlineBeforeElementClose(Element element, int depth) {
-        return depth == 0;
+        return depth == 0 && !mPrefs.removeEmptyLines;
     }
 
     private boolean newlineAfterElementClose(Element element, int depth) {
