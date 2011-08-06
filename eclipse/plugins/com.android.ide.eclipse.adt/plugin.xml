@@ -1024,6 +1024,23 @@
             contextId="org.eclipse.ui.contexts.window"
             commandId="com.android.ide.eclipse.adt.launch.LaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
+     <!-- Rebind the select-enclosing actions from WTP's M2+M3 to M2+M4 to be
+          consistent with Java files. The contextId is org.eclipse.core.runtime.xml
+          instead of org.eclipse.wst.sse.ui.structuredTextEditorScope to avoid
+          keyboard conflict warnings (and an action selection dialog.)
+     -->
+        <key
+            platform="carbon"
+            sequence="CTRL+SHIFT+ARROW_UP"
+            contextId="org.eclipse.core.runtime.xml"
+            commandId="org.eclipse.wst.sse.ui.structure.select.enclosing"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
+        <key
+            platform="carbon"
+            sequence="CTRL+SHIFT+ARROW_DOWN"
+            contextId="org.eclipse.core.runtime.xml"
+            commandId="org.eclipse.wst.sse.ui.structure.select.last"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
     </extension>
     <extension point="org.eclipse.core.contenttype.contentTypes">
         <content-type
