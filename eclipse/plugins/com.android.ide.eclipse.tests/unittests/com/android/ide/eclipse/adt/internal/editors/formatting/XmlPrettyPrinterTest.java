@@ -15,7 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+
+import org.eclipse.jface.preference.PreferenceStore;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -29,8 +34,21 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
 
 public class XmlPrettyPrinterTest extends TestCase {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        PreferenceStore store = new PreferenceStore();
+        AdtPrefs.init(store);
+        AdtPrefs prefs = AdtPrefs.getPrefs();
+        prefs.initializeStoreWithDefaults(store);
+        prefs.loadValues(null);
+        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+        assertTrue(formatPrefs.oneAttributeOnFirstLine);
+    }
+
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
-            String xml, String expected, String delimiter) throws Exception {
+            String xml, String expected, String delimiter,
+            String startNodeName, String endNodeName) throws Exception {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         InputSource is = new InputSource(new StringReader(xml));
@@ -53,12 +71,55 @@ public class XmlPrettyPrinterTest extends TestCase {
         XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
 
         StringBuilder sb = new StringBuilder(1000);
-        printer.prettyPrint(-1, document, document, document, sb);
+        Node startNode = document;
+        Node endNode = document;
+        if (startNodeName != null) {
+            startNode = findNode(document.getDocumentElement(), startNodeName);
+        }
+        if (endNodeName != null) {
+            endNode = findNode(document.getDocumentElement(), endNodeName);
+        }
+
+        printer.prettyPrint(-1, document, startNode, endNode, sb);
         String formatted = sb.toString();
         if (!expected.equals(formatted)) {
             System.out.println(formatted);
         }
         assertEquals(expected, formatted);
+    }
+
+    private Node findNode(Node node, String nodeName) {
+        if (node.getNodeName().equals(nodeName)) {
+            return node;
+        }
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            Node result = findNode(child, nodeName);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    protected int getCaretOffset(String fileContent, String caretLocation) {
+        int caretDelta = caretLocation.indexOf("^"); //$NON-NLS-1$
+        assertTrue(caretLocation, caretDelta != -1);
+
+        String caretContext = caretLocation.substring(0, caretDelta)
+                + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+        int caretContextIndex = fileContent.indexOf(caretContext);
+        assertTrue("Caret content " + caretContext + " not found in file",
+                caretContextIndex != -1);
+        return caretContextIndex + caretDelta;
+    }
+
+    private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
+            String xml, String expected, String delimiter) throws Exception {
+        checkFormat(prefs, style, xml, expected, delimiter, null, null);
     }
 
     private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
@@ -78,9 +139,9 @@ public class XmlPrettyPrinterTest extends TestCase {
     public void testLayout1() throws Exception {
         checkFormat(
                 "<LinearLayout><Button></Button></LinearLayout>",
-                "<LinearLayout>\n" +
+                "<LinearLayout >\n" +
                 "\n" +
-                "    <Button>\n" +
+                "    <Button >\n" +
                 "    </Button>\n" +
                 "\n" +
                 "</LinearLayout>");
@@ -89,10 +150,9 @@ public class XmlPrettyPrinterTest extends TestCase {
     public void testLayout2() throws Exception {
         checkFormat(
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout>\n" +
+                "<LinearLayout >\n" +
                 "\n" +
-                "    <Button\n" +
-                "        foo=\"bar\">\n" +
+                "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
                 "\n" +
                 "</LinearLayout>");
@@ -104,9 +164,9 @@ public class XmlPrettyPrinterTest extends TestCase {
         checkFormat(
                 prefs, XmlFormatStyle.LAYOUT,
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout>\n" +
+                "<LinearLayout >\n" +
                 "\n" +
-                "    <Button foo=\"bar\">\n" +
+                "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
                 "\n" +
                 "</LinearLayout>");
@@ -191,9 +251,8 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "         SYSTEM \"http://www.xml.com/iso/isolat2-xml.entities\" >\n" +
                 "]>\n" +
                  */
-                "<LinearLayout\n" +
-                "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    android:orientation=\"vertical\">\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:orientation=\"vertical\" >\n" +
                 "    <![CDATA[\n" +
                 "This is character data!\n" +
                 "<!-- This is not a comment! -->\n" +
@@ -218,13 +277,158 @@ public class XmlPrettyPrinterTest extends TestCase {
         checkFormat(
                 XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout>\r\n" +
+                "<LinearLayout >\r\n" +
                 "\r\n" +
-                "    <Button\r\n" +
-                "        foo=\"bar\">\r\n" +
+                "    <Button foo=\"bar\" >\r\n" +
                 "    </Button>\r\n" +
                 "\r\n" +
                 "</LinearLayout>",
                 "\r\n");
     }
+
+    public void testRemoveBlanklines() throws Exception {
+        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        prefs.removeEmptyLines = true;
+        checkFormat(
+                prefs, XmlFormatStyle.LAYOUT,
+                "<foo><bar><baz1></baz1><baz2></baz2></bar><bar2></bar2><bar3><baz12></baz12></bar3></foo>",
+                "<foo >\n" +
+                "    <bar >\n" +
+                "        <baz1 >\n" +
+                "        </baz1>\n" +
+                "        <baz2 >\n" +
+                "        </baz2>\n" +
+                "    </bar>\n" +
+                "    <bar2 >\n" +
+                "    </bar2>\n" +
+                "    <bar3 >\n" +
+                "        <baz12 >\n" +
+                "        </baz12>\n" +
+                "    </bar3>\n" +
+                "</foo>");
+    }
+
+    public void testRange() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
+                "\n" +
+                "    <Button foo=\"bar\" >\n" +
+                "    </Button>\n" +
+                "\n" +
+                "    <CheckBox >\n" +
+                "    </CheckBox>\n",
+                "\n", "Button", "CheckBox");
+    }
+
+    public void testRange2() throws Exception {
+        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        prefs.removeEmptyLines = true;
+        checkFormat(
+                prefs, XmlFormatStyle.LAYOUT,
+                "<foo><bar><baz1></baz1><baz2></baz2></bar><bar2></bar2><bar3><baz12></baz12></bar3></foo>",
+                "        <baz1 >\n" +
+                "        </baz1>\n" +
+                "        <baz2 >\n" +
+                "        </baz2>\n" +
+                "    </bar>\n" +
+                "    <bar2 >\n" +
+                "    </bar2>\n" +
+                "    <bar3 >\n" +
+                "        <baz12 >\n" +
+                "        </baz12>\n",
+                "\n", "baz1", "baz12");
+    }
+
+    public void testEOLcomments() throws Exception {
+        checkFormat(
+                XmlFormatStyle.LAYOUT,
+                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                "    <item android:state_pressed=\"true\"\n" +
+                "          android:color=\"#ffff0000\"></item> <!-- pressed -->\n" +
+                "    <item android:state_focused=\"true\"\n" +
+                "          android:color=\"#ff0000ff\"></item> <!-- focused -->\n" +
+                "    <item android:color=\"#ff000000\"></item> <!-- default -->\n" +
+                "</selector>",
+
+                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:color=\"#ffff0000\"\n" +
+                "        android:state_pressed=\"true\"></item> <!-- pressed -->\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:color=\"#ff0000ff\"\n" +
+                "        android:state_focused=\"true\"></item> <!-- focused -->\n" +
+                "\n" +
+                "    <item android:color=\"#ff000000\"></item> <!-- default -->\n" +
+                "\n" +
+                "</selector>");
+    }
+
+    public void testPreserveNewlineAfterComment() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources><dimen name=\"colorstrip_height\">6dip</dimen>\n" +
+                "    <!-- comment1 --><dimen name=\"title_height\">45dip</dimen>\n" +
+                "\n" +
+                "    <!-- comment2: newline above --><dimen name=\"now_playing_height\">90dip</dimen>\n" +
+                "    <dimen name=\"text_size_small\">14sp</dimen>\n" +
+                "\n" +
+                "\n" +
+                "    <!-- comment3: newline above and below -->\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "    <dimen name=\"text_size_medium\">18sp</dimen><dimen name=\"text_size_large\">22sp</dimen>\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
+                "\n" +
+                "    <!-- comment1 -->\n" +
+                "    <dimen name=\"title_height\">45dip</dimen>\n" +
+                "\n" +
+                "    <!-- comment2: newline above -->\n" +
+                "    <dimen name=\"now_playing_height\">90dip</dimen>\n" +
+                "    <dimen name=\"text_size_small\">14sp</dimen>\n" +
+                "\n" +
+                "    <!-- comment3: newline above and below -->\n" +
+                "\n" +
+                "    <dimen name=\"text_size_medium\">18sp</dimen>\n" +
+                "    <dimen name=\"text_size_large\">22sp</dimen>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testPlurals() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+                "<string name=\"toast_sync_error\">Sync error: <xliff:g id=\"error\">%1$s</xliff:g></string>\n" +
+                "<string name=\"session_subtitle\"><xliff:g id=\"time\">%1$s</xliff:g> in <xliff:g id=\"room\">%2$s</xliff:g></string>\n" +
+                "<plurals name=\"now_playing_countdown\">\n" +
+                "<item quantity=\"zero\"><xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "<item quantity=\"one\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> day, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "<item quantity=\"other\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> days, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "</plurals>\n" +
+                "</resources>",
+
+                "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+                "\n" +
+                "    <string name=\"toast_sync_error\">Sync error: <xliff:g id=\"error\">%1$s</xliff:g></string>\n" +
+                "    <string name=\"session_subtitle\"><xliff:g id=\"time\">%1$s</xliff:g> in <xliff:g id=\"room\">%2$s</xliff:g></string>\n" +
+                "\n" +
+                "    <plurals name=\"now_playing_countdown\">\n" +
+                "        <item quantity=\"zero\"><xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "        <item quantity=\"one\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> day, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "        <item quantity=\"other\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> days, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
+                "    </plurals>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+
 }
