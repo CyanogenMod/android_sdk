@@ -280,8 +280,8 @@ public class PackagesPage extends UpdaterPage
         });
 
         mButtonInstall = new Button(mGroupOptions, SWT.NONE);
-        mButtonInstall.setText("Install Selected...");
-        mButtonInstall.setToolTipText("Install all the selected packages");
+        mButtonInstall.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
+        mButtonInstall.setToolTipText("Install one or more packages");
         GridDataBuilder.create(mButtonInstall).hFill().vCenter().hGrab();
         mButtonInstall.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -339,8 +339,8 @@ public class PackagesPage extends UpdaterPage
         });
 
         mButtonDelete = new Button(mGroupOptions, SWT.NONE);
-        mButtonDelete.setText("Delete...");
-        mButtonDelete.setToolTipText("Delete an installed package");
+        mButtonDelete.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
+        mButtonDelete.setToolTipText("Delete one ore more installed packages");
         GridDataBuilder.create(mButtonDelete).hFill().vCenter().hGrab();
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -888,6 +888,7 @@ public class PackagesPage extends UpdaterPage
         }
 
         boolean canInstall = false;
+        int numPackages = 0;
 
         if (mDisplayArchives) {
             // In detail mode, we display archives so we can install if at
@@ -899,7 +900,7 @@ public class PackagesPage extends UpdaterPage
                     if (c instanceof Archive) {
                         if (((Archive) c).isCompatible()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     }
                 }
@@ -916,12 +917,12 @@ public class PackagesPage extends UpdaterPage
                         // This is an update package
                         if (((Package) c).hasCompatibleArchive()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     } else if (c instanceof PkgItem) {
                         if (((PkgItem) c).getMainPackage().hasCompatibleArchive()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     }
                 }
@@ -929,9 +930,15 @@ public class PackagesPage extends UpdaterPage
         }
 
         mButtonInstall.setEnabled(canInstall);
+        mButtonInstall.setText(
+                numPackages == 0 ? "Install packages..." :
+                    numPackages == 1 ? "Install 1 package..." :
+                        String.format("Install %d packages...", numPackages));
 
         // We can only delete local archives
         boolean canDelete = false;
+        numPackages = 0;
+
         Object[] checked = mTreeViewer.getCheckedElements();
         if (checked != null) {
             for (Object c : checked) {
@@ -939,13 +946,17 @@ public class PackagesPage extends UpdaterPage
                     PkgState state = ((PkgItem) c).getState();
                     if (state == PkgState.INSTALLED) {
                         canDelete = true;
-                        break;
+                        numPackages++;
                     }
                 }
             }
         }
 
         mButtonDelete.setEnabled(canDelete);
+        mButtonDelete.setText(
+                numPackages == 0 ? "Delete packages..." :
+                    numPackages == 1 ? "Delete 1 package..." :
+                        String.format("Delete %d packages...", numPackages));
     }
 
     private void onButtonInstall() {
