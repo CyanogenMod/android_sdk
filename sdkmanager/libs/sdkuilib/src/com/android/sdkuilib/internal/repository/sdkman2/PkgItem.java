@@ -30,7 +30,7 @@ import com.android.sdklib.internal.repository.Package.UpdateInfo;
  * The state or update package can change later.
  */
 public class PkgItem implements Comparable<PkgItem> {
-    private PkgState mState;
+    private final PkgState mState;
     private final Package mMainPkg;
     private Package mUpdatePkg;
     private boolean mChecked;
@@ -100,10 +100,6 @@ public class PkgItem implements Comparable<PkgItem> {
 
     public PkgState getState() {
         return mState;
-    }
-
-    public void setState(PkgState state) {
-        mState = state;
     }
 
     public SdkSource getSource() {

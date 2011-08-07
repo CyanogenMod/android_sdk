@@ -182,9 +182,9 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
                 getTree(m, true /*displaySortByApi*/));
 
-        // Now simulate a reload that clears the package list and create similar
+        // Now simulate a reload that clears the package list and creates similar
         // objects but not the same references. The only difference is that updateXyz
-        // returns false since they don't change anything.
+        // returns false since nothing changes.
 
         m.updateStart();
         // First insert local packages
@@ -285,7 +285,7 @@ public class PackagesDiffLogicTest extends TestCase {
         m.updateStart();
         // No local packages
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[0]));
-        assertTrue(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+        assertFalse(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1)
         }));
 
