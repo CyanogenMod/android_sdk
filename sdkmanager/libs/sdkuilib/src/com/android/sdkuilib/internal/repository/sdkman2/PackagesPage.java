@@ -280,8 +280,8 @@ public class PackagesPage extends UpdaterPage
         });
 
         mButtonInstall = new Button(mGroupOptions, SWT.NONE);
-        mButtonInstall.setText("Install Selected...");
-        mButtonInstall.setToolTipText("Install all the selected packages");
+        mButtonInstall.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
+        mButtonInstall.setToolTipText("Install one or more packages");
         GridDataBuilder.create(mButtonInstall).hFill().vCenter().hGrab();
         mButtonInstall.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -339,8 +339,8 @@ public class PackagesPage extends UpdaterPage
         });
 
         mButtonDelete = new Button(mGroupOptions, SWT.NONE);
-        mButtonDelete.setText("Delete...");
-        mButtonDelete.setToolTipText("Delete an installed package");
+        mButtonDelete.setText("");  //$NON-NLS-1$  placeholder, filled in updateButtonsState()
+        mButtonDelete.setToolTipText("Delete one ore more installed packages");
         GridDataBuilder.create(mButtonDelete).hFill().vCenter().hGrab();
         mButtonDelete.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -537,9 +537,6 @@ public class PackagesPage extends UpdaterPage
 
         mDiffLogic.updateStart();
         mDiffLogic.getPackageLoader().loadPackages(new ISourceLoadedCallback() {
-            // We'll need to refresh the tree if the tree is not display the categories
-            // for the current sort type.
-
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.
                 final boolean changed = mDiffLogic.updateSourcePackages(
@@ -871,13 +868,12 @@ public class PackagesPage extends UpdaterPage
 
     /**
      * Indicate an install/delete operation is pending.
-     * This disable the install/delete buttons.
-     * Use {@link #endOperationPending()} to revert.
+     * This disables the install/delete buttons.
+     * Use {@link #endOperationPending()} to revert, typically in a {@code try..finally} block.
      */
     private void beginOperationPending() {
         mOperationPending = true;
-        mButtonInstall.setEnabled(false);
-        mButtonDelete.setEnabled(false);
+        updateButtonsState();
     }
 
     private void endOperationPending() {
@@ -886,11 +882,8 @@ public class PackagesPage extends UpdaterPage
     }
 
     private void updateButtonsState() {
-        if (mOperationPending) {
-            return;
-        }
-
         boolean canInstall = false;
+        int numPackages = 0;
 
         if (mDisplayArchives) {
             // In detail mode, we display archives so we can install if at
@@ -902,7 +895,7 @@ public class PackagesPage extends UpdaterPage
                     if (c instanceof Archive) {
                         if (((Archive) c).isCompatible()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     }
                 }
@@ -919,22 +912,28 @@ public class PackagesPage extends UpdaterPage
                         // This is an update package
                         if (((Package) c).hasCompatibleArchive()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     } else if (c instanceof PkgItem) {
                         if (((PkgItem) c).getMainPackage().hasCompatibleArchive()) {
                             canInstall = true;
-                            break;
+                            numPackages++;
                         }
                     }
                 }
             }
         }
 
-        mButtonInstall.setEnabled(canInstall);
+        mButtonInstall.setEnabled(canInstall && !mOperationPending);
+        mButtonInstall.setText(
+                numPackages == 0 ? "Install packages..." :
+                    numPackages == 1 ? "Install 1 package..." :
+                        String.format("Install %d packages...", numPackages));
 
         // We can only delete local archives
         boolean canDelete = false;
+        numPackages = 0;
+
         Object[] checked = mTreeViewer.getCheckedElements();
         if (checked != null) {
             for (Object c : checked) {
@@ -942,13 +941,17 @@ public class PackagesPage extends UpdaterPage
                     PkgState state = ((PkgItem) c).getState();
                     if (state == PkgState.INSTALLED) {
                         canDelete = true;
-                        break;
+                        numPackages++;
                     }
                 }
             }
         }
 
-        mButtonDelete.setEnabled(canDelete);
+        mButtonDelete.setEnabled(canDelete && !mOperationPending);
+        mButtonDelete.setText(
+                numPackages == 0 ? "Delete packages..." :
+                    numPackages == 1 ? "Delete 1 package..." :
+                        String.format("Delete %d packages...", numPackages));
     }
 
     private void onButtonInstall() {

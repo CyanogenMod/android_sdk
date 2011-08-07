@@ -23,11 +23,13 @@ import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -231,11 +233,15 @@ class PackagesDiffLogic {
                         continue;
                     }
 
-                    // Remove all items which obsolete source we have not been visited.
+                    // Remove all *remote* items which obsolete source we have not been visited.
+                    // This detects packages which have disappeared from a remote source during an
+                    // update and removes from the current list.
+                    // Locally installed item are never removed.
                     for (Iterator<PkgItem> itemIt = cat.getItems().iterator();
                             itemIt.hasNext(); ) {
                         PkgItem item = itemIt.next();
-                        if (!mVisitedSources.contains(item.getSource())) {
+                        if (item.getState() == PkgState.NEW &&
+                                !mVisitedSources.contains(item.getSource())) {
                             itemIt.remove();
                             hasChanged  = true;
                         }
@@ -308,27 +314,34 @@ class PackagesDiffLogic {
 
         assert newPackages.size() == packages.length;
 
-        // Upgrade 'new' items to 'installed' for any local package we already know about
+        // Upgrade NEW items to INSTALLED for any local package we already know about.
+        // We can't just change the state of the NEW item to INSTALLED, we also need its
+        // installed package/archive information and so we swap them in-place in the items list.
+
         for (PkgCategory cat : op.getCategories()) {
             List<PkgItem> items = cat.getItems();
             for (int i = 0; i < items.size(); i++) {
                 PkgItem item = items.get(i);
 
-                if (item.hasUpdatePkg() && newPackages.contains(item.getUpdatePkg())) {
-                    // This item has an update package that is now installed.
-                    PkgItem installed = new PkgItem(item.getUpdatePkg(), PkgState.INSTALLED);
-                    unusedPackages.remove(item.getUpdatePkg());
-                    item.removeUpdate();
-                    items.add(installed);
-                    cat.setUnused(false);
-                    hasChanged = true;
+                if (item.hasUpdatePkg()) {
+                    Package newPkg = setContainsLocalPackage(newPackages, item.getUpdatePkg());
+                    if (newPkg != null) {
+                        // This item has an update package that is now installed.
+                        PkgItem installed = new PkgItem(newPkg, PkgState.INSTALLED);
+                        removePackageFromSet(unusedPackages, newPkg);
+                        item.removeUpdate();
+                        items.add(installed);
+                        cat.setUnused(false);
+                        hasChanged = true;
+                    }
                 }
 
-                if (newPackages.contains(item.getMainPackage())) {
-                    unusedPackages.remove(item.getMainPackage());
+                Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
+                if (newPkg != null) {
+                    removePackageFromSet(unusedPackages, newPkg);
                     if (item.getState() == PkgState.NEW) {
                         // This item has a main package that is now installed.
-                        item.setState(PkgState.INSTALLED);
+                        replace(items, i, new PkgItem(newPkg, PkgState.INSTALLED));
                         cat.setUnused(false);
                         hasChanged = true;
                     }
@@ -336,13 +349,18 @@ class PackagesDiffLogic {
             }
         }
 
-        // Downgrade 'installed' items to 'new' if their package isn't listed anymore
+        // Downgrade INSTALLED items to NEW if their package isn't listed anymore
         for (PkgCategory cat : op.getCategories()) {
-            for (PkgItem item : cat.getItems()) {
-                if (item.getState() == PkgState.INSTALLED &&
-                        !newPackages.contains(item.getMainPackage())) {
-                    item.setState(PkgState.NEW);
-                    hasChanged = true;
+            List<PkgItem> items = cat.getItems();
+            for (int i = 0; i < items.size(); i++) {
+                PkgItem item = items.get(i);
+
+                if (item.getState() == PkgState.INSTALLED) {
+                    Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
+                    if (newPkg == null) {
+                        replace(items, i, new PkgItem(item.getMainPackage(), PkgState.NEW));
+                        hasChanged = true;
+                    }
                 }
             }
         }
@@ -371,8 +389,72 @@ class PackagesDiffLogic {
         return hasChanged;
     }
 
-    /** Process all remote packages. Returns true if something changed.
-     * @param op */
+    /**
+     * Replaces the item at {@code index} in {@code list} with the new {@code obj} element.
+     * This uses {@link ArrayList#set(int, Object)} if possible, remove+add otherwise.
+     *
+     * @return The old item at the same index position.
+     * @throws IndexOutOfBoundsException if index out of range (index < 0 || index >= size()).
+     */
+    private <T> T replace(List<T> list, int index, T obj) {
+        if (list instanceof ArrayList<?>) {
+            return ((ArrayList<T>) list).set(index, obj);
+        } else {
+            T old = list.remove(index);
+            list.add(index, obj);
+            return old;
+        }
+    }
+
+    /**
+     * Checks whether the {@code newPackages} set contains a package that is the
+     * same as {@code pkgToFind}.
+     * This is based on Package being the same from an install point of view rather than
+     * pure object equality.
+     * @return The matching package from the {@code newPackages} set or null if not found.
+     */
+    private Package setContainsLocalPackage(Collection<Package> newPackages, Package pkgToFind) {
+        // Most of the time, local packages don't have the exact same hash code
+        // as new ones since the objects are similar but not exactly the same,
+        // for example their installed OS path cannot match (by definition) so
+        // their hash code do not match when used with Set.contains().
+
+        for (Package newPkg : newPackages) {
+            // Two packages are the same if they are compatible types,
+            // do not update each other and have the same revision number.
+            if (pkgToFind.canBeUpdatedBy(newPkg) == UpdateInfo.NOT_UPDATE &&
+                    pkgToFind.getRevision() == newPkg.getRevision()) {
+                return newPkg;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Removes the given package from the set.
+     * This is based on Package being the same from an install point of view rather than
+     * pure object equality.
+     */
+    private void removePackageFromSet(Collection<Package> packages, Package pkgToRemove) {
+        // First try to remove the package based on its hash code. This can fail
+        // for a variety of reasons, as explained in setContainsLocalPackage().
+        if (packages.remove(pkgToRemove)) {
+            return;
+        }
+
+        for (Package pkg : packages) {
+            // Two packages are the same if they are compatible types,
+            // or not updates of each other and have the same revision number.
+            if (pkgToRemove.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
+                    pkgToRemove.getRevision() == pkg.getRevision()) {
+                packages.remove(pkg);
+                return;
+            }
+        }
+    }
+
+    /** Process all remote packages. Returns true if something changed. */
     private boolean processSource(UpdateOp op, SdkSource source, Package[] packages) {
         boolean hasChanged = false;
         // Note: unusedPackages must respect the original packages order. It can't be a set.
@@ -392,22 +474,26 @@ class PackagesDiffLogic {
                 if (!(itemSource == source || (source != null && source.equals(itemSource)))) {
                     continue;
                 }
+
                 // Installed items have been dealt with the local source,
                 // so only change new items here
-                if (item.getState() == PkgState.NEW &&
-                        !newPackages.contains(item.getMainPackage())) {
-                    // This package is no longer part of the source.
-                    items.remove(i--);
-                    hasChanged = true;
-                    continue;
+                if (item.getState() == PkgState.NEW) {
+                    Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
+                    if (newPkg == null) {
+                        // This package is no longer part of the source.
+                        items.remove(i--);
+                        hasChanged = true;
+                        continue;
+                    }
                 }
 
                 cat.setUnused(false);
-                unusedPackages.remove(item.getMainPackage());
+                removePackageFromSet(unusedPackages, item.getMainPackage());
 
                 if (item.hasUpdatePkg()) {
-                    if (newPackages.contains(item.getUpdatePkg())) {
-                        unusedPackages.remove(item.getUpdatePkg());
+                    Package newPkg = setContainsLocalPackage(newPackages, item.getUpdatePkg());
+                    if (newPkg != null) {
+                        removePackageFromSet(unusedPackages, newPkg);
                     } else {
                         // This update is no longer part of the source
                         item.removeUpdate();
