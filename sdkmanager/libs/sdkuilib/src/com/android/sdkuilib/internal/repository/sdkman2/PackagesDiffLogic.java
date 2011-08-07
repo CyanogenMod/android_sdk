@@ -231,11 +231,15 @@ class PackagesDiffLogic {
                         continue;
                     }
 
-                    // Remove all items which obsolete source we have not been visited.
+                    // Remove all *remote* items which obsolete source we have not been visited.
+                    // This detects packages which have disappeared from a remote source during an
+                    // update and removes from the current list.
+                    // Locally installed item are never removed.
                     for (Iterator<PkgItem> itemIt = cat.getItems().iterator();
                             itemIt.hasNext(); ) {
                         PkgItem item = itemIt.next();
-                        if (!mVisitedSources.contains(item.getSource())) {
+                        if (item.getState() == PkgState.NEW &&
+                                !mVisitedSources.contains(item.getSource())) {
                             itemIt.remove();
                             hasChanged  = true;
                         }

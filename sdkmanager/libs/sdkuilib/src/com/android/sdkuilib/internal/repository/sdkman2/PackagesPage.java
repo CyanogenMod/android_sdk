@@ -537,9 +537,6 @@ public class PackagesPage extends UpdaterPage
 
         mDiffLogic.updateStart();
         mDiffLogic.getPackageLoader().loadPackages(new ISourceLoadedCallback() {
-            // We'll need to refresh the tree if the tree is not display the categories
-            // for the current sort type.
-
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.
                 final boolean changed = mDiffLogic.updateSourcePackages(
