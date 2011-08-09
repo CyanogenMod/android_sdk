@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.ProgressBar;
  * See {@link ITaskMonitor} for details on how a monitor expects to
  * be displayed.
  */
-interface IProgressUiProvider {
+interface IProgressUiProvider extends ILogUiProvider {
 
     public abstract boolean isCancelRequested();
 
@@ -38,25 +38,6 @@ interface IProgressUiProvider {
      * This method can be invoked from a non-UI thread.
      */
     public abstract void setDescription(String description);
-
-    /**
-     * Logs a "normal" information line.
-     * This method can be invoked from a non-UI thread.
-     */
-    public abstract void log(String log);
-
-    /**
-     * Logs an "error" information line.
-     * This method can be invoked from a non-UI thread.
-     */
-    public abstract void logError(String log);
-
-    /**
-     * Logs a "verbose" information line, that is extra details which are typically
-     * not that useful for the end-user and might be hidden until explicitly shown.
-     * This method can be invoked from a non-UI thread.
-     */
-    public abstract void logVerbose(String log);
 
     /**
      * Sets the max value of the progress bar.
