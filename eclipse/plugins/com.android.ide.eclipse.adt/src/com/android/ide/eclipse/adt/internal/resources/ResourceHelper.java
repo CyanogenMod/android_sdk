@@ -25,6 +25,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
+import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.TYPE_ATTR;
 import static com.android.sdklib.SdkConstants.FD_RESOURCES;
 
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -78,6 +79,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -238,6 +240,16 @@ public class ResourceHelper {
         List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
         for (ResourceFolderType folderType : folderTypes) {
             if (folderType != ResourceFolderType.VALUES) {
+
+                if (type == ResourceType.ID) {
+                    // The folder types for ID is not only VALUES but also
+                    // LAYOUT and MENU. However, unlike resources, they are only defined
+                    // inline there so for the purposes of isFileBasedResourceType
+                    // (where the intent is to figure out files that are uniquely identified
+                    // by a resource's name) this method should return false anyway.
+                    return false;
+                }
+
                 return true;
             }
         }
@@ -326,11 +338,14 @@ public class ResourceHelper {
 
         // Find "dimens.xml" file in res/values/ (or corresponding name for other
         // value types)
-        String fileName = type.getName() + 's';
+        String typeName = type.getName();
+        String fileName = typeName + 's';
         String projectPath = FD_RESOURCES + WS_SEP + FD_RES_VALUES + WS_SEP
             + fileName + '.' + EXT_XML;
         Object editRequester = project;
         IResource member = project.findMember(projectPath);
+        String tagName = Hyperlinks.getTagName(type);
+        boolean createEmptyTag = type == ResourceType.ID;
         if (member != null) {
             if (member instanceof IFile) {
                 IFile file = (IFile) member;
@@ -366,16 +381,34 @@ public class ResourceHelper {
                         Node nextChild = lastElement != null ? lastElement.getNextSibling() : null;
                         Text indentNode = document.createTextNode('\n' + indent);
                         root.insertBefore(indentNode, nextChild);
-                        Element element = document.createElement(Hyperlinks.getTagName(type));
+                        Element element = document.createElement(tagName);
+                        if (createEmptyTag) {
+                            if (element instanceof ElementImpl) {
+                                ElementImpl elementImpl = (ElementImpl) element;
+                                elementImpl.setEmptyTag(true);
+                            }
+                        }
                         element.setAttribute(NAME_ATTR, name);
+                        if (!tagName.equals(typeName)) {
+                            element.setAttribute(TYPE_ATTR, typeName);
+                        }
                         root.insertBefore(element, nextChild);
-                        Text valueNode = document.createTextNode(value);
-                        element.appendChild(valueNode);
+                        IRegion region = null;
+
+                        if (createEmptyTag) {
+                            IndexedRegion domRegion = VisualRefactoring.getRegion(element);
+                            int endOffset = domRegion.getEndOffset();
+                            region = new Region(endOffset, 0);
+                        } else {
+                            Node valueNode = document.createTextNode(value);
+                            element.appendChild(valueNode);
+
+                            IndexedRegion domRegion = VisualRefactoring.getRegion(valueNode);
+                            int startOffset = domRegion.getStartOffset();
+                            int length = domRegion.getLength();
+                            region = new Region(startOffset, length);
+                        }
                         model.save();
-                        IndexedRegion domRegion = VisualRefactoring.getRegion(valueNode);
-                        int startOffset = domRegion.getStartOffset();
-                        int length = domRegion.getLength();
-                        IRegion region = new Region(startOffset, length);
                         return Pair.of(file, region);
                     }
                 } catch (Exception e) {
@@ -398,19 +431,32 @@ public class ResourceHelper {
             sb.append('<').append(root).append('>').append('\n');
             sb.append("    "); //$NON-NLS-1$
             sb.append('<');
-            sb.append(type.getName());
+            sb.append(tagName);
             sb.append(" name=\""); //$NON-NLS-1$
             sb.append(name);
             sb.append('"');
-            sb.append('>');
-            int start = sb.length();
-            sb.append(value);
-            int end = sb.length();
-            sb.append('<').append('/');
-            sb.append(type.getName());
-            sb.append(">\n");                            //$NON-NLS-1$
-            sb.append('<').append('/').append(root).append('>').append('\n');
+            if (!tagName.equals(typeName)) {
+                sb.append(" type=\""); //$NON-NLS-1$
+                sb.append(typeName);
+                sb.append('"');
+            }
+            int start, end;
+            if (createEmptyTag) {
+                sb.append("/>");                             //$NON-NLS-1$
+                start = sb.length();
+                end = sb.length();
+            } else {
+                sb.append('>');
+                start = sb.length();
+                sb.append(value);
+                end = sb.length();
+                sb.append('<').append('/');
+                sb.append(tagName);
+                sb.append('>');
+            }
+            sb.append('\n').append('<').append('/').append(root).append('>').append('\n');
             String result = sb.toString();
+            // TODO: Pretty print string (wait until that CL is integrated)
             String error = null;
             try {
                 byte[] buf = result.getBytes("UTF8");    //$NON-NLS-1$

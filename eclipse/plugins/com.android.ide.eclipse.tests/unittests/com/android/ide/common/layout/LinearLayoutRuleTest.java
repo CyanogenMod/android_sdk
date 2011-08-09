@@ -30,9 +30,9 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.MenuAction;
-import com.android.ide.common.api.MenuAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.MenuAction.Choices;
 
 import java.util.List;
 import java.util.Locale;
@@ -86,7 +86,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                         // Insert position line
                         "drawLine(1,0,1,480)" + (haveBounds ?
                         // Outline of dragged node centered over position line
-                        ", useStyle(DROP_PREVIEW), " + "drawRect(Rect[1,0,100,80])"
+                        ", useStyle(DROP_PREVIEW), " + "drawRect(1,0,101,80)"
                                 // Nothing when we don't have bounds
                                 : "") + "]", graphics.getDrawn().toString());
 
@@ -218,7 +218,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawLine(0,0,240,0)",
 
                 // Preview of the dropped rectangle
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,-40,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,-40,105,40)");
 
         // Without drag bounds it should be identical except no preview
         // rectangle
@@ -249,11 +249,11 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawLine(0,381,240,381)",
 
                 // Preview of the dropped rectangle
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,381,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,381,105,461)");
 
         // Check without bounds too
         dragInto(true, new Rect(0, 0, 105, 80), new Point(30, 500), 4, -1,
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,381,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,381,105,461)");
     }
 
     public void testDragInVerticalMiddle() {
@@ -277,11 +277,11 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawLine(0,190,240,190)",
 
                 // Preview of the dropped rectangle
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,150,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,150,105,230)");
 
         // Check without bounds too
         dragInto(true, new Rect(0, 0, 105, 80), new Point(0, 170), 2, -1,
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,150,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,150,105,230)");
     }
 
     public void testDragInVerticalMiddleSelfPos() {
@@ -311,7 +311,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawLine(0,290,240,290)",
 
                 // Preview of dropped rectangle
-                "useStyle(DROP_PREVIEW), drawRect(Rect[0,250,100,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,250,100,330)");
 
         // Test dropping on self (no position change):
         dragInto(true,
@@ -337,7 +337,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 // No active nearest line when you're over the self pos!
 
                 // Preview of the dropped rectangle
-                "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawRect(Rect[0,100,100,80])");
+                "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawRect(0,100,100,180)");
     }
 
     public void testDragToLastPosition() {
@@ -365,9 +365,8 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_ZONE_ACTIVE), useStyle(DROP_PREVIEW), drawLine(0,381,240,381)",
 
                 // Drop Preview
-                "seStyle(DROP_PREVIEW), drawRect(Rect[0,381,100,80])");
+                "useStyle(DROP_PREVIEW), drawRect(0,381,100,461)");
     }
-
 
     public void testFormatFloatValue() throws Exception {
         assertEquals("1", LinearLayoutRule.formatFloatAttribute(1.0f));

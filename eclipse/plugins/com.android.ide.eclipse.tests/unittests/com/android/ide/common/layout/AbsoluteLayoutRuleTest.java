@@ -58,7 +58,7 @@ public class AbsoluteLayoutRuleTest extends LayoutTestBase {
                 "useStyle(DROP_RECIPIENT), drawRect(Rect[0,0,240,480])",
 
                 // Drop preview
-                "useStyle(DROP_PREVIEW), drawRect(Rect[30,-10,105,80])");
+                "useStyle(DROP_PREVIEW), drawRect(30,-10,135,70)");
 
         assertEquals("30dp", inserted.getStringAttr(ANDROID_URI, "layout_x"));
         assertEquals("-10dp", inserted.getStringAttr(ANDROID_URI, "layout_y"));
