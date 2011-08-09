@@ -893,7 +893,8 @@ public class PackagesPage extends UpdaterPage
             if (checked != null) {
                 for (Object c : checked) {
                     if (c instanceof Archive) {
-                        if (((Archive) c).isCompatible()) {
+                        Archive a = (Archive) c;
+                        if (!a.isLocal() && a.isCompatible()) {
                             canInstall = true;
                             numPackages++;
                         }
@@ -908,17 +909,16 @@ public class PackagesPage extends UpdaterPage
             Object[] checked = mTreeViewer.getCheckedElements();
             if (checked != null) {
                 for (Object c : checked) {
+                    Package p = null;
+
                     if (c instanceof Package) {
-                        // This is an update package
-                        if (((Package) c).hasCompatibleArchive()) {
-                            canInstall = true;
-                            numPackages++;
-                        }
+                        p = (Package) c;
                     } else if (c instanceof PkgItem) {
-                        if (((PkgItem) c).getMainPackage().hasCompatibleArchive()) {
-                            canInstall = true;
-                            numPackages++;
-                        }
+                        p = ((PkgItem) c).getMainPackage();
+                    }
+                    if (p != null && !p.isLocal() && p.hasCompatibleArchive()) {
+                        canInstall = true;
+                        numPackages++;
                     }
                 }
             }
@@ -965,7 +965,8 @@ public class PackagesPage extends UpdaterPage
             if (checked != null) {
                 for (Object c : checked) {
                     if (c instanceof Archive) {
-                        if (((Archive) c).isCompatible()) {
+                        Archive a = (Archive) c;
+                        if (!a.isLocal() && a.isCompatible()) {
                             archives.add((Archive) c);
                         }
                     }
@@ -997,7 +998,7 @@ public class PackagesPage extends UpdaterPage
                     }
                     if (p != null) {
                         for (Archive a : p.getArchives()) {
-                            if (a.isCompatible()) {
+                            if (!a.isLocal() && a.isCompatible()) {
                                 archives.add(a);
                             }
                         }
