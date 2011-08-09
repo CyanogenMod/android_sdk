@@ -305,8 +305,7 @@ class PackagesDiffLogic {
         return displayIsSortByApi ? apiListChanged : sourceListChanged;
     }
 
-    /** Process all local packages. Returns true if something changed.
-     * @param op */
+    /** Process all local packages. Returns true if something changed. */
     private boolean processLocals(UpdateOp op, Package[] packages) {
         boolean hasChanged = false;
         Set<Package> newPackages = new HashSet<Package>(Arrays.asList(packages));
@@ -349,7 +348,7 @@ class PackagesDiffLogic {
             }
         }
 
-        // Downgrade INSTALLED items to NEW if their package isn't listed anymore
+        // Downgrade INSTALLED items to NEW if their package isn't listed anymore in locals
         for (PkgCategory cat : op.getCategories()) {
             List<PkgItem> items = cat.getItems();
             for (int i = 0; i < items.size(); i++) {
@@ -423,7 +422,7 @@ class PackagesDiffLogic {
             // Two packages are the same if they are compatible types,
             // do not update each other and have the same revision number.
             if (pkgToFind.canBeUpdatedBy(newPkg) == UpdateInfo.NOT_UPDATE &&
-                    pkgToFind.getRevision() == newPkg.getRevision()) {
+                    newPkg.getRevision() == pkgToFind.getRevision()) {
                 return newPkg;
             }
         }
@@ -436,20 +435,48 @@ class PackagesDiffLogic {
      * This is based on Package being the same from an install point of view rather than
      * pure object equality.
      */
-    private void removePackageFromSet(Collection<Package> packages, Package pkgToRemove) {
+    private void removePackageFromSet(Collection<Package> packages, Package pkgToFind) {
         // First try to remove the package based on its hash code. This can fail
         // for a variety of reasons, as explained in setContainsLocalPackage().
-        if (packages.remove(pkgToRemove)) {
+        if (packages.remove(pkgToFind)) {
             return;
         }
 
         for (Package pkg : packages) {
             // Two packages are the same if they are compatible types,
             // or not updates of each other and have the same revision number.
-            if (pkgToRemove.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
-                    pkgToRemove.getRevision() == pkg.getRevision()) {
+            if (pkgToFind.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
+                    pkg.getRevision() == pkgToFind.getRevision()) {
                 packages.remove(pkg);
+                // Implementation detail: we can get away with using Collection.remove()
+                // whilst in the for iterator because we return right away (otherwise the
+                // iterator would complain the collection just changed.)
                 return;
+            }
+        }
+    }
+
+    /**
+     * Removes any package from the set that is equal or lesser than {@code pkgToFind}.
+     * This is based on Package being the same from an install point of view rather than
+     * pure object equality.
+     * </p>
+     * This is a slight variation on {@link #removePackageFromSet(Collection, Package)}
+     * where we remove from the set any package that is similar to {@code pkgToFind}
+     * and has either the same revision number or a <em>lesser</em> revision number.
+     * An example of this use-case is there's an installed local package in rev 5
+     * (that is the pkgToFind) and there's a remote package in rev 3 (in the package list),
+     * in which case we 'forget' the rev 3 package even exists.
+     */
+    private void removePackageOrLesserFromSet(Collection<Package> packages, Package pkgToFind) {
+        for (Iterator<Package> it = packages.iterator(); it.hasNext(); ) {
+            Package pkg = it.next();
+
+            // Two packages are the same if they are compatible types,
+            // or not updates of each other and have the same revision number.
+            if (pkgToFind.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
+                    pkg.getRevision() <= pkgToFind.getRevision()) {
+                it.remove();
             }
         }
     }
@@ -461,6 +488,7 @@ class PackagesDiffLogic {
         List<Package> unusedPackages = new ArrayList<Package>(Arrays.asList(packages));
         Set<Package> newPackages = new HashSet<Package>(unusedPackages);
 
+        assert source != null;
         assert newPackages.size() == packages.length;
 
         // Remove any items or updates that are no longer in the source's packages
@@ -468,15 +496,14 @@ class PackagesDiffLogic {
             List<PkgItem> items = cat.getItems();
             for (int i = 0; i < items.size(); i++) {
                 PkgItem item = items.get(i);
-                SdkSource itemSource = item.getSource();
 
-                // Only process items matching the current source
-                if (!(itemSource == source || (source != null && source.equals(itemSource)))) {
+                if (!isSourceCompatible(item, source)) {
                     continue;
                 }
 
-                // Installed items have been dealt with the local source,
-                // so only change new items here
+                // Try to prune current items that are no longer on the remote site.
+                // Installed items have been dealt with the local source, so only
+                // change new items here.
                 if (item.getState() == PkgState.NEW) {
                     Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
                     if (newPkg == null) {
@@ -488,7 +515,7 @@ class PackagesDiffLogic {
                 }
 
                 cat.setUnused(false);
-                removePackageFromSet(unusedPackages, item.getMainPackage());
+                removePackageOrLesserFromSet(unusedPackages, item.getMainPackage());
 
                 if (item.hasUpdatePkg()) {
                     Package newPkg = setContainsLocalPackage(newPackages, item.getUpdatePkg());
@@ -524,6 +551,37 @@ class PackagesDiffLogic {
         }
 
         return hasChanged;
+    }
+
+    private boolean isSourceCompatible(PkgItem currentItem, SdkSource newItemSource) {
+        SdkSource currentSource = currentItem.getSource();
+
+        // Only process items matching the current source.
+        if (currentSource == newItemSource) {
+            // Same source. accept it.
+            return true;
+
+        } else if (currentSource != null && currentSource.equals(newItemSource)) {
+            // Same source. Accept it.
+            return true;
+
+        } else if (currentSource == null && currentItem.getState() == PkgState.INSTALLED) {
+            // Accept it.
+            // If a locally installed item has no source, it probably has been
+            // manually installed. In this case just match any remote source.
+            return true;
+
+        } else if (currentSource != null && currentSource.getUrl().startsWith("file://")) {
+            // Probably a manual local install. Accept it.
+            return true;
+
+        } else {
+            // Reject the source mismatch. The idea is that if two remote repositories
+            // have similar packages, we don't want to merge them together and have
+            // one hide the other. This is a design error from the repository owners
+            // and we want the case to be blatant so that we can get it fixed.
+            return false;
+        }
     }
 
     private PkgCategory findCurrentCategory(
@@ -632,6 +690,10 @@ class PackagesDiffLogic {
             // First check if the new package could be an update
             // to an existing package
             for (PkgItem item : cat.getItems()) {
+                if (!isSourceCompatible(item, newPackage.getParentSource())) {
+                    continue;
+                }
+
                 if (item.isSameMainPackageAs(newPackage)) {
                     // Seems like this isn't really a new item after all.
                     cat.setUnused(false);

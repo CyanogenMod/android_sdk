@@ -852,7 +852,7 @@ public class PackagesDiffLogicTest extends TestCase {
         // Populate the list with typical items: tools, platforms tools, extras, 2 platforms.
         // With nothing installed, this should pick the tools, extras and the top platform.
 
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
         SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
 
         m.updateStart();
@@ -1038,6 +1038,94 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    // ----
+
+    public void testLocalIsNewer() {
+        // This tests an edge case that typically happens only during development where
+        // one would have a local package which revision number is larger than what the
+        // remove repositories can offer. In this case we don't want to offer the remote
+        // package as an "upgrade" nor as a downgrade.
+
+        // Populate the list with local revisions 5 and lower remote revisions 3
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(        src1, 5, 5),
+                new MockPlatformToolPackage(src1, 5),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(        src1, 3, 3),
+                new MockPlatformToolPackage(src1, 3),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        // The remote packages in rev 3 are hidden by the local packages in rev 5
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 5>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 5>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 5>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 5>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testSourceDups() {
+        // This tests an edge case were 2 remote repositories are giving the
+        // same kind of packages. We don't want to merge them together or treat
+        // them as upgrades to each other.
+
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+        SdkSource src3 = new SdkRepoSource("http://repo.com/url3", "repo3");
+        MockPlatformPackage p1 = null;
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(        src1, 3, 3),
+                new MockPlatformToolPackage(src1, 3),
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
+                new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon B", p1, 6),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src3, new Package[] {
+                new MockAddonPackage(src3, "addon A", p1, 5), // same as  addon A rev 5 from src2
+                new MockAddonPackage(src3, "addon B", p1, 7), // upgrades addon B rev 6 from src2
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        // The remote packages in rev 3 are hidden by the local packages in rev 5
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=5>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 6>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (repo.com), #items=3>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategorySource <source=repo2 (repo.com), #items=2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 6>\n" +
+                "PkgCategorySource <source=repo3 (repo.com), #items=2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
