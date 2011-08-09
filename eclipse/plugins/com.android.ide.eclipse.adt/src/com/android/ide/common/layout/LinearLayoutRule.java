@@ -44,13 +44,14 @@ import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
-import com.android.ide.common.api.MenuAction.OrderedChoices;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
+import com.android.util.Pair;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -91,21 +92,26 @@ public class LinearLayoutRule extends BaseLayoutRule {
      * Add an explicit Orientation toggle to the context menu.
      */
     @Override
-    public List<MenuAction> getContextMenu(final INode selectedNode) {
+    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
+        super.addContextMenuActions(actions, selectedNode);
         if (supportsOrientation()) {
             String current = getCurrentOrientation(selectedNode);
-            IMenuCallback onChange = new PropertyCallback(Collections.singletonList(selectedNode),
+            IMenuCallback onChange = new PropertyCallback(
+                    null, // use passed in nodes instead to support multiple nodes
                     "Change LinearLayout Orientation",
                     ANDROID_URI, ATTR_ORIENTATION);
-            return concatenate(super.getContextMenu(selectedNode),
-                new MenuAction.Choices(ACTION_ORIENTATION, "Orientation",  //$NON-NLS-1$
-                    mapify(
-                        "horizontal", "Horizontal",                    //$NON-NLS-1$
-                        "vertical", "Vertical"                         //$NON-NLS-1$
-                    ),
-                    current, onChange));
-        } else {
-            return super.getContextMenu(selectedNode);
+            List<Pair<String, String>> alternatives = new ArrayList<Pair<String,String>>(2);
+            alternatives.add(Pair.of("horizontal", "Horizontal")); //$NON-NLS-1$
+            alternatives.add(Pair.of("vertical", "Vertical"));     //$NON-NLS-1$
+            RuleAction action = RuleAction.createChoices(
+                    ACTION_ORIENTATION, "Orientation",  //$NON-NLS-1$
+                    onChange,
+                    null /* iconUrls */,
+                    current,
+                    null /* icon */, 5, true,
+                    alternatives);
+
+            actions.add(action);
         }
     }
 
@@ -145,22 +151,22 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
         if (supportsOrientation()) {
-            OrderedChoices action = MenuAction.createChoices(
+            Choices action = RuleAction.createChoices(
                     ACTION_ORIENTATION, "Orientation",  //$NON-NLS-1$
-                    null,
                     new PropertyCallback(Collections.singletonList(parentNode),
                             "Change LinearLayout Orientation",
                             ANDROID_URI, ATTR_ORIENTATION),
-                    Arrays.<String>asList("Set Horizontal Orientation", "Set Vertical Orientation"),
+                    Arrays.<String>asList("Set Horizontal Orientation","Set Vertical Orientation"),
                     Arrays.<URL>asList(ICON_HORIZONTAL, ICON_VERTICAL),
                     Arrays.<String>asList("horizontal", "vertical"),
                     getCurrentOrientation(parentNode),
                     null /* icon */,
-                    -10
+                    -10,
+                    false /* supportsMultipleNodes */
             );
             action.setRadio(true);
             actions.add(action);
@@ -168,17 +174,17 @@ public class LinearLayoutRule extends BaseLayoutRule {
         if (!isVertical(parentNode)) {
             String current = parentNode.getStringAttr(ANDROID_URI, ATTR_BASELINE_ALIGNED);
             boolean isAligned =  current == null || Boolean.valueOf(current);
-            actions.add(MenuAction.createToggle(null, "Toggle Baseline Alignment",
+            actions.add(RuleAction.createToggle(null, "Toggle Baseline Alignment",
                     isAligned,
                     new PropertyCallback(Collections.singletonList(parentNode),
                             "Change Baseline Alignment",
                             ANDROID_URI, ATTR_BASELINE_ALIGNED), // TODO: Also set index?
-                    ICON_BASELINE, 38));
+                    ICON_BASELINE, 38, false));
         }
 
         // Gravity
         if (children != null && children.size() > 0) {
-            actions.add(MenuAction.createSeparator(35));
+            actions.add(RuleAction.createSeparator(35));
 
             // Margins
             actions.add(createMarginAction(parentNode, children));
@@ -188,8 +194,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
             // Weights
             IMenuCallback actionCallback = new IMenuCallback() {
-                public void action(final MenuAction action, final String valueId,
-                        final Boolean newValue) {
+                public void action(final RuleAction action, List<? extends INode> selectedNodes,
+                        final String valueId, final Boolean newValue) {
                     parentNode.editXml("Change Weight", new INodeHandler() {
                         public void handle(INode n) {
                             String id = action.getId();
@@ -222,15 +228,15 @@ public class LinearLayoutRule extends BaseLayoutRule {
                     });
                 }
             };
-            actions.add(MenuAction.createSeparator(50));
-            actions.add(MenuAction.createAction(ACTION_DISTRIBUTE, "Distribute Weights Evenly",
-                    null, actionCallback, ICON_DISTRIBUTE, 60));
-            actions.add(MenuAction.createAction(ACTION_DOMINATE, "Assign All Weight",
-                    null, actionCallback, ICON_DOMINATE, 70));
-            actions.add(MenuAction.createAction(ACTION_WEIGHT, "Change Layout Weight", null,
-                    actionCallback, ICON_WEIGHTS, 80));
-            actions.add(MenuAction.createAction(ACTION_CLEAR, "Clear All Weights",
-                    null, actionCallback, ICON_CLEAR_WEIGHTS, 90));
+            actions.add(RuleAction.createSeparator(50));
+            actions.add(RuleAction.createAction(ACTION_DISTRIBUTE, "Distribute Weights Evenly",
+                    actionCallback, ICON_DISTRIBUTE, 60, false /*supportsMultipleNodes*/));
+            actions.add(RuleAction.createAction(ACTION_DOMINATE, "Assign All Weight",
+                    actionCallback, ICON_DOMINATE, 70, false));
+            actions.add(RuleAction.createAction(ACTION_WEIGHT, "Change Layout Weight",
+                    actionCallback, ICON_WEIGHTS, 80, false));
+            actions.add(RuleAction.createAction(ACTION_CLEAR, "Clear All Weights",
+                     actionCallback, ICON_CLEAR_WEIGHTS, 90, false));
         }
     }
 

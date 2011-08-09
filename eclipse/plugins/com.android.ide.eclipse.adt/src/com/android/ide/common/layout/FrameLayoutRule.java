@@ -31,7 +31,7 @@ import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
@@ -156,10 +156,10 @@ public class FrameLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
-        actions.add(MenuAction.createSeparator(25));
+        actions.add(RuleAction.createSeparator(25));
         actions.add(createMarginAction(parentNode, children));
         if (children != null && children.size() > 0) {
             actions.add(createGravityAction(children, ATTR_LAYOUT_GRAVITY));

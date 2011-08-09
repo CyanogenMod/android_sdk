@@ -31,8 +31,8 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.MenuAction;
-import com.android.ide.common.api.MenuAction.OrderedChoices;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
@@ -130,32 +130,32 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
-        OrderedChoices orientationAction = MenuAction.createChoices(
+        Choices orientationAction = RuleAction.createChoices(
                 ACTION_ORIENTATION,
                 "Orientation", //$NON-NLS-1$
-                null, new PropertyCallback(Collections.singletonList(parentNode),
+                new PropertyCallback(Collections.singletonList(parentNode),
                         "Change LinearLayout Orientation", ANDROID_URI, ATTR_ORIENTATION), Arrays
                         .<String> asList("Set Horizontal Orientation", "Set Vertical Orientation"),
                 Arrays.<URL> asList(ICON_HORIZONTAL, ICON_VERTICAL), Arrays.<String> asList(
                         "horizontal", "vertical"), getCurrentOrientation(parentNode),
-                null /* icon */, -10);
+                null /* icon */, -10, false);
         orientationAction.setRadio(true);
         actions.add(orientationAction);
 
         // Gravity and margins
         if (children != null && children.size() > 0) {
-            actions.add(MenuAction.createSeparator(35));
+            actions.add(RuleAction.createSeparator(35));
             actions.add(createMarginAction(parentNode, children));
             actions.add(createGravityAction(children, ATTR_LAYOUT_GRAVITY));
         }
 
         IMenuCallback actionCallback = new IMenuCallback() {
-            public void action(final MenuAction action, final String valueId,
-                    final Boolean newValue) {
+            public void action(final RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, final Boolean newValue) {
                 parentNode.editXml("Add/Remove Row/Column", new INodeHandler() {
                     public void handle(INode n) {
                         String id = action.getId();
@@ -194,33 +194,33 @@ public class GridLayoutRule extends BaseLayoutRule {
         };
 
         // Add Row and Add Column
-        actions.add(MenuAction.createSeparator(150));
-        actions.add(MenuAction.createAction(ACTION_ADD_COL, "Add Column", null, actionCallback,
-                ICON_ADD_COL, 160));
-        actions.add(MenuAction.createAction(ACTION_ADD_ROW, "Add Row", null, actionCallback,
-                ICON_ADD_ROW, 165));
+        actions.add(RuleAction.createSeparator(150));
+        actions.add(RuleAction.createAction(ACTION_ADD_COL, "Add Column", actionCallback,
+                ICON_ADD_COL, 160, false /* supportsMultipleNodes */));
+        actions.add(RuleAction.createAction(ACTION_ADD_ROW, "Add Row", actionCallback,
+                ICON_ADD_ROW, 165, false));
 
         // Remove Row and Remove Column (if something is selected)
         if (children != null && children.size() > 0) {
             // TODO: Add "Merge Columns" and "Merge Rows" ?
 
-            actions.add(MenuAction.createAction(ACTION_REMOVE_COL, "Remove Column", null,
-                    actionCallback, ICON_REMOVE_COL, 170));
-            actions.add(MenuAction.createAction(ACTION_REMOVE_ROW, "Remove Row", null,
-                    actionCallback, ICON_REMOVE_ROW, 175));
+            actions.add(RuleAction.createAction(ACTION_REMOVE_COL, "Remove Column",
+                    actionCallback, ICON_REMOVE_COL, 170, false));
+            actions.add(RuleAction.createAction(ACTION_REMOVE_ROW, "Remove Row",
+                    actionCallback, ICON_REMOVE_ROW, 175, false));
         }
 
-        actions.add(MenuAction.createSeparator(185));
+        actions.add(RuleAction.createSeparator(185));
 
-        actions.add(MenuAction.createToggle(ACTION_SNAP, "Snap to Grid",
-                sSnapToGrid, actionCallback, ICON_SNAP, 190));
+        actions.add(RuleAction.createToggle(ACTION_SNAP, "Snap to Grid",
+                sSnapToGrid, actionCallback, ICON_SNAP, 190, false));
 
-        actions.add(MenuAction.createToggle(ACTION_SHOW_GRID, "Show Structure",
-                sShowStructure, actionCallback, ICON_SHOW_GRID, 200));
+        actions.add(RuleAction.createToggle(ACTION_SHOW_GRID, "Show Structure",
+                sShowStructure, actionCallback, ICON_SHOW_GRID, 200, false));
 
         // Temporary: Diagnostics for GridLayout
-        actions.add(MenuAction.createToggle(ACTION_DEBUG, "Debug",
-                sDebugGridLayout, actionCallback, null, 210));
+        actions.add(RuleAction.createToggle(ACTION_DEBUG, "Debug",
+                sDebugGridLayout, actionCallback, null, 210, false));
     }
 
     /**

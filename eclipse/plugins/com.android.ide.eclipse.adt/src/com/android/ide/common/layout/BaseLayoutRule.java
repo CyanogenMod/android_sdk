@@ -66,8 +66,9 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
-import com.android.ide.common.api.MenuAction;
-import com.android.ide.common.api.MenuAction.ChoiceProvider;
+import com.android.ide.common.api.IViewRule;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.ChoiceProvider;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.Segment;
@@ -85,6 +86,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A {@link IViewRule} for all layouts.
+ */
 public class BaseLayoutRule extends BaseViewRule {
     private static final String ACTION_FILL_WIDTH = "_fillW";  //$NON-NLS-1$
     private static final String ACTION_FILL_HEIGHT = "_fillH"; //$NON-NLS-1$
@@ -102,7 +106,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
     // The Margin layout parameters are available for LinearLayout, FrameLayout, RelativeLayout,
     // and their subclasses.
-    protected final MenuAction createMarginAction(final INode parentNode,
+    protected final RuleAction createMarginAction(final INode parentNode,
             final List<? extends INode> children) {
 
         final List<? extends INode> targets = children == null || children.size() == 0 ?
@@ -111,7 +115,8 @@ public class BaseLayoutRule extends BaseViewRule {
         final INode first = targets.get(0);
 
         IMenuCallback actionCallback = new IMenuCallback() {
-            public void action(MenuAction action, final String valueId, final Boolean newValue) {
+            public void action(RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, final Boolean newValue) {
                 parentNode.editXml("Change Margins", new INodeHandler() {
                     public void handle(INode n) {
                         String uri = ANDROID_URI;
@@ -137,13 +142,13 @@ public class BaseLayoutRule extends BaseViewRule {
             }
         };
 
-        return MenuAction.createAction(ACTION_MARGIN, "Change Margins...", null, actionCallback,
-                        ICON_MARGINS, 40);
+        return RuleAction.createAction(ACTION_MARGIN, "Change Margins...", actionCallback,
+                ICON_MARGINS, 40, false);
     }
 
     // Both LinearLayout and RelativeLayout have a gravity (but RelativeLayout applies it
     // to the parent whereas for LinearLayout it's on the children)
-    protected final MenuAction createGravityAction(final List<? extends INode> targets, final
+    protected final RuleAction createGravityAction(final List<? extends INode> targets, final
             String attributeName) {
         if (targets != null && targets.size() > 0) {
             final INode first = targets.get(0);
@@ -162,20 +167,19 @@ public class BaseLayoutRule extends BaseViewRule {
                 }
             };
 
-            return MenuAction.createChoices("_gravity", "Change Gravity", //$NON-NLS-1$
-                    null,
+            return RuleAction.createChoices("_gravity", "Change Gravity", //$NON-NLS-1$
                     new PropertyCallback(targets, "Change Gravity", ANDROID_URI,
                             attributeName),
                     provider,
                     first.getStringAttr(ANDROID_URI, attributeName), ICON_GRAVITY,
-                    43);
+                    43, false);
         }
 
         return null;
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
@@ -186,7 +190,8 @@ public class BaseLayoutRule extends BaseViewRule {
 
         // Shared action callback
         IMenuCallback actionCallback = new IMenuCallback() {
-            public void action(MenuAction action, final String valueId, final Boolean newValue) {
+            public void action(RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, final Boolean newValue) {
                 final String actionId = action.getId();
                 final String undoLabel;
                 if (actionId.equals(ACTION_FILL_WIDTH)) {
@@ -218,10 +223,10 @@ public class BaseLayoutRule extends BaseViewRule {
             }
         };
 
-        actions.add(MenuAction.createToggle(ACTION_FILL_WIDTH, "Toggle Fill Width",
-                isFilled(first, ATTR_LAYOUT_WIDTH), actionCallback, ICON_FILL_WIDTH, 10));
-        actions.add(MenuAction.createToggle(ACTION_FILL_HEIGHT, "Toggle Fill Height",
-                isFilled(first, ATTR_LAYOUT_HEIGHT), actionCallback, ICON_FILL_HEIGHT, 20));
+        actions.add(RuleAction.createToggle(ACTION_FILL_WIDTH, "Toggle Fill Width",
+                isFilled(first, ATTR_LAYOUT_WIDTH), actionCallback, ICON_FILL_WIDTH, 10, false));
+        actions.add(RuleAction.createToggle(ACTION_FILL_HEIGHT, "Toggle Fill Height",
+                isFilled(first, ATTR_LAYOUT_HEIGHT), actionCallback, ICON_FILL_HEIGHT, 20, false));
     }
 
     // ==== Paste support ====
@@ -256,6 +261,10 @@ public class BaseLayoutRule extends BaseViewRule {
      * This method is invoked by BaseView when onPaste() is called --
      * views don't generally accept children and instead use the target node as
      * a hint to paste "before" it.
+     *
+     * @param parentNode the parent node we're pasting into
+     * @param targetNode the first selected node
+     * @param elements the elements being pasted
      */
     public void onPasteBeforeChild(INode parentNode, INode targetNode, IDragElement[] elements) {
 
@@ -737,6 +746,12 @@ public class BaseLayoutRule extends BaseViewRule {
         }
     }
 
+    /**
+     * Returns the maximum number of pixels will be considered a "match" when snapping
+     * resize or move positions to edges or other constraints
+     *
+     * @return the maximum number of pixels to consider for snapping
+     */
     public static final int getMaxMatchDistance() {
         // TODO - make constant once we're happy with the feel
         return 20;

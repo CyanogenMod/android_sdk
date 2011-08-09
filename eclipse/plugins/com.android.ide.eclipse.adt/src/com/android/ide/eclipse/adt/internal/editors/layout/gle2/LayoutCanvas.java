@@ -1047,11 +1047,8 @@ public class LayoutCanvas extends Canvas {
 
     /**
      * Helper to create the drop target for the given control.
-     * <p/>
-     * This is static with package-access so that {@link OutlinePage} can also
-     * create an exact copy of the drop target with the same attributes.
      */
-    /* package */static DropTarget createDropTarget(Control control) {
+    private static DropTarget createDropTarget(Control control) {
         DropTarget dropTarget = new DropTarget(
                 control, DND.DROP_COPY | DND.DROP_MOVE | DND.DROP_DEFAULT);
         dropTarget.setTransfer(new Transfer[] {

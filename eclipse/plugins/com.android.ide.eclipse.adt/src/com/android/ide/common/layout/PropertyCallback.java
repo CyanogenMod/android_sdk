@@ -19,7 +19,7 @@ package com.android.ide.common.layout;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 
 import java.util.List;
 
@@ -33,6 +33,16 @@ public class PropertyCallback implements IMenuCallback {
     private final String mUri;
     private final String mAttribute;
 
+    /**
+     * Creates a new property callback.
+     *
+     * @param targetNodes the nodes to apply the property to, or null to use the
+     *            nodes pass into the
+     *            {@link #action(RuleAction, List, String, Boolean)} method.
+     * @param undoLabel the label to use for the undo action
+     * @param uri the attribute URI to apply
+     * @param attribute the attribute name to apply
+     */
     public PropertyCallback(List<? extends INode> targetNodes, String undoLabel,
             String uri, String attribute) {
         super();
@@ -43,13 +53,18 @@ public class PropertyCallback implements IMenuCallback {
     }
 
     // ---- Implements IMenuCallback ----
-    public void action(MenuAction action, final String valueId, final Boolean newValue) {
-        if (mTargetNodes == null || mTargetNodes.size() == 0) {
+    public void action(RuleAction action, List<? extends INode> selectedNodes,
+            final String valueId, final Boolean newValue) {
+        if (mTargetNodes != null && mTargetNodes.size() > 0) {
+            selectedNodes = mTargetNodes;
+        }
+        if (selectedNodes == null || selectedNodes.size() == 0) {
             return;
         }
-        mTargetNodes.get(0).editXml(mUndoLabel, new INodeHandler() {
+        final List<? extends INode> nodes = selectedNodes;
+        selectedNodes.get(0).editXml(mUndoLabel, new INodeHandler() {
             public void handle(INode n) {
-                for (INode targetNode : mTargetNodes) {
+                for (INode targetNode : nodes) {
                     if (valueId != null) {
                         targetNode.setAttribute(mUri, mAttribute, valueId);
                     } else {

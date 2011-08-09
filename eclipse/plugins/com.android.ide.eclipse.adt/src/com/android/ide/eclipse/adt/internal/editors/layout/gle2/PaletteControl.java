@@ -23,7 +23,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction.Toggle;
+import com.android.ide.common.api.RuleAction.Toggle;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;

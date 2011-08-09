@@ -184,24 +184,6 @@ public class GestureManager {
     }
 
     /**
-     * Returns the {@link DropTargetListener} used by the GestureManager. This
-     * is a bit leaky, but the Outline is reusing all this code... This should
-     * be separated out.
-     */
-    /* package */DropTargetListener getDropTargetListener() {
-        return mDropListener;
-    }
-
-    /**
-     * Returns the {@link DragSourceListener} used by the GestureManager. This
-     * is a bit leaky, but the Outline is reusing all this code... This should
-     * be separated out.
-     */
-    /* package */DragSourceListener getDragSourceListener() {
-        return mDragSourceListener;
-    }
-
-    /**
      * Registers all the listeners needed by the {@link GestureManager}.
      *
      * @param dragSource The drag source in the {@link LayoutCanvas} to listen
