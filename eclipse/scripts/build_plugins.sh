@@ -239,4 +239,9 @@ if [ -n "$ECLIPSE_PID" ] && [ -f "$PID_FILE" ]; then
   kill -9 "$ECLIPSE_PID"
 fi
 
+# Remove build files left by Eclipse all behind
+rm -fv *.properties *.xml
+find . -name "@*" | xargs rm -rfv
+
+
 # we're done!
