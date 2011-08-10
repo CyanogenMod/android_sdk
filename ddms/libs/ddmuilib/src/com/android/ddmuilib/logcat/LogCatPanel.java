@@ -17,7 +17,9 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmuilib.SelectionDependentPanel;
+import com.android.ddmuilib.TableHelper;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -26,7 +28,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 
 /**
  * LogCatPanel displays a table listing the logcat messages.
@@ -40,13 +41,16 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private TableViewer mViewer;
     private LogCatReceiver mReceiver;
+    private IPreferenceStore mPrefStore;
 
     /**
      * Construct a logcat panel.
      * @param r source of logcat messages.
+     * @param prefStore preference store where UI preferences will be saved
      */
-    public LogCatPanel(LogCatReceiver r) {
+    public LogCatPanel(LogCatReceiver r, IPreferenceStore prefStore) {
         mReceiver = r;
+        mPrefStore = prefStore;
         mReceiver.addMessageReceivedEventListener(this);
     }
 
@@ -86,8 +90,8 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.getTable().setLayoutData(gd);
         table.getHorizontalBar().setVisible(true);
 
-        /** Fields to show in the table. */
-        String []properties = {
+        /** Columns to show in the table. */
+        String[] properties = {
                 "Level",
                 "Time",
                 "PID",
@@ -95,19 +99,23 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "Text",
         };
 
-        /** Column widths (in px) corresponding to the above fields. */
-        int []colWidths = {
-                50,
-                150,
-                50,
-                200,
-                1000,
+        /** The sampleText for each column is used to determine the default widths
+         * for each column. The contents do not matter, only their lengths are needed. */
+        String[] sampleText = {
+                "    II",
+                "    00-00 00:00:00.0000 ",
+                "    0000",
+                "    SampleTagText",
+                "    Log Message field should be pretty long by default.",
         };
 
         for (int i = 0; i < properties.length; i++) {
-            TableColumn col = new TableColumn(mViewer.getTable(), SWT.NONE, i);
-            col.setWidth(colWidths[i]);
-            col.setText(properties[i]);
+            TableHelper.createTableColumn(mViewer.getTable(),
+                    properties[i],                      /* Column title */
+                    SWT.LEFT,                           /* Column Style */
+                    sampleText[i],                      /* String to compute default col width */
+                    getPreferenceKey(properties[i]),    /* Preference Store key for this column */
+                    mPrefStore);
         }
 
         mViewer.getTable().setLinesVisible(true); /* zebra stripe the table */
@@ -116,6 +124,10 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.setLabelProvider(new LogCatMessageLabelProvider(MSG_WRAP_WIDTH));
         mViewer.setContentProvider(new LogCatMessageContentProvider());
         mViewer.setInput(mReceiver.getMessages());
+    }
+
+    private String getPreferenceKey(String field) {
+        return "logcat.view.colsize." + field;
     }
 
     @Override
