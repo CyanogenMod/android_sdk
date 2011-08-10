@@ -1758,8 +1758,20 @@ public class GraphicalEditorPart extends EditorPart
                 addBoldText(mErrorLabel, message);
             }
 
-            String problems = logger.getProblems();
+            String problems = logger.getProblems(false /*includeFidelityWarnings*/);
             addText(mErrorLabel, problems);
+
+            List<String> fidelityWarnings = logger.getFidelityWarnings();
+            if (fidelityWarnings != null && fidelityWarnings.size() > 0) {
+                addText(mErrorLabel,
+                        "The graphics preview in the layout editor may not be accurate:\n");
+                for (String warning : fidelityWarnings) {
+                    addText(mErrorLabel, warning + ' ');
+                    addActionLink(mErrorLabel,
+                            ActionLinkStyleRange.IGNORE_FIDELITY_WARNING,
+                            "(Ignore for this session)\n", warning, null);
+                }
+            }
 
             mSashError.setMaximizedControl(null);
         } else {
@@ -1938,6 +1950,8 @@ public class GraphicalEditorPart extends EditorPart
         private static final int LINK_SHOW_LOG = 5;
         /** Change the class reference to the given fully qualified name */
         private static final int LINK_CHANGE_CLASS_TO = 6;
+        /** Ignore the given fidelity warning */
+        private static final int IGNORE_FIDELITY_WARNING = 7;
 
         /** Client data 1 - usually the class name */
         private final String mData1;
@@ -2035,6 +2049,10 @@ public class GraphicalEditorPart extends EditorPart
                     } catch (BadLocationException e) {
                         AdtPlugin.log(e, null);
                     }
+                    break;
+                case IGNORE_FIDELITY_WARNING:
+                    RenderLogger.ignoreFidelityWarning(mData1);
+                    recomputeLayout();
                     break;
                 default:
                     break;
