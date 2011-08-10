@@ -52,7 +52,7 @@ function check_params() {
   cd "$D/../../../" && echo "Switched to directory $PWD"
 
   # The current Eclipse build has some Linux dependency in its config files
-  [ `uname` == "Linux" ] || die "This must run from a Linux box."
+  [ `uname` == "Linux" -o `uname` == "Darwin" ] || die "This must run from a Linux or Mac OSX box."
 
   # Check dest dir exists
   [ -n "$DEST_DIR" ] || die "Usage: $0 <destination-directory> [build-number]"

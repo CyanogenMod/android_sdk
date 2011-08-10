@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# build script for eclipse adt build on linux platform
+# build script for eclipse adt build on the Linux and Mac platforms
 #
 # Usage: sdk/eclipse/scripts/build_plugins <build_version>
 #
@@ -18,7 +18,7 @@
 # - Build does not properly clean up after itself (build server always executes from
 #   a clean state.)
 # - Script will fail if current absolute path has spaces in it.
-# - Only linux is supported for now
+# - Only linux and OSX are supported for now
 # - Do NOT manually invoke this script. Instead use the build_server.sh wrapper
 #   which does some extra preliminary steps (it builds a few libs needed here.)
 
@@ -59,7 +59,18 @@ function dieWithUsage() {
 # build.properties file. We can easily support other platforms but would need
 # to override those values in this script.
 HOST=`uname`
-[ "$HOST" == "Linux" ] || die "ERROR: This script is currently only supported on Linux platform"
+if [ "$HOST" == "Linux" ]; then
+  BASEOS=linux
+  BASEWS=gtk
+  BASEARCH=x86
+elif [ "$HOST" == "Darwin" ]; then
+  BASEOS=macosx
+  BASEWS=cocoa
+  BASEARCH=x86
+else
+  die "ERROR: This script is currently only supported on Linux and MacOSX."
+fi
+
 
 # Make sure this runs from the sdk/eclipse plugin.
 D=`dirname "$0"`
@@ -188,6 +199,7 @@ find . -name "@*" | xargs rm -rfv
 
 set +e  # don't stop on errors anymore, we want to catch them here
 
+
 java \
   -jar $LAUNCHER \
   -data "$CONFIG_DIR" \
@@ -198,6 +210,9 @@ java \
   -DbuildDirectory=$PWD \
   -DforceContextQualifier=$BUILD_VERSION \
   -DECLIPSE_HOME=$ECLIPSE_HOME \
+  -Dbaseos=$BASEOS \
+  -Dbasews=$BASEWS \
+  -Dbasearch=$BASEARCH \
   $SITE_PARAM
 RESULT=$?
 
