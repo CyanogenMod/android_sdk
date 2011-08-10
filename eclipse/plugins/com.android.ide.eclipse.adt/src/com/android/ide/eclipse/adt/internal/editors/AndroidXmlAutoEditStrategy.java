@@ -93,9 +93,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
             if (model != null) {
                 try {
                     final int offset = c.offset;
-                    int lineInfoOffset = (offset == doc.getLength() ? offset - 1 : offset);
-                    IRegion info = doc.getLineInformationOfOffset(lineInfoOffset);
-                    int lineStart = info.getOffset();
+                    int lineStart = findLineStart(doc, offset);
                     int textStart = findTextStart(doc, lineStart, offset);
 
                     IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(textStart);
@@ -187,6 +185,20 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
     }
 
     /**
+     * Returns the offset of the start of the line (which might be whitespace)
+     *
+     * @param document the document
+     * @param offset an offset for a character anywhere on the line
+     * @return the offset of the first character on the line
+     * @throws BadLocationException if the offset is invalid
+     */
+    public static int findLineStart(IDocument document, int offset) throws BadLocationException {
+        offset = Math.min(offset, document.getLength() - 1);
+        IRegion info = document.getLineInformationOfOffset(offset);
+        return info.getOffset();
+    }
+
+    /**
      * Finds the first non-whitespace character on the given line
      *
      * @param document the document to search
@@ -197,7 +209,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
      *         whichever is smallest
      * @throws BadLocationException if the offsets are invalid
      */
-    private static int findTextStart(IDocument document, int lineStart, int lineEnd)
+    public static int findTextStart(IDocument document, int lineStart, int lineEnd)
             throws BadLocationException {
         for (int offset = lineStart; offset < lineEnd; offset++) {
             char c = document.getChar(offset);
@@ -223,9 +235,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
             return;
         }
 
-        int offset = Math.min(command.offset, doc.getLength() - 1);
-        IRegion info = doc.getLineInformationOfOffset(offset);
-        int lineStart = info.getOffset();
+        int lineStart = findLineStart(doc, command.offset);
         int textStart = findTextStart(doc, lineStart, command.offset);
 
         StringBuilder sb = new StringBuilder(command.text);
