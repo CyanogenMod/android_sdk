@@ -29,6 +29,7 @@ import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.AllocationPanel;
+import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.DevicePanel;
 import com.android.ddmuilib.EmulatorControlPanel;
 import com.android.ddmuilib.HeapPanel;
@@ -1365,7 +1366,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     }
 
     private void createLogCatView(Composite parent) {
-        mLogCatPanel = new LogCatPanel(new LogCatReceiver());
+        mLogCatPanel = new LogCatPanel(new LogCatReceiver(), DdmUiPreferences.getStore());
         mLogCatPanel.createPanel(parent);
 
         if (mCurrentDevice != null) {
