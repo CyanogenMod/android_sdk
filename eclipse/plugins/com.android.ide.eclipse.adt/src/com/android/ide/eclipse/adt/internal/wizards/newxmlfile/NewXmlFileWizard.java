@@ -19,7 +19,12 @@
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileCreationPage.TypeInfo;
 import com.android.resources.ResourceFolderType;
 import com.android.util.Pair;
@@ -36,6 +41,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
@@ -107,19 +113,32 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
      */
     @Override
     public boolean performFinish() {
-        Pair<IFile, IRegion> created = createXmlFile();
+        final Pair<IFile, IRegion> created = createXmlFile();
         if (created == null) {
             return false;
         } else {
-            IFile file = created.getFirst();
-
             // Open the file
-            try {
-                AdtPlugin.openFile(file, null, false /* showEditorTab */);
-            } catch (PartInitException e) {
-                AdtPlugin.log(e, "Failed to create %1$s: missing type",  //$NON-NLS-1$
-                        file.getFullPath().toString());
-            }
+            // This has to be delayed in order for focus handling to work correctly
+            AdtPlugin.getDisplay().asyncExec(new Runnable() {
+                public void run() {
+                    IFile file = created.getFirst();
+                    IRegion region = created.getSecond();
+                    try {
+                        IEditorPart editor = AdtPlugin.openFile(file, null,
+                                false /*showEditorTab*/);
+                        if (editor instanceof AndroidXmlEditor) {
+                            final AndroidXmlEditor xmlEditor = (AndroidXmlEditor)editor;
+                            if (!xmlEditor.hasMultiplePages()) {
+                                xmlEditor.show(region.getOffset(), region.getLength(),
+                                        true /* showEditorTab */);
+                            }
+                        }
+                    } catch (PartInitException e) {
+                        AdtPlugin.log(e, "Failed to create %1$s: missing type", //$NON-NLS-1$
+                                file.getFullPath().toString());
+                    }
+                }});
+
             return true;
         }
     }
@@ -147,12 +166,12 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
         String attrs = type.getDefaultAttrs(mMainPage.getProject(), root);
 
         String child = type.getChild(mMainPage.getProject(), root);
-        return createXmlFile(file, xmlns, root, attrs, child);
+        return createXmlFile(file, xmlns, root, attrs, child, type.getResFolderType());
     }
 
     /** Creates a new file using the given root element, namespace and root attributes */
     private static Pair<IFile, IRegion> createXmlFile(IFile file, String xmlns,
-            String root, String rootAttributes, String child) {
+            String root, String rootAttributes, String child, ResourceFolderType folderType) {
         String name = file.getFullPath().toString();
         boolean need_delete = false;
 
@@ -185,23 +204,42 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             sb.append(child);
         }
 
-        // The insertion line
-        sb.append("    ");                           //$NON-NLS-1$
-        int caretOffset = sb.length();
-        sb.append("\n");                             //$NON-NLS-1$
+        // Insert an indented caret. Since the markup here will be reformatted, we need to
+        // insert text tokens that the formatter will preserve, which we can then turn back
+        // into indentation and a caret offset:
+        final String indentToken = "${indent}"; //$NON-NLS-1$
+        final String caretToken = "${caret}";   //$NON-NLS-1$
+        sb.append(indentToken);
+        sb.append(caretToken);
 
         sb.append("</").append(root).append(">\n");  //$NON-NLS-1$ //$NON-NLS-2$
 
-        String result = sb.toString();
+        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+        String fileContents;
+        if (AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
+            fileContents = sb.toString();
+        } else {
+            XmlFormatStyle style = XmlFormatStyle.getForFolderType(folderType);
+            fileContents = XmlPrettyPrinter.prettyPrint(sb.toString(), formatPrefs,
+                                style, null /*lineSeparator*/);
+        }
+
+        // Remove marker tokens and replace them with whitespace
+        fileContents = fileContents.replace(indentToken, formatPrefs.getOneIndentUnit());
+        int caretOffset = fileContents.indexOf(caretToken);
+        if (caretOffset != -1) {
+            fileContents = fileContents.replace(caretToken, ""); //$NON-NLS-1$
+        }
+
         String error = null;
         try {
-            byte[] buf = result.getBytes("UTF8");    //$NON-NLS-1$
+            byte[] buf = fileContents.getBytes("UTF8");    //$NON-NLS-1$
             InputStream stream = new ByteArrayInputStream(buf);
             if (need_delete) {
                 file.delete(IResource.KEEP_HISTORY | IResource.FORCE, null /*monitor*/);
             }
             file.create(stream, true /*force*/, null /*progress*/);
-            IRegion region = new Region(caretOffset, 0);
+            IRegion region = caretOffset != -1 ? new Region(caretOffset, 0) : null;
             return Pair.of(file, region);
         } catch (UnsupportedEncodingException e) {
             error = e.getMessage();
@@ -244,7 +282,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             root = type.getRootSeed().toString();
         }
         String attrs = type.getDefaultAttrs(project, root);
-        return createXmlFile(file, xmlns, root, attrs, null);
+        return createXmlFile(file, xmlns, root, attrs, null, folderType);
     }
 
     public static boolean createWsParentDirectory(IContainer wsPath) {

@@ -23,26 +23,33 @@ import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.resources.ResourceFolderType;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
 import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Visitor which walks over the subtree of the DOM to be formatted and pretty prints
  * the DOM into the given {@link StringBuilder}
  */
 @SuppressWarnings("restriction")
-class XmlPrettyPrinter {
+public class XmlPrettyPrinter {
     /** The style to print the XML in */
     private final XmlFormatStyle mStyle;
     /** Formatting preferences to use when formatting the XML */
@@ -68,13 +75,63 @@ class XmlPrettyPrinter {
      * @param lineSeparator the line separator to use, such as "\n" (can be null, in which
      *     case the system default is looked up via the line.separator property)
      */
-    XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style, String lineSeparator) {
+    public XmlPrettyPrinter(XmlFormatPreferences prefs, XmlFormatStyle style,
+            String lineSeparator) {
         mPrefs = prefs;
         mStyle = style;
         if (lineSeparator == null) {
             lineSeparator = System.getProperty("line.separator"); //$NON-NLS-1$
         }
         mLineSeparator = lineSeparator;
+    }
+
+    /**
+     * Creates a new {@link XmlPrettyPrinter}
+     *
+     * @param prefs the preferences to format with
+     * @param folderType the type of resource folder containing the XML content to be formatted
+     * @param lineSeparator the line separator to use, such as "\n"
+     */
+    public XmlPrettyPrinter(XmlFormatPreferences prefs, ResourceFolderType folderType,
+            String lineSeparator) {
+        this(prefs, XmlFormatStyle.getForFolderType(folderType), lineSeparator);
+    }
+
+    /**
+     * Pretty-prints the given XML document, which must be well-formed. If it is not,
+     * the original unformatted XML document is returned
+     *
+     * @param xml the XML content to format
+     * @param prefs the preferences to format with
+     * @param style the style to format with
+     * @param lineSeparator the line separator to use, such as "\n" (can be null, in which
+     *     case the system default is looked up via the line.separator property)
+     * @return the formatted document
+     */
+    public static String prettyPrint(String xml, XmlFormatPreferences prefs, XmlFormatStyle style,
+            String lineSeparator) {
+        try {
+            // TODO: Use the proper XML model from Eclipse such that I can handle empty
+            // tags properly. Unfortunately, this is tricky; the Eclipse XML model wants to
+            // be tied to an IFile. A possible solution is described in
+            // http://www.eclipse.org/forums/index.php/t/73640/ .
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            InputSource is = new InputSource(new StringReader(xml));
+            factory.setIgnoringComments(false);
+            factory.setIgnoringElementContentWhitespace(false);
+            factory.setCoalescing(false);
+            factory.setNamespaceAware(true);
+            factory.setValidating(false);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(is);
+
+            XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, lineSeparator);
+            StringBuilder sb = new StringBuilder(1000);
+            printer.prettyPrint(-1, document, null, null, sb);
+            return sb.toString();
+        } catch (Exception e) {
+            return xml;
+        }
     }
 
     /**

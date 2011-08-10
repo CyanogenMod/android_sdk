@@ -15,6 +15,12 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceType;
+import com.android.sdklib.SdkConstants;
+
+import org.eclipse.core.runtime.IPath;
+
 /**
  * Style to use when printing the XML. Different types of Android XML files use slightly
  * different preferred formats. For example, in layout files there is typically always a
@@ -24,7 +30,7 @@ package com.android.ide.eclipse.adt.internal.editors.formatting;
  * included on the same line whereas for other layout styles the children are typically
  * placed on a line of their own.
  */
-enum XmlFormatStyle {
+public enum XmlFormatStyle {
     /** Layout formatting style: blank lines between elements, attributes on separate lines */
     LAYOUT,
 
@@ -38,4 +44,61 @@ enum XmlFormatStyle {
      * single block with no whitespace within it)
      */
     MANIFEST;
+
+    /**
+     * Returns the {@link XmlFormatStyle} to use for a resource of the given type
+     *
+     * @param resourceType the type of resource to be formatted
+     * @return the suitable format style to use
+     */
+    public static XmlFormatStyle get(ResourceType resourceType) {
+        switch (resourceType) {
+            case ARRAY:
+            case ATTR:
+            case BOOL:
+            case DECLARE_STYLEABLE:
+            case DIMEN:
+            case FRACTION:
+            case ID:
+            case INTEGER:
+            case STRING:
+            case STYLE:
+            case STYLEABLE:
+                return RESOURCE;
+
+            default:
+                return LAYOUT;
+        }
+    }
+
+    /**
+     * Returns the {@link XmlFormatStyle} to use for resource files in the given resource
+     * folder
+     *
+     * @param folderType the type of folder containing the resource file
+     * @return the suitable format style to use
+     */
+    public static XmlFormatStyle getForFolderType(ResourceFolderType folderType) {
+        if (folderType == ResourceFolderType.VALUES) {
+            return RESOURCE;
+        } else {
+            return LAYOUT;
+        }
+    }
+
+    /**
+     * Returns the {@link XmlFormatStyle} to use for resource files of the given path.
+     *
+     * @param path the path to the resource file
+     * @return the suitable format style to use
+     */
+    public static XmlFormatStyle getForFile(IPath path) {
+        if (SdkConstants.FN_ANDROID_MANIFEST_XML.equals(path.lastSegment())) {
+            return MANIFEST;
+        }
+
+        String parentName = path.segment(path.segmentCount() - 1);
+        ResourceFolderType folderType = ResourceFolderType.getFolderType(parentName);
+        return getForFolderType(folderType);
+    }
 }
