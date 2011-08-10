@@ -22,7 +22,9 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import org.eclipse.core.runtime.IStatus;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link LayoutLog} which records the problems it encounters and offers them as a
@@ -35,6 +37,7 @@ class RenderLogger extends LayoutLog {
     private List<String> mErrors;
     private boolean mHaveExceptions;
     private List<String> mTags;
+    private static Set<String> sIgnoredFidelityWarnings;
 
     /** Construct a logger for the given named layout */
     RenderLogger(String name) {
@@ -54,9 +57,11 @@ class RenderLogger extends LayoutLog {
     /**
      * Returns a (possibly multi-line) description of all the problems
      *
+     * @param includeFidelityWarnings if true, include fidelity warnings in the problem
+     *            summary
      * @return a string describing the rendering problems
      */
-    public String getProblems() {
+    public String getProblems(boolean includeFidelityWarnings) {
         StringBuilder sb = new StringBuilder();
 
         if (mErrors != null) {
@@ -71,7 +76,7 @@ class RenderLogger extends LayoutLog {
             }
         }
 
-        if (mFidelityWarnings != null) {
+        if (includeFidelityWarnings && mFidelityWarnings != null) {
             sb.append("The graphics preview in the layout editor may not be accurate:\n");
             for (String warning : mFidelityWarnings) {
                 sb.append("* ");
@@ -84,6 +89,15 @@ class RenderLogger extends LayoutLog {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Returns the fidelity warnings
+     *
+     * @return the fidelity warnings
+     */
+    public List<String> getFidelityWarnings() {
+        return mFidelityWarnings;
     }
 
     // ---- extends LayoutLog ----
@@ -128,6 +142,10 @@ class RenderLogger extends LayoutLog {
 
     @Override
     public void fidelityWarning(String tag, String message, Throwable throwable, Object data) {
+        if (sIgnoredFidelityWarnings != null && sIgnoredFidelityWarnings.contains(message)) {
+            return;
+        }
+
         String description = describe(message);
         AdtPlugin.log(throwable, "%1$s: %2$s", mName, description);
         if (throwable != null) {
@@ -135,6 +153,18 @@ class RenderLogger extends LayoutLog {
         }
 
         addFidelityWarning(tag, description);
+    }
+
+    /**
+     * Ignore the given render fidelity warning for the current session
+     *
+     * @param message the message to be ignored for this session
+     */
+    public static void ignoreFidelityWarning(String message) {
+        if (sIgnoredFidelityWarnings == null) {
+            sIgnoredFidelityWarnings = new HashSet<String>();
+        }
+        sIgnoredFidelityWarnings.add(message);
     }
 
     private String describe(String message) {

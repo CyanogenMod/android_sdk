@@ -31,7 +31,7 @@ public class RenderLoggerTest extends TestCase {
         l.fidelityWarning(null, "No GPS", null, null);
         assertTrue(l.hasProblems());
         assertEquals("The graphics preview in the layout editor may not be accurate:\n"
-                + "* No perspective Transforms\n" + "* No GPS\n", l.getProblems());
+                + "* No perspective Transforms\n" + "* No GPS\n", l.getProblems(true));
         assertFalse(l.seenTag("foo"));
         assertFalse(l.seenTag(null));
     }
@@ -43,7 +43,8 @@ public class RenderLoggerTest extends TestCase {
         l.warning("slow", "Sample warning", null);
         assertTrue(l.hasProblems());
         assertEquals("Sample Error\n" + "Sample warning\n"
-                + "Exception details are logged in Window > Show View > Error Log", l.getProblems());
+                + "Exception details are logged in Window > Show View > Error Log",
+                l.getProblems(true));
         assertFalse(l.seenTag("foo"));
         assertTrue(l.seenTag("timeout"));
         assertTrue(l.seenTag("slow"));
@@ -52,5 +53,30 @@ public class RenderLoggerTest extends TestCase {
         assertTrue(l.seenTagPrefix("slow"));
         assertTrue(l.seenTagPrefix("time"));
         assertFalse(l.seenTagPrefix("timeouts"));
+    }
+
+    public void testLoggerSuppressWarnings() throws Exception {
+        RenderLogger l = new RenderLogger("foo");
+        assertFalse(l.hasProblems());
+        RenderLogger.ignoreFidelityWarning("No perspective Transforms");
+        l.fidelityWarning(null, "No perspective Transforms", null, null);
+        l.fidelityWarning(null, "No GPS", null, null);
+        assertTrue(l.hasProblems());
+        assertEquals("The graphics preview in the layout editor may not be accurate:\n"
+                + "* No GPS\n", l.getProblems(true));
+        assertEquals("", l.getProblems(false));
+        assertFalse(l.seenTag("foo"));
+        assertFalse(l.seenTag(null));
+
+        l = new RenderLogger("foo");
+        assertFalse(l.hasProblems());
+        RenderLogger.ignoreFidelityWarning("No perspective Transforms");
+        RenderLogger.ignoreFidelityWarning("No GPS");
+        l.fidelityWarning(null, "No perspective Transforms", null, null);
+        l.fidelityWarning(null, "No GPS", null, null);
+        assertFalse(l.hasProblems());
+        assertEquals("", l.getProblems(true));
+        assertFalse(l.seenTag("foo"));
+        assertFalse(l.seenTag(null));
     }
 }
