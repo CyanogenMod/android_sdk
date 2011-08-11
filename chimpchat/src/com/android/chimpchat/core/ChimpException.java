@@ -15,25 +15,8 @@
  */
 package com.android.chimpchat.core;
 
-public enum PhysicalButton {
-    HOME("KEYCODE_HOME"),
-    SEARCH("KEYCODE_SEARCH"),
-    MENU("KEYCODE_MENU"),
-    BACK("KEYCODE_BACK"),
-    DPAD_UP("DPAD_UP"),
-    DPAD_DOWN("DPAD_DOWN"),
-    DPAD_LEFT("DPAD_LEFT"),
-    DPAD_RIGHT("DPAD_RIGHT"),
-    DPAD_CENTER("DPAD_CENTER"),
-    ENTER("enter");
-
-    private String keyName;
-
-    private PhysicalButton(String keyName) {
-        this.keyName = keyName;
-    }
-
-    public String getKeyName() {
-        return keyName;
+public class ChimpException extends RuntimeException {
+    public ChimpException(String s) {
+        super(s);
     }
 }

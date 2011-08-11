@@ -20,6 +20,7 @@ import com.android.chimpchat.ChimpManager;
 import com.android.chimpchat.hierarchyviewer.HierarchyViewer;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -94,12 +95,19 @@ public interface IChimpDevice {
     /**
      * Perform a press of a given type using a given key.
      *
-     * TODO: define standard key names in a separate class or enum
-     *
      * @param keyName the name of the key to use
      * @param type the type of press to perform
      */
     void press(String keyName, TouchPressType type);
+
+
+    /**
+     * Perform a press of a given type using a given key.
+     *
+     * @param key the key to press
+     * @param type the type of press to perform
+     */
+    void press(PhysicalButton key, TouchPressType type);
 
     /**
      * Perform a drag from one one location to another
@@ -201,4 +209,28 @@ public interface IChimpDevice {
      * Wake up the screen on the device.
      */
     void wake();
+
+    /**
+     * List the possible view ID strings from the current applications resource file
+     * @return the list of view id strings
+     */
+    Collection<String> getViewIdList();
+
+    /**
+     * Retrieve the view object for the view with the given id.
+     * @return a view object for the view with the given id
+     */
+    IChimpView getView(ISelector selector);
+
+    /**
+     * Retrive the root view object.
+     * @return the root view object.
+     */
+    IChimpView getRootView();
+
+    /**
+     * Retrieves the view objects that match the given selector
+     * @return A list of views that match the given selector
+     */
+    Collection<IChimpView> getViews(IMultiSelector selector);
 }
