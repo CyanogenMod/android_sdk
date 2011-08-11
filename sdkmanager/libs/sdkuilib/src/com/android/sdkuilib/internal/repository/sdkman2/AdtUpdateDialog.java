@@ -157,7 +157,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                 mStatusText,
                 mProgressBar,
                 null /*buttonStop*/,
-                mUpdaterData.getSdkLog()));
+                new SdkLogAdapter(mUpdaterData.getSdkLog())));
         mUpdaterData.setTaskFactory(factory);
 
         setupSources();
