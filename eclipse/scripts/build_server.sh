@@ -60,9 +60,13 @@ function check_params() {
 }
 
 function build_libs() {
-  MAKE_OPT="-j8"
-  echo "*** Building: make $MAKE_OPT dx ping ddms androidprefs layoutlib layoutlib_api ide_common ninepatch sdklib sdkuilib traceview"
-  make $MAKE_OPT dx ping ddms androidprefs layoutlib layoutlib_api ide_common ninepatch sdklib sdkuilib traceview
+  J="8"
+  [[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
+  [[ $(uname) == "Linux"  ]] && J=$(( $(cat /proc/cpuinfo | grep processor | wc -l) + 2 ))
+  MAKE_OPT="-j$J"
+  LIBS="dx ping ddms androidprefs layoutlib layoutlib_api ide_common ninepatch sdklib sdkuilib traceview assetstudio"
+  echo "*** Building: make $MAKE_OPT $LIBS"
+  make $MAKE_OPT $LIBS
 }
 
 function build_plugin {

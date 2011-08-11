@@ -17,4 +17,5 @@ eclipse/plugins/com.android.ide.eclipse.traceview/build.xml
 eclipse/features/com.android.ide.eclipse.*/build.xml
 eclipse/features/com.android.ide.eclipse.*/*.zip
 /eclipse/v[0-9-]*-[0-9]*
+/eclipse/v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
 /status-output
