@@ -20,6 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 
 import com.android.chimpchat.ChimpChat;
+import com.android.chimpchat.core.By;
+import com.android.chimpchat.core.IChimpView;
 import com.android.chimpchat.core.IChimpDevice;
 import com.android.chimpchat.core.IChimpImage;
 import com.android.chimpchat.core.TouchPressType;
@@ -31,11 +33,13 @@ import org.python.core.ArgParser;
 import org.python.core.ClassDictInit;
 import org.python.core.Py;
 import org.python.core.PyDictionary;
+import org.python.core.PyList;
 import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -177,19 +181,14 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         String name = ap.getString(0);
-        String touchType = ap.getString(1);
+        String touchType = ap.getString(1, DOWN_AND_UP);
 
         // The old docs had this string, and so in favor of maintaining
         // backwards compatibility, let's special case it to the new one.
         if (touchType.equals("DOWN_AND_UP")){
             touchType = "downAndUp";
         }
-        TouchPressType type = TouchPressType.fromIdentifier(ap.getString(1));
-        if (type == null) {
-            LOG.warning(String.format("Invalid TouchPressType specified (%s) default used instead",
-                    ap.getString(1)));
-            type = TouchPressType.DOWN_AND_UP;
-        }
+        TouchPressType type = TouchPressType.fromIdentifier(touchType);
 
         impl.press(name, type);
     }
@@ -356,5 +355,75 @@ public class MonkeyDevice extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         impl.wake();
+    }
+
+
+    @MonkeyRunnerExported(doc = "Retrieve the properties that can be queried")
+    public PyList getPropertyList(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        Collection<String> properties = impl.getPropertyList();
+        return new PyList(properties);
+    }
+
+    @MonkeyRunnerExported(doc = "Retrieve the view ids for the current application")
+    public PyList getViewIdList(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        Collection<String> viewIds = impl.getViewIdList();
+        return new PyList(viewIds);
+    }
+
+     //Because the pythonic way is to have flatter hierarchies, rather than doing the
+     //findView(By.id("foo")) style the java code uses, I'm going to expose them as individual
+     //method calls. This is similar to WebDriver's python bindings.
+    @MonkeyRunnerExported(doc = "Obtains the view with the specified id.",
+                          args = {"id"},
+                          argDocs = {"The id of the view to retrieve."},
+                          returns = "The view object with the specified id.")
+    public MonkeyView getViewById(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        String id = ap.getString(0);
+        IChimpView view = impl.getView(By.id(id));
+        return new MonkeyView(view);
+    }
+
+    @MonkeyRunnerExported(doc = "Obtains the view with the specified accessibility ids.",
+                          args = {"windowId", "accessibility id"},
+                          argDocs = {"The window id of the view to retrieve.",
+                                     "The accessibility id of the view to retrieve."},
+                          returns = "The view object with the specified id.")
+    public MonkeyView getViewByAccessibilityIds(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        int windowId = ap.getInt(0);
+        int accessibilityId = ap.getInt(1);
+        IChimpView view = impl.getView(By.accessibilityIds(windowId, accessibilityId));
+        return new MonkeyView(view);
+    }
+
+    @MonkeyRunnerExported(doc = "Obtains current root view",
+                          returns = "The root view object")
+    public MonkeyView getRootView(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        return new MonkeyView(impl.getRootView());
+    }
+
+    @MonkeyRunnerExported(doc = "Obtains a list of views that contain the specified text.",
+                          args = {"text"},
+                          argDocs = {"The text to search for"},
+                          returns = "A list of view objects that contain the specified text.")
+    public PyList getViewsByText(PyObject[] args, String[] kws) {
+        ArgParser ap = JythonUtils.createArgParser(args, kws);
+        Preconditions.checkNotNull(ap);
+        String text = ap.getString(0);
+        Collection<IChimpView> views = impl.getViews(By.text(text));
+        PyList pyViews = new PyList();
+        for (IChimpView view : views) {
+            pyViews.append(new MonkeyView(view));
+        }
+        return pyViews;
     }
 }

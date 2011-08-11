@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.chimpchat.core;
 
-public enum PhysicalButton {
-    HOME("KEYCODE_HOME"),
-    SEARCH("KEYCODE_SEARCH"),
-    MENU("KEYCODE_MENU"),
-    BACK("KEYCODE_BACK"),
-    DPAD_UP("DPAD_UP"),
-    DPAD_DOWN("DPAD_DOWN"),
-    DPAD_LEFT("DPAD_LEFT"),
-    DPAD_RIGHT("DPAD_RIGHT"),
-    DPAD_CENTER("DPAD_CENTER"),
-    ENTER("enter");
+import com.android.chimpchat.ChimpManager;
 
-    private String keyName;
+import java.util.Collection;
 
-    private PhysicalButton(String keyName) {
-        this.keyName = keyName;
-    }
-
-    public String getKeyName() {
-        return keyName;
-    }
+/** An interface for selectors that select more than one item */
+public interface IMultiSelector {
+    /**
+     * A method that allows you to get a list of  views based on the given selector type
+     */
+    Collection<IChimpView> getViews(ChimpManager manager);
 }
