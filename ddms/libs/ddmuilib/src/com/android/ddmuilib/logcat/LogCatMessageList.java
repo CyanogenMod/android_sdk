@@ -54,6 +54,13 @@ public final class LogCatMessageList {
     }
 
     /**
+     * Clear all messages in the list.
+     */
+    public synchronized void clear() {
+        mQ.clear();
+    }
+
+    /**
      * Obtain all the messages currently present in the list.
      * @return array containing all the log messages
      */
