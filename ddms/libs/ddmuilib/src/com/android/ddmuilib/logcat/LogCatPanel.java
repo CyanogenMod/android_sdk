@@ -345,11 +345,17 @@ public final class LogCatPanel extends SelectionDependentPanel
         clearLog.setImage(
                 ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_CLEAR_LOG, toolBar.getDisplay()));
         clearLog.setToolTipText("Clear Log");
+        clearLog.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                mReceiver.clearMessages();
+                mViewer.refresh();
+            }
+        });
 
         /* FIXME: Enable all the UI elements after adding support for user interaction with them. */
         mLiveFilterText.setEnabled(false);
         mLiveFilterLevelCombo.setEnabled(false);
-        clearLog.setEnabled(false);
     }
 
     /**
