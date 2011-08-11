@@ -89,8 +89,9 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
     private ProgressBar mProgressBar;
     private Label mStatusText;
     private ImgDisabledButton mButtonStop;
-    private ToggleButton mButtonDetails;
+    private ToggleButton mButtonShowLog;
     private SettingsController mSettingsController;
+    private LogWindow mLogWindow;
 
     /**
      * Creates a new window. Caller must call open(), which will block.
@@ -144,6 +145,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         preCreateContent();
         createContents();
         createMenuBar();
+        createLogWindow();
         mShell.open();
         mShell.layout();
 
@@ -207,12 +209,12 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
             }
         });
 
-        mButtonDetails = new ToggleButton(composite2, SWT.NONE,
+        mButtonShowLog = new ToggleButton(composite2, SWT.NONE,
                 getImage("collapsed_16.png"),   //$NON-NLS-1$
                 getImage("expanded_16.png"));   //$NON-NLS-1$
-        mButtonDetails.addListener(SWT.Selection, new Listener() {
+        mButtonShowLog.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
-                onToggleDetails();
+                onToggleLogWindow();
             }
         });
     }
@@ -348,6 +350,19 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         return null;
     }
 
+    /**
+     * Creates the log window.
+     * <p/>
+     * If this is invoked from an IDE, we also define a secondary logger so that all
+     * messages flow to the IDE log. This may or may not be what we want in the end
+     * (e.g. a middle ground would be to repeat error, and ignore normal/verbose)
+     */
+    private void createLogWindow() {
+        mLogWindow = new LogWindow(mShell,
+                mContext == SdkInvocationContext.IDE ? mUpdaterData.getSdkLog() : null);
+        mLogWindow.open();
+    }
+
 
     // -- Start of internal part ----------
     // Hide everything down-below from SWT designer
@@ -425,7 +440,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     /**
      * Once the UI has been created, initializes the content.
-     * This creates the pages, selects the first one, setup sources and scan for local folders.
+     * This creates the pages, selects the first one, setups sources and scans for local folders.
      *
      * Returns true if we should show the window.
      */
@@ -433,7 +448,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         ProgressViewFactory factory = new ProgressViewFactory();
         factory.setProgressView(new ProgressView(
                 mStatusText, mProgressBar, mButtonStop,
-                mContext == SdkInvocationContext.IDE ? mUpdaterData.getSdkLog() : null));
+                mLogWindow));
         mUpdaterData.setTaskFactory(factory);
 
         setWindowImage(mShell);
@@ -482,6 +497,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * Called by the main loop when the window has been disposed.
      */
     private void dispose() {
+        mLogWindow.close();
         mUpdaterData.getSources().saveUserAddons(mUpdaterData.getSdkLog());
     }
 
@@ -516,8 +532,10 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         mSettingsController.applySettings();
     }
 
-    private void onToggleDetails() {
-        mButtonDetails.setState(1 - mButtonDetails.getState());
+    private void onToggleLogWindow() {
+        // toggle visibility
+        mLogWindow.setVisible(!mLogWindow.isVisible());
+        mButtonShowLog.setState(mLogWindow.isVisible() ? 1 : 0);
     }
 
     private void onStopSelected() {
