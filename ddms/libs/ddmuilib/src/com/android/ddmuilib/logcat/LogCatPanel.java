@@ -21,6 +21,7 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -35,6 +36,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
@@ -42,7 +44,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -80,6 +86,8 @@ public final class LogCatPanel extends SelectionDependentPanel
     private Text mLiveFilterText;
 
     private TableViewer mViewer;
+
+    private String mLogFileExportFolder;
 
     /**
      * Construct a logcat panel.
@@ -325,7 +333,13 @@ public final class LogCatPanel extends SelectionDependentPanel
         ToolItem saveToLog = new ToolItem(toolBar, SWT.PUSH);
         saveToLog.setImage(ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_SAVE_LOG_TO_FILE,
                 toolBar.getDisplay()));
-        saveToLog.setToolTipText("Export Log To Text File.");
+        saveToLog.setToolTipText("Export Selected Items To Text File..");
+        saveToLog.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                saveLogToFile();
+            }
+        });
 
         ToolItem clearLog = new ToolItem(toolBar, SWT.PUSH);
         clearLog.setImage(
@@ -335,13 +349,96 @@ public final class LogCatPanel extends SelectionDependentPanel
         /* FIXME: Enable all the UI elements after adding support for user interaction with them. */
         mLiveFilterText.setEnabled(false);
         mLiveFilterLevelCombo.setEnabled(false);
-        toolBar.setEnabled(false);
+        clearLog.setEnabled(false);
+    }
+
+    /**
+     * Save logcat messages selected in the table to a file.
+     */
+    private void saveLogToFile() {
+        /* show dialog box and get target file name */
+        final String fName = getLogFileTargetLocation();
+        if (fName == null) {
+            return;
+        }
+
+        /* obtain list of selected messages */
+        final List<LogCatMessage> selectedMessages = getSelectedLogCatMessages();
+
+        /* save messages to file in a different (non UI) thread */
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    BufferedWriter w = new BufferedWriter(new FileWriter(fName));
+                    for (LogCatMessage m : selectedMessages) {
+                        w.append(m.toString());
+                        w.newLine();
+                    }
+                    w.close();
+                } catch (final IOException e) {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        public void run() {
+                            MessageDialog.openError(Display.getCurrent().getActiveShell(),
+                                    "Unable to export selection to file.",
+                                    "Unexpected error while saving selected messages to file: "
+                                            + e.getMessage());
+                        }
+                    });
+                }
+            }
+        });
+        t.setName("Saving selected items to logfile..");
+        t.start();
+    }
+
+    /**
+     * Display a {@link FileDialog} to the user and obtain the location for the log file.
+     * @return path to target file, null if user canceled the dialog
+     */
+    private String getLogFileTargetLocation() {
+        FileDialog fd = new FileDialog(Display.getCurrent().getActiveShell(), SWT.SAVE);
+
+        fd.setText("Save Log..");
+        fd.setFileName("log.txt");
+
+        if (mLogFileExportFolder == null) {
+            mLogFileExportFolder = System.getProperty("user.home");
+        }
+        fd.setFilterPath(mLogFileExportFolder);
+
+        fd.setFilterNames(new String[] {
+                "Text Files (*.txt)"
+        });
+        fd.setFilterExtensions(new String[] {
+                "*.txt"
+        });
+
+        String fName = fd.open();
+        if (fName != null) {
+            mLogFileExportFolder = fd.getFilterPath();  /* save path to restore on future calls */
+        }
+
+        return fName;
+    }
+
+    private List<LogCatMessage> getSelectedLogCatMessages() {
+        Table table = mViewer.getTable();
+        int[] indices = table.getSelectionIndices();
+        Arrays.sort(indices); /* Table.getSelectionIndices() does not specify an order */
+
+        List<LogCatMessage> selectedMessages = new ArrayList<LogCatMessage>(indices.length);
+        for (int i : indices) {
+            LogCatMessage m = (LogCatMessage) table.getItem(i).getData();
+            selectedMessages.add(m);
+        }
+
+        return selectedMessages;
     }
 
     private void createLogcatViewTable(Composite parent) {
         /* SWT.VIRTUAL style will make the table render faster, but all rows will be
          * of equal heights which causes wrapped messages to just be clipped. */
-        final Table table = new Table(parent, SWT.FULL_SELECTION);
+        final Table table = new Table(parent, SWT.FULL_SELECTION | SWT.MULTI);
         mViewer = new TableViewer(table);
 
         table.setLayoutData(new GridData(GridData.FILL_BOTH));
