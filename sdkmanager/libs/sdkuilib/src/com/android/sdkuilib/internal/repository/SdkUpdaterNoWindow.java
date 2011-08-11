@@ -23,7 +23,9 @@ import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.util.Pair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -336,6 +338,74 @@ public class SdkUpdaterNoWindow {
         }
 
         /**
+         * Displays a prompt message to the user and read two values,
+         * login/password.
+         * <p>
+         * <i>Asks user for login/password information.</i>
+         * <p>
+         * This method shows a question in the standard output, asking for login
+         * and password.</br>
+         * <b>Method Output:</b></br>
+         *     Title</br>
+         *     Message</br>
+         *     Login: (Wait for user input)</br>
+         *     Password: (Wait for user input)</br>
+         * <p>
+         *
+         * @param title The title of the iteration.
+         * @param message The message to be displayed.
+         * @return A {@link Pair} holding the entered login and password. The
+         *         <b>first element</b> is always the <b>Login</b>, and the
+         *         <b>second element</b> is always the <b>Password</b>. This
+         *         method will never return null, in case of error the pair will
+         *         be filled with empty strings.
+         * @see ITaskMonitor#displayLoginPasswordPrompt(String, String)
+         */
+        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+            String login = "";    //$NON-NLS-1$
+            String password = ""; //$NON-NLS-1$
+            mSdkLog.printf("\n%1$s\n%2$s", title, message);
+            byte[] readBuffer = new byte[2048];
+            try {
+                mSdkLog.printf("\nLogin: ");
+                login = readLine(readBuffer);
+                mSdkLog.printf("\nPassword: ");
+                password = readLine(readBuffer);
+                /*
+                 * TODO: Implement a way to don't echo the typed password On
+                 * Java 5 there's no simple way to do this. There's just a
+                 * workaround which is output backspaces on each keystroke.
+                 * A good alternative is to use Java 6 java.io.Console
+                 */
+            } catch (IOException e) {
+                // Reset login/pass to empty Strings.
+                login = "";    //$NON-NLS-1$
+                password = ""; //$NON-NLS-1$
+                //Just print the error to console.
+                mSdkLog.printf("\nError occurred during login/pass query: %s\n", e.getMessage());
+            }
+
+            return Pair.of(login, password);
+        }
+
+        private String readLine(byte[] buffer) throws IOException {
+            int count = System.in.read(buffer);
+
+            // is the input longer than the buffer?
+            if (count == buffer.length && buffer[count-1] != 10) {
+                throw new IOException(String.format(
+                        "Input is longer than the buffer size, (%1$s) bytes", buffer.length));
+            }
+
+            // ignore end whitespace
+            while (count > 0 && (buffer[count-1] == '\r' || buffer[count-1] == '\n')) {
+                count--;
+            }
+
+            return new String(buffer, 0, count);
+        }
+
+        /**
          * Creates a sub-monitor that will use up to tickCount on the progress bar.
          * tickCount must be 1 or more.
          */
@@ -431,6 +501,10 @@ public class SdkUpdaterNoWindow {
 
         public boolean displayPrompt(String title, String message) {
             return mRoot.displayPrompt(title, message);
+        }
+
+        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+            return mRoot.displayLoginPasswordPrompt(title, message);
         }
 
         public ITaskMonitor createSubMonitor(int tickCount) {

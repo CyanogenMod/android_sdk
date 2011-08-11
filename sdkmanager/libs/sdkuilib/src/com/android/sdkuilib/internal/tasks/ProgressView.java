@@ -19,11 +19,13 @@ package com.android.sdkuilib.internal.tasks;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdkuilib.ui.AuthenticationDialog;
+import com.android.sdkuilib.ui.GridDialog;
+import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -325,18 +327,51 @@ public final class ProgressView implements IProgressUiProvider {
     public boolean displayPrompt(final String title, final String message) {
         final boolean[] result = new boolean[] { false };
 
-        if (!mProgressBar.isDisposed()) {
-            final Shell shell = mProgressBar.getShell();
-            Display display = shell.getDisplay();
-
-            display.syncExec(new Runnable() {
-                public void run() {
-                    result[0] = MessageDialog.openQuestion(shell, title, message);
-                }
-            });
-        }
+        syncExec(mProgressBar, new Runnable() {
+            public void run() {
+                Shell shell = mProgressBar.getShell();
+                result[0] = MessageDialog.openQuestion(shell, title, message);
+            }
+        });
 
         return result[0];
+    }
+
+    /**
+     * This method opens a pop-up window which requests for User Login and
+     * password.
+     *
+     * @param title The title of the window.
+     * @param message The message to displayed in the login/password window.
+     * @return Returns a {@link Pair} holding the entered login and password.
+     *         The information must always be in the following order:
+     *         Login,Password. So in order to retrieve the <b>login</b> callers
+     *         should retrieve the first element, and the second value for the
+     *         <b>password</b>.
+     *         If operation is <b>canceled</b> by user the return value must be <b>null</b>.
+     * @see ITaskMonitor#displayLoginPasswordPrompt(String, String)
+     */
+    public Pair<String, String>
+            displayLoginPasswordPrompt(final String title, final String message) {
+        final String[] resultArray = new String[] {"", ""};
+        // open dialog and request login and password
+        syncExec(mProgressBar, new Runnable() {
+            public void run() {
+                Shell shell = mProgressBar.getShell();
+                AuthenticationDialog authenticationDialog = new AuthenticationDialog(shell,
+                        title,
+                        message);
+                int dlgResult = authenticationDialog.open();
+                if (dlgResult == GridDialog.OK) {
+                    resultArray[0] = authenticationDialog.getLogin();
+                    resultArray[1] = authenticationDialog.getPassword();
+                } else {
+                    resultArray[0] = null;
+                    resultArray[1] = null;
+                }
+            }
+        });
+        return resultArray[0] == null ? null : Pair.of(resultArray[0], resultArray[1]);
     }
 
     // ----

@@ -23,37 +23,44 @@ make -j3 showcommands $LIBS || die "ADT: Fail to build one of $LIBS."
 
 echo "Copying java libs to $DEST"
 
+# Prebuilts required by sdklib & co, to be linked/copied in the ADT libs folder
+PREBUILTS="\
+    prebuilt/common/kxml2/kxml2-2.3.0.jar \
+    prebuilt/common/commons-compress/commons-compress-1.0.jar \
+    prebuilt/common/http-client/httpclient-4.1.1.jar \
+    prebuilt/common/http-client/httpcore-4.1.jar \
+    prebuilt/common/http-client/httpmime-4.1.1.jar \
+    prebuilt/common/http-client/commons-logging-1.1.1.jar \
+    prebuilt/common/http-client/commons-codec-1.4.jar \
+    "
+
 
 HOST=`uname`
 if [ "$HOST" == "Linux" ]; then
     for LIB in $LIBS; do
         ln -svf $BACK/out/host/linux-x86/framework/$LIB.jar "$DEST/"
     done
-    ln -svf $BACK/out/host/linux-x86/framework/kxml2-2.3.0.jar          "$DEST/"
-    ln -svf $BACK/out/host/linux-x86/framework/commons-compress-1.0.jar "$DEST/"
+
+    for P in $PREBUILTS; do
+        ln -svf $BACK/$P "$DEST/"
+    done
   
 elif [ "$HOST" == "Darwin" ]; then
     for LIB in $LIBS; do
         ln -svf $BACK/out/host/darwin-x86/framework/$LIB.jar "$DEST/"
     done
-    ln -svf $BACK/out/host/darwin-x86/framework/kxml2-2.3.0.jar          "$DEST/"
-    ln -svf $BACK/out/host/darwin-x86/framework/commons-compress-1.0.jar "$DEST/"
+
+    for P in $PREBUILTS; do
+        ln -svf $BACK/$P "$DEST/"
+    done
 
 elif [ "${HOST:0:6}" == "CYGWIN" ]; then
     for LIB in $LIBS; do
         cp -vf  out/host/windows-x86/framework/$LIB.jar "$DEST/"
     done
 
-    if [ ! -f "$DEST/kxml2-2.3.0.jar" ]; then
-        cp -v "prebuilt/common/kxml2/kxml2-2.3.0.jar" "$DEST/"
-    fi
-
-    if [ ! -f "$DEST/commons-compress-1.0.jar" ]; then
-        cp -v "prebuilt/common/commons-compress/commons-compress-1.0.jar" "$DEST/"
-    fi
-
+    cp -v $PREBUILTS "$DEST/"
     chmod -v a+rx "$DEST"/*.jar
 else
     echo "Unsupported platform ($HOST). Nothing done."
 fi
-

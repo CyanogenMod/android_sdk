@@ -30,14 +30,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-
 
 /**
  * Performs the work of installing a given {@link Archive}.
@@ -267,15 +265,13 @@ public class ArchiveInstaller {
             String urlString,
             String description,
             ITaskMonitor monitor) {
-        URL url;
 
         description += " (%1$d%%, %2$.0f KiB/s, %3$d %4$s left)";
 
         FileOutputStream os = null;
         InputStream is = null;
         try {
-            url = new URL(urlString);
-            is = url.openStream();
+            is = UrlOpener.openURL(urlString, monitor);
             os = new FileOutputStream(tmpFile);
 
             MessageDigest digester = archive.getChecksumType().getMessageDigest();

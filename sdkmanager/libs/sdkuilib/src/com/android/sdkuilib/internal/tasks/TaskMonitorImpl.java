@@ -17,8 +17,7 @@
 package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITaskMonitor;
-
-import org.eclipse.swt.widgets.ProgressBar;
+import com.android.util.Pair;
 
 /**
  * Internal class that implements the logic of an {@link ITaskMonitor}.
@@ -156,7 +155,7 @@ class TaskMonitorImpl implements ITaskMonitor {
     }
 
     /**
-     * Display a yes/no question dialog box.
+     * Displays a yes/no question dialog box.
      *
      * This implementation allow this to be called from any thread, it
      * makes sure the dialog is opened synchronously in the ui thread.
@@ -167,6 +166,21 @@ class TaskMonitorImpl implements ITaskMonitor {
      */
     public boolean displayPrompt(final String title, final String message) {
         return mUi.displayPrompt(title, message);
+    }
+
+    /**
+     * Displays a Login/Password dialog. This implementation allows this method to be
+     * called from any thread, it makes sure the dialog is opened synchronously
+     * in the ui thread.
+     *
+     * @param title The title of the dialog box
+     * @param message Message to be displayed
+     * @return Pair with entered login/password. Login is always the first
+     *         element and Password is always the second. If any error occurs a
+     *         pair with empty strings is returned.
+     */
+    public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+        return mUi.displayLoginPasswordPrompt(title, message);
     }
 
     /**
@@ -282,6 +296,10 @@ class TaskMonitorImpl implements ITaskMonitor {
 
         public boolean displayPrompt(String title, String message) {
             return mRoot.displayPrompt(title, message);
+        }
+
+        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+            return mRoot.displayLoginPasswordPrompt(title, message);
         }
 
         public ITaskMonitor createSubMonitor(int tickCount) {
