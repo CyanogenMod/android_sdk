@@ -63,6 +63,8 @@ final class Device implements IDevice {
      */
     private SocketChannel mSocketChannel;
 
+    private boolean mArePropertiesSet = false;
+
     /**
      * Output receiver for "pm install package.apk" command line.
      */
@@ -164,6 +166,42 @@ final class Device implements IDevice {
      */
     public String getProperty(String name) {
         return mProperties.get(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean arePropertiesSet() {
+        return mArePropertiesSet;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPropertyCacheOrSync(String name) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+        if (mArePropertiesSet) {
+            return getProperty(name);
+        } else {
+            return getPropertySync(name);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPropertySync(String name) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+        CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+        executeShellCommand(String.format("getprop '%s'", name), receiver);
+        String value = receiver.getOutput().trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        return value;
     }
 
     public String getMountPoint(String name) {
@@ -391,6 +429,9 @@ final class Device implements IDevice {
     }
 
     void update(int changeMask) {
+        if ((changeMask & CHANGE_BUILD_INFO) != 0) {
+            mArePropertiesSet = true;
+        }
         mMonitor.getServer().deviceChanged(this, changeMask);
     }
 
