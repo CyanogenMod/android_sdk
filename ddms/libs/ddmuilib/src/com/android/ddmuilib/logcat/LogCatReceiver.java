@@ -168,6 +168,13 @@ public final class LogCatReceiver {
     }
 
     /**
+     * Clear the list of messages received from the currently active device.
+     */
+    public void clearMessages() {
+        mLogMessages.clear();
+    }
+
+    /**
      * Add to list of message event listeners.
      * @param l listener to notified when messages are received from the device
      */
