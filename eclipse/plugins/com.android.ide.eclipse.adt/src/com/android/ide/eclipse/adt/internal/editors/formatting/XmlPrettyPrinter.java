@@ -49,6 +49,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 @SuppressWarnings("restriction")
 public class XmlPrettyPrinter {
+    private static final String COMMENT_BEGIN = "<!--"; //$NON-NLS-1$
+    private static final String COMMENT_END = "-->";    //$NON-NLS-1$
+
     /** The style to print the XML in */
     private final XmlFormatStyle mStyle;
     /** Formatting preferences to use when formatting the XML */
@@ -283,9 +286,10 @@ public class XmlPrettyPrinter {
     }
 
     private void printText(Node node) {
+        String text = node.getNodeValue();
+
         // Most text nodes are just whitespace for formatting (which we're replacing)
         // so look for actual text content and extract that part out
-        String text = node.getNodeValue();
         String trimmed = text.trim();
         if (trimmed.length() > 0) {
             // TODO: Reformat the contents if it is too wide?
@@ -350,21 +354,20 @@ public class XmlPrettyPrinter {
         }
 
         // TODO: Reformat the comment text?
-        if (!multiLine && trimmed.length() < 70) {
+        if (!multiLine) {
             if (!isSuffixComment) {
                 indent(depth);
             }
-            mOut.append("<!-- ");  //$NON-NLS-1$
+            mOut.append(COMMENT_BEGIN).append(' ');
             mOut.append(trimmed);
-            mOut.append(" -->"); //$NON-NLS-1$
+            mOut.append(' ').append(COMMENT_END);
             mOut.append(mLineSeparator);
         } else {
-            indent(depth);
-            mOut.append("<!--"); //$NON-NLS-1$
-            mOut.append(mLineSeparator);
+            // Strip off blank lines at the beginning and end of the comment text.
+            // Find last newline at the beginning of the text:
             int index = 0;
             int end = comment.length();
-            int recentNewline = 0;
+            int recentNewline = -1;
             while (index < end) {
                 char c = comment.charAt(index);
                 if (c == '\n') {
@@ -378,6 +381,7 @@ public class XmlPrettyPrinter {
 
             int start = recentNewline + 1;
 
+            // Find last newline at the end of the text
             index = end - 1;
             recentNewline = -1;
             while (index > start) {
@@ -390,14 +394,70 @@ public class XmlPrettyPrinter {
                 }
                 index--;
             }
+
             end = recentNewline == -1 ? index : recentNewline;
-            if (start < end) {
-                mOut.append(comment.substring(start, end));
+            if (start >= end) {
+                // It's a blank comment like <!-- \n\n--> - just clean it up
+                if (!isSuffixComment) {
+                    indent(depth);
+                }
+                mOut.append(COMMENT_BEGIN).append(' ').append(COMMENT_END);
+                mOut.append(mLineSeparator);
+                return;
             }
-            mOut.append(mLineSeparator);
-            indent(depth);
-            mOut.append("-->"); //$NON-NLS-1$
-            mOut.append(mLineSeparator);
+
+            trimmed = comment.substring(start, end);
+
+            // When stripping out prefix and suffix blank lines we might have ended up
+            // with a single line comment again so check and format single line comments
+            // without newlines inside the <!-- --> delimiters
+            multiLine = trimmed.indexOf('\n') != -1;
+            if (multiLine) {
+                indent(depth);
+                mOut.append(COMMENT_BEGIN);
+                mOut.append(mLineSeparator);
+
+                // See if we need to add extra spacing to keep alignment. Consider a comment
+                // like this:
+                // <!-- Deprecated strings - Move the identifiers to this section,
+                //      and remove the actual text. -->
+                // This String will be
+                // " Deprecated strings - Move the identifiers to this section,\n" +
+                // "     and remove the actual text. -->"
+                // where the left side column no longer lines up.
+                // To fix this, we need to insert some extra whitespace into the first line
+                // of the string; in particular, the exact number of characters that the
+                // first line of the comment was indented with!
+                Node previous = node.getPreviousSibling();
+                if (previous != null && previous.getNodeType() == Node.TEXT_NODE) {
+                    String prevText = previous.getNodeValue();
+                    int indentation = COMMENT_BEGIN.length();
+                    for (int i = prevText.length() - 1; i >= 0; i--) {
+                        char c = prevText.charAt(i);
+                        if (c == '\n') {
+                            break;
+                        } else if (c == '\t') {
+                            indentation += 4; // TODO: Look up Eclipse settings
+                        } else {
+                            indentation++;
+                        }
+                    }
+                    for (int i = 0; i < indentation; i++) {
+                        mOut.append(' ');
+                    }
+                }
+
+                mOut.append(trimmed);
+                mOut.append(mLineSeparator);
+                indent(depth);
+                mOut.append(COMMENT_END);
+                mOut.append(mLineSeparator);
+            } else {
+                mOut.append(COMMENT_BEGIN).append(' ');
+                mOut.append(trimmed);
+                mOut.append(' ').append(COMMENT_END);
+                mOut.append(mLineSeparator);
+            }
         }
 
         // Preserve whitespace after comment: See if the original document had two or
@@ -493,7 +553,7 @@ public class XmlPrettyPrinter {
                 // immediately follow the last attribute
                 if (attribute != last) {
                     mOut.append(singleLine ? " " : mLineSeparator); //$NON-NLS-1$
-                    indentNextAttribute = true;
+                    indentNextAttribute = !singleLine;
                 }
             }
         }
