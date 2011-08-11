@@ -18,6 +18,9 @@ package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdkuilib.ui.AuthenticationDialog;
+import com.android.sdkuilib.ui.GridDialog;
+import com.android.util.Pair;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -154,7 +157,8 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
         });
 
         mResultText = new Text(mRootComposite,
-                SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+                SWT.BORDER | SWT.READ_ONLY | SWT.WRAP |
+                SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         mResultText.setEditable(true);
         mResultText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
@@ -390,6 +394,45 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
             }
         });
         return result[0];
+    }
+
+    /**
+     * This method opens a pop-up window which requests for User Login and
+     * password.
+     *
+     * @param title The title of the window.
+     * @param message The message to displayed in the login/password window.
+     * @return Returns a {@link Pair} holding the entered login and password.
+     *         The information must always be in the following order:
+     *         Login,Password. So in order to retrieve the <b>login</b> callers
+     *         should retrieve the first element, and the second value for the
+     *         <b>password</b>.
+     *         If operation is <b>canceled</b> by user the return value must be <b>null</b>.
+     * @see ITaskMonitor#displayLoginPasswordPrompt(String, String)
+     */
+    public Pair<String, String> displayLoginPasswordPrompt(
+            final String title, final String message) {
+        final String[] resultArray = new String[2];
+        Display display = mDialogShell.getDisplay();
+
+        // open dialog and request login and password
+        display.syncExec(new Runnable() {
+            public void run() {
+                AuthenticationDialog authenticationDialog = new AuthenticationDialog(mDialogShell,
+                            title,
+                            message);
+                int dlgResult= authenticationDialog.open();
+                if(dlgResult == GridDialog.OK) {
+                    resultArray[0] = authenticationDialog.getLogin();
+                    resultArray[1] = authenticationDialog.getPassword();
+                } else {
+                        resultArray[0] = null;
+                        resultArray[1] = null;
+                }
+            }
+        });
+
+        return resultArray[0] == null ? null : Pair.of(resultArray[0], resultArray[1]);
     }
 
     /**

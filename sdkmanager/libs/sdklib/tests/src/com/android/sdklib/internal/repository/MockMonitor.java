@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.util.Pair;
 
 /**
  * Mock implementation of {@link ITaskMonitor} that simply captures
@@ -94,5 +95,9 @@ public class MockMonitor implements ITaskMonitor {
     }
 
     public void warning(String warningFormat, Object... args) {
+    }
+
+    public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+        return null;
     }
 }

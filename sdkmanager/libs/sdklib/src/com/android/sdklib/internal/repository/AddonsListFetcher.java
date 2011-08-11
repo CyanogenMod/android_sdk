@@ -31,7 +31,6 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -91,7 +90,7 @@ public class AddonsListFetcher {
 
         url = url == null ? "" : url.trim();
 
-        monitor.setProgressMax(4);
+        monitor.setProgressMax(5);
         monitor.setDescription("Fetching %1$s", url);
         monitor.incProgress(1);
 
@@ -101,7 +100,7 @@ public class AddonsListFetcher {
         Document validatedDoc = null;
         String validatedUri = null;
 
-        ByteArrayInputStream xml = fetchUrl(url, exception);
+        ByteArrayInputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
 
         if (xml != null) {
             monitor.setDescription("Validate XML");
@@ -176,21 +175,19 @@ public class AddonsListFetcher {
     }
 
     /**
-     * Fetches the document at the given URL and returns it as a stream.
-     * Returns null if anything wrong happens.
+     * Fetches the document at the given URL and returns it as a stream. Returns
+     * null if anything wrong happens. References: <br/>
+     * URL Connection:
      *
-     * References: <br/>
-     * Java URL Connection: http://java.sun.com/docs/books/tutorial/networking/urls/readingWriting.html <br/>
-     * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html <br/>
-     * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html <br/>
-     *
+     * @see {@link UrlOpener} which handles all URL logic.
      * @param urlString The URL to load, as a string.
-     * @param outException If non null, where to store any exception that happens during the fetch.
+     * @param monitor {@link ITaskMonitor} related to this URL.
+     * @param outException If non null, where to store any exception that
+     *            happens during the fetch.
      */
-    private ByteArrayInputStream fetchUrl(String urlString, Exception[] outException) {
-        URL url;
+    private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor,
+            Exception[] outException) {
         try {
-            url = new URL(urlString);
 
             InputStream is = null;
 
@@ -199,7 +196,7 @@ public class AddonsListFetcher {
             byte[] result = new byte[inc];
 
             try {
-                is = url.openStream();
+                is = UrlOpener.openURL(urlString, monitor);
 
                 int n;
                 while ((n = is.read(result, curr, result.length - curr)) != -1) {

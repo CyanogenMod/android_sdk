@@ -249,7 +249,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      */
     public void load(ITaskMonitor monitor, boolean forceHttp) {
 
-        monitor.setProgressMax(4);
+        monitor.setProgressMax(6);
 
         setDefaultDescription();
 
@@ -265,7 +265,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
         String[] validationError = new String[] { null };
         Exception[] exception = new Exception[] { null };
-        InputStream xml = fetchUrl(url, exception);
+        InputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
         Document validatedDoc = null;
         boolean usingAlternateXml = false;
         boolean usingAlternateUrl = false;
@@ -279,13 +279,15 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             }
             url += getUrlDefaultXmlFile();
 
-            xml = fetchUrl(url, exception);
+            xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
             usingAlternateUrl = true;
         }
 
         if (xml != null) {
             monitor.setDescription(String.format("Validate XML: %1$s", url));
 
+            ITaskMonitor subMonitor = monitor.createSubMonitor(2);
+            subMonitor.setProgressMax(2);
             for (int tryOtherUrl = 0; tryOtherUrl < 2; tryOtherUrl++) {
                 // Explore the XML to find the potential XML schema version
                 int version = getXmlSchemaVersion(xml);
@@ -347,8 +349,8 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                         }
                         url += getUrlDefaultXmlFile();
 
-                        xml = fetchUrl(url, null /*outException*/);
-
+                        xml = fetchUrl(url, subMonitor.createSubMonitor(1), null /* outException */);
+                        subMonitor.incProgress(1);
                         // Loop to try the alternative document
                         if (xml != null) {
                             usingAlternateUrl = true;
@@ -465,21 +467,19 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
     }
 
     /**
-     * Fetches the document at the given URL and returns it as a string.
-     * Returns null if anything wrong happens and write errors to the monitor.
-     *
+     * Fetches the document at the given URL and returns it as a string. Returns
+     * null if anything wrong happens and write errors to the monitor.
      * References: <br/>
-     * Java URL Connection: http://java.sun.com/docs/books/tutorial/networking/urls/readingWriting.html <br/>
-     * Java URL Reader: http://java.sun.com/docs/books/tutorial/networking/urls/readingURL.html <br/>
-     * Java set Proxy: http://java.sun.com/docs/books/tutorial/networking/urls/_setProxy.html <br/>
+     * URL Connection:
      *
+     * @see {@link UrlOpener} which handles all URL logic.
      * @param urlString The URL to load, as a string.
-     * @param outException If non null, where to store any exception that happens during the fetch.
+     * @param monitor {@link ITaskMonitor} related to this URL.
+     * @param outException If non null, where to store any exception that
+     *            happens during the fetch.
      */
-    private InputStream fetchUrl(String urlString, Exception[] outException) {
-        URL url;
+    private InputStream fetchUrl(String urlString, ITaskMonitor monitor, Exception[] outException) {
         try {
-            url = new URL(urlString);
 
             InputStream is = null;
 
@@ -488,7 +488,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             byte[] result = new byte[inc];
 
             try {
-                is = url.openStream();
+                is = UrlOpener.openURL(urlString, monitor);
 
                 int n;
                 while ((n = is.read(result, curr, result.length - curr)) != -1) {

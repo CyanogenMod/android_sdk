@@ -61,6 +61,11 @@ if not "%1"=="" goto EndTempCopy
     copy /B /D /Y lib\common.jar         %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\commons-compress*  %tmp_dir%\lib\        > nul
     copy /B /D /Y lib\swtmenubar.jar     %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\commons-logging*   %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\commons-codec*     %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\httpclient*        %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\httpcode*          %tmp_dir%\lib\        > nul
+    copy /B /D /Y lib\httpmime*          %tmp_dir%\lib\        > nul
 
     rem jar_path and swt_path are relative to PWD so we don't need to adjust them, just change dirs.
     set tools_dir=%cd%
