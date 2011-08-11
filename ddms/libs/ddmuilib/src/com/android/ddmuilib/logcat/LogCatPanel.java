@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -64,9 +65,6 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final String IMAGE_EDIT_FILTER = "edit.png"; //$NON-NLS-1$
     private static final String IMAGE_SAVE_LOG_TO_FILE = "save.png"; //$NON-NLS-1$
     private static final String IMAGE_CLEAR_LOG = "clear.png"; //$NON-NLS-1$
-
-    /* FIXME: create appropriate icon */
-    private static final String IMAGE_SCROLL_LOG_TO_LATEST = "halt.png"; //$NON-NLS-1$
 
     private LogCatReceiver mReceiver;
     private IPreferenceStore mPrefStore;
@@ -334,12 +332,6 @@ public final class LogCatPanel extends SelectionDependentPanel
                 ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_CLEAR_LOG, toolBar.getDisplay()));
         clearLog.setToolTipText("Clear Log");
 
-        ToolItem scrollToLast = new ToolItem(toolBar, SWT.PUSH);
-        scrollToLast.setImage(
-                ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_SCROLL_LOG_TO_LATEST,
-                        toolBar.getDisplay()));
-        scrollToLast.setToolTipText("Always scroll to the latest output from logcat");
-
         /* FIXME: Enable all the UI elements after adding support for user interaction with them. */
         mLiveFilterText.setEnabled(false);
         mLiveFilterLevelCombo.setEnabled(false);
@@ -429,6 +421,10 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.setFilters(new ViewerFilter[] {
                 new LogCatViewerFilter(mLogCatFilters.get(index)),
         });
+
+        /* whenever filters are changed, the number of displayed logs changes
+         * drastically. Display the latest log in such a situation. */
+        scrollToLatestLog();
     }
 
     @Override
@@ -447,13 +443,35 @@ public final class LogCatPanel extends SelectionDependentPanel
                 }
                 mViewer.refresh();
 
-                /* if an item has been selected, then don't scroll the table,
-                 * otherwise, always display the latest output.
-                 * FIXME: this behavior should be controlled via a "scroll lock" button in UI. */
-                if (mViewer.getTable().getSelectionCount() == 0) {
-                    mViewer.getTable().setTopIndex(mViewer.getTable().getItemCount() - 1);
+                if (shouldScrollToLatestLog()) {
+                    scrollToLatestLog();
                 }
             }
         });
+    }
+
+    /** Scroll to the last line. */
+    private void scrollToLatestLog() {
+        mViewer.getTable().setTopIndex(mViewer.getTable().getItemCount() - 1);
+    }
+
+    /**
+     * Determine if the table should scroll to reveal the last entry. The scrolling
+     * behavior is as follows:
+     * <ul>
+     *   <li> Scroll if the scrollbar "thumb" is at the bottom of the scrollbar, i.e.,
+     *        the last line of the table is visible. </li>
+     *   <li> Do not scroll otherwise. This happens if the user manually moves the thumb
+     *        to scroll up the table.
+     * </ul>
+     * @return true if table should be scrolled, false otherwise.
+     */
+    private boolean shouldScrollToLatestLog() {
+        ScrollBar sb = mViewer.getTable().getVerticalBar();
+        if (sb == null) {
+            return true;
+        }
+
+        return sb.getSelection() + sb.getThumb() == sb.getMaximum();
     }
 }
