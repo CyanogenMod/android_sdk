@@ -26,15 +26,25 @@ import org.eclipse.swt.widgets.Composite;
  * This acts as a button by firing the {@link SWT#Selection} listener.
  */
 public class ImgDisabledButton extends ToggleButton {
-    public ImgDisabledButton(Composite parent, int style,
-            Image imageEnabled, Image imageDisabled) {
-        super(parent, style, imageEnabled, imageDisabled);
+    public ImgDisabledButton(
+            Composite parent,
+            int style,
+            Image imageEnabled,
+            Image imageDisabled,
+            String tooltipEnabled,
+            String tooltipDisabled) {
+        super(parent,
+                style,
+                imageEnabled,
+                imageDisabled,
+                tooltipEnabled,
+                tooltipDisabled);
     }
 
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
-        updateImage();
+        updateImageAndTooltip();
         redraw();
     }
 

@@ -240,9 +240,6 @@ class LogWindow implements ILogUiProvider {
             syncExec(mLogDescription, new Runnable() {
                 public void run() {
                     appendLine(TextStyle.ERROR, log);
-
-                    // Error also make the log window rise
-                    setVisible(true);
                 }
             });
 

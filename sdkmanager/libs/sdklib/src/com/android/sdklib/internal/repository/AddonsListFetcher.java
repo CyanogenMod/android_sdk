@@ -179,11 +179,11 @@ public class AddonsListFetcher {
      * null if anything wrong happens. References: <br/>
      * URL Connection:
      *
-     * @see {@link UrlOpener} which handles all URL logic.
      * @param urlString The URL to load, as a string.
      * @param monitor {@link ITaskMonitor} related to this URL.
      * @param outException If non null, where to store any exception that
      *            happens during the fetch.
+     * @see UrlOpener UrlOpener, which handles all URL logic.
      */
     private ByteArrayInputStream fetchUrl(String urlString, ITaskMonitor monitor,
             Exception[] outException) {
