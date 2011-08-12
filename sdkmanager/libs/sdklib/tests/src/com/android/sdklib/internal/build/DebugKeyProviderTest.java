@@ -22,7 +22,6 @@ import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
-import java.util.Date;
 
 import junit.framework.TestCase;
 

@@ -129,6 +129,7 @@ public class DebugKeyProvider {
      * Returns the debug {@link PrivateKey} to use to sign applications for debug purpose.
      * @return the private key or <code>null</code> if its creation failed.
      */
+    @SuppressWarnings("unused") // the thrown Exceptions are not actually thrown
     public PrivateKey getDebugKey() throws KeyStoreException, NoSuchAlgorithmException,
             UnrecoverableKeyException, UnrecoverableEntryException {
         if (mEntry != null) {
@@ -142,6 +143,7 @@ public class DebugKeyProvider {
      * Returns the debug {@link Certificate} to use to sign applications for debug purpose.
      * @return the certificate or <code>null</code> if its creation failed.
      */
+    @SuppressWarnings("unused") // the thrown Exceptions are not actually thrown
     public Certificate getCertificate() throws KeyStoreException, NoSuchAlgorithmException,
             UnrecoverableKeyException, UnrecoverableEntryException {
         if (mEntry != null) {

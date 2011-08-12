@@ -152,14 +152,20 @@ public class MultiApkExportHelper {
 
     /**
      * Returns the list of projects defined by the <var>projectList</var> string.
+     *
      * The projects are checked to be valid Android project and to represent a valid set
      * of projects for multi-apk export.
-     * If a project does not exist or is not valid, the method will throw a {@link BuildException}.
+     *
+     * If a project does not exist or is not valid, the method will throw a {@link ExportException}.
+     *
      * The string must be a list of paths, relative to the export project path (given to
-     * {@link #MultiApkExportHelper(String, String, int, Target)}), separated by the colon (':')
-     * character. The path separator is expected to be forward-slash ('/') on all platforms.
-     * @param projects the string containing all the relative paths to the projects. This is
-     * usually read from export.properties.
+     * {@link #MultiApkExportHelper(String, String, int, Target, PrintStream)}),
+     * separated by the colon (':') character.
+     *
+     * The path separator is expected to be forward-slash ('/') on all platforms.
+     *
+     * @param projectList the string containing all the relative paths to the projects.
+     *          This is usually read from export.properties.
      * @throws ExportException
      */
     public List<ProjectConfig> getProjects(String projectList) throws ExportException {
@@ -335,11 +341,12 @@ public class MultiApkExportHelper {
 
     /**
      * Checks a project for inclusion in the list of exported APK.
-     * <p/>This performs a check on the manifest, as well as gathers more information about
+     * <p/>
+     * This performs a check on the manifest, as well as gathers more information about
      * mutli-apk from the project's default.properties file.
      * If the manifest is correct, a list of apk to export is created and returned.
      *
-     * @param projectFolder the folder of the project to check
+     * @param relativePath the folder of the project to check
      * @param projects the list of project to file with the project if it passes validation.
      * @throws ExportException in case of error.
      */
@@ -486,9 +493,12 @@ public class MultiApkExportHelper {
 
     /**
      * Checks an existing list of {@link ProjectConfig} versus a config file.
+     * This does not return any value. It however throws an {@link ExportException} in
+     * case of error which some descriptive message.
+     *
      * @param projects the list of projects to check
      * @param configProp the config file (must have been generated from a previous export)
-     * @return true if the projects and config file match
+     *
      * @throws ExportException in case of error
      */
     private void compareProjectsToConfigFile(List<ProjectConfig> projects, File configProp)

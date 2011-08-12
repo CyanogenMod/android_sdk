@@ -81,7 +81,7 @@ public final class AndroidManifest {
     /**
      * Returns an {@link IAbstractFile} object representing the manifest for the given project.
      *
-     * @param project The project containing the manifest file.
+     * @param projectFolder The project containing the manifest file.
      * @return An IAbstractFile object pointing to the manifest or null if the manifest
      *         is missing.
      */
