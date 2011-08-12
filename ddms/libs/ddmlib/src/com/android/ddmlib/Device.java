@@ -171,7 +171,6 @@ final class Device implements IDevice {
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean arePropertiesSet() {
         return mArePropertiesSet;
     }
@@ -179,7 +178,6 @@ final class Device implements IDevice {
     /**
      * {@inheritDoc}
      */
-    @Override
     public String getPropertyCacheOrSync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
         if (mArePropertiesSet) {
@@ -192,7 +190,6 @@ final class Device implements IDevice {
     /**
      * {@inheritDoc}
      */
-    @Override
     public String getPropertySync(String name) throws TimeoutException,
             AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
         CollectingOutputReceiver receiver = new CollectingOutputReceiver();
