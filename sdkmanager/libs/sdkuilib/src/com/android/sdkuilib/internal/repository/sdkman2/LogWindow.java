@@ -42,6 +42,11 @@ import org.eclipse.swt.widgets.Widget;
  * A floating log window that can be displayed or hidden by the main SDK Manager 2 window.
  * It displays a log of the sdk manager operation (listing, install, delete) including
  * any errors (e.g. network error or install/delete errors.)
+ * <p/>
+ * Since the SDK Manager will direct all log to this window, its purpose is to be
+ * opened by the main window at startup and left open all the time. When not needed
+ * the floating window is hidden but not closed. This way it can easily accumulate
+ * all the log.
  */
 class LogWindow implements ILogUiProvider {
 
@@ -64,7 +69,8 @@ class LogWindow implements ILogUiProvider {
     }
 
     /**
-     * Create the dialog.
+     * Creates the floating window. Callers should use {@link #open()} later.
+     *
      * @param parentShell Parent container
      * @param secondaryLog An optional logger where messages will <em>also</em> be output.
      */
@@ -89,7 +95,10 @@ class LogWindow implements ILogUiProvider {
     }
 
     /**
-     * Opens the window. Does not block. Caller should use close() later.
+     * Opens the window.
+     * This call does not block and relies on the fact that the main window is
+     * already running an SWT event dispatch loop.
+     * Caller should use {@link #close()} later.
      */
     public void open() {
         createShell();
@@ -99,6 +108,12 @@ class LogWindow implements ILogUiProvider {
         mShell.setVisible(false);
     }
 
+    /**
+     * Closes and <em>destroys</em> the window.
+     * This must be called just before quitting the app.
+     * <p/>
+     * To simply hide/show the window, use {@link #setVisible(boolean)} instead.
+     */
     public void close() {
         if (mShell != null && !mShell.isDisposed()) {
             mCloseRequested = true;
@@ -107,10 +122,20 @@ class LogWindow implements ILogUiProvider {
         }
     }
 
+    /**
+     * Determines whether the window is currently shown or not.
+     *
+     * @return True if the window is shown.
+     */
     public boolean isVisible() {
         return mShell != null && !mShell.isDisposed() && mShell.isVisible();
     }
 
+    /**
+     * Toggles the window visibility.
+     *
+     * @param visible True to make the window visible, false to hide it.
+     */
     public void setVisible(boolean visible) {
         if (mShell != null && !mShell.isDisposed()) {
             mShell.setVisible(visible);
@@ -125,7 +150,7 @@ class LogWindow implements ILogUiProvider {
         mShell = new Shell(mParentShell, SWT.SHELL_TRIM | SWT.TOOL);
         mShell.setMinimumSize(new Point(600, 300));
         mShell.setSize(450, 300);
-        mShell.setText("Log Window");
+        mShell.setText("Android SDK Manager Log");
         GridLayoutBuilder.create(mShell);
 
         mShell.addShellListener(new ShellAdapter() {
@@ -181,7 +206,7 @@ class LogWindow implements ILogUiProvider {
                     appendLine(TextStyle.TITLE, description);
 
                     if (mSecondaryLog != null) {
-                        mSecondaryLog.printf("%1$s", description);
+                        mSecondaryLog.printf("%1$s", description);  //$NON-NLS-1$
                     }
                 }
             }
@@ -201,7 +226,7 @@ class LogWindow implements ILogUiProvider {
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("  %1$s", log);
+                mSecondaryLog.printf("  %1$s", log);                //$NON-NLS-1$
             }
         }
     }
@@ -222,7 +247,7 @@ class LogWindow implements ILogUiProvider {
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("ERROR: %1$s", log);
+                mSecondaryLog.printf("ERROR: %1$s", log);           //$NON-NLS-1$
             }
         }
     }
@@ -236,12 +261,12 @@ class LogWindow implements ILogUiProvider {
         if (acceptLog(log, false /*isDescription*/)) {
             syncExec(mLogDescription, new Runnable() {
                 public void run() {
-                    appendLine(TextStyle.DEFAULT, "  " + log);
+                    appendLine(TextStyle.DEFAULT, "  " + log);      //$NON-NLS-1$
                 }
             });
 
             if (mSecondaryLog != null) {
-                mSecondaryLog.printf("    %1$s", log);
+                mSecondaryLog.printf("    %1$s", log);              //$NON-NLS-1$
             }
         }
     }
@@ -281,16 +306,16 @@ class LogWindow implements ILogUiProvider {
     }
 
     private void appendLine(TextStyle style, String text) {
-        if (!text.endsWith("\n")) {
+        if (!text.endsWith("\n")) {                                 //$NON-NLS-1$
             text += '\n';
         }
+
+        int start = mStyledText.getCharCount();
 
         if (style == TextStyle.DEFAULT) {
             mStyledText.append(text);
 
         } else {
-            String s = mStyledText.getText();
-            int start = (s == null ? 0 : s.length());
             mStyledText.append(text);
 
             StyleRange sr = new StyleRange();
@@ -302,6 +327,13 @@ class LogWindow implements ILogUiProvider {
             }
             sr.underline = false;
             mStyledText.setStyleRange(sr);
+        }
+
+        // Scroll caret if it was already at the end before we added new text.
+        // Ideally we would scroll if the scrollbar is at the bottom but we don't
+        // have direct access to the scrollbar without overriding the SWT impl.
+        if (mStyledText.getCaretOffset() >= start) {
+            mStyledText.setSelection(mStyledText.getCharCount());
         }
     }
 

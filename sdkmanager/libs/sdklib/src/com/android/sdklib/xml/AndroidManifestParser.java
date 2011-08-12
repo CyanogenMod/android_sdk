@@ -60,15 +60,14 @@ public class AndroidManifestParser {
     public interface ManifestErrorHandler extends ErrorHandler {
         /**
          * Handles a parsing error and an optional line number.
-         * @param exception
-         * @param lineNumber
          */
         void handleError(Exception exception, int lineNumber);
 
         /**
          * Checks that a class is valid and can be used in the Android Manifest.
          * <p/>
-         * Errors are put as {@link IMarker} on the manifest file.
+         * Errors are put as {@code org.eclipse.core.resources.IMarker} on the manifest file.
+         *
          * @param locator
          * @param className the fully qualified name of the class to test.
          * @param superClassName the fully qualified name of the class it is supposed to extend.
@@ -99,10 +98,8 @@ public class AndroidManifestParser {
          * Creates a new {@link ManifestHandler}.
          *
          * @param manifestFile The manifest file being parsed. Can be null.
-         * @param errorListener An optional error listener.
-         * @param gatherData True if data should be gathered.
-         * @param javaProject The java project holding the manifest file. Can be null.
-         * @param markErrors True if errors should be marked as Eclipse Markers on the resource.
+         * @param manifestData Class containing the manifest info obtained during the parsing.
+         * @param errorHandler An optional error handler.
          */
         ManifestHandler(IAbstractFile manifestFile, ManifestData manifestData,
                 ManifestErrorHandler errorHandler) {
@@ -584,7 +581,8 @@ public class AndroidManifestParser {
      * @param gatherData indicates whether the parsing will extract data from the manifest. If false
      * the method will always return null.
      * @param errorHandler an optional errorHandler.
-     * @return
+     * @return A class containing the manifest info obtained during the parsing, or null on error.
+     *
      * @throws StreamException
      * @throws IOException
      * @throws SAXException
@@ -594,7 +592,7 @@ public class AndroidManifestParser {
             IAbstractFile manifestFile,
             boolean gatherData,
             ManifestErrorHandler errorHandler)
-            throws SAXException, IOException, StreamException, ParserConfigurationException {
+                throws SAXException, IOException, StreamException, ParserConfigurationException {
         if (manifestFile != null) {
             SAXParser parser = sParserFactory.newSAXParser();
 
@@ -620,6 +618,7 @@ public class AndroidManifestParser {
      * This is the equivalent of calling <pre>parse(manifestFile, true, null)</pre>
      *
      * @param manifestFile the manifest file to parse.
+     *
      * @throws ParserConfigurationException
      * @throws StreamException
      * @throws IOException
@@ -645,7 +644,8 @@ public class AndroidManifestParser {
      * object containing the result of the parsing.
      *
      * @param manifestFileStream the {@link InputStream} representing the manifest file.
-     * @return
+     * @return A class containing the manifest info obtained during the parsing or null on error.
+     *
      * @throws StreamException
      * @throws IOException
      * @throws SAXException

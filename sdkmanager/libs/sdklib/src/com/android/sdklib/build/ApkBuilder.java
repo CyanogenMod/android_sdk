@@ -721,14 +721,15 @@ public final class ApkBuilder {
     }
 
     /**
-     * Processes a {@link File} that could be a {@link ApkFile}, or a folder containing
+     * Processes a {@link File} that could be an APK {@link File}, or a folder containing
      * java resources.
+     *
      * @param file the {@link File} to process.
-     * @param path the relative path of this file to the source folder. Can be <code>null</code> to
-     * identify a root file.
+     * @param path the relative path of this file to the source folder.
+     *          Can be <code>null</code> to identify a root file.
      * @throws IOException
-     * @throws DuplicateFileException if a file conflicts with another already added to the APK
-     *                                   at the same location inside the APK archive.
+     * @throws DuplicateFileException if a file conflicts with another already added
+     *          to the APK at the same location inside the APK archive.
      */
     private void processFileForResource(File file, String path)
             throws IOException, DuplicateFileException {

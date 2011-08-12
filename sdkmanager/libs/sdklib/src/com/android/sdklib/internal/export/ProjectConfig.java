@@ -205,7 +205,6 @@ public final class ProjectConfig {
     /**
      * Finds ABIs in a project folder. This is based on the presence of libs/<abi>/ folder.
      *
-     * @param projectPath The OS path of the project.
      * @return A new non-null, possibly empty, list of ABI strings.
      */
     private List<String> findAbis() {
@@ -270,7 +269,8 @@ public final class ProjectConfig {
 
     /**
      * Compares the current project config to a list of properties.
-     * These properties are in the format output by {@link #getConfigString()}.
+     * These properties are in the format output by {@link #getConfigString(boolean)}.
+     *
      * @param values the properties to compare to.
      * @return null if the properties exactly match the current config, an error message otherwise
      */

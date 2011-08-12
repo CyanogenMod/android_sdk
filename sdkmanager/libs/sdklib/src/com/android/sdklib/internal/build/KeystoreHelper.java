@@ -59,7 +59,7 @@ public final class KeystoreHelper {
             IKeyGenOutput output)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableEntryException, IOException, KeytoolException {
-        
+
         // get the executable name of keytool depending on the platform.
         String os = System.getProperty("os.name");
 
@@ -73,9 +73,9 @@ public final class KeystoreHelper {
         String javaHome = System.getProperty("java.home");
 
         if (javaHome != null && javaHome.length() > 0) {
-            keytoolCommand = javaHome + File.separator + "bin" + File.separator + keytoolCommand; 
+            keytoolCommand = javaHome + File.separator + "bin" + File.separator + keytoolCommand;
         }
-        
+
         // create the command line to call key tool to build the key with no user input.
         ArrayList<String> commandList = new ArrayList<String>();
         commandList.add(keytoolCommand);
@@ -111,41 +111,40 @@ public final class KeystoreHelper {
             boolean firstArg = true;
             for (String arg : commandArray) {
                 boolean hasSpace = arg.indexOf(' ') != -1;
-                
+
                 if (firstArg == true) {
                     firstArg = false;
                 } else {
                     builder.append(' ');
                 }
-                
+
                 if (hasSpace) {
                     builder.append('"');
                 }
-                
+
                 builder.append(arg);
 
                 if (hasSpace) {
                     builder.append('"');
                 }
             }
-            
+
             throw new KeytoolException("Failed to create key: " + e.getMessage(),
                     javaHome, builder.toString());
         }
-        
+
         if (result != 0) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Get the stderr/stdout outputs of a process and return when the process is done.
      * Both <b>must</b> be read or the process will block on windows.
      * @param process The process to get the ouput from
      * @return the process return code.
-     * @throws InterruptedException
      */
     private static int grabProcessOutput(final Process process, final IKeyGenOutput output) {
         // read the lines as they come. if null is returned, it's
