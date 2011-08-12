@@ -22,12 +22,9 @@ import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * A JFace label provider for the LogCat log messages. It expects elements of type
@@ -47,9 +44,11 @@ public final class LogCatMessageLabelProvider extends LabelProvider
 
     /**
      * Construct a label provider that will wrap lines of length > wrapWidth.
+     * @param font default font to use
      * @param wrapWidth width at which to wrap lines
      */
-    public LogCatMessageLabelProvider(int wrapWidth) {
+    public LogCatMessageLabelProvider(Font font, int wrapWidth) {
+        mLogFont = font;
         mWrapWidth = wrapWidth;
     }
 
@@ -149,11 +148,10 @@ public final class LogCatMessageLabelProvider extends LabelProvider
     }
 
     public Font getFont(Object element, int index) {
-        if (mLogFont == null) {
-            /* FIXME: this should be obtained from preference settings. */
-            mLogFont = new Font(Display.getDefault(),
-                    new FontData("Courier New", 10, SWT.NORMAL));
-        }
         return mLogFont;
+    }
+
+    public void setFont(Font preferredFont) {
+        mLogFont = preferredFont;
     }
 }

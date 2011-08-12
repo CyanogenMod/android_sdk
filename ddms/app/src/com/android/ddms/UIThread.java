@@ -230,7 +230,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
      */
     private static final String USE_NEW_LOGCAT_VIEW =
             System.getenv("ANDROID_USE_NEW_LOGCAT_VIEW");
-    private boolean useOldLogCatView() {
+    public static boolean useOldLogCatView() {
         return USE_NEW_LOGCAT_VIEW == null;
     }
 

@@ -23,6 +23,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.PortFieldEditor;
+import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -424,19 +425,27 @@ public final class PrefsDialog {
          */
         @Override
         protected void createFieldEditors() {
-            RadioGroupFieldEditor rgfe;
+            if (UIThread.useOldLogCatView()) {
+                RadioGroupFieldEditor rgfe;
 
-            rgfe = new RadioGroupFieldEditor(PrefsDialog.LOGCAT_COLUMN_MODE,
-                "Message Column Resizing Mode", 1, new String[][] {
-                    { "Manual", PrefsDialog.LOGCAT_COLUMN_MODE_MANUAL },
-                    { "Automatic", PrefsDialog.LOGCAT_COLUMN_MODE_AUTO },
-                    },
-                getFieldEditorParent(), true);
-            addField(rgfe);
+                rgfe = new RadioGroupFieldEditor(PrefsDialog.LOGCAT_COLUMN_MODE,
+                    "Message Column Resizing Mode", 1, new String[][] {
+                        { "Manual", PrefsDialog.LOGCAT_COLUMN_MODE_MANUAL },
+                        { "Automatic", PrefsDialog.LOGCAT_COLUMN_MODE_AUTO },
+                        },
+                    getFieldEditorParent(), true);
+                addField(rgfe);
 
-            FontFieldEditor ffe = new FontFieldEditor(PrefsDialog.LOGCAT_FONT, "Text output font:",
-                    getFieldEditorParent());
-            addField(ffe);
+                FontFieldEditor ffe = new FontFieldEditor(PrefsDialog.LOGCAT_FONT,
+                        "Text output font:",
+                        getFieldEditorParent());
+                addField(ffe);
+            } else {
+                FontFieldEditor ffe = new FontFieldEditor(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
+                        "Text output font:",
+                        getFieldEditorParent());
+                addField(ffe);
+            }
         }
     }
 
