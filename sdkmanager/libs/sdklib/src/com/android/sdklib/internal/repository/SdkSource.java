@@ -19,6 +19,7 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.internal.repository.UrlOpener.CanceledByUserException;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -271,9 +272,13 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         boolean usingAlternateUrl = false;
         String validatedUri = null;
 
-        // If the original URL can't be fetched and the URL doesn't explicitly end with
-        // our filename, make another tentative after changing the URL.
-        if (xml == null && !url.endsWith(getUrlDefaultXmlFile())) {
+        // If the original URL can't be fetched
+        // and the URL doesn't explicitly end with our filename
+        // and it wasn't an HTTP authentication operation canceled by the user
+        // then make another tentative after changing the URL.
+        if (xml == null
+                && !url.endsWith(getUrlDefaultXmlFile())
+                && !(exception[0] instanceof CanceledByUserException)) {
             if (!url.endsWith("/")) {       //$NON-NLS-1$
                 url += "/";                 //$NON-NLS-1$
             }
@@ -472,11 +477,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      * References: <br/>
      * URL Connection:
      *
-     * @see {@link UrlOpener} which handles all URL logic.
      * @param urlString The URL to load, as a string.
      * @param monitor {@link ITaskMonitor} related to this URL.
      * @param outException If non null, where to store any exception that
      *            happens during the fetch.
+     * @see UrlOpener UrlOpener, which handles all URL logic.
      */
     private InputStream fetchUrl(String urlString, ITaskMonitor monitor, Exception[] outException) {
         try {
