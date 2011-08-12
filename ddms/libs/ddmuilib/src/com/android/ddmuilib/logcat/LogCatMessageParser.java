@@ -39,13 +39,16 @@ public final class LogCatMessageParser {
      * This first line looks something like:<br>
      * {@code "[ 00-00 00:00:00.000 <pid>:0x<???> <severity>/<tag>]"}
      * <br>
-     * Note: severity is one of V, D, I, W, E or A<br>
+     * Note: severity is one of V, D, I, W, E, A? or F. However, there doesn't seem to be
+     *       a way to actually generate an A (assert) message. Log.wtf is supposed to generate
+     *       a message with severity A, however it generates the undocumented F level. In
+     *       such a case, the parser will change the level from F to A.<br>
      * Note: the fraction of second value can have any number of digit.<br>
      * Note: the tag should be trimmed as it may have spaces at the end.
      */
     private static Pattern sLogHeaderPattern = Pattern.compile(
             "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
-          + "\\s+(\\d*):(0x[0-9a-fA-F]+)\\s([VDIWEA])/(.*)\\]$");
+          + "\\s+(\\d*):(0x[0-9a-fA-F]+)\\s([VDIWEAF])/(.*)\\]$");
 
     /**
      * Parse a list of strings into {@link LogCatMessage} objects. This method
@@ -68,6 +71,12 @@ public final class LogCatMessageParser {
                 mCurPid = matcher.group(2);
                 mCurLogLevel = LogLevel.getByLetterString(matcher.group(4));
                 mCurTag = matcher.group(5).trim();
+
+                /* LogLevel doesn't support messages with severity "F". Log.wtf() is supposed
+                 * to generate "A", but generates "F". */
+                if (mCurLogLevel == null && matcher.group(4).equals("F")) {
+                    mCurLogLevel = LogLevel.ASSERT;
+                }
             } else {
                 LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid, mCurTag, mCurTime, line);
                 messages.add(m);
