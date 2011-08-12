@@ -285,7 +285,7 @@ public class PackagesDiffLogicTest extends TestCase {
         m.updateStart();
         // No local packages
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[0]));
-        assertFalse(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+        assertTrue(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1)
         }));
 
@@ -658,7 +658,7 @@ public class PackagesDiffLogicTest extends TestCase {
         m.updateStart();
         // no local package
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[0]));
-        assertFalse(m.updateSourcePackages(false /*sortByApi*/, src1, new Package[] {
+        assertTrue(m.updateSourcePackages(false /*sortByApi*/, src1, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1),
         }));
         assertTrue(m.updateEnd(false /*sortByApi*/));

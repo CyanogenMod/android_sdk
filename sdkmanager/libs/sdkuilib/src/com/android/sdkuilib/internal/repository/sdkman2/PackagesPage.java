@@ -1008,18 +1008,22 @@ public class PackagesPage extends UpdaterPage
         }
 
         if (mUpdaterData != null) {
+            boolean needsRefresh = false;
             try {
                 beginOperationPending();
 
-                mUpdaterData.updateOrInstallAll_WithGUI(
+                List<Archive> installed = mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
                     mCheckFilterObsolete.getSelection() /* includeObsoletes */);
+                needsRefresh = installed != null && !installed.isEmpty();
             } finally {
                 endOperationPending();
 
-                // The local package list has changed, make sure to refresh it
-                mUpdaterData.getLocalSdkParser().clearPackages();
-                loadPackages();
+                if (needsRefresh) {
+                    // The local package list has changed, make sure to refresh it
+                    mUpdaterData.getLocalSdkParser().clearPackages();
+                    loadPackages();
+                }
             }
         }
     }
