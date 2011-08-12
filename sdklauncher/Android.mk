@@ -7,11 +7,13 @@
 # and currently simply executes tools\android.bat.
 # Eventually it should simply replace the batch file.
 
-ifeq ($(HOST_OS),windows)
 
-LOCAL_PATH:= $(call my-dir)
+#----- The current C++ sdklauncher -----
 
+LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
+
+ifeq ($(HOST_OS),windows)
 
 LOCAL_SRC_FILES := \
 	sdklauncher.c
@@ -49,3 +51,10 @@ include $(BUILD_HOST_EXECUTABLE)
 $(call dist-for-goals,droid,$(LOCAL_BUILT_MODULE))
 
 endif
+
+#----- New experimental sdklauncher. Not ready for production. -----
+
+include $(LOCAL_PATH)/app/Android.mk
+
+
+
