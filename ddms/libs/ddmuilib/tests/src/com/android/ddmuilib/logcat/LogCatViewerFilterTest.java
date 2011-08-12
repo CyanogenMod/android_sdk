@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 public class LogCatViewerFilterTest extends TestCase {
     public void testFilterByLogLevel() {
         LogCatFilterSettings settings = new LogCatFilterSettings("",  //$NON-NLS-1$
-                "", "", LogLevel.DEBUG);                              //$NON-NLS-1$ //$NON-NLS-2$
+                "", "", "", LogLevel.DEBUG);            //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         LogCatViewerFilter filter = new LogCatViewerFilter(settings);
 
         /* filter message below filter's log level */
@@ -38,7 +38,7 @@ public class LogCatViewerFilterTest extends TestCase {
 
     public void testFilterByPid() {
         LogCatFilterSettings settings = new LogCatFilterSettings("",  //$NON-NLS-1$
-                "", "123", LogLevel.VERBOSE);                         //$NON-NLS-1$ //$NON-NLS-2$
+                "", "", "123", LogLevel.VERBOSE);       //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         LogCatViewerFilter filter = new LogCatViewerFilter(settings);
 
         /* show message with pid matching filter */
@@ -54,7 +54,7 @@ public class LogCatViewerFilterTest extends TestCase {
 
     public void testFilterByTagRegex() {
         LogCatFilterSettings settings = new LogCatFilterSettings("",  //$NON-NLS-1$
-                "tag.*", "", LogLevel.VERBOSE);                       //$NON-NLS-1$ //$NON-NLS-2$
+                "tag.*", "", "", LogLevel.VERBOSE);     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         LogCatViewerFilter filter = new LogCatViewerFilter(settings);
 
         /* show message with tag matching filter */
@@ -64,6 +64,21 @@ public class LogCatViewerFilterTest extends TestCase {
 
         msg = new LogCatMessage(LogLevel.VERBOSE,
                 "", "ta123", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        assertEquals(false, filter.select(null, null, msg));
+    }
+
+    public void testFilterByTextRegex() {
+        LogCatFilterSettings settings = new LogCatFilterSettings("",  //$NON-NLS-1$
+                "", "text.*", "", LogLevel.VERBOSE);    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogCatViewerFilter filter = new LogCatViewerFilter(settings);
+
+        /* show message with text matching filter */
+        LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "", "", "text123");   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        assertEquals(true, filter.select(null, null, msg));
+
+        msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "", "", "te123");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         assertEquals(false, filter.select(null, null, msg));
     }
 }

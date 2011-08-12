@@ -34,7 +34,10 @@ public final class LogCatViewerFilter extends ViewerFilter {
 
     private boolean mCheckPID;
     private boolean mCheckTag;
+    private boolean mCheckText;
+
     private Pattern mTagPattern;
+    private Pattern mTextPattern;
 
     /**
      * Construct a {@link ViewerFilter} filtering logcat messages based on
@@ -47,14 +50,25 @@ public final class LogCatViewerFilter extends ViewerFilter {
 
         mCheckPID = mFilterSettings.getPidString().trim().length() != 0;
         mCheckTag = mFilterSettings.getTag().trim().length() != 0;
+        mCheckText = mFilterSettings.getText().trim().length() != 0;
 
         if (mCheckTag) {
             try {
                 mTagPattern = Pattern.compile(mFilterSettings.getTag());
             } catch (PatternSyntaxException e) {
-                Log.e("LogCatFilter", "Ignoring invalid regex.");
-                Log.e("LogCatFilter", e);
+                Log.e("LogCatFilter", "Ignoring invalid tag regex.");
+                Log.e("LogCatFilter", e.getMessage());
                 mCheckTag = false;
+            }
+        }
+
+        if (mCheckText) {
+            try {
+                mTextPattern = Pattern.compile(mFilterSettings.getText());
+            } catch (PatternSyntaxException e) {
+                Log.e("LogCatFilter", "Ignoring invalid text regex.");
+                Log.e("LogCatFilter", e.getMessage());
+                mCheckText = false;
             }
         }
     }
@@ -81,7 +95,14 @@ public final class LogCatViewerFilter extends ViewerFilter {
         /* if tag filter is enabled, filter out messages not matching the tag */
         if (mCheckTag) {
             Matcher matcher = mTagPattern.matcher(m.getTag());
-            if (!matcher.matches()) {
+            if (!matcher.find()) {
+                return false;
+            }
+        }
+
+        if (mCheckText) {
+            Matcher matcher = mTextPattern.matcher(m.getMessage());
+            if (!matcher.find()) {
                 return false;
             }
         }
