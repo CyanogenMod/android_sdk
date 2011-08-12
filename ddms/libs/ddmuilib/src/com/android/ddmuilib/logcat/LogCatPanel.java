@@ -23,6 +23,8 @@ import com.android.ddmuilib.TableHelper;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
@@ -30,6 +32,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -56,6 +60,13 @@ import java.util.List;
  */
 public final class LogCatPanel extends SelectionDependentPanel
                         implements ILogCatMessageEventListener {
+    /** Preference key to use for storing font settings. */
+    public static final String LOGCAT_VIEW_FONT_PREFKEY = "logcat.view.font";
+    private static final String DEFAULT_LOGCAT_FONT = new FontData(
+            "Courier New", 10, SWT.NORMAL).toString();
+
+    private static final String LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX = "logcat.view.colsize.";
+
     /** Width (in characters) at which to wrap messages. SWT Tables do not
      * auto wrap long text - they simply clip the text.
      * FIXME: this should be a preference. */
@@ -88,6 +99,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private TableViewer mViewer;
 
     private String mLogFileExportFolder;
+    private LogCatMessageLabelProvider mLogCatMessageLabelProvider;
 
     /**
      * Construct a logcat panel.
@@ -101,6 +113,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mReceiver.addMessageReceivedEventListener(this);
 
         initializeFilters(prefStore);
+        initializeFonts(prefStore);
     }
 
     private void initializeFilters(IPreferenceStore prefStore) {
@@ -113,6 +126,19 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "", "", LogLevel.ERROR));
 
         /* FIXME restore saved filters from prefStore */
+    }
+
+    private void initializeFonts(IPreferenceStore prefStore) {
+        mPrefStore.setDefault(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY, DEFAULT_LOGCAT_FONT);
+
+        mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent event) {
+                if (event.getProperty().equals(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY)) {
+                    mLogCatMessageLabelProvider.setFont(getFontFromPrefStore());
+                    mViewer.refresh();
+                }
+            }
+        });
     }
 
     @Override
@@ -474,20 +500,27 @@ public final class LogCatPanel extends SelectionDependentPanel
                     properties[i],                      /* Column title */
                     SWT.LEFT,                           /* Column Style */
                     sampleText[i],                      /* String to compute default col width */
-                    getPreferenceKey(properties[i]),    /* Preference Store key for this column */
+                    getColPreferenceKey(properties[i]), /* Preference Store key for this column */
                     mPrefStore);
         }
 
         mViewer.getTable().setLinesVisible(true); /* zebra stripe the table */
         mViewer.getTable().setHeaderVisible(true);
 
-        mViewer.setLabelProvider(new LogCatMessageLabelProvider(MSG_WRAP_WIDTH));
+        mLogCatMessageLabelProvider = new LogCatMessageLabelProvider(getFontFromPrefStore(),
+                MSG_WRAP_WIDTH);
+        mViewer.setLabelProvider(mLogCatMessageLabelProvider);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
         mViewer.setInput(mReceiver.getMessages());
     }
 
-    private String getPreferenceKey(String field) {
-        return "logcat.view.colsize." + field;
+    private String getColPreferenceKey(String field) {
+        return LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX + field;
+    }
+
+    private Font getFontFromPrefStore() {
+        String preferredFont = mPrefStore.getString(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY);
+        return new Font(Display.getDefault(), new FontData(preferredFont));
     }
 
     private void setupDefaults() {
