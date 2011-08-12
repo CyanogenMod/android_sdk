@@ -21,6 +21,9 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
 
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -46,8 +49,28 @@ public class SdkRepoSourceTest extends TestCase {
             super("fake-url", null /*uiName*/);
         }
 
-        public Document _findAlternateToolsXml(InputStream xml) throws IOException {
-            return super.findAlternateToolsXml(xml);
+        /**
+         * Returns a pair of Document (which can be null) and the captured stdout/stderr output
+         * (which is the empty string by default).
+         */
+        public Pair<Document, String> _findAlternateToolsXml(InputStream xml) throws IOException {
+
+            final StringBuilder output = new StringBuilder();
+            Document doc = super.findAlternateToolsXml(xml, new ErrorHandler() {
+                public void warning(SAXParseException exception) throws SAXException {
+                    output.append("WARN: " + exception.getMessage()).append('\n');
+                }
+
+                public void fatalError(SAXParseException exception) throws SAXException {
+                    output.append("FATAL: " + exception.getMessage()).append('\n');
+                }
+
+                public void error(SAXParseException exception) throws SAXException {
+                    output.append("ERROR: " + exception.getMessage()).append('\n');
+                }
+            });
+
+            return Pair.of(doc, output.toString());
         }
 
         public boolean _parsePackages(Document doc, String nsUri, ITaskMonitor monitor) {
@@ -87,20 +110,24 @@ public class SdkRepoSourceTest extends TestCase {
 
     public void testFindAlternateToolsXml_Errors() throws Exception {
         // Support null as input
-        Document result = mSource._findAlternateToolsXml(null);
-        assertNull(result);
+        Pair<Document, String> result = mSource._findAlternateToolsXml(null);
+        assertEquals(Pair.of((Document) null, ""), result);
 
         // Support an empty input
         String str = "";
         ByteArrayInputStream input = new ByteArrayInputStream(str.getBytes());
         result = mSource._findAlternateToolsXml(input);
-        assertNull(result);
+        assertEquals(
+                Pair.of((Document) null, "FATAL: Premature end of file.\n"),
+                result);
 
         // Support a random string as input
         str = "Some random string, not even HTML nor XML";
         input = new ByteArrayInputStream(str.getBytes());
         result = mSource._findAlternateToolsXml(input);
-        assertNull(result);
+        assertEquals(
+                Pair.of((Document) null, "FATAL: Content is not allowed in prolog.\n"),
+                result);
 
         // Support an HTML input, e.g. a typical 404 document as returned by DL
         str = "<html><head> " +
@@ -120,7 +147,9 @@ public class SdkRepoSourceTest extends TestCase {
         "</body></html> ";
         input = new ByteArrayInputStream(str.getBytes());
         result = mSource._findAlternateToolsXml(input);
-        assertNull(result);
+        assertEquals(
+                Pair.of((Document) null, "FATAL: The element type \"meta\" must be terminated by the matching end-tag \"</meta>\".\n"),
+                result);
 
         // Support some random XML document, totally unrelated to our sdk-repository schema
         str = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
@@ -130,7 +159,7 @@ public class SdkRepoSourceTest extends TestCase {
         "</manifest>";
         input = new ByteArrayInputStream(str.getBytes());
         result = mSource._findAlternateToolsXml(input);
-        assertNull(result);
+        assertEquals(Pair.of((Document) null, ""), result);
     }
 
     /**
@@ -140,10 +169,11 @@ public class SdkRepoSourceTest extends TestCase {
         InputStream xmlStream = getTestResource(
                     "/com/android/sdklib/testdata/repository_sample_3.xml");
 
-        Document result = mSource._findAlternateToolsXml(xmlStream);
-        assertNotNull(result);
+        Pair<Document, String> result = mSource._findAlternateToolsXml(xmlStream);
+        assertNotNull(result.getFirst());
+        assertEquals("", result.getSecond());
         MockMonitor monitor = new MockMonitor();
-        assertTrue(mSource._parsePackages(result, SdkRepoConstants.NS_URI, monitor));
+        assertTrue(mSource._parsePackages(result.getFirst(), SdkRepoConstants.NS_URI, monitor));
 
         assertEquals("Found Android SDK Tools, revision 1\n" +
                      "Found Android SDK Tools, revision 42\n" +
