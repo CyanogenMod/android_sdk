@@ -28,6 +28,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+import org.xml.sax.ErrorHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,7 +98,6 @@ public class SdkRepoSource extends SdkSource {
         return SdkRepoConstants.getXsdStream(version);
     }
 
-
     /**
      * The purpose of this method is to support forward evolution of our schema.
      * <p/>
@@ -129,6 +129,26 @@ public class SdkRepoSource extends SdkSource {
      */
     @Override
     protected Document findAlternateToolsXml(@Nullable InputStream xml) throws IOException {
+        return findAlternateToolsXml(xml, null /*errorHandler*/);
+    }
+
+    /**
+     * An alternate version of {@link #findAlternateToolsXml(InputStream)} that allows
+     * the caller to specify the XML error handler. The default from the underlying Java
+     * XML Xerces parser will dump to stdout/stderr, which is not convenient during unit tests.
+     *
+     * @param xml The input XML stream. Can be null.
+     * @param errorHandler An optional XML error handler. If null, the default will be used.
+     * @return Either a new XML document conforming to our schema with at least one &lt;tool&gt;
+     *         and &lt;platform-tools&gt; element or null.
+     * @throws IOException if InputStream.reset() fails
+     * @null Can return null on failure.
+     * @see #findAlternateToolsXml(InputStream) findAlternateToolsXml() provides more details.
+     */
+    protected Document findAlternateToolsXml(
+            @Nullable InputStream xml,
+            @Nullable ErrorHandler errorHandler)
+                throws IOException {
         if (xml == null) {
             return null;
         }
@@ -148,6 +168,11 @@ public class SdkRepoSource extends SdkSource {
             // Parse the old document using a non namespace aware builder
             factory.setNamespaceAware(false);
             DocumentBuilder builder = factory.newDocumentBuilder();
+
+            if (errorHandler != null) {
+                builder.setErrorHandler(errorHandler);
+            }
+
             oldDoc = builder.parse(xml);
 
             // Prepare a new document using a namespace aware builder
