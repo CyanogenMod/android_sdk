@@ -53,6 +53,12 @@ public class XmlFormatPreferences {
     private XmlFormatPreferences() {
     }
 
+    /**
+     * Creates a new {@link XmlFormatPreferences} based on the current settings
+     * in {@link AdtPrefs}
+     *
+     * @return an {@link XmlFormatPreferences} object
+     */
     public static XmlFormatPreferences create() {
         XmlFormatPreferences p = new XmlFormatPreferences();
         AdtPrefs prefs = AdtPrefs.getPrefs();
@@ -69,6 +75,11 @@ public class XmlFormatPreferences {
     // The XML module settings do not have a public API. We should replace this with JDT
     // settings anyway since that's more likely what users have configured and want applied
     // to their XML files
+    /**
+     * Returns the string to use to indent one indentation level
+     *
+     * @return the string used to indent one indentation level
+     */
     @SuppressWarnings({
             "restriction", "deprecation"
     })

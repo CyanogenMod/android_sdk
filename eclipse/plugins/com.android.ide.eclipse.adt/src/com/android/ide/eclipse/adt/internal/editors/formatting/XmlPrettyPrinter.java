@@ -322,20 +322,41 @@ public class XmlPrettyPrinter {
             }
         }
 
-        // Put the comment on a line on its own? Only if it does not follow some other comment
-        // (e.g. is the first child in an element or follows some other element only separated
-        // by whitespace)
+        // Put the comment on a line on its own? Only if it was separated by a blank line
+        // in the previous version of the document. In other words, if the document
+        // adds blank lines between comments this formatter will preserve that fact, and vice
+        // versa for a tightly formatted document it will preserve that convention as well.
         if (!mPrefs.removeEmptyLines && depth > 0 && !isSuffixComment) {
             Node curr = node.getPreviousSibling();
-            if (curr == null
-                    || curr.getNodeType() == Node.ELEMENT_NODE
-                    || (curr.getNodeType() == Node.TEXT_NODE
-                            && curr.getNodeValue().trim().length() == 0
-                            && (curr.getPreviousSibling() == null
-                               || curr.getPreviousSibling().getNodeType() == Node.ELEMENT_NODE))) {
+            if (curr == null) {
                 mOut.append(mLineSeparator);
+            } else if (curr.getNodeType() == Node.TEXT_NODE) {
+                String text = curr.getNodeValue();
+                // Count how many newlines we find in the trailing whitespace of the
+                // text node
+                int newLines = 0;
+                for (int i = text.length() - 1; i >= 0; i--) {
+                    char c = text.charAt(i);
+                    if (Character.isWhitespace(c)) {
+                        if (c == '\n') {
+                            newLines++;
+                            if (newLines == 2) {
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                if (newLines >= 2) {
+                    mOut.append(mLineSeparator);
+                } else if (text.trim().length() == 0 && curr.getPreviousSibling() == null) {
+                    // Comment before first child in node
+                    mOut.append(mLineSeparator);
+                }
             }
         }
+
 
         // TODO: Reformat the comment text?
         if (!multiLine) {

@@ -330,6 +330,11 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
         mGraphicalEditor.recomputeLayout();
     }
 
+    @Override
+    public boolean supportsFormatOnGuiEdit() {
+        return true;
+    }
+
     /**
      * Returns the custom IContentOutlinePage or IPropertySheetPage when asked for it.
      */
