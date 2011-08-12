@@ -29,6 +29,7 @@ import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage.MenuAction;
+import com.android.sdkuilib.internal.tasks.ILogUiProvider;
 import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
@@ -201,8 +202,10 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         composite2.setLayout(new GridLayout(2, false));
 
         mButtonStop = new ImgDisabledButton(composite2, SWT.NONE,
-                getImage("stop_enabled_16.png"),   //$NON-NLS-1$
-                getImage("stop_disabled_16.png"));   //$NON-NLS-1$
+                getImage("stop_enabled_16.png"),    //$NON-NLS-1$
+                getImage("stop_disabled_16.png"),   //$NON-NLS-1$
+                "Click to abort the current task",
+                "");                                //$NON-NLS-1$ nothing to abort
         mButtonStop.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 onStopSelected();
@@ -210,8 +213,10 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         });
 
         mButtonShowLog = new ToggleButton(composite2, SWT.NONE,
-                getImage("collapsed_16.png"),   //$NON-NLS-1$
-                getImage("expanded_16.png"));   //$NON-NLS-1$
+                getImage("log_off_16.png"),         //$NON-NLS-1$
+                getImage("log_on_16.png"),          //$NON-NLS-1$
+                "Click to show the log window",     // tooltip for state hidden=>shown
+                "Click to hide the log window");    // tooltip for state shown=>hidden
         mButtonShowLog.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 onToggleLogWindow();
@@ -446,9 +451,46 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      */
     private boolean postCreateContent() {
         ProgressViewFactory factory = new ProgressViewFactory();
-        factory.setProgressView(new ProgressView(
-                mStatusText, mProgressBar, mButtonStop,
-                mLogWindow));
+
+        // This class delegates all logging to the mLogWindow window
+        // and filters errors to make sure the window is visible when
+        // an error is logged.
+        ILogUiProvider logAdapter = new ILogUiProvider() {
+            public void setDescription(String description) {
+                mLogWindow.setDescription(description);
+            }
+
+            public void log(String log) {
+                mLogWindow.log(log);
+            }
+
+            public void logVerbose(String log) {
+                mLogWindow.logVerbose(log);
+            }
+
+            public void logError(String log) {
+                mLogWindow.logError(log);
+
+                // Run the window visibility check/toggle on the UI thread.
+                // Note: at least on Windows, it seems ok to check for the window visibility
+                // on a sub-thread but that doesn't seem cross-platform safe. We shouldn't
+                // have a lot of error logging, so this should be acceptable. If not, we could
+                // cache the visibility state.
+                mShell.getDisplay().syncExec(new Runnable() {
+                    public void run() {
+                        if (!mLogWindow.isVisible()) {
+                            // Don't toggle the window visibility directly.
+                            // Instead use the same action as the log-toggle button
+                            // so that the button's state be kept in sync.
+                            onToggleLogWindow();
+                        }
+                    }
+                });
+            }
+        };
+
+        factory.setProgressView(
+                new ProgressView(mStatusText, mProgressBar, mButtonStop, logAdapter));
         mUpdaterData.setTaskFactory(factory);
 
         setWindowImage(mShell);

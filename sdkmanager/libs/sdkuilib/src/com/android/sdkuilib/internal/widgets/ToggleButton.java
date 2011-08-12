@@ -32,15 +32,24 @@ import org.eclipse.swt.widgets.Event;
  */
 public class ToggleButton extends CLabel {
     private Image[] mImage = new Image[2];
+    private String[] mTooltip = new String[2];
     private boolean mMouseIn;
     private int mState = 0;
 
 
-    public ToggleButton(Composite parent, int style, Image image1, Image image2) {
+    public ToggleButton(
+            Composite parent,
+            int style,
+            Image image1,
+            Image image2,
+            String tooltip1,
+            String tooltip2) {
         super(parent, style);
         mImage[0] = image1;
         mImage[1] = image2;
-        updateImage();
+        mTooltip[0] = tooltip1;
+        mTooltip[1] = tooltip2;
+        updateImageAndTooltip();
 
         addMouseListener(new MouseListener() {
             public void mouseDown(MouseEvent e) {
@@ -99,7 +108,7 @@ public class ToggleButton extends CLabel {
     public void setState(int state) {
         assert state == 0 || state == 1;
         mState = state;
-        updateImage();
+        updateImageAndTooltip();
         redraw();
     }
 
@@ -111,8 +120,9 @@ public class ToggleButton extends CLabel {
         return mState;
     }
 
-    protected void updateImage() {
+    protected void updateImageAndTooltip() {
         setImage(mImage[getState()]);
+        setToolTipText(mTooltip[getState()]);
     }
 }
 
