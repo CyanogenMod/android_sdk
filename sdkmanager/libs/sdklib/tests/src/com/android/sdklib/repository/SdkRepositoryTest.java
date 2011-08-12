@@ -242,18 +242,23 @@ public class SdkRepositoryTest extends TestCase {
         fail();
     }
 
-    private static String OPEN_TAG =
+    private static String OPEN_TAG_REPO =
         "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/" +
         Integer.toString(SdkRepoConstants.NS_LATEST_VERSION) +
         "\">";
+    private static String CLOSE_TAG_REPO = "</r:sdk-repository>";
 
-    private static String CLOSE_TAG = "</r:sdk-repository>";
+    private static String OPEN_TAG_ADDON =
+        "<r:sdk-addon xmlns:r=\"http://schemas.android.com/sdk/android/addon/" +
+        Integer.toString(SdkAddonConstants.NS_LATEST_VERSION) +
+        "\">";
+    private static String CLOSE_TAG_ADDON = "</r:sdk-addon>";
 
     /** A document with a root element containing no platform, addon, etc., is valid. */
     public void testEmptyRootXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
-            CLOSE_TAG;
+            OPEN_TAG_REPO +
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -266,9 +271,9 @@ public class SdkRepositoryTest extends TestCase {
     /** A document with an unknown element. */
     public void testUnknownContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
+            OPEN_TAG_REPO +
             "<r:unknown />" +
-            CLOSE_TAG;
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -288,9 +293,9 @@ public class SdkRepositoryTest extends TestCase {
     /** A document with an incomplete element. */
     public void testIncompleteContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
+            OPEN_TAG_REPO +
             "<r:platform> <r:api-level>1</r:api-level> <r:libs /> </r:platform>" +
-            CLOSE_TAG;
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -310,9 +315,9 @@ public class SdkRepositoryTest extends TestCase {
     /** A document with a wrong type element. */
     public void testWrongTypeContentXml() throws Exception {
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
+            OPEN_TAG_REPO +
             "<r:platform> <r:api-level>NotAnInteger</r:api-level> <r:libs /> </r:platform>" +
-            CLOSE_TAG;
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -334,13 +339,13 @@ public class SdkRepositoryTest extends TestCase {
     public void testLicenseIdNotFound() throws Exception {
         // we define a license named "lic1" and then reference "lic2" instead
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
+            OPEN_TAG_REPO +
             "<r:license id=\"lic1\"> some license </r:license> " +
             "<r:tool> <r:uses-license ref=\"lic2\" /> <r:revision>1</r:revision> " +
             "<r:min-platform-tools-rev>1</r:min-platform-tools-rev> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:tool>" +
-            CLOSE_TAG;
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -362,11 +367,11 @@ public class SdkRepositoryTest extends TestCase {
     public void testExtraPathWithSlash() throws Exception {
         // we define a license named "lic1" and then reference "lic2" instead
         String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG +
+            OPEN_TAG_REPO +
             "<r:extra> <r:revision>1</r:revision> <r:path>path/cannot\\contain\\segments</r:path> " +
             "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
             "<r:url>url</r:url> </r:archive> </r:archives> </r:extra>" +
-            CLOSE_TAG;
+            CLOSE_TAG_REPO;
 
         Source source = new StreamSource(new StringReader(document));
 
@@ -377,6 +382,39 @@ public class SdkRepositoryTest extends TestCase {
         } catch (SAXParseException e) {
             // We expect a parse error referring to this grammar rule
             assertRegex("cvc-pattern-valid: Value 'path/cannot\\\\contain\\\\segments' is not facet-valid with respect to pattern.*",
+                    e.getMessage());
+            return;
+        }
+        // If we get here, the validator has not failed as we expected it to.
+        fail();
+    }
+
+    /** An addon does not support a codename.
+     * There used to be a typo in the repository.XSD versions 1-2 & the addon XSD versions 1-2
+     * where addons had an optional element 'codename'. This was a typo and it's been fixed.
+     */
+    public void testAddonCodename() throws Exception {
+        // we define a license named "lic1" and then reference "lic2" instead
+        String document = "<?xml version=\"1.0\"?>" +
+            OPEN_TAG_ADDON +
+            "<r:license id=\"lic1\"> some license </r:license> " +
+            "<r:add-on> <r:uses-license ref=\"lic1\" /> <r:revision>1</r:revision> " +
+            "<r:name>AddonName</r:name> <r:vendor>AddonVendor</r:vendor> <r:api-level>42</r:api-level> " +
+            "<r:codename>Addons do not support codenames</r:codenames> " +
+            "<r:libs><r:lib><r:name>com.example.LibName</r:name></r:lib></r:libs> " +
+            "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
+            "<r:url>url</r:url> </r:archive> </r:archives> </r:add-on>" +
+            CLOSE_TAG_ADDON;
+
+        Source source = new StreamSource(new StringReader(document));
+
+        // don't capture the validator errors, we want it to fail and catch the exception
+        Validator validator = getAddonValidator(SdkAddonConstants.NS_LATEST_VERSION, null);
+        try {
+            validator.validate(source);
+        } catch (SAXParseException e) {
+            // We expect a parse error referring to this grammar rule
+            assertRegex("cvc-complex-type.2.4.a: Invalid content was found starting with element 'r:codename'.*",
                     e.getMessage());
             return;
         }

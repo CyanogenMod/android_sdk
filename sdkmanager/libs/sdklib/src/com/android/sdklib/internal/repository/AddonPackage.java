@@ -128,11 +128,7 @@ public class AddonPackage extends Package
         mVendor   = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VENDOR);
         mName     = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_NAME);
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
-        String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
-        if (codeName.length() == 0) {
-            codeName = null;
-        }
-        mVersion = new AndroidVersion(apiLevel, codeName);
+        mVersion = new AndroidVersion(apiLevel, null /*codeName*/);
 
         mLibs = parseLibs(XmlParserUtils.getFirstChild(packageNode, SdkRepoConstants.NODE_LIBS));
 
