@@ -110,12 +110,49 @@ public interface IDevice {
     public int getPropertyCount();
 
     /**
-     * Returns a property value.
+     * Returns the cached property value.
      *
      * @param name the name of the value to return.
-     * @return the value or <code>null</code> if the property does not exist.
+     * @return the value or <code>null</code> if the property does not exist or has not yet been
+     * cached.
      */
     public String getProperty(String name);
+
+    /**
+     * Returns <code>true></code> if properties have been cached
+     */
+    public boolean arePropertiesSet();
+
+    /**
+     * A variant of {@link #getProperty(String)} that will attempt to retrieve the given
+     * property from device directly, without using cache.
+     *
+     * @param name the name of the value to return.
+     * @return the value or <code>null</code> if the property does not exist
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws ShellCommandUnresponsiveException in case the shell command doesn't send output for a
+     *             given time.
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public String getPropertySync(String name) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException;
+
+    /**
+     * A combination of {@link #getProperty(String)} and {@link #getPropertySync(String)} that
+     * will attempt to retrieve the property from cache if available, and if not, will query the
+     * device directly.
+     *
+     * @param name the name of the value to return.
+     * @return the value or <code>null</code> if the property does not exist
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws ShellCommandUnresponsiveException in case the shell command doesn't send output for a
+     *             given time.
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public String getPropertyCacheOrSync(String name) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException;
 
     /**
      * Returns a mount point.

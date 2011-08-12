@@ -266,9 +266,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "%ISOLat2;        \n" +
                 "\n" +
-                "    <!--\n" +
-                "Type <key>less-than</key> (&#x3C;)\n" +
-                "    -->\n" +
+                "<!-- Type <key>less-than</key> (&#x3C;) -->\n" +
                 "\n" +
                 "</LinearLayout>");
     }
@@ -437,6 +435,39 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "        <item quantity=\"one\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> day, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
                 "        <item quantity=\"other\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> days, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
                 "    </plurals>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testMultiAttributeResource() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<resources><string name=\"debug_enable_debug_logging_label\" translatable=\"false\">Enable extra debug logging?</string></resources>",
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"debug_enable_debug_logging_label\" translatable=\"false\">Enable extra debug logging?</string>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testMultilineCommentAlignment() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<resources>" +
+                "    <!-- Deprecated strings - Move the identifiers to this section, mark as DO NOT TRANSLATE,\n" +
+                "         and remove the actual text.  These will be removed in a bulk operation. -->\n" +
+                "    <!-- Do Not Translate.  Unused string. -->\n" +
+                "    <string name=\"meeting_invitation\"></string>\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "    <!--\n" +
+                "         Deprecated strings - Move the identifiers to this section, mark as DO NOT TRANSLATE,\n" +
+                "         and remove the actual text.  These will be removed in a bulk operation\n" +
+                "    -->\n" +
+                "    <!-- Do Not Translate.  Unused string. -->\n" +
+                "    <string name=\"meeting_invitation\"></string>\n" +
                 "\n" +
                 "</resources>");
     }
