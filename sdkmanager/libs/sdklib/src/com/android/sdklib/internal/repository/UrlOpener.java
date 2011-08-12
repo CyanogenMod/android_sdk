@@ -41,34 +41,42 @@ import java.util.Map;
 
 /**
  * This class holds methods for adding URLs management.
+ * @see #openURL(String, ITaskMonitor)
  */
 public class UrlOpener {
+
+    public static class CanceledByUserException extends Exception {
+        private static final long serialVersionUID = -7669346110926032403L;
+
+        public CanceledByUserException(String message) {
+            super(message);
+        }
+    }
 
     private static Map<String, Pair<String, String>> sRealmCache =
             new HashMap<String, Pair<String, String>>();
 
     /**
-     * Open a URL. It can be a simple URL or one which requires basic
-     * authentication. </br> <i>Description</i>
-     * <p>
+     * Opens a URL. It can be a simple URL or one which requires basic
+     * authentication.
+     * <p/>
      * Tries to access the given URL. If http response is either
-     * {@link HttpStatus.SC_UNAUTHORIZED} or
-     * {@link HttpStatus.SC_PROXY_AUTHENTICATION_REQUIRED} asks for
+     * {@code HttpStatus.SC_UNAUTHORIZED} or
+     * {@code HttpStatus.SC_PROXY_AUTHENTICATION_REQUIRED}, asks for
      * login/password and tries to authenticate into proxy server and/or URL.
-     * </p>
-     * <p>
+     * <p/>
      * This implementation relies on the Apache Http Client due to its
-     * capabilities of proxy/http authentication. </br> Proxy configuration is
-     * determined by {@link ProxySelectorRoutePlanner} using the JVM proxy
-     * settings by default. For more information see:
-     * <a>http://hc.apache.org/httpcomponents-client-ga/</a>
-     * <a>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/conn/ProxySelectorRoutePlanner.html</a>
-     * </p>
-     * <p>
-     * There's a very simple<b>cache</b> implementation. Login/Password for each
-     * realm are stored on a static {@link Map}. Before asking the user the
-     * method verifies if the information is already available in cache
-     * </p>
+     * capabilities of proxy/http authentication. <br/>
+     * Proxy configuration is determined by {@link ProxySelectorRoutePlanner} using the JVM proxy
+     * settings by default.
+     * <p/>
+     * For more information see: <br/>
+     * - {@code http://hc.apache.org/httpcomponents-client-ga/} <br/>
+     * - {@code http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/conn/ProxySelectorRoutePlanner.html}
+     * <p/>
+     * There's a very simple <b>cache</b> implementation.
+     * Login/Password for each realm are stored in a static {@link Map}.
+     * Before asking the user the method verifies if the information is already available in cache.
      *
      * @param url the URL string to be opened.
      * @param monitor {@link ITaskMonitor} which is related to this URL
@@ -76,8 +84,12 @@ public class UrlOpener {
      * @return Returns an {@link InputStream} holding the URL content.
      * @throws IOException Exception thrown when there are problems retrieving
      *             the URL or its content.
+     * @throws CanceledByUserException Exception thrown if the user cancels the
+     *              authentication dialog.
      */
-    static InputStream openURL(String url, ITaskMonitor monitor) throws IOException {
+    @SuppressWarnings("deprecation")
+    static InputStream openURL(String url, ITaskMonitor monitor)
+        throws IOException, CanceledByUserException {
 
         InputStream stream = null;
         HttpEntity entity = null;
@@ -148,7 +160,7 @@ public class UrlOpener {
                             "Please login to the following domain: " + realm +
                             "\n\nServer requiring authentication:\n" + authScope.getHost());
                     if (result == null) {
-                        throw new IOException("User canceled login dialog.");
+                        throw new CanceledByUserException("User canceled login dialog.");
                     }
                 }
 
