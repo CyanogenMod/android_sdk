@@ -1,0 +1,3 @@
+Main-Class: com.android.sdklauncher.Main
+Class-Path: 
+
