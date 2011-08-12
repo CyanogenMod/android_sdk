@@ -516,9 +516,10 @@ public class ProjectCreator {
         }
 
         if (libraryPath != null) {
-            // at this point, the default properties already exists, either because they were
+            // At this point, the default properties already exists, either because they were
             // already there or because they were created with a new target
             if (propsWC == null) {
+                assert props != null;
                 propsWC = props.makeWorkingCopy();
             }
 
@@ -549,6 +550,7 @@ public class ProjectCreator {
             int index = 1;
             while (true) {
                 String propName = ProjectProperties.PROPERTY_LIB_REF + Integer.toString(index);
+                assert props != null;
                 String ref = props.getProperty(propName);
                 if (ref == null) {
                     break;
@@ -565,6 +567,7 @@ public class ProjectCreator {
         // save the default props if needed.
         if (saveDefaultProps) {
             try {
+                assert propsWC != null;
                 propsWC.save();
                 println("Updated %1$s", PropertyType.DEFAULT.getFilename());
             } catch (Exception e) {
