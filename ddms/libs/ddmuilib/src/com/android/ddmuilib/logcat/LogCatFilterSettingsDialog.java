@@ -173,7 +173,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
 
         /* if a pid is provided, it should be a +ve integer */
         String pidText = mPIDFilterText.getText().trim();
-        if (!pidText.equals("")) {
+        if (pidText.trim().length() > 0) {
             int pid = 0;
             try {
                 pid = Integer.parseInt(pidText);
@@ -190,7 +190,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
 
         /* tag field must use a valid regex pattern */
         String tagText = mTagFilterText.getText().trim();
-        if (!tagText.equals("")) {
+        if (tagText.trim().length() > 0) {
             try {
                 Pattern.compile(tagText);
             } catch (PatternSyntaxException e) {
@@ -201,7 +201,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
 
         /* text field must use a valid regex pattern */
         String messageText = mTextFilterText.getText().trim();
-        if (!messageText.equals("")) {
+        if (messageText.trim().length() > 0) {
             try {
                 Pattern.compile(messageText);
             } catch (PatternSyntaxException e) {
