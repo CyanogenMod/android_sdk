@@ -126,10 +126,10 @@ public final class LogCatPanel extends SelectionDependentPanel
         String pid = "";
         mLogCatFilters.add(new LogCatFilterSettings("All messages (no filters)",
                 tag, text, pid, LogLevel.VERBOSE));
-        mLogCatFilters.add(new LogCatFilterSettings("Errors only",
-                tag, text, pid, LogLevel.ERROR));
 
-        /* FIXME restore saved filters from prefStore */
+        /* restore saved filters from prefStore */
+        List<LogCatFilterSettings> savedFilters = getSavedFilterSettings();
+        mLogCatFilters.addAll(savedFilters);
     }
 
     private void initializeFonts(IPreferenceStore prefStore) {
@@ -143,6 +143,21 @@ public final class LogCatPanel extends SelectionDependentPanel
                 }
             }
         });
+    }
+
+    private void saveFilterPreferences() {
+        LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
+
+        /* save all filter settings except the first one which is the default */
+        String e = serializer.encodeToPreferenceString(
+                mLogCatFilters.subList(1, mLogCatFilters.size()));
+        mPrefStore.setValue("logcat.filters.list", e);
+    }
+
+    private List<LogCatFilterSettings> getSavedFilterSettings() {
+        LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
+        String e = mPrefStore.getString("logcat.filters.list");
+        return serializer.decodeFromPreferenceString(e);
     }
 
     @Override
@@ -268,6 +283,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mFiltersTableViewer.getTable().setSelection(idx);
 
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void deleteSelectedFilter() {
@@ -282,6 +298,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mFiltersTableViewer.getTable().setSelection(selectedIndex - 1);
 
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void editSelectedFilter() {
@@ -310,6 +327,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         mFiltersTableViewer.getTable().setSelection(selectedIndex);
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void createFiltersTable(Composite parent) {
