@@ -48,11 +48,13 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
 
     private String mFilterName;
     private String mTag;
+    private String mText;
     private String mPID;
     private String mLogLevel;
 
     private Text mFilterNameText;
     private Text mTagFilterText;
+    private Text mTextFilterText;
     private Text mPIDFilterText;
     private Combo mLogLevelCombo;
     private Button mOkButton;
@@ -63,19 +65,22 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      */
     public LogCatFilterSettingsDialog(Shell parentShell) {
         super(parentShell);
-        setDefaults("", "", "", LogLevel.VERBOSE);
+        setDefaults("", "", "", "", LogLevel.VERBOSE);
     }
 
     /**
      * Set the default values to show when the dialog is opened.
      * @param filterName name for the filter.
      * @param tag value for filter by tag
+     * @param text value for filter by text
      * @param pid value for filter by pid
      * @param level value for filter by log level
      */
-    public void setDefaults(String filterName, String tag, String pid, LogLevel level) {
+    public void setDefaults(String filterName, String tag, String text, String pid,
+            LogLevel level) {
         mFilterName = filterName;
         mTag = tag;
+        mText = text;
         mPID = pid;
         mLogLevel = level.getStringValue();
     }
@@ -102,6 +107,11 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mTagFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mTagFilterText.setText(mTag);
 
+        createLabel(c, "by Log Message:");
+        mTextFilterText = new Text(c, SWT.BORDER);
+        mTextFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mTextFilterText.setText(mText);
+
         createLabel(c, "by PID:");
         mPIDFilterText = new Text(c, SWT.BORDER);
         mPIDFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -122,6 +132,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         };
         mFilterNameText.addModifyListener(m);
         mTagFilterText.addModifyListener(m);
+        mTextFilterText.addModifyListener(m);
         mPIDFilterText.addModifyListener(m);
 
         return c;
@@ -188,6 +199,17 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
             }
         }
 
+        /* text field must use a valid regex pattern */
+        String messageText = mTextFilterText.getText().trim();
+        if (!messageText.equals("")) {
+            try {
+                Pattern.compile(messageText);
+            } catch (PatternSyntaxException e) {
+                return new DialogStatus(false,
+                        "Invalid regex used in text field: " + e.getMessage());
+            }
+        }
+
         return new DialogStatus(true, null);
     }
 
@@ -211,6 +233,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         /* save values from the widgets before the shell is closed. */
         mFilterName = mFilterNameText.getText();
         mTag = mTagFilterText.getText();
+        mText = mTextFilterText.getText();
         mLogLevel = mLogLevelCombo.getText();
 
         String pidText = mPIDFilterText.getText().trim();
@@ -235,6 +258,14 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      */
     public String getTag() {
         return mTag;
+    }
+
+    /**
+     * Obtain the text regex to filter by.
+     * @return user provided tag regex, maybe empty.
+     */
+    public String getText() {
+        return mText;
     }
 
     /**

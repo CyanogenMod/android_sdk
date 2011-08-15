@@ -78,6 +78,7 @@ public final class AaptExecLoopTask extends BaseTask {
     private boolean mVerbose = false;
     private boolean mUseCrunchCache = false;
     private int mVersionCode = 0;
+    private String mVersionName;
     private String mManifest;
     private ArrayList<Path> mResources;
     private String mAssets;
@@ -137,6 +138,14 @@ public final class AaptExecLoopTask extends BaseTask {
                         "WARNING: Ignoring invalid version code value '%s'.", versionCode));
             }
         }
+    }
+
+    /**
+     * Sets the value of the "versionName" attribute
+     * @param versionName the value
+     */
+    public void setVersionname(String versionName) {
+        mVersionName = versionName;
     }
 
     public void setDebug(boolean value) {
@@ -416,6 +425,11 @@ public final class AaptExecLoopTask extends BaseTask {
         if (mVersionCode != 0) {
             task.createArg().setValue("--version-code");
             task.createArg().setValue(Integer.toString(mVersionCode));
+        }
+
+        if ((mVersionName != null) && (mVersionName.length() > 0)) {
+            task.createArg().setValue("--version-name");
+            task.createArg().setValue(mVersionName);
         }
 
         // manifest location
