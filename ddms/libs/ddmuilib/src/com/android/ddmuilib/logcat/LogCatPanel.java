@@ -135,7 +135,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             public void propertyChange(PropertyChangeEvent event) {
                 if (event.getProperty().equals(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY)) {
                     mLogCatMessageLabelProvider.setFont(getFontFromPrefStore());
-                    mViewer.refresh();
+                    refreshLogCatTable();
                 }
             }
         });
@@ -375,7 +375,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             @Override
             public void widgetSelected(SelectionEvent arg0) {
                 mReceiver.clearMessages();
-                mViewer.refresh();
+                refreshLogCatTable();
             }
         });
 
@@ -572,6 +572,10 @@ public final class LogCatPanel extends SelectionDependentPanel
      * Implements {@link ILogCatMessageEventListener#messageReceived()}.
      */
     public void messageReceived() {
+        refreshLogCatTable();
+    }
+
+    private void refreshLogCatTable() {
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
                 if (mViewer.getTable().isDisposed()) {
