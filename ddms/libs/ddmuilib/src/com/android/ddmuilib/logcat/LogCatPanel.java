@@ -26,10 +26,11 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
@@ -120,10 +121,13 @@ public final class LogCatPanel extends SelectionDependentPanel
         mLogCatFilters = new ArrayList<LogCatFilterSettings>();
 
         /* add a couple of filters by default */
+        String tag = "";
+        String text = "";
+        String pid = "";
         mLogCatFilters.add(new LogCatFilterSettings("All messages (no filters)",
-                "", "", LogLevel.VERBOSE));
+                tag, text, pid, LogLevel.VERBOSE));
         mLogCatFilters.add(new LogCatFilterSettings("Errors only",
-                "", "", LogLevel.ERROR));
+                tag, text, pid, LogLevel.ERROR));
 
         /* FIXME restore saved filters from prefStore */
     }
@@ -252,6 +256,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         LogCatFilterSettings f = new LogCatFilterSettings(d.getFilterName().trim(),
                 d.getTag().trim(),
+                d.getText().trim(),
                 d.getPID().trim(),
                 LogLevel.getByString(d.getLogLevel()));
 
@@ -289,14 +294,15 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         LogCatFilterSettingsDialog dialog = new LogCatFilterSettingsDialog(
                 Display.getCurrent().getActiveShell());
-        dialog.setDefaults(curFilter.getName(), curFilter.getTag(), curFilter.getPidString(),
-                curFilter.getLogLevel());
+        dialog.setDefaults(curFilter.getName(), curFilter.getTag(), curFilter.getText(),
+                curFilter.getPidString(), curFilter.getLogLevel());
         if (dialog.open() != Window.OK) {
             return;
         }
 
         LogCatFilterSettings f = new LogCatFilterSettings(dialog.getFilterName(),
                 dialog.getTag(),
+                dialog.getText(),
                 dialog.getPID(),
                 LogLevel.getByString(dialog.getLogLevel()));
         mLogCatFilters.set(selectedIndex, f);
@@ -348,11 +354,22 @@ public final class LogCatPanel extends SelectionDependentPanel
         mLiveFilterText = new Text(c, SWT.BORDER | SWT.SEARCH);
         mLiveFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mLiveFilterText.setMessage(DEFAULT_SEARCH_MESSAGE);
+        mLiveFilterText.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent arg0) {
+                updateAppliedFilters();
+            }
+        });
 
         mLiveFilterLevelCombo = new Combo(c, SWT.READ_ONLY | SWT.DROP_DOWN);
         mLiveFilterLevelCombo.setItems(
                 LogCatFilterSettingsDialog.getLogLevels().toArray(new String[0]));
         mLiveFilterLevelCombo.select(0);
+        mLiveFilterLevelCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                updateAppliedFilters();
+            }
+        });
 
         ToolBar toolBar = new ToolBar(c, SWT.FLAT);
 
@@ -378,10 +395,6 @@ public final class LogCatPanel extends SelectionDependentPanel
                 refreshLogCatTable();
             }
         });
-
-        /* FIXME: Enable all the UI elements after adding support for user interaction with them. */
-        mLiveFilterText.setEnabled(false);
-        mLiveFilterLevelCombo.setEnabled(false);
     }
 
     /**
@@ -534,34 +547,51 @@ public final class LogCatPanel extends SelectionDependentPanel
      * Perform all necessary updates whenever a filter is selected (by user or programmatically).
      */
     private void filterSelectionChanged() {
-        int idx = mFiltersTableViewer.getTable().getSelectionIndex();
-
-        updateFiltersToolBar(idx);
-        selectFilter(idx);
+        updateFiltersToolBar();
+        updateAppliedFilters();
     }
 
-    private void updateFiltersToolBar(int index) {
-        boolean en = true;
-        if (index == 0) {
-            en = false;
-        }
+    private int getSavedFilterIndex() {
+        return mFiltersTableViewer.getTable().getSelectionIndex();
+    }
 
-        /* The default filter at index 0 can neither be edited or removed. */
+    private void updateFiltersToolBar() {
+        /* The default filter at index 0 can neither be edited, nor removed. */
+        boolean en = getSavedFilterIndex() != 0;
         mEditFilterToolItem.setEnabled(en);
         mDeleteFilterToolItem.setEnabled(en);
     }
 
-    private void selectFilter(int index) {
-        assert index > 0 && index < mLogCatFilters.size();
-
-        mViewer.setFilters(new ViewerFilter[] {
-                new LogCatViewerFilter(mLogCatFilters.get(index)),
-        });
+    private void updateAppliedFilters() {
+        /* list of filters to apply = saved filter + live filters */
+        List<LogCatViewerFilter> filters = new ArrayList<LogCatViewerFilter>();
+        filters.add(getSelectedSavedFilter());
+        filters.addAll(getCurrentLiveFilters());
+        mViewer.setFilters(filters.toArray(new LogCatViewerFilter[filters.size()]));
 
         /* whenever filters are changed, the number of displayed logs changes
          * drastically. Display the latest log in such a situation. */
         scrollToLatestLog();
     }
+
+    private List<LogCatViewerFilter> getCurrentLiveFilters() {
+        List<LogCatViewerFilter> liveFilters = new ArrayList<LogCatViewerFilter>();
+
+        List<LogCatFilterSettings> liveFilterSettings = LogCatFilterSettings.fromString(
+                mLiveFilterText.getText(),                                  /* current query */
+                LogLevel.getByString(mLiveFilterLevelCombo.getText()));     /* current log level */
+        for (LogCatFilterSettings s : liveFilterSettings) {
+            liveFilters.add(new LogCatViewerFilter(s));
+        }
+
+        return liveFilters;
+    }
+
+    private LogCatViewerFilter getSelectedSavedFilter() {
+        int index = getSavedFilterIndex();
+        return new LogCatViewerFilter(mLogCatFilters.get(index));
+    }
+
 
     @Override
     public void setFocus() {
