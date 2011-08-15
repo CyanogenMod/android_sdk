@@ -349,6 +349,10 @@ public final class SectionHelper {
             text.setLayoutData(twd);
         }
         text.setWhitespaceNormalized(true);
+        if (isHtml && !label.startsWith("<form>")) {          //$NON-NLS-1$
+            assert label.startsWith("<form>") : "HTML for FormText must be wrapped in <form>...</form>"; //$NON-NLS-1$
+            label = "<form>" + label + "</form>";   //$NON-NLS-1$ //$NON-NLS-2$
+        }
         text.setText(label, isHtml /* parseTags */, isHtml /* expandURLs */);
         return text;
     }

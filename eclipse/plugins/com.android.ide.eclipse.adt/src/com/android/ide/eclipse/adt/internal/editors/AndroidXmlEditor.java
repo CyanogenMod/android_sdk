@@ -413,10 +413,13 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 final IEditorInput input = getEditorInput();
                 Display.getDefault().asyncExec(new Runnable() {
                     public void run() {
-                        IWorkbenchPage[] pages = getSite().getWorkbenchWindow().getPages();
-                        for (int i = 0; i < pages.length; i++) {
-                            IEditorPart editorPart = pages[i].findEditor(input);
-                            pages[i].closeEditor(editorPart, true);
+                        // FIXME understand why this code is accessing the current window's pages,
+                        // if that's *this* instance, we have a local pages member from the super
+                        // class we can use directly. If this is justified, please explain.
+                        IWorkbenchPage[] windowPages = getSite().getWorkbenchWindow().getPages();
+                        for (int i = 0; i < windowPages.length; i++) {
+                            IEditorPart editorPart = windowPages[i].findEditor(input);
+                            windowPages[i].closeEditor(editorPart, true);
                         }
                     }
                 });
