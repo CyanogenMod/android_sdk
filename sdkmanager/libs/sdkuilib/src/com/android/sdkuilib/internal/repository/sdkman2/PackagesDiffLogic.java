@@ -348,7 +348,7 @@ class PackagesDiffLogic {
             }
         }
 
-        // Downgrade INSTALLED items to NEW if their package isn't listed anymore in locals
+        // Remove INSTALLED items if their package isn't listed anymore in locals
         for (PkgCategory cat : op.getCategories()) {
             List<PkgItem> items = cat.getItems();
             for (int i = 0; i < items.size(); i++) {
@@ -357,7 +357,7 @@ class PackagesDiffLogic {
                 if (item.getState() == PkgState.INSTALLED) {
                     Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
                     if (newPkg == null) {
-                        replace(items, i, new PkgItem(item.getMainPackage(), PkgState.NEW));
+                        items.remove(i--);
                         hasChanged = true;
                     }
                 }
