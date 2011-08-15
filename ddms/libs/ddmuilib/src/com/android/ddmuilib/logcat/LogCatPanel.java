@@ -619,7 +619,7 @@ public final class LogCatPanel extends SelectionDependentPanel
      * Update view whenever a message is received.
      * Implements {@link ILogCatMessageEventListener#messageReceived()}.
      */
-    public void messageReceived() {
+    public void messageReceived(List<LogCatMessage> receivedMessages) {
         refreshLogCatTable();
     }
 

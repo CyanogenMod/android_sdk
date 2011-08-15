@@ -155,7 +155,7 @@ public final class LogCatReceiver {
             for (LogCatMessage m: messages) {
                 mLogMessages.appendMessage(m);
             }
-            sendMessageReceivedEvent();
+            sendMessageReceivedEvent(messages);
         }
     }
 
@@ -182,9 +182,9 @@ public final class LogCatReceiver {
         mLogCatMessageListeners.add(l);
     }
 
-    private void sendMessageReceivedEvent() {
+    private void sendMessageReceivedEvent(List<LogCatMessage> messages) {
         for (ILogCatMessageEventListener l: mLogCatMessageListeners) {
-            l.messageReceived();
+            l.messageReceived(messages);
         }
     }
 }
