@@ -102,8 +102,6 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Weird things will happen if setProgressMax is called multiple times
      * *after* {@link #incProgress(int)}: we don't try to adjust it on the
      * fly.
-     *
-     * @see ProgressBar#setMaximum(int)
      */
     public void setProgressMax(int max) {
         assert max > 0;
