@@ -120,6 +120,7 @@
          before, then this will create them with empty values, which are then ignored
          by the custom tasks receiving them. -->
     <property name="version.code" value="" />
+    <property name="version.name" value="" />
     <property name="aapt.resource.filter" value="" />
     <property name="filter.abi" value="" />
 
@@ -519,6 +520,7 @@
         <aapt executable="${aapt}"
                 command="package"
                 versioncode="${version.code}"
+                versionname="${version.name}"
                 debug="${build.packaging.debug}"
                 manifest="AndroidManifest.xml"
                 assets="${asset.absolute.dir}"
