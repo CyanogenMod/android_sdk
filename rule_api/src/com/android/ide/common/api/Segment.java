@@ -16,8 +16,6 @@
 
 package com.android.ide.common.api;
 
-import com.android.ide.common.layout.relative.MarginType;
-
 /**
  * A segment is a straight horizontal or vertical line between two points, typically an
  * edge of a node but also possibly some internal segment like a baseline or a center
