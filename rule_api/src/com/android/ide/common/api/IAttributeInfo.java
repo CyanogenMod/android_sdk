@@ -81,4 +81,6 @@ public interface IAttributeInfo {
     /** Returns the documentation for deprecated attributes. Null if not deprecated. */
     public String getDeprecatedDoc();
 
+    /** Returns the fully qualified class name of the view defining this attribute */
+    public String getDefinedBy();
 }

@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import java.util.List;
+
 /**
  * Metadata about a particular view. The metadata for a View can be found by asking the
  * {@link IClientRulesEngine} for the metadata for a given class via
@@ -47,6 +49,14 @@ public interface IViewMetadata {
      * @return the {@link FillPreference} of this view
      */
     public FillPreference getFillPreference();
+
+    /**
+     * Returns the most common attributes for this view.
+     *
+     * @return a list of attribute names (not including a namespace prefix) that
+     *         are commonly set for this type of view, never null
+     */
+    public List<String> getTopAttributes();
 
     /**
      * Types of fill behavior that views can prefer.

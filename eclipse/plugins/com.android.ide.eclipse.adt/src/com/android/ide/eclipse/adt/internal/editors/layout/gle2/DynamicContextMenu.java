@@ -469,6 +469,7 @@ class DynamicContextMenu {
             Set<String> availableIds = computeApplicableActionIds(allActions);
             List<RuleAction> firstSelectedActions = allActions.get(mNodes.get(0));
 
+            int count = 0;
             for (RuleAction firstAction : firstSelectedActions) {
                 if (!availableIds.contains(firstAction.getId())
                         && !(firstAction instanceof RuleAction.Separator)) {
@@ -477,6 +478,11 @@ class DynamicContextMenu {
                 }
 
                 createContributionItem(firstAction, mNodes).fill(menu, -1);
+                count++;
+            }
+
+            if (count == 0) {
+                addDisabledMessageItem("<Empty>");
             }
         }
     }
@@ -546,7 +552,8 @@ class DynamicContextMenu {
                 }
 
                 String title = titles.get(i);
-                IAction a = new Action(title, IAction.AS_PUSH_BUTTON) {
+                IAction a = new Action(title,
+                        current != null ? IAction.AS_CHECK_BOX : IAction.AS_PUSH_BUTTON) {
                     @Override
                     public void runWithEvent(Event event) {
                         run();

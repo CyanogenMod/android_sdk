@@ -281,6 +281,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 styleInfo,
                 false,      //required
                 null);      // overrides
+        styleInfo.setDefinedBy(SdkConstants.CLASS_VIEW);
 
         // Process all View attributes
         DescriptorsUtils.appendAttributes(attributes,
@@ -290,11 +291,17 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 null, // requiredAttributes
                 null /* overrides */);
 
+        List<String> attributeSources = new ArrayList<String>();
+        if (info.getAttributes() != null && info.getAttributes().length > 0) {
+            attributeSources.add(fqcn);
+        }
+
         for (ViewClassInfo link = info.getSuperClass();
                 link != null;
                 link = link.getSuperClass()) {
             AttributeInfo[] attrList = link.getAttributes();
             if (attrList.length > 0) {
+                attributeSources.add(link.getFullClassName());
                 attributes.add(new SeparatorAttributeDescriptor(
                         String.format("Attributes from %1$s", link.getShortClassName())));
                 DescriptorsUtils.appendAttributes(attributes,
@@ -318,14 +325,16 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                     continue;
                 }
                 if (needSeparator) {
+                    ViewClassInfo viewLayoutClass = layoutParams.getViewLayoutClass();
                     String title;
+                    String shortClassName = viewLayoutClass.getShortClassName();
                     if (layoutParams.getShortClassName().equals(
                             SdkConstants.CLASS_NAME_LAYOUTPARAMS)) {
                         title = String.format("Layout Attributes from %1$s",
-                                    layoutParams.getViewLayoutClass().getShortClassName());
+                                    shortClassName);
                     } else {
                         title = String.format("Layout Attributes from %1$s (%2$s)",
-                                layoutParams.getViewLayoutClass().getShortClassName(),
+                                shortClassName,
                                 layoutParams.getShortClassName());
                     }
                     layoutAttributes.add(new SeparatorAttributeDescriptor(title));
@@ -350,6 +359,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
                 layoutAttributes.toArray(new AttributeDescriptor[layoutAttributes.size()]),
                 null, // children
                 false /* mandatory */);
+        desc.setAttributeSources(Collections.unmodifiableList(attributeSources));
         infoDescMap.put(info, desc);
         return desc;
     }

@@ -176,6 +176,9 @@ public class LayoutConstants {
     /** The android.webkit. package prefix */
     public static final String ANDROID_WEBKIT_PKG = ANDROID_PKG_PREFIX + "webkit."; //$NON-NLS-1$
 
+    /** The LayoutParams inner-class name suffix, .LayoutParams */
+    public static final String DOT_LAYOUT_PARAMS = ".LayoutParams"; //$NON-NLS-1$
+
     /** The fully qualified class name of an EditText view */
     public static final String FQCN_EDIT_TEXT = "android.widget.EditText"; //$NON-NLS-1$
 

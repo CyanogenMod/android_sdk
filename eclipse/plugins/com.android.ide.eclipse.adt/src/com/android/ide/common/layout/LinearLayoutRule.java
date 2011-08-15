@@ -44,14 +44,13 @@ import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.RuleAction;
-import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.SdkConstants;
-import com.android.util.Pair;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -87,33 +86,6 @@ public class LinearLayoutRule extends BaseLayoutRule {
             LinearLayoutRule.class.getResource("clearweights.png"); //$NON-NLS-1$
     private static final URL ICON_DOMINATE =
             LinearLayoutRule.class.getResource("allweight.png"); //$NON-NLS-1$
-
-    /**
-     * Add an explicit Orientation toggle to the context menu.
-     */
-    @Override
-    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
-        super.addContextMenuActions(actions, selectedNode);
-        if (supportsOrientation()) {
-            String current = getCurrentOrientation(selectedNode);
-            IMenuCallback onChange = new PropertyCallback(
-                    null, // use passed in nodes instead to support multiple nodes
-                    "Change LinearLayout Orientation",
-                    ANDROID_URI, ATTR_ORIENTATION);
-            List<Pair<String, String>> alternatives = new ArrayList<Pair<String,String>>(2);
-            alternatives.add(Pair.of("horizontal", "Horizontal")); //$NON-NLS-1$
-            alternatives.add(Pair.of("vertical", "Vertical"));     //$NON-NLS-1$
-            RuleAction action = RuleAction.createChoices(
-                    ACTION_ORIENTATION, "Orientation",  //$NON-NLS-1$
-                    onChange,
-                    null /* iconUrls */,
-                    current,
-                    null /* icon */, 5, true,
-                    alternatives);
-
-            actions.add(action);
-        }
-    }
 
     /**
      * Returns the current orientation, regardless of whether it has been defined in XML

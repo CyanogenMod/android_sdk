@@ -296,7 +296,7 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
         return mAttributes;
     }
 
-    /* Sets the list of allowed attributes. */
+    /** Sets the list of allowed attributes. */
     public void setAttributes(AttributeDescriptor[] attributes) {
         mAttributes = attributes;
         for (AttributeDescriptor attribute : attributes) {

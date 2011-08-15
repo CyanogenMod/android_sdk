@@ -18,6 +18,8 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gre;
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository.RenderMode;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 public class ViewMetadataRepositoryTest extends TestCase {
@@ -60,4 +62,16 @@ public class ViewMetadataRepositoryTest extends TestCase {
         assertEquals(RenderMode.SKIP, repository.getRenderMode("android.widget.LinearLayout"));
         assertEquals(RenderMode.ALONE, repository.getRenderMode("android.widget.TabHost"));
     }
+
+    public void testGetTopAttributes() throws Exception {
+        ViewMetadataRepository repository = ViewMetadataRepository.get();
+        assertEquals(Arrays.asList("id", "text", "style"),
+                repository.getTopAttributes("android.widget.RadioButton"));
+        assertEquals(Arrays.asList("id", "gravity", "paddingLeft", "paddingRight", "checkMark",
+                "textAppearance"),
+                repository.getTopAttributes("android.widget.CheckedTextView"));
+        assertEquals(Arrays.asList("id"),
+                repository.getTopAttributes("android.widget.NonExistent"));
+    }
+
 }

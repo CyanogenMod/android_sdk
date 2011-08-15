@@ -25,6 +25,7 @@ import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,8 @@ public class TestNode implements INode {
     private Map<String, IAttribute> mAttributes = new HashMap<String, IAttribute>();
 
     private Map<String, IAttributeInfo> mAttributeInfos = new HashMap<String, IAttributeInfo>();
+
+    private List<String> mAttributeSources;
 
     public TestNode(String fqcn) {
         this.mFqcn = fqcn;
@@ -96,6 +99,10 @@ public class TestNode implements INode {
 
     public void editXml(String undoName, INodeHandler callback) {
         callback.handle(this);
+    }
+
+    public void putAttributeInfo(String uri, String attrName, IAttributeInfo info) {
+        mAttributeInfos.put(uri + attrName, info);
     }
 
     public IAttributeInfo getAttributeInfo(String uri, String attrName) {
@@ -179,5 +186,13 @@ public class TestNode implements INode {
 
     public Margins getMargins() {
         return null;
+    }
+
+    public List<String> getAttributeSources() {
+        return mAttributeSources != null ? mAttributeSources : Collections.<String>emptyList();
+    }
+
+    public void setAttributeSources(List<String> attributeSources) {
+        mAttributeSources = attributeSources;
     }
 }

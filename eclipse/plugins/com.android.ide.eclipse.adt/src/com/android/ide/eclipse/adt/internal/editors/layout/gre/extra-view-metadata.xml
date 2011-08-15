@@ -26,6 +26,7 @@
     render (alone|skip|normal) "normal"
     fill (none|both|width|height|opposite|width_in_vertical|height_in_horizontal) "none"
     resize (full|none|horizontal|vertical|scaled) "full"
+    topAttrs CDATA #IMPLIED
 >
 ]>
 <metadata>
@@ -33,6 +34,7 @@
         name="Form Widgets">
         <view
             class="android.widget.TextView"
+            topAttrs="text,textAppearance,textColor,textSize"
             name="TextView"
             init=""
             relatedTo="EditText,AutoCompleteTextView,MultiAutoCompleteTextView">
@@ -48,25 +50,32 @@
         </view>
         <view
             class="android.widget.Button"
+            topAttrs="text,style"
             relatedTo="ImageButton" />
         <view
             class="android.widget.ToggleButton"
+            topAttrs="textOff,textOn,style,background"
             relatedTo="CheckBox" />
         <view
             class="android.widget.CheckBox"
+            topAttrs="text"
             relatedTo="RadioButton,ToggleButton,CheckedTextView" />
         <view
             class="android.widget.RadioButton"
+            topAttrs="text,style"
             relatedTo="CheckBox,ToggleButton" />
         <view
             class="android.widget.CheckedTextView"
+            topAttrs="gravity,paddingLeft,paddingRight,checkMark,textAppearance"
             relatedTo="TextView,CheckBox" />
         <view
             class="android.widget.Spinner"
+            topAttrs="prompt,entries,style"
             relatedTo="EditText"
             fill="width_in_vertical" />
         <view
             class="android.widget.ProgressBar"
+            topAttrs="style,visibility,indeterminate,max"
             relatedTo="SeekBar"
             name="ProgressBar (Large)"
             init="style=?android:attr/progressBarStyleLarge"
@@ -86,22 +95,27 @@
         </view>
         <view
             class="android.widget.SeekBar"
+            topAttrs="paddingLeft,paddingRight,progressDrawable,thumb"
             relatedTo="ProgressBar"
             resize="horizontal"
             fill="width_in_vertical" />
         <view
             class="android.widget.QuickContactBadge"
+            topAttrs="src,style,gravity"
             resize="scaled" />
         <view
-            class="android.widget.RadioGroup" />
+            class="android.widget.RadioGroup"
+            topAttrs="orientation,paddingBottom,paddingTop,style" />
         <view
             class="android.widget.RatingBar"
+            topAttrs="numStars,stepSize,style,isIndicator"
             resize="horizontal" />
     </category>
     <category
         name="Text Fields">
         <view
             class="android.widget.EditText"
+            topAttrs="hint,inputType,singleLine"
             name="Plain Text"
             init=""
             resize="full"
@@ -148,9 +162,11 @@
         </view>
         <view
             class="android.widget.AutoCompleteTextView"
+            topAttrs="singleLine,autoText"
             fill="width_in_vertical" />
         <view
             class="android.widget.MultiAutoCompleteTextView"
+            topAttrs="background,hint,imeOptions,inputType,style,textColor"
             fill="width_in_vertical" />
     </category>
     <category
@@ -161,6 +177,7 @@
             render="skip" />
         <view
             class="android.widget.LinearLayout"
+            topAttrs="orientation,gravity"
             name="LinearLayout (Vertical)"
             init="android:orientation=vertical"
             icon="VerticalLinearLayout"
@@ -171,27 +188,33 @@
         </view>
         <view
             class="android.widget.RelativeLayout"
+            topAttrs="background,orientation,paddingLeft"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.FrameLayout"
+            topAttrs="background"
             fill="opposite"
             render="skip" />
         <view
             class="include"
+            topAttrs="layout"
             name="Include Other Layout"
             render="skip" />
         <view
             class="fragment"
+            topAttrs="class,name"
             name="Fragment"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.TableLayout"
+            topAttrs="stretchColumns,shrinkColumns,orientation"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.TableRow"
+            topAttrs="paddingTop,focusable,gravity,visibility"
             fill="opposite"
             resize="vertical"
             render="skip" />
@@ -204,39 +227,49 @@
         name="Composite">
         <view
             class="android.widget.ListView"
+            topAttrs="drawSelectorOnTop,cacheColorHint,divider,background"
             relatedTo="ExpandableListView"
             fill="width_in_vertical" />
         <view
             class="android.widget.ExpandableListView"
+            topAttrs="drawSelectorOnTop,cacheColorHint,indicatorLeft,indicatorRight,scrollbars,textSize"
             relatedTo="ListView"
             fill="width_in_vertical" />
         <view
             class="android.widget.GridView"
+            topAttrs="numColumns,verticalSpacing,horizontalSpacing"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.ScrollView"
+            topAttrs="fillViewport,orientation,scrollbars"
             relatedTo="HorizontalScrollView"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.HorizontalScrollView"
+            topAttrs="scrollbars,fadingEdgeLength,fadingEdge"
             relatedTo="ScrollView"
             render="skip" />
         <view
             class="android.widget.SearchView"
+            topAttrs="iconifiedByDefault,queryHint,maxWidth,minWidth,visibility"
             render="skip" />
         <view
-            class="android.widget.SlidingDrawer" />
+            class="android.widget.SlidingDrawer"
+            topAttrs="allowSingleTap,bottomOffset,content,handle,topOffset,visibility" />
         <view
             class="android.widget.TabHost"
+            topAttrs="paddingTop,background,duplicateParentState,visibility"
             fill="width_in_vertical"
             render="alone" />
         <view
             class="android.widget.TabWidget"
+            topAttrs="background,paddingLeft,tabStripEnabled,gravity"
             render="alone" />
         <view
             class="android.webkit.WebView"
+            topAttrs="background,visibility,textAppearance"
             fill="opposite"
             render="skip" />
     </category>
@@ -244,14 +277,17 @@
         name="Images &amp; Media">
         <view
             class="android.widget.ImageView"
+            topAttrs="src,scaleType"
             resize="scaled"
             relatedTo="ImageButton,VideoView" />
         <view
             class="android.widget.ImageButton"
+            topAttrs="src,background,style"
             resize="scaled"
             relatedTo="Button,ImageView" />
         <view
             class="android.widget.Gallery"
+            topAttrs="gravity,spacing,background"
             fill="width_in_vertical"
             render="skip" />
         <view
@@ -267,6 +303,7 @@
         name="Time &amp; Date">
         <view
             class="android.widget.TimePicker"
+            topAttrs="visibility"
             relatedTo="DatePicker,CalendarView"
             render="alone" />
         <view
@@ -275,13 +312,16 @@
             render="alone" />
         <view
             class="android.widget.CalendarView"
+            topAttrs="focusable,focusableInTouchMode,visibility"
             fill="both"
             relatedTo="TimePicker,DatePicker" />
         <view
             class="android.widget.Chronometer"
+            topAttrs="textSize,gravity,visibility"
             render="skip" />
         <view
             class="android.widget.AnalogClock"
+            topAttrs="dial,hand_hour,hand_minute"
             relatedTo="DigitalClock" />
         <view
             class="android.widget.DigitalClock"
@@ -291,14 +331,17 @@
         name="Transitions">
         <view
             class="android.widget.ImageSwitcher"
+            topAttrs="inAnimation,outAnimation,cropToPadding,padding,scaleType"
             relatedTo="ViewFlipper,ViewSwitcher,TextSwitcher"
             render="skip" />
         <view
             class="android.widget.AdapterViewFlipper"
+            topAttrs="autoStart,flipInterval,inAnimation,outAnimation"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.StackView"
+            topAttrs="loopViews,gravity"
             fill="opposite"
             render="skip" />
         <view
@@ -308,15 +351,18 @@
             render="skip" />
         <view
             class="android.widget.ViewAnimator"
+            topAttrs="inAnimation,outAnimation"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.ViewFlipper"
+            topAttrs="flipInterval,inAnimation,outAnimation,addStatesFromChildren,measureAllChildren"
             relatedTo="ViewSwitcher,ImageSwitcher,TextSwitcher"
             fill="opposite"
             render="skip" />
         <view
             class="android.widget.ViewSwitcher"
+            topAttrs="inAnimation,outAnimation"
             relatedTo="ViewFlipper,ImageSwitcher,TextSwitcher"
             fill="opposite"
             render="skip" />
@@ -328,12 +374,15 @@
             render="skip" />
         <view
             class="android.view.View"
+            topAttrs="background,visibility,style"
             render="skip" />
         <view
             class="android.view.ViewStub"
+            topAttrs="layout,inflatedId,visibility"
             render="skip" />
         <view
             class="android.gesture.GestureOverlayView"
+            topAttrs="gestureStrokeType,uncertainGestureColor,eventsInterceptionEnabled,gestureColor,orientation"
             render="skip" />
         <view
             class="android.view.TextureView"
@@ -343,17 +392,21 @@
             render="skip" />
         <view
             class="android.widget.NumberPicker"
+            topAttrs="focusable,focusableInTouchMode"
             relatedTo="TimePicker,DatePicker"
             render="alone" />
         <view
             class="android.widget.ZoomButton"
+            topAttrs="background"
             relatedTo="Button,ZoomControls" />
         <view
             class="android.widget.ZoomControls"
+            topAttrs="style,background,gravity"
             relatedTo="ZoomButton"
             resize="none" />
         <view
             class="merge"
+            topAttrs="orientation,gravity,style"
             skip="true"
             render="skip" />
         <view
@@ -362,9 +415,11 @@
             render="skip" />
         <view
             class="android.widget.TwoLineListItem"
+            topAttrs="mode,paddingBottom,paddingTop,minHeight,paddingLeft"
             render="skip" />
         <view
             class="android.widget.AbsoluteLayout"
+            topAttrs="background,orientation,paddingBottom,paddingLeft,paddingRight,paddingTop"
             name="AbsoluteLayout (Deprecated)"
             fill="opposite"
             render="skip" />
