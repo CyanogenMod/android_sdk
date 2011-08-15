@@ -67,19 +67,22 @@ public interface IViewRule {
      * If null is returned, the GLE will automatically shorten the class name using its
      * own heuristic, which is to keep the first 2 package components and the class name.
      * The class name is the <code>fqcn</code> argument that was given
-     * to {@link #onInitialize(String)}.
+     * to {@link #onInitialize(String,IClientRulesEngine)}.
      *
      * @return Null for the default behavior or a shortened string.
      */
     String getDisplayName();
 
     /**
-     * Invoked by the Rules Engine to retrieve a set of actions to customize
+     * Invoked by the Rules Engine to produce a set of actions to customize
      * the context menu displayed for this view. The result is not cached and the
      * method is invoked every time the context menu is about to be shown.
+     * <p>
+     * The order of the menu items is determined by the sort priority set on
+     * the actions.
      * <p/>
-     * Most rules should consider returning <code>super.getContextMenu(node)</code>
-     * and appending their own custom menu actions, if any.
+     * Most rules should consider calling super.{@link #addContextMenuActions(List, INode)}
+     * as well.
      * <p/>
      * Menu actions are either toggles or fixed lists with one currently-selected
      * item. It is expected that the rule will need to recreate the actions with
@@ -87,16 +90,18 @@ public interface IViewRule {
      * is not cached. However rules are encouraged to cache some or all of the result
      * to speed up following calls if it makes sense.
      *
-     * @return Null for no context menu, or a new {@link MenuAction} describing one
-     *   or more actions to display in the context menu.
+     * @param actions a list of actions to add new context menu actions into. The order
+     *    of the actions in this list is not important; it will be sorted by
+     *    {@link RuleAction#getSortPriority()} later.
+     * @param node the node to add actions for.
      */
-    List<MenuAction> getContextMenu(INode node);
+    void addContextMenuActions(List<RuleAction> actions, INode node);
 
     /**
      * Invoked by the Rules Engine to ask the parent layout for the set of layout actions
      * to display in the layout bar. The layout rule should add these into the provided
      * list. The order the items are added in does not matter; the
-     * {@link MenuAction#getSortPriority()} values will be used to sort the actions prior
+     * {@link RuleAction#getSortPriority()} values will be used to sort the actions prior
      * to display, which makes it easier for parent rules and deriving rules to interleave
      * their respective actions.
      *
@@ -104,7 +109,7 @@ public interface IViewRule {
      * @param parentNode the parent of the selection, or the selection itself if the root
      * @param targets the targeted/selected nodes, if any
      */
-    void addLayoutActions(List<MenuAction> actions,
+    void addLayoutActions(List<RuleAction> actions,
             INode parentNode, List<? extends INode> targets);
 
     // ==== Selection ====

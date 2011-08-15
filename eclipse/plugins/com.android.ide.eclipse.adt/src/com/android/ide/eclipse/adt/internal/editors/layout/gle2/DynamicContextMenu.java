@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.EXPANDABLE_LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.GRID_VIEW;
@@ -23,12 +25,15 @@ import static com.android.ide.common.layout.LayoutConstants.LIST_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.SPINNER;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
-import com.android.ide.common.api.IMenuCallback;
+import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.MenuAction;
-import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
+import com.android.ide.common.api.RuleAction.NestedAction;
+import com.android.ide.common.api.RuleAction.Toggle;
+import com.android.ide.common.layout.BaseViewRule;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewAction;
@@ -39,20 +44,23 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Menu;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 /**
  * Helper class that is responsible for adding and managing the dynamic menu items
@@ -65,7 +73,7 @@ import java.util.regex.Pattern;
  * created by {@link OutlinePage}. Different root {@link MenuManager}s are populated, however
  * they are both linked to the current selection state of the {@link LayoutCanvas}.
  */
-/* package */ class DynamicContextMenu {
+class DynamicContextMenu {
 
     /** The XML layout editor that contains the canvas that uses this menu. */
     private final LayoutEditor mEditor;
@@ -75,7 +83,6 @@ import java.util.regex.Pattern;
 
     /** The root menu manager of the context menu. */
     private final MenuManager mMenuManager;
-
 
     /**
      * Creates a new helper responsible for adding and managing the dynamic menu items
@@ -125,22 +132,12 @@ import java.util.regex.Pattern;
     }
 
     /**
-     * This is invoked by <code>menuAboutToShow</code> on {@link #mMenuManager}.
+     * This method is invoked by <code>menuAboutToShow</code> on {@link #mMenuManager}.
      * All previous dynamic menu actions have been removed and this method can now insert
      * any new actions that depend on the current selection.
      */
     private void populateDynamicContextMenu() {
-        // Map action-id => action object (one per selected view that defined it)
-        final TreeMap<String /*id*/, ArrayList<MenuAction>> actionsMap =
-            new TreeMap<String, ArrayList<MenuAction>>();
-
-        // Map group-id => actions to place in this group.
-        TreeMap<String /*id*/, MenuAction.Group> groupsMap =
-            new TreeMap<String, MenuAction.Group>();
-
-        int maxMenuSelection = collectDynamicMenuActions(actionsMap, groupsMap);
-
-        // Now create the actual menu contributions
+        //  Create the actual menu contributions
         String endId = mMenuManager.getItems()[0].getId();
 
         Separator sep = new Separator();
@@ -148,73 +145,85 @@ import java.util.regex.Pattern;
         mMenuManager.insertBefore(endId, sep);
         endId = sep.getId();
 
-        // First create the groups
-        Map<String, MenuManager> menuGroups = new HashMap<String, MenuManager>();
-        for (MenuAction.Group group : groupsMap.values()) {
-            String id = group.getId();
-            MenuManager submenu = new MenuManager(group.getTitle(), id);
-            menuGroups.put(id, submenu);
-            mMenuManager.insertBefore(endId, submenu);
-            endId = id;
+        List<SelectionItem> selections = mCanvas.getSelectionManager().getSelections();
+        if (selections.size() == 0) {
+            return;
+        }
+        List<INode> nodes = new ArrayList<INode>(selections.size());
+        for (SelectionItem item : selections) {
+            nodes.add(item.getNode());
         }
 
-        boolean needGroupSep = !menuGroups.isEmpty();
-
-        // Now fill in the actions
-        for (ArrayList<MenuAction> actions : actionsMap.values()) {
-            // Filter actions... if we have a multiple selection, only accept actions
-            // which are common to *all* the selection which actually returned at least
-            // one menu action.
-            if (actions == null ||
-                    actions.isEmpty() ||
-                    actions.size() != maxMenuSelection) {
-                continue;
-            }
-
-            if (!(actions.get(0) instanceof MenuAction.Action)) {
-                continue;
-            }
-
-            // Arbitrarily select the first action, as all the actions with the same id
-            // should have the same constant attributes such as id and title.
-            final MenuAction.Action firstAction = (MenuAction.Action) actions.get(0);
-
-            IContributionItem contrib = null;
-
-            if (firstAction instanceof MenuAction.Toggle) {
-                contrib = createDynamicMenuToggle((MenuAction.Toggle) firstAction, actionsMap);
-
-            } else if (firstAction instanceof MenuAction.Choices) {
-                Map<String, String> choiceMap = ((MenuAction.Choices) firstAction).getChoices();
-                if (choiceMap != null && !choiceMap.isEmpty()) {
-                    contrib = createDynamicChoices(
-                            (MenuAction.Choices)firstAction, choiceMap, actionsMap);
-                }
-            } else {
-                // Must be a plain action
-                contrib = createDynamicAction(firstAction, actionsMap);
-            }
-
-            if (contrib != null) {
-                MenuManager groupMenu = menuGroups.get(firstAction.getGroupId());
-                if (groupMenu != null) {
-                    groupMenu.add(contrib);
-                } else {
-                    if (needGroupSep) {
-                        needGroupSep = false;
-
-                        sep = new Separator();
-                        sep.setId("-dyn-gle-sep2");  //$NON-NLS-1$
-                        mMenuManager.insertBefore(endId, sep);
-                        endId = sep.getId();
-                    }
-                    mMenuManager.insertBefore(endId, contrib);
-                }
-            }
+        List<IContributionItem> menuItems = getMenuItems(nodes);
+        for (IContributionItem menuItem : menuItems) {
+            mMenuManager.insertBefore(endId, menuItem);
         }
 
         insertTagSpecificMenus(endId);
         insertVisualRefactorings(endId);
+        insertParentItems(endId);
+    }
+
+    /**
+     * Returns the list of node-specific actions applicable to the given
+     * collection of nodes
+     *
+     * @param nodes the collection of nodes to look up actions for
+     * @return a list of contribution items applicable for all the nodes
+     */
+    private List<IContributionItem> getMenuItems(List<INode> nodes) {
+        Map<INode, List<RuleAction>> allActions = new HashMap<INode, List<RuleAction>>();
+        for (INode node : nodes) {
+            List<RuleAction> actionList = getMenuActions((NodeProxy) node);
+            allActions.put(node, actionList);
+        }
+
+        Set<String> availableIds = computeApplicableActionIds(allActions);
+
+        // +10: Make room for separators too
+        List<IContributionItem> items = new ArrayList<IContributionItem>(availableIds.size() + 10);
+
+        // We'll use the actions returned by the first node. Even when there
+        // are multiple items selected, we'll use the first action, but pass
+        // the set of all selected nodes to that first action. Actions are required
+        // to work this way to facilitate multi selection and actions which apply
+        // to multiple nodes.
+        List<RuleAction> firstSelectedActions = allActions.get(nodes.get(0));
+
+        for (RuleAction action : firstSelectedActions) {
+            if (!availableIds.contains(action.getId())
+                    && !(action instanceof RuleAction.Separator)) {
+                // This action isn't supported by all selected items.
+                continue;
+            }
+
+            items.add(createContributionItem(action, nodes));
+        }
+
+        return items;
+    }
+
+    private void insertParentItems(String endId) {
+        List<SelectionItem> selection = mCanvas.getSelectionManager().getSelections();
+        if (selection.size() == 1) {
+            mMenuManager.insertBefore(endId, new Separator());
+            INode parent = selection.get(0).getNode().getParent();
+            while (parent != null) {
+                String id = parent.getStringAttr(ANDROID_URI, ATTR_ID);
+                String label;
+                if (id != null && id.length() > 0) {
+                    label = BaseViewRule.stripIdPrefix(id);
+                } else {
+                    // Use the view name, such as "Button", as the label
+                    label = parent.getFqcn();
+                    // Strip off package
+                    label = label.substring(label.lastIndexOf('.') + 1);
+                }
+                mMenuManager.insertBefore(endId, new NestedParentMenu(label, parent));
+                parent = parent.getParent();
+            }
+            mMenuManager.insertBefore(endId, new Separator());
+        }
     }
 
     private void insertVisualRefactorings(String endId) {
@@ -264,98 +273,68 @@ import java.util.regex.Pattern;
     }
 
     /**
-     * Collects all the {@link MenuAction} contributed by the {@link IViewRule} of the
-     * current selection.
-     * This is the first step of {@link #populateDynamicContextMenu()}.
+     * Given a map from selection items to list of applicable actions (produced
+     * by {@link #computeApplicableActions()}) this method computes the set of
+     * common actions and returns the action ids of these actions.
      *
-     * @param outActionsMap Map that collects all the contributed actions.
-     * @param outGroupsMap Map that collects all the contributed groups (sub-menus).
-     * @return The max number of selected items that contributed the same action ID.
-     *   This is used later to filter on multiple selections so that we can display only
-     *   actions that are common to all selected items that contributed at least one action.
+     * @param actions a map from selection item to list of actions applicable to
+     *            that selection item
+     * @return set of action ids for the actions that are present in the action
+     *         lists for all selected items
      */
-    private int collectDynamicMenuActions(
-            final TreeMap<String, ArrayList<MenuAction>> outActionsMap,
-            final TreeMap<String, MenuAction.Group> outGroupsMap) {
-        int maxMenuSelection = 0;
-        for (SelectionItem selection : mCanvas.getSelectionManager().getSelections()) {
-            List<MenuAction> viewActions = null;
-            if (selection != null) {
-                CanvasViewInfo vi = selection.getViewInfo();
-                if (vi != null) {
-                    viewActions = getMenuActions(vi);
-                }
-            }
-            if (viewActions == null) {
-                continue;
-            }
-
-            boolean foundAction = false;
-            for (MenuAction action : viewActions) {
-
-                // Allow nulls - ignore these. Make it easier to define action lists
-                // literals where some items may not be included (because their references
-                // are null).
-                if (action == null) {
-                    continue;
-                }
-
-                if (action.getId() == null || action.getTitle() == null) {
-                    // TODO Log verbose error for invalid action.
-                    continue;
-                }
-
-                String id = action.getId();
-
-                if (action instanceof MenuAction.Group) {
-                    if (!outGroupsMap.containsKey(id)) {
-                        outGroupsMap.put(id, (MenuAction.Group) action);
-                    }
-                    continue;
-                }
-
-                ArrayList<MenuAction> actions = outActionsMap.get(id);
-                if (actions == null) {
-                    actions = new ArrayList<MenuAction>();
-                    outActionsMap.put(id, actions);
-                }
-
-                // All the actions for the same id should have be equal
-                if (!actions.isEmpty()) {
-                    if (!action.equals(actions.get(0))) {
-                        // TODO Log verbose error for invalid type mismatch.
+    private Set<String> computeApplicableActionIds(Map<INode, List<RuleAction>> actions) {
+        if (actions.size() > 1) {
+            // More than one view is selected, so we have to filter down the available
+            // actions such that only those actions that are defined for all the views
+            // are shown
+            Map<String, Integer> idCounts = new HashMap<String, Integer>();
+            for (Map.Entry<INode, List<RuleAction>> entry : actions.entrySet()) {
+                List<RuleAction> actionList = entry.getValue();
+                for (RuleAction action : actionList) {
+                    if (!action.supportsMultipleNodes()) {
                         continue;
                     }
+                    String id = action.getId();
+                    if (id != null) {
+                        assert id != null : action;
+                        Integer count = idCounts.get(id);
+                        if (count == null) {
+                            idCounts.put(id, Integer.valueOf(1));
+                        } else {
+                            idCounts.put(id, count + 1);
+                        }
+                    }
                 }
-
-                actions.add(action);
-                foundAction = true;
             }
-
-            if (foundAction) {
-                maxMenuSelection++;
+            Integer selectionCount = Integer.valueOf(actions.size());
+            Set<String> validIds = new HashSet<String>(idCounts.size());
+            for (Map.Entry<String, Integer> entry : idCounts.entrySet()) {
+                Integer count = entry.getValue();
+                if (selectionCount.equals(count)) {
+                    String id = entry.getKey();
+                    validIds.add(id);
+                }
             }
+            return validIds;
+        } else {
+            List<RuleAction> actionList = actions.values().iterator().next();
+            Set<String> validIds = new HashSet<String>(actionList.size());
+            for (RuleAction action : actionList) {
+                String id = action.getId();
+                validIds.add(id);
+            }
+            return validIds;
         }
-        return maxMenuSelection;
     }
 
     /**
-     * Returns the menu actions computed by the rule associated with this view.
+     * Returns the menu actions computed by the rule associated with this node.
      *
-     * @param vi the canvas view info we need menu actions for
-     * @return a list of {@link MenuAction} objects applicable to the view info
+     * @param node the canvas node we need menu actions for
+     * @return a list of {@link RuleAction} objects applicable to the node
      */
-    public List<MenuAction> getMenuActions(CanvasViewInfo vi) {
-        if (vi == null) {
-            return null;
-        }
-
-        NodeProxy node = mCanvas.getNodeFactory().create(vi);
-        if (node == null) {
-            return null;
-        }
-
-        List<MenuAction> actions = mCanvas.getRulesEngine().callGetContextMenu(node);
+    private List<RuleAction> getMenuActions(NodeProxy node) {
+        List<RuleAction> actions = mCanvas.getRulesEngine().callGetContextMenu(node);
         if (actions == null || actions.size() == 0) {
             return null;
         }
@@ -364,273 +343,234 @@ import java.util.regex.Pattern;
     }
 
     /**
-     * Invoked by {@link #populateDynamicContextMenu()} to create a new menu item
-     * for a {@link MenuAction.Toggle}.
-     * <p/>
-     * Toggles are represented by a checked menu item.
+     * Creates a {@link ContributionItem} for the given {@link RuleAction}.
      *
-     * @param firstAction The toggle action to convert to a menu item. In the case of a
-     *   multiple selection, this is the first of many similar actions.
-     * @param actionsMap Map of all contributed actions.
-     * @return a new {@link IContributionItem} to add to the context menu
+     * @param action the action to create a {@link ContributionItem} for
+     * @param nodes the set of nodes the action should be applied to
+     * @return a new {@link ContributionItem} which implements the given action
+     *         on the given nodes
      */
-    private IContributionItem createDynamicMenuToggle(
-            final MenuAction.Toggle firstAction,
-            final TreeMap<String, ArrayList<MenuAction>> actionsMap) {
+    private ContributionItem createContributionItem(final RuleAction action,
+            final List<INode> nodes) {
+        if (action instanceof RuleAction.Separator) {
+            return new Separator();
+        } else if (action instanceof NestedAction) {
+            NestedAction parentAction = (NestedAction) action;
+            return new ActionContributionItem(new NestedActionMenu(parentAction, nodes));
+        } else if (action instanceof Choices) {
+            Choices parentAction = (Choices) action;
+            return new ActionContributionItem(new NestedChoiceMenu(parentAction, nodes));
+        } else if (action instanceof Toggle) {
+            return new ActionContributionItem(createToggleAction(action, nodes));
+        } else {
+            return new ActionContributionItem(createPlainAction(action, nodes));
+        }
+    }
 
-        final boolean isChecked = firstAction.isChecked();
-
-        Action a = new Action(firstAction.getTitle(), IAction.AS_CHECK_BOX) {
+    private Action createToggleAction(final RuleAction action, final List<INode> nodes) {
+        Toggle toggleAction = (Toggle) action;
+        final boolean isChecked = toggleAction.isChecked();
+        Action a = new Action(action.getTitle(), IAction.AS_CHECK_BOX) {
             @Override
             public void run() {
-                final List<MenuAction> actions = actionsMap.get(firstAction.getId());
-                if (actions == null || actions.isEmpty()) {
-                    return;
-                }
-
-                String label = String.format("Toggle attribute %s", actions.get(0).getTitle());
-                if (actions.size() > 1) {
-                    label += String.format(" (%d elements)", actions.size());
-                }
-
-                if (mEditor.isEditXmlModelPending()) {
-                    // This should not be happening.
-                    logError("Action '%s' failed: XML changes pending, document might be corrupt.", //$NON-NLS-1$
-                             label);
-                    return;
-                }
-
+                String label = createActionLabel(action, nodes);
                 mEditor.wrapUndoEditXmlModel(label, new Runnable() {
                     public void run() {
-                        // Invoke the callbacks of all the actions using the same action-id
-                        for (MenuAction a2 : actions) {
-                            if (a2 instanceof MenuAction.Action) {
-                                IMenuCallback c = ((MenuAction.Action) a2).getCallback();
-                                if (c != null) {
-                                    try {
-                                        c.action(a2, null /* no valueId for a toggle */,
-                                                !isChecked);
-                                    } catch (Exception e) {
-                                        AdtPlugin.log(e, "XML edit operation failed: %s",
-                                                e.toString());
-                                    }
-                                }
-                            }
-                        }
+                        action.getCallback().action(action, nodes,
+                                null/* no valueId for a toggle */, !isChecked);
+                        applyPendingChanges();
                     }
                 });
             }
         };
-        a.setId(firstAction.getId());
+        a.setId(action.getId());
         a.setChecked(isChecked);
-
-        return new ActionContributionItem(a);
+        return a;
     }
 
-    /**
-     * Invoked by {@link #populateDynamicContextMenu()} to create a new menu item
-     * for a plain action. This is nearly identical to {@link #createDynamicMenuToggle},
-     * except for the {@link IAction} type and the removal of setChecked, isChecked, etc.
-     *
-     * @param firstAction The action to convert to a menu item. In the case of a
-     *   multiple selection, this is the first of many similar actions.
-     * @param actionsMap Map of all contributed actions.
-     * @return a new {@link IContributionItem} to add to the context menu
-     */
-    private IContributionItem createDynamicAction(
-            final MenuAction.Action firstAction,
-            final TreeMap<String, ArrayList<MenuAction>> actionsMap) {
-
-        Action a = new Action(firstAction.getTitle(), IAction.AS_PUSH_BUTTON) {
+    private IAction createPlainAction(final RuleAction action, final List<INode> nodes) {
+        IAction a = new Action(action.getTitle(), IAction.AS_PUSH_BUTTON) {
             @Override
             public void run() {
-                final List<MenuAction> actions = actionsMap.get(firstAction.getId());
-                if (actions == null || actions.isEmpty()) {
-                    return;
-                }
-
-                String label = actions.get(0).getTitle();
-                if (actions.size() > 1) {
-                    label += String.format(" (%d elements)", actions.size());
-                }
-
-                if (mEditor.isEditXmlModelPending()) {
-                    // This should not be happening.
-                    logError("Action '%s' failed: XML changes pending, document might be corrupt.", //$NON-NLS-1$
-                             label);
-                    return;
-                }
-
+                String label = createActionLabel(action, nodes);
                 mEditor.wrapUndoEditXmlModel(label, new Runnable() {
                     public void run() {
-                        // Invoke the callbacks of all the actions using the same action-id
-                        for (MenuAction a2 : actions) {
-                            if (a2 instanceof MenuAction.Action) {
-                                IMenuCallback c = ((MenuAction.Action) a2).getCallback();
-                                if (c != null) {
-                                    try {
-                                        // Values do not apply for plain actions
-                                        c.action(a2, null /* valueId */, null /* newValue */);
-                                    } catch (Exception e) {
-                                        AdtPlugin.log(e, "XML edit operation failed: %s",
-                                                e.toString());
-                                    }
-                                }
-                            }
-                        }
+                        action.getCallback().action(action, nodes, null,
+                                Boolean.TRUE);
+                        applyPendingChanges();
                     }
                 });
             }
         };
-        a.setId(firstAction.getId());
+        a.setId(action.getId());
+        return a;
+    }
 
-        return new ActionContributionItem(a);
+    private static String createActionLabel(final RuleAction action, final List<INode> nodes) {
+        String label = action.getTitle();
+        if (nodes.size() > 1) {
+            label += String.format(" (%d elements)", nodes.size());
+        }
+        return label;
     }
 
     /**
-     * Invoked by {@link #populateDynamicContextMenu()} to create a new menu item
-     * for a {@link MenuAction.Choices}.
-     * <p/>
-     * Multiple-choices are represented by a sub-menu containing checked items.
-     *
-     * @param firstAction The choices action to convert to a menu item. In the case of a
-     *   multiple selection, this is the first of many similar actions.
-     * @param actionsMap Map of all contributed actions.
-     * @return a new {@link IContributionItem} to add to the context menu
+     * The {@link NestedParentMenu} provides submenu content which adds actions
+     * available on one of the selected node's parent nodes. This will be
+     * similar to the menu content for the selected node, except the parent
+     * menus will not be embedded within the nested menu.
      */
-    private IContributionItem createDynamicChoices(
-            final MenuAction.Choices firstAction,
-            Map<String, String> choiceMap,
-            final TreeMap<String, ArrayList<MenuAction>> actionsMap) {
+    private class NestedParentMenu extends SubmenuAction {
+        INode mParent;
 
-        IconFactory factory = IconFactory.getInstance();
-        MenuManager submenu = new MenuManager(firstAction.getTitle(), firstAction.getId());
-
-        // Convert to a tree map as needed so that keys be naturally ordered.
-        if (!(choiceMap instanceof TreeMap<?, ?>)) {
-            choiceMap = new TreeMap<String, String>(choiceMap);
+        NestedParentMenu(String title, INode parent) {
+            super(title);
+            mParent = parent;
         }
 
-        String sepPattern = Pattern.quote(MenuAction.Choices.CHOICE_SEP);
-
-        for (Entry<String, String> entry : choiceMap.entrySet() ) {
-            final String key = entry.getKey();
-            String title = entry.getValue();
-
-            if (key == null || title == null) {
-                continue;
+        @Override
+        protected void addMenuItems(Menu menu) {
+            List<SelectionItem> selection = mCanvas.getSelectionManager().getSelections();
+            if (selection.size() == 0) {
+                return;
             }
 
-            if (MenuAction.Choices.SEPARATOR.equals(title)) {
-                submenu.add(new Separator());
-                continue;
+            List<IContributionItem> menuItems = getMenuItems(Collections.singletonList(mParent));
+            for (IContributionItem menuItem : menuItems) {
+                menuItem.fill(menu, -1);
+            }
+        }
+    }
+
+    /**
+     * The {@link NestedActionMenu} creates a lazily populated pull-right menu
+     * where the children are {@link RuleAction}'s themselves.
+     */
+    private class NestedActionMenu extends SubmenuAction {
+        private final NestedAction mParentAction;
+        private final List<INode> mNodes;
+
+        NestedActionMenu(NestedAction parentAction, List<INode> nodes) {
+            super(parentAction.getTitle());
+            mParentAction = parentAction;
+            mNodes = nodes;
+
+            assert mNodes.size() > 0;
+        }
+
+        @Override
+        protected void addMenuItems(Menu menu) {
+            Map<INode, List<RuleAction>> allActions = new HashMap<INode, List<RuleAction>>();
+            for (INode node : mNodes) {
+                List<RuleAction> actionList = mParentAction.getNestedActions(node);
+                allActions.put(node, actionList);
             }
 
-            final List<MenuAction> actions = actionsMap.get(firstAction.getId());
+            Set<String> availableIds = computeApplicableActionIds(allActions);
+            List<RuleAction> firstSelectedActions = allActions.get(mNodes.get(0));
 
-            if (actions == null || actions.isEmpty()) {
-                continue;
-            }
-
-            // Are all actions for this id checked, unchecked, or in a mixed state?
-            int numOff = 0;
-            int numOn = 0;
-            for (MenuAction a2 : actions) {
-                MenuAction.Choices choice = (MenuAction.Choices) a2;
-                String current = choice.getCurrent();
-                if (current == null) {
-                    // None of the choices were selected. This can for example happen if
-                    // the user does not have an attribute for "layout_width" set on the element
-                    // and the context menu is opened to see the width choices.
-                    numOff++;
+            for (RuleAction firstAction : firstSelectedActions) {
+                if (!availableIds.contains(firstAction.getId())
+                        && !(firstAction instanceof RuleAction.Separator)) {
+                    // This action isn't supported by all selected items.
                     continue;
                 }
-                boolean found = false;
 
-                if (current.indexOf(MenuAction.Choices.CHOICE_SEP) >= 0) {
-                    // current choice has a separator, so it's a flag with multiple values
-                    // selected. Compare keys with the split values.
-                    if (current.indexOf(key) >= 0) {
-                        for(String value : current.split(sepPattern)) {
-                            if (key.equals(value)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    // current choice has no separator, simply compare to the key
-                    found = key.equals(current);
+                createContributionItem(firstAction, mNodes).fill(menu, -1);
+            }
+        }
+    }
+
+    private void applyPendingChanges() {
+        LayoutCanvas canvas = mEditor.getGraphicalEditor().getCanvasControl();
+        CanvasViewInfo root = canvas.getViewHierarchy().getRoot();
+        if (root != null) {
+            UiViewElementNode uiViewNode = root.getUiViewNode();
+            NodeFactory nodeFactory = canvas.getNodeFactory();
+            NodeProxy rootNode = nodeFactory.create(uiViewNode);
+            if (rootNode != null) {
+                rootNode.applyPendingChanges();
+            }
+        }
+    }
+
+    /**
+     * The {@link NestedChoiceMenu} creates a lazily populated pull-right menu
+     * where the items in the menu are strings
+     */
+    private class NestedChoiceMenu extends SubmenuAction {
+        private final Choices mParentAction;
+        private final List<INode> mNodes;
+
+        NestedChoiceMenu(Choices parentAction, List<INode> nodes) {
+            super(parentAction.getTitle());
+            mParentAction = parentAction;
+            mNodes = nodes;
+        }
+
+        @Override
+        protected void addMenuItems(Menu menu) {
+            List<String> titles = mParentAction.getTitles();
+            List<String> ids = mParentAction.getIds();
+            String current = mParentAction.getCurrent();
+            assert titles.size() == ids.size();
+            String[] currentValues = current != null
+                    && current.indexOf(RuleAction.CHOICE_SEP) != -1 ?
+                    current.split(RuleAction.CHOICE_SEP_PATTERN) : null;
+            for (int i = 0, n = Math.min(titles.size(), ids.size()); i < n; i++) {
+                final String id = ids.get(i);
+                if (id == null || id.equals(RuleAction.SEPARATOR)) {
+                    new Separator().fill(menu, -1);
+                    continue;
                 }
 
-                if (found) {
-                    numOn++;
-                } else {
-                    numOff++;
-                }
-            }
-
-            // We consider the item to be checked if all actions are all checked.
-            // This means a mixed item will be first toggled from off to on by all the callbacks.
-            final boolean isChecked = numOff == 0 && numOn > 0;
-            boolean isMixed = numOff > 0 && numOn > 0;
-
-            if (isMixed) {
-                title += String.format(" (%1$d/%2$d)", numOn, numOff + numOn);
-            }
-
-            Action a = new Action(title, IAction.AS_CHECK_BOX) {
-                @Override
-                public void run() {
-
-                    String label =
-                        String.format("Change attribute %1$s", actions.get(0).getTitle());
-                    if (actions.size() > 1) {
-                        label += String.format(" (%1$d elements)", actions.size());
-                    }
-
-                    if (mEditor.isEditXmlModelPending()) {
-                        // This should not be happening.
-                        logError("Action '%1$s' failed: XML changes pending, document might be corrupt.", //$NON-NLS-1$
-                                 label);
-                        return;
-                    }
-
-                    mEditor.wrapUndoEditXmlModel(label, new Runnable() {
-                        public void run() {
-                            // Invoke the callbacks of all the actions using the same action-id
-                            for (MenuAction a2 : actions) {
-                                if (a2 instanceof MenuAction.Action) {
-                                    try {
-                                        ((MenuAction.Action) a2).getCallback().action(a2, key,
-                                            !isChecked);
-                                    } catch (Exception e) {
-                                        AdtPlugin.log(e, "XML edit operation failed: %s",
-                                                e.toString());
-                                    }
+                // Find out whether this item is selected
+                boolean select = false;
+                if (current != null) {
+                    // The current choice has a separator, so it's a flag with
+                    // multiple values selected. Compare keys with the split
+                    // values.
+                    if (currentValues != null) {
+                        if (current.indexOf(id) >= 0) {
+                            for (String value : currentValues) {
+                                if (id.equals(value)) {
+                                    select = true;
+                                    break;
                                 }
                             }
                         }
-                    });
+                    } else {
+                        // current choice has no separator, simply compare to the key
+                        select = id.equals(current);
+                    }
                 }
-            };
-            a.setId(String.format("%1$s_%2$s", firstAction.getId(), key));          //$NON-NLS-1$
-            a.setChecked(isChecked);
-            if (isMixed) {
-                a.setImageDescriptor(factory.getImageDescriptor("match_multiple")); //$NON-NLS-1$
+
+                String title = titles.get(i);
+                IAction a = new Action(title, IAction.AS_PUSH_BUTTON) {
+                    @Override
+                    public void runWithEvent(Event event) {
+                        run();
+                    }
+                    @Override
+                    public void run() {
+                        String label = createActionLabel(mParentAction, mNodes);
+                        mEditor.wrapUndoEditXmlModel(label, new Runnable() {
+                            public void run() {
+                                mParentAction.getCallback().action(mParentAction, mNodes, id,
+                                        Boolean.TRUE);
+                                applyPendingChanges();
+                            }
+                        });
+                    }
+                };
+                a.setId(id);
+                a.setEnabled(true);
+                if (select) {
+                    a.setChecked(true);
+                }
+
+                new ActionContributionItem(a).fill(menu, -1);
             }
-
-            submenu.add(a);
         }
-
-        return submenu;
     }
-
-    private void logError(String format, Object...args) {
-        AdtPlugin.logAndPrintError(
-                null, // exception
-                mCanvas.getRulesEngine().getProject().getName(), // tag
-                format, args);
-    }
-
 }

@@ -17,7 +17,7 @@
 package com.android.ide.common.layout;
 
 import com.android.ide.common.api.INode;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 
 import java.util.List;
 
@@ -29,9 +29,8 @@ public class MergeRule extends FrameLayoutRule {
     // on top of each other at (0,0)
 
     @Override
-    public List<MenuAction> getContextMenu(INode selectedNode) {
+    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
         // Deliberately ignore super.getContextMenu(); we don't want to attempt to list
         // properties for the <merge> tag
-        return null;
     }
 }

@@ -29,14 +29,14 @@ import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
-import com.android.ide.common.api.MenuAction.Choices;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /** Test the {@link LinearLayoutRule} */
 public class LinearLayoutRuleTest extends LayoutTestBase {
@@ -126,17 +126,19 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
         initialize(rule, "android.widget.LinearLayout");
         INode node = TestNode.create("android.widget.Button").id("@+id/Button012");
 
-        List<MenuAction> contextMenu = rule.getContextMenu(node);
+        List<RuleAction> contextMenu = new ArrayList<RuleAction>();
+        rule.addContextMenuActions(contextMenu, node);
         assertEquals(6, contextMenu.size());
-        assertNull(contextMenu.get(0)); // Edit Text... not available
-        assertEquals("Edit ID...", contextMenu.get(1).getTitle());
-        assertEquals("Layout Width", contextMenu.get(2).getTitle());
-        assertEquals("Layout Height", contextMenu.get(3).getTitle());
+        assertEquals("Edit ID...", contextMenu.get(0).getTitle());
+        assertEquals("Layout Width", contextMenu.get(1).getTitle());
+        assertEquals("Layout Height", contextMenu.get(2).getTitle());
+        assertTrue(contextMenu.get(3) instanceof RuleAction.Separator);
         assertEquals("Properties", contextMenu.get(4).getTitle());
         assertEquals("Orientation", contextMenu.get(5).getTitle());
 
-        MenuAction propertiesMenu = contextMenu.get(4);
-        assertTrue(propertiesMenu.getClass().getName(), propertiesMenu instanceof MenuAction.Group);
+        RuleAction propertiesMenu = contextMenu.get(4);
+        assertTrue(propertiesMenu.getClass().getName(),
+                propertiesMenu instanceof RuleAction.NestedAction);
         // TODO: Test Properties-list
     }
 
@@ -147,17 +149,21 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
             .set(ANDROID_URI, ATTR_LAYOUT_WIDTH, "42dip")
             .set(ANDROID_URI, ATTR_LAYOUT_HEIGHT, "50sp");
 
-        List<MenuAction> contextMenu = rule.getContextMenu(node);
+        List<RuleAction> contextMenu = new ArrayList<RuleAction>();
+        rule.addContextMenuActions(contextMenu, node);
         assertEquals(6, contextMenu.size());
-        assertEquals("Layout Width", contextMenu.get(2).getTitle());
-        MenuAction menuAction = contextMenu.get(2);
-        assertTrue(menuAction instanceof MenuAction.Choices);
-        MenuAction.Choices choices = (Choices) menuAction;
-        Map<String, String> items = choices.getChoices();
-        assertTrue(items.containsKey("42dip"));
-        assertTrue(items.containsValue("42dip"));
-        assertEquals("Other...", items.get("zcustom"));
-        assertEquals("Match Parent", items.get("match_parent"));
+        assertEquals("Layout Width", contextMenu.get(1).getTitle());
+        RuleAction menuAction = contextMenu.get(1);
+        assertTrue(menuAction instanceof RuleAction.Choices);
+        RuleAction.Choices choices = (RuleAction.Choices) menuAction;
+        List<String> titles = choices.getTitles();
+        List<String> ids = choices.getIds();
+        assertEquals("Wrap Content", titles.get(0));
+        assertEquals("wrap_content", ids.get(0));
+        assertEquals("Match Parent", titles.get(1));
+        assertEquals("match_parent", ids.get(1));
+        assertEquals("42dip", titles.get(2));
+        assertEquals("42dip", ids.get(2));
         assertEquals("42dip", choices.getCurrent());
     }
 
@@ -169,21 +175,24 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
 
         assertNull(node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION));
 
-        List<MenuAction> contextMenu = rule.getContextMenu(node);
+        List<RuleAction> contextMenu = new ArrayList<RuleAction>();
+        rule.addContextMenuActions(contextMenu, node);
         assertEquals(6, contextMenu.size());
-        MenuAction orientationAction = contextMenu.get(5);
+        RuleAction orientationAction = contextMenu.get(5);
+        assertEquals("Orientation", orientationAction.getTitle());
 
         assertTrue(orientationAction.getClass().getName(),
-                orientationAction instanceof MenuAction.Choices);
+                orientationAction instanceof RuleAction.Choices);
 
-        MenuAction.Choices choices = (Choices) orientationAction;
+        RuleAction.Choices choices = (RuleAction.Choices) orientationAction;
         IMenuCallback callback = choices.getCallback();
-        callback.action(orientationAction, VALUE_VERTICAL, true);
+        callback.action(orientationAction, Collections.singletonList(node), VALUE_VERTICAL, true);
 
         String orientation = node.getStringAttr(ANDROID_URI,
                 ATTR_ORIENTATION);
         assertEquals(VALUE_VERTICAL, orientation);
-        callback.action(orientationAction, VALUE_HORIZONTAL, true);
+        callback.action(orientationAction, Collections.singletonList(node), VALUE_HORIZONTAL,
+                true);
         orientation = node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION);
         assertEquals(VALUE_HORIZONTAL, orientation);
     }

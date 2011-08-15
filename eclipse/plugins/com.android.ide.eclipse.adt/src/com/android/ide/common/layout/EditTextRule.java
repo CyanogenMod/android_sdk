@@ -23,7 +23,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 
 import java.util.List;
 
@@ -51,12 +51,15 @@ public class EditTextRule extends BaseViewRule {
      * Adds a "Request Focus" menu item.
      */
     @Override
-    public List<MenuAction> getContextMenu(final INode selectedNode) {
+    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
+        super.addContextMenuActions(actions, selectedNode);
+
         final boolean hasFocus = hasFocus(selectedNode);
         final String label = hasFocus ? "Clear Focus" : "Request Focus";
 
         IMenuCallback onChange = new IMenuCallback() {
-            public void action(MenuAction menuAction, String valueId, Boolean newValue) {
+            public void action(RuleAction menuAction, List<? extends INode> selectedNodes,
+                    String valueId, Boolean newValue) {
                 selectedNode.editXml(label, new INodeHandler() {
                     public void handle(INode node) {
                         INode focus = findFocus(findRoot(node));
@@ -71,8 +74,8 @@ public class EditTextRule extends BaseViewRule {
             }
         };
 
-        return concatenate(super.getContextMenu(selectedNode),
-            new MenuAction.Action("_setfocus", label, null, onChange));  //$NON-NLS-1$
+        actions.add(RuleAction.createAction("_setfocus", label, onChange, //$NON-NLS-1$
+                null, 5, false /*supportsMultipleNodes*/));
     }
 
     /** Returns true if the given node currently has focus */

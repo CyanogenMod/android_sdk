@@ -25,7 +25,7 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
@@ -52,6 +52,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -211,21 +212,24 @@ public class RulesEngine {
     }
 
     /**
-     * Invokes {@link IViewRule#getContextMenu(INode)} on the rule matching the specified element.
+     * Invokes {@link IViewRule#addContextMenuActions(List, INode)} on the rule matching the specified element.
      *
      * @param selectedNode The node selected. Never null.
      * @return Null if the rule failed, there's no rule or the rule does not provide
-     *   any custom menu actions. Otherwise, a list of {@link MenuAction}.
+     *   any custom menu actions. Otherwise, a list of {@link RuleAction}.
      */
-    public List<MenuAction> callGetContextMenu(NodeProxy selectedNode) {
+    public List<RuleAction> callGetContextMenu(NodeProxy selectedNode) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(selectedNode.getNode());
 
         if (rule != null) {
             try {
                 mInsertType = InsertType.CREATE;
-                return rule.getContextMenu(selectedNode);
+                List<RuleAction> actions = new ArrayList<RuleAction>();
+                rule.addContextMenuActions(actions, selectedNode);
+                Collections.sort(actions);
 
+                return actions;
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.getContextMenu() failed: %s",
                         rule.getClass().getSimpleName(),
@@ -237,16 +241,18 @@ public class RulesEngine {
     }
 
     /**
-     * Invokes {@link IViewRule#getContextMenu(INode)} on the rule matching the specified element.
+     * Invokes {@link IViewRule#addLayoutActions(List, INode, List)} on the rule
+     * matching the specified element.
      *
      * @param actions The list of actions to add layout actions into
      * @param parentNode The layout node
-     * @param children The selected children of the node, if any (used to initialize values
-     *    of child layout controls, if applicable)
-     * @return Null if the rule failed, there's no rule or the rule does not provide
-     *   any custom menu actions. Otherwise, a list of {@link MenuAction}.
+     * @param children The selected children of the node, if any (used to
+     *            initialize values of child layout controls, if applicable)
+     * @return Null if the rule failed, there's no rule or the rule does not
+     *         provide any custom menu actions. Otherwise, a list of
+     *         {@link RuleAction}.
      */
-    public List<MenuAction> callAddLayoutActions(List<MenuAction> actions,
+    public List<RuleAction> callAddLayoutActions(List<RuleAction> actions,
             NodeProxy parentNode, List<NodeProxy> children ) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(parentNode.getNode());

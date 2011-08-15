@@ -50,7 +50,7 @@ import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
@@ -315,17 +315,18 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Layout Actions Bar ====
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 
         actions.add(createGravityAction(Collections.<INode>singletonList(parentNode),
                 ATTR_GRAVITY));
-        actions.add(MenuAction.createSeparator(25));
+        actions.add(RuleAction.createSeparator(25));
         actions.add(createMarginAction(parentNode, children));
 
         IMenuCallback callback = new IMenuCallback() {
-            public void action(MenuAction action, final String valueId, final Boolean newValue) {
+            public void action(RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, final Boolean newValue) {
                 final String id = action.getId();
                 if (id.equals(ACTION_CENTER_VERTICAL)|| id.equals(ACTION_CENTER_HORIZONTAL)) {
                     parentNode.editXml("Center", new INodeHandler() {
@@ -356,18 +357,18 @@ public class RelativeLayoutRule extends BaseLayoutRule {
 
         // Centering actions
         if (children != null && children.size() > 0) {
-                        actions.add(MenuAction.createSeparator(150));
-            actions.add(MenuAction.createAction(ACTION_CENTER_VERTICAL, "Center Vertically", null,
-                    callback, ICON_CENTER_VERTICALLY, 160));
-            actions.add(MenuAction.createAction(ACTION_CENTER_HORIZONTAL, "Center Horizontally",
-                    null, callback, ICON_CENTER_HORIZONTALLY, 170));
+                        actions.add(RuleAction.createSeparator(150));
+            actions.add(RuleAction.createAction(ACTION_CENTER_VERTICAL, "Center Vertically",
+                    callback, ICON_CENTER_VERTICALLY, 160, false));
+            actions.add(RuleAction.createAction(ACTION_CENTER_HORIZONTAL, "Center Horizontally",
+                    callback, ICON_CENTER_HORIZONTALLY, 170, false));
         }
 
-        actions.add(MenuAction.createSeparator(80));
-        actions.add(MenuAction.createToggle(ACTION_SHOW_CONSTRAINTS, "Show Constraints",
-                sShowConstraints, callback, ICON_SHOW_CONSTRAINTS, 180));
-        actions.add(MenuAction.createToggle(ACTION_SHOW_STRUCTURE, "Show All Relationships",
-                sShowStructure, callback, ICON_SHOW_STRUCTURE, 190));
+        actions.add(RuleAction.createSeparator(80));
+        actions.add(RuleAction.createToggle(ACTION_SHOW_CONSTRAINTS, "Show Constraints",
+                sShowConstraints, callback, ICON_SHOW_CONSTRAINTS, 180, false));
+        actions.add(RuleAction.createToggle(ACTION_SHOW_STRUCTURE, "Show All Relationships",
+                sShowStructure, callback, ICON_SHOW_STRUCTURE, 190, false));
     }
 
     private void centerHorizontally(INode node) {

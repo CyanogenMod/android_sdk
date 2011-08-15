@@ -24,7 +24,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.SegmentType;
 
 import java.net.URL;
@@ -69,21 +69,22 @@ public class TableLayoutRule extends LinearLayoutRule {
      * Add an explicit "Add Row" action to the context menu
      */
     @Override
-   public List<MenuAction> getContextMenu(final INode selectedNode) {
+    public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
+        super.addContextMenuActions(actions, selectedNode);
+
         IMenuCallback addTab = new IMenuCallback() {
-            public void action(MenuAction action, final String valueId, Boolean newValue) {
+            public void action(RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, Boolean newValue) {
                 final INode node = selectedNode;
                 INode newRow = node.appendChild(FQCN_TABLE_ROW);
                 mRulesEngine.select(Collections.singletonList(newRow));
             }
         };
-        return concatenate(super.getContextMenu(selectedNode),
-            new MenuAction.Action("_addrow", "Add Row", //$NON-NLS-1$
-                    null, addTab));
+        actions.add(RuleAction.createAction("_addrow", "Add Row", addTab, null, 5, false)); //$NON-NLS-1$
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
         addTableLayoutActions(mRulesEngine, actions, parentNode, children);
@@ -93,11 +94,11 @@ public class TableLayoutRule extends LinearLayoutRule {
      * Adds layout actions to add and remove toolbar items
      */
     static void addTableLayoutActions(final IClientRulesEngine rulesEngine,
-            List<MenuAction> actions, final INode parentNode,
+            List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         IMenuCallback actionCallback = new IMenuCallback() {
-            public void action(final MenuAction action, final String valueId,
-                    final Boolean newValue) {
+            public void action(final RuleAction action, List<? extends INode> selectedNodes,
+                    final String valueId, final Boolean newValue) {
                 parentNode.editXml("Add/Remove Table Row", new INodeHandler() {
                     public void handle(INode n) {
                         if (action.getId().equals(ACTION_ADD_ROW)) {
@@ -155,14 +156,14 @@ public class TableLayoutRule extends LinearLayoutRule {
         };
 
         // Add Row
-        actions.add(MenuAction.createSeparator(150));
-        actions.add(MenuAction.createAction(ACTION_ADD_ROW, "Add Table Row", null, actionCallback,
-                ICON_ADD_ROW, 160));
+        actions.add(RuleAction.createSeparator(150));
+        actions.add(RuleAction.createAction(ACTION_ADD_ROW, "Add Table Row", actionCallback,
+                ICON_ADD_ROW, 160, false));
 
         // Remove Row (if something is selected)
         if (children != null && children.size() > 0) {
-            actions.add(MenuAction.createAction(ACTION_REMOVE_ROW, "Remove Table Row", null,
-                    actionCallback, ICON_REMOVE_ROW, 170));
+            actions.add(RuleAction.createAction(ACTION_REMOVE_ROW, "Remove Table Row",
+                    actionCallback, ICON_REMOVE_ROW, 170, false));
         }
     }
 
