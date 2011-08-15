@@ -16,9 +16,13 @@
 
 package com.android.ide.common.api;
 
+import java.util.List;
+
 /**
- * Callback interface for {@link MenuAction}s. The callback performs the actual
- * work of the menu.
+ * Callback interface for a {@link RuleAction}. The callback performs the actual
+ * work of the action, and this level of indirection allows multiple actions (which
+ * typically do not have their own class, only their own instances) to share a single
+ * implementation callback class.
  * <p>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
@@ -26,14 +30,15 @@ package com.android.ide.common.api;
  */
 public interface IMenuCallback {
     /**
-     * Performs the actual work promised by the {@link MenuAction}.
-     *
-     * @param action The MenuAction being applied.
+     * Performs the actual work promised by the {@link RuleAction}.
+     * @param action The action being applied.
+     * @param selectedNodes The nodes to apply the action to
      * @param valueId For a Choices action, the string id of the selected choice
      * @param newValue For a toggle or for a flag, true if the item is being
      *            checked, false if being unchecked. For enums this is not
      *            useful; however for flags it allows one to add or remove items
      *            to the flag's choices.
      */
-    void action(MenuAction menuAction, String valueId, Boolean newValue);
+    void action(RuleAction action, List<? extends INode> selectedNodes, String valueId,
+            Boolean newValue);
 }

@@ -21,7 +21,7 @@ import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.MenuAction;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.SegmentType;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public class TableRowRule extends LinearLayoutRule {
     }
 
     @Override
-    public void addLayoutActions(List<MenuAction> actions, final INode parentNode,
+    public void addLayoutActions(List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         super.addLayoutActions(actions, parentNode, children);
 

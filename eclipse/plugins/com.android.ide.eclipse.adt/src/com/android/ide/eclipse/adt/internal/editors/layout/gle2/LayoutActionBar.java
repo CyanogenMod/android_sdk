@@ -18,12 +18,12 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 
-import com.android.ide.common.api.MenuAction;
-import com.android.ide.common.api.MenuAction.OrderedChoices;
-import com.android.ide.common.api.MenuAction.Separator;
-import com.android.ide.common.api.MenuAction.Toggle;
+import com.android.ide.common.api.INode;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
+import com.android.ide.common.api.RuleAction.Separator;
+import com.android.ide.common.api.RuleAction.Toggle;
 import com.android.ide.common.layout.BaseViewRule;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -31,7 +31,6 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -67,6 +66,13 @@ public class LayoutActionBar extends Composite {
     private ToolItem mZoomInButton;
     private ToolItem mZoomFitButton;
 
+    /**
+     * Creates a new {@link LayoutActionBar} and adds it to the given parent.
+     *
+     * @param parent the parent composite to add the actions bar to
+     * @param style the SWT style to apply
+     * @param editor the associated layout editor
+     */
     public LayoutActionBar(Composite parent, int style, GraphicalEditorPart editor) {
         super(parent, style | SWT.NO_FOCUS);
         mEditor = editor;
@@ -118,7 +124,7 @@ public class LayoutActionBar extends Composite {
         for (SelectionItem item : selections) {
             selectedNodes.add(item.getNode());
         }
-        List<MenuAction> actions = new ArrayList<MenuAction>();
+        List<RuleAction> actions = new ArrayList<RuleAction>();
         engine.callAddLayoutActions(actions, parent, selectedNodes);
 
         // Place actions in the correct order (the actions may come from different
@@ -131,14 +137,14 @@ public class LayoutActionBar extends Composite {
         int index = -1;
         String label = null;
         if (selectedNodes.size() == 1) {
-            List<MenuAction> itemActions = new ArrayList<MenuAction>();
+            List<RuleAction> itemActions = new ArrayList<RuleAction>();
             NodeProxy selectedNode = selectedNodes.get(0);
             engine.callAddLayoutActions(itemActions, selectedNode, null);
             if (itemActions.size() > 0) {
                 Collections.sort(itemActions);
 
-                if (!(itemActions.get(0) instanceof MenuAction.Separator)) {
-                    actions.add(MenuAction.createSeparator(0));
+                if (!(itemActions.get(0) instanceof RuleAction.Separator)) {
+                    actions.add(RuleAction.createSeparator(0));
                 }
                 label = selectedNode.getStringAttr(ANDROID_URI, ATTR_ID);
                 if (label != null) {
@@ -155,7 +161,7 @@ public class LayoutActionBar extends Composite {
         mLayoutToolBar.layout();
     }
 
-    private void addActions(List<MenuAction> actions, int labelIndex, String label) {
+    private void addActions(List<RuleAction> actions, int labelIndex, String label) {
         if (actions.size() > 0) {
             // Flag used to indicate that if there are any actions -after- this, it
             // should be separated from this current action (we don't unconditionally
@@ -164,7 +170,7 @@ public class LayoutActionBar extends Composite {
             boolean needSeparator = false;
 
             int index = 0;
-            for (MenuAction action : actions) {
+            for (RuleAction action : actions) {
                 if (index == labelIndex) {
                     final ToolItem button = new ToolItem(mLayoutToolBar, SWT.PUSH);
                     button.setText(label);
@@ -181,8 +187,8 @@ public class LayoutActionBar extends Composite {
                     needSeparator = false;
                 }
 
-                if (action instanceof MenuAction.OrderedChoices) {
-                    MenuAction.OrderedChoices choices = (OrderedChoices) action;
+                if (action instanceof RuleAction.Choices) {
+                    RuleAction.Choices choices = (Choices) action;
                     if (!choices.isRadio()) {
                         addDropdown(choices);
                     } else {
@@ -190,13 +196,10 @@ public class LayoutActionBar extends Composite {
                         addRadio(choices);
                         needSeparator = true;
                     }
-                } else if (action instanceof MenuAction.Toggle) {
+                } else if (action instanceof RuleAction.Toggle) {
                     addToggle((Toggle) action);
-                } else if (action instanceof MenuAction.Action) {
-                    addAction((MenuAction.Action) action);
                 } else {
-                    AdtPlugin.log(IStatus.ERROR, "Action not supported in toolbar: %1$s",
-                            action.getTitle());
+                    addPlainAction(action);
                 }
             }
         }
@@ -226,8 +229,8 @@ public class LayoutActionBar extends Composite {
         button.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                toggle.getCallback().action(toggle, toggle.getId(),
-                        button.getSelection());
+                toggle.getCallback().action(toggle, getSelectedNodes(),
+                        toggle.getId(), button.getSelection());
                 updateSelection();
             }
         });
@@ -236,7 +239,19 @@ public class LayoutActionBar extends Composite {
         }
     }
 
-    private void addAction(final MenuAction.Action menuAction) {
+    private List<INode> getSelectedNodes() {
+        List<SelectionItem> selections =
+                mEditor.getCanvasControl().getSelectionManager().getSelections();
+        List<INode> nodes = new ArrayList<INode>(selections.size());
+        for (SelectionItem item : selections) {
+            nodes.add(item.getNode());
+        }
+
+        return nodes;
+    }
+
+
+    private void addPlainAction(final RuleAction menuAction) {
         final ToolItem button = new ToolItem(mLayoutToolBar, SWT.PUSH);
 
         URL iconUrl = menuAction.getIconUrl();
@@ -251,13 +266,14 @@ public class LayoutActionBar extends Composite {
         button.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                menuAction.getCallback().action(menuAction, menuAction.getId(), false);
+                menuAction.getCallback().action(menuAction, getSelectedNodes(), menuAction.getId(),
+                        false);
                 updateSelection();
             }
         });
     }
 
-    private void addRadio(final MenuAction.OrderedChoices choices) {
+    private void addRadio(final RuleAction.Choices choices) {
         List<URL> icons = choices.getIconUrls();
         List<String> titles = choices.getTitles();
         List<String> ids = choices.getIds();
@@ -277,7 +293,7 @@ public class LayoutActionBar extends Composite {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     if (item.getSelection()) {
-                        choices.getCallback().action(choices, id, null);
+                        choices.getCallback().action(choices, getSelectedNodes(), id, null);
                         updateSelection();
                     }
                 }
@@ -289,7 +305,7 @@ public class LayoutActionBar extends Composite {
         }
     }
 
-    private void addDropdown(final MenuAction.OrderedChoices choices) {
+    private void addDropdown(final RuleAction.Choices choices) {
         final ToolItem combo = new ToolItem(mLayoutToolBar, SWT.DROP_DOWN);
         URL iconUrl = choices.getIconUrl();
         if (iconUrl != null) {
@@ -331,7 +347,7 @@ public class LayoutActionBar extends Composite {
                     item.addSelectionListener(new SelectionAdapter() {
                         @Override
                         public void widgetSelected(SelectionEvent e) {
-                            choices.getCallback().action(choices, id, null);
+                            choices.getCallback().action(choices, getSelectedNodes(), id, null);
                             updateSelection();
                         }
                     });
