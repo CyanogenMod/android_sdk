@@ -61,8 +61,12 @@ import java.util.List;
  */
 public final class LogCatPanel extends SelectionDependentPanel
                         implements ILogCatMessageEventListener {
+    /** Preference key to use for storing list of logcat filters. */
+    public static final String LOGCAT_FILTERS_LIST = "logcat.view.filters.list";
+
     /** Preference key to use for storing font settings. */
     public static final String LOGCAT_VIEW_FONT_PREFKEY = "logcat.view.font";
+
     private static final String DEFAULT_LOGCAT_FONT = new FontData(
             "Courier New", 10, SWT.NORMAL).toString();
 
@@ -87,7 +91,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private LogCatReceiver mReceiver;
     private IPreferenceStore mPrefStore;
 
-    private List<LogCatFilterSettings> mLogCatFilters;
+    private List<LogCatFilter> mLogCatFilters;
 
     private ToolItem mNewFilterToolItem;
     private ToolItem mDeleteFilterToolItem;
@@ -118,18 +122,18 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void initializeFilters(IPreferenceStore prefStore) {
-        mLogCatFilters = new ArrayList<LogCatFilterSettings>();
+        mLogCatFilters = new ArrayList<LogCatFilter>();
 
-        /* add a couple of filters by default */
+        /* add default filter matching all messages */
         String tag = "";
         String text = "";
         String pid = "";
-        mLogCatFilters.add(new LogCatFilterSettings("All messages (no filters)",
+        mLogCatFilters.add(new LogCatFilter("All messages (no filters)",
                 tag, text, pid, LogLevel.VERBOSE));
-        mLogCatFilters.add(new LogCatFilterSettings("Errors only",
-                tag, text, pid, LogLevel.ERROR));
 
-        /* FIXME restore saved filters from prefStore */
+        /* restore saved filters from prefStore */
+        List<LogCatFilter> savedFilters = getSavedFilters();
+        mLogCatFilters.addAll(savedFilters);
     }
 
     private void initializeFonts(IPreferenceStore prefStore) {
@@ -143,6 +147,21 @@ public final class LogCatPanel extends SelectionDependentPanel
                 }
             }
         });
+    }
+
+    private void saveFilterPreferences() {
+        LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
+
+        /* save all filter settings except the first one which is the default */
+        String e = serializer.encodeToPreferenceString(
+                mLogCatFilters.subList(1, mLogCatFilters.size()));
+        mPrefStore.setValue(LOGCAT_FILTERS_LIST, e);
+    }
+
+    private List<LogCatFilter> getSavedFilters() {
+        LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
+        String e = mPrefStore.getString(LOGCAT_FILTERS_LIST);
+        return serializer.decodeFromPreferenceString(e);
     }
 
     @Override
@@ -254,7 +273,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             return;
         }
 
-        LogCatFilterSettings f = new LogCatFilterSettings(d.getFilterName().trim(),
+        LogCatFilter f = new LogCatFilter(d.getFilterName().trim(),
                 d.getTag().trim(),
                 d.getText().trim(),
                 d.getPID().trim(),
@@ -268,6 +287,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mFiltersTableViewer.getTable().setSelection(idx);
 
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void deleteSelectedFilter() {
@@ -282,6 +302,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mFiltersTableViewer.getTable().setSelection(selectedIndex - 1);
 
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void editSelectedFilter() {
@@ -290,7 +311,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             return;
         }
 
-        LogCatFilterSettings curFilter = mLogCatFilters.get(selectedIndex);
+        LogCatFilter curFilter = mLogCatFilters.get(selectedIndex);
 
         LogCatFilterSettingsDialog dialog = new LogCatFilterSettingsDialog(
                 Display.getCurrent().getActiveShell());
@@ -300,7 +321,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             return;
         }
 
-        LogCatFilterSettings f = new LogCatFilterSettings(dialog.getFilterName(),
+        LogCatFilter f = new LogCatFilter(dialog.getFilterName(),
                 dialog.getTag(),
                 dialog.getText(),
                 dialog.getPID(),
@@ -310,6 +331,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         mFiltersTableViewer.getTable().setSelection(selectedIndex);
         filterSelectionChanged();
+        saveFilterPreferences();
     }
 
     private void createFiltersTable(Composite parent) {
@@ -577,10 +599,10 @@ public final class LogCatPanel extends SelectionDependentPanel
     private List<LogCatViewerFilter> getCurrentLiveFilters() {
         List<LogCatViewerFilter> liveFilters = new ArrayList<LogCatViewerFilter>();
 
-        List<LogCatFilterSettings> liveFilterSettings = LogCatFilterSettings.fromString(
+        List<LogCatFilter> liveFilterSettings = LogCatFilter.fromString(
                 mLiveFilterText.getText(),                                  /* current query */
                 LogLevel.getByString(mLiveFilterLevelCombo.getText()));     /* current log level */
-        for (LogCatFilterSettings s : liveFilterSettings) {
+        for (LogCatFilter s : liveFilterSettings) {
             liveFilters.add(new LogCatViewerFilter(s));
         }
 
@@ -599,9 +621,10 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /**
      * Update view whenever a message is received.
+     * @param receivedMessages list of messages from logcat
      * Implements {@link ILogCatMessageEventListener#messageReceived()}.
      */
-    public void messageReceived() {
+    public void messageReceived(List<LogCatMessage> receivedMessages) {
         refreshLogCatTable();
     }
 
