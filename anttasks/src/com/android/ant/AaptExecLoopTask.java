@@ -348,7 +348,7 @@ public final class AaptExecLoopTask extends BaseTask {
         // Now we figure out what we need to do
         if (generateRClass) {
             // Check to see if our dependencies have changed. If not, then skip
-            if (initDependencies(mRFolder + File.separator + "R.d", watchPaths)
+            if (initDependencies(mRFolder + File.separator + "R.java.d", watchPaths)
                               && dependenciesHaveChanged() == false) {
                 System.out.println("No changed resources. R.java and Manifest.java untouched.");
                 return;
@@ -357,13 +357,12 @@ public final class AaptExecLoopTask extends BaseTask {
             // Find our dependency file. It should have the same name as our target .ap_ but
             // with a .d extension
             String dependencyFilePath = mApkFolder + File.separator + mApkName;
-            dependencyFilePath =
-                 dependencyFilePath.substring(0, dependencyFilePath.lastIndexOf(".")) + ".d";
+            dependencyFilePath += ".d";
 
             // Check to see if our dependencies have changed
             if (initDependencies(dependencyFilePath , watchPaths)
                             && dependenciesHaveChanged() == false) {
-                System.out.println("No changed resources or assets. " + dependencyFilePath
+                System.out.println("No changed resources or assets. " + mApkName
                                     + " remains untouched");
                 return;
             }
