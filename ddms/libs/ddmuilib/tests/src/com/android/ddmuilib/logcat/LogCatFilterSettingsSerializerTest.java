@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 public class LogCatFilterSettingsSerializerTest extends TestCase {
     /* test that decode(encode(f)) = f */
     public void testSerializer() {
-        LogCatFilterSettings fs = new LogCatFilterSettings(
+        LogCatFilter fs = new LogCatFilter(
                 "TestFilter",               //$NON-NLS-1$
                 "Tag'.*Regex",              //$NON-NLS-1$
                 "regexForTextField..''",    //$NON-NLS-1$
@@ -34,11 +34,11 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
 
         LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
         String s = serializer.encodeToPreferenceString(Arrays.asList(fs));
-        List<LogCatFilterSettings> decodedFiltersList = serializer.decodeFromPreferenceString(s);
+        List<LogCatFilter> decodedFiltersList = serializer.decodeFromPreferenceString(s);
 
         assertEquals(1, decodedFiltersList.size());
 
-        LogCatFilterSettings dfs = decodedFiltersList.get(0);
+        LogCatFilter dfs = decodedFiltersList.get(0);
         assertEquals(fs.getName(), dfs.getName());
         assertEquals(fs.getTag(), dfs.getTag());
         assertEquals(fs.getText(), dfs.getText());

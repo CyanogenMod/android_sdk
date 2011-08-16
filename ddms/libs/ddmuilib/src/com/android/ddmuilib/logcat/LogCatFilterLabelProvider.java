@@ -21,7 +21,7 @@ import org.eclipse.swt.graphics.Image;
 
 /**
  * A JFace label provider for the LogCat filters. It expects elements of type
- * {@link LogCatFilterSettings}.
+ * {@link LogCatFilter}.
  */
 public final class LogCatFilterLabelProvider extends LabelProvider implements ITableLabelProvider {
     public Image getColumnImage(Object arg0, int arg1) {
@@ -30,16 +30,16 @@ public final class LogCatFilterLabelProvider extends LabelProvider implements IT
 
     /**
      * Implements {@link ITableLabelProvider#getColumnText(Object, int)}.
-     * @param element an instance of {@link LogCatFilterSettings}
+     * @param element an instance of {@link LogCatFilter}
      * @param index index of the column
      * @return text to use in the column
      */
     public String getColumnText(Object element, int index) {
-        if (!(element instanceof LogCatFilterSettings)) {
+        if (!(element instanceof LogCatFilter)) {
             return null;
         }
 
-        LogCatFilterSettings f = (LogCatFilterSettings) element;
+        LogCatFilter f = (LogCatFilter) element;
 
         /* FIXME: Currently, only the name of the filter is displayed.
          * A future fix will also display the "unread count" associated

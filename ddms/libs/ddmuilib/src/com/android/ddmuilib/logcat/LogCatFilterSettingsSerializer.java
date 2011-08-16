@@ -26,8 +26,8 @@ import java.util.List;
  * Users can create multiple filters in the logcat view. These filters could have regexes
  * in their settings. All of the user created filters are saved into a single Eclipse
  * preference. This class helps in generating the string to be saved given a list of
- * {@link LogCatFilterSettings}, and also does the reverse of creating the list of filter
- * settings given the encoded string.
+ * {@link LogCatFilter}'s, and also does the reverse of creating the list of filters
+ * given the encoded string.
  */
 public final class LogCatFilterSettingsSerializer {
     private static final char SINGLE_QUOTE = '\'';
@@ -43,17 +43,18 @@ public final class LogCatFilterSettingsSerializer {
     private static final String KW_LOGLEVEL = "level";
 
     /**
-     * Encode a list of {@link LogCatFilterSettings} into a string for saving to preference store.
-     * See {@link LogCatFilterSettingsSerializer#decodeFromPreferenceString(String)} for the
+     * Encode the settings from a list of {@link LogCatFilter}'s into a string for saving to
+     * the preference store. See
+     * {@link LogCatFilterSettingsSerializer#decodeFromPreferenceString(String)} for the
      * reverse operation.
-     * @param filterSettings list of settings to save.
+     * @param filters list of filters to save.
      * @return an encoded string that can be saved in Eclipse preference store. The encoded string
      * is of a list of key:'value' pairs.
      */
-    public String encodeToPreferenceString(List<LogCatFilterSettings> filterSettings) {
+    public String encodeToPreferenceString(List<LogCatFilter> filters) {
         StringBuffer sb = new StringBuffer();
 
-        for (LogCatFilterSettings f : filterSettings) {
+        for (LogCatFilter f : filters) {
             sb.append(KW_NAME); sb.append(KW_DELIM); sb.append(quoteString(f.getName()));
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_TAG);  sb.append(KW_DELIM); sb.append(quoteString(f.getTag()));
@@ -70,12 +71,13 @@ public final class LogCatFilterSettingsSerializer {
     }
 
     /**
-     * Decode an encoded string into a list of {@link LogCatFilterSettings}.
+     * Decode an encoded string representing the settings of a list of logcat
+     * filters into a list of {@link LogCatFilter}'s.
      * @param pref encoded preference string
-     * @return a list of {@link LogCatFilterSettings}
+     * @return a list of {@link LogCatFilter}
      */
-    public List<LogCatFilterSettings> decodeFromPreferenceString(String pref) {
-        List<LogCatFilterSettings> fs = new ArrayList<LogCatFilterSettings>();
+    public List<LogCatFilter> decodeFromPreferenceString(String pref) {
+        List<LogCatFilter> fs = new ArrayList<LogCatFilter>();
 
         /* first split the string into a list of key, value pairs */
         List<String> kv = getKeyValues(pref);
@@ -112,7 +114,7 @@ public final class LogCatFilterSettingsSerializer {
                 }
             }
 
-            fs.add(new LogCatFilterSettings(name, tag, text, pid, level));
+            fs.add(new LogCatFilter(name, tag, text, pid, level));
         }
 
         return fs;
