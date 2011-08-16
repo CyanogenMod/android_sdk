@@ -32,8 +32,8 @@ public final class LogCatFilterContentProvider implements IStructuredContentProv
 
     /**
      * Obtain the list of filters currently in use.
-     * @param model list of {@link LogCatFilterSettings}'s
-     * @return array of {@link LogCatFilterSettings} objects, or null.
+     * @param model list of {@link LogCatFilter}'s
+     * @return array of {@link LogCatFilter} objects, or null.
      */
     public Object[] getElements(Object model) {
         if (model instanceof List<?>) {
