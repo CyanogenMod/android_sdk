@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.layout.relative;
 
+import static com.android.ide.common.api.MarginType.NO_MARGIN;
 import static com.android.ide.common.api.SegmentType.BASELINE;
 import static com.android.ide.common.api.SegmentType.BOTTOM;
 import static com.android.ide.common.api.SegmentType.CENTER_HORIZONTAL;
@@ -24,7 +25,6 @@ import static com.android.ide.common.api.SegmentType.RIGHT;
 import static com.android.ide.common.api.SegmentType.TOP;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
-import static com.android.ide.common.layout.relative.MarginType.NO_MARGIN;
 import static java.lang.Math.abs;
 
 import com.android.ide.common.api.DropFeedback;
