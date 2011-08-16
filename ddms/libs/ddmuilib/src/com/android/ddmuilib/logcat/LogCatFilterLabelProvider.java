@@ -41,14 +41,10 @@ public final class LogCatFilterLabelProvider extends LabelProvider implements IT
 
         LogCatFilter f = (LogCatFilter) element;
 
-        /* FIXME: Currently, only the name of the filter is displayed.
-         * A future fix will also display the "unread count" associated
-         * with each filter. */
-        switch (index) {
-            case 0:
-                return f.getName();
-            default:
-                return "**";
+        if (f.getUnreadCount() == 0) {
+            return f.getName();
+        } else {
+            return String.format("%s (%d)", f.getName(), f.getUnreadCount());
         }
     }
 }

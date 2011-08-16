@@ -40,6 +40,12 @@ public final class LogCatFilter {
     private final String mPid;
     private final LogLevel mLogLevel;
 
+    /** Indicates the number of messages that match this filter, but have not
+     * yet been read by the user. This is really metadata about this filter
+     * necessary for the UI. If we ever end up needing to store more metadata,
+     * then it is probably better to move it out into a separate class. */
+    private int mUnreadCount;
+
     private boolean mCheckPID;
     private boolean mCheckTag;
     private boolean mCheckText;
@@ -65,6 +71,8 @@ public final class LogCatFilter {
         mText = text.trim();
         mPid = pid.trim();
         mLogLevel = logLevel;
+
+        mUnreadCount = 0;
 
         mCheckPID = mPid.length() != 0;
 
@@ -180,5 +188,33 @@ public final class LogCatFilter {
         }
 
         return true;
+    }
+
+    /**
+     * Update the unread count based on new messages received. The unread count
+     * is incremented by the count of messages in the received list that will be
+     * accepted by this filter.
+     * @param newMessages list of new messages.
+     */
+    public void updateUnreadCount(List<LogCatMessage> newMessages) {
+        for (LogCatMessage m : newMessages) {
+            if (matches(m)) {
+                mUnreadCount++;
+            }
+        }
+    }
+
+    /**
+     * Reset count of unread messages.
+     */
+    public void resetUnreadCount() {
+        mUnreadCount = 0;
+    }
+
+    /**
+     * Get current value for the unread message counter.
+     */
+    public int getUnreadCount() {
+        return mUnreadCount;
     }
 }

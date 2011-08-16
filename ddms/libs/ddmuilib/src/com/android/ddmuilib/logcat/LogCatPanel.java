@@ -92,6 +92,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private IPreferenceStore mPrefStore;
 
     private List<LogCatFilter> mLogCatFilters;
+    private int mCurrentSelectedFilterIndex;
 
     private ToolItem mNewFilterToolItem;
     private ToolItem mDeleteFilterToolItem;
@@ -569,17 +570,27 @@ public final class LogCatPanel extends SelectionDependentPanel
      * Perform all necessary updates whenever a filter is selected (by user or programmatically).
      */
     private void filterSelectionChanged() {
+        mCurrentSelectedFilterIndex = getSelectedSavedFilterIndex();
+
+        resetUnreadCountForSelectedFilter();
         updateFiltersToolBar();
         updateAppliedFilters();
     }
 
-    private int getSavedFilterIndex() {
+    private void resetUnreadCountForSelectedFilter() {
+        int index = getSelectedSavedFilterIndex();
+        mLogCatFilters.get(index).resetUnreadCount();
+
+        refreshFiltersTable();
+    }
+
+    private int getSelectedSavedFilterIndex() {
         return mFiltersTableViewer.getTable().getSelectionIndex();
     }
 
     private void updateFiltersToolBar() {
         /* The default filter at index 0 can neither be edited, nor removed. */
-        boolean en = getSavedFilterIndex() != 0;
+        boolean en = getSelectedSavedFilterIndex() != 0;
         mEditFilterToolItem.setEnabled(en);
         mDeleteFilterToolItem.setEnabled(en);
     }
@@ -610,7 +621,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private LogCatViewerFilter getSelectedSavedFilter() {
-        int index = getSavedFilterIndex();
+        int index = getSelectedSavedFilterIndex();
         return new LogCatViewerFilter(mLogCatFilters.get(index));
     }
 
@@ -626,6 +637,32 @@ public final class LogCatPanel extends SelectionDependentPanel
      */
     public void messageReceived(List<LogCatMessage> receivedMessages) {
         refreshLogCatTable();
+
+        updateUnreadCount(receivedMessages);
+        refreshFiltersTable();
+    }
+
+    /**
+     * When new messages are received, and they match a saved filter, update
+     * the unread count associated with that filter.
+     * @param receivedMessages list of new messages received
+     */
+    private void updateUnreadCount(List<LogCatMessage> receivedMessages) {
+        for (int i = 0; i < mLogCatFilters.size(); i++) {
+            if (i == mCurrentSelectedFilterIndex) {
+                /* no need to update unread count for currently selected filter */
+                continue;
+            }
+            mLogCatFilters.get(i).updateUnreadCount(receivedMessages);
+        }
+    }
+
+    private void refreshFiltersTable() {
+        Display.getDefault().asyncExec(new Runnable() {
+            public void run() {
+                mFiltersTableViewer.refresh();
+            }
+        });
     }
 
     private void refreshLogCatTable() {
