@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.layout.relative;
+package com.android.ide.common.api;
 
-import com.android.ide.common.api.Segment;
 
 /**
  * A {@link MarginType} indicates whether a {@link Segment} corresponds to the visual edge

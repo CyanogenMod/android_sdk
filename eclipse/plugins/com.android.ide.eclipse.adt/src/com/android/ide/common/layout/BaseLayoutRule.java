@@ -67,13 +67,13 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.RuleAction;
-import com.android.ide.common.api.RuleAction.ChoiceProvider;
+import com.android.ide.common.api.MarginType;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.ChoiceProvider;
 import com.android.ide.common.api.Segment;
 import com.android.ide.common.api.SegmentType;
-import com.android.ide.common.layout.relative.MarginType;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
