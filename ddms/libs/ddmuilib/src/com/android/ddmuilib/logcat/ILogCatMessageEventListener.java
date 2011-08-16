@@ -16,10 +16,14 @@
 
 package com.android.ddmuilib.logcat;
 
+import java.util.List;
+
 /**
  * Listeners interested in log cat messages should implement this interface.
  */
 public interface ILogCatMessageEventListener {
-    /** Called on reception of logcat messages. */
-    void messageReceived();
+    /** Called on reception of logcat messages.
+     * @param receivedMessages list of messages received
+     */
+    void messageReceived(List<LogCatMessage> receivedMessages);
 }
