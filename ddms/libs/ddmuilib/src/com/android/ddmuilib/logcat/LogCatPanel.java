@@ -548,6 +548,8 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.setLabelProvider(mLogCatMessageLabelProvider);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
         mViewer.setInput(mReceiver.getMessages());
+
+        initDoubleClickListener();
     }
 
     private String getColPreferenceKey(String field) {
@@ -660,6 +662,9 @@ public final class LogCatPanel extends SelectionDependentPanel
     private void refreshFiltersTable() {
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
+                if (mFiltersTableViewer.getTable().isDisposed()) {
+                    return;
+                }
                 mFiltersTableViewer.refresh();
             }
         });
@@ -703,5 +708,29 @@ public final class LogCatPanel extends SelectionDependentPanel
         }
 
         return sb.getSelection() + sb.getThumb() == sb.getMaximum();
+    }
+
+    private List<ILogCatMessageSelectionListener> mMessageSelectionListeners;
+
+    private void initDoubleClickListener() {
+        mMessageSelectionListeners = new ArrayList<ILogCatMessageSelectionListener>(1);
+
+        mViewer.getTable().addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent arg0) {
+                List<LogCatMessage> selectedMessages = getSelectedLogCatMessages();
+                if (selectedMessages.size() == 0) {
+                    return;
+                }
+
+                for (ILogCatMessageSelectionListener l : mMessageSelectionListeners) {
+                    l.messageDoubleClicked(selectedMessages.get(0));
+                }
+            }
+        });
+    }
+
+    public void addLogCatMessageSelectionListener(ILogCatMessageSelectionListener l) {
+        mMessageSelectionListeners.add(l);
     }
 }
