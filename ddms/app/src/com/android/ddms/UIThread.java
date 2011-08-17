@@ -228,10 +228,10 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
      * Flag to indicate whether to use the old or the new logcat view. This is a
      * temporary workaround that will be removed once the new view is complete.
      */
-    private static final String USE_NEW_LOGCAT_VIEW =
-            System.getenv("ANDROID_USE_NEW_LOGCAT_VIEW");
+    private static final String USE_OLD_LOGCAT_VIEW =
+            System.getenv("ANDROID_USE_OLD_LOGCAT_VIEW");
     public static boolean useOldLogCatView() {
-        return USE_NEW_LOGCAT_VIEW == null;
+        return USE_OLD_LOGCAT_VIEW != null;
     }
 
     private LogPanel mLogPanel; /* only valid when useOldLogCatView() == true */
