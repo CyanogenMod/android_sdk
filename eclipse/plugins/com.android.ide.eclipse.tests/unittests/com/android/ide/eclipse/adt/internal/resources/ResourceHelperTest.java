@@ -91,7 +91,7 @@ public class ResourceHelperTest extends TestCase {
 
     }
 
-    public void testgetIcon() throws Exception {
+    public void testGetIcon() throws Exception {
         // check that the method returns null for an unknown qualifier class
         assertNull(ResourceHelper.getIcon(FakeQualifierClass.class));
 
