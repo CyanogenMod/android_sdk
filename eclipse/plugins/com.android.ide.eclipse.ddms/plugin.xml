@@ -20,6 +20,15 @@
             id="com.android.ide.eclipse.ddms.views.DeviceView"
             name="%view.name.Devices">
       </view>
+      <!-- Deprecate the old logcat view. It should be removed entirely
+           after the preview release -->
+      <view
+            allowMultiple="false"
+            category="com.android.ide.eclipse.ddms.views.category"
+            class="com.android.ide.eclipse.ddms.views.OldLogCatView"
+            icon="icons/android.png"
+            id="com.android.ide.eclipse.ddms.views.OldLogCatView"
+            name="LogCat (deprecated)"/>
       <view
             allowMultiple="false"
             category="com.android.ide.eclipse.ddms.views.category"
