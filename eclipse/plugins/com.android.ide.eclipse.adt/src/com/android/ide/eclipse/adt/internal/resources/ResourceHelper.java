@@ -43,9 +43,12 @@ import com.android.ide.common.resources.configuration.NightModeQualifier;
 import com.android.ide.common.resources.configuration.RegionQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.ScreenDimensionQualifier;
+import com.android.ide.common.resources.configuration.ScreenHeightQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.ide.common.resources.configuration.ScreenRatioQualifier;
 import com.android.ide.common.resources.configuration.ScreenSizeQualifier;
+import com.android.ide.common.resources.configuration.ScreenWidthQualifier;
+import com.android.ide.common.resources.configuration.SmallestScreenWidthQualifier;
 import com.android.ide.common.resources.configuration.TextInputMethodQualifier;
 import com.android.ide.common.resources.configuration.TouchScreenQualifier;
 import com.android.ide.common.resources.configuration.UiModeQualifier;
@@ -119,23 +122,26 @@ public class ResourceHelper {
 
     static {
         IconFactory factory = IconFactory.getInstance();
-        sIconMap.put(CountryCodeQualifier.class,       factory.getIcon("mcc")); //$NON-NLS-1$
-        sIconMap.put(NetworkCodeQualifier.class,       factory.getIcon("mnc")); //$NON-NLS-1$
-        sIconMap.put(LanguageQualifier.class,          factory.getIcon("language")); //$NON-NLS-1$
-        sIconMap.put(RegionQualifier.class,            factory.getIcon("region")); //$NON-NLS-1$
-        sIconMap.put(ScreenSizeQualifier.class,        factory.getIcon("size")); //$NON-NLS-1$
-        sIconMap.put(ScreenRatioQualifier.class,       factory.getIcon("ratio")); //$NON-NLS-1$
-        sIconMap.put(ScreenOrientationQualifier.class, factory.getIcon("orientation")); //$NON-NLS-1$
-        sIconMap.put(UiModeQualifier.class,            factory.getIcon("dockmode")); //$NON-NLS-1$
-        sIconMap.put(NightModeQualifier.class,         factory.getIcon("nightmode")); //$NON-NLS-1$
-        sIconMap.put(DensityQualifier.class,           factory.getIcon("dpi")); //$NON-NLS-1$
-        sIconMap.put(TouchScreenQualifier.class,       factory.getIcon("touch")); //$NON-NLS-1$
-        sIconMap.put(KeyboardStateQualifier.class,     factory.getIcon("keyboard")); //$NON-NLS-1$
-        sIconMap.put(TextInputMethodQualifier.class,   factory.getIcon("text_input")); //$NON-NLS-1$
-        sIconMap.put(NavigationStateQualifier.class,   factory.getIcon("navpad")); //$NON-NLS-1$
-        sIconMap.put(NavigationMethodQualifier.class,  factory.getIcon("navpad")); //$NON-NLS-1$
-        sIconMap.put(ScreenDimensionQualifier.class,   factory.getIcon("dimension")); //$NON-NLS-1$
-        sIconMap.put(VersionQualifier.class,           factory.getIcon("version")); //$NON-NLS-1$
+        sIconMap.put(CountryCodeQualifier.class,        factory.getIcon("mcc")); //$NON-NLS-1$
+        sIconMap.put(NetworkCodeQualifier.class,        factory.getIcon("mnc")); //$NON-NLS-1$
+        sIconMap.put(LanguageQualifier.class,           factory.getIcon("language")); //$NON-NLS-1$
+        sIconMap.put(RegionQualifier.class,             factory.getIcon("region")); //$NON-NLS-1$
+        sIconMap.put(ScreenSizeQualifier.class,         factory.getIcon("size")); //$NON-NLS-1$
+        sIconMap.put(ScreenRatioQualifier.class,        factory.getIcon("ratio")); //$NON-NLS-1$
+        sIconMap.put(ScreenOrientationQualifier.class,  factory.getIcon("orientation")); //$NON-NLS-1$
+        sIconMap.put(UiModeQualifier.class,             factory.getIcon("dockmode")); //$NON-NLS-1$
+        sIconMap.put(NightModeQualifier.class,          factory.getIcon("nightmode")); //$NON-NLS-1$
+        sIconMap.put(DensityQualifier.class,            factory.getIcon("dpi")); //$NON-NLS-1$
+        sIconMap.put(TouchScreenQualifier.class,        factory.getIcon("touch")); //$NON-NLS-1$
+        sIconMap.put(KeyboardStateQualifier.class,      factory.getIcon("keyboard")); //$NON-NLS-1$
+        sIconMap.put(TextInputMethodQualifier.class,    factory.getIcon("text_input")); //$NON-NLS-1$
+        sIconMap.put(NavigationStateQualifier.class,    factory.getIcon("navpad")); //$NON-NLS-1$
+        sIconMap.put(NavigationMethodQualifier.class,   factory.getIcon("navpad")); //$NON-NLS-1$
+        sIconMap.put(ScreenDimensionQualifier.class,    factory.getIcon("dimension")); //$NON-NLS-1$
+        sIconMap.put(VersionQualifier.class,            factory.getIcon("version")); //$NON-NLS-1$
+        sIconMap.put(ScreenWidthQualifier.class,        factory.getIcon("width")); //$NON-NLS-1$
+        sIconMap.put(ScreenHeightQualifier.class,       factory.getIcon("height")); //$NON-NLS-1$
+        sIconMap.put(SmallestScreenWidthQualifier.class,factory.getIcon("swidth")); //$NON-NLS-1$
     }
 
     /**
