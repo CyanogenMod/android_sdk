@@ -21,6 +21,8 @@ import org.apache.tools.ant.Task;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A base class for the ant task that contains logic for handling dependency files
@@ -40,6 +42,22 @@ public abstract class BaseTask extends Task {
     }
 
     protected abstract String getExecTaskName();
+
+    private Set<String> mRestrictTouchedExtensionsTo;
+
+    /**
+     * Sets the value of the "restricttouchedextensionsto" attribute.
+     * @param touchedExtensions the extensions to check to see if they have been modified.
+     *        values should be separated by a colon (:). If left blank or not set, all extensions
+     *        will be checked.
+     */
+    public void setRestrictTouchedExtensionsTo(String restrictTouchedExtensionsTo) {
+        mRestrictTouchedExtensionsTo = new HashSet<String>();
+        String[] extensions = restrictTouchedExtensionsTo.split(":");
+        for (String s : extensions) {
+            mRestrictTouchedExtensionsTo.add(s);
+        }
+    }
 
     @Override
     public void execute() throws BuildException {
@@ -84,6 +102,6 @@ public abstract class BaseTask extends Task {
         }
 
         assert mDependencies != null : "Dependencies have not been initialized";
-        return mDependencies.dependenciesHaveChanged();
+        return mDependencies.dependenciesHaveChanged(mRestrictTouchedExtensionsTo);
     }
 }
