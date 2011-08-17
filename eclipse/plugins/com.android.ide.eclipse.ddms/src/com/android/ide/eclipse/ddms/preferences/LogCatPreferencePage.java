@@ -20,16 +20,13 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FontFieldEditor;
-import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.SWTError;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 
+import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.LogCatView;
@@ -50,30 +47,9 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
 
     @Override
     protected void createFieldEditors() {
-        FontFieldEditor ffe = new FontFieldEditor(PreferenceInitializer.ATTR_LOGCAT_FONT,
+        FontFieldEditor ffe = new FontFieldEditor(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
                 Messages.LogCatPreferencePage_Display_Font, getFieldEditorParent());
         addField(ffe);
-
-        getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent event) {
-                // get the name of the property that changed.
-                String property = event.getProperty();
-
-                if (PreferenceInitializer.ATTR_LOGCAT_FONT.equals(property)) {
-                    try {
-                        FontData fdat = new FontData((String) event.getNewValue());
-                        LogCatView.setFont(new Font(getFieldEditorParent().getDisplay(), fdat));
-                    } catch (IllegalArgumentException e) {
-                        // Looks like the data from the store is not valid.
-                        // We do nothing (default font will be used).
-                    } catch (SWTError e2) {
-                        // Looks like the Font() constructor failed.
-                        // We do nothing in this case, the logcat view will use
-                        // the default font.
-                    }
-                }
-            }
-        });
 
         ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM,
                 Messages.LogCatPreferencePage_Double_Click_Action, new String[][] {
