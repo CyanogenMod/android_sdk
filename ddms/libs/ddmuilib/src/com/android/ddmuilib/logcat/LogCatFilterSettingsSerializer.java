@@ -94,7 +94,7 @@ public final class LogCatFilterSettingsSerializer {
             String text = "";
             LogLevel level = LogLevel.VERBOSE;
 
-            assert kv.get(index) == KW_NAME;
+            assert kv.get(index).equals(KW_NAME);
             name = kv.get(index + 1);
 
             index += 2;
