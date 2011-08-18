@@ -55,9 +55,11 @@ public final class LogCatMessageParser {
      * maintains state from previous calls regarding the last seen header of
      * logcat messages.
      * @param lines list of raw strings obtained from logcat -v long
+     * @param pidToNameMapper mapper to obtain the app name given a pid
      * @return list of LogMessage objects parsed from the input
      */
-    public List<LogCatMessage> processLogLines(String[] lines) {
+    public List<LogCatMessage> processLogLines(String[] lines,
+            LogCatPidToNameMapper pidToNameMapper) {
         List<LogCatMessage> messages = new ArrayList<LogCatMessage>(lines.length);
 
         for (String line : lines) {
@@ -78,7 +80,9 @@ public final class LogCatMessageParser {
                     mCurLogLevel = LogLevel.ASSERT;
                 }
             } else {
-                LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid, mCurTag, mCurTime, line);
+                LogCatMessage m = new LogCatMessage(mCurLogLevel, mCurPid,
+                        pidToNameMapper.getName(mCurPid),
+                        mCurTag, mCurTime, line);
                 messages.add(m);
             }
         }
