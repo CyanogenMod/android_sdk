@@ -36,7 +36,7 @@ public class DependencyGraph {
     // Files that we know about from the dependency file
     private Set<File> mTargets = Collections.emptySet();
     private Set<File> mPrereqs = mTargets;
-    private ArrayList<File> mWatchPaths;
+    private final ArrayList<File> mWatchPaths;
 
     public DependencyGraph(String dependencyFilePath, ArrayList<File> watchPaths) {
         mWatchPaths = watchPaths;
@@ -45,15 +45,18 @@ public class DependencyGraph {
 
     /**
      * Check all the dependencies to see if anything has changed.
+     * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
+     *        be considered for a modification check. All deleted/created files will still be
+     *        checked. If this is null, all files will be checked for modification date
      * @return true if new prerequisites have appeared, target files are missing or if
      *         prerequisite files have been modified since the last target generation.
      */
-    public boolean dependenciesHaveChanged() {
+    public boolean dependenciesHaveChanged(Set<String> extensionsToCheck) {
         boolean noFile = (mTargets.size() == 0);
         boolean missingPrereq = missingPrereqFile();
         boolean newPrereq = newPrereqFile();
         boolean missingTarget = missingTargetFile();
-        boolean modPrereq = modifiedPrereq();
+        boolean modPrereq = modifiedPrereq(extensionsToCheck);
 
         if (noFile) {
             System.out.println("No Dependency File Found");
@@ -206,7 +209,7 @@ public class DependencyGraph {
      * @return true if the latest prerequisite modification is after the oldest
      *         target modification.
      */
-    private boolean modifiedPrereq() {
+    private boolean modifiedPrereq(Set<String> extensionsToCheck) {
         // Find the oldest target
         long oldestTarget = Long.MAX_VALUE;
         for (File target : mTargets) {
@@ -218,8 +221,12 @@ public class DependencyGraph {
         // Find the newest prerequisite
         long newestPrereq = 0;
         for (File prereq : mPrereqs) {
-            if (prereq.lastModified() > newestPrereq) {
-                newestPrereq = prereq.lastModified();
+            // If we have a list of extensions that we need to restrict ourselves to, only
+            // consider this file if it has that extension.
+            if (extensionsToCheck == null || extensionsToCheck.contains(getExtension(prereq))) {
+                if (prereq.lastModified() > newestPrereq) {
+                    newestPrereq = prereq.lastModified();
+                }
             }
         }
 
@@ -250,5 +257,20 @@ public class DependencyGraph {
             // we'll just return null
         }
         return null;
+    }
+
+    /**
+     *  Gets the extension (if present) on a file by looking at the filename
+     *  @param file the file to get the extension of
+     *  @return the extension if present, or the empty string if the filename doesn't have
+     *          and extension.
+     */
+    private static String getExtension(File file) {
+        String filename = file.getName();
+        if (filename.lastIndexOf('.') == -1) {
+            return "";
+        }
+        // Don't include the leading '.' in the extension
+        return filename.substring(filename.lastIndexOf('.') + 1);
     }
 }
