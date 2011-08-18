@@ -19,7 +19,9 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static org.eclipse.wst.xml.core.internal.provisional.contenttype.ContentTypeIdForXML.ContentTypeID_XML;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.util.Pair;
 
@@ -31,6 +33,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocumentRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegion;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.eclipse.wst.xml.core.internal.regions.DOMRegionContext;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -38,13 +41,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 @SuppressWarnings("restriction") // No replacement for restricted XML model yet
 public class DomUtilities {
@@ -715,6 +723,55 @@ public class DomUtilities {
                 if (match != null) {
                     return match;
                 }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Parses the given XML string as a DOM document, using Eclipse's structured
+     * XML model (which for example allows us to distinguish empty elements
+     * (<foo/>) from elements with no children (<foo></foo>).
+     *
+     * @param xml the XML content to be parsed (must be well formed)
+     * @return the DOM document, or null
+     */
+    public static Document parseStructuredDocument(String xml) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        IStructuredModel model = modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
+        IStructuredDocument document = model.getStructuredDocument();
+        model.aboutToChangeModel();
+        document.set(xml);
+        model.changedModel();
+        if (model instanceof IDOMModel) {
+            IDOMModel domModel = (IDOMModel) model;
+            return domModel.getDocument();
+        }
+
+        return null;
+    }
+
+    /**
+     * Parses the given XML string as a DOM document, using the JDK parser.
+     * The parser does not validate, and is namespace aware.
+     *
+     * @param xml the XML content to be parsed (must be well formed)
+     * @param logParserErrors if true, log parser errors to the log, otherwise
+     *            silently return null
+     * @return the DOM document, or null
+     */
+    public static Document parseDocument(String xml, boolean logParserErrors) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        InputSource is = new InputSource(new StringReader(xml));
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            return builder.parse(is);
+        } catch (Exception e) {
+            if (logParserErrors) {
+                AdtPlugin.log(e, null);
             }
         }
 

@@ -79,8 +79,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * A "New Android Project" Wizard.
@@ -881,10 +881,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             }
 
             // Reformat the file according to the user's formatting settings
-            // This is disabled for now since the non-file-based pretty printing uses
-            // the JDK XML parser instead of the Eclipse parser, and the JDK parser does
-            // not track "empty tags", so <uses-sdk/> turns into <uses-sdk></uses-sdk>
-            //manifestTemplate = reformat(XmlFormatStyle.MANIFEST, manifestTemplate);
+            manifestTemplate = reformat(XmlFormatStyle.MANIFEST, manifestTemplate);
 
             // Save in the project as UTF-8
             InputStream stream = new ByteArrayInputStream(
