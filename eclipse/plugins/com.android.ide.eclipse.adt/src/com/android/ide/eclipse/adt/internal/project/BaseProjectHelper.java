@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -497,23 +498,7 @@ public final class BaseProjectHelper {
     public final static IFolder getAndroidOutputFolder(IProject project) {
         try {
             if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
-                // get a java project from the normal project object
-                IJavaProject javaProject = JavaCore.create(project);
-
-                IPath path = javaProject.getOutputLocation();
-                IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
-                IResource outputResource = wsRoot.findMember(path);
-
-                if (outputResource != null) { // really shouldn't happen
-                    // if the output folder is directly a child of the project,
-                    // then use it directly.
-                    if (outputResource.getParent().equals(project)) {
-                        return (IFolder) outputResource;
-                    }
-
-                    // otherwise returns the parent folder of the java output folder.
-                    return (IFolder) outputResource.getParent();
-                }
+                return project.getFolder(SdkConstants.FD_OUTPUT);
             }
         } catch (JavaModelException e) {
             // Let's do nothing and return null

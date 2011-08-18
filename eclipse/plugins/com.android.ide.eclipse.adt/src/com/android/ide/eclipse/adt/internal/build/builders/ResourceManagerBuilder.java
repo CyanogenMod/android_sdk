@@ -211,6 +211,15 @@ public class ResourceManagerBuilder extends BaseBuilder {
             project.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 10));
         }
 
+        // check that we have bin/res/
+        IFolder androidOutput = BaseProjectHelper.getAndroidOutputFolder(project);
+        IFolder binResFolder = androidOutput.getFolder(SdkConstants.FD_RESOURCES);
+        if (binResFolder.exists() == false) {
+            binResFolder.create(true /* force */, true /* local */,
+                    new SubProgressMonitor(monitor, 10));
+            project.refreshLocal(IResource.DEPTH_ONE, new SubProgressMonitor(monitor, 10));
+        }
+
         // Check the preference to be sure we are supposed to refresh
         // the folders.
         if (AdtPrefs.getPrefs().getBuildForceResResfresh()) {
