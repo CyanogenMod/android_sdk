@@ -33,6 +33,7 @@ import com.android.sdklib.build.ApkBuilder.JarStatus;
 import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -51,6 +52,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -135,7 +137,6 @@ public class BuildHelper {
         mVerbose = verbose;
     }
 
-
     public void updateCrunchCache() throws AaptExecException, AaptResultException {
         // Benchmarking start
         long startCrunchTime = 0;
@@ -166,6 +167,12 @@ public class BuildHelper {
             AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
         }
     }
+
+    public static void writeResources(IArchiveBuilder builder, IJavaProject javaProject)
+            throws DuplicateFileException, ApkCreationException, SealedApkException, CoreException {
+        writeStandardResources(builder, javaProject, null);
+    }
+
     /**
      * Packages the resources of the projet into a .ap_ file.
      * @param manifestFile the manifest of the project.
@@ -881,7 +888,7 @@ public class BuildHelper {
      * Writes the standard resources of a project and its referenced projects
      * into a {@link SignedJarBuilder}.
      * Standard resources are non java/aidl files placed in the java package folders.
-     * @param apkBuilder the {@link ApkBuilder}.
+     * @param builder the archive builder.
      * @param javaProject the javaProject object.
      * @param referencedJavaProjects the java projects that this project references.
      * @throws ApkCreationException if an error occurred
@@ -890,25 +897,24 @@ public class BuildHelper {
      *                                   at the same location inside the APK archive.
      * @throws CoreException
      */
-    private void writeStandardResources(ApkBuilder apkBuilder, IJavaProject javaProject,
+    private static void writeStandardResources(IArchiveBuilder builder, IJavaProject javaProject,
             List<IJavaProject> referencedJavaProjects)
             throws DuplicateFileException, ApkCreationException, SealedApkException,
             CoreException  {
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         IWorkspaceRoot wsRoot = ws.getRoot();
 
-        // create a list of path already put into the archive, in order to detect conflict
-        ArrayList<String> list = new ArrayList<String>();
+        writeStandardProjectResources(builder, javaProject, wsRoot);
 
-        writeStandardProjectResources(apkBuilder, javaProject, wsRoot, list);
-
-        for (IJavaProject referencedJavaProject : referencedJavaProjects) {
-            // only include output from non android referenced project
-            // (This is to handle the case of reference Android projects in the context of
-            // instrumentation projects that need to reference the projects to be tested).
-            if (referencedJavaProject.getProject().hasNature(
-                    AdtConstants.NATURE_DEFAULT) == false) {
-                writeStandardProjectResources(apkBuilder, referencedJavaProject, wsRoot, list);
+        if (referencedJavaProjects != null) {
+            for (IJavaProject referencedJavaProject : referencedJavaProjects) {
+                // only include output from non android referenced project
+                // (This is to handle the case of reference Android projects in the context of
+                // instrumentation projects that need to reference the projects to be tested).
+                if (referencedJavaProject.getProject().hasNature(
+                        AdtConstants.NATURE_DEFAULT) == false) {
+                    writeStandardProjectResources(builder, referencedJavaProject, wsRoot);
+                }
             }
         }
     }
@@ -919,15 +925,14 @@ public class BuildHelper {
      * @param jarBuilder the {@link ApkBuilder}.
      * @param javaProject the javaProject object.
      * @param wsRoot the {@link IWorkspaceRoot}.
-     * @param list a list of files already added to the archive, to detect conflicts.
      * @throws ApkCreationException if an error occurred
      * @throws SealedApkException if the APK is already sealed.
      * @throws DuplicateFileException if a file conflicts with another already added to the APK
      *                                   at the same location inside the APK archive.
      * @throws CoreException
      */
-    private void writeStandardProjectResources(ApkBuilder apkBuilder,
-            IJavaProject javaProject, IWorkspaceRoot wsRoot, ArrayList<String> list)
+    private static void writeStandardProjectResources(IArchiveBuilder builder,
+            IJavaProject javaProject, IWorkspaceRoot wsRoot)
             throws DuplicateFileException, ApkCreationException, SealedApkException, CoreException {
         // get the source pathes
         List<IPath> sourceFolders = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -936,14 +941,14 @@ public class BuildHelper {
         for (IPath sourcePath : sourceFolders) {
             IResource sourceResource = wsRoot.findMember(sourcePath);
             if (sourceResource != null && sourceResource.getType() == IResource.FOLDER) {
-                writeFolderResources(apkBuilder, javaProject, (IFolder) sourceResource);
+                writeFolderResources(builder, javaProject, (IFolder) sourceResource);
             }
         }
     }
 
-    private void writeFolderResources(ApkBuilder apkBuilder, final IJavaProject javaProject,
-            IFolder root) throws CoreException, ApkCreationException,
-            SealedApkException, DuplicateFileException {
+    private static void writeFolderResources(IArchiveBuilder builder,
+            final IJavaProject javaProject, IFolder root) throws CoreException,
+            ApkCreationException, SealedApkException, DuplicateFileException {
         final List<IPath> pathsToPackage = new ArrayList<IPath>();
         root.accept(new IResourceProxyVisitor() {
             public boolean visit(IResourceProxy proxy) throws CoreException {
@@ -969,7 +974,7 @@ public class BuildHelper {
         IPath rootLocation = root.getLocation();
         for (IPath path : pathsToPackage) {
             IPath archivePath = path.makeRelativeTo(rootLocation);
-            apkBuilder.addFile(path.toFile(), archivePath.toString());
+            builder.addFile(path.toFile(), archivePath.toString());
         }
     }
 
@@ -987,66 +992,90 @@ public class BuildHelper {
         IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
 
         ArrayList<String> oslibraryList = new ArrayList<String>();
+
+        // we could use IJavaProject.getResolvedClasspath directly, but we actually
+        // want to see the containers themselves.
         IClasspathEntry[] classpaths = javaProject.readRawClasspath();
         if (classpaths != null) {
             for (IClasspathEntry e : classpaths) {
-                if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY ||
-                        e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
-                    // if this is a classpath variable reference, we resolve it.
-                    if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
-                        e = JavaCore.getResolvedClasspathEntry(e);
-                    }
+                // if this is a classpath variable reference, we resolve it.
+                if (e.getEntryKind() == IClasspathEntry.CPE_VARIABLE) {
+                    e = JavaCore.getResolvedClasspathEntry(e);
+                }
 
-                    // get the IPath
-                    IPath path = e.getPath();
-
-                    IResource resource = wsRoot.findMember(path);
-                    // case of a jar file (which could be relative to the workspace or a full path)
-                    if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
-                        if (resource != null && resource.exists() &&
-                                resource.getType() == IResource.FILE) {
-                            oslibraryList.add(resource.getLocation().toOSString());
-                        } else {
-                            // if the jar path doesn't match a workspace resource,
-                            // then we get an OSString and check if this links to a valid file.
-                            String osFullPath = path.toOSString();
-
-                            File f = new File(osFullPath);
-                            if (f.isFile()) {
-                                oslibraryList.add(osFullPath);
-                            } else {
-                                String message = String.format( Messages.Couldnt_Locate_s_Error,
-                                        path);
-                                // always output to the console
-                                mOutStream.println(message);
-
-                                // put a marker
-                                if (resMarker != null) {
-                                    resMarker.setWarning(mProject, message);
-                                }
+                if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+                    handleClasspathEntry(e, wsRoot, oslibraryList, resMarker);
+                } else if (e.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                    // get the container
+                    try {
+                        IClasspathContainer container = JavaCore.getClasspathContainer(
+                                e.getPath(), javaProject);
+                        // ignore the system and default_system types as they represent
+                        // libraries that are part of the runtime.
+                        if (container.getKind() == IClasspathContainer.K_APPLICATION) {
+                            IClasspathEntry[] entries = container.getClasspathEntries();
+                            for (IClasspathEntry entry : entries) {
+                                handleClasspathEntry(entry, wsRoot, oslibraryList, resMarker);
                             }
                         }
-                    } else {
-                        // this can be the case for a class folder.
-                        if (resource != null && resource.exists() &&
-                                resource.getType() == IResource.FOLDER) {
-                            oslibraryList.add(resource.getLocation().toOSString());
-                        } else {
-                            // if the path doesn't match a workspace resource,
-                            // then we get an OSString and check if this links to a valid folder.
-                            String osFullPath = path.toOSString();
-
-                            File f = new File(osFullPath);
-                            if (f.isDirectory()) {
-                                oslibraryList.add(osFullPath);
-                            }
-                        }
+                    } catch (JavaModelException jme) {
+                        // can't resolve the container? ignore it.
+                        AdtPlugin.log(jme, "Failed to resolve ClasspathContainer: %s", e.getPath());
                     }
                 }
             }
         }
 
         return oslibraryList.toArray(new String[oslibraryList.size()]);
+    }
+
+    private void handleClasspathEntry(IClasspathEntry e, IWorkspaceRoot wsRoot,
+            ArrayList<String> oslibraryList, ResourceMarker resMarker) {
+        // get the IPath
+        IPath path = e.getPath();
+
+        IResource resource = wsRoot.findMember(path);
+        // case of a jar file (which could be relative to the workspace or a full path)
+        if (AdtConstants.EXT_JAR.equalsIgnoreCase(path.getFileExtension())) {
+            if (resource != null && resource.exists() &&
+                    resource.getType() == IResource.FILE) {
+                oslibraryList.add(resource.getLocation().toOSString());
+            } else {
+                // if the jar path doesn't match a workspace resource,
+                // then we get an OSString and check if this links to a valid file.
+                String osFullPath = path.toOSString();
+
+                File f = new File(osFullPath);
+                if (f.isFile()) {
+                    oslibraryList.add(osFullPath);
+                } else {
+                    String message = String.format( Messages.Couldnt_Locate_s_Error,
+                            path);
+                    // always output to the console
+                    mOutStream.println(message);
+
+                    // put a marker
+                    if (resMarker != null) {
+                        resMarker.setWarning(mProject, message);
+                    }
+                }
+            }
+        } else {
+            // this can be the case for a class folder.
+            if (resource != null && resource.exists() &&
+                    resource.getType() == IResource.FOLDER) {
+                oslibraryList.add(resource.getLocation().toOSString());
+            } else {
+                // if the path doesn't match a workspace resource,
+                // then we get an OSString and check if this links to a valid folder.
+                String osFullPath = path.toOSString();
+
+                File f = new File(osFullPath);
+                if (f.isDirectory()) {
+                    oslibraryList.add(osFullPath);
+                }
+            }
+        }
     }
 
     /**

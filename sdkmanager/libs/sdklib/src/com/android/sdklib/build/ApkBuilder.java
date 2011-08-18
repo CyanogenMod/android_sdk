@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * - Native libraries from the project or its library.
  *
  */
-public final class ApkBuilder {
+public final class ApkBuilder implements IArchiveBuilder {
 
     private final static Pattern PATTERN_NATIVELIB_EXT = Pattern.compile("^.+\\.so$",
             Pattern.CASE_INSENSITIVE);

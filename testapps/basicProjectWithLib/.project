@@ -30,16 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>basicLibWithJar_src</name>
-			<type>2</type>
-			<locationURI>_android_basicLibWithJar_aa4247fe/src</locationURI>
-		</link>
-		<link>
-			<name>basicLib_src</name>
-			<type>2</type>
-			<locationURI>_android_basicLib_99a2bf77/src</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>

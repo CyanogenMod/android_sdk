@@ -493,7 +493,8 @@ public class PreCompilerBuilder extends BaseBuilder {
             // generate resources.
             boolean compiledTheResources = mMustCompileResources;
             if (mMustCompileResources) {
-                handleResources(project, javaPackage, projectTarget, manifestFile, libProjects);
+                handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
+                        projectState.isLibrary());
                 saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , false);
             }
 
@@ -581,11 +582,13 @@ public class PreCompilerBuilder extends BaseBuilder {
      * @param projectTarget the target of the main project
      * @param manifest the {@link IFile} representing the project manifest
      * @param libProjects the library dependencies
+     * @param isLibrary if the project is a library project
      * @throws CoreException
      * @throws AbortBuildException
      */
     private void handleResources(IProject project, String javaPackage, IAndroidTarget projectTarget,
-            IFile manifest, List<IProject> libProjects) throws CoreException, AbortBuildException {
+            IFile manifest, List<IProject> libProjects, boolean isLibrary)
+            throws CoreException, AbortBuildException {
         // get the resource folder
         IFolder resFolder = project.getFolder(AdtConstants.WS_RESOURCES);
 
@@ -636,12 +639,15 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
                 }
             }
+
             String libPackages = null;
             if (libJavaPackages != null) {
                 libPackages = libJavaPackages.toString();
+
             }
+
             execAapt(project, projectTarget, osOutputPath, osResPath, osManifestPath,
-                    mainPackageFolder, libResFolders, libPackages);
+                    mainPackageFolder, libResFolders, libPackages, isLibrary);
         }
     }
 
@@ -660,11 +666,13 @@ public class PreCompilerBuilder extends BaseBuilder {
      * @param libResFolders the list of res folders for the library.
      * @param libraryPackages an optional list of javapackages to replace the main project java package.
      * can be null.
+     * @param isLibrary if the project is a library project
      * @throws AbortBuildException
      */
     private void execAapt(IProject project, IAndroidTarget projectTarget, String osOutputPath,
             String osResPath, String osManifestPath, IFolder packageFolder,
-            ArrayList<IFolder> libResFolders, String libraryPackages) throws AbortBuildException {
+            ArrayList<IFolder> libResFolders, String libraryPackages, boolean isLibrary)
+            throws AbortBuildException {
         // We actually need to delete the manifest.java as it may become empty and
         // in this case aapt doesn't generate an empty one, but instead doesn't
         // touch it.
@@ -678,6 +686,10 @@ public class PreCompilerBuilder extends BaseBuilder {
         array.add("-m"); //$NON-NLS-1$
         if (AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE) {
             array.add("-v"); //$NON-NLS-1$
+        }
+
+        if (isLibrary) {
+            array.add("--non-constant-id"); //$NON-NLS-1$
         }
 
         if (libResFolders.size() > 0) {

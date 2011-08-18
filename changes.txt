@@ -1,14 +1,32 @@
 Change log for Android SDK Tools.
 
-Revision 11:
+Revision 14:
+
+- Build performance improvements:
+   * resource compilation and packaging now properly use dependency to only
+     be executed if a resource changed.
+   * Optimized resource compilation for projects with libraries. This should
+     speed up this phase significantly for large projects with libraries.
+   * PNG files that are optimized during resource packaging are now cached
+     and only re-optimized if they changed instead of doing at every build.
+- New library project mechanism:
+   *
+
+Revision 13:
+
+Revision 12: (07/2011):
+- The AVD manager and emulator can now use system images compiled for ARM v7 and
+  x86 CPUs.
+
+Revision 11 (05/2011):
 - See eclipse/changes.txt for ADT related changes.
 
-Revision 10:
+Revision 10 (02/2011):
 - The tools now automatically generate Java Programming Language
   source files (in the gen directory) and bytecode (in the res/raw
   directory) from your native .rs files
 
-Revision 9:
+Revision 9 (01/2011):
 - Fix packaging issue that broke draw9patch
 - Ant build rules will now check the Ant version and fail if it's older than 1.8
 - Fix "folder locked" errors when installing packages in SDK Manager on Windows.
@@ -22,7 +40,7 @@ Revision 9:
 - Logcat view in DDMS now properly displays UTF-8 characters.
 
 
-Revision 8:
+Revision 8 (12/2010):
 - New SDK component: platform-tools. This makes all platforms use the same
   latest version of aapt/aidl/dx.
 - Support for true debug build. No need to change the value of debuggable in
@@ -36,7 +54,7 @@ Revision 8:
   (default to "ascii", "1.5" and "1.5")
 
 
-Revision 7:
+Revision 7 (09/2010):
 - Support for Ant rules provided by the Tools components (override the one in
   the platform component)
 - Added support for libraries with library dependencies.

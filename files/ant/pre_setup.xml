@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="imported" basedir=".">
 
-    <!-- Custom Android task to deal with the project target, and import the
-         proper rules.
-         This requires ant 1.6.0 or above. -->
-    <path id="android.antlibs">
-        <pathelement path="${sdk.dir}/tools/lib/anttasks.jar" />
-    </path>
+    <fail message="Your build.xml file is outdated. Delete it and regenerate it with 'android update project'"/>
 
-    <taskdef name="setup"
-        classname="com.android.ant.SetupTask"
-        classpathref="android.antlibs" />
 </project>
