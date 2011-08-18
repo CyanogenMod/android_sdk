@@ -380,16 +380,17 @@ public interface IDevice {
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException;
 
     /**
-     * Installs an Android application on device.
-     * This is a helper method that combines the syncPackageToDevice, installRemotePackage,
-     * and removePackage steps
+     * Installs an Android application on device. This is a helper method that combines the
+     * syncPackageToDevice, installRemotePackage, and removePackage steps
      *
      * @param packageFilePath the absolute file system path to file on local host to install
      * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *            available options.
      * @return a {@link String} with an error code, or <code>null</code> if success.
      * @throws InstallException if the installation fails.
      */
-    public String installPackage(String packageFilePath, boolean reinstall)
+    public String installPackage(String packageFilePath, boolean reinstall, String... extraArgs)
             throws InstallException;
 
     /**
@@ -410,10 +411,12 @@ public interface IDevice {
      *
      * @param remoteFilePath absolute file path to package file on device
      * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *            available options.
      * @throws InstallException if the installation fails.
      */
-    public String installRemotePackage(String remoteFilePath, boolean reinstall)
-            throws InstallException;
+    public String installRemotePackage(String remoteFilePath, boolean reinstall,
+            String... extraArgs) throws InstallException;
 
     /**
      * Removes a file from device.
