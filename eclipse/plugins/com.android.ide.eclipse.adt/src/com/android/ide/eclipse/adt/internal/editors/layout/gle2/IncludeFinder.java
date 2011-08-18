@@ -56,11 +56,7 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -70,10 +66,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * The include finder finds other XML files that are including a given XML file, and does
@@ -526,23 +518,9 @@ public class IncludeFinder {
      * @return a list of included urls, or null
      */
     private List<String> findIncludesInXml(String xml) {
-        Document document = null;
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        InputSource is = new InputSource(new StringReader(xml));
-        try {
-            factory.setNamespaceAware(true);
-            factory.setValidating(false);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            document = builder.parse(is);
-
+        Document document = DomUtilities.parseDocument(xml, false /*logParserErrors*/);
+        if (document != null) {
             return findIncludesInDocument(document);
-
-        } catch (ParserConfigurationException e) {
-            // pass -- ignore files we can't parse
-        } catch (SAXException e) {
-            // pass -- ignore files we can't parse
-        } catch (IOException e) {
-            // pass -- ignore files we can't parse
         }
 
         return Collections.emptyList();
