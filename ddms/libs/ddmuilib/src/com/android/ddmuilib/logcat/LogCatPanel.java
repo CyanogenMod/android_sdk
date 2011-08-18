@@ -16,6 +16,7 @@
 
 package com.android.ddmuilib.logcat;
 
+import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
@@ -68,8 +69,10 @@ public final class LogCatPanel extends SelectionDependentPanel
     /** Preference key to use for storing font settings. */
     public static final String LOGCAT_VIEW_FONT_PREFKEY = "logcat.view.font";
 
-    private static final String DEFAULT_LOGCAT_FONT = new FontData(
-            "Courier New", 10, SWT.NORMAL).toString();
+    private static final String FONT_FAMILY =
+            DdmConstants.CURRENT_PLATFORM == DdmConstants.PLATFORM_DARWIN ? "Monaco":"Courier New";
+    private static final FontData DEFAULT_LOGCAT_FONT = new FontData(
+            FONT_FAMILY, 12, SWT.NORMAL);
 
     private static final String LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX = "logcat.view.colsize.";
 
@@ -139,7 +142,8 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void initializeFonts(IPreferenceStore prefStore) {
-        mPrefStore.setDefault(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY, DEFAULT_LOGCAT_FONT);
+        PreferenceConverter.setDefault(mPrefStore, LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
+                DEFAULT_LOGCAT_FONT);
 
         mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent event) {
