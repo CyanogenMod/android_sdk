@@ -1371,7 +1371,8 @@ public class UiElementNode implements IPropertySource {
     }
 
     /**
-     * Updates the {@link UiAttributeNode} list for this {@link UiElementNode}.
+     * Updates the {@link UiAttributeNode} list for this {@link UiElementNode}
+     * using the values from the XML element.
      * <p/>
      * For a given {@link UiElementNode}, the attribute list always exists in
      * full and is totally independent of whether the XML model actually
@@ -1456,6 +1457,12 @@ public class UiElementNode implements IPropertySource {
         }
     }
 
+    /**
+     * Create a new temporary text attribute descriptor for the unknown attribute
+     * and returns a new {@link UiAttributeNode} associated to this descriptor.
+     * <p/>
+     * The attribute is not marked as dirty, doing so is up to the caller.
+     */
     private UiAttributeNode addUnknownAttribute(String xmlFullName,
             String xmlAttrLocalName, String xmlNsUri) {
         // Create a new unknown attribute of format string
@@ -1467,7 +1474,6 @@ public class UiElementNode implements IPropertySource {
                 new AttributeInfo(xmlAttrLocalName, new Format[] { Format.STRING } )
                 );
         UiAttributeNode uiAttr = desc.createUiNode(this);
-        uiAttr.setDirty(true);
         mUnknownUiAttributes.add(uiAttr);
         mCachedAllUiAttributes = null;
         return uiAttr;
@@ -1815,6 +1821,9 @@ public class UiElementNode implements IPropertySource {
 
             // We've created the attribute, but not actually set the value on it, so let's do it.
             // Try with the updated internal attributes.
+            // Implementation detail: we could just do a setCurrentValue + setDirty on the
+            // uiAttr returned by addUnknownAttribute(); however going through setInternalAttrValue
+            // means we won't duplicate the logic, at the expense of doing one more lookup.
             uiAttr = setInternalAttrValue(
                     getAllUiAttributes(), attrXmlName, attrNsUri, value, override);
         }
