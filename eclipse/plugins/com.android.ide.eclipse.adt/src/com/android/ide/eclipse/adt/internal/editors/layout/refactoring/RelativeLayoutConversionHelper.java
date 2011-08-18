@@ -207,7 +207,8 @@ class RelativeLayoutConversionHelper {
     private void deleteRemovedElements(List<Element> delete) {
         if (mFlatten && delete.size() > 0) {
             for (Element element : delete) {
-                mRefactoring.removeElementTags(mRootEdit, element, delete);
+                mRefactoring.removeElementTags(mRootEdit, element, delete,
+                        true /*changeIndentation*/);
             }
         }
     }

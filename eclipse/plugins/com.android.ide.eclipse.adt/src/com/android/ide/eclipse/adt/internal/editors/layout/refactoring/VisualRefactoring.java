@@ -30,6 +30,9 @@ import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttr
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
@@ -52,6 +55,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -1036,7 +1040,8 @@ public abstract class VisualRefactoring extends Refactoring {
      *
      * TODO: Rename this to "unwrap" ? And allow for handling nested deletions.
      */
-    protected void removeElementTags(MultiTextEdit rootEdit, Element element, List<Element> skip) {
+    protected void removeElementTags(MultiTextEdit rootEdit, Element element, List<Element> skip,
+            boolean changeIndentation) {
         IndexedRegion elementRegion = getRegion(element);
         if (elementRegion == null) {
             return;
@@ -1069,8 +1074,6 @@ public abstract class VisualRefactoring extends Refactoring {
                     }
                 }
 
-
-
                 // Find the close tag
                 // Look at all attribute values and look for an id reference match
                 region = doc.getRegionAtCharacterOffset(elementRegion.getEndOffset()
@@ -1096,7 +1099,7 @@ public abstract class VisualRefactoring extends Refactoring {
             }
 
             // Dedent the contents
-            if (startLineInclusive != -1 && endLineInclusive != -1) {
+            if (changeIndentation && startLineInclusive != -1 && endLineInclusive != -1) {
                 String indent = AndroidXmlEditor.getIndentAtOffset(doc, getRegion(element)
                         .getStartOffset());
                 setIndentation(rootEdit, indent, doc, startLineInclusive, endLineInclusive,
@@ -1217,7 +1220,7 @@ public abstract class VisualRefactoring extends Refactoring {
             }
             if (deleteLine) {
                 startOffset = lineBegin;
-                endOffset = lineEnd + 1;
+                endOffset = Math.min(doc.getLength(), lineEnd + 1);
             }
         } catch (BadLocationException e) {
             AdtPlugin.log(e, null);
@@ -1225,6 +1228,87 @@ public abstract class VisualRefactoring extends Refactoring {
 
 
         return new DeleteEdit(startOffset, endOffset - startOffset);
+    }
+
+    /**
+     * Rewrite the edits in the given {@link MultiTextEdit} such that same edits are
+     * applied, but the resulting range is also formatted
+     */
+    protected MultiTextEdit reformat(MultiTextEdit edit, XmlFormatStyle style) {
+        IDocument document = new org.eclipse.jface.text.Document();
+        String xml = mEditor.getStructuredDocument().get();
+        document.set(xml);
+
+        try {
+            edit.apply(document);
+        } catch (MalformedTreeException e) {
+            AdtPlugin.log(e, null);
+            return null; // Abort formatting
+        } catch (BadLocationException e) {
+            AdtPlugin.log(e, null);
+            return null; // Abort formatting
+        }
+
+        String actual = document.get();
+
+        // TODO: Try to format only the affected portion of the document.
+        // To do that we need to find out what the affected offsets are; we know
+        // the MultiTextEdit's affected range, but that is referring to offsets
+        // in the old document. Use that to compute offsets in the new document.
+        //int distanceFromEnd = actual.length() - edit.getExclusiveEnd();
+        //IStructuredModel model = DomUtilities.createStructuredModel(actual);
+        //int start = edit.getOffset();
+        //int end = actual.length() - distanceFromEnd;
+        //int length = end - start;
+        //TextEdit format = AndroidXmlFormattingStrategy.format(model, start, length);
+        XmlFormatPreferences formatPrefs = XmlFormatPreferences.create();
+        String formatted = XmlPrettyPrinter.prettyPrint(actual, formatPrefs, style,
+                null /*lineSeparator*/);
+
+
+        // Figure out how much of the before and after strings are identical and narrow
+        // the replacement scope
+        boolean foundDifference = false;
+        int firstDifference = 0;
+        int lastDifference = formatted.length();
+        int start = 0;
+        int end = xml.length();
+
+        for (int i = 0, j = start; i < formatted.length() && j < end; i++, j++) {
+            if (formatted.charAt(i) != xml.charAt(j)) {
+                firstDifference = i;
+                foundDifference = true;
+                break;
+            }
+        }
+
+        if (!foundDifference) {
+            // No differences - the document is already formatted, nothing to do
+            return null;
+        }
+
+        lastDifference = firstDifference + 1;
+        for (int i = formatted.length() - 1, j = end - 1;
+                i > firstDifference && j > start;
+                i--, j--) {
+            if (formatted.charAt(i) != xml.charAt(j)) {
+                lastDifference = i + 1;
+                break;
+            }
+        }
+
+        start += firstDifference;
+        end -= (formatted.length() - lastDifference);
+        end = Math.max(start, end);
+        formatted = formatted.substring(firstDifference, lastDifference);
+
+        ReplaceEdit format = new ReplaceEdit(start, end - start,
+                formatted);
+
+        MultiTextEdit newEdit = new MultiTextEdit();
+        newEdit.addChild(format);
+
+        return newEdit;
     }
 
     protected ViewElementDescriptor getElementDescriptor(String fqcn) {

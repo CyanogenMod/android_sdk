@@ -146,7 +146,17 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         }
     }
 
-    private TextEdit format(IStructuredModel model, int start, int length) {
+    /**
+     * Creates a {@link TextEdit} for formatting the given model's XML in the text range
+     * starting at offset start with the given length. Note that the exact formatting
+     * offsets may be adjusted to format a complete element.
+     *
+     * @param model the model to be formatted
+     * @param start the starting offset
+     * @param length the length of the text range to be formatted
+     * @return a {@link TextEdit} which edits the model into a formatted document
+     */
+    public static TextEdit format(IStructuredModel model, int start, int length) {
         int end = start + length;
 
         TextEdit edit = new MultiTextEdit();
@@ -348,7 +358,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
      * adjusted (for example to make the edit smaller if the beginning and/or end is
      * identical, and so on)
      */
-    private ReplaceEdit createReplaceEdit(IStructuredDocument document, int replaceStart,
+    private static ReplaceEdit createReplaceEdit(IStructuredDocument document, int replaceStart,
             int replaceEnd, String formatted, XmlFormatPreferences prefs) {
         // If replacing a node somewhere in the middle, start the replacement at the
         // beginning of the current line
@@ -488,7 +498,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
 
     /**
      * Guess what style to use to edit the given document - layout, resource, manifest, ... ? */
-    private XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
+    private static XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
         // The "layout" style is used for most XML resource file types:
         // layouts, color-lists and state-lists, animations, drawables, menus, etc
         XmlFormatStyle style = XmlFormatStyle.LAYOUT;
