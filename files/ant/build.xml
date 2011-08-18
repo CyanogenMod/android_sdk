@@ -545,7 +545,8 @@
                     androidjar="${android.jar}"
                     rfolder="${gen.absolute.dir}"
                     projectLibrariesResName="project.libraries.res"
-                    projectLibrariesPackageName="project.libraries.package">
+                    projectLibrariesPackageName="project.libraries.package"
+                    restricttouchedextensionsto="xml">
                 <res path="${resource.absolute.dir}" />
             </aapt>
         </do-only-if-manifest-hasCode>
