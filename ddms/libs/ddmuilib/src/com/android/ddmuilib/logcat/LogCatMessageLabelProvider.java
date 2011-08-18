@@ -178,6 +178,10 @@ public final class LogCatMessageLabelProvider extends LabelProvider
     }
 
     public void setFont(Font preferredFont) {
+        if (mLogFont != null) {
+            mLogFont.dispose();
+        }
+
         mLogFont = preferredFont;
         mFontWidth = getFontWidth();
         updateWrapWidth();
