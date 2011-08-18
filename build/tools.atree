@@ -59,7 +59,6 @@ bin/monkeyrunner    tools/monkeyrunner
 
 # sdk.git Ant templates for project build files
 sdk/templates/build.template        tools/lib/build.template
-sdk/templates/build.export.template tools/lib/build.export.template
 sdk/files/proguard.cfg              tools/lib/proguard.cfg
 
 # Ant Build Rules
