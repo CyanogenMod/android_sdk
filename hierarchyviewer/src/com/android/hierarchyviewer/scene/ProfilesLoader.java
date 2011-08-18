@@ -17,6 +17,7 @@
 package com.android.hierarchyviewer.scene;
 
 import com.android.ddmlib.IDevice;
+import com.android.hierarchyviewer.HierarchyViewer;
 import com.android.hierarchyviewer.device.Window;
 import com.android.hierarchyviewer.device.DeviceBridge;
 
@@ -30,6 +31,10 @@ import java.io.InputStreamReader;
 
 public class ProfilesLoader {
     public static double[] loadProfiles(IDevice device, Window window, String params) {
+        if (!HierarchyViewer.isProfilingEnabled()) {
+            return new double[] { 0.0, 0.0, 0.0 };
+        }
+        
         Socket socket = null;
         BufferedReader in = null;
         BufferedWriter out = null;
