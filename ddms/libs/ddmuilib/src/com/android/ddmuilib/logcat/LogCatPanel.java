@@ -23,6 +23,7 @@ import com.android.ddmuilib.TableHelper;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.TableViewer;
@@ -557,8 +558,9 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private Font getFontFromPrefStore() {
-        String preferredFont = mPrefStore.getString(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY);
-        return new Font(Display.getDefault(), new FontData(preferredFont));
+        FontData fd = PreferenceConverter.getFontData(mPrefStore,
+                LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY);
+        return new Font(Display.getDefault(), fd);
     }
 
     private void setupDefaults() {
@@ -572,7 +574,18 @@ public final class LogCatPanel extends SelectionDependentPanel
      * Perform all necessary updates whenever a filter is selected (by user or programmatically).
      */
     private void filterSelectionChanged() {
-        mCurrentSelectedFilterIndex = getSelectedSavedFilterIndex();
+        int idx = getSelectedSavedFilterIndex();
+        if (idx == -1) {
+            /* One of the filters should always be selected.
+             * On Linux, there is no way to deselect an item.
+             * On Mac, clicking inside the list view, but not an any item will result
+             * in all items being deselected. In such a case, we simply reselect the
+             * first entry. */
+            idx = 0;
+            mFiltersTableViewer.getTable().setSelection(idx);
+        }
+
+        mCurrentSelectedFilterIndex = idx;
 
         resetUnreadCountForSelectedFilter();
         updateFiltersToolBar();
