@@ -255,10 +255,15 @@ public class PreCompilerBuilder extends BaseBuilder {
                     dv = new PreCompilerDeltaVisitor(this, sourceFolderPathList, mProcessors);
                     delta.accept(dv);
                     // Notify the ResourceManager:
-                    ResourceManager.getInstance().processDelta(delta);
+                    ResourceManager resManager = ResourceManager.getInstance();
+                    resManager.processDelta(delta);
 
-                    // record the state
+                    // Check whether this project or its dependencies (libraries) have
+                    // resources that need compilation
+                    mMustCompileResources |= resManager.projectNeedsIdGeneration(project);
+                    // Check to see if Manifest.xml, Manifest.java, or R.java have changed:
                     mMustCompileResources |= dv.getCompileResources();
+
                     for (SourceProcessor processor : mProcessors) {
                         processor.doneVisiting(project);
                     }
@@ -266,24 +271,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                     // get the java package from the visitor
                     javaPackage = dv.getManifestPackage();
                     minSdkVersion = dv.getMinSdkVersion();
-
-                    // if the main resources didn't change, then we check for the library
-                    // ones (will trigger resource recompilation too)
-                    if (mMustCompileResources == false && libProjects.size() > 0) {
-                        for (IProject libProject : libProjects) {
-                            delta = getDelta(libProject);
-                            if (delta != null) {
-                                LibraryDeltaVisitor visitor = new LibraryDeltaVisitor();
-                                delta.accept(visitor);
-
-                                mMustCompileResources = visitor.getResChange();
-
-                                if (mMustCompileResources) {
-                                    break;
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -496,6 +483,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
                         projectState.isLibrary());
                 saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , false);
+                // The project resources will find out that they're in sync when their IDs are set
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
