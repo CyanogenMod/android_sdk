@@ -38,6 +38,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 
