@@ -18,9 +18,11 @@ package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
+import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -31,6 +33,11 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -744,5 +751,57 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     public void addLogCatMessageSelectionListener(ILogCatMessageSelectionListener l) {
         mMessageSelectionListeners.add(l);
+    }
+
+    private ITableFocusListener mTableFocusListener;
+
+    /**
+     * Specify the listener to be called when the logcat view gets focus. This interface is
+     * required by DDMS to hook up the menu items for Copy and Select All.
+     * @param listener listener to be notified when logcat view is in focus
+     */
+    public void setTableFocusListener(ITableFocusListener listener) {
+        mTableFocusListener = listener;
+
+        final Table table = mViewer.getTable();
+        final IFocusedTableActivator activator = new IFocusedTableActivator() {
+            public void copy(Clipboard clipboard) {
+                copySelectionToClipboard(clipboard);
+            }
+
+            public void selectAll() {
+                table.selectAll();
+            }
+        };
+
+        table.addFocusListener(new FocusListener() {
+            public void focusGained(FocusEvent e) {
+                mTableFocusListener.focusGained(activator);
+            }
+
+            public void focusLost(FocusEvent e) {
+                mTableFocusListener.focusLost(activator);
+            }
+        });
+    }
+
+    /** Copy all selected messages to clipboard. */
+    public void copySelectionToClipboard(Clipboard clipboard) {
+        StringBuilder sb = new StringBuilder();
+
+        for (LogCatMessage m : getSelectedLogCatMessages()) {
+            sb.append(m.toString());
+            sb.append('\n');
+        }
+
+        clipboard.setContents(
+                new Object[] {sb.toString()},
+                new Transfer[] {TextTransfer.getInstance()}
+                );
+    }
+
+    /** Select all items in the logcat table. */
+    public void selectAll() {
+        mViewer.getTable().selectAll();
     }
 }
