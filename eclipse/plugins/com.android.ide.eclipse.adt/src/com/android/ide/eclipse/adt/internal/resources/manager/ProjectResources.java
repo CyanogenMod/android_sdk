@@ -72,7 +72,6 @@ public class ProjectResources extends ResourceRepository {
 
     private final IProject mProject;
 
-
     /**
      * Makes a ProjectResources for a given <var>project</var>.
      * @param project the project.
@@ -288,5 +287,9 @@ public class ProjectResources extends ResourceRepository {
         mResourceValueMap = resourceValueMap;
         mResIdValueToNameMap = resIdValueToNameMap;
         mStyleableValueToNameMap = styleableValueMap;
+
+        // Our resource IDs should now be in sync
+        setIdsRefreshed();
     }
+
 }
