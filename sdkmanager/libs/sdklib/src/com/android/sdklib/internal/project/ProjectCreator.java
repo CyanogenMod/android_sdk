@@ -603,20 +603,19 @@ public class ProjectCreator {
         // Build.xml: create if not present or no <androidinit/> in it
         File buildXml = new File(projectFolder, SdkConstants.FN_BUILD_XML);
         boolean needsBuildXml = projectName != null || !buildXml.exists();
+
         if (!needsBuildXml) {
-            // Look for for a classname="com.android.ant.SetupTask" attribute
-            needsBuildXml = !checkFileContainsRegexp(buildXml,
-                    "classname=\"com.android.ant.SetupTask\"");  //$NON-NLS-1$
-        }
-        if (!needsBuildXml) {
-            // Note that "<setup" must be followed by either a whitespace, a "/" (for the
-            // XML /> closing tag) or an end-of-line. This way we know the XML tag is really this
-            // one and later we will be able to use an "androidinit2" tag or such as necessary.
-            needsBuildXml = !checkFileContainsRegexp(buildXml, "<setup(?:\\s|/|$)");  //$NON-NLS-1$
-        }
-        if (needsBuildXml) {
-            if (buildXml.exists()) {
-                println("File %1$s is too old and needs to be updated.", SdkConstants.FN_BUILD_XML);
+            // we are looking for version-tag: followed by either an integer or "custom".
+            if (checkFileContainsRegexp(buildXml, "version-tag:\\s*custom")) { //$NON-NLS-1$
+                println("File %1$s is custom and will not be overriden.",
+                        SdkConstants.FN_BUILD_XML);
+            } else {
+                // TODO: look for the version value and update if too old.
+                if (!checkFileContainsRegexp(buildXml, "version-tag:\\s*(\\d*)")) { //$NON-NLS-1$
+                    needsBuildXml = true;
+                    println("File %1$s is too old and needs to be updated.",
+                            SdkConstants.FN_BUILD_XML);
+                }
             }
         }
 

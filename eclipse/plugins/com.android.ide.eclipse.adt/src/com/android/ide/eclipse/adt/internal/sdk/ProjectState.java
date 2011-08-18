@@ -149,7 +149,7 @@ public final class ProjectState {
 
         @Override
         public int hashCode() {
-            return mRelativePath.hashCode();
+            return normalizePath(mRelativePath).hashCode();
         }
     }
 
@@ -552,6 +552,10 @@ public final class ProjectState {
 
     private void removeParentProject(ProjectState parentState) {
         mParentProjects.remove(parentState);
+    }
+
+    public List<ProjectState> getParentProjects() {
+        return Collections.unmodifiableList(mParentProjects);
     }
 
     /**

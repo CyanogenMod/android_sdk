@@ -88,6 +88,8 @@ public final class AaptExecLoopTask extends BaseTask {
     private String mResourceFilter;
     private String mRFolder;
     private final ArrayList<NoCompress> mNoCompressList = new ArrayList<NoCompress>();
+    private String mProjectLibrariesResName;
+    private String mProjectLibrariesPackageName;
 
     /**
      * Sets the value of the "executable" attribute.
@@ -235,6 +237,15 @@ public final class AaptExecLoopTask extends BaseTask {
         }
     }
 
+    public void setProjectLibrariesResName(String projectLibrariesResName) {
+        mProjectLibrariesResName = projectLibrariesResName;
+    }
+
+    public void setProjectLibrariesPackageName(String projectLibrariesPackageName) {
+        mProjectLibrariesPackageName = projectLibrariesPackageName;
+    }
+
+
     /**
      * Returns an object representing a nested <var>nocompress</var> element.
      */
@@ -268,6 +279,13 @@ public final class AaptExecLoopTask extends BaseTask {
      */
     @Override
     public void execute() throws BuildException {
+        if (mProjectLibrariesResName == null) {
+            throw new BuildException("Missing attribute projectLibrariesResName");
+        }
+        if (mProjectLibrariesPackageName == null) {
+            throw new BuildException("Missing attribute projectLibrariesPackageName");
+        }
+
         Project taskProject = getProject();
 
         String libPkgProp = null;
@@ -275,7 +293,7 @@ public final class AaptExecLoopTask extends BaseTask {
         // if the parameters indicate generation of the R class, check if
         // more R classes need to be created for libraries.
         if (mRFolder != null && new File(mRFolder).isDirectory()) {
-            libPkgProp = taskProject.getProperty(AntConstants.PROP_PROJECT_LIBS_PKG);
+            libPkgProp = taskProject.getProperty(mProjectLibrariesPackageName);
             if (libPkgProp != null) {
                 // Replace ";" with ":" since that's what aapt expects
                 libPkgProp = libPkgProp.replace(';', ':');
@@ -283,6 +301,11 @@ public final class AaptExecLoopTask extends BaseTask {
         }
         // Call aapt. If there are libraries, we'll pass a non-null string of libs.
         callAapt(libPkgProp);
+    }
+
+    @Override
+    protected String getExecTaskName() {
+        return "aapt";
     }
 
     /**
@@ -298,7 +321,7 @@ public final class AaptExecLoopTask extends BaseTask {
         final boolean generateRClass = mRFolder != null && new File(mRFolder).isDirectory();
 
         // Get whether we have libraries
-        Object libResRef = taskProject.getReference(AntConstants.PROP_PROJECT_LIBS_RES_REF);
+        Object libResRef = taskProject.getReference(mProjectLibrariesResName);
 
         // Set up our folders to check for changed files
         ArrayList<File> watchPaths = new ArrayList<File>();
@@ -358,8 +381,7 @@ public final class AaptExecLoopTask extends BaseTask {
         task.setExecutable(mExecutable);
         task.setFailonerror(true);
 
-        File exe = new File(mExecutable);
-        task.setTaskName(exe.getName());
+        task.setTaskName(getExecTaskName());
 
         // aapt command. Only "package" is supported at this time really.
         task.createArg().setValue(mCommand);

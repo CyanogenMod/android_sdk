@@ -38,6 +38,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.SealedApkException;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 
 import org.eclipse.core.resources.IContainer;
@@ -58,9 +59,18 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 public class PostCompilerBuilder extends BaseBuilder {
 
@@ -253,10 +263,13 @@ public class PostCompilerBuilder extends BaseBuilder {
         try {
             // get the project info
             ProjectState projectState = Sdk.getProjectState(project);
-            if (projectState == null || projectState.isLibrary()) {
-                // library project do not need to be dexified or packaged.
+
+            // this can happen if the project has no default.properties.
+            if (projectState == null) {
                 return null;
             }
+
+            boolean isLibrary = projectState.isLibrary();
 
             // get the libraries
             List<IProject> libProjects = projectState.getFullLibraryProjects();
@@ -294,6 +307,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Apk_Build);
 
+                // Full build: we do all the steps.
                 mUpdateCrunchCache = true;
                 mPackageResources = true;
                 mConvertToDex = true;
@@ -305,6 +319,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // go through the resources and see if something changed.
                 IResourceDelta delta = getDelta(project);
                 if (delta == null) {
+                    // no delta? Same as full build: we do all the steps.
                     mUpdateCrunchCache = true;
                     mPackageResources = true;
                     mConvertToDex = true;
@@ -395,6 +410,25 @@ public class PostCompilerBuilder extends BaseBuilder {
             } else {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Post_Compiler);
+            }
+
+            // finished with the common init and tests. Special case of the library.
+            if (isLibrary) {
+                // check the jar output file is present, if not create it.
+                IFile jarIFile = androidOutputFolder.getFile(
+                        project.getName().toLowerCase() + AdtConstants.DOT_JAR);
+                if (mConvertToDex == false && jarIFile.exists() == false) {
+                    mConvertToDex = true;
+                }
+
+                if (mConvertToDex) {
+                    IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
+
+                    writeLibraryPackage(jarIFile, project, javaOutputFolder,
+                            referencedJavaProjects);
+                }
+
+                return allRefProjects;
             }
 
             // first thing we do is check that the SDK directory has been setup.
@@ -714,6 +748,141 @@ public class PostCompilerBuilder extends BaseBuilder {
         }
 
         return allRefProjects;
+    }
+
+    private static class JarBuilder implements IArchiveBuilder {
+
+        private static Pattern R_PATTERN = Pattern.compile("R(\\$.*)?\\.class"); //$NON-NLS-1$
+
+        private final byte[] buffer = new byte[1024];
+        private final JarOutputStream mOutputStream;
+
+        JarBuilder(JarOutputStream outputStream) {
+            mOutputStream = outputStream;
+        }
+
+        public void addFile(IFile file, IFolder rootFolder) throws ApkCreationException {
+            // we only package class file from the output folder
+            if (AdtConstants.EXT_CLASS.equals(file.getFileExtension()) == false) {
+                return;
+            }
+
+            // we don't package any R[$*] classes.
+            String name = file.getName();
+            if (R_PATTERN.matcher(name).matches()) {
+                return;
+            }
+
+            IPath path = file.getFullPath().makeRelativeTo(rootFolder.getFullPath());
+            try {
+                addFile(file.getContents(), file.getLocalTimeStamp(), path.toString());
+            } catch (ApkCreationException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new ApkCreationException(e, "Failed to add %s", file);
+            }
+        }
+
+        public void addFile(File file, String archivePath) throws ApkCreationException,
+                SealedApkException, DuplicateFileException {
+            try {
+                FileInputStream inputStream = new FileInputStream(file);
+                long lastModified = file.lastModified();
+                addFile(inputStream, lastModified, archivePath);
+            } catch (ApkCreationException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new ApkCreationException(e, "Failed to add %s", file);
+            }
+        }
+
+        private void addFile(InputStream content, long lastModified, String archivePath)
+                throws IOException, ApkCreationException {
+            // create the jar entry
+            JarEntry entry = new JarEntry(archivePath);
+            entry.setTime(lastModified);
+
+            try {
+                // add the entry to the jar archive
+                mOutputStream.putNextEntry(entry);
+
+                // read the content of the entry from the input stream, and write
+                // it into the archive.
+                int count;
+                while ((count = content.read(buffer)) != -1) {
+                    mOutputStream.write(buffer, 0, count);
+                }
+            } finally {
+                try {
+                    if (content != null) {
+                        content.close();
+                    }
+                } catch (Exception e) {
+                    throw new ApkCreationException(e, "Failed to close stream");
+                }
+            }
+        }
+    }
+
+    private void writeLibraryPackage(IFile jarIFile, IProject project, IFolder javaOutputFolder,
+            List<IJavaProject> referencedJavaProjects) {
+
+        JarOutputStream jos = null;
+        try {
+            Manifest manifest = new Manifest();
+            Attributes mainAttributes = manifest.getMainAttributes();
+            mainAttributes.put(Attributes.Name.CLASS_PATH, "Android ADT"); //$NON-NLS-1$
+            mainAttributes.putValue("Created-By", "1.0 (Android)"); //$NON-NLS-1$  //$NON-NLS-2$
+            jos = new JarOutputStream(
+                    new FileOutputStream(jarIFile.getLocation().toFile()), manifest);
+
+            JarBuilder jarBuilder = new JarBuilder(jos);
+
+            // write the class files
+            writeClassFilesIntoJar(jarBuilder, javaOutputFolder, javaOutputFolder);
+
+            // now write the standard Java resources
+            BuildHelper.writeResources(jarBuilder, JavaCore.create(project));
+
+            // do the same for all the referencedJava project
+            for (IJavaProject javaProject : referencedJavaProjects) {
+                IFolder refProjectOutput = BaseProjectHelper.getJavaOutputFolder(
+                        javaProject.getProject());
+
+                if (refProjectOutput != null) {
+                    // write the class files
+                    writeClassFilesIntoJar(jarBuilder, refProjectOutput, refProjectOutput);
+
+                    // now write the standard Java resources
+                    BuildHelper.writeResources(jarBuilder, javaProject);
+                }
+            }
+
+            saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , mConvertToDex);
+        } catch (Exception e) {
+            AdtPlugin.log(e, "Failed to write jar file %s", jarIFile.getLocation().toOSString());
+        } finally {
+            if (jos != null) {
+                try {
+                    jos.close();
+                } catch (IOException e) {
+                    // pass
+                }
+            }
+        }
+    }
+
+    private void writeClassFilesIntoJar(JarBuilder builder, IFolder folder, IFolder rootFolder)
+            throws CoreException, IOException, ApkCreationException {
+        IResource[] members = folder.members();
+        for (IResource member : members) {
+            if (member.getType() == IResource.FOLDER) {
+                writeClassFilesIntoJar(builder, (IFolder) member, rootFolder);
+            } else if (member.getType() == IResource.FILE) {
+                IFile file = (IFile) member;
+                builder.addFile(file, rootFolder);
+            }
+        }
     }
 
     @Override

@@ -268,7 +268,8 @@ public final class ProjectHelper {
         // get the output folder
         IPath outputFolder = javaProject.getOutputLocation();
 
-        boolean foundContainer = false;
+        boolean foundFrameworkContainer = false;
+        boolean foundLibrariesContainer = false;
 
         for (int i = 0 ; i < entries.length ;) {
             // get the entry and kind
@@ -285,8 +286,12 @@ public final class ProjectHelper {
                     continue;
                 }
             } else if (kind == IClasspathEntry.CPE_CONTAINER) {
-                if (AndroidClasspathContainerInitializer.checkPath(entry.getPath())) {
-                    foundContainer = true;
+                String path = entry.getPath().toString();
+                if (AdtConstants.CONTAINER_FRAMEWORK.equals(path)) {
+                    foundFrameworkContainer = true;
+                }
+                if (AdtConstants.CONTAINER_LIBRARIES.equals(path)) {
+                    foundLibrariesContainer = true;
                 }
             }
 
@@ -294,10 +299,17 @@ public final class ProjectHelper {
         }
 
         // if the framework container is not there, we add it
-        if (foundContainer == false) {
+        if (foundFrameworkContainer == false) {
             // add the android container to the array
             entries = ProjectHelper.addEntryToClasspath(entries,
-                    AndroidClasspathContainerInitializer.getContainerEntry());
+                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_FRAMEWORK)));
+        }
+
+        // same thing for the library container
+        if (foundLibrariesContainer == false) {
+            // add the android container to the array
+            entries = ProjectHelper.addEntryToClasspath(entries,
+                    JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_LIBRARIES)));
         }
 
         // set the new list of entries to the project

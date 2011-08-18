@@ -22,26 +22,31 @@ import org.eclipse.jdt.core.IClasspathEntry;
 
 /**
  * Classpath container for the Android projects.
+ * This supports both the System classpath and the library dependencies.
  */
 class AndroidClasspathContainer implements IClasspathContainer {
-    
-    private IClasspathEntry[] mClasspathEntry;
-    private IPath mContainerPath;
-    private String mName;
-    
+
+    private final IClasspathEntry[] mClasspathEntry;
+    private final IPath mContainerPath;
+    private final String mName;
+    private final int mKind;
+
     /**
      * Constructs the container with the {@link IClasspathEntry} representing the android
      * framework jar file and the container id
      * @param entries the entries representing the android framework and optional libraries.
      * @param path the path containing the classpath container id.
      * @param name the name of the container to display.
+     * @param the container kind. Can be {@link IClasspathContainer#K_DEFAULT_SYSTEM} or
+     *      {@link IClasspathContainer#K_APPLICATION}
      */
-    AndroidClasspathContainer(IClasspathEntry[] entries, IPath path, String name) {
+    AndroidClasspathContainer(IClasspathEntry[] entries, IPath path, String name, int kind) {
         mClasspathEntry = entries;
         mContainerPath = path;
         mName = name;
+        mKind = kind;
     }
-    
+
     public IClasspathEntry[] getClasspathEntries() {
         return mClasspathEntry;
     }
@@ -51,7 +56,7 @@ class AndroidClasspathContainer implements IClasspathContainer {
     }
 
     public int getKind() {
-        return IClasspathContainer.K_DEFAULT_SYSTEM;
+        return mKind;
     }
 
     public IPath getPath() {

@@ -32,9 +32,11 @@
          application and should be checked into Version Control Systems. -->
     <property file="default.properties" />
 
-
-    <!-- Required pre-setup import -->
-    <import file="${sdk.dir}/tools/ant/pre_setup.xml" />
+    <!-- quick check on sdk.dir -->
+    <fail
+            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project'"
+            unless="sdk.dir"
+    />
 
 
 <!-- extension targets. Uncomment the ones where you want to do custom work
@@ -45,35 +47,32 @@
     <target name="-pre-compile">
     </target>
 
-    [This is typically used for code obfuscation.
-     Compiled code location: ${out.classes.absolute.dir}
-     If this is not done in place, override ${out.dex.input.absolute.dir}]
+    /* This is typically used for code obfuscation.
+       Compiled code location: ${out.classes.absolute.dir}
+       If this is not done in place, override ${out.dex.input.absolute.dir} */
     <target name="-post-compile">
     </target>
 -->
 
-    <!-- Execute the Android Setup task that will setup some properties
-         specific to the target, and import the build rules files.
-
-         The rules file is imported from
-            <SDK>/tools/ant/
-         Depending on the project type it can be either:
-         - main_rules.xml
-         - lib_rules.xml
-         - test_rules.xml
+    <!-- Import the actual build file.
 
          To customize existing targets, there are two options:
          - Customize only one target:
              - copy/paste the target into this file, *before* the
-               <setup> task.
+               <import> task.
              - customize it to your needs.
-         - Customize the whole script.
+         - Customize the whole content of build.xml
              - copy/paste the content of the rules files (minus the top node)
-               into this file, *after* the <setup> task
-             - disable the import of the rules by changing the setup task
-               below to <setup import="false" />.
+               into this file, replacing the <import> task.
              - customize to your needs.
+
+         ***********************
+         ****** IMPORTANT ******
+         ***********************
+         In all case you should replace the following version tag value with "custom"
+         in order to avoid having your file be overridden.
     -->
-    <setup />
+    <!-- version-tag: 1 -->
+    <import file="${sdk.dir}/tools/ant/build.xml" />
 
 </project>

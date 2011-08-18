@@ -50,6 +50,8 @@ public final class SdkConstants {
 
     /** An SDK Project's AndroidManifest.xml file */
     public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";
+    /** pre-dex jar filename. i.e. "classes.jar" */
+    public final static String FN_CLASSES_JAR = "classes.jar"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public final static String FN_APK_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
 

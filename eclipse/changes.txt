@@ -1,3 +1,9 @@
+13.0.0
+- Build system:
+  - ADT now uses bin/classes to output the java compilation
+    and bin/ for Android specific classes. This will make bin show up
+    in the package explorer.
+
 12.0.0
 - Many bug fixes!
 - Visual Layout Editor:

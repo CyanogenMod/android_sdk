@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.common.sdk.LoadStatus;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
@@ -81,10 +81,6 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
     private final static String PROPERTY_ANDROID_SOURCE = "androidSource"; //$NON-NLS-1$
 
-    /** The container id for the android framework jar file */
-    public final static String CONTAINER_ID =
-        "com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"; //$NON-NLS-1$
-
     /** path separator to store multiple paths in a single property. This is guaranteed to not
      * be in a path.
      */
@@ -113,32 +109,15 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
      */
     @Override
     public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
-        if (CONTAINER_ID.equals(containerPath.toString())) {
+        if (AdtConstants.CONTAINER_FRAMEWORK.equals(containerPath.toString())) {
             IClasspathContainer container = allocateAndroidContainer(project);
             if (container != null) {
-                JavaCore.setClasspathContainer(new Path(CONTAINER_ID),
+                JavaCore.setClasspathContainer(new Path(AdtConstants.CONTAINER_FRAMEWORK),
                         new IJavaProject[] { project },
                         new IClasspathContainer[] { container },
                         new NullProgressMonitor());
             }
         }
-    }
-
-    /**
-     * Creates a new {@link IClasspathEntry} of type {@link IClasspathEntry#CPE_CONTAINER}
-     * linking to the Android Framework.
-     */
-    public static IClasspathEntry getContainerEntry() {
-        return JavaCore.newContainerEntry(new Path(CONTAINER_ID));
-    }
-
-    /**
-     * Checks the {@link IPath} objects against the android framework container id and
-     * returns <code>true</code> if they are identical.
-     * @param path the <code>IPath</code> to check.
-     */
-    public static boolean checkPath(IPath path) {
-        return CONTAINER_ID.equals(path.toString());
     }
 
     /**
@@ -164,7 +143,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
             // give each project their new container in one call.
             JavaCore.setClasspathContainer(
-                    new Path(CONTAINER_ID),
+                    new Path(AdtConstants.CONTAINER_FRAMEWORK),
                     androidProjects, containers, new NullProgressMonitor());
 
             return true;
@@ -214,7 +193,9 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
                         return new AndroidClasspathContainer(
                                 createClasspathEntries(iProject, target, targetName),
-                                new Path(CONTAINER_ID), targetName);
+                                new Path(AdtConstants.CONTAINER_FRAMEWORK),
+                                targetName,
+                                IClasspathContainer.K_DEFAULT_SYSTEM);
                     }
 
                     // In case of error, we'll try different thing to provide the best error message
@@ -459,7 +440,8 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         IClasspathEntry[] entries = createClasspathEntriesFromPaths(paths, target);
 
         return new AndroidClasspathContainer(entries,
-                new Path(CONTAINER_ID), targetNameCache);
+                new Path(AdtConstants.CONTAINER_FRAMEWORK),
+                targetNameCache, IClasspathContainer.K_DEFAULT_SYSTEM);
     }
 
     /**
@@ -520,17 +502,16 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         // create the java doc link.
         String androidApiURL = ProjectHelper.loadStringProperty(root, PROPERTY_ANDROID_API);
         String apiURL = null;
-        if (androidApiURL != null) {
+        if (androidApiURL != null && testURL(androidApiURL)) {
             apiURL = androidApiURL;
         } else {
-            if (testURL(androidApiURL)) {
-                apiURL = androidApiURL;
-            } else if (testURL(paths[CACHE_INDEX_DOCS_URI])) {
+            if (testURL(paths[CACHE_INDEX_DOCS_URI])) {
                 apiURL = paths[CACHE_INDEX_DOCS_URI];
             } else if (testURL(ANDROID_API_REFERENCE)) {
                 apiURL = ANDROID_API_REFERENCE;
             }
         }
+
         IClasspathAttribute[] attributes = null;
         if (apiURL != null && !NULL_API_URL.equals(apiURL)) {
             IClasspathAttribute cpAttribute = JavaCore.newClasspathAttribute(
