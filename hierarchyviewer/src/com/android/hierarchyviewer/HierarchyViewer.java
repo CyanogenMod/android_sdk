@@ -27,6 +27,12 @@ public class HierarchyViewer {
     private static final CharSequence OS_WINDOWS = "Windows";
     private static final CharSequence OS_MACOSX = "Mac OS X";
 
+    private static boolean sProfilingEnabled = true;
+
+    public static boolean isProfilingEnabled() {
+        return sProfilingEnabled;
+    }
+
     private static void initUserInterface() {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("apple.awt.brushMetalLook", "true");
@@ -52,6 +58,10 @@ public class HierarchyViewer {
     }
 
     public static void main(String[] args) {
+        if (args.length > 0) {
+            sProfilingEnabled = !args[0].equalsIgnoreCase("-profiling=false");
+        }
+
         initUserInterface();
         DeviceBridge.initDebugBridge();
 
