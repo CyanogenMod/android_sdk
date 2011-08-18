@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.build.builders;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.SourceChangeHandler;
 import com.android.ide.eclipse.adt.internal.build.SourceProcessor;
-import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.builders.BaseBuilder.BaseDeltaVisitor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
@@ -60,9 +60,8 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
     // Result fields.
     /**
      * Compile flag. This is set to true if one of the changed/added/removed
-     * file is a resource file. Upon visiting all the delta resources, if
-     * this flag is true, then we know we'll have to compile the resources
-     * into R.java
+     * files is Manifest.xml, Manifest.java, or R.java. All other file changes
+     * will be taken care of by ResourceManager.
      */
     private boolean mCompileResources = false;
 
@@ -88,12 +87,12 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
     private IFolder mSourceFolder = null;
 
     /** List of source folders. */
-    private List<IPath> mSourceFolders;
+    private final List<IPath> mSourceFolders;
     private boolean mIsGenSourceFolder = false;
 
     private final List<SourceChangeHandler> mSourceChangeHandlers =
         new ArrayList<SourceChangeHandler>();
-    private IWorkspaceRoot mRoot;
+    private final IWorkspaceRoot mRoot;
 
 
 
@@ -109,6 +108,10 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
         }
     }
 
+    /**
+     * Get whether Manifest.java, Manifest.xml, or R.java have changed
+     * @return true if any of Manifest.xml, Manifest.java, or R.java have been modified
+     */
     public boolean getCompileResources() {
         return mCompileResources;
     }
@@ -323,8 +326,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
             switch (kind) {
                 case IResourceDelta.CHANGED:
                     // display verbose message
-                    message = String.format(Messages.s_Modified_Recreating_s, p,
-                            AdtConstants.FN_RESOURCE_CLASS);
+                    message = String.format(Messages.s_Modified_Recreating_s, p);
                     break;
                 case IResourceDelta.ADDED:
                     // display verbose message
@@ -345,26 +347,13 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
             for (SourceChangeHandler handler : mSourceChangeHandlers) {
                 handler.handleResourceFile((IFile)resource, kind);
             }
-
-            if (AdtConstants.EXT_XML.equalsIgnoreCase(ext)) {
-                if (kind != IResourceDelta.REMOVED) {
-                    // check xml Validity
-                    mBuilder.checkXML(resource, this);
-                }
-
-                // if we are going through this resource, it was modified
-                // somehow.
-                // we don't care if it was an added/removed/changed event
-                mCompileResources = true;
-                return false;
-            } else {
-                // this is a non xml resource.
-                if (kind == IResourceDelta.ADDED
-                        || kind == IResourceDelta.REMOVED) {
-                    mCompileResources = true;
-                    return false;
-                }
+            // If it's an XML resource, check the syntax
+            if (AdtConstants.EXT_XML.equalsIgnoreCase(ext) && kind != IResourceDelta.REMOVED) {
+                // check xml Validity
+                mBuilder.checkXML(resource, this);
             }
+            // Whether or not to generate R.java for a changed resource is taken care of by the
+            // Resource Manager.
         } else if (resource instanceof IFolder) {
             // in this case we may be inside a folder that contains a source
             // folder, go through the list of known source folders

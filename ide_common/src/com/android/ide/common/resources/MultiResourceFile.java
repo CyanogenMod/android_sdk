@@ -54,6 +54,10 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         super(file, folder);
     }
 
+    // Boolean flag to track whether a named element has been added or removed, thus requiring
+    // a new ID table to be generated
+    private boolean mNeedIdRefresh;
+
     @Override
     protected void load() {
         // need to parse the file and find the content.
@@ -62,14 +66,21 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         // create new ResourceItems for the new content.
         mResourceTypeList = Collections.unmodifiableCollection(mResourceItems.keySet());
 
+        // We need an ID generation step
+        mNeedIdRefresh = true;
+
         // create/update the resource items.
         updateResourceItems();
     }
 
     @Override
     protected void update() {
-        // remove this file from all existing ResourceItem.
-        getFolder().getRepository().removeFile(mResourceTypeList, this);
+        // Reset the ID generation flag
+        mNeedIdRefresh = false;
+
+        // Copy the previous version of our list of ResourceItems and types
+        Map<ResourceType, Map<String, ResourceValue>> oldResourceItems
+                        = new EnumMap<ResourceType, Map<String, ResourceValue>>(mResourceItems);
 
         // reset current content.
         mResourceItems.clear();
@@ -80,14 +91,34 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         // create new ResourceItems for the new content.
         mResourceTypeList = Collections.unmodifiableCollection(mResourceItems.keySet());
 
+        // Check to see if any names have changed. If so, mark the flag so updateResourceItems
+        // can notify the ResourceRepository that an ID refresh is needed
+        if (oldResourceItems.keySet().equals(mResourceItems.keySet())) {
+            for (ResourceType type : mResourceTypeList) {
+                // We just need to check the names of the items.
+                // If there are new or removed names then we'll have to regenerate IDs
+                if (mResourceItems.get(type).keySet()
+                                          .equals(oldResourceItems.get(type).keySet()) == false) {
+                    mNeedIdRefresh = true;
+                }
+            }
+        } else {
+            // If our type list is different, obviously the names will be different
+            mNeedIdRefresh = true;
+        }
         // create/update the resource items.
         updateResourceItems();
     }
 
     @Override
     protected void dispose() {
+        ResourceRepository repository = getRepository();
+
         // only remove this file from all existing ResourceItem.
-        getFolder().getRepository().removeFile(mResourceTypeList, this);
+        repository.removeFile(mResourceTypeList, this);
+
+        // We'll need an ID refresh because we deleted items
+        repository.markForIdRefresh();
 
         // don't need to touch the content, it'll get reclaimed as this objects disappear.
         // In the mean time other objects may need to access it.
@@ -106,6 +137,10 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
     private void updateResourceItems() {
         ResourceRepository repository = getRepository();
+
+        // remove this file from all existing ResourceItem.
+        repository.removeFile(mResourceTypeList, this);
+
         for (ResourceType type : mResourceTypeList) {
             Map<String, ResourceValue> list = mResourceItems.get(type);
 
@@ -118,6 +153,11 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
                     item.add(this);
                 }
             }
+        }
+
+        // If we need an ID refresh, ask the repository for that now
+        if (mNeedIdRefresh) {
+            repository.markForIdRefresh();
         }
     }
 

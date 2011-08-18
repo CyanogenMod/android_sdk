@@ -41,8 +41,8 @@ public class SingleResourceFile extends ResourceFile {
         sParserFactory.setNamespaceAware(true);
     }
 
-    private String mResourceName;
-    private ResourceType mType;
+    private final String mResourceName;
+    private final ResourceType mType;
     private ResourceValue mValue;
 
     public SingleResourceFile(IAbstractFile file, ResourceFolder folder) {
@@ -79,6 +79,9 @@ public class SingleResourceFile extends ResourceFile {
 
         // add this file to the list of files generating this resource item.
         item.add(this);
+
+        // Ask for an ID refresh since we're adding an item that will generate an ID
+        getRepository().markForIdRefresh();
     }
 
     @Override
@@ -91,6 +94,9 @@ public class SingleResourceFile extends ResourceFile {
     protected void dispose() {
         // only remove this file from the existing ResourceItem.
         getFolder().getRepository().removeFile(mType, this);
+
+        // Ask for an ID refresh since we're removing an item that previously generated an ID
+        getRepository().markForIdRefresh();
 
         // don't need to touch the content, it'll get reclaimed as this objects disappear.
         // In the mean time other objects may need to access it.

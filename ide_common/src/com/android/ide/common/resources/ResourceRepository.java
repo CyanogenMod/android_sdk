@@ -68,6 +68,7 @@ public abstract class ResourceRepository {
 
     protected final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
 
+    private boolean mNeedsIdRefresh;
 
     /**
      * Makes a resource repository
@@ -193,6 +194,29 @@ public abstract class ResourceRepository {
      * @return a new ResourceItem (or child class) instance.
      */
     protected abstract ResourceItem createResourceItem(String name);
+
+    /**
+     * Sets a flag which determines whether aapt needs to be run to regenerate resource IDs
+     */
+    protected void markForIdRefresh() {
+        mNeedsIdRefresh = true;
+    }
+
+    /**
+     * Returns whether this repository has been marked as "dirty"; if one or more of the constituent
+     * files have declared that the resource item names that they provide have changed.
+     */
+    public boolean needsIdRefresh() {
+        return mNeedsIdRefresh;
+    }
+
+    /**
+     * Indicates that the resources IDs have been regenerated, so the repository is now in a clean
+     * state
+     */
+    public void setIdsRefreshed() {
+        mNeedsIdRefresh = false;
+    }
 
     /**
      * Processes a folder and adds it to the list of existing folders.

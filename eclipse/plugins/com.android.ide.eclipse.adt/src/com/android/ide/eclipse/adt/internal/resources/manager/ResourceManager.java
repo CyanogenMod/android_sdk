@@ -26,6 +26,8 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IRawDeltaListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.io.FolderWrapper;
@@ -337,10 +339,10 @@ public final class ResourceManager {
             return;
         }
 
-        // checks if the file is under res/something.
+        // checks if the file is under res/something or bin/res/something
         IPath path = file.getFullPath();
 
-        if (path.segmentCount() == 4) {
+        if (path.segmentCount() == 4 || path.segmentCount() == 5) {
             if (isInResFolder(path)) {
                 IContainer container = file.getParent();
                 if (container instanceof IFolder) {
@@ -461,6 +463,50 @@ public final class ResourceManager {
         }
 
         return null;
+    }
+
+    /**
+     * Checks the ResourceRepositories associated with the given project and its dependencies
+     * and returns whether or not a resource regeneration is needed for that project
+     * @param project the project to check
+     * @return true if the project or any of its dependencies says it has new or deleted resources
+     */
+    public boolean projectNeedsIdGeneration(IProject project) {
+        // Get a list of repositories to check through
+        List<ProjectResources> repositories = getAllProjectResourcesAssociatedWith(project);
+        for (ProjectResources repository : repositories) {
+            if (repository.needsIdRefresh()) {
+                return true;
+            }
+        }
+        // If we've gotten to here, all repositories are in sync, return false
+        return false;
+    }
+
+    /**
+     * Get all the resource repositories representing this project and any included libraries
+     * @param project the project to get along with its dependencies
+     * @return a list of all ProjectResources ordered lowest to highest priority that need to be
+     *         included in this project.
+     */
+    private List<ProjectResources> getAllProjectResourcesAssociatedWith(IProject project) {
+        List<ProjectResources> toRet = new ArrayList<ProjectResources>();
+        // if the project contains libraries, we need to add the libraries resources here
+        if (project != null) {
+            ProjectState state = Sdk.getProjectState(project);
+            if (state != null) {
+                List<IProject> libraries = state.getFullLibraryProjects();
+                for (IProject library : libraries) {
+                    ProjectResources libRes = mMap.get(library);
+                    if (libRes != null) {
+                        toRet.add(libRes);
+                    }
+                }
+            }
+        }
+        // Add the queried current project last
+        toRet.add(mMap.get(project));
+        return toRet;
     }
 
     /**

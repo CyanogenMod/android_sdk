@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -88,8 +89,8 @@ public final class IdGeneratingResourceFile extends ResourceFile
 
     @Override
     protected void update() {
-        // remove this file from all existing ResourceItem.
-        getFolder().getRepository().removeFile(mResourceTypeList, this);
+        // Copy the previous list of ID names
+        Set<String> oldIdNames = mIdResources.keySet();
 
         // reset current content.
         mIdResources.clear();
@@ -97,14 +98,21 @@ public final class IdGeneratingResourceFile extends ResourceFile
         // need to parse the file and find the IDs.
         parseFileForIds();
 
-        // Notify the repository about any changes
-        updateResourceItems();
+        // We only need to update the repository if our IDs have changed
+        if (oldIdNames.equals(mIdResources.keySet()) == false) {
+            updateResourceItems();
+        }
     }
 
     @Override
     protected void dispose() {
+        ResourceRepository repository = getRepository();
+
         // Remove declarations from this file from the repository
-        getFolder().getRepository().removeFile(mResourceTypeList, this);
+        repository.removeFile(mResourceTypeList, this);
+
+        // Ask for an ID refresh since we'll be taking away ID generating items
+        repository.markForIdRefresh();
     }
 
     @Override
@@ -155,6 +163,9 @@ public final class IdGeneratingResourceFile extends ResourceFile
     private void updateResourceItems() {
         ResourceRepository repository = getRepository();
 
+        // remove this file from all existing ResourceItem.
+        repository.removeFile(mResourceTypeList, this);
+
         // First add this as a layout file
         ResourceItem item = repository.getResourceItem(mFileType, mFileName);
         item.add(this);
@@ -165,6 +176,9 @@ public final class IdGeneratingResourceFile extends ResourceFile
             // add this file to the list of files generating ID resources.
             item.add(this);
         }
+
+        //  Ask the repository for an ID refresh
+        repository.markForIdRefresh();
     }
 
     /**
