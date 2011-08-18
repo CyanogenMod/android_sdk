@@ -22,9 +22,13 @@ import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * A JFace label provider for the LogCat log messages. It expects elements of type
@@ -32,6 +36,12 @@ import org.eclipse.swt.graphics.Image;
  */
 public final class LogCatMessageLabelProvider extends LabelProvider
                     implements ITableLabelProvider, ITableColorProvider, ITableFontProvider {
+    private static final int INDEX_LOGLEVEL = 0;
+    private static final int INDEX_LOGTIME = 1;
+    private static final int INDEX_PID = 2;
+    private static final int INDEX_TAG = 3;
+    private static final int INDEX_TEXT = 4;
+
     /* Default Colors for different log levels. */
     private static final Color INFO_MSG_COLOR =    new Color(null, 0, 127, 0);
     private static final Color DEBUG_MSG_COLOR =   new Color(null, 0, 0, 127);
@@ -39,17 +49,34 @@ public final class LogCatMessageLabelProvider extends LabelProvider
     private static final Color WARN_MSG_COLOR =    new Color(null, 255, 127, 0);
     private static final Color VERBOSE_MSG_COLOR = new Color(null, 0, 0, 0);
 
-    private int mWrapWidth;
+    /** Default width to assume for the logcat message column when not able to
+     * detect it from the table itself. */
+    private static final int DEFAULT_TEXT_COL_WIDTH = 1000;
+
     private Font mLogFont;
 
+    private Table mTable;
+    private int mWrapWidth;
+    private int mColWidth = DEFAULT_TEXT_COL_WIDTH;
+    private int mFontWidth;
+
     /**
-     * Construct a label provider that will wrap lines of length > wrapWidth.
+     * Construct a label provider that will be used in rendering the given table.
+     * The table argument is provided so that the label provider can figure out the width
+     * of the columns, and wrap messages if necessary.
      * @param font default font to use
-     * @param wrapWidth width at which to wrap lines
+     * @param parentTable table for which labels are provided
+     * @param table
      */
-    public LogCatMessageLabelProvider(Font font, int wrapWidth) {
+    public LogCatMessageLabelProvider(Font font, Table parentTable) {
         mLogFont = font;
-        mWrapWidth = wrapWidth;
+        mTable = parentTable;
+
+        addTextColumnWidthChangeListener();
+
+        mColWidth = getColumnWidth();
+        mFontWidth = getFontWidth();
+        updateWrapWidth();
     }
 
     public Image getColumnImage(Object element, int index) {
@@ -68,32 +95,31 @@ public final class LogCatMessageLabelProvider extends LabelProvider
 
         LogCatMessage m = (LogCatMessage) element;
         switch (index) {
-            case 0:
+            case INDEX_LOGLEVEL:
                 return Character.toString(m.getLogLevel().getPriorityLetter());
-            case 1:
+            case INDEX_LOGTIME:
                 return m.getTime();
-            case 2:
+            case INDEX_PID:
                 return m.getPidString();
-            case 3:
+            case INDEX_TAG:
                 return m.getTag();
-            case 4:
+            case INDEX_TEXT:
                 String msg = m.getMessage();
                 if (msg.length() < mWrapWidth) {
                     return msg;
                 }
-                return wrapMessage(msg, mWrapWidth);
+                return wrapMessage(msg);
             default:
                 return null;
         }
     }
 
     /**
-     * Wrap a string into multiple lines if it exceeds a certain width.
+     * Wrap logcat message into multiple lines if it exceeds the current width of the text column.
      * @param msg message string to line wrap
-     * @param width width at which to wrap
      * @return line with newline's inserted
      */
-    private String wrapMessage(String msg, int width) {
+    private String wrapMessage(String msg) {
         StringBuffer sb = new StringBuffer();
 
         int offset = 0;
@@ -106,7 +132,7 @@ public final class LogCatMessageLabelProvider extends LabelProvider
                 sb.append("\n  ");
             }
 
-            int copylen = Math.min(width, len);
+            int copylen = Math.min(mWrapWidth, len);
             sb.append(msg.substring(offset, offset + copylen));
 
             offset += copylen;
@@ -153,5 +179,41 @@ public final class LogCatMessageLabelProvider extends LabelProvider
 
     public void setFont(Font preferredFont) {
         mLogFont = preferredFont;
+        mFontWidth = getFontWidth();
+        updateWrapWidth();
+    }
+
+    private void addTextColumnWidthChangeListener() {
+        mTable.getColumn(INDEX_TEXT).addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent arg0) {
+                mColWidth = getColumnWidth();
+                updateWrapWidth();
+            }
+        });
+    }
+
+    /* # of chars in the column = width of column / width of each character in the font used */
+    private void updateWrapWidth() {
+        mWrapWidth = mColWidth / mFontWidth;
+    }
+
+    private int getFontWidth() {
+        mTable.setFont(mLogFont);
+        GC gc = new GC(mTable);
+        try {
+            return gc.getFontMetrics().getAverageCharWidth();
+        } finally {
+            gc.dispose();
+        }
+    }
+
+    private int getColumnWidth() {
+        int w = mTable.getColumn(INDEX_TEXT).getWidth();
+        if (w != 0) {
+            return w; /* return new width only if it is valid */
+        } else {
+            return mColWidth; /* otherwise stick to current width */
+        }
     }
 }

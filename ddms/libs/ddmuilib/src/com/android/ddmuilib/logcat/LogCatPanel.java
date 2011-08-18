@@ -76,11 +76,6 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private static final String LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX = "logcat.view.colsize.";
 
-    /** Width (in characters) at which to wrap messages. SWT Tables do not
-     * auto wrap long text - they simply clip the text.
-     * FIXME: this should be a preference. */
-    private static final int MSG_WRAP_WIDTH = 150;
-
     /** Default message to show in the message search field. */
     private static final String DEFAULT_SEARCH_MESSAGE =
             "Search for messages. Accepts Java regexes. "
@@ -549,7 +544,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.getTable().setHeaderVisible(true);
 
         mLogCatMessageLabelProvider = new LogCatMessageLabelProvider(getFontFromPrefStore(),
-                MSG_WRAP_WIDTH);
+                mViewer.getTable());
         mViewer.setLabelProvider(mLogCatMessageLabelProvider);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
         mViewer.setInput(mReceiver.getMessages());
