@@ -508,11 +508,11 @@ final class Device implements IDevice {
         }
     }
 
-    public String installPackage(String packageFilePath, boolean reinstall)
+    public String installPackage(String packageFilePath, boolean reinstall, String... extraArgs)
             throws InstallException {
         try {
             String remoteFilePath = syncPackageToDevice(packageFilePath);
-            String result = installRemotePackage(remoteFilePath, reinstall);
+            String result = installRemotePackage(remoteFilePath, reinstall, extraArgs);
             removeRemotePackage(remoteFilePath);
             return result;
         } catch (IOException e) {
@@ -569,12 +569,20 @@ final class Device implements IDevice {
         return new File(filePath).getName();
     }
 
-    public String installRemotePackage(String remoteFilePath, boolean reinstall)
-            throws InstallException {
+    public String installRemotePackage(String remoteFilePath, boolean reinstall,
+            String... extraArgs) throws InstallException {
         try {
             InstallReceiver receiver = new InstallReceiver();
-            String cmd = String.format(reinstall ? "pm install -r \"%1$s\"" : "pm install \"%1$s\"",
-                                remoteFilePath);
+            StringBuilder optionString = new StringBuilder();
+            if (reinstall) {
+                optionString.append("-r ");
+            }
+            for (String arg : extraArgs) {
+                optionString.append(arg);
+                optionString.append(' ');
+            }
+            String cmd = String.format("pm install %1$s \"%2$s\"", optionString.toString(),
+                    remoteFilePath);
             executeShellCommand(cmd, receiver, INSTALL_TIMEOUT);
             return receiver.getErrorMessage();
         } catch (TimeoutException e) {
