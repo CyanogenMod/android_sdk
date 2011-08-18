@@ -103,6 +103,11 @@ framework/jython.jar             tools/lib/jython.jar
 # 3rd Party java libraries
 framework/groovy-all-1.7.0.jar                                tools/lib/groovy-all-1.7.0.jar
 framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
+framework/httpclient-4.1.1.jar                                tools/lib/httpclient-4.1.1.jar
+framework/httpcore-4.1.jar                                    tools/lib/httpcore-4.1.jar
+framework/httpmime-4.1.1.jar                                  tools/lib/httpmime-4.1.1.jar
+framework/commons-logging-1.1.1.jar                           tools/lib/commons-logging-1.1.1.jar
+framework/commons-codec-1.4.jar                               tools/lib/commons-codec-1.4.jar
 framework/emmalib.jar                                         tools/lib/emma_device.jar
 external/emma/lib/emma.jar                                    tools/lib/emma.jar
 external/emma/lib/emma_ant.jar                                tools/lib/emma_ant.jar
