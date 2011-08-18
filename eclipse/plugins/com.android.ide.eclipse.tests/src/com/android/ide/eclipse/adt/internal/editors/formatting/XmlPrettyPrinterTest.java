@@ -15,21 +15,13 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.jface.preference.PreferenceStore;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import java.io.StringReader;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import junit.framework.TestCase;
 
@@ -50,23 +42,8 @@ public class XmlPrettyPrinterTest extends TestCase {
             String xml, String expected, String delimiter,
             String startNodeName, boolean openTagOnly, String endNodeName) throws Exception {
 
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        InputSource is = new InputSource(new StringReader(xml));
-        factory.setIgnoringComments(false);
-        factory.setIgnoringElementContentWhitespace(false);
-        factory.setCoalescing(false);
-        factory.setNamespaceAware(true);
-        factory.setValidating(true);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setErrorHandler(new ErrorHandler() {
-            public void error(SAXParseException arg0) throws SAXException {
-            }
-            public void fatalError(SAXParseException arg0) throws SAXException {
-            }
-            public void warning(SAXParseException arg0) throws SAXException {
-            }
-        });
-        Document document = builder.parse(is);
+        Document document = DomUtilities.parseStructuredDocument(xml);
+        assertNotNull(document);
 
         XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
 
@@ -230,27 +207,17 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "-->        \n" +
                 "</LinearLayout>",
 
-                /* For some reason the SAX document builder does not include the processing
-                 * instruction node (the Eclipse XML parser luckily does; try to change
-                 * unit test to use it since we want to make sure the pretty printer
-                 * handles it properly)
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                */
                 "<!--\n" +
                 "/**\n" +
                 " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
                 " */\n" +
                 "-->\n" +
-                /* For some reason the SAX document builder does not include the
-                 * doc type node (the Eclipse XML parser luckily does; try to change
-                 * unit test to use it since we want to make sure the pretty printer
-                 * handles it properly)
                 "<!DOCTYPE metadata [\n" +
                 "<!ELEMENT metadata (category)*>\n" +
                 "<!ENTITY % ISOLat2\n" +
                 "         SYSTEM \"http://www.xml.com/iso/isolat2-xml.entities\" >\n" +
                 "]>\n" +
-                 */
                 "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    android:orientation=\"vertical\" >\n" +
                 "    <![CDATA[\n" +
@@ -314,8 +281,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
                 "\n" +
-                "    <CheckBox >\n" +
-                "    </CheckBox>\n",
+                "    <CheckBox />\n",
                 "\n", "Button", false, "CheckBox");
     }
 
@@ -393,6 +359,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <dimen name=\"text_size_medium\">18sp</dimen><dimen name=\"text_size_large\">22sp</dimen>\n" +
                 "</resources>",
 
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<resources>\n" +
                 "\n" +
                 "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +

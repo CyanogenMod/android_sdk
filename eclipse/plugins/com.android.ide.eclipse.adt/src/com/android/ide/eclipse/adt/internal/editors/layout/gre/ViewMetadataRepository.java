@@ -131,7 +131,7 @@ public class ViewMetadataRepository {
         try {
             factory.setNamespaceAware(true);
             factory.setValidating(false);
-            factory.setIgnoringElementContentWhitespace(true);
+            factory.setIgnoringComments(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(is);
         } catch (Exception e) {
@@ -203,7 +203,7 @@ public class ViewMetadataRepository {
             try {
                 factory.setNamespaceAware(true);
                 factory.setValidating(false);
-                factory.setIgnoringElementContentWhitespace(true);
+                factory.setIgnoringComments(true);
                 DocumentBuilder builder = factory.newDocumentBuilder();
                 Document document = builder.parse(is);
                 Map<String, FillPreference> fillTypes = new HashMap<String, FillPreference>();

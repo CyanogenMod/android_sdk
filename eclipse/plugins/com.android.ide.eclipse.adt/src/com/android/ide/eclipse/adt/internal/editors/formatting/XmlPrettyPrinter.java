@@ -32,16 +32,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Visitor which walks over the subtree of the DOM to be formatted and pretty prints
@@ -111,30 +106,19 @@ public class XmlPrettyPrinter {
      * @param style the style to format with
      * @param lineSeparator the line separator to use, such as "\n" (can be null, in which
      *     case the system default is looked up via the line.separator property)
-     * @return the formatted document
+     * @return the formatted document (or if a parsing error occurred, returns the
+     *     unformatted document)
      */
     public static String prettyPrint(String xml, XmlFormatPreferences prefs, XmlFormatStyle style,
             String lineSeparator) {
-        try {
-            // TODO: Use the proper XML model from Eclipse such that I can handle empty
-            // tags properly. Unfortunately, this is tricky; the Eclipse XML model wants to
-            // be tied to an IFile. A possible solution is described in
-            // http://www.eclipse.org/forums/index.php/t/73640/ .
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            InputSource is = new InputSource(new StringReader(xml));
-            factory.setIgnoringComments(false);
-            factory.setIgnoringElementContentWhitespace(false);
-            factory.setCoalescing(false);
-            factory.setNamespaceAware(true);
-            factory.setValidating(false);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(is);
-
+        Document document = DomUtilities.parseStructuredDocument(xml);
+        if (document != null) {
             XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, lineSeparator);
-            StringBuilder sb = new StringBuilder(1000);
-            printer.prettyPrint(-1, document, null, null, sb, false/*openTagOnly*/);
+            StringBuilder sb = new StringBuilder(3 * xml.length() / 2);
+            printer.prettyPrint(-1, document, null, null, sb, false /*openTagOnly*/);
             return sb.toString();
-        } catch (Exception e) {
+        } else {
+            // Parser error: just return the unformatted content
             return xml;
         }
     }
@@ -428,22 +412,38 @@ public class XmlPrettyPrinter {
                 // To fix this, we need to insert some extra whitespace into the first line
                 // of the string; in particular, the exact number of characters that the
                 // first line of the comment was indented with!
-                Node previous = node.getPreviousSibling();
-                if (previous != null && previous.getNodeType() == Node.TEXT_NODE) {
-                    String prevText = previous.getNodeValue();
-                    int indentation = COMMENT_BEGIN.length();
-                    for (int i = prevText.length() - 1; i >= 0; i--) {
-                        char c = prevText.charAt(i);
-                        if (c == '\n') {
-                            break;
-                        } else if (c == '\t') {
-                            indentation += 4; // TODO: Look up Eclipse settings
-                        } else {
-                            indentation++;
-                        }
+
+                // However, if the comment started like this:
+                // <!--
+                // /** Copyright
+                // -->
+                // then obviously the align-indent is 0, so we only want to compute an
+                // align indent when we don't find a newline before the content
+                boolean startsWithNewline = false;
+                for (int i = 0; i < start; i++) {
+                    if (comment.charAt(i) == '\n') {
+                        startsWithNewline = true;
+                        break;
                     }
-                    for (int i = 0; i < indentation; i++) {
-                        mOut.append(' ');
+                }
+                if (!startsWithNewline) {
+                    Node previous = node.getPreviousSibling();
+                    if (previous != null && previous.getNodeType() == Node.TEXT_NODE) {
+                        String prevText = previous.getNodeValue();
+                        int indentation = COMMENT_BEGIN.length();
+                        for (int i = prevText.length() - 1; i >= 0; i--) {
+                            char c = prevText.charAt(i);
+                            if (c == '\n') {
+                                break;
+                            } else if (c == '\t') {
+                                indentation += 4; // TODO: Look up Eclipse settings
+                            } else {
+                                indentation++;
+                            }
+                        }
+                        for (int i = 0; i < indentation; i++) {
+                            mOut.append(' ');
+                        }
                     }
                 }
 
