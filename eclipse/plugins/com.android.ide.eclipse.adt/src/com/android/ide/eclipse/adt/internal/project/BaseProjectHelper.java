@@ -473,11 +473,8 @@ public final class BaseProjectHelper {
                 IJavaProject javaProject = JavaCore.create(project);
 
                 IPath path = javaProject.getOutputLocation();
-                IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
-                IResource outputResource = wsRoot.findMember(path);
-                if (outputResource != null && outputResource.getType() == IResource.FOLDER) {
-                    return (IFolder)outputResource;
-                }
+                path = path.removeFirstSegments(1);
+                return project.getFolder(path);
             }
         } catch (JavaModelException e) {
             // Let's do nothing and return null
