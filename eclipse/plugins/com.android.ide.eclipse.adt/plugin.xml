@@ -285,31 +285,6 @@
                 label="Display dex bytecode"
                 menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3" />
         </objectContribution>
-        <objectContribution
-            id="com.android.ide.eclipse.adt.contribution3"
-            nameFilter="*"
-            objectClass="org.eclipse.core.resources.IProject"
-            adaptable="true">
-            <menu
-                id="com.android.ide.eclipse.adt.AndroidTools"
-                label="Android Tools"
-                path="additions">
-                <separator name="group1" />
-                <separator name="group2" />
-            </menu>
-            <filter
-                name="projectNature"
-                value="com.android.ide.eclipse.adt.AndroidExportNature">
-            </filter>
-            <action
-                class="com.android.ide.eclipse.adt.internal.actions.MultiApkExportAction"
-                enablesFor="1"
-                id="com.android.ide.eclipse.adt.actions.MultiApkExportAction"
-                label="Export APKs"
-                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group1"
-                tooltip="Exports multiple APKs from the export project configuration">
-            </action>
-        </objectContribution>
     </extension>
     <extension point="org.eclipse.ui.preferencePages">
         <page
