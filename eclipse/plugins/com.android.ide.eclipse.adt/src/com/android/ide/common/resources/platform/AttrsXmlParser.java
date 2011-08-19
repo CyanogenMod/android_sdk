@@ -16,6 +16,8 @@
 
 package com.android.ide.common.resources.platform;
 
+import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
+
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.platform.ViewClassInfo.LayoutParamsInfo;
@@ -162,7 +164,14 @@ public final class AttrsXmlParser {
             String xmlName = info.getShortClassName();
             DeclareStyleableInfo style = mStyleMap.get(xmlName);
             if (style != null) {
-                info.setAttributes(style.getAttributes());
+                String definedBy = info.getFullClassName();
+                AttributeInfo[] attributes = style.getAttributes();
+                for (AttributeInfo attribute : attributes) {
+                    if (attribute.getDefinedBy() == null) {
+                        attribute.setDefinedBy(definedBy);
+                    }
+                }
+                info.setAttributes(attributes);
                 info.setJavaDoc(style.getJavaDoc());
             }
         }
@@ -174,14 +183,24 @@ public final class AttrsXmlParser {
     public void loadLayoutParamsAttributes(LayoutParamsInfo info) {
         if (getDocument() != null) {
             // Transforms "LinearLayout" and "LayoutParams" into "LinearLayout_Layout".
+            ViewClassInfo viewLayoutClass = info.getViewLayoutClass();
             String xmlName = String.format("%1$s_%2$s", //$NON-NLS-1$
-                    info.getViewLayoutClass().getShortClassName(),
+                    viewLayoutClass.getShortClassName(),
                     info.getShortClassName());
             xmlName = xmlName.replaceFirst("Params$", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
             DeclareStyleableInfo style = mStyleMap.get(xmlName);
             if (style != null) {
-                info.setAttributes(style.getAttributes());
+                // For defined by, use the actual class name, e.g.
+                //   android.widget.LinearLayout.LayoutParams
+                String definedBy = viewLayoutClass.getFullClassName() + DOT_LAYOUT_PARAMS;
+                AttributeInfo[] attributes = style.getAttributes();
+                for (AttributeInfo attribute : attributes) {
+                    if (attribute.getDefinedBy() == null) {
+                        attribute.setDefinedBy(definedBy);
+                    }
+                }
+                info.setAttributes(attributes);
             }
         }
     }

@@ -19,6 +19,8 @@ package com.android.ide.common.api;
 
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 
+import java.util.List;
+
 
 /**
  * Represents a view in the XML layout being edited.
@@ -217,9 +219,23 @@ public interface INode {
      * If you want attributes actually written in the XML and their values, please use
      * {@link #getStringAttr(String, String)} or {@link #getLiveAttributes()} instead.
      *
-     * @return A non-null possible-empty list of {@link IAttributeInfo}.
+     * @return A non-null possibly-empty list of {@link IAttributeInfo}.
      */
     public IAttributeInfo[] getDeclaredAttributes();
+
+    /**
+     * Returns the list of classes (fully qualified class names) that are
+     * contributing properties to the {@link #getDeclaredAttributes()} attribute
+     * list, in order from most specific to least specific (in other words,
+     * android.view.View will be last in the list.) This is usually the same as
+     * the super class chain of a view, but it skips any views that do not
+     * contribute attributes.
+     *
+     * @return a list of views classes that contribute attributes to this node,
+     *         which is never null because at least android.view.View will
+     *         contribute attributes.
+     */
+    public List<String> getAttributeSources();
 
     /**
      * Returns the list of all attributes defined in the XML for this node.
@@ -232,7 +248,7 @@ public interface INode {
      * If you want a list of all possible attributes, whether used in the XML or not by
      * this node, please see {@link #getDeclaredAttributes()} instead.
      *
-     * @return A non-null possible-empty list of {@link IAttribute}.
+     * @return A non-null possibly-empty list of {@link IAttribute}.
      */
     public IAttribute[] getLiveAttributes();
 

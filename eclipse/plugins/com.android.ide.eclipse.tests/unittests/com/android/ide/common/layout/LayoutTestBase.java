@@ -26,8 +26,10 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IValidator;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
+import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -211,9 +213,25 @@ public class LayoutTestBase extends TestCase {
             return mFqn;
         }
 
-        public IViewMetadata getMetadata(String fqcn) {
-            fail("Not supported in tests yet");
-            return null;
+        public IViewMetadata getMetadata(final String fqcn) {
+            return new IViewMetadata() {
+                public String getDisplayName() {
+                    // This also works when there is no "."
+                    return fqcn.substring(fqcn.lastIndexOf('.') + 1);
+                }
+
+                public FillPreference getFillPreference() {
+                    return ViewMetadataRepository.get().getFillPreference(fqcn);
+                }
+
+                public Margins getInsets() {
+                    return null;
+                }
+
+                public List<String> getTopAttributes() {
+                    return ViewMetadataRepository.get().getTopAttributes(fqcn);
+                }
+            };
         }
 
         public int getMinApiLevel() {

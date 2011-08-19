@@ -76,6 +76,7 @@ public class EditTextRule extends BaseViewRule {
 
         actions.add(RuleAction.createAction("_setfocus", label, onChange, //$NON-NLS-1$
                 null, 5, false /*supportsMultipleNodes*/));
+        actions.add(RuleAction.createSeparator(7));
     }
 
     /** Returns true if the given node currently has focus */
