@@ -36,6 +36,9 @@ import org.eclipse.wst.xml.ui.internal.text.XMLDocumentRegionEdgeMatcher;
  */
 @SuppressWarnings("restriction")
 public class AndroidXmlCharacterMatcher extends XMLDocumentRegionEdgeMatcher {
+    /**
+     * Constructs a new character matcher for Android XML files
+     */
     public AndroidXmlCharacterMatcher() {
     }
 
@@ -184,6 +187,15 @@ public class AndroidXmlCharacterMatcher extends XMLDocumentRegionEdgeMatcher {
         return -1;
     }
 
+    /**
+     * Finds the corresponding closing tag by searching forwards until the tag balance
+     * reaches a given target.
+     *
+     * @param doc the document
+     * @param start the starting offset (where the search begins searching forwards from)
+     * @param targetTagBalance the balance to end the search at
+     * @return the offset of the beginning of the closing tag
+     */
     public static int findTagForwards(IStructuredDocument doc, int start, int targetTagBalance) {
         int tagBalance = 0;
         IStructuredDocumentRegion region = doc.getRegionAtCharacterOffset(start);

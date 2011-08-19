@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
+@SuppressWarnings("javadoc")
 public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
 
     public void checkInsertNewline(String before, String after) throws Exception {
@@ -101,12 +102,14 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
     public void testCornerCase2() throws Exception {
         checkInsertNewline(
                 "\n^",
+
                 "\n\n^");
     }
 
     public void testCornerCase3() throws Exception {
         checkInsertNewline(
                 "    ^",
+
                 "    \n" +
                 "    ^");
     }
@@ -114,6 +117,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
     public void testSimpleIndentation1() throws Exception {
         checkInsertNewline(
                 "   ^ ",
+
                 "   \n" +
                 "   ^ ");
     }
@@ -122,6 +126,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "\n" +
                 "   foo^\n",
+
                 "\n" +
                 "   foo\n" +
                 "   ^\n");
@@ -131,6 +136,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "\n" +
                 "    <newtag>^\n",
+
                 "\n" +
                 "    <newtag>\n" +
                 "        ^\n");
@@ -140,6 +146,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "\n" +
                 "    <newtag/>^\n",
+
                 "\n" +
                 "    <newtag/>\n" +
                 "    ^\n");
@@ -158,6 +165,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "\n" +
                 "    <newtag ^attribute='value'/>\n",
+
                 "\n" +
                 "    <newtag \n" +
                 "        ^attribute='value'/>\n");
@@ -167,6 +175,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         // Make sure that inside a comment we ignore tags etc
         checkInsertNewline(
                 "<!--\n   foo^\n--->\n",
+
                 "<!--\n   foo\n   ^\n--->\n");
     }
 
@@ -177,6 +186,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "<!--\n" +
                 "<foo><^\n" +
                 "-->\n",
+
                 "\n" +
                 "<!--\n" +
                 "<foo><\n" +
@@ -188,6 +198,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "\n" +
                 "    <item>^</item>\n",
+
                 "\n" +
                 "    <item>\n" +
                 "        ^\n" +
@@ -201,6 +212,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "\n" +
                 "    <foo\n" +
                 "        name='value'>^</foo>\n",
+
                 "\n" +
                 "    <foo\n" +
                 "        name='value'>\n" +
@@ -214,6 +226,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "\n" +
                 "    <foo\n" +
                 "        name='value'/>^\n",
+
                 "\n" +
                 "    <foo\n" +
                 "        name='value'/>\n" +
@@ -225,6 +238,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "\n" +
                 "    <foo\n" +
                 "        name='value'></foo>^\n",
+
                 "\n" +
                 "    <foo\n" +
                 "        name='value'></foo>\n" +
@@ -243,6 +257,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "\n" +
                 "    <foo\n" +
                 "        name='value'><bar></bar><baz/></foo>^\n",
+
                 "\n" +
                 "    <foo\n" +
                 "        name='value'><bar></bar><baz/></foo>\n" +
@@ -257,6 +272,7 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "        android:layout_height=\"wrap_content\"\n" +
                 "        android:text=\"Button\" >^\n" +
                 "    </Button>\n",
+
                 "    <Button\n" +
                 "        android:id=\"@+id/button1\"\n" +
                 "        android:layout_width=\"wrap_content\"\n" +
@@ -270,9 +286,134 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
         checkInsertNewline(
                 "    <Button\n" +
                 "        attr=\"value\"></Button>^\n",
+
                 "    <Button\n" +
                 "        attr=\"value\"></Button>\n" +
                 "    ^\n" +
+                "");
+    }
+
+    public void testLineBeginning1() throws Exception {
+        // Test that if you insert on a blank line, we just add a newline and indent
+        checkInsertNewline(
+                "<foo>\n" +
+                "^\n" +
+                "</foo>",
+
+                "<foo>\n" +
+                "\n" +
+                "    ^\n" +
+                "</foo>");
+    }
+
+    public void testLineBeginning2() throws Exception {
+        // Test that if you insert with the caret on the beginning of a line that has
+        // content, we insert an indent correctly
+        checkInsertNewline(
+                "<foo>\n" +
+                "^    <bar/>\n" +
+                "</foo>",
+
+                "<foo>\n" +
+                "\n" +
+                "    ^<bar/>\n" +
+                "</foo>");
+    }
+
+    public void testLineBeginning3() throws Exception {
+        checkInsertNewline(
+                "<foo>\n" +
+                "    <bar>\n" +
+                "^\n" +
+                "        <baz/>\n" +
+                "    </bar>\n" +
+                "</foo>",
+
+                "<foo>\n" +
+                "    <bar>\n" +
+                "\n" +
+                "        ^\n" +
+                "        <baz/>\n" +
+                "    </bar>\n" +
+                "</foo>");
+
+    }
+
+    public void testLineBeginning4() throws Exception {
+        // Test that if you insert with the caret on the beginning of a line that has
+        // content, we insert an indent correctly
+        checkInsertNewline(
+                "<foo>\n" +
+                "    <bar>\n" +
+                "\n" +
+                "^        <baz/>\n" +
+                "    </bar>\n" +
+                "</foo>",
+
+                "<foo>\n" +
+                "    <bar>\n" +
+                "\n" +
+                "\n" +
+                "        ^<baz/>\n" +
+                "    </bar>\n" +
+                "</foo>");
+    }
+
+    public void testLineBeginning5() throws Exception {
+        // Test that if you insert with the caret on the beginning of a line that has
+        // content, we insert an indent correctly
+        checkInsertNewline(
+                "<foo>\n" +
+                "    <bar>\n" +
+                "\n" +
+                "    ^    <baz/>\n" +
+                "    </bar>\n" +
+                "</foo>",
+
+                "<foo>\n" +
+                "    <bar>\n" +
+                "\n" +
+                "    \n" +
+                "        ^<baz/>\n" +
+                "    </bar>\n" +
+                "</foo>");
+    }
+
+    public void testLineBeginning6() throws Exception {
+
+        checkInsertNewline(
+                "    <foo>\n" +
+                "        <bar>\n" +
+                "            \n" +
+                "        \n" +
+                "^        </bar>\n" +
+                "    </foo>\n",
+
+                "    <foo>\n" +
+                "        <bar>\n" +
+                "            \n" +
+                "        \n" +
+                "\n" +
+                "        ^</bar>\n" +
+                "    </foo>\n");
+    }
+
+    public void testBlankContinuation() throws Exception {
+
+        checkInsertNewline(
+                "    <foo>\n" +
+                "        <bar>\n" +
+                "            ^\n" +
+                "        </bar>\n" +
+                "    </foo>\n" +
+                "",
+
+                "    <foo>\n" +
+                "        <bar>\n" +
+                "            \n" +
+                "            ^\n" +
+                "        </bar>\n" +
+                "    </foo>\n" +
                 "");
     }
 
