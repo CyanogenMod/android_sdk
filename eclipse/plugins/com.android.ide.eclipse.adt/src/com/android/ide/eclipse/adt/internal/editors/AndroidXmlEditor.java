@@ -139,6 +139,18 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     private int mIsEditXmlModelPending;
 
     /**
+     * Usually null, but during an editing operation, represents the highest
+     * node which should be formatted when the editing operation is complete.
+     */
+    private UiElementNode mFormatNode;
+
+    /**
+     * Whether {@link #mFormatNode} should be formatted recursively, or just
+     * the node itself (its arguments)
+     */
+    private boolean mFormatChildren;
+
+    /**
      * Creates a form editor.
      * <p/>The editor will setup a {@link ITargetChangeListener} and call
      * {@link #initUiRootNode(boolean)}, when the SDK or the target changes.
@@ -896,6 +908,35 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                     // Notify the model we're done modifying it. This must *always* be executed.
                     model.changedModel();
 
+                    if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
+                        if (!mFormatNode.hasError()) {
+                            if (mFormatNode == getUiRootNode()) {
+                                reformatDocument();
+                            } else {
+                                Node node = mFormatNode.getXmlNode();
+                                if (node instanceof IndexedRegion) {
+                                    IndexedRegion region = (IndexedRegion) node;
+                                    int begin = region.getStartOffset();
+                                    int end = region.getEndOffset();
+
+                                    if (!mFormatChildren) {
+                                        // This will format just the attribute list
+                                        end = begin + 1;
+                                    }
+
+                                    model.aboutToChangeModel();
+                                    try {
+                                        reformatRegion(begin, end);
+                                    } finally {
+                                        model.changedModel();
+                                    }
+                                }
+                            }
+                        }
+                        mFormatNode = null;
+                        mFormatChildren = false;
+                    }
+
                     // Clean up the undo unit. This is done more than once as explained
                     // above for beginRecording.
                     for (int i = 0; i < undoReverseCount; i++) {
@@ -912,6 +953,55 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                             mIsEditXmlModelPending);
                     mIsEditXmlModelPending = 0;
                 }
+            }
+        }
+    }
+
+    /**
+     * Does this editor participate in the "format GUI editor changes" option?
+     *
+     * @return true if this editor supports automatically formatting XML
+     *         affected by GUI changes
+     */
+    public boolean supportsFormatOnGuiEdit() {
+        return false;
+    }
+
+    /**
+     * Mark the given node as needing to be formatted when the current edits are
+     * done, provided the user has turned that option on (see
+     * {@link AdtPrefs#getFormatGuiXml()}).
+     *
+     * @param node the node to be scheduled for formatting
+     * @param attributesOnly if true, only update the attributes list of the
+     *            node, otherwise update the node recursively (e.g. all children
+     *            too)
+     */
+    public void scheduleNodeReformat(UiElementNode node, boolean attributesOnly) {
+        if (!supportsFormatOnGuiEdit()) {
+            return;
+        }
+
+        if (node == mFormatNode) {
+            if (!attributesOnly) {
+                mFormatChildren = true;
+            }
+        } else if (mFormatNode == null) {
+            mFormatNode = node;
+            mFormatChildren = !attributesOnly;
+        } else {
+            if (mFormatNode.isAncestorOf(node)) {
+                mFormatChildren = true;
+            } else if (node.isAncestorOf(mFormatNode)) {
+                mFormatNode = node;
+                mFormatChildren = true;
+            } else {
+                // Two independent nodes; format their closest common ancestor.
+                // Later we could consider having a small number of independent nodes
+                // and formatting those, and only switching to formatting the common ancestor
+                // when the number of individual nodes gets large.
+                mFormatChildren = true;
+                mFormatNode = UiElementNode.getCommonAncestor(mFormatNode, node);
             }
         }
     }
@@ -1104,31 +1194,35 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         end = Math.min(end, documentLength);
         begin = Math.min(begin, end);
 
-        // It turns out the XML formatter does *NOT* format things correctly if you
-        // select just a region of text. You *MUST* also include the leading whitespace
-        // on the line, or it will dedent all the content to column 0. Therefore,
-        // we must figure out the offset of the start of the line that contains the
-        // beginning of the tag.
-        try {
-            IRegion lineInformation = document.getLineInformationOfOffset(begin);
-            if (lineInformation != null) {
-                int lineBegin = lineInformation.getOffset();
-                if (lineBegin != begin) {
-                    begin = lineBegin;
-                } else if (begin > 0) {
-                    // Trick #2: It turns out that, if an XML element starts in column 0,
-                    // then the XML formatter will NOT indent it (even if its parent is
-                    // indented). If you on the other hand include the end of the previous
-                    // line (the newline), THEN the formatter also correctly inserts the
-                    // element. Therefore, we adjust the beginning range to include the
-                    // previous line (if we are not already in column 0 of the first line)
-                    // in the case where the element starts the line.
-                    begin--;
+        if (!AdtPrefs.getPrefs().getUseCustomXmlFormatter()) {
+            // Workarounds which only apply to the builtin Eclipse formatter:
+            //
+            // It turns out the XML formatter does *NOT* format things correctly if you
+            // select just a region of text. You *MUST* also include the leading whitespace
+            // on the line, or it will dedent all the content to column 0. Therefore,
+            // we must figure out the offset of the start of the line that contains the
+            // beginning of the tag.
+            try {
+                IRegion lineInformation = document.getLineInformationOfOffset(begin);
+                if (lineInformation != null) {
+                    int lineBegin = lineInformation.getOffset();
+                    if (lineBegin != begin) {
+                        begin = lineBegin;
+                    } else if (begin > 0) {
+                        // Trick #2: It turns out that, if an XML element starts in column 0,
+                        // then the XML formatter will NOT indent it (even if its parent is
+                        // indented). If you on the other hand include the end of the previous
+                        // line (the newline), THEN the formatter also correctly inserts the
+                        // element. Therefore, we adjust the beginning range to include the
+                        // previous line (if we are not already in column 0 of the first line)
+                        // in the case where the element starts the line.
+                        begin--;
+                    }
                 }
+            } catch (BadLocationException e) {
+                // This cannot happen because we already clamped the offsets
+                AdtPlugin.log(e, e.toString());
             }
-        } catch (BadLocationException e) {
-            // This cannot happen because we already clamped the offsets
-            AdtPlugin.log(e, e.toString());
         }
 
         if (textViewer instanceof StructuredTextViewer) {
@@ -1138,7 +1232,17 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             if (canFormat) {
                 StyledText textWidget = textViewer.getTextWidget();
                 textWidget.setSelection(begin, end);
-                structuredTextViewer.doOperation(operation);
+
+                try {
+                    // Formatting does not affect the XML model so ignore notifications
+                    // about model edits from this
+                    mIgnoreXmlUpdate = true;
+                    structuredTextViewer.doOperation(operation);
+                } finally {
+                    mIgnoreXmlUpdate = false;
+                }
+
+                textWidget.setSelection(0, 0);
             }
         }
     }
@@ -1171,7 +1275,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             int operation = StructuredTextViewer.FORMAT_DOCUMENT;
             boolean canFormat = structuredTextViewer.canDoOperation(operation);
             if (canFormat) {
-                structuredTextViewer.doOperation(operation);
+                try {
+                    // Formatting does not affect the XML model so ignore notifications
+                    // about model edits from this
+                    mIgnoreXmlUpdate = true;
+                    structuredTextViewer.doOperation(operation);
+                } finally {
+                    mIgnoreXmlUpdate = false;
+                }
             }
         }
     }

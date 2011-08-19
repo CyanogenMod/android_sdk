@@ -363,7 +363,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "<resources>\n" +
                 "\n" +
                 "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
-                "\n" +
                 "    <!-- comment1 -->\n" +
                 "    <dimen name=\"title_height\">45dip</dimen>\n" +
                 "\n" +
@@ -439,5 +438,40 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "</resources>");
     }
 
+    public void testLineCommentSpacing() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<resources>\n" +
+                "\n" +
+                "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
+                "    <!-- comment1 -->\n" +
+                "    <dimen name=\"title_height\">45dip</dimen>\n" +
+                "    <!-- comment2: no newlines -->\n" +
+                "    <dimen name=\"now_playing_height\">90dip</dimen>\n" +
+                "    <dimen name=\"text_size_small\">14sp</dimen>\n" +
+                "\n" +
+                "    <!-- comment3: newline above and below -->\n" +
+                "\n" +
+                "    <dimen name=\"text_size_medium\">18sp</dimen>\n" +
+                "    <dimen name=\"text_size_large\">22sp</dimen>\n" +
+                "\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
+                "    <!-- comment1 -->\n" +
+                "    <dimen name=\"title_height\">45dip</dimen>\n" +
+                "    <!-- comment2: no newlines -->\n" +
+                "    <dimen name=\"now_playing_height\">90dip</dimen>\n" +
+                "    <dimen name=\"text_size_small\">14sp</dimen>\n" +
+                "\n" +
+                "    <!-- comment3: newline above and below -->\n" +
+                "\n" +
+                "    <dimen name=\"text_size_medium\">18sp</dimen>\n" +
+                "    <dimen name=\"text_size_large\">22sp</dimen>\n" +
+                "\n" +
+                "</resources>");
+    }
 
 }

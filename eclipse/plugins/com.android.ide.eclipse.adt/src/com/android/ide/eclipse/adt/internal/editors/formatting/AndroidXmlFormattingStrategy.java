@@ -27,7 +27,6 @@ import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
@@ -83,6 +82,9 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
     private final LinkedList<TypedPosition> mPartitions = new LinkedList<TypedPosition>();
     private ContextBasedFormattingStrategy mDelegate = null;
 
+    /**
+     * Creates a new {@link AndroidXmlFormattingStrategy}
+     */
     public AndroidXmlFormattingStrategy() {
     }
 

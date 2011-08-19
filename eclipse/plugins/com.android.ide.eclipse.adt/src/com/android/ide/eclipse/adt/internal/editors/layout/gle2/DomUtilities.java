@@ -54,6 +54,9 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+/**
+ * Various utility methods for manipulating DOM nodes.
+ */
 @SuppressWarnings("restriction") // No replacement for restricted XML model yet
 public class DomUtilities {
     private static final String AMPERSAND_ENTITY = "&amp;"; //$NON-NLS-1$
