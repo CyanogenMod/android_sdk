@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors;
 
+import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_CONTENT;
 import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_EMPTY_TAG_CLOSE;
 import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_END_TAG_OPEN;
 import static org.eclipse.wst.xml.core.internal.regions.DOMRegionContext.XML_TAG_CLOSE;
@@ -172,6 +173,93 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                             sb.append(lineIndent);
                         }
                         c.text = sb.toString();
+                    } else if (region != null && region.getType().equals(XML_CONTENT)) {
+                        // Indenting in text content. If you're in the middle of editing
+                        // text, just copy the current line indentation.
+                        // However, if you're editing in leading whitespace (e.g. you press
+                        // newline on a blank line following say an element) then figure
+                        // out the indentation as if the newline had been pressed at the
+                        // end of the element, and insert that amount of indentation.
+                        // In this case we need to also make sure to subtract any existing
+                        // whitespace on the current line such that if we have
+                        //
+                        // <foo>
+                        // ^   <bar/>
+                        // </foo>
+                        //
+                        // you end up with
+                        //
+                        // <foo>
+                        //
+                        //    ^<bar/>
+                        // </foo>
+                        //
+                        String text = region.getText();
+                        int regionStart = region.getStartOffset();
+                        int delta = offset - regionStart;
+                        boolean inWhitespacePrefix = true;
+                        for (int i = 0, n = Math.min(delta, text.length()); i < n; i++) {
+                            char ch = text.charAt(i);
+                            if (!Character.isWhitespace(ch)) {
+                                inWhitespacePrefix = false;
+                                break;
+                            }
+                        }
+                        if (inWhitespacePrefix) {
+                            IStructuredDocumentRegion previous = region.getPrevious();
+                            if (previous != null && previous.getType() == XML_TAG_NAME) {
+                                ITextRegionList subRegions = previous.getRegions();
+                                ITextRegion last = subRegions.get(subRegions.size() - 1);
+                                if (last.getType() == XML_TAG_CLOSE ||
+                                        last.getType() == XML_EMPTY_TAG_CLOSE) {
+                                    int begin = AndroidXmlCharacterMatcher.findTagBackwards(doc,
+                                            previous.getStartOffset() + last.getStart(), 0);
+                                    int prevLineStart = findLineStart(doc, begin);
+                                    int prevTextStart = findTextStart(doc, prevLineStart, begin);
+
+                                    String lineIndent = ""; //$NON-NLS-1$
+                                    if (prevTextStart > prevLineStart) {
+                                        lineIndent = doc.get(prevLineStart,
+                                                prevTextStart - prevLineStart);
+                                    }
+                                    StringBuilder sb = new StringBuilder(c.text);
+                                    sb.append(lineIndent);
+                                    String oneIndentUnit =
+                                            XmlFormatPreferences.create().getOneIndentUnit();
+
+                                    // See if there is whitespace on the insert line that
+                                    // we should also remove
+                                    for (int i = delta, n = text.length(); i < n; i++) {
+                                        char ch = text.charAt(i);
+                                        if (ch == ' ') {
+                                            c.length++;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    boolean onClosingTagLine = false;
+                                    if (text.indexOf('\n', delta) == -1) {
+                                        IStructuredDocumentRegion next = region.getNext();
+                                        if (next != null && next.getType() == XML_TAG_NAME) {
+                                            String nextType = next.getRegions().get(0).getType();
+                                            if (nextType == XML_END_TAG_OPEN) {
+                                                onClosingTagLine = true;;
+                                            }
+                                        }
+                                    }
+
+                                    boolean addIndent = (last.getType() == XML_TAG_CLOSE)
+                                            && !onClosingTagLine;
+                                    if (addIndent) {
+                                        sb.append(oneIndentUnit);
+                                    }
+                                    c.text = sb.toString();
+
+                                    return;
+                                }
+                            }
+                        }
+                        copyPreviousLineIndentation(doc, c);
                     } else {
                         copyPreviousLineIndentation(doc, c);
                     }
