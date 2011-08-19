@@ -468,6 +468,12 @@ public class GestureManager {
             }
             if (mCurrentGesture == null) {
                 updateCursor(mousePos);
+            } else if (mCurrentGesture instanceof DropGesture) {
+                // Mouse Up shouldn't be delivered in the middle of a drag & drop -
+                // but this can happen on some versions of Linux
+                // (see http://code.google.com/p/android/issues/detail?id=19057 )
+                // and if we process the mouseUp it will abort the remainder of
+                // the drag & drop operation, so ignore this event!
             } else {
                 finishGesture(mousePos, false);
             }
