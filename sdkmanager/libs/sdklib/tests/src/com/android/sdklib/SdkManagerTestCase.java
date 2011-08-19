@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager;
+package com.android.sdklib;
 
 
 import com.android.prefs.AndroidLocation;
@@ -126,8 +126,10 @@ public abstract class SdkManagerTestCase extends TestCase {
      */
     private File makeFakeSdk() throws IOException {
 
+        // First we create a temp file to "reserve" the temp directory name we want to use.
         File tmpFile = File.createTempFile(
                 this.getClass().getSimpleName() + '_' + this.getName(), null);
+        // Then erase the file and make the directory
         tmpFile.delete();
         tmpFile.mkdirs();
 
@@ -145,15 +147,24 @@ public abstract class SdkManagerTestCase extends TestCase {
         targetDir.mkdirs();
         new File(targetDir, SdkConstants.FN_FRAMEWORK_LIBRARY).createNewFile();
         new File(targetDir, SdkConstants.FN_FRAMEWORK_AIDL).createNewFile();
-        new File(targetDir, SdkConstants.FN_SOURCE_PROP).createNewFile();
+
+        File sourceProp = new File(targetDir, SdkConstants.FN_SOURCE_PROP);
+        sourceProp.createNewFile();
+        FileWriter out = new FileWriter(sourceProp);
+        out.write("Layoutlib.Api=5\n");
+        out.write("Layoutlib.Revision=2\n");
+        out.close();
+
         File buildProp = new File(targetDir, SdkConstants.FN_BUILD_PROP);
-        FileWriter out = new FileWriter(buildProp);
+        out = new FileWriter(buildProp);
         out.write(SdkManager.PROP_VERSION_RELEASE + "=0.0\n");
         out.write(SdkManager.PROP_VERSION_SDK + "=0\n");
         out.write(SdkManager.PROP_VERSION_CODENAME + "=REL\n");
         out.close();
+
         File imagesDir = new File(targetDir, "images");
         imagesDir.mkdirs();
+
         new File(imagesDir, "userdata.img").createNewFile();
         File skinsDir = new File(targetDir, "skins");
         File hvgaDir = new File(skinsDir, "HVGA");
