@@ -524,6 +524,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "Level",
                 "Time",
                 "PID",
+                "Application",
                 "Tag",
                 "Text",
         };
@@ -531,9 +532,10 @@ public final class LogCatPanel extends SelectionDependentPanel
         /** The sampleText for each column is used to determine the default widths
          * for each column. The contents do not matter, only their lengths are needed. */
         String[] sampleText = {
-                "    II",
+                "    ",
                 "    00-00 00:00:00.0000 ",
                 "    0000",
+                "    com.android.launcher",
                 "    SampleTagText",
                 "    Log Message field should be pretty long by default.",
         };

@@ -36,6 +36,7 @@ public final class LogCatReceiver {
     private LogCatOutputReceiver mCurrentLogCatOutputReceiver;
     private List<ILogCatMessageEventListener> mLogCatMessageListeners;
     private LogCatMessageParser mLogCatMessageParser;
+    private LogCatPidToNameMapper mPidToNameMapper;
 
     /**
      * Construct a LogCat message receiver.
@@ -43,6 +44,7 @@ public final class LogCatReceiver {
     public LogCatReceiver() {
         mLogCatMessageListeners = new ArrayList<ILogCatMessageEventListener>();
         mLogCatMessageParser = new LogCatMessageParser();
+        mPidToNameMapper = new LogCatPidToNameMapper();
     }
 
     /**
@@ -85,6 +87,8 @@ public final class LogCatReceiver {
 
         mLogCatMessageParser.resetState();
         startReceiverThread();
+
+        mPidToNameMapper.setDevice(mCurrentDevice);
     }
 
     private void startReceiverThread() {
@@ -149,10 +153,11 @@ public final class LogCatReceiver {
     }
 
     private void processLogLines(String[] lines) {
-        List<LogCatMessage> messages = mLogCatMessageParser.processLogLines(lines);
+        List<LogCatMessage> messages = mLogCatMessageParser.processLogLines(lines,
+                mPidToNameMapper);
 
         if (messages.size() > 0) {
-            for (LogCatMessage m: messages) {
+            for (LogCatMessage m : messages) {
                 mLogMessages.appendMessage(m);
             }
             sendMessageReceivedEvent(messages);
@@ -183,7 +188,7 @@ public final class LogCatReceiver {
     }
 
     private void sendMessageReceivedEvent(List<LogCatMessage> messages) {
-        for (ILogCatMessageEventListener l: mLogCatMessageListeners) {
+        for (ILogCatMessageEventListener l : mLogCatMessageListeners) {
             l.messageReceived(messages);
         }
     }

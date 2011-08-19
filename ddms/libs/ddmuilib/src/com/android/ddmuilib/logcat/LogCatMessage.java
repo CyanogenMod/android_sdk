@@ -27,6 +27,7 @@ import com.android.ddmlib.Log.LogLevel;
 public final class LogCatMessage {
     private final LogLevel mLogLevel;
     private final String mPidString;
+    private final String mAppName;
     private final String mTag;
     private final String mTime;
     private final String mMessage;
@@ -34,9 +35,11 @@ public final class LogCatMessage {
     /**
      * Construct an immutable log message object.
      */
-    public LogCatMessage(LogLevel logLevel, String pid, String tag, String time, String msg) {
+    public LogCatMessage(LogLevel logLevel, String pid, String appName,
+            String tag, String time, String msg) {
         mLogLevel = logLevel;
         mPidString = pid;
+        mAppName = appName;
         mTag = tag;
         mTime = time;
         mMessage = msg;
@@ -48,6 +51,10 @@ public final class LogCatMessage {
 
     public String getPidString() {
         return mPidString;
+    }
+
+    public String getAppName() {
+        return mAppName;
     }
 
     public String getTag() {
