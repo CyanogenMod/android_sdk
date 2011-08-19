@@ -733,7 +733,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
             item = new MenuItem(fileMenu, SWT.NONE);
             item.setText("E&xit\tCtrl-Q");
-            item.setAccelerator('Q' | (Main.isMac() ? SWT.COMMAND : SWT.CONTROL));
+            item.setAccelerator('Q' | SWT.MOD1);
             item.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
@@ -745,7 +745,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         // create edit menu items
         mCopyMenuItem = new MenuItem(editMenu, SWT.NONE);
         mCopyMenuItem.setText("&Copy\tCtrl-C");
-        mCopyMenuItem.setAccelerator('C' | SWT.COMMAND);
+        mCopyMenuItem.setAccelerator('C' | SWT.MOD1);
         mCopyMenuItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -757,7 +757,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         mSelectAllMenuItem = new MenuItem(editMenu, SWT.NONE);
         mSelectAllMenuItem.setText("Select &All\tCtrl-A");
-        mSelectAllMenuItem.setAccelerator('A' | SWT.COMMAND);
+        mSelectAllMenuItem.setAccelerator('A' | SWT.MOD1);
         mSelectAllMenuItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -815,7 +815,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         // text (e.g. the unicode symbol for the command key + S) anyway
         // so it's fine to leave it there for the other platforms.
         screenShotItem.setText("&Screen capture...\tCtrl-S");
-        screenShotItem.setAccelerator('S' | (Main.isMac() ? SWT.COMMAND : SWT.CONTROL));
+        screenShotItem.setAccelerator('S' | SWT.MOD1);
         screenShotItem.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -961,6 +961,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         createTopPanel(topPanel, darkGray);
 
+        mClipboard = new Clipboard(panelArea.getDisplay());
         if (useOldLogCatView()) {
             createBottomPanel(bottomPanel);
         } else {
@@ -1016,6 +1017,8 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         // now set up the listener in the various panels
         if (useOldLogCatView()) {
             mLogPanel.setTableFocusListener(mTableListener);
+        } else {
+            mLogCatPanel.setTableFocusListener(mTableListener);
         }
         mEventLogPanel.setTableFocusListener(mTableListener);
         for (TablePanel p : mPanels) {
@@ -1212,7 +1215,6 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
         // create clipboard
         Display display = comp.getDisplay();
-        mClipboard = new Clipboard(display);
 
         LogColors colors = new LogColors();
 
