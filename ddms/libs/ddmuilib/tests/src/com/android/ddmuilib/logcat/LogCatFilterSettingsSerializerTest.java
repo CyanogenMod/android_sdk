@@ -30,6 +30,7 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
                 "Tag'.*Regex",              //$NON-NLS-1$
                 "regexForTextField..''",    //$NON-NLS-1$
                 "123",                      //$NON-NLS-1$
+                "TestAppName.*",            //$NON-NLS-1$
                 LogLevel.ERROR);
 
         LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
@@ -43,6 +44,7 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
         assertEquals(fs.getTag(), dfs.getTag());
         assertEquals(fs.getText(), dfs.getText());
         assertEquals(fs.getPidString(), dfs.getPidString());
+        assertEquals(fs.getAppName(), dfs.getAppName());
         assertEquals(fs.getLogLevel(), dfs.getLogLevel());
     }
 }

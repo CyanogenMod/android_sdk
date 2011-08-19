@@ -23,66 +23,81 @@ import junit.framework.TestCase;
 
 public class LogCatFilterTest extends TestCase {
     public void testFilterByLogLevel() {
-        LogCatFilter filter = new LogCatFilter("",  //$NON-NLS-1$
-                "", "", "", LogLevel.DEBUG);        //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogCatFilter filter = new LogCatFilter("",
+                "", "", "", "", LogLevel.DEBUG);
 
         /* filter message below filter's log level */
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "", "", "");
         assertEquals(false, filter.matches(msg));
 
         /* do not filter message above filter's log level */
         msg = new LogCatMessage(LogLevel.ERROR,
-                "", "", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "", "", "");
         assertEquals(true, filter.matches(msg));
     }
 
     public void testFilterByPid() {
-        LogCatFilter filter = new LogCatFilter("",  //$NON-NLS-1$
-                "", "", "123", LogLevel.VERBOSE);   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogCatFilter filter = new LogCatFilter("",
+                "", "", "123", "", LogLevel.VERBOSE);
 
         /* show message with pid matching filter */
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "123", "", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "123", "", "", "", "");
         assertEquals(true, filter.matches(msg));
 
         /* don't show message with pid not matching filter */
         msg = new LogCatMessage(LogLevel.VERBOSE,
-                "12", "", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "12", "", "", "", "");
+        assertEquals(false, filter.matches(msg));
+    }
+
+    public void testFilterByAppNameRegex() {
+        LogCatFilter filter = new LogCatFilter("",
+                "", "", "", "dalvik.*", LogLevel.VERBOSE);
+
+        /* show message with pid matching filter */
+        LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "dalvikvm1", "", "", "");
+        assertEquals(true, filter.matches(msg));
+
+        /* don't show message with pid not matching filter */
+        msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "system", "", "", "");
         assertEquals(false, filter.matches(msg));
     }
 
     public void testFilterByTagRegex() {
-        LogCatFilter filter = new LogCatFilter("",  //$NON-NLS-1$
-                "tag.*", "", "", LogLevel.VERBOSE); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogCatFilter filter = new LogCatFilter("",
+                "tag.*", "", "", "", LogLevel.VERBOSE);
 
         /* show message with tag matching filter */
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "tag123", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "tag123", "", "");
         assertEquals(true, filter.matches(msg));
 
         msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "ta123", "", "");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "ta123", "", "");
         assertEquals(false, filter.matches(msg));
     }
 
     public void testFilterByTextRegex() {
-        LogCatFilter filter = new LogCatFilter("",      //$NON-NLS-1$
-                "", "text.*", "", LogLevel.VERBOSE);    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogCatFilter filter = new LogCatFilter("",
+                "", "text.*", "", "", LogLevel.VERBOSE);
 
         /* show message with text matching filter */
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "", "", "text123");   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "", "", "text123");
         assertEquals(true, filter.matches(msg));
 
         msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "", "", "te123");     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                "", "", "", "", "te123");
         assertEquals(false, filter.matches(msg));
     }
 
     public void testMatchingText() {
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "", "",                            //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "", "", "", "",                        //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 "message with word1 and word2");       //$NON-NLS-1$
         assertEquals(true, search("word1 with", msg)); //$NON-NLS-1$
         assertEquals(true, search("text:w.* ", msg));  //$NON-NLS-1$
@@ -91,7 +106,7 @@ public class LogCatFilterTest extends TestCase {
 
     public void testTagKeyword() {
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "", "tag", "",                         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "", "", "tag", "",                     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 "sample message");                     //$NON-NLS-1$
         assertEquals(false, search("t.*", msg));       //$NON-NLS-1$
         assertEquals(true, search("tag:t.*", msg));    //$NON-NLS-1$
@@ -99,10 +114,18 @@ public class LogCatFilterTest extends TestCase {
 
     public void testPidKeyword() {
         LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
-                "123", "", "",                         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "123", "", "", "",                     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 "sample message");                     //$NON-NLS-1$
         assertEquals(false, search("123", msg));       //$NON-NLS-1$
         assertEquals(true, search("pid:123", msg));    //$NON-NLS-1$
+    }
+
+    public void testAppNameKeyword() {
+        LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "dalvik", "", "",                  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                "sample message");                     //$NON-NLS-1$
+        assertEquals(false, search("dalv.*", msg));    //$NON-NLS-1$
+        assertEquals(true, search("app:dal.*k", msg)); //$NON-NLS-1$
     }
 
     /**
