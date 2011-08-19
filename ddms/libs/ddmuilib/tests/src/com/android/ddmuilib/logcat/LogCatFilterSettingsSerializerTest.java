@@ -43,7 +43,7 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
         assertEquals(fs.getName(), dfs.getName());
         assertEquals(fs.getTag(), dfs.getTag());
         assertEquals(fs.getText(), dfs.getText());
-        assertEquals(fs.getPidString(), dfs.getPidString());
+        assertEquals(fs.getPid(), dfs.getPid());
         assertEquals(fs.getAppName(), dfs.getAppName());
         assertEquals(fs.getLogLevel(), dfs.getLogLevel());
     }

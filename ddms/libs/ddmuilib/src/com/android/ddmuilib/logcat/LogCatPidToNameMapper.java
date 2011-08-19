@@ -66,7 +66,7 @@ public class LogCatPidToNameMapper {
         if (name != null) {
             int pid = cd.getPid();
             if (mPidToName != null && mPidToName.containsKey(pid)) {
-                mPidToName.put(Integer.valueOf(pid).toString(), name);
+                mPidToName.put(Integer.toString(pid), name);
             }
         }
     }
@@ -110,7 +110,7 @@ public class LogCatPidToNameMapper {
                 name = UNKNOWN_APP;
             }
 
-            mPidToName.put(Integer.valueOf(pid).toString(), name);
+            mPidToName.put(Integer.toString(pid), name);
         }
     }
 
