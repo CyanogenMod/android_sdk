@@ -25,15 +25,18 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 
 import com.android.ide.common.api.DropFeedback;
+import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IDragElement;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.NestedAction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -130,30 +133,29 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
         rule.addContextMenuActions(contextMenu, node);
         assertEquals(6, contextMenu.size());
         assertEquals("Edit ID...", contextMenu.get(0).getTitle());
-        assertEquals("Layout Width", contextMenu.get(1).getTitle());
-        assertEquals("Layout Height", contextMenu.get(2).getTitle());
-        assertTrue(contextMenu.get(3) instanceof RuleAction.Separator);
-        assertEquals("Properties", contextMenu.get(4).getTitle());
-        assertEquals("Orientation", contextMenu.get(5).getTitle());
+        assertTrue(contextMenu.get(1) instanceof RuleAction.Separator);
+        assertEquals("Layout Width", contextMenu.get(2).getTitle());
+        assertEquals("Layout Height", contextMenu.get(3).getTitle());
+        assertTrue(contextMenu.get(4) instanceof RuleAction.Separator);
+        assertEquals("Other Properties", contextMenu.get(5).getTitle());
 
-        RuleAction propertiesMenu = contextMenu.get(4);
+        RuleAction propertiesMenu = contextMenu.get(5);
         assertTrue(propertiesMenu.getClass().getName(),
-                propertiesMenu instanceof RuleAction.NestedAction);
-        // TODO: Test Properties-list
+                propertiesMenu instanceof NestedAction);
     }
 
     public void testContextMenuCustom() {
         LinearLayoutRule rule = new LinearLayoutRule();
         initialize(rule, "android.widget.LinearLayout");
-        INode node = TestNode.create("android.widget.Button").id("@+id/Button012")
+        INode node = TestNode.create("android.widget.LinearLayout").id("@+id/LinearLayout")
             .set(ANDROID_URI, ATTR_LAYOUT_WIDTH, "42dip")
             .set(ANDROID_URI, ATTR_LAYOUT_HEIGHT, "50sp");
 
         List<RuleAction> contextMenu = new ArrayList<RuleAction>();
         rule.addContextMenuActions(contextMenu, node);
         assertEquals(6, contextMenu.size());
-        assertEquals("Layout Width", contextMenu.get(1).getTitle());
-        RuleAction menuAction = contextMenu.get(1);
+        assertEquals("Layout Width", contextMenu.get(2).getTitle());
+        RuleAction menuAction = contextMenu.get(2);
         assertTrue(menuAction instanceof RuleAction.Choices);
         RuleAction.Choices choices = (RuleAction.Choices) menuAction;
         List<String> titles = choices.getTitles();
@@ -171,14 +173,18 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
     public void testOrientation() {
         LinearLayoutRule rule = new LinearLayoutRule();
         initialize(rule, "android.widget.LinearLayout");
-        INode node = TestNode.create("android.widget.Button").id("@+id/Button012");
+        TestNode node = TestNode.create("android.widget.LinearLayout").id("@+id/LinearLayout012");
+        node.putAttributeInfo(ANDROID_URI, "orientation",
+                new TestAttributeInfo(ATTR_ORIENTATION, new Format[] { Format.ENUM },
+                        "android.widget.LinearLayout",
+                        new String[] {"horizontal", "vertical"}, null, null));
 
         assertNull(node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION));
 
         List<RuleAction> contextMenu = new ArrayList<RuleAction>();
         rule.addContextMenuActions(contextMenu, node);
-        assertEquals(6, contextMenu.size());
-        RuleAction orientationAction = contextMenu.get(5);
+        assertEquals(7, contextMenu.size());
+        RuleAction orientationAction = contextMenu.get(1);
         assertEquals("Orientation", orientationAction.getTitle());
 
         assertTrue(orientationAction.getClass().getName(),
@@ -195,6 +201,84 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 true);
         orientation = node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION);
         assertEquals(VALUE_HORIZONTAL, orientation);
+    }
+
+    // Check that the context menu manipulates the orientation attribute
+    public void testProperties() {
+        LinearLayoutRule rule = new LinearLayoutRule();
+        initialize(rule, "android.widget.LinearLayout");
+        TestNode node = TestNode.create("android.widget.LinearLayout").id("@+id/LinearLayout012");
+        node.putAttributeInfo(ANDROID_URI, "orientation",
+                new TestAttributeInfo(ATTR_ORIENTATION, new Format[] { Format.ENUM },
+                        "android.widget.LinearLayout",
+                        new String[] {"horizontal", "vertical"}, null, null));
+        node.setAttributeSources(Arrays.asList("android.widget.LinearLayout",
+                "android.view.ViewGroup", "android.view.View"));
+        node.putAttributeInfo(ANDROID_URI, "gravity",
+                new TestAttributeInfo("gravity", new Format[] { Format.INTEGER },
+                        "android.widget.LinearLayout", null, null, null));
+
+
+        assertNull(node.getStringAttr(ANDROID_URI, ATTR_ORIENTATION));
+
+        List<RuleAction> contextMenu = new ArrayList<RuleAction>();
+        rule.addContextMenuActions(contextMenu, node);
+        assertEquals(8, contextMenu.size());
+
+        assertEquals("Orientation", contextMenu.get(1).getTitle());
+        assertEquals("Edit Gravity...", contextMenu.get(2).getTitle());
+
+        assertEquals("Other Properties", contextMenu.get(7).getTitle());
+
+        RuleAction propertiesMenu = contextMenu.get(7);
+        assertTrue(propertiesMenu.getClass().getName(),
+                propertiesMenu instanceof NestedAction);
+        NestedAction nested = (NestedAction) propertiesMenu;
+        List<RuleAction> nestedActions = nested.getNestedActions(node);
+        assertEquals(9, nestedActions.size());
+        assertEquals("Recent", nestedActions.get(0).getTitle());
+        assertTrue(nestedActions.get(1) instanceof RuleAction.Separator);
+        assertEquals("Defined by LinearLayout", nestedActions.get(2).getTitle());
+        assertEquals("Inherited from ViewGroup", nestedActions.get(3).getTitle());
+        assertEquals("Inherited from View", nestedActions.get(4).getTitle());
+        assertTrue(nestedActions.get(5) instanceof RuleAction.Separator);
+        assertEquals("Layout Parameters", nestedActions.get(6).getTitle());
+        assertTrue(nestedActions.get(7) instanceof RuleAction.Separator);
+        assertEquals("All By Name", nestedActions.get(8).getTitle());
+
+        BaseViewRule.editedProperty(ATTR_ORIENTATION);
+
+        RuleAction recentAction = nestedActions.get(0);
+        assertTrue(recentAction instanceof NestedAction);
+        NestedAction recentChoices = (NestedAction) recentAction;
+        List<RuleAction> recentItems = recentChoices.getNestedActions(node);
+
+        assertEquals(1, recentItems.size());
+        assertEquals("Orientation", recentItems.get(0).getTitle());
+
+        BaseViewRule.editedProperty("gravity");
+        recentItems = recentChoices.getNestedActions(node);
+        assertEquals(2, recentItems.size());
+        assertEquals("Gravity...", recentItems.get(0).getTitle());
+        assertEquals("Orientation", recentItems.get(1).getTitle());
+
+        BaseViewRule.editedProperty(ATTR_ORIENTATION);
+        recentItems = recentChoices.getNestedActions(node);
+        assertEquals(2, recentItems.size());
+        assertEquals("Orientation", recentItems.get(0).getTitle());
+        assertEquals("Gravity...", recentItems.get(1).getTitle());
+
+        // Lots of other properties -- flushes out properties that apply to this view
+        for (int i = 0; i < 30; i++) {
+            BaseViewRule.editedProperty("dummy_" + i);
+        }
+        recentItems = recentChoices.getNestedActions(node);
+        assertEquals(0, recentItems.size());
+
+        BaseViewRule.editedProperty("gravity");
+        recentItems = recentChoices.getNestedActions(node);
+        assertEquals(1, recentItems.size());
+        assertEquals("Gravity...", recentItems.get(0).getTitle());
     }
 
     public void testDragInEmptyWithBounds() {

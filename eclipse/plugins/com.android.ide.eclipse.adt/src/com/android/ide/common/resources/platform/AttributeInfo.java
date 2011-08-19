@@ -38,6 +38,8 @@ public class AttributeInfo implements IAttributeInfo {
     private String mJavaDoc;
     /** Documentation for deprecated attributes. Null if not deprecated. */
     private String mDeprecatedDoc;
+    /** The source class defining this attribute */
+    private String mDefinedBy;
 
     /**
      * @param name The XML Name of the attribute
@@ -116,5 +118,27 @@ public class AttributeInfo implements IAttributeInfo {
     /** Sets the documentation for deprecated attributes. Null if not deprecated. */
     public void setDeprecatedDoc(String deprecatedDoc) {
         mDeprecatedDoc = deprecatedDoc;
+    }
+
+    /**
+     * Sets the name of the class (fully qualified class name) which defined
+     * this attribute
+     *
+     * @param definedBy the name of the class (fully qualified class name) which
+     *            defined this attribute
+     */
+    public void setDefinedBy(String definedBy) {
+        mDefinedBy = definedBy;
+    }
+
+    /**
+     * Returns the name of the class (fully qualified class name) which defined
+     * this attribute
+     *
+     * @return the name of the class (fully qualified class name) which defined
+     *         this attribute
+     */
+    public String getDefinedBy() {
+        return mDefinedBy;
     }
 }

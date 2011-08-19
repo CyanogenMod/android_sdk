@@ -24,12 +24,12 @@ package com.android.ide.common.resources.platform;
  */
 public class DeclareStyleableInfo {
     /** The style name, never null. */
-    private String mStyleName;
+    private final String mStyleName;
     /** Attributes for this view or view group. Can be empty but never null. */
-    private AttributeInfo[] mAttributes;
+    private final AttributeInfo[] mAttributes;
     /** Short javadoc. Can be null. */
     private String mJavaDoc;
-    /** Optional name of the parents stylable. Can be null. */
+    /** Optional name of the parents styleable. Can be null. */
     private String[] mParents;
 
     /**
@@ -70,7 +70,6 @@ public class DeclareStyleableInfo {
         }
     }
 
-
     /** Returns style name */
     public String getStyleName() {
         return mStyleName;
@@ -79,11 +78,6 @@ public class DeclareStyleableInfo {
     /** Returns the attributes for this view or view group. Maybe empty but not null. */
     public AttributeInfo[] getAttributes() {
         return mAttributes;
-    }
-
-    /** Sets the list of attributes for this View or ViewGroup. */
-    public void setAttributes(AttributeInfo[] attributes) {
-        mAttributes = attributes;
     }
 
     /** Returns a short javadoc */

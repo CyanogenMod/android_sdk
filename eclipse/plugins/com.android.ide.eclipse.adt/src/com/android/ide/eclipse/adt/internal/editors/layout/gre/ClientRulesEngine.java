@@ -88,6 +88,7 @@ import org.eclipse.ui.dialogs.SelectionDialog;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -167,6 +168,10 @@ class ClientRulesEngine implements IClientRulesEngine {
 
             public Margins getInsets() {
                 return mRulesEngine.getEditor().getCanvasControl().getInsets(fqcn);
+            }
+
+            public List<String> getTopAttributes() {
+                return ViewMetadataRepository.get().getTopAttributes(fqcn);
             }
         };
     }

@@ -16,10 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.descriptors;
 
-import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_VIEW_PKG;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WEBKIT_PKG;
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 
+import com.android.ide.common.resources.platform.AttributeInfo;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -28,6 +29,9 @@ import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElement
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
 import org.eclipse.swt.graphics.Image;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * {@link ViewElementDescriptor} describes the properties expected for a given XML element node
@@ -61,6 +65,9 @@ public class ViewElementDescriptor extends ElementDescriptor {
 
     /** The super-class descriptor. Can be null. */
     private ViewElementDescriptor mSuperClassDesc;
+
+    /** List of attribute sources, classes that contribute attributes to {@link #mAttributes} */
+    private List<String> mAttributeSources;
 
     /**
      * Constructs a new {@link ViewElementDescriptor} based on its XML name, UI name,
@@ -110,12 +117,17 @@ public class ViewElementDescriptor extends ElementDescriptor {
     /**
      * Returns the fully qualified name of the View class represented by this element descriptor
      * e.g. "android.view.View".
+     *
+     * @return the fully qualified class name, never null
      */
     public String getFullClassName() {
         return mFullClassName;
     }
 
-    /** Returns the list of layout attributes. Can be empty but not null. */
+    /** Returns the list of layout attributes. Can be empty but not null.
+     *
+     * @return the list of layout attributes, never null
+     */
     public AttributeDescriptor[] getLayoutAttributes() {
         return mLayoutAttributes;
     }
@@ -141,6 +153,8 @@ public class ViewElementDescriptor extends ElementDescriptor {
     /**
      * Returns the {@link ViewElementDescriptor} of the super-class of this View descriptor
      * that matches the java View hierarchy. Can be null.
+     *
+     * @return the super class' descriptor or null
      */
     public ViewElementDescriptor getSuperClassDesc() {
         return mSuperClassDesc;
@@ -149,6 +163,8 @@ public class ViewElementDescriptor extends ElementDescriptor {
     /**
      * Sets the {@link ViewElementDescriptor} of the super-class of this View descriptor
      * that matches the java View hierarchy. Can be null.
+     *
+     * @param superClassDesc the descriptor for the super class, or null
      */
     public void setSuperClass(ViewElementDescriptor superClassDesc) {
         mSuperClassDesc = superClassDesc;
@@ -180,6 +196,35 @@ public class ViewElementDescriptor extends ElementDescriptor {
         }
 
         return icon;
+    }
+
+    /**
+     * Returns the list of attribute sources for the attributes provided by this
+     * descriptor. An attribute source is the fully qualified class name of the
+     * defining class for some of the properties. The specific attribute source
+     * of a given {@link AttributeInfo} can be found by calling
+     * {@link AttributeInfo#getDefinedBy()}.
+     * <p>
+     * The attribute sources are ordered from class to super class.
+     * <p>
+     * The list may <b>not</b> be modified by clients.
+     *
+     * @return a non null list of attribute sources for this view
+     */
+    public List<String> getAttributeSources() {
+        return mAttributeSources != null ? mAttributeSources : Collections.<String>emptyList();
+    }
+
+    /**
+     * Sets the attribute sources for this view. See {@link #getAttributes()}
+     * for details.
+     *
+     * @param attributeSources a non null list of attribute sources for this
+     *            view descriptor
+     * @see #getAttributeSources()
+     */
+    public void setAttributeSources(List<String> attributeSources) {
+        mAttributeSources = attributeSources;
     }
 
     /**

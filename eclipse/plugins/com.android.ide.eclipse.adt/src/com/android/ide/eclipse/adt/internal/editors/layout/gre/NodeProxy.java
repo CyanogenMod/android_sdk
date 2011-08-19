@@ -43,6 +43,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -385,6 +386,15 @@ public class NodeProxy implements INode {
         }
 
         return infos;
+    }
+
+    public List<String> getAttributeSources() {
+        ElementDescriptor descriptor = mNode.getDescriptor();
+        if (descriptor instanceof ViewElementDescriptor) {
+            return ((ViewElementDescriptor) descriptor).getAttributeSources();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public IAttribute[] getLiveAttributes() {

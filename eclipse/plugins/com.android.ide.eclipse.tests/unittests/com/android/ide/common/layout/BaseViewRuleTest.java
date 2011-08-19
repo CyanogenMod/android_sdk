@@ -22,15 +22,15 @@ import java.util.Collections;
 import junit.framework.TestCase;
 
 public class BaseViewRuleTest extends TestCase {
-    public final void testPrettyName() {
-        assertEquals(null, BaseViewRule.prettyName(null));
-        assertEquals("", BaseViewRule.prettyName(""));
-        assertEquals("Foo", BaseViewRule.prettyName("foo"));
-        assertEquals("Foo bar", BaseViewRule.prettyName("foo_bar"));
-        // TODO: We should check this to capitalize each initial word
-        // assertEquals("Foo Bar", BaseView.prettyName("foo_bar"));
-        // TODO: We should also handle camelcase properties
-        // assertEquals("Foo Bar", BaseView.prettyName("fooBar"));
+
+    public final void testGetAttributeDisplayName() {
+        assertEquals(null, BaseViewRule.getAttributeDisplayName(null));
+        assertEquals("", BaseViewRule.getAttributeDisplayName(""));
+        assertEquals("Foo", BaseViewRule.getAttributeDisplayName("foo"));
+        assertEquals("FooBar", BaseViewRule.getAttributeDisplayName("fooBar"));
+        assertEquals("Foo Bar", BaseViewRule.getAttributeDisplayName("foo_bar"));
+        // TBD: Should we also handle CamelCase properties?
+        // assertEquals("Foo Bar", BaseViewRule.getAttributeDisplayName("fooBar"));
     }
 
     public final void testJoin() {

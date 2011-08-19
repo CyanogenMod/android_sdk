@@ -17,10 +17,14 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
+import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
@@ -36,6 +40,7 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IValidator;
+import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Point;
@@ -43,8 +48,8 @@ import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.RuleAction.ActionProvider;
 import com.android.ide.common.api.RuleAction.ChoiceProvider;
-import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.SegmentType;
+import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
 import java.net.URL;
@@ -55,6 +60,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -64,16 +70,17 @@ import java.util.Set;
  * Common IViewRule processing to all view and layout classes.
  */
 public class BaseViewRule implements IViewRule {
+    /** List of recently edited properties */
+    private static List<String> sRecent = new LinkedList<String>();
+
+    /** Maximum number of recent properties to track and list */
+    private final static int MAX_RECENT_COUNT = 12;
+
     // Strings used as internal ids, group ids and prefixes for actions
     private static final String FALSE_ID = "false"; //$NON-NLS-1$
     private static final String TRUE_ID = "true"; //$NON-NLS-1$
     private static final String PROP_PREFIX = "@prop@"; //$NON-NLS-1$
     private static final String CLEAR_ID = "clear"; //$NON-NLS-1$
-    private static final String PROPERTIES_ID = "properties"; //$NON-NLS-1$
-    private static final String EDIT_TEXT_ID = "edittext"; //$NON-NLS-1$
-    private static final String EDIT_ID_ID = "editid"; //$NON-NLS-1$
-    private static final String WIDTH_ID = "layout_width"; //$NON-NLS-1$
-    private static final String HEIGHT_ID = "layout_height"; //$NON-NLS-1$
     private static final String ZCUSTOM = "zcustom"; //$NON-NLS-1$
 
     protected IClientRulesEngine mRulesEngine;
@@ -159,7 +166,7 @@ public class BaseViewRule implements IViewRule {
                 final String actionId = isProp ?
                         fullActionId.substring(PROP_PREFIX.length()) : fullActionId;
 
-                if (fullActionId.equals(WIDTH_ID)) {
+                if (fullActionId.equals(ATTR_LAYOUT_WIDTH)) {
                     final String newAttrValue = getValue(valueId, newWidth);
                     if (newAttrValue != null) {
                         for (INode node : selectedNodes) {
@@ -167,9 +174,10 @@ public class BaseViewRule implements IViewRule {
                                     new PropertySettingNodeHandler(ANDROID_URI,
                                             ATTR_LAYOUT_WIDTH, newAttrValue));
                         }
+                        editedProperty(ATTR_LAYOUT_WIDTH);
                     }
                     return;
-                } else if (fullActionId.equals(HEIGHT_ID)) {
+                } else if (fullActionId.equals(ATTR_LAYOUT_HEIGHT)) {
                     // Ask the user
                     final String newAttrValue = getValue(valueId, newHeight);
                     if (newAttrValue != null) {
@@ -178,9 +186,10 @@ public class BaseViewRule implements IViewRule {
                                     new PropertySettingNodeHandler(ANDROID_URI,
                                             ATTR_LAYOUT_HEIGHT, newAttrValue));
                         }
+                        editedProperty(ATTR_LAYOUT_HEIGHT);
                     }
                     return;
-                } else if (fullActionId.equals(EDIT_ID_ID)) {
+                } else if (fullActionId.equals(ATTR_ID)) {
                     // Ids must be set individually so open the id dialog for each
                     // selected node (though allow cancel to break the loop)
                     for (INode node : selectedNodes) {
@@ -195,80 +204,91 @@ public class BaseViewRule implements IViewRule {
                             }
                             node.editXml("Change ID", new PropertySettingNodeHandler(ANDROID_URI,
                                     ATTR_ID, newId));
+                            editedProperty(ATTR_ID);
                         } else if (newId == null) {
                             // Cancelled
                             break;
                         }
                     }
                     return;
-                } else {
+                } else if (isProp) {
                     INode firstNode = selectedNodes.get(0);
-                    if (fullActionId.equals(EDIT_TEXT_ID)) {
-                        String oldText = selectedNodes.size() == 1
-                            ? firstNode.getStringAttr(ANDROID_URI, ATTR_TEXT)
-                            : ""; //$NON-NLS-1$
-                        oldText = ensureValidString(oldText);
-                        String newText = mRulesEngine.displayResourceInput("string", oldText); //$NON-NLS-1$
-                        if (newText != null) {
-                            for (INode node : selectedNodes) {
-                                node.editXml("Change Text",
-                                        new PropertySettingNodeHandler(ANDROID_URI,
-                                                ATTR_TEXT, newText.length() > 0 ? newText : null));
+                    String key = getPropertyMapKey(selectedNode);
+                    Map<String, Prop> props = mAttributesMap.get(key);
+                    final Prop prop = (props != null) ? props.get(actionId) : null;
+
+                    if (prop != null) {
+                        editedProperty(actionId);
+
+                        // For custom values (requiring an input dialog) input the
+                        // value outside the undo-block.
+                        // Input the value as a text, unless we know it's the "text" or
+                        // "style" attributes (where we know we want to ask for specific
+                        // resource types).
+                        String uri = ANDROID_URI;
+                        String v = null;
+                        if (prop.isStringEdit()) {
+                            boolean isStyle = actionId.equals(ATTR_STYLE);
+                            boolean isText = actionId.equals(ATTR_TEXT);
+                            boolean isHint = actionId.equals(ATTR_HINT);
+                            if (isStyle || isText || isHint) {
+                                String resourceTypeName = isStyle
+                                        ? ResourceType.STYLE.getName()
+                                        : ResourceType.STRING.getName();
+                                String oldValue = selectedNodes.size() == 1
+                                    ? firstNode.getStringAttr(null, ATTR_STYLE)
+                                    : ""; //$NON-NLS-1$
+                                oldValue = ensureValidString(oldValue);
+                                v = mRulesEngine.displayResourceInput(resourceTypeName, oldValue);
+                                if (isStyle) {
+                                    uri = null;
+                                }
+                            } else {
+                                v = inputAttributeValue(firstNode, actionId);
                             }
                         }
-                        return;
-                    } else if (isProp) {
-                        String key = getPropertyMapKey(selectedNode);
-                        Map<String, Prop> props = mAttributesMap.get(key);
-                        final Prop prop = (props != null) ? props.get(actionId) : null;
+                        final String customValue = v;
 
-                        if (prop != null) {
-                            // For custom values (requiring an input dialog) input the
-                            // value outside the undo-block
-                            final String customValue = prop.isStringEdit()
-                                ? inputAttributeValue(firstNode, actionId) : null;
-
-                            for (INode n : selectedNodes) {
-                                if (prop.isToggle()) {
-                                    // case of toggle
-                                    String value = "";                  //$NON-NLS-1$
-                                    if (valueId.equals(TRUE_ID)) {
-                                        value = newValue ? "true" : ""; //$NON-NLS-1$ //$NON-NLS-2$
-                                    } else if (valueId.equals(FALSE_ID)) {
-                                        value = newValue ? "false" : "";//$NON-NLS-1$ //$NON-NLS-2$
+                        for (INode n : selectedNodes) {
+                            if (prop.isToggle()) {
+                                // case of toggle
+                                String value = "";                  //$NON-NLS-1$
+                                if (valueId.equals(TRUE_ID)) {
+                                    value = newValue ? "true" : ""; //$NON-NLS-1$ //$NON-NLS-2$
+                                } else if (valueId.equals(FALSE_ID)) {
+                                    value = newValue ? "false" : "";//$NON-NLS-1$ //$NON-NLS-2$
+                                }
+                                n.setAttribute(uri, actionId, value);
+                            } else if (prop.isFlag()) {
+                                // case of a flag
+                                String values = "";                 //$NON-NLS-1$
+                                if (!valueId.equals(CLEAR_ID)) {
+                                    values = n.getStringAttr(ANDROID_URI, actionId);
+                                    Set<String> newValues = new HashSet<String>();
+                                    if (values != null) {
+                                        newValues.addAll(Arrays.asList(
+                                                values.split("\\|"))); //$NON-NLS-1$
                                     }
-                                    n.setAttribute(ANDROID_URI, actionId, value);
-                                } else if (prop.isFlag()) {
-                                    // case of a flag
-                                    String values = "";                 //$NON-NLS-1$
-                                    if (!valueId.equals(CLEAR_ID)) {
-                                        values = n.getStringAttr(ANDROID_URI, actionId);
-                                        Set<String> newValues = new HashSet<String>();
-                                        if (values != null) {
-                                            newValues.addAll(Arrays.asList(
-                                                    values.split("\\|"))); //$NON-NLS-1$
-                                        }
-                                        if (newValue) {
-                                            newValues.add(valueId);
-                                        } else {
-                                            newValues.remove(valueId);
-                                        }
-                                        values = join('|', newValues);
+                                    if (newValue) {
+                                        newValues.add(valueId);
+                                    } else {
+                                        newValues.remove(valueId);
                                     }
-                                    n.setAttribute(ANDROID_URI, actionId, values);
-                                } else if (prop.isEnum()) {
-                                    // case of an enum
-                                    String value = "";                   //$NON-NLS-1$
-                                    if (!valueId.equals(CLEAR_ID)) {
-                                        value = newValue ? valueId : ""; //$NON-NLS-1$
-                                    }
-                                    n.setAttribute(ANDROID_URI, actionId, value);
-                                } else {
-                                    assert prop.isStringEdit();
-                                    // We've already received the value outside the undo block
-                                    if (customValue != null) {
-                                        n.setAttribute(ANDROID_URI, actionId, customValue);
-                                    }
+                                    values = join('|', newValues);
+                                }
+                                n.setAttribute(uri, actionId, values);
+                            } else if (prop.isEnum()) {
+                                // case of an enum
+                                String value = "";                   //$NON-NLS-1$
+                                if (!valueId.equals(CLEAR_ID)) {
+                                    value = newValue ? valueId : ""; //$NON-NLS-1$
+                                }
+                                n.setAttribute(uri, actionId, value);
+                            } else {
+                                assert prop.isStringEdit();
+                                // We've already received the value outside the undo block
+                                if (customValue != null) {
+                                    n.setAttribute(uri, actionId, customValue);
                                 }
                             }
                         }
@@ -332,13 +352,16 @@ public class BaseViewRule implements IViewRule {
 
         IAttributeInfo textAttribute = selectedNode.getAttributeInfo(ANDROID_URI, ATTR_TEXT);
         if (textAttribute != null) {
-            actions.add(RuleAction.createAction(EDIT_TEXT_ID, "Edit Text...", onChange,
+            actions.add(RuleAction.createAction(PROP_PREFIX + ATTR_TEXT, "Edit Text...", onChange,
                     null, 10, true));
         }
 
-        actions.add(RuleAction.createAction(EDIT_ID_ID, "Edit ID...", onChange, null, 20, true));
+        actions.add(RuleAction.createAction(ATTR_ID, "Edit ID...", onChange, null, 20, true));
+
+        addCommonPropertyActions(actions, selectedNode, onChange, 21);
 
         // Create width choice submenu
+        actions.add(RuleAction.createSeparator(32));
         List<Pair<String, String>> widthChoices = new ArrayList<Pair<String,String>>(4);
         widthChoices.add(Pair.of(VALUE_WRAP_CONTENT, "Wrap Content"));
         if (canMatchParent) {
@@ -351,11 +374,11 @@ public class BaseViewRule implements IViewRule {
         }
         widthChoices.add(Pair.of(ZCUSTOM, "Other..."));
         actions.add(RuleAction.createChoices(
-                WIDTH_ID, "Layout Width",
+                ATTR_LAYOUT_WIDTH, "Layout Width",
                 onChange,
                 null /* iconUrls */,
                 currentWidth,
-                null, 30,
+                null, 35,
                 true, // supportsMultipleNodes
                 widthChoices));
 
@@ -372,7 +395,7 @@ public class BaseViewRule implements IViewRule {
         }
         heightChoices.add(Pair.of(ZCUSTOM, "Other..."));
         actions.add(RuleAction.createChoices(
-                HEIGHT_ID, "Layout Height",
+                ATTR_LAYOUT_HEIGHT, "Layout Height",
                 onChange,
                 null /* iconUrls */,
                 currentHeight,
@@ -381,14 +404,52 @@ public class BaseViewRule implements IViewRule {
                 heightChoices));
 
         actions.add(RuleAction.createSeparator(45));
-        RuleAction properties = RuleAction.createChoices(PROPERTIES_ID, "Properties",
+        RuleAction properties = RuleAction.createChoices("properties", "Other Properties", //$NON-NLS-1$
                 onChange /*callback*/, null /*icon*/, 50,
                 true /*supportsMultipleNodes*/, new ActionProvider() {
             public List<RuleAction> getNestedActions(INode node) {
-                List<RuleAction> propertyActions = createPropertyActions(node,
-                        getPropertyMapKey(node), onChange);
+                List<RuleAction> propertyActionTypes = new ArrayList<RuleAction>();
+                propertyActionTypes.add(RuleAction.createChoices(
+                        "recent", "Recent", //$NON-NLS-1$
+                        onChange /*callback*/, null /*icon*/, 10,
+                        true /*supportsMultipleNodes*/, new ActionProvider() {
+                            public List<RuleAction> getNestedActions(INode n) {
+                                List<RuleAction> propertyActions = new ArrayList<RuleAction>();
+                                addRecentPropertyActions(propertyActions, n, onChange);
+                                return propertyActions;
+                            }
+                }));
 
-                return propertyActions;
+                propertyActionTypes.add(RuleAction.createSeparator(20));
+
+                addInheritedProperties(propertyActionTypes, node, onChange, 30);
+
+                propertyActionTypes.add(RuleAction.createSeparator(50));
+                propertyActionTypes.add(RuleAction.createChoices(
+                        "layoutparams", "Layout Parameters", //$NON-NLS-1$
+                        onChange /*callback*/, null /*icon*/, 60,
+                        true /*supportsMultipleNodes*/, new ActionProvider() {
+                            public List<RuleAction> getNestedActions(INode n) {
+                                List<RuleAction> propertyActions = new ArrayList<RuleAction>();
+                                addPropertyActions(propertyActions, n, onChange, null, true);
+                                return propertyActions;
+                            }
+                }));
+
+                propertyActionTypes.add(RuleAction.createSeparator(70));
+
+                propertyActionTypes.add(RuleAction.createChoices(
+                        "allprops", "All By Name", //$NON-NLS-1$
+                        onChange /*callback*/, null /*icon*/, 80,
+                        true /*supportsMultipleNodes*/, new ActionProvider() {
+                            public List<RuleAction> getNestedActions(INode n) {
+                                List<RuleAction> propertyActions = new ArrayList<RuleAction>();
+                                addPropertyActions(propertyActions, n, onChange, null, false);
+                                return propertyActions;
+                            }
+                }));
+
+                return propertyActionTypes;
             }
         });
 
@@ -409,13 +470,201 @@ public class BaseViewRule implements IViewRule {
     }
 
     /**
+     * Adds menu items for the inherited attributes, one pull-right menu for each super class
+     * that defines attributes.
+     *
+     * @param propertyActionTypes the actions list to add into
+     * @param node the node to apply the attributes to
+     * @param onChange the callback to use for setting attributes
+     * @param sortPriority the initial sort attribute for the first menu item
+     */
+    private void addInheritedProperties(List<RuleAction> propertyActionTypes, INode node,
+            final IMenuCallback onChange, int sortPriority) {
+        List<String> attributeSources = node.getAttributeSources();
+        for (final String definedBy : attributeSources) {
+            String sourceClass = definedBy;
+
+            // Strip package prefixes when necessary
+            int index = sourceClass.length();
+            if (sourceClass.endsWith(DOT_LAYOUT_PARAMS)) {
+                index = sourceClass.length() - DOT_LAYOUT_PARAMS.length() - 1;
+            }
+            int lastDot = sourceClass.lastIndexOf('.', index);
+            if (lastDot != -1) {
+                sourceClass = sourceClass.substring(lastDot + 1);
+            }
+
+            String label;
+            if (definedBy.equals(node.getFqcn())) {
+                label = String.format("Defined by %1$s", sourceClass);
+            } else {
+                label = String.format("Inherited from %1$s", sourceClass);
+            }
+
+            propertyActionTypes.add(RuleAction.createChoices("def_" + definedBy,
+                    label,
+                    onChange /*callback*/, null /*icon*/, sortPriority++,
+                    true /*supportsMultipleNodes*/, new ActionProvider() {
+                        public List<RuleAction> getNestedActions(INode n) {
+                            List<RuleAction> propertyActions = new ArrayList<RuleAction>();
+                            addPropertyActions(propertyActions, n, onChange, definedBy, false);
+                            return propertyActions;
+                        }
+           }));
+        }
+    }
+
+    /**
+     * Creates a list of properties that are commonly edited for views of the
+     * selected node's type
+     */
+    private void addCommonPropertyActions(List<RuleAction> actions, INode selectedNode,
+            IMenuCallback onChange, int sortPriority) {
+        Map<String, Prop> properties = getPropertyMetadata(selectedNode);
+        IViewMetadata metadata = mRulesEngine.getMetadata(selectedNode.getFqcn());
+        if (metadata != null) {
+            List<String> attributes = metadata.getTopAttributes();
+            if (attributes.size() > 0) {
+                for (String attribute : attributes) {
+                    // Text and ID are handled manually in the menu construction code because
+                    // we want to place them consistently and customize the action label
+                    if (ATTR_TEXT.equals(attribute) || ATTR_ID.equals(attribute)) {
+                        continue;
+                    }
+
+                    Prop property = properties.get(attribute);
+                    if (property != null) {
+                        String title = property.getTitle();
+                        if (title.endsWith("...")) {
+                            title = String.format("Edit %1$s", property.getTitle());
+                        }
+                        actions.add(createPropertyAction(property, attribute, title,
+                                selectedNode, onChange, sortPriority));
+                        sortPriority++;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Record that the given property was just edited; adds it to the front of
+     * the recently edited property list
+     *
+     * @param property the name of the property
+     */
+    static void editedProperty(String property) {
+        if (sRecent.contains(property)) {
+            sRecent.remove(property);
+        } else if (sRecent.size() > MAX_RECENT_COUNT) {
+            sRecent.remove(sRecent.size() - 1);
+        }
+        sRecent.add(0, property);
+    }
+
+    /**
+     * Creates a list of recently modified properties that apply to the given selected node
+     */
+    private void addRecentPropertyActions(List<RuleAction> actions, INode selectedNode,
+            IMenuCallback onChange) {
+        int sortPriority = 10;
+        Map<String, Prop> properties = getPropertyMetadata(selectedNode);
+        for (String attribute : sRecent) {
+            Prop property = properties.get(attribute);
+            if (property != null) {
+                actions.add(createPropertyAction(property, attribute, property.getTitle(),
+                        selectedNode, onChange, sortPriority));
+                sortPriority += 10;
+            }
+        }
+    }
+
+    /**
      * Creates a list of nested actions representing the property-setting
      * actions for the given selected node
      */
-    private List<RuleAction> createPropertyActions(final INode selectedNode, final String key,
-            final IMenuCallback onChange) {
-        List<RuleAction> propertyActions = new ArrayList<RuleAction>();
+    private void addPropertyActions(List<RuleAction> actions, INode selectedNode,
+            IMenuCallback onChange, String definedBy, boolean layoutParamsOnly) {
 
+        Map<String, Prop> properties = getPropertyMetadata(selectedNode);
+
+        int sortPriority = 10;
+        for (Map.Entry<String, Prop> entry : properties.entrySet()) {
+            String id = entry.getKey();
+            Prop property = entry.getValue();
+            if (layoutParamsOnly) {
+                // If we have definedBy information, that is most accurate; all layout
+                // params will be defined by a class whose name ends with
+                // .LayoutParams:
+                if (definedBy != null) {
+                    if (!definedBy.endsWith(DOT_LAYOUT_PARAMS)) {
+                        continue;
+                    }
+                } else if (!id.startsWith(ATTR_LAYOUT_PREFIX)) {
+                    continue;
+                }
+            }
+            if (definedBy != null && !definedBy.equals(property.getDefinedBy())) {
+                continue;
+            }
+            actions.add(createPropertyAction(property, id, property.getTitle(),
+                    selectedNode, onChange, sortPriority));
+            sortPriority += 10;
+        }
+
+        // The properties are coming out of map key order which isn't right, so sort
+        // alphabetically instead
+        Collections.sort(actions, new Comparator<RuleAction>() {
+            public int compare(RuleAction action1, RuleAction action2) {
+                return action1.getTitle().compareTo(action2.getTitle());
+            }
+        });
+    }
+
+    private RuleAction createPropertyAction(Prop p, String id, String title, INode selectedNode,
+            IMenuCallback onChange, int sortPriority) {
+        if (p.isToggle()) {
+            // Toggles are handled as a multiple-choice between true, false
+            // and nothing (clear)
+            String value = selectedNode.getStringAttr(ANDROID_URI, id);
+            if (value != null)
+                value = value.toLowerCase();
+            if ("true".equals(value)) {         //$NON-NLS-1$
+                value = TRUE_ID;
+            } else if ("false".equals(value)) { //$NON-NLS-1$
+                value = FALSE_ID;
+            } else {
+                value = CLEAR_ID;
+            }
+            return RuleAction.createChoices(PROP_PREFIX + id, title,
+                    onChange, BOOLEAN_CHOICE_PROVIDER,
+                    value,
+                    null, sortPriority,
+                    true);
+        } else if (p.getChoices() != null) {
+            // Enum or flags. Their possible values are the multiple-choice
+            // items, with an extra "clear" option to remove everything.
+            String current = selectedNode.getStringAttr(ANDROID_URI, id);
+            if (current == null || current.length() == 0) {
+                current = CLEAR_ID;
+            }
+            return RuleAction.createChoices(PROP_PREFIX + id, title,
+                    onChange, new EnumPropertyChoiceProvider(p),
+                    current,
+                    null, sortPriority,
+                    true);
+        } else {
+            return RuleAction.createAction(
+                    PROP_PREFIX + id,
+                    title,
+                    onChange,
+                    null, sortPriority,
+                    true);
+        }
+    }
+
+    private Map<String, Prop> getPropertyMetadata(final INode selectedNode) {
+        String key = getPropertyMapKey(selectedNode);
         Map<String, Prop> props = mAttributesMap.get(key);
         if (props == null) {
             // Prepare the property map
@@ -431,91 +680,38 @@ public class BaseViewRule implements IViewRule {
                     continue;
                 }
 
-                String title = prettyName(id);
+                String title = getAttributeDisplayName(id);
 
+                String definedBy = attrInfo != null ? attrInfo.getDefinedBy() : null;
                 if (IAttributeInfo.Format.BOOLEAN.in(formats)) {
-                    props.put(id, new Prop(title, true));
+                    props.put(id, new Prop(title, true, definedBy));
                 } else if (IAttributeInfo.Format.ENUM.in(formats)) {
                     // Convert each enum into a map id=>title
                     Map<String, String> values = new HashMap<String, String>();
                     if (attrInfo != null) {
                         for (String e : attrInfo.getEnumValues()) {
-                            values.put(e, prettyName(e));
+                            values.put(e, getAttributeDisplayName(e));
                         }
                     }
 
-                    props.put(id, new Prop(title, false, false, values));
+                    props.put(id, new Prop(title, false, false, values, definedBy));
                 } else if (IAttributeInfo.Format.FLAG.in(formats)) {
                     // Convert each flag into a map id=>title
                     Map<String, String> values = new HashMap<String, String>();
                     if (attrInfo != null) {
                         for (String e : attrInfo.getFlagValues()) {
-                            values.put(e, prettyName(e));
+                            values.put(e, getAttributeDisplayName(e));
                         }
                     }
 
-                    props.put(id, new Prop(title, false, true, values));
+                    props.put(id, new Prop(title, false, true, values, definedBy));
                 } else {
-                    props.put(id, new Prop(title + "...", false));
+                    props.put(id, new Prop(title + "...", false, definedBy));
                 }
             }
             mAttributesMap.put(key, props);
         }
-
-        int nextPriority = 10;
-        for (Map.Entry<String, Prop> entry : props.entrySet()) {
-            String id = entry.getKey();
-            Prop p = entry.getValue();
-            if (p.isToggle()) {
-                // Toggles are handled as a multiple-choice between true, false
-                // and nothing (clear)
-                String value = selectedNode.getStringAttr(ANDROID_URI, id);
-                if (value != null)
-                    value = value.toLowerCase();
-                if ("true".equals(value)) {         //$NON-NLS-1$
-                    value = TRUE_ID;
-                } else if ("false".equals(value)) { //$NON-NLS-1$
-                    value = FALSE_ID;
-                } else {
-                    value = CLEAR_ID;
-                }
-                Choices action = RuleAction.createChoices(PROP_PREFIX + id, p.getTitle(),
-                        onChange, BOOLEAN_CHOICE_PROVIDER,
-                        value,
-                        null, nextPriority++,
-                        true);
-                propertyActions.add(action);
-            } else if (p.getChoices() != null) {
-                // Enum or flags. Their possible values are the multiple-choice
-                // items, with an extra "clear" option to remove everything.
-                String current = selectedNode.getStringAttr(ANDROID_URI, id);
-                if (current == null || current.length() == 0) {
-                    current = CLEAR_ID;
-                }
-                Choices action = RuleAction.createChoices(PROP_PREFIX + id, p.getTitle(),
-                        onChange, new EnumPropertyChoiceProvider(p),
-                        current,
-                        null, nextPriority++,
-                        true);
-                propertyActions.add(action);
-            } else {
-                RuleAction action = RuleAction.createAction(
-                        PROP_PREFIX + id,
-                        p.getTitle(),
-                        onChange,
-                        null, nextPriority++,
-                        true);
-                propertyActions.add(action);
-            }
-        }
-
-        // The properties are coming out of map key order which isn't right
-        Collections.sort(propertyActions, new Comparator<RuleAction>() {
-            public int compare(RuleAction action1, RuleAction action2) {
-                return action1.getTitle().compareTo(action2.getTitle());
-            }
-        });
-        return propertyActions;
+        return props;
     }
 
     /**
@@ -627,9 +823,31 @@ public class BaseViewRule implements IViewRule {
         return map;
     }
 
-    public static String prettyName(String name) {
+    /**
+     * Produces a display name for an attribute, usually capitalizing the attribute name
+     * and splitting up underscores into new words
+     *
+     * @param name the attribute name to convert
+     * @return a display name for the attribute name
+     */
+    public static String getAttributeDisplayName(String name) {
         if (name != null && name.length() > 0) {
-            name = Character.toUpperCase(name.charAt(0)) + name.substring(1).replace('_', ' ');
+            StringBuilder sb = new StringBuilder();
+            boolean capitalizeNext = true;
+            for (int i = 0, n = name.length(); i < n; i++) {
+                char c = name.charAt(i);
+                if (capitalizeNext) {
+                    c = Character.toUpperCase(c);
+                }
+                capitalizeNext = false;
+                if (c == '_') {
+                    c = ' ';
+                    capitalizeNext = true;
+                }
+                sb.append(c);
+            }
+
+            return sb.toString();
         }
 
         return name;
@@ -698,16 +916,23 @@ public class BaseViewRule implements IViewRule {
         private final boolean mFlag;
         private final String mTitle;
         private final Map<String, String> mChoices;
+        private String mDefinedBy;
 
-        public Prop(String title, boolean isToggle, boolean isFlag, Map<String, String> choices) {
-            this.mTitle = title;
-            this.mToggle = isToggle;
-            this.mFlag = isFlag;
-            this.mChoices = choices;
+        public Prop(String title, boolean isToggle, boolean isFlag, Map<String, String> choices,
+                String definedBy) {
+            mTitle = title;
+            mToggle = isToggle;
+            mFlag = isFlag;
+            mChoices = choices;
+            mDefinedBy = definedBy;
         }
 
-        public Prop(String title, boolean isToggle) {
-            this(title, isToggle, false, null);
+        public String getDefinedBy() {
+            return mDefinedBy;
+        }
+
+        public Prop(String title, boolean isToggle, String definedBy) {
+            this(title, isToggle, false, null, definedBy);
         }
 
         private boolean isToggle() {
@@ -760,6 +985,12 @@ public class BaseViewRule implements IViewRule {
     public void onRemovingChildren(List<INode> deleted, INode parent) {
     }
 
+    /**
+     * Strips the {@code @+id} or {@code @id} prefix off of the given id
+     *
+     * @param id attribute to be stripped
+     * @return the id name without the {@code @+id} or {@code @id} prefix
+     */
     public static String stripIdPrefix(String id) {
         if (id == null) {
             return ""; //$NON-NLS-1$

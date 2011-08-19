@@ -160,7 +160,7 @@ public class BaseLayoutRule extends BaseViewRule {
                         // Generate list of possible gravity value constants
                         assert IAttributeInfo.Format.FLAG.in(info.getFormats());
                         for (String name : info.getFlagValues()) {
-                            titles.add(prettyName(name));
+                            titles.add(getAttributeDisplayName(name));
                             ids.add(name);
                         }
                     }

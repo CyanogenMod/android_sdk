@@ -268,10 +268,11 @@ public class ViewMetadataRepository {
         }
 
         String relatedTo = child.getAttribute("relatedTo"); //$NON-NLS-1$
+        String topAttrs = child.getAttribute("topAttrs"); //$NON-NLS-1$
         String resize = child.getAttribute("resize"); //$NON-NLS-1$
         ViewData view = new ViewData(fqcn, displayName, fillPreference,
                 skip.length() == 0 ? false : Boolean.valueOf(skip),
-                renderMode, relatedTo, resize);
+                renderMode, relatedTo, resize, topAttrs);
 
         String init = child.getAttribute("init"); //$NON-NLS-1$
         String icon = child.getAttribute("icon"); //$NON-NLS-1$
@@ -384,7 +385,8 @@ public class ViewMetadataRepository {
         }
 
         if (remaining.size() > 0) {
-            List<ViewElementDescriptor> otherItems = new ArrayList<ViewElementDescriptor>(remaining);
+            List<ViewElementDescriptor> otherItems =
+                    new ArrayList<ViewElementDescriptor>(remaining);
             // Always sorted, we don't have a natural order for these unknowns
             Collections.sort(otherItems);
             if (createCategories) {
@@ -475,11 +477,13 @@ public class ViewMetadataRepository {
         private String mIconName;
         /** The resize preference of this view */
         private String mResize;
+        /** The most commonly set attributes of this view */
+        private String mTopAttrs;
 
         /** Constructs a new view data for the given class */
         private ViewData(String fqcn, String displayName,
                 FillPreference fillPreference, boolean skip, RenderMode renderMode,
-                String relatedTo, String resize) {
+                String relatedTo, String resize, String topAttrs) {
             super();
             mFqcn = fqcn;
             mDisplayName = displayName;
@@ -488,6 +492,7 @@ public class ViewMetadataRepository {
             mRenderMode = renderMode;
             mRelatedTo = relatedTo;
             mResize = resize;
+            mTopAttrs = topAttrs;
         }
 
         /** Returns the {@link FillPreference} for views of this type */
@@ -545,6 +550,22 @@ public class ViewMetadataRepository {
                 }
 
                 return result;
+            }
+        }
+
+        public List<String> getTopAttributes() {
+            // "id" is a top attribute for all views, so it is not included in the XML, we just
+            // add it in dynamically here
+            if (mTopAttrs == null || mTopAttrs.length() == 0) {
+                return Collections.singletonList(ATTR_ID);
+            } else {
+                String[] split = mTopAttrs.split(","); //$NON-NLS-1$
+                List<String> topAttributes = new ArrayList<String>(split.length + 1);
+                topAttributes.add(ATTR_ID);
+                for (int i = 0, n = split.length; i < n; i++) {
+                    topAttributes.add(split[i]);
+                }
+                return Collections.<String>unmodifiableList(topAttributes);
             }
         }
 
@@ -661,6 +682,23 @@ public class ViewMetadataRepository {
     }
 
     /**
+     * Returns a list of the top (most commonly set) attributes of the given
+     * view.
+     *
+     * @param fqcn the fully qualified class name
+     * @return a list, never null but possibly empty, of popular attribute names
+     *         (not including a namespace prefix)
+     */
+    public List<String> getTopAttributes(String fqcn) {
+        ViewData view = getClassToView().get(fqcn);
+        if (view != null) {
+            return view.getTopAttributes();
+        }
+
+        return Collections.singletonList(ATTR_ID);
+    }
+
+    /**
      * Returns a set of fully qualified names for views that are closely related to the
      * given view
      *
@@ -692,10 +730,17 @@ public class ViewMetadataRepository {
          */
         SKIP;
 
+        /**
+         * Returns the {@link RenderMode} for the given render XML attribute
+         * value
+         *
+         * @param render the attribute value in the metadata XML file
+         * @return a corresponding {@link RenderMode}, never null
+         */
         public static RenderMode get(String render) {
-            if ("alone".equals(render)) {
+            if ("alone".equals(render)) {       //$NON-NLS-1$
                 return ALONE;
-            } else if ("skip".equals(render)) {
+            } else if ("skip".equals(render)) { //$NON-NLS-1$
                 return SKIP;
             } else {
                 return NORMAL;
