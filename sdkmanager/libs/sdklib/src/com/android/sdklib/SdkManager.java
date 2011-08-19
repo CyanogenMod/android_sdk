@@ -85,8 +85,35 @@ public class SdkManager {
 
     /** The location of the SDK as an OS path */
     private final String mOsSdkPath;
-    /** Valid targets that have been loaded. */
-    private IAndroidTarget[] mTargets;
+    /** Valid targets that have been loaded. Can be empty but not null. */
+    private IAndroidTarget[] mTargets = new IAndroidTarget[0];
+
+    public static class LayoutlibVersion implements Comparable<LayoutlibVersion> {
+        private final int mApi;
+        private final int mRevision;
+
+        public static final int NOT_SPECIFIED = 0;
+
+        public LayoutlibVersion(int api, int revision) {
+            mApi = api;
+            mRevision = revision;
+        }
+
+        public int getApi() {
+            return mApi;
+        }
+
+        public int getRevision() {
+            return mRevision;
+        }
+
+        public int compareTo(LayoutlibVersion rhs) {
+            boolean useRev = this.mRevision > NOT_SPECIFIED && rhs.mRevision > NOT_SPECIFIED;
+            int lhsValue = (this.mApi << 16) + (useRev ? this.mRevision : 0);
+            int rhsValue = (rhs.mApi  << 16) + (useRev ? rhs.mRevision  : 0);
+            return lhsValue - rhsValue;
+        }
+    }
 
     /**
      * Create a new {@link SdkManager} instance.
@@ -232,6 +259,39 @@ public class SdkManager {
     }
 
     /**
+     * Returns the greatest {@link LayoutlibVersion} found amongst all platform
+     * targets currently loaded in the SDK.
+     * <p/>
+     * We only started recording Layoutlib Versions recently in the platform meta data
+     * so it's possible to have an SDK with many platforms loaded but no layoutlib
+     * version defined.
+     *
+     * @return The greatest {@link LayoutlibVersion} or null if none is found.
+     * @deprecated This helper method is provisional. I am marking it as deprecated for
+     *   lack of a better tag (e.g. "@future"?). It's deprecated in the sense that
+     *   we're not using it yet and should NOT be considered a stable API yet.
+     *   We'll probably need to revisit it when the want to actually use it.
+     *   If it's convenient as-is then this deprecation message shall be removed.
+     */
+    @Deprecated
+    public LayoutlibVersion getMaxLayoutlibVersion() {
+        LayoutlibVersion maxVersion = null;
+
+        for (IAndroidTarget target : getTargets()) {
+            if (target instanceof PlatformTarget) {
+                LayoutlibVersion lv = ((PlatformTarget) target).getLayoutlibVersion();
+                if (lv != null) {
+                    if (maxVersion == null || lv.compareTo(maxVersion) > 0) {
+                        maxVersion = lv;
+                    }
+                }
+            }
+        }
+
+        return maxVersion;
+    }
+
+    /**
      * Loads the Platforms from the SDK.
      * Creates the "platforms" folder if necessary.
      *
@@ -331,18 +391,40 @@ public class SdkManager {
                                         // codename is irrelevant at this point.
                 }
 
-                // platform rev number
+                // platform rev number & layoutlib version are extracted from the source.properties
+                // saved by the SDK Manager when installing the package.
+
                 int revision = 1;
-                FileWrapper sourcePropFile = new FileWrapper(platformFolder,
-                        SdkConstants.FN_SOURCE_PROP);
+                LayoutlibVersion layoutlibVersion = null;
+
+                FileWrapper sourcePropFile =
+                    new FileWrapper(platformFolder, SdkConstants.FN_SOURCE_PROP);
+
                 Map<String, String> sourceProp = ProjectProperties.parsePropertyFile(
                         sourcePropFile, log);
+
                 if (sourceProp != null) {
                     try {
                         revision = Integer.parseInt(sourceProp.get("Pkg.Revision"));   //$NON-NLS-1$
                     } catch (NumberFormatException e) {
                         // do nothing, we'll keep the default value of 1.
                     }
+
+                    try {
+                        String propApi = sourceProp.get("Layoutlib.Api");           //$NON-NLS-1$
+                        String propRev = sourceProp.get("Layoutlib.Revision");      //$NON-NLS-1$
+                        int llApi = propApi == null ? LayoutlibVersion.NOT_SPECIFIED :
+                                                      Integer.parseInt(propApi);
+                        int llRev = propRev == null ? LayoutlibVersion.NOT_SPECIFIED :
+                                                      Integer.parseInt(propRev);
+                        if (llApi > LayoutlibVersion.NOT_SPECIFIED &&
+                                llRev >= LayoutlibVersion.NOT_SPECIFIED) {
+                            layoutlibVersion = new LayoutlibVersion(llApi, llRev);
+                        }
+                    } catch (NumberFormatException e) {
+                        // do nothing, we'll ignore the layoutlib version if it's invalid
+                    }
+
                     map.putAll(sourceProp);
                 }
 
@@ -371,6 +453,7 @@ public class SdkManager {
                         apiCodename,
                         apiName,
                         revision,
+                        layoutlibVersion,
                         abiList,
                         map);
 

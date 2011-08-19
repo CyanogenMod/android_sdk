@@ -16,6 +16,7 @@
 
 package com.android.sdklib;
 
+import com.android.sdklib.SdkManager.LayoutlibVersion;
 import com.android.sdklib.util.SparseArray;
 
 import java.io.File;
@@ -45,22 +46,31 @@ final class PlatformTarget implements IAndroidTarget {
     private String[] mSkins;
     private String[] mAbis;
     private boolean mAbiCompatibilityMode;
-
+    private final LayoutlibVersion mLayoutlibVersion;
 
     /**
      * Creates a Platform target.
+     *
      * @param sdkOsPath the root folder of the SDK
      * @param platformOSPath the root folder of the platform component
      * @param apiLevel the API Level
      * @param codeName the codename. can be null.
      * @param versionName the version name of the platform.
      * @param revision the revision of the platform component.
+     * @param layoutlibVersion The {@link LayoutlibVersion}. May be null.
      * @param abis the list of supported abis
      * @param properties the platform properties
      */
     @SuppressWarnings("deprecation")
-    PlatformTarget(String sdkOsPath, String platformOSPath, int apiLevel,
-            String codeName, String versionName, int revision, String[] abis,
+    PlatformTarget(
+            String sdkOsPath,
+            String platformOSPath,
+            int apiLevel,
+            String codeName,
+            String versionName,
+            int revision,
+            LayoutlibVersion layoutlibVersion,
+            String[] abis,
             Map<String, String> properties) {
         if (platformOSPath.endsWith(File.separator) == false) {
             platformOSPath = platformOSPath + File.separator;
@@ -70,6 +80,7 @@ final class PlatformTarget implements IAndroidTarget {
         mVersion = new AndroidVersion(apiLevel, codeName);
         mVersionName = versionName;
         mRevision = revision;
+        mLayoutlibVersion = layoutlibVersion;
 
         if (mVersion.isPreview()) {
             mName =  String.format(PLATFORM_NAME_PREVIEW, mVersionName);
@@ -123,7 +134,13 @@ final class PlatformTarget implements IAndroidTarget {
             mAbiCompatibilityMode = true;
             mAbis = new String[] { SdkConstants.ABI_ARMEABI };
         }
+    }
 
+    /**
+     * Returns the {@link LayoutlibVersion}. May be null.
+     */
+    public LayoutlibVersion getLayoutlibVersion() {
+        return mLayoutlibVersion;
     }
 
     /**
@@ -151,9 +168,9 @@ final class PlatformTarget implements IAndroidTarget {
         return mRootFolderOsPath;
     }
 
-    /*
-     * (non-Javadoc)
-     *
+    /**
+     * {@inheritDoc}
+     * <p/>
      * For Platform, the vendor name is always "Android".
      *
      * @see com.android.sdklib.IAndroidTarget#getVendor()
