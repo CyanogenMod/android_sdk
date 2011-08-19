@@ -21,6 +21,7 @@ import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ddmuilib.logcat.LogCatReceiver;
 import com.android.ddmuilib.logcat.LogCatStackTraceParser;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
 import org.eclipse.core.resources.IFile;
@@ -34,15 +35,19 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.ide.IDE;
 
 import java.util.HashMap;
@@ -72,6 +77,8 @@ public class LogCatView extends SelectionDependentViewPart {
     private LogCatPanel mLogCatPanel;
     private LogCatStackTraceParser mStackTraceParser = new LogCatStackTraceParser();
 
+    private Clipboard mClipboard;
+
     @Override
     public void createPartControl(Composite parent) {
         parent.setLayout(new FillLayout());
@@ -84,6 +91,24 @@ public class LogCatView extends SelectionDependentViewPart {
         mLogCatPanel.addLogCatMessageSelectionListener(new ILogCatMessageSelectionListener() {
             public void messageDoubleClicked(LogCatMessage m) {
                 onDoubleClick(m);
+            }
+        });
+
+        mClipboard = new Clipboard(parent.getDisplay());
+        IActionBars actionBars = getViewSite().getActionBars();
+        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(),
+                new Action(Messages.LogCatView_Copy) {
+            @Override
+            public void run() {
+                mLogCatPanel.copySelectionToClipboard(mClipboard);
+            }
+        });
+
+        actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+                new Action(Messages.LogCatView_Select_All) {
+            @Override
+            public void run() {
+                mLogCatPanel.selectAll();
             }
         });
     }
