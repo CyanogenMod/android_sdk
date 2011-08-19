@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.EnumMap;
@@ -78,9 +79,55 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      * @see IFileListener#fileChanged
      */
     public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+        IProject project = file.getProject();
+
         if (file.getName().equals(AdtConstants.FN_COMPILED_RESOURCE_CLASS)) {
-            loadAndParseRClass(file.getProject());
+            // create the classname
+            String className = getRClassName(project);
+            if (className == null) {
+                // We need to abort.
+                AdtPlugin.log(IStatus.ERROR,
+                        "fileChanged: failed to find manifest package for project %1$s", //$NON-NLS-1$
+                        project.getName());
+                return;
+            }
+            // path will begin with /projectName/bin/classes so we'll ignore that
+            IPath relativeClassPath = file.getFullPath().removeFirstSegments(3);
+            if (packagePathMatches(relativeClassPath.toString(), className)) {
+                loadAndParseRClass(project, className);
+            }
         }
+    }
+
+    /**
+     * Check to see if the package section of the given path matches the packageName.
+     * For example, /project/bin/classes/com/foo/app/R.class should match com.foo.app.R
+     * @param path the pathname of the file to look at
+     * @param packageName the package qualified name of the class
+     * @return true if the package section of the path matches the package qualified name
+     */
+    private boolean packagePathMatches(String path, String packageName) {
+        // First strip the ".class" off the end of the path
+        String pathWithoutExtension = path.substring(0, path.indexOf(AdtConstants.DOT_CLASS));
+
+        // then split the components of each path by their separators
+        String [] pathArray = pathWithoutExtension.split(File.separator);
+        String [] packageArray = packageName.split(AdtConstants.RE_DOT);
+
+
+        int pathIndex = 0;
+        int packageIndex = 0;
+
+        while (pathIndex < pathArray.length && packageIndex < packageArray.length) {
+            if (pathArray[pathIndex].equals(packageArray[packageIndex]) == false) {
+                return false;
+            }
+            pathIndex++;
+            packageIndex++;
+        }
+        // We may have matched all the way up to this point, but we're not sure it's a match
+        // unless BOTH paths done
+        return (pathIndex == pathArray.length && packageIndex == packageArray.length);
     }
 
     /**
@@ -117,31 +164,30 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         try {
             // check this is an android project
             if (project.hasNature(AdtConstants.NATURE_DEFAULT)) {
-                loadAndParseRClass(project);
+                String className = getRClassName(project);
+                // Find the classname
+                if (className == null) {
+                    // We need to abort.
+                    AdtPlugin.log(IStatus.ERROR,
+                            "projectOpenedWithWorkspace: failed to find manifest package for project %1$s", //$NON-NLS-1$
+                            project.getName());
+                    return;
+                }
+                loadAndParseRClass(project, className);
             }
         } catch (CoreException e) {
             // pass
         }
     }
 
-    private void loadAndParseRClass(IProject project) {
+    private void loadAndParseRClass(IProject project, String className) {
         try {
             // first check there's a ProjectResources to store the content
             ProjectResources projectResources = ResourceManager.getInstance().getProjectResources(
                     project);
 
             if (projectResources != null) {
-                // create the classname
-                String className = getRClassName(project);
-                if (className == null) {
-                    // We need to abort.
-                    AdtPlugin.log(IStatus.ERROR,
-                            "loadAndParseRClass: failed to find manifest package for project %1$s", //$NON-NLS-1$
-                            project.getName());
-                    return;
-                }
-
-                // create a temporary class loader to load it.
+                // create a temporary class loader to load the class
                 ProjectClassLoader loader = new ProjectClassLoader(null /* parentClassLoader */,
                         project);
 
