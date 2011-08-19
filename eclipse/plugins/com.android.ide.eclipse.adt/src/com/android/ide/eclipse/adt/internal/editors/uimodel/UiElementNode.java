@@ -1082,9 +1082,7 @@ public class UiElementNode implements IPropertySource {
             node.setDirty(false);
         }
 
-        if (mUiParent != null) {
-            mUiParent.formatOnInsert(this);
-        }
+        getEditor().scheduleNodeReformat(this, false);
 
         invokeUiUpdateListeners(UiUpdateState.CREATED);
         return mXmlNode;
@@ -1119,10 +1117,6 @@ public class UiElementNode implements IPropertySource {
         if (previousSibling != null && previousSibling.getNodeType() == Node.TEXT_NODE
                 && previousSibling.getNodeValue().trim().length() == 0) {
             xmlParent.removeChild(previousSibling);
-        }
-
-        if (mUiParent != null) {
-            mUiParent.formatOnDeletion(this);
         }
 
         invokeUiUpdateListeners(UiUpdateState.DELETED);
@@ -1615,6 +1609,17 @@ public class UiElementNode implements IPropertySource {
                 return result;
             }
 
+            if (AdtPrefs.getPrefs().getFormatGuiXml() && getEditor().supportsFormatOnGuiEdit()) {
+                // If auto formatting, don't bother with attribute sorting here since the
+                // order will be corrected as soon as the edit is committed anyway
+                for (UiAttributeNode uiAttribute : dirtyAttributes) {
+                    commitAttributeToXml(uiAttribute, uiAttribute.getCurrentValue());
+                    uiAttribute.setDirty(false);
+                }
+
+                return result;
+            }
+
             String firstName = dirtyAttributes.get(0).getDescriptor().getXmlLocalName();
             NamedNodeMap attributes = ((Element) element).getAttributes();
             List<Attr> move = new ArrayList<Attr>();
@@ -1805,6 +1810,8 @@ public class UiElementNode implements IPropertySource {
         if (value == null) {
             value = ""; //$NON-NLS-1$ -- this removes an attribute
         }
+
+        getEditor().scheduleNodeReformat(this, true);
 
         // Try with all internal attributes
         UiAttributeNode uiAttr = setInternalAttrValue(
@@ -2055,75 +2062,45 @@ public class UiElementNode implements IPropertySource {
         }
     }
 
-    /** Handles reformatting of the XML buffer when a given node has been inserted.
+    /**
+     * Returns true if this node is an ancestor (parent, grandparent, and so on)
+     * of the given node. Note that a node is not considered an ancestor of
+     * itself.
      *
-     * @param node The node that was inserted.
+     * @param node the node to test
+     * @return true if this node is an ancestor of the given node
      */
-    private void formatOnInsert(UiElementNode node) {
-        // Reformat parent if it's the first child (such that it for example can force
-        // children into their own lines.)
-        if (mUiChildren.size() == 1) {
-            reformat();
-        } else {
-            // In theory, we should ONLY have to reformat the node itself:
-            // uiNode.reformat();
-            //
-            // However, the XML formatter does not correctly handle this; in particular
-            // it will -dedent- a correctly indented child. Here's an example:
-            //
-            // @formatter:off
-            //    <?xml version="1.0" encoding="utf-8"?>
-            //    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            //        android:layout_width="fill_parent" android:layout_height="fill_parent"
-            //        android:orientation="vertical">
-            //        <LinearLayout android:id="@+id/LinearLayout01"
-            //            android:layout_width="wrap_content" android:layout_height="wrap_content">
-            //            <Button android:id="@+id/Button03"></Button>
-            //        </LinearLayout>
-            //    </LinearLayout>
-            // @formatter:on
-            //
-            // If we  have just inserted the button inside the nested LinearLayout, and
-            // attempt to format it, it will incorrectly dedent the button to be flush with
-            // its parent.
-            //
-            // Therefore, for now, in this case, format the PARENT on insert. This means that
-            // siblings can be formatted as well, but that can't be helped.
-
-            // This should be "uiNode.reformat();" instead of "reformat()" if formatting
-            // worked correctly:
-            reformat();
+    public boolean isAncestorOf(UiElementNode node) {
+        node = node.getUiParent();
+        while (node != null) {
+            if (node == this) {
+                return true;
+            }
+            node = node.getUiParent();
         }
+        return false;
     }
 
     /**
-     * Handles reformatting of the XML buffer when a given node has been removed.
+     * Finds the nearest common parent of the two given nodes (which could be one of the
+     * two nodes as well)
      *
-     * @param node The node that was removed.
+     * @param node1 the first node to test
+     * @param node2 the second node to test
+     * @return the nearest common parent of the two given nodes
      */
-    private void formatOnDeletion(UiElementNode node) {
-        // Reformat parent if it's the last child removed, such that we can for example
-        // place the closing element back on the same line as the opening tag (if the
-        // user has that mode configured in the formatting options.)
-        if (mUiChildren.size() <= 1) {
-            // <= 1 instead of == 0: turns out the parent hasn't always deleted
-            // this child from its its children list yet.
-            reformat();
-        }
-    }
-
-    /**
-     * Reformats the XML corresponding to the given XML node. This will do nothing if we have
-     * errors, or if the user has turned off XML auto-formatting.
-     */
-    private void reformat() {
-        if (mHasError || !AdtPrefs.getPrefs().getFormatGuiXml()) {
-            return;
+    public static UiElementNode getCommonAncestor(UiElementNode node1, UiElementNode node2) {
+        while (node2 != null) {
+            UiElementNode current = node1;
+            while (current != null && current != node2) {
+                current = current.getUiParent();
+            }
+            if (current == node2) {
+                return current;
+            }
+            node2 = node2.getUiParent();
         }
 
-        AndroidXmlEditor editor = getEditor();
-        if (editor != null && mXmlNode != null) {
-            editor.reformatNode(mXmlNode);
-        }
+        return null;
     }
 }

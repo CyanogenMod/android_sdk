@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.preferences;
 
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
@@ -241,26 +242,68 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         return mBuildForceResResfresh;
     }
 
+    /**
+     * Should changes made by GUI editors automatically format the corresponding XML nodes
+     * affected by the edit?
+     *
+     * @return true if the GUI editors should format affected XML regions
+     */
     public boolean getFormatGuiXml() {
-        return mFormatGuiXml;
+        // The format-GUI-editors flag only applies when the custom formatter is used,
+        // since the built-in formatter has problems editing partial documents
+        return mFormatGuiXml && mCustomXmlFormatter;
     }
 
+    /**
+     * Should the XML formatter use a custom Android XML formatter (following
+     * Android code style) or use the builtin Eclipse XML formatter?
+     *
+     * @return true if the Android formatter should be used instead of the
+     *         default Eclipse one
+     */
     public boolean getUseCustomXmlFormatter() {
         return mCustomXmlFormatter;
     }
 
+    /**
+     * Should the Android XML formatter use the Eclipse XML indentation settings
+     * (usually one tab character) instead of the default 4 space character
+     * indent?
+     *
+     * @return true if the Eclipse XML indentation settings should be use
+     */
     public boolean isUseEclipseIndent() {
         return mUseEclipseIndent;
     }
 
+    /**
+     * Should the Android XML formatter try to avoid inserting blank lines to
+     * make the format as compact as possible (no blank lines between elements,
+     * no blank lines surrounding comments, etc).
+     *
+     * @return true to remove blank lines
+     */
     public boolean isRemoveEmptyLines() {
         return mRemoveEmptyLines;
     }
 
+    /**
+     * Should the Android XML formatter attempt to place a single attribute on
+     * the same line as the element open tag?
+     *
+     * @return true if single-attribute elements should place the attribute on
+     *         the same line as the element open tag
+     */
     public boolean isOneAttributeOnFirstLine() {
         return mOneAttributeOnFirstLine;
     }
 
+    /**
+     * Returns the sort order to be applied to the attributes (one of which can
+     * be {@link AttributeSortOrder#NO_SORTING}).
+     *
+     * @return the sort order to apply to the attributes
+     */
     public AttributeSortOrder getAttributeSort() {
         if (mAttributeSort == null) {
             return AttributeSortOrder.LOGICAL;
@@ -268,10 +311,24 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         return mAttributeSort;
     }
 
+    /**
+     * Returns whether a space should be inserted before the closing {@code >}
+     * character in open tags and before the closing {@code />} characters in
+     * empty tag. Note that the {@link XmlFormatStyle#RESOURCE} style overrides
+     * this setting to make it more compact for the {@code <item>} elements.
+     *
+     * @return true if an empty space should be inserted before {@code >} or
+     *         {@code />}.
+     */
     public boolean isSpaceBeforeClose() {
         return mSpaceBeforeClose;
     }
 
+    /**
+     * Returns whether the file should be automatically formatted on save.
+     *
+     * @return true if the XML files should be formatted on save.
+     */
     public boolean isFormatOnSave() {
         return mFormatOnSave;
     }

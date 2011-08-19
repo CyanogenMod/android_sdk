@@ -43,7 +43,11 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
     private BooleanFieldEditor mRemoveEmptyEditor;
     private BooleanFieldEditor mOneAttrPerLineEditor;
     private BooleanFieldEditor mSpaceBeforeCloseEditor;
+    private BooleanFieldEditor mFormatGuiXmlEditor;
 
+    /**
+     * Constructs a new Android editors preference page
+     */
     public EditorsPage() {
         super(GRID);
         setPreferenceStore(AdtPlugin.getDefault().getPreferenceStore());
@@ -113,9 +117,10 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
                 },
                 parent, true));
 
-        addField(new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_GUI_XML,
+        mFormatGuiXmlEditor = new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_GUI_XML,
                 "Automatically format the XML edited by the visual layout editor",
-                parent));
+                parent);
+        addField(mFormatGuiXmlEditor);
 
         addField(new BooleanFieldEditor(AdtPrefs.PREFS_FORMAT_ON_SAVE,
                 "Format on Save",
@@ -131,6 +136,7 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
         mRemoveEmptyEditor.setEnabled(enabled, parent);
         mOneAttrPerLineEditor.setEnabled(enabled, parent);
         mSpaceBeforeCloseEditor.setEnabled(enabled, parent);
+        mFormatGuiXmlEditor.setEnabled(enabled, parent);
     }
 
     /**
