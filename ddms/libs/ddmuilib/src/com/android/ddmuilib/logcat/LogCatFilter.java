@@ -31,6 +31,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public final class LogCatFilter {
     private static final String PID_KEYWORD = "pid:";   //$NON-NLS-1$
+    private static final String APP_KEYWORD = "app:";   //$NON-NLS-1$
     private static final String TAG_KEYWORD = "tag:";   //$NON-NLS-1$
     private static final String TEXT_KEYWORD = "text:"; //$NON-NLS-1$
 
@@ -38,6 +39,7 @@ public final class LogCatFilter {
     private final String mTag;
     private final String mText;
     private final String mPid;
+    private final String mAppName;
     private final LogLevel mLogLevel;
 
     /** Indicates the number of messages that match this filter, but have not
@@ -47,34 +49,48 @@ public final class LogCatFilter {
     private int mUnreadCount;
 
     private boolean mCheckPID;
+    private boolean mCheckAppName;
     private boolean mCheckTag;
     private boolean mCheckText;
 
+    private Pattern mAppNamePattern;
     private Pattern mTagPattern;
     private Pattern mTextPattern;
 
     /**
-     * Construct a filter with the provided restrictions for the logcat message.
+     * Construct a filter with the provided restrictions for the logcat message. All the text
+     * fields accept Java regexes as input, but ignore invalid regexes.
      * @param name name for the filter
-     * @param tag value for the logcat message's tag field. Can be a regex.
-     * Invalid regexes are ignored.
-     * @param text value for the logcat message's text field. Can be a regex.
-     * Invalid regexes are ignored.
+     * @param tag value for the logcat message's tag field.
+     * @param text value for the logcat message's text field.
      * @param pid value for the logcat message's pid field.
+     * @param appName value for the logcat message's app name field.
      * @param logLevel value for the logcat message's log level. Only messages of
      * higher priority will be accepted by the filter.
      */
-    public LogCatFilter(String name, String tag, String text, String pid,
+    public LogCatFilter(String name, String tag, String text, String pid, String appName,
             LogLevel logLevel) {
         mName = name.trim();
         mTag = tag.trim();
         mText = text.trim();
         mPid = pid.trim();
+        mAppName = appName.trim();
         mLogLevel = logLevel;
 
         mUnreadCount = 0;
 
         mCheckPID = mPid.length() != 0;
+
+        if (mAppName.length() != 0) {
+            try {
+                mAppNamePattern = Pattern.compile(mAppName);
+                mCheckAppName = true;
+            } catch (PatternSyntaxException e) {
+                Log.e("LogCatFilter", "Ignoring invalid app name regex.");
+                Log.e("LogCatFilter", e.getMessage());
+                mCheckAppName = false;
+            }
+        }
 
         if (mTag.length() != 0) {
             try {
@@ -116,9 +132,12 @@ public final class LogCatFilter {
             String tag = "";
             String text = "";
             String pid = "";
+            String app = "";
 
             if (s.startsWith(PID_KEYWORD)) {
                 pid = s.substring(PID_KEYWORD.length());
+            } else if (s.startsWith(APP_KEYWORD)) {
+                app = s.substring(APP_KEYWORD.length());
             } else if (s.startsWith(TAG_KEYWORD)) {
                 tag = s.substring(TAG_KEYWORD.length());
             } else {
@@ -129,7 +148,7 @@ public final class LogCatFilter {
                 }
             }
             filterSettings.add(new LogCatFilter("livefilter-" + s,
-                    tag, text, pid, minLevel));
+                    tag, text, pid, app, minLevel));
         }
 
         return filterSettings;
@@ -151,6 +170,10 @@ public final class LogCatFilter {
         return mPid;
     }
 
+    public String getAppName() {
+        return mAppName;
+    }
+
     public LogLevel getLogLevel() {
         return mLogLevel;
     }
@@ -170,6 +193,14 @@ public final class LogCatFilter {
          * the filter's pid */
         if (mCheckPID && !m.getPidString().equals(mPid)) {
             return false;
+        }
+
+        /* if app name filter is enabled, filter out messages not matching the app name */
+        if (mCheckAppName) {
+            Matcher matcher = mAppNamePattern.matcher(m.getAppName());
+            if (!matcher.find()) {
+                return false;
+            }
         }
 
         /* if tag filter is enabled, filter out messages not matching the tag */

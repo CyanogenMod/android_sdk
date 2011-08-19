@@ -40,6 +40,7 @@ public final class LogCatFilterSettingsSerializer {
     private static final String KW_TAG = "tag";
     private static final String KW_TEXT = "text";
     private static final String KW_PID = "pid";
+    private static final String KW_APP = "app";
     private static final String KW_LOGLEVEL = "level";
 
     /**
@@ -62,6 +63,8 @@ public final class LogCatFilterSettingsSerializer {
             sb.append(KW_TEXT); sb.append(KW_DELIM); sb.append(quoteString(f.getText()));
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_PID);  sb.append(KW_DELIM); sb.append(quoteString(f.getPidString()));
+                                                                        sb.append(ATTR_DELIM);
+            sb.append(KW_APP);  sb.append(KW_DELIM); sb.append(quoteString(f.getAppName()));
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_LOGLEVEL); sb.append(KW_DELIM);
                                        sb.append(quoteString(f.getLogLevel().getStringValue()));
@@ -91,6 +94,7 @@ public final class LogCatFilterSettingsSerializer {
             String name = "";
             String tag = "";
             String pid = "";
+            String app = "";
             String text = "";
             LogLevel level = LogLevel.VERBOSE;
 
@@ -109,12 +113,14 @@ public final class LogCatFilterSettingsSerializer {
                     text = value;
                 } else if (key.equals(KW_PID)) {
                     pid = value;
+                } else if (key.equals(KW_APP)) {
+                    app = value;
                 } else if (key.equals(KW_LOGLEVEL)) {
                     level = LogLevel.getByString(value);
                 }
             }
 
-            fs.add(new LogCatFilter(name, tag, text, pid, level));
+            fs.add(new LogCatFilter(name, tag, text, pid, app, level));
         }
 
         return fs;
