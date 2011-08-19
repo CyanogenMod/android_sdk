@@ -50,12 +50,14 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
     private String mTag;
     private String mText;
     private String mPID;
+    private String mAppName;
     private String mLogLevel;
 
     private Text mFilterNameText;
     private Text mTagFilterText;
     private Text mTextFilterText;
     private Text mPIDFilterText;
+    private Text mAppNameFilterText;
     private Combo mLogLevelCombo;
     private Button mOkButton;
 
@@ -65,7 +67,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      */
     public LogCatFilterSettingsDialog(Shell parentShell) {
         super(parentShell);
-        setDefaults("", "", "", "", LogLevel.VERBOSE);
+        setDefaults("", "", "", "", "", LogLevel.VERBOSE);
     }
 
     /**
@@ -74,14 +76,16 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      * @param tag value for filter by tag
      * @param text value for filter by text
      * @param pid value for filter by pid
+     * @param appName value for filter by app name
      * @param level value for filter by log level
      */
-    public void setDefaults(String filterName, String tag, String text, String pid,
+    public void setDefaults(String filterName, String tag, String text, String pid, String appName,
             LogLevel level) {
         mFilterName = filterName;
         mTag = tag;
         mText = text;
         mPID = pid;
+        mAppName = appName;
         mLogLevel = level.getStringValue();
     }
 
@@ -117,6 +121,11 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mPIDFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mPIDFilterText.setText(mPID);
 
+        createLabel(c, "by Application Name:");
+        mAppNameFilterText = new Text(c, SWT.BORDER);
+        mAppNameFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mAppNameFilterText.setText(mAppName);
+
         createLabel(c, "by Log Level:");
         mLogLevelCombo = new Combo(c, SWT.READ_ONLY | SWT.DROP_DOWN);
         mLogLevelCombo.setItems(getLogLevels().toArray(new String[0]));
@@ -134,6 +143,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mTagFilterText.addModifyListener(m);
         mTextFilterText.addModifyListener(m);
         mPIDFilterText.addModifyListener(m);
+        mAppNameFilterText.addModifyListener(m);
 
         return c;
     }
@@ -210,6 +220,17 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
             }
         }
 
+        /* app name field must use a valid regex pattern */
+        String appNameText = mAppNameFilterText.getText().trim();
+        if (appNameText.trim().length() > 0) {
+            try {
+                Pattern.compile(appNameText);
+            } catch (PatternSyntaxException e) {
+                return new DialogStatus(false,
+                        "Invalid regex used in application name field: " + e.getMessage());
+            }
+        }
+
         return new DialogStatus(true, null);
     }
 
@@ -235,11 +256,8 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mTag = mTagFilterText.getText();
         mText = mTextFilterText.getText();
         mLogLevel = mLogLevelCombo.getText();
-
-        String pidText = mPIDFilterText.getText().trim();
-        if (!pidText.equals("")) {
-            mPID = pidText;
-        }
+        mPID = mPIDFilterText.getText();
+        mAppName = mAppNameFilterText.getText();
 
         super.okPressed();
     }
@@ -274,6 +292,14 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      */
     public String getPID() {
         return mPID;
+    }
+
+    /**
+     * Obtain user provided application name to filter by.
+     * @return user provided app name regex, maybe empty
+     */
+    public String getAppName() {
+        return mAppName;
     }
 
     /**
