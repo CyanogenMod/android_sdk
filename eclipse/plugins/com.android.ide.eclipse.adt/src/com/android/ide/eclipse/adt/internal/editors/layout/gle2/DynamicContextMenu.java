@@ -39,6 +39,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLay
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeViewAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractIncludeAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ExtractStyleAction;
+import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UnwrapAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInAction;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 
@@ -238,6 +239,9 @@ class DynamicContextMenu {
         mMenuManager.insertBefore(endId, ExtractIncludeAction.create(mEditor));
         mMenuManager.insertBefore(endId, ExtractStyleAction.create(mEditor));
         mMenuManager.insertBefore(endId, WrapInAction.create(mEditor));
+        if (selection.size() == 1 && !(selection.get(0).isRoot())) {
+            mMenuManager.insertBefore(endId, UnwrapAction.create(mEditor));
+        }
         if (selection.size() == 1 && (selection.get(0).isLayout() ||
                 selection.get(0).getViewInfo().getName().equals(FQCN_GESTURE_OVERLAY_VIEW))) {
             mMenuManager.insertBefore(endId, ChangeLayoutAction.create(mEditor));
