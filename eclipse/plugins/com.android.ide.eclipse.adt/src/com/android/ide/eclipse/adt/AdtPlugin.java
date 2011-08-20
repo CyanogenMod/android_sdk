@@ -1701,7 +1701,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      * Pings the usage start server.
      */
     private void pingUsageServer() {
-        // get the version of the plugin
+
+        // Report the version of the ADT plugin to the stat server
         String versionString = (String) getBundle().getHeaders().get(
                 Constants.BUNDLE_VERSION);
         Version version = new Version(versionString);
@@ -1709,7 +1710,10 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
                 version.getMinor(), version.getMicro());
 
-        // get the version of eclipse by getting the version of one of the runtime plugins.
+        SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+
+        // Report the version of Eclipse to the stat server.
+        // Get the version of eclipse by getting the version of one of the runtime plugins.
         ResourcesPlugin resPlugin = ResourcesPlugin.getPlugin();
 
         String eclipseVersionString = (String) resPlugin.getBundle().getHeaders().get(
@@ -1720,7 +1724,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         eclipseVersionString = String.format("%1$d.%2$d",  //$NON-NLS-1$
                 eclipseVersion.getMajor(), eclipseVersion.getMinor());
 
-        SdkStatsService.ping("adt", versionString, eclipseVersionString, getDisplay()); //$NON-NLS-1$
+        SdkStatsService.ping("eclipse", eclipseVersionString, getDisplay()); //$NON-NLS-1$
     }
 
     /**
