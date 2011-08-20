@@ -162,6 +162,8 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                         new RefactoringProposal(editor,
                             new WrapInRefactoring(file, editor, textSelection, null)),
                         new RefactoringProposal(editor,
+                                new UnwrapRefactoring(file, editor, textSelection, null)),
+                        new RefactoringProposal(editor,
                             new ChangeViewRefactoring(file, editor, textSelection, null)),
                         new RefactoringProposal(editor,
                             new ChangeLayoutRefactoring(file, editor, textSelection, null)),

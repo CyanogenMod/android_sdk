@@ -686,6 +686,15 @@
                 tooltip="Wraps Views in a new container">
             </action>
             <action
+                class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UnwrapAction"
+                definitionId="com.android.ide.eclipse.adt.refactoring.unwrap"
+                id="com.android.ide.eclipse.adt.actions.Unwrap"
+                label="Remove Container..."
+                menubarPath="org.eclipse.jdt.ui.refactoring.menu/com.android.ide.eclipse.adt.refactoring.menu/android"
+                style="push"
+                tooltip="Unwraps Views by Removing their container">
+            </action>
+            <action
                 class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutAction"
                 definitionId="com.android.ide.eclipse.adt.refactoring.convert"
                 id="com.android.ide.eclipse.adt.actions.ChangeLayout"
@@ -838,6 +847,12 @@
         </command>
         <command
             categoryId="com.android.ide.eclipse.adt.refactoring.category"
+            description="Unwraps Views From Their Container"
+            id="com.android.ide.eclipse.adt.refactoring.unwrap"
+            name="Remove Container">
+        </command>
+        <command
+            categoryId="com.android.ide.eclipse.adt.refactoring.category"
             description="Converts Layouts from One Type to Another"
             id="com.android.ide.eclipse.adt.refactoring.convert"
             name="Change Layout">
@@ -865,6 +880,10 @@
         <contribution
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.WrapInContribution"
             id="com.android.ide.eclipse.adt.refactoring.wrapin">
+        </contribution>
+        <contribution
+            class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.UnwrapContribution"
+            id="com.android.ide.eclipse.adt.refactoring.unwrap">
         </contribution>
         <contribution
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.ChangeLayoutContribution"

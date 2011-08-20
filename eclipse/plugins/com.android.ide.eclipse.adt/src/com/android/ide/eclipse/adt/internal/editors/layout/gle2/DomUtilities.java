@@ -741,18 +741,30 @@ public class DomUtilities {
      * @return the DOM document, or null
      */
     public static Document parseStructuredDocument(String xml) {
-        IModelManager modelManager = StructuredModelManager.getModelManager();
-        IStructuredModel model = modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
-        IStructuredDocument document = model.getStructuredDocument();
-        model.aboutToChangeModel();
-        document.set(xml);
-        model.changedModel();
+        IStructuredModel model = createStructuredModel(xml);
         if (model instanceof IDOMModel) {
             IDOMModel domModel = (IDOMModel) model;
             return domModel.getDocument();
         }
 
         return null;
+    }
+
+    /**
+     * Parses the given XML string and builds an Eclipse structured model for it.
+     *
+     * @param xml the XML content to be parsed (must be well formed)
+     * @return the structured model
+     */
+    public static IStructuredModel createStructuredModel(String xml) {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        IStructuredModel model = modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
+        IStructuredDocument document = model.getStructuredDocument();
+        model.aboutToChangeModel();
+        document.set(xml);
+        model.changedModel();
+
+        return model;
     }
 
     /**
