@@ -101,7 +101,7 @@ public final class LogCatMessageLabelProvider extends LabelProvider
             case INDEX_LOGTIME:
                 return m.getTime();
             case INDEX_PID:
-                return m.getPidString();
+                return m.getPid();
             case INDEX_APPNAME:
                 return m.getAppName();
             case INDEX_TAG:

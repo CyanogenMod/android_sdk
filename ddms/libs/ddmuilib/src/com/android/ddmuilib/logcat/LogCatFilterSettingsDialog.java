@@ -49,14 +49,14 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
     private String mFilterName;
     private String mTag;
     private String mText;
-    private String mPID;
+    private String mPid;
     private String mAppName;
     private String mLogLevel;
 
     private Text mFilterNameText;
     private Text mTagFilterText;
     private Text mTextFilterText;
-    private Text mPIDFilterText;
+    private Text mPidFilterText;
     private Text mAppNameFilterText;
     private Combo mLogLevelCombo;
     private Button mOkButton;
@@ -84,7 +84,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mFilterName = filterName;
         mTag = tag;
         mText = text;
-        mPID = pid;
+        mPid = pid;
         mAppName = appName;
         mLogLevel = level.getStringValue();
     }
@@ -117,9 +117,9 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mTextFilterText.setText(mText);
 
         createLabel(c, "by PID:");
-        mPIDFilterText = new Text(c, SWT.BORDER);
-        mPIDFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mPIDFilterText.setText(mPID);
+        mPidFilterText = new Text(c, SWT.BORDER);
+        mPidFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mPidFilterText.setText(mPid);
 
         createLabel(c, "by Application Name:");
         mAppNameFilterText = new Text(c, SWT.BORDER);
@@ -142,7 +142,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mFilterNameText.addModifyListener(m);
         mTagFilterText.addModifyListener(m);
         mTextFilterText.addModifyListener(m);
-        mPIDFilterText.addModifyListener(m);
+        mPidFilterText.addModifyListener(m);
         mAppNameFilterText.addModifyListener(m);
 
         return c;
@@ -182,7 +182,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         }
 
         /* if a pid is provided, it should be a +ve integer */
-        String pidText = mPIDFilterText.getText().trim();
+        String pidText = mPidFilterText.getText().trim();
         if (pidText.trim().length() > 0) {
             int pid = 0;
             try {
@@ -256,7 +256,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
         mTag = mTagFilterText.getText();
         mText = mTextFilterText.getText();
         mLogLevel = mLogLevelCombo.getText();
-        mPID = mPIDFilterText.getText();
+        mPid = mPidFilterText.getText();
         mAppName = mAppNameFilterText.getText();
 
         super.okPressed();
@@ -290,8 +290,8 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
      * Obtain user provided PID to filter by.
      * @return user provided pid, maybe empty.
      */
-    public String getPID() {
-        return mPID;
+    public String getPid() {
+        return mPid;
     }
 
     /**
