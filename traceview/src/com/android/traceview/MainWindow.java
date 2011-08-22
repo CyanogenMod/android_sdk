@@ -201,7 +201,7 @@ public class MainWindow extends ApplicationWindow {
 
         String revision = getRevision();
         if (revision != null) {
-            SdkStatsService.ping(PING_NAME, revision, null);
+            SdkStatsService.ping(PING_NAME, revision);
         }
 
         // Process command line arguments

@@ -1710,7 +1710,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
                 version.getMinor(), version.getMicro());
 
-        SdkStatsService.ping("adt", versionString, getDisplay()); //$NON-NLS-1$
+        SdkStatsService.ping("adt", versionString); //$NON-NLS-1$
 
         // Report the version of Eclipse to the stat server.
         // Get the version of eclipse by getting the version of one of the runtime plugins.
@@ -1724,7 +1724,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         eclipseVersionString = String.format("%1$d.%2$d",  //$NON-NLS-1$
                 eclipseVersion.getMajor(), eclipseVersion.getMinor());
 
-        SdkStatsService.ping("eclipse", eclipseVersionString, getDisplay()); //$NON-NLS-1$
+        SdkStatsService.ping("eclipse", eclipseVersionString); //$NON-NLS-1$
     }
 
     /**

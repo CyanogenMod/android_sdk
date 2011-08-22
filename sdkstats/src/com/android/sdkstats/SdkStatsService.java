@@ -20,21 +20,7 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 
 import org.eclipse.jface.preference.PreferenceStore;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.program.Program;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
@@ -53,82 +39,57 @@ public class SdkStatsService {
     /** Minimum interval between ping, in milliseconds. */
     private static final long PING_INTERVAL_MSEC = 86400 * 1000;  // 1 day
 
-    /* Text strings displayed in the opt-out dialog. */
-    private static final String WINDOW_TITLE_TEXT =
-        "Android SDK";
-
-    private static final String HEADER_TEXT =
-        "Thanks for using the Android SDK!";
-
-    private static final String NOTICE_TEXT =
-        "We know you just want to get started but please read this first.";
-
-    /** Used in the preference pane (PrefsDialog) as well. */
-    public static final String BODY_TEXT =
-        "By choosing to send certain usage statistics to Google, you can " +
-        "help us improve the Android SDK.  These usage statistics let us " +
-        "measure things like active usage of the SDK and let us know things " +
-        "like which versions of the SDK are in use and which tools are the " +
-        "most popular with developers.  This limited data is not associated " +
-        "with personal information about you, is examined on an aggregate " +
-        "basis, and is maintained in accordance with the " +
-        "<a href=\"http://www.google.com/intl/en/privacy.html\">Google " +
-        "Privacy Policy</a>.";
-
-    /** Used in the preference pane (PrefsDialog) as well. */
-    public static final String CHECKBOX_TEXT =
-        "Send usage statistics to Google.";
-
-    private static final String FOOTER_TEXT =
-        "If you later decide to change this setting, you can do so in the " +
-        "\"ddms\" tool under \"File\" > \"Preferences\" > \"Usage Stats\".";
-
-    private static final String BUTTON_TEXT =
-        "   Proceed   ";
-
-    /** List of Linux browser commands to try, in order (see openUrl). */
-    private static final String[] LINUX_BROWSERS = new String[] {
-        "firefox -remote openurl(%URL%,new-window)",  //$NON-NLS-1$ running FF
-        "mozilla -remote openurl(%URL%,new-window)",  //$NON-NLS-1$ running Moz
-        "firefox %URL%",                              //$NON-NLS-1$ new FF
-        "mozilla %URL%",                              //$NON-NLS-1$ new Moz
-        "kfmclient openURL %URL%",                    //$NON-NLS-1$ Konqueror
-        "opera -newwindow %URL%",                     //$NON-NLS-1$ Opera
-    };
-
     public final static String PING_OPT_IN = "pingOptIn"; //$NON-NLS-1$
     public final static String PING_TIME = "pingTime"; //$NON-NLS-1$
     public final static String PING_ID = "pingId"; //$NON-NLS-1$
-
 
     private static PreferenceStore sPrefStore;
 
     /**
      * Send a "ping" to the Google toolbar server, if enough time has
-     * elapsed since the last ping, and if the user has not opted out.
-     * If this is the first time, notify the user and offer an opt-out.
-     * Note: UI operations (if any) are synchronous, but the actual ping
-     * (if any) is sent in a <i>non-daemon</i> background thread.
+     * elapsed since the last ping, and if the user has not opted out.<br>
+     *
+     * The ping will not be sent if the user opt out dialog has not been shown yet.
+     * Use {@link #getUserPermissionForPing(Shell)} to display the dialog requesting
+     * user permissions.<br>
+     *
+     * Note: The actual ping (if any) is sent in a <i>non-daemon</i> background thread.
      *
      * @param app name to report in the ping
      * @param version to report in the ping
-     * @param display an optional {@link Display} object to use, or null, if a new one should be
-     * created.
      */
-    public static void ping(final String app, final String version, final Display display) {
-        // Unique, randomly assigned ID for this installation.
-        PreferenceStore prefs = getPreferenceStore();
-        if (prefs != null) {
-            if (prefs.contains(PING_ID) == false) {
-                // First time: make up a new ID.  TODO: Use something more random?
-                prefs.setValue(PING_ID, new Random().nextLong());
+    public static void ping(final String app, final String version) {
+        doPing(app, version, getPreferenceStore());
+    }
 
-                // ask the user whether he/she wants to opt-out.
-                // This will call doPing in the Display thread after the dialog closes.
-                getUserPermissionAndPing(app, version, prefs, display);
-            } else {
-                doPing(app, version, prefs);
-            }
+    /**
+     * Find out if user has already set permissions for the ping service.
+     * @return true if user has already set the permissions for the ping service. This could've
+     * happened only if the user has already viewed the dialog displayed by
+     * {@link #getUserPermissionForPing(Shell)}.
+     */
+    public static boolean pingPermissionsSet() {
+        PreferenceStore prefs = getPreferenceStore();
+        return prefs != null && prefs.contains(PING_ID);
+    }
+
+    /**
+     * Display a dialog to the user providing information about the ping service,
+     * and whether they'd like to opt-out of it.
+     *
+     * Once the dialog has been shown, it sets a preference internally indicating that the user has
+     * viewed this dialog. This setting can be queried using {@link #pingPermissionsSet()}.
+     */
+    public static void getUserPermissionForPing(Shell parent) {
+        PreferenceStore prefs = getPreferenceStore();
+        getUserPermissionForPing(prefs, parent);
+
+        // First time: make up a new ID.  TODO: Use something more random?
+        prefs.setValue(PING_ID, new Random().nextLong());
+        try {
+            prefs.save();
+        } catch (IOException e) {
+            /* ignore exceptions while saving preferences */
         }
     }
 
@@ -308,142 +269,18 @@ public class SdkStatsService {
     }
 
     /**
-     * Prompt the user for whether they want to opt out of reporting, and then calls
-     * {@link #doPing(String, String, PreferenceStore)}
+     * Prompt the user for whether they want to opt out of reporting, and save the user
+     * input in preferences.
      */
-    private static void getUserPermissionAndPing(final String app, final String version,
-            final PreferenceStore prefs, Display display) {
-        boolean dispose = false;
-        if (display == null) {
-            display = new Display();
-            dispose = true;
-        }
-
-        final Display currentDisplay = display;
-        final boolean disposeDisplay = dispose;
-
-        display.asyncExec(new Runnable() {
+    private static void getUserPermissionForPing(final PreferenceStore prefs, final Shell parent) {
+        final Display display = parent.getDisplay();
+        display.syncExec(new Runnable() {
             public void run() {
-                // Whether the user gave permission (size-1 array for writing to).
-                // Initialize to false, set when the user clicks the button.
-                final boolean[] permission = new boolean[] { false };
-
-
-                final Shell shell = new Shell(currentDisplay, SWT.TITLE | SWT.BORDER);
-                shell.setText(WINDOW_TITLE_TEXT);
-                shell.setLayout(new GridLayout(1, false)); // 1 column
-
-                // Take the default font and scale it up for the title.
-                final Label title = new Label(shell, SWT.CENTER | SWT.WRAP);
-                final FontData[] fontdata = title.getFont().getFontData();
-                for (int i = 0; i < fontdata.length; i++) {
-                    fontdata[i].setHeight(fontdata[i].getHeight() * 4 / 3);
-                }
-                title.setFont(new Font(currentDisplay, fontdata));
-                title.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-                title.setText(HEADER_TEXT);
-
-                final Label notice = new Label(shell, SWT.WRAP);
-                notice.setFont(title.getFont());
-                notice.setForeground(new Color(currentDisplay, 255, 0, 0));
-                notice.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-                notice.setText(NOTICE_TEXT);
-
-                final Link text = new Link(shell, SWT.WRAP);
-                text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-                text.setText(BODY_TEXT);
-                text.addSelectionListener(new SelectionAdapter() {
-                    @Override
-                    public void widgetSelected(SelectionEvent event) {
-                        openUrl(event.text);
-                    }
-                });
-
-                final Button checkbox = new Button(shell, SWT.CHECK);
-                checkbox.setSelection(true); // Opt-in by default.
-                checkbox.setText(CHECKBOX_TEXT);
-
-                final Link footer = new Link(shell, SWT.WRAP);
-                footer.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-                footer.setText(FOOTER_TEXT);
-
-                final Button button = new Button(shell, SWT.PUSH);
-                button.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
-                button.setText(BUTTON_TEXT);
-                button.addSelectionListener(new SelectionAdapter() {
-                    @Override
-                    public void widgetSelected(SelectionEvent event) {
-                        permission[0] = checkbox.getSelection();
-                        shell.close();
-                    }
-                });
-
-                // Size the window to a fixed width, as high as necessary,
-                // centered.
-                final Point size = shell.computeSize(450, SWT.DEFAULT, true);
-                final Rectangle screen = currentDisplay.getClientArea();
-                shell.setBounds(screen.x + screen.width / 2 - size.x / 2, screen.y + screen.height
-                        / 2 - size.y / 2, size.x, size.y);
-
-                shell.open();
-
-                while (!shell.isDisposed()) {
-                    if (!currentDisplay.readAndDispatch())
-                        currentDisplay.sleep();
-                }
-
-                // the dialog has closed, take care of storing the user preference
-                // and do the ping (in a different thread)
-                prefs.setValue(PING_OPT_IN, permission[0]);
-                try {
-                    prefs.save();
-                    doPing(app, version, prefs);
-                }
-                catch (IOException ioe) {
-                }
-
-
-                if (disposeDisplay) {
-                    currentDisplay.dispose();
-                }
+                SdkStatsPermissionDialog dialog = new SdkStatsPermissionDialog(parent);
+                dialog.open();
+                prefs.setValue(PING_OPT_IN, dialog.getPingUserPreference());
             }
         });
-    }
-
-    /**
-     * Open a URL in an external browser.
-     * @param url to open - MUST be sanitized and properly formed!
-     */
-    public static void openUrl(final String url) {
-        // TODO: consider using something like BrowserLauncher2
-        // (http://browserlaunch2.sourceforge.net/) instead of these hacks.
-
-        // SWT's Program.launch() should work on Mac, Windows, and GNOME
-        // (because the OS shell knows how to launch a default browser).
-        if (!Program.launch(url)) {
-            // Must be Linux non-GNOME (or something else broke).
-            // Try a few Linux browser commands in the background.
-            new Thread() {
-                @Override
-                public void run() {
-                    for (String cmd : LINUX_BROWSERS) {
-                        cmd = cmd.replaceAll("%URL%", url);  //$NON-NLS-1$
-                        try {
-                            Process proc = Runtime.getRuntime().exec(cmd);
-                            if (proc.waitFor() == 0) break;  // Success!
-                        } catch (InterruptedException e) {
-                            // Should never happen!
-                            throw new RuntimeException(e);
-                        } catch (IOException e) {
-                            // Swallow the exception and try the next browser.
-                        }
-                    }
-
-                    // TODO: Pop up some sort of error here?
-                    // (We're in a new thread; can't use the existing Display.)
-                }
-            }.start();
-        }
     }
 
     /**
