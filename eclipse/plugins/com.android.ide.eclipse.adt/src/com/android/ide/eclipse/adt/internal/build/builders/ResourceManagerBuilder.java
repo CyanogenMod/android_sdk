@@ -33,6 +33,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -211,8 +212,30 @@ public class ResourceManagerBuilder extends BaseBuilder {
             project.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(monitor, 10));
         }
 
-        // check that we have bin/res/
+        // convert older projects which use bin as the eclipse output folder into projects
+        // using bin/classes
         IFolder androidOutput = BaseProjectHelper.getAndroidOutputFolder(project);
+        IFolder javaOutput = BaseProjectHelper.getJavaOutputFolder(project);
+        if (androidOutput.exists() == false || javaOutput == null ||
+                javaOutput.getParent().equals(androidOutput) == false) {
+            // get what we want as the new java output.
+            IFolder newJavaOutput = androidOutput.getFolder(SdkConstants.FD_CLASSES_OUTPUT);
+
+            if (androidOutput.exists() == false) {
+                androidOutput.create(true /*force*/, true /*local*/, monitor);
+            }
+
+            if (newJavaOutput.exists() == false) {
+                newJavaOutput.create(true /*force*/, true /*local*/, monitor);
+            }
+
+            // set the java output to this project.
+            javaProject.setOutputLocation(newJavaOutput.getFullPath(), monitor);
+
+            project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
+        }
+
+        // check that we have bin/res/
         IFolder binResFolder = androidOutput.getFolder(SdkConstants.FD_RESOURCES);
         if (binResFolder.exists() == false) {
             binResFolder.create(true /* force */, true /* local */,

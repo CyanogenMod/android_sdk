@@ -44,7 +44,6 @@ import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
@@ -858,45 +857,6 @@ public final class Sdk  {
             } catch (CoreException e) {
                 // this can only happen if the project does not exist or is not open, neither
                 // of which can happen here since we're processing a Project opened event.
-            }
-
-            // convert older projects which use bin as the eclipse output folder into projects
-            // using bin/classes
-            final IFolder androidOutput = BaseProjectHelper.getAndroidOutputFolder(openedProject);
-            final IFolder javaOutput = BaseProjectHelper.getJavaOutputFolder(openedProject);
-            if (androidOutput.exists() == false ||
-                    javaOutput.getParent().equals(androidOutput) == false) {
-                // get what we want as the new java output.
-                final IFolder newJavaOutput = androidOutput.getFolder(
-                        SdkConstants.FD_CLASSES_OUTPUT);
-
-                // start a job to do resource change (which can't be done in that callback.)
-                Job job = new Job("Project bin convertion") {
-                    @Override
-                    protected IStatus run(IProgressMonitor monitor) {
-                        try {
-                            if (androidOutput.exists() == false) {
-                                androidOutput.create(true /*force*/, true /*local*/, monitor);
-                            }
-
-                            if (newJavaOutput.exists() == false) {
-                                newJavaOutput.create(true /*force*/, true /*local*/, monitor);
-                            }
-
-                            // set the java output to this project.
-                            IJavaProject javaProject = JavaCore.create(openedProject);
-                            javaProject.setOutputLocation(newJavaOutput.getFullPath(), monitor);
-
-                            openedProject.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
-                        } catch (CoreException e) {
-                            return e.getStatus();
-                        }
-
-                        return Status.OK_STATUS;
-                    }
-                };
-                job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
-                job.schedule();
             }
 
 
