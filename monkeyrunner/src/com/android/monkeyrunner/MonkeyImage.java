@@ -26,7 +26,6 @@ import org.python.core.PyInteger;
 import org.python.core.PyObject;
 import org.python.core.PyTuple;
 
-import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 /**
@@ -40,7 +39,7 @@ public class MonkeyImage extends PyObject implements ClassDictInit {
         JythonUtils.convertDocAnnotationsForClass(MonkeyImage.class, dict);
     }
 
-    private IChimpImage impl;
+    private final IChimpImage impl;
 
     public MonkeyImage(IChimpImage impl) {
         this.impl = impl;
@@ -134,9 +133,7 @@ public class MonkeyImage extends PyObject implements ClassDictInit {
         Preconditions.checkNotNull(ap);
 
         PyObject otherObject = ap.getPyObject(0);
-        // TODO: check if this conversion wortks
-        IChimpImage other = (IChimpImage) otherObject.__tojava__(
-                IChimpImage.class);
+        IChimpImage other = ((MonkeyImage) otherObject.__tojava__(MonkeyImage.class)).getImpl();
 
         double percent = JythonUtils.getFloat(ap, 1, 1.0);
 
