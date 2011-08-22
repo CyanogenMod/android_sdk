@@ -396,32 +396,47 @@
 
     <!-- generic setup -->
     <target name="-setup">
-        <echo>Gathering info for ${ant.project.name}...</echo>
-        <!-- load project properties, resolve Android target, library dependencies
-             and set some properties with the results.
-             All property names are passed as parameters ending in -Out -->
-        <setup
-                projectTypeOut="android.project.type"
-                androidJarFileOut="android.jar"
-                androidAidlFileOut="android.aidl"
-                renderScriptExeOut="renderscript"
-                renderScriptIncludeDirOut="android.rs"
-                bootclasspathrefOut="android.target.classpath"
-                projectLibrariesRootOut="project.libraries"
-                projectLibrariesJarsOut="project.libraries.jars"
-                projectLibrariesResOut="project.libraries.res"
-                projectLibrariesPackageOut="project.libraries.package"
-                projectLibrariesLibsOut="project.libraries.libs"
-        />
+        <if>
+            <condition>
+                <not><isset property="setup.done" /></not>
+            </condition>
+            <then>
+                <property name="setup.done" value="true" />
+                <echo>Gathering info for ${ant.project.name}...</echo>
+                <!-- load project properties, resolve Android target, library dependencies
+                     and set some properties with the results.
+                     All property names are passed as parameters ending in -Out -->
+                <setup
+                        projectTypeOut="android.project.type"
+                        androidJarFileOut="android.jar"
+                        androidAidlFileOut="android.aidl"
+                        renderScriptExeOut="renderscript"
+                        renderScriptIncludeDirOut="android.rs"
+                        bootclasspathrefOut="android.target.classpath"
+                        projectLibrariesRootOut="project.libraries"
+                        projectLibrariesJarsOut="project.libraries.jars"
+                        projectLibrariesResOut="project.libraries.res"
+                        projectLibrariesPackageOut="project.libraries.package"
+                        projectLibrariesLibsOut="project.libraries.libs"
+                />
 
-        <!-- sets a few boolean based on android.project.type
-             to make the if task easier -->
-        <condition property="project.is.library" else="false">
-            <equals arg1="${android.project.type}" arg2="library" />
-        </condition>
-        <condition property="project.is.test" else="false">
-            <equals arg1="${android.project.type}" arg2="test" />
-        </condition>
+                <!-- sets a few boolean based on android.project.type
+                     to make the if task easier -->
+                <condition property="project.is.library" else="false">
+                    <equals arg1="${android.project.type}" arg2="library" />
+                </condition>
+                <condition property="project.is.test" else="false">
+                    <equals arg1="${android.project.type}" arg2="test" />
+                </condition>
+
+                <!-- If a test project, resolve absolute path to tested project. -->
+                <if condition="${project.is.test}">
+                    <then>
+                        <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
+                    </then>
+                </if>
+            </then>
+        </if>
     </target>
 
     <!-- Pre build setup -->
@@ -457,8 +472,6 @@
         <!-- compile the main project if this is a test project -->
         <if condition="${project.is.test}">
             <then>
-                <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
-
                 <!-- figure out which target must be used to build the tested project.
                      If emma is enabled, then use 'instrument' otherwise, use 'debug' -->
                 <condition property="tested.project.target" value="instrument" else="debug">
@@ -999,7 +1012,7 @@
 
     <!-- Installs the tested project. This make sure to install the proper package based on
          the value of emma.enabled -->
-    <target name="-install-tested-project" depends="-test-project-check">
+    <target name="-install-tested-project" depends="-test-project-check, -setup">
         <!-- figure out which tested package to install based on emma.enabled -->
         <condition property="tested.project.install.target" value="installi" else="installd">
             <isset property="emma.enabled" />
@@ -1021,11 +1034,11 @@
                 expression="/manifest/@package" output="tested.manifest.package" />
 
         <property name="emma.dump.file"
-                value="/sdcard/${tested.manifest.package}_coverage.ec" />
+                value="/data/data/${tested.manifest.package}/coverage.ec" />
 
         <if condition="${emma.enabled}">
             <then>
-                <fail message="code coverage is not currently supported. coming soon"/>
+                <echo>WARNING: Code Coverage is currently only supported on the emulator and rooted devices.</echo>
                 <run-tests-helper emma.enabled="true">
                     <extra-instrument-args>
                         <arg value="-e" />
