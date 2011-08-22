@@ -62,7 +62,7 @@ public final class LogCatFilterSettingsSerializer {
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_TEXT); sb.append(KW_DELIM); sb.append(quoteString(f.getText()));
                                                                         sb.append(ATTR_DELIM);
-            sb.append(KW_PID);  sb.append(KW_DELIM); sb.append(quoteString(f.getPidString()));
+            sb.append(KW_PID);  sb.append(KW_DELIM); sb.append(quoteString(f.getPid()));
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_APP);  sb.append(KW_DELIM); sb.append(quoteString(f.getAppName()));
                                                                         sb.append(ATTR_DELIM);

@@ -26,7 +26,7 @@ import com.android.ddmlib.Log.LogLevel;
  */
 public final class LogCatMessage {
     private final LogLevel mLogLevel;
-    private final String mPidString;
+    private final String mPid;
     private final String mAppName;
     private final String mTag;
     private final String mTime;
@@ -38,7 +38,7 @@ public final class LogCatMessage {
     public LogCatMessage(LogLevel logLevel, String pid, String appName,
             String tag, String time, String msg) {
         mLogLevel = logLevel;
-        mPidString = pid;
+        mPid = pid;
         mAppName = appName;
         mTag = tag;
         mTime = time;
@@ -49,8 +49,8 @@ public final class LogCatMessage {
         return mLogLevel;
     }
 
-    public String getPidString() {
-        return mPidString;
+    public String getPid() {
+        return mPid;
     }
 
     public String getAppName() {
@@ -74,7 +74,7 @@ public final class LogCatMessage {
         return mTime + ": "
                 + mLogLevel.getPriorityLetter() + "/"
                 + mTag + "("
-                + mPidString + "): "
+                + mPid + "): "
                 + mMessage;
     }
 }

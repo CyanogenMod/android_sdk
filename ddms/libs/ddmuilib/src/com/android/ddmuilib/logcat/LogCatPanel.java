@@ -291,7 +291,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         LogCatFilter f = new LogCatFilter(d.getFilterName().trim(),
                 d.getTag().trim(),
                 d.getText().trim(),
-                d.getPID().trim(),
+                d.getPid().trim(),
                 d.getAppName().trim(),
                 LogLevel.getByString(d.getLogLevel()));
 
@@ -332,7 +332,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         LogCatFilterSettingsDialog dialog = new LogCatFilterSettingsDialog(
                 Display.getCurrent().getActiveShell());
         dialog.setDefaults(curFilter.getName(), curFilter.getTag(), curFilter.getText(),
-                curFilter.getPidString(), curFilter.getAppName(), curFilter.getLogLevel());
+                curFilter.getPid(), curFilter.getAppName(), curFilter.getLogLevel());
         if (dialog.open() != Window.OK) {
             return;
         }
@@ -340,7 +340,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         LogCatFilter f = new LogCatFilter(dialog.getFilterName(),
                 dialog.getTag(),
                 dialog.getText(),
-                dialog.getPID(),
+                dialog.getPid(),
                 dialog.getAppName(),
                 LogLevel.getByString(dialog.getLogLevel()));
         mLogCatFilters.set(selectedIndex, f);

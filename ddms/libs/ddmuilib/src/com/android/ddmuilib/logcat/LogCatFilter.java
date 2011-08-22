@@ -48,7 +48,7 @@ public final class LogCatFilter {
      * then it is probably better to move it out into a separate class. */
     private int mUnreadCount;
 
-    private boolean mCheckPID;
+    private boolean mCheckPid;
     private boolean mCheckAppName;
     private boolean mCheckTag;
     private boolean mCheckText;
@@ -79,7 +79,7 @@ public final class LogCatFilter {
 
         mUnreadCount = 0;
 
-        mCheckPID = mPid.length() != 0;
+        mCheckPid = mPid.length() != 0;
 
         if (mAppName.length() != 0) {
             try {
@@ -166,7 +166,7 @@ public final class LogCatFilter {
         return mText;
     }
 
-    public String getPidString() {
+    public String getPid() {
         return mPid;
     }
 
@@ -191,7 +191,7 @@ public final class LogCatFilter {
 
         /* if pid filter is enabled, filter out messages whose pid does not match
          * the filter's pid */
-        if (mCheckPID && !m.getPidString().equals(mPid)) {
+        if (mCheckPid && !m.getPid().equals(mPid)) {
             return false;
         }
 
