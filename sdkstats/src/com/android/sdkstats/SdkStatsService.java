@@ -115,8 +115,7 @@ public class SdkStatsService {
      * @param display an optional {@link Display} object to use, or null, if a new one should be
      * created.
      */
-    public static void ping(final String app, final String version, final String eclipseVersion,
-            final Display display) {
+    public static void ping(final String app, final String version, final Display display) {
         // Unique, randomly assigned ID for this installation.
         PreferenceStore prefs = getPreferenceStore();
         if (prefs != null) {
@@ -126,9 +125,9 @@ public class SdkStatsService {
 
                 // ask the user whether he/she wants to opt-out.
                 // This will call doPing in the Display thread after the dialog closes.
-                getUserPermissionAndPing(app, version, eclipseVersion, prefs, display);
+                getUserPermissionAndPing(app, version, prefs, display);
             } else {
-                doPing(app, version, eclipseVersion, prefs);
+                doPing(app, version, prefs);
             }
         }
     }
@@ -187,13 +186,12 @@ public class SdkStatsService {
 
     /**
      * Pings the usage stats server, as long as the prefs contain the opt-in boolean
+     *
      * @param app name to report in the ping
      * @param version to report in the ping
-     * @param eclipseVersion optional version of eclipse.
      * @param prefs the preference store where the opt-in value and ping times are store
      */
-    private static void doPing(final String app, String version, final String eclipseVersion,
-            PreferenceStore prefs) {
+    private static void doPing(final String app, String version, PreferenceStore prefs) {
         // Validate the application and version input.
         final String normalVersion = normalizeVersion(app, version);
 
@@ -227,7 +225,7 @@ public class SdkStatsService {
             @Override
             public void run() {
                 try {
-                    actuallySendPing(app, normalVersion, eclipseVersion, id);
+                    actuallySendPing(app, normalVersion, id);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -241,12 +239,11 @@ public class SdkStatsService {
      *
      * @param app name to report in the ping
      * @param version to report in the ping (dotted numbers, no more than four)
-     * @param eclipseVersion optional version of eclipse.
      * @param id of the local installation
      * @throws IOException if the ping failed
      */
     @SuppressWarnings("deprecation")
-    private static void actuallySendPing(String app, String version, String eclipseVersion, long id)
+    private static void actuallySendPing(String app, String version, long id)
                 throws IOException {
         // Detect and report the host OS.
         String os = System.getProperty("os.name");          //$NON-NLS-1$
@@ -278,9 +275,7 @@ public class SdkStatsService {
             "/service/update?as=androidsdk_" + app +        //$NON-NLS-1$
                 "&id=" + Long.toHexString(id) +             //$NON-NLS-1$
                 "&version=" + version +                     //$NON-NLS-1$
-                "&os=" + os +                               //$NON-NLS-1$
-                (eclipseVersion != null ?
-                        "&eclipse=" + eclipseVersion : "")); //$NON-NLS-1$ //$NON-NLS-2$
+                "&os=" + os);                               //$NON-NLS-1$
 
         // Discard the actual response, but make sure it reads OK
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -314,10 +309,10 @@ public class SdkStatsService {
 
     /**
      * Prompt the user for whether they want to opt out of reporting, and then calls
-     * {@link #doPing(String, String, String, PreferenceStore)}
+     * {@link #doPing(String, String, PreferenceStore)}
      */
     private static void getUserPermissionAndPing(final String app, final String version,
-            final String eclipseVersion, final PreferenceStore prefs, Display display) {
+            final PreferenceStore prefs, Display display) {
         boolean dispose = false;
         if (display == null) {
             display = new Display();
@@ -402,7 +397,7 @@ public class SdkStatsService {
                 prefs.setValue(PING_OPT_IN, permission[0]);
                 try {
                     prefs.save();
-                    doPing(app, version, eclipseVersion, prefs);
+                    doPing(app, version, prefs);
                 }
                 catch (IOException ioe) {
                 }
