@@ -766,7 +766,7 @@
          -->
     <target name="-package-resources" depends="-crunch">
         <!-- only package resources if *not* a library project -->
-        <do-only-if-not-library elseText="Library project: do not package apk..." >
+        <do-only-if-not-library elseText="Library project: do not package resources..." >
             <aapt executable="${aapt}"
                     command="package"
                     versioncode="${version.code}"
@@ -811,17 +811,21 @@
         </do-only-if-not-library>
     </target>
 
-    <!-- ********** Debug specific targets ********** -->
-
-    <target name="-debug-obfuscation-check">
-        <!-- proguard is never enabled in debug mode -->
-        <property name="proguard.enabled" value="false"/>
+    <target name="-set-mode-check">
+        <fail if="out.final.file"
+                message="Cannot run two different modes at the same time. If you are running more than one debug/release/instrument type targets, call them from different Ant calls." />
     </target>
 
-    <target name="-set-debug-mode" depends="-debug-obfuscation-check">
+    <!-- ********** Debug specific targets ********** -->
+
+    <target name="-set-debug-files" depends="-set-mode-check">
+
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-debug-unaligned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-debug.apk" />
+    </target>
 
+
+    <target name="-set-debug-mode">
         <!-- record the current build target -->
         <property name="build.target" value="debug" />
 
@@ -835,9 +839,13 @@
 
     </target>
 
+    <target name="-debug-obfuscation-check">
+        <!-- proguard is never enabled in debug mode -->
+        <property name="proguard.enabled" value="false"/>
+    </target>
+
     <!-- Builds debug output package -->
-    <target name="debug" depends="-set-debug-mode, -package"
-                description="Builds the application and signs it with a debug key.">
+    <target name="-do-debug" depends="-set-debug-mode, -debug-obfuscation-check, -package">
         <!-- only create apk if *not* a library project -->
         <do-only-if-not-library elseText="Library project: do not create apk..." >
             <sequential>
@@ -845,9 +853,15 @@
                 <echo>Debug Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
+    </target>
+
+    <!-- Builds debug output package -->
+    <target name="debug" depends="-set-debug-files, -do-debug"
+                description="Builds the application and signs it with a debug key.">
         <record-build-info key="build.last.target" value="${build.target}" />
         <record-build-info key="build.last.is.instrumented" value="${build.is.instrumented}" />
     </target>
+
 
     <!-- ********** Release specific targets ********** -->
 
@@ -894,7 +908,7 @@
         </if>
     </target>
 
-    <target name="-set-release-mode">
+    <target name="-set-release-mode" depends="-set-mode-check">
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-release-unsigned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-release.apk" />
 
@@ -968,7 +982,7 @@
          gets compiled by the test projects in a way that will make it
          support emma code coverage -->
 
-    <target name="-set-instrumented-mode">
+    <target name="-set-instrumented-mode" depends="-set-mode-check">
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-instrumented-unaligned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-instrumented.apk" />
 
@@ -977,7 +991,7 @@
     </target>
 
     <!-- Builds instrumented output package -->
-    <target name="instrument" depends="-set-instrumented-mode, debug"
+    <target name="instrument" depends="-set-instrumented-mode, -do-debug"
                 description="Builds an instrumented packaged.">
         <!-- only create apk if *not* a library project -->
         <do-only-if-not-library elseText="Library project: do not create apk..." >
@@ -1134,7 +1148,7 @@
         </do-only-if-not-library>
     </target>
 
-    <target name="installd" depends="-set-debug-mode, install"
+    <target name="installd" depends="-set-debug-files, install"
             description="Installs (only) the debug package." />
     <target name="installr" depends="-set-release-mode, install"
             description="Installs (only) the release package." />
