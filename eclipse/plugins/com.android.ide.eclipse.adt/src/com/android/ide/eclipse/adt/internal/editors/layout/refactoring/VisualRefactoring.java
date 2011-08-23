@@ -860,6 +860,12 @@ public abstract class VisualRefactoring extends Refactoring {
         return null;
     }
 
+    /**
+     * Returns the {@link IndexedRegion} for the given node
+     *
+     * @param node the node to look up the region for
+     * @return the corresponding region, or null
+     */
     public static IndexedRegion getRegion(Node node) {
         if (node instanceof IndexedRegion) {
             return (IndexedRegion) node;
@@ -905,6 +911,14 @@ public abstract class VisualRefactoring extends Refactoring {
         return -1;
     }
 
+    /**
+     * Returns the id of the given element
+     *
+     * @param element the element to look up the id for
+     * @return the corresponding id, or an empty string (should not be null
+     *         according to the DOM API, but has been observed to be null on
+     *         some versions of Eclipse)
+     */
     public static String getId(Element element) {
         return element.getAttributeNS(ANDROID_URI, ATTR_ID);
     }

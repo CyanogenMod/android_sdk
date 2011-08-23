@@ -16,7 +16,9 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
@@ -90,7 +92,8 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
                     validatePage();
                     // Hierarchy flattening only works for relative layout (and any future
                     // layouts that can also support arbitrary layouts).
-                    mFlatten.setVisible(mTypeCombo.getText().equals(FQCN_RELATIVE_LAYOUT));
+                    String text = mTypeCombo.getText();
+                    mFlatten.setVisible(text.equals(RELATIVE_LAYOUT) || text.equals(GRID_LAYOUT));
                 }
             };
             mTypeCombo.addSelectionListener(selectionListener);
@@ -113,14 +116,31 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
             exclude.add(VIEW_MERGE);
             exclude.add(VIEW_FRAGMENT);
             boolean oldIsRelativeLayout = mOldType.equals(FQCN_RELATIVE_LAYOUT);
-            if (oldIsRelativeLayout) {
+            boolean oldIsGridLayout = mOldType.equals(FQCN_GRID_LAYOUT);
+            if (oldIsRelativeLayout || oldIsGridLayout) {
                 exclude.add(mOldType);
             }
             mClassNames = WrapInWizard.addLayouts(mProject, mOldType, mTypeCombo, exclude, false);
 
+            boolean gridLayoutAvailable = false;
+            for (int i = 0; i < mTypeCombo.getItemCount(); i++) {
+                if (mTypeCombo.getItem(i).equals(GRID_LAYOUT)) {
+                    gridLayoutAvailable = true;
+                    break;
+                }
+            }
+
             mTypeCombo.select(0);
-            // The default should be Relative layout, if available (and not the old Type)
-            if (!oldIsRelativeLayout) {
+            // The default should be GridLayout (if available) and if not RelativeLayout,
+            // if available (and not the old Type)
+            if (gridLayoutAvailable && !oldIsGridLayout) {
+                for (int i = 0; i < mTypeCombo.getItemCount(); i++) {
+                    if (mTypeCombo.getItem(i).equals(GRID_LAYOUT)) {
+                        mTypeCombo.select(i);
+                        break;
+                    }
+                }
+            } else if (!oldIsRelativeLayout) {
                 for (int i = 0; i < mTypeCombo.getItemCount(); i++) {
                     if (mTypeCombo.getItem(i).equals(RELATIVE_LAYOUT)) {
                         mTypeCombo.select(i);
@@ -128,7 +148,8 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
                     }
                 }
             }
-            mFlatten.setVisible(mTypeCombo.getText().equals(RELATIVE_LAYOUT));
+            mFlatten.setVisible(mTypeCombo.getText().equals(RELATIVE_LAYOUT)
+                    || mTypeCombo.getText().equals(GRID_LAYOUT));
 
             setControl(composite);
             validatePage();

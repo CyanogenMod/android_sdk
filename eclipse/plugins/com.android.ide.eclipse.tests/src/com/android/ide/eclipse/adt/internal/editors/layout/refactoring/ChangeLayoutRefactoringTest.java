@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -65,7 +66,26 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         checkRefactoring("sample6.xml", true);
     }
 
+    public void testGridLayout1() throws Exception {
+        checkRefactoring(FQCN_GRID_LAYOUT, "sample1a.xml", true);
+    }
+
+    public void testGridLayout2() throws Exception {
+        // Test code which analyzes an embedded RelativeLayout
+        checkRefactoring(FQCN_GRID_LAYOUT, "sample2.xml", true);
+    }
+
+    public void testGridLayout5() throws Exception {
+        // Test handling of LinearLayout "gravity" attributes on its children
+        checkRefactoring(FQCN_GRID_LAYOUT, "sample5.xml", true);
+    }
+
     private void checkRefactoring(String basename, boolean flatten) throws Exception {
+        checkRefactoring(FQCN_RELATIVE_LAYOUT, basename, flatten);
+    }
+
+    private void checkRefactoring(String newLayoutType, String basename,
+            boolean flatten) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
@@ -76,7 +96,7 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         ChangeLayoutRefactoring refactoring = new ChangeLayoutRefactoring(selectedElements,
                 layoutEditor);
         refactoring.setFlatten(flatten);
-        refactoring.setType(FQCN_RELATIVE_LAYOUT);
+        refactoring.setType(newLayoutType);
         refactoring.setRootView(rootView);
 
         List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
