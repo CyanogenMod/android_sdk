@@ -54,9 +54,11 @@ public class SdkStatsPermissionDialog extends Dialog {
         "like which versions of the SDK are in use and which tools are the " +
         "most popular with developers. This limited data is not associated " +
         "with personal information about you, and is examined on an aggregate " +
-        "basis, and is maintained in accordance with the " +
+        "basis, and is maintained in accordance with the Google Privacy Policy.";
+
+    public static final String PRIVACY_POLICY_LINK_TEXT =
         "<a href=\"http://www.google.com/intl/en/privacy.html\">Google " +
-        "Privacy Policy</a>.";
+        "Privacy Policy</a>";
 
     /** Used in the preference pane (PrefsDialog) as well. */
     public static final String CHECKBOX_TEXT =
@@ -112,13 +114,16 @@ public class SdkStatsPermissionDialog extends Dialog {
         notice.setText(NOTICE_TEXT);
         notice.pack();
 
-        final Link text = new Link(composite, SWT.WRAP);
+        final Label bodyText = new Label(composite, SWT.WRAP);
         GridData gd = new GridData();
         gd.widthHint = notice.getSize().x;  // do not extend beyond the NOTICE text's width
         gd.grabExcessHorizontalSpace = true;
-        text.setLayoutData(gd);
-        text.setText(BODY_TEXT);
-        text.addSelectionListener(new SelectionAdapter() {
+        bodyText.setLayoutData(gd);
+        bodyText.setText(BODY_TEXT);
+
+        final Link privacyLink = new Link(composite, SWT.NONE);
+        privacyLink.setText(PRIVACY_POLICY_LINK_TEXT);
+        privacyLink.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent event) {
                 openUrl(event.text);
@@ -135,7 +140,7 @@ public class SdkStatsPermissionDialog extends Dialog {
             }
         });
 
-        final Link footer = new Link(composite, SWT.WRAP);
+        final Label footer = new Label(composite, SWT.WRAP);
         gd = new GridData();
         gd.widthHint = notice.getSize().x;
         gd.grabExcessHorizontalSpace = true;
