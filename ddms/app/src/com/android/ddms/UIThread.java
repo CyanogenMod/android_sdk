@@ -437,7 +437,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
      */
     public void runUI(String ddmsParentLocation) {
         Display.setAppName(APP_NAME);
-        mDisplay = new Display();
+        mDisplay = Display.getDefault();
         final Shell shell = new Shell(mDisplay);
 
         // create the image loaders for DDMS and DDMUILIB
