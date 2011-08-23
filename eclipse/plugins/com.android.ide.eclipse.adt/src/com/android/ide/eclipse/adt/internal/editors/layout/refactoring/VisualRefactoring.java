@@ -701,6 +701,12 @@ public abstract class VisualRefactoring extends Refactoring {
                 mSelectionStart = getRegion(first).getStartOffset();
                 mSelectionEnd = getRegion(last).getEndOffset();
 
+                if (mSelectionStart > mSelectionEnd) {
+                    int tmp = mSelectionStart;
+                    mSelectionStart = mSelectionEnd;
+                    mSelectionEnd = tmp;
+                }
+
                 if (first == last) {
                     nodes.add(first);
                 } else if (first.getParentNode() == last.getParentNode()) {
@@ -845,7 +851,8 @@ public abstract class VisualRefactoring extends Refactoring {
         }
         String oldTypeBase = oldType.substring(oldType.lastIndexOf('.') + 1);
         String id = getId(element);
-        if (id == null || id.toLowerCase().contains(oldTypeBase.toLowerCase())) {
+        if (id == null || id.length() == 0
+                || id.toLowerCase().contains(oldTypeBase.toLowerCase())) {
             String newTypeBase = newType.substring(newType.lastIndexOf('.') + 1);
             return ensureHasId(rootEdit, element, newTypeBase);
         }
@@ -1235,9 +1242,25 @@ public abstract class VisualRefactoring extends Refactoring {
      * applied, but the resulting range is also formatted
      */
     protected MultiTextEdit reformat(MultiTextEdit edit, XmlFormatStyle style) {
-        IDocument document = new org.eclipse.jface.text.Document();
         String xml = mEditor.getStructuredDocument().get();
-        document.set(xml);
+        return reformat(xml, edit, style);
+    }
+
+    /**
+     * Rewrite the edits in the given {@link MultiTextEdit} such that same edits are
+     * applied, but the resulting range is also formatted
+     *
+     * @param oldContents the original contents that should be edited by a
+     *            {@link MultiTextEdit}
+     * @param edit the {@link MultiTextEdit} to be applied to some string
+     * @param style the formatting style to use
+     * @return a new {@link MultiTextEdit} which performs the same edits as the input edit
+     *         but also reformats the text
+     */
+    public static MultiTextEdit reformat(String oldContents, MultiTextEdit edit,
+            XmlFormatStyle style) {
+        IDocument document = new org.eclipse.jface.text.Document();
+        document.set(oldContents);
 
         try {
             edit.apply(document);
@@ -1272,10 +1295,10 @@ public abstract class VisualRefactoring extends Refactoring {
         int firstDifference = 0;
         int lastDifference = formatted.length();
         int start = 0;
-        int end = xml.length();
+        int end = oldContents.length();
 
         for (int i = 0, j = start; i < formatted.length() && j < end; i++, j++) {
-            if (formatted.charAt(i) != xml.charAt(j)) {
+            if (formatted.charAt(i) != oldContents.charAt(j)) {
                 firstDifference = i;
                 foundDifference = true;
                 break;
@@ -1291,7 +1314,7 @@ public abstract class VisualRefactoring extends Refactoring {
         for (int i = formatted.length() - 1, j = end - 1;
                 i > firstDifference && j > start;
                 i--, j--) {
-            if (formatted.charAt(i) != xml.charAt(j)) {
+            if (formatted.charAt(i) != oldContents.charAt(j)) {
                 lastDifference = i + 1;
                 break;
             }

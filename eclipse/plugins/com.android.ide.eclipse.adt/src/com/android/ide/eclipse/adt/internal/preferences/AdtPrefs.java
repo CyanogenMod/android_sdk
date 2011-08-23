@@ -381,7 +381,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_HOME_PACKAGE, "android.process.acore"); //$NON-NLS-1$
 
         store.setDefault(PREFS_MONITOR_DENSITY, 0.f);
-        store.setDefault(PREFS_FORMAT_GUI_XML, false);
+        store.setDefault(PREFS_FORMAT_GUI_XML, true);
         store.setDefault(PREFS_USE_CUSTOM_XML_FORMATTER, true);
         store.setDefault(PREFS_ONE_ATTR_PER_LINE, true);
         store.setDefault(PREFS_SPACE_BEFORE_CLOSE, true);

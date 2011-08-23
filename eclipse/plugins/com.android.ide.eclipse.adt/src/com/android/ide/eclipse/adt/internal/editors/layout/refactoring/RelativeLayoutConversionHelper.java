@@ -66,6 +66,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.IStatus;
@@ -119,6 +120,10 @@ class RelativeLayoutConversionHelper {
 
     /** Performs conversion from any layout to a RelativeLayout */
     public void convertToRelative() {
+        if (mRootView == null) {
+            return;
+        }
+
         // Locate the view for the layout
         CanvasViewInfo layoutView = findViewForElement(mRootView, mLayout);
         if (layoutView == null || layoutView.getChildren().size() == 0) {
@@ -208,7 +213,7 @@ class RelativeLayoutConversionHelper {
         if (mFlatten && delete.size() > 0) {
             for (Element element : delete) {
                 mRefactoring.removeElementTags(mRootEdit, element, delete,
-                        true /*changeIndentation*/);
+                        !AdtPrefs.getPrefs().getFormatGuiXml() /*changeIndentation*/);
             }
         }
     }
@@ -558,7 +563,8 @@ class RelativeLayoutConversionHelper {
                 }
             }
 
-            if (baselineRef != null && !baselineRef.getId().equals(childView.getId())) {
+            if (baselineRef != null && baselineRef.getId() != null
+                    && !baselineRef.getId().equals(childView.getId())) {
                 assert !isVertical;
                 // Only align if they share the same gravity
                 if ((childView.getGravity() & GRAVITY_VERT_MASK) ==

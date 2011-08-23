@@ -43,6 +43,7 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -163,15 +164,19 @@ public class ChangeViewRefactoring extends VisualRefactoring {
             String oldName = element.getNodeName();
             int open = text.indexOf(oldName);
             int close = text.lastIndexOf(oldName);
+            if (element instanceof ElementImpl && ((ElementImpl) element).isEmptyTag()) {
+                close = -1;
+            }
 
-            if (open != -1 && close != -1) {
+            if (open != -1) {
                 int oldLength = oldName.length();
                 rootEdit.addChild(new ReplaceEdit(region.getStartOffset() + open,
                         oldLength, name));
-                if (close != open) { // Gracefully handle <FooLayout/>
-                    rootEdit.addChild(new ReplaceEdit(region.getStartOffset() + close, oldLength,
-                            name));
-                }
+            }
+            if (close != -1 && close != open) {
+                int oldLength = oldName.length();
+                rootEdit.addChild(new ReplaceEdit(region.getStartOffset() + close, oldLength,
+                        name));
             }
 
             // Change tag type
