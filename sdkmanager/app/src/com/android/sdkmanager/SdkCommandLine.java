@@ -54,7 +54,6 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String OBJECT_PROJECT        = "project";                   //$NON-NLS-1$
     public static final String OBJECT_TEST_PROJECT   = "test-project";              //$NON-NLS-1$
     public static final String OBJECT_LIB_PROJECT    = "lib-project";               //$NON-NLS-1$
-    public static final String OBJECT_EXPORT_PROJECT = "export-project";            //$NON-NLS-1$
     public static final String OBJECT_ADB            = "adb";                       //$NON-NLS-1$
 
     public static final String ARG_ALIAS        = "alias";                          //$NON-NLS-1$
@@ -142,13 +141,7 @@ class SdkCommandLine extends CommandLineProcessor {
                 "Creates a new Android library project." },
             { VERB_UPDATE, OBJECT_LIB_PROJECT,
                 "Updates an Android library project (must already have an AndroidManifest.xml)." },
-/*
- * disabled until the feature is officially supported.
-            { VERB_CREATE, OBJECT_EXPORT_PROJECT,
-                "Creates a new Android Export Project." },
-            { VERB_UPDATE, OBJECT_EXPORT_PROJECT,
-                "Updates an Android Export Project (must have an export.properties)." },
-*/
+
             { VERB_UPDATE, OBJECT_ADB,
                 "Updates adb to support the USB devices declared in the SDK add-ons." },
 

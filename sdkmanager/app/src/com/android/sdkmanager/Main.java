@@ -257,9 +257,6 @@ public class Main {
             } else if (SdkCommandLine.OBJECT_LIB_PROJECT.equals(directObject)) {
                 createProject(true /*library*/);
 
-            } else if (SdkCommandLine.OBJECT_EXPORT_PROJECT.equals(directObject)) {
-                createExportProject();
-
             }
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb)) {
             if (SdkCommandLine.OBJECT_AVD.equals(directObject)) {
@@ -273,9 +270,6 @@ public class Main {
 
             } else if (SdkCommandLine.OBJECT_LIB_PROJECT.equals(directObject)) {
                 updateProject(true /*library*/);
-
-            } else if (SdkCommandLine.OBJECT_EXPORT_PROJECT.equals(directObject)) {
-                updateExportProject();
 
             } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
                 if (mSdkCommandLine.getFlagNoUI(verb)) {
@@ -651,39 +645,6 @@ public class Main {
     }
 
     /**
-     * Creates a new Android Export project based on command-line parameters
-     */
-    private void createExportProject() {
-        ProjectCreator creator = getProjectCreator();
-
-        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
-
-        String projectName = mSdkCommandLine.getParamName();
-        String packageName = mSdkCommandLine.getParamProjectPackage(
-                SdkCommandLine.OBJECT_EXPORT_PROJECT);
-
-        if (projectName != null &&
-                !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
-            errorAndExit(
-                "Project name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
-                projectName, ProjectCreator.CHARS_PROJECT_NAME);
-            return;
-        }
-
-        if (packageName != null &&
-                !ProjectCreator.RE_PACKAGE_NAME.matcher(packageName).matches()) {
-            errorAndExit(
-                "Package name '%1$s' contains invalid characters.\n" +
-                "A package name must be constitued of two Java identifiers.\n" +
-                "Each identifier allowed characters are: %2$s",
-                packageName, ProjectCreator.CHARS_PACKAGE_NAME);
-            return;
-        }
-
-        creator.createExportProject(projectDir, projectName, packageName);
-    }
-
-    /**
      * Updates an existing Android project based on command-line parameters
      * @param library whether the project is a library project.
      */
@@ -758,26 +719,6 @@ public class Main {
 
         creator.updateTestProject(projectDir, mSdkCommandLine.getParamTestProjectMain(),
                 mSdkManager);
-    }
-
-    /**
-     * Updates an existing Android export project based on command-line parameters
-     */
-    private void updateExportProject() {
-        ProjectCreator creator = getProjectCreator();
-
-        String projectDir = getProjectLocation(mSdkCommandLine.getParamLocationPath());
-
-        String projectName = mSdkCommandLine.getParamName();
-        if (projectName != null &&
-                !ProjectCreator.RE_PROJECT_NAME.matcher(projectName).matches()) {
-            errorAndExit(
-                "Project name '%1$s' contains invalid characters.\nAllowed characters are: %2$s",
-                projectName, ProjectCreator.CHARS_PROJECT_NAME);
-            return;
-        }
-
-        creator.updateExportProject(projectDir, projectName, mSdkCommandLine.getFlagForce());
     }
 
     /**
