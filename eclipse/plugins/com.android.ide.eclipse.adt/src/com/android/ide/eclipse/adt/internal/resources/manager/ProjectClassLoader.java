@@ -80,7 +80,7 @@ public final class ProjectClassLoader extends ClassLoader {
             // get the project info
             ProjectState projectState = Sdk.getProjectState(mJavaProject.getProject());
 
-            // this can happen if the project has no default.properties.
+            // this can happen if the project has no project.properties.
             if (projectState != null) {
 
                 List<IProject> libProjects = projectState.getFullLibraryProjects();

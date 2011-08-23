@@ -25,6 +25,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 
 import java.util.ArrayList;
@@ -54,6 +55,16 @@ public class IFolderWrapper implements IAbstractFolder {
     public boolean exists() {
         return mContainer.exists();
     }
+
+    public boolean delete() {
+        try {
+            mContainer.delete(true /*force*/, new NullProgressMonitor());
+            return true;
+        } catch (CoreException e) {
+            return false;
+        }
+    }
+
 
     public IAbstractResource[] listMembers() {
         try {

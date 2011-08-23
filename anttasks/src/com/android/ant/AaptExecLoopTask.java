@@ -272,7 +272,7 @@ public final class AaptExecLoopTask extends BaseTask {
     /*
      * (non-Javadoc)
      *
-     * Executes the loop. Based on the values inside default.properties, this will
+     * Executes the loop. Based on the values inside project.properties, this will
      * create alternate temporary ap_ files.
      *
      * @see org.apache.tools.ant.Task#execute()
