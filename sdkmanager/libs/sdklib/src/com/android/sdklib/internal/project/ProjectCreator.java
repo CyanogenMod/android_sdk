@@ -39,6 +39,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.xpath.XPath;
@@ -52,6 +53,9 @@ import javax.xml.xpath.XPathFactory;
  * @hide
  */
 public class ProjectCreator {
+
+    /** Version of the build.xml. Stored in version-tag */
+    private final static int MIN_BUILD_VERSION_TAG = 1;
 
     /** Package path substitution string used in template files, i.e. "PACKAGE_PATH" */
     private final static String PH_JAVA_FOLDER = "PACKAGE_PATH";
@@ -75,6 +79,11 @@ public class ProjectCreator {
     private final static String PH_PROJECT_NAME = "PROJECT_NAME";
     /** Application icon substitution string used in the manifest template */
     private final static String PH_ICON = "ICON";
+    /** Version tag name substitution string used in template files, i.e. "VERSION_TAG". */
+    private final static String PH_VERSION_TAG = "VERSION_TAG";
+
+    /** The xpath to find a project name in an Ant build file. */
+    private static final String XPATH_PROJECT_NAME = "/project/@name";
 
     /** Pattern for characters accepted in a project name. Since this will be used as a
      * directory name, we're being a bit conservative on purpose: dot and space cannot be used. */
@@ -225,6 +234,7 @@ public class ProjectCreator {
             // files manually.
             keywords.put(PH_JAVA_FOLDER, packagePath);
             keywords.put(PH_PACKAGE, packageName);
+            keywords.put(PH_VERSION_TAG, Integer.toString(MIN_BUILD_VERSION_TAG));
 
 
             // compute some activity related information
@@ -456,7 +466,9 @@ public class ProjectCreator {
      * <li> Check there's a default.properties with a target *or* --target was specified
      * <li> Update default.prop if --target was specified
      * <li> Refresh/create "sdk" in local.properties
-     * <li> Build.xml: create if not present or no <androidinit(\w|/>) in it
+     * <li> Build.xml: create if not present or if version-tag is found or not. version-tag:custom
+     * prevent any overwrite. version-tag:[integer] will override. missing version-tag will query
+     * the dev.
      * </ul>
      *
      * @param folderPath the folder of the project to update. This folder must exist.
@@ -604,17 +616,43 @@ public class ProjectCreator {
         File buildXml = new File(projectFolder, SdkConstants.FN_BUILD_XML);
         boolean needsBuildXml = projectName != null || !buildXml.exists();
 
+        // if it seems there's no need for a new build.xml, look for inside the file
+        // to try to detect old ones that may need updating.
         if (!needsBuildXml) {
             // we are looking for version-tag: followed by either an integer or "custom".
-            if (checkFileContainsRegexp(buildXml, "version-tag:\\s*custom")) { //$NON-NLS-1$
-                println("File %1$s is custom and will not be overriden.",
+            if (checkFileContainsRegexp(buildXml, "version-tag:\\s*custom") != null) { //$NON-NLS-1$
+                println("%1$s: Found version-tag: custom. File will not be updated.",
                         SdkConstants.FN_BUILD_XML);
             } else {
-                // TODO: look for the version value and update if too old.
-                if (!checkFileContainsRegexp(buildXml, "version-tag:\\s*(\\d*)")) { //$NON-NLS-1$
-                    needsBuildXml = true;
-                    println("File %1$s is too old and needs to be updated.",
+                Matcher m = checkFileContainsRegexp(buildXml, "version-tag:\\s*(\\d+)"); //$NON-NLS-1$
+                if (m == null) {
+                    println("----------\n" +
+                            "%1$s: Failed to find version-tag string. File must be updated.\n" +
+                            "In order to not erase potential customizations, the file will not be automatically regenerated.\n" +
+                            "If no changes have been made to the file, delete it manually and run the command again.\n" +
+                            "If you have made customizations to the build process, the file must be manually updated.\n" +
+                            "It is recommended to:\n" +
+                            "\t* Copy current file to a safe location.\n" +
+                            "\t* Delete original file.\n" +
+                            "\t* Run command again to generate a new file.\n" +
+                            "\t* Port customizations to the new file, by looking at the new rules file\n" +
+                            "\t  located at <SDK>/tools/ant/build.xml\n" +
+                            "\t* Update file to contain\n" +
+                            "\t      version-tag: custom\n" +
+                            "\t  to prevent file from being rewritten automatically by the SDK tools.\n" +
+                            "----------\n",
                             SdkConstants.FN_BUILD_XML);
+                } else {
+                    String versionStr = m.group(1);
+                    if (versionStr != null) {
+                        // can't fail due to regexp above.
+                        int version = Integer.parseInt(versionStr);
+                        if (version < MIN_BUILD_VERSION_TAG) {
+                            println("%1$s: Found version-tag: %2$d. Expected version-tag: %3$d: file must be updated.",
+                                    SdkConstants.FN_BUILD_XML, version, MIN_BUILD_VERSION_TAG);
+                            needsBuildXml = true;
+                        }
+                    }
                 }
             }
         }
@@ -623,28 +661,67 @@ public class ProjectCreator {
             // create the map for place-holders of values to replace in the templates
             final HashMap<String, String> keywords = new HashMap<String, String>();
 
-            // Take the project name from the command line if there's one
-            if (projectName != null) {
-                keywords.put(PH_PROJECT_NAME, projectName);
-            } else {
-                extractPackageFromManifest(androidManifest, keywords);
-                if (keywords.containsKey(PH_ACTIVITY_ENTRY_NAME)) {
-                    String activity = keywords.get(PH_ACTIVITY_ENTRY_NAME);
-                    // keep only the last segment if applicable
-                    int pos = activity.lastIndexOf('.');
-                    if (pos != -1) {
-                        activity = activity.substring(pos + 1);
-                    }
+            // put the current version-tag value
+            keywords.put(PH_VERSION_TAG, Integer.toString(MIN_BUILD_VERSION_TAG));
 
-                    // Use the activity as project name
-                    keywords.put(PH_PROJECT_NAME, activity);
-                } else {
-                    // We need a project name. Just pick up the basename of the project
-                    // directory.
-                    projectName = projectFolder.getName();
-                    keywords.put(PH_PROJECT_NAME, projectName);
+            // if there was no project name on the command line, figure one out.
+            if (projectName == null) {
+                // otherwise, take it from the existing build.xml if it exists already.
+                if (buildXml.exists()) {
+                    try {
+                        XPathFactory factory = XPathFactory.newInstance();
+                        XPath xpath = factory.newXPath();
+
+                        projectName = xpath.evaluate(XPATH_PROJECT_NAME,
+                                new InputSource(new FileInputStream(buildXml)));
+                    } catch (XPathExpressionException e) {
+                        // this is ok since we're going to recreate the file.
+                        mLog.error(e, "Unable to find existing project name from %1$s",
+                                SdkConstants.FN_BUILD_XML);
+                    } catch (FileNotFoundException e) {
+                        // can't happen since we check above.
+                    }
+                }
+
+                // if the project is still null, then we find another way.
+                if (projectName == null) {
+                    extractPackageFromManifest(androidManifest, keywords);
+                    if (keywords.containsKey(PH_ACTIVITY_ENTRY_NAME)) {
+                        String activity = keywords.get(PH_ACTIVITY_ENTRY_NAME);
+                        // keep only the last segment if applicable
+                        int pos = activity.lastIndexOf('.');
+                        if (pos != -1) {
+                            activity = activity.substring(pos + 1);
+                        }
+
+                        // Use the activity as project name
+                        projectName = activity;
+
+                        println("No project name specified, using Activity name '%1$s'.\n" +
+                                "If you wish to change it, edit the first line of %2$s.",
+                                activity, SdkConstants.FN_BUILD_XML);
+                    } else {
+                        // We need a project name. Just pick up the basename of the project
+                        // directory.
+                        File projectCanonicalFolder = projectFolder;
+                        try {
+                            projectCanonicalFolder = projectCanonicalFolder.getCanonicalFile();
+                        } catch (IOException e) {
+                            // ignore, keep going
+                        }
+
+                        // Use the folder name as project name
+                        projectName = projectCanonicalFolder.getName();
+
+                        println("No project name specified, using project folder name '%1$s'.\n" +
+                                "If you wish to change it, edit the first line of %2$s.",
+                                projectName, SdkConstants.FN_BUILD_XML);
+                    }
                 }
             }
+
+            // put the project name in the map for replacement during the template installation.
+            keywords.put(PH_PROJECT_NAME, projectName);
 
             if (mLevel == OutputLevel.VERBOSE) {
                 println("Regenerating %1$s with project name %2$s",
@@ -653,9 +730,7 @@ public class ProjectCreator {
             }
 
             try {
-                installTemplate("build.template",
-                        new File(projectFolder, SdkConstants.FN_BUILD_XML),
-                        keywords);
+                installTemplate("build.template", buildXml, keywords);
             } catch (ProjectCreateException e) {
                 mLog.error(e, null);
                 return false;
@@ -731,38 +806,35 @@ public class ProjectCreator {
             return;
         }
 
-        // look for the name of the project. If build.xml does not exist,
-        // query the main project build.xml for its name
+        // update test-project does not support the --name parameter, therefore the project
+        // name should generally not be passed to updateProject().
+        // However if build.xml does not exist then updateProject() will recreate it. In this
+        // case we will need the project name.
+        // To do this, we look for the parent project name and add "test" to it.
+        // If the main project does not have a project name (yet), then the default behavior
+        // will be used (look for activity and then folder name)
         String projectName = null;
         XPathFactory factory = XPathFactory.newInstance();
         XPath xpath = factory.newXPath();
 
-        File testBuildXml = new File(folderPath, "build.xml");
-        if (testBuildXml.isFile()) {
-            try {
-                projectName = xpath.evaluate("/project/@name",
-                        new InputSource(new FileInputStream(testBuildXml)));
-            } catch (XPathExpressionException e) {
-                // looks like the build.xml is wrong, we'll create a new one, and get its name
-                // from the parent.
-            } catch (FileNotFoundException e) {
-                // looks like the build.xml is wrong, we'll create a new one, and get its name
-                // from the parent.
-            }
-        }
-
-        // if the project name is still unknown, get it from the parent.
-        if (projectName == null) {
-            try {
-                String mainProjectName = xpath.evaluate("/project/@name",
-                        new InputSource(new FileInputStream(new File(resolvedPath, "build.xml"))));
-                projectName = mainProjectName + "Test";
-            } catch (XPathExpressionException e) {
-                mLog.error(e, "Unable to query main project name.");
-                return;
-            } catch (FileNotFoundException e) {
-                mLog.error(e, "Unable to query main project name.");
-                return;
+        File testBuildXml = new File(folderPath, SdkConstants.FN_BUILD_XML);
+        if (testBuildXml.isFile() == false) {
+            File mainBuildXml = new File(resolvedPath, SdkConstants.FN_BUILD_XML);
+            if (mainBuildXml.isFile()) {
+                try {
+                    // get the name of the main project and add Test to it.
+                    String mainProjectName = xpath.evaluate(XPATH_PROJECT_NAME,
+                            new InputSource(new FileInputStream(mainBuildXml)));
+                    projectName = mainProjectName + "Test";
+                } catch (XPathExpressionException e) {
+                    // it's ok, updateProject() will figure out a name automatically.
+                    // We do log the error though as the build.xml file may be broken.
+                    mLog.warning("Failed to parse %1$s.\n" +
+                            "File may not be valid. Consider running 'android update project' on the main project.",
+                            mainBuildXml.getPath());
+                } catch (FileNotFoundException e) {
+                    // should not happen since we check first.
+                }
             }
         }
 
@@ -911,9 +983,15 @@ public class ProjectCreator {
     }
 
     /**
-     * Returns true if any line of the input file contains the requested regexp.
+     * Looks for a given regex in a file and returns the matcher if any line of the input file
+     * contains the requested regexp.
+     *
+     * @param file the file to search.
+     * @param regexp the regexp to search for.
+     *
+     * @return a Matcher or null if the regexp is not found.
      */
-    private boolean checkFileContainsRegexp(File file, String regexp) {
+    private Matcher checkFileContainsRegexp(File file, String regexp) {
         Pattern p = Pattern.compile(regexp);
 
         try {
@@ -921,8 +999,9 @@ public class ProjectCreator {
             String line;
 
             while ((line = in.readLine()) != null) {
-                if (p.matcher(line).find()) {
-                    return true;
+                Matcher m = p.matcher(line);
+                if (m.find()) {
+                    return m;
                 }
             }
 
@@ -931,7 +1010,7 @@ public class ProjectCreator {
             // ignore
         }
 
-        return false;
+        return null;
     }
 
     /**

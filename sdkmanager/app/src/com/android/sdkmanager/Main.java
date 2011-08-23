@@ -1423,7 +1423,7 @@ public class Main {
     }
 
     /**
-     * Reads the line from the input stream.
+     * Reads a line from the input stream.
      * @param buffer
      * @throws IOException
      */
