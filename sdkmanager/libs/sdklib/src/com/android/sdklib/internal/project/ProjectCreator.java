@@ -375,49 +375,6 @@ public class ProjectCreator {
         }
     }
 
-    public void createExportProject(String folderPath, String projectName, String packageName) {
-        // create project folder if it does not exist
-        File projectFolder = checkNewProjectLocation(folderPath);
-        if (projectFolder == null) {
-            return;
-        }
-
-        try {
-            // location of the SDK goes in localProperty
-            ProjectPropertiesWorkingCopy localProperties = ProjectProperties.create(folderPath,
-                    PropertyType.LOCAL);
-            localProperties.setProperty(ProjectProperties.PROPERTY_SDK, mSdkFolder);
-            localProperties.save();
-
-            // package name goes in export properties
-            ProjectPropertiesWorkingCopy exportProperties = ProjectProperties.create(folderPath,
-                    PropertyType.EXPORT);
-            exportProperties.setProperty(ProjectProperties.PROPERTY_PACKAGE, packageName);
-            exportProperties.setProperty(ProjectProperties.PROPERTY_VERSIONCODE, "1");
-            exportProperties.setProperty(ProjectProperties.PROPERTY_PROJECTS, "../some/path/here");
-            exportProperties.save();
-
-            // create the map for place-holders of values to replace in the build file template
-            final HashMap<String, String> keywords = new HashMap<String, String>();
-
-            // Take the project name from the command line if there's one
-            if (projectName != null) {
-                keywords.put(PH_PROJECT_NAME, projectName);
-            } else {
-                // We need a project name. Just pick up the basename of the project
-                // directory.
-                projectName = projectFolder.getName();
-                keywords.put(PH_PROJECT_NAME, projectName);
-            }
-
-            installTemplate("build.export.template",
-                    new File(projectFolder, SdkConstants.FN_BUILD_XML),
-                    keywords);
-        } catch (Exception e) {
-            mLog.error(e, null);
-        }
-    }
-
     private File checkNewProjectLocation(String folderPath) {
         File projectFolder = new File(folderPath);
         if (!projectFolder.exists()) {

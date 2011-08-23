@@ -94,11 +94,7 @@ public class ProjectProperties {
         LOCAL(SdkConstants.FN_LOCAL_PROPERTIES, LOCAL_HEADER, new String[] {
                 PROPERTY_SDK
             },
-            new String[] { PROPERTY_SDK_LEGACY }),
-        EXPORT(SdkConstants.FN_EXPORT_PROPERTIES, EXPORT_HEADER, new String[] {
-                PROPERTY_PACKAGE, PROPERTY_VERSIONCODE, PROPERTY_PROJECTS,
-                PROPERTY_KEY_STORE, PROPERTY_KEY_ALIAS
-            }, null);
+            new String[] { PROPERTY_SDK_LEGACY });
 
         private final String mFilename;
         private final String mHeader;
