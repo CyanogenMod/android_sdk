@@ -69,10 +69,10 @@
          ***********************
          ****** IMPORTANT ******
          ***********************
-         In all case you should replace the following version tag value with "custom"
-         in order to avoid having your file be overridden.
+         In all cases you must update the value of version-tag below to read 'custom' instead of an integer,
+         in order to avoid having your file be overridden by tools such as "android update project"
     -->
-    <!-- version-tag: 1 -->
+    <!-- version-tag: VERSION_TAG -->
     <import file="${sdk.dir}/tools/ant/build.xml" />
 
 </project>
