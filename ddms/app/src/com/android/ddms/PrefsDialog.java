@@ -23,6 +23,7 @@ import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.PortFieldEditor;
+import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.sdkstats.SdkStatsPermissionDialog;
 import com.android.sdkstats.SdkStatsService;
@@ -447,6 +448,12 @@ public final class PrefsDialog {
                         "Text output font:",
                         getFieldEditorParent());
                 addField(ffe);
+
+                IntegerFieldEditor maxMessages = new IntegerFieldEditor(
+                        LogCatMessageList.MAX_MESSAGES_PREFKEY,
+                        "Maximum number of logcat messages to buffer",
+                        getFieldEditorParent());
+                addField(maxMessages);
             }
         }
     }

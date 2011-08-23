@@ -76,6 +76,7 @@ public class Messages extends NLS {
     public static String FileExplorerView_Push_File;
     public static String FileExplorerView_Push_File_Onto_Device;
     public static String LogCatPreferencePage_Display_Font;
+    public static String LogCatPreferencePage_MaxMessages;
     public static String LogCatPreferencePage_Double_Click_Action;
     public static String LogCatPreferencePage_Go_To_Problem_Declararion;
     public static String LogCatPreferencePage_Go_To_Problem_Error_Line;

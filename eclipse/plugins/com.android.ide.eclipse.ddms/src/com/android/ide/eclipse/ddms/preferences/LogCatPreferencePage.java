@@ -20,12 +20,14 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FontFieldEditor;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 
+import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
@@ -39,6 +41,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
 
     private BooleanFieldEditor mSwitchPerspective;
     private ComboFieldEditor mWhichPerspective;
+    private IntegerFieldEditor mMaxMessages;
 
     public LogCatPreferencePage() {
         super(GRID);
@@ -50,6 +53,11 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
         FontFieldEditor ffe = new FontFieldEditor(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
                 Messages.LogCatPreferencePage_Display_Font, getFieldEditorParent());
         addField(ffe);
+
+        mMaxMessages = new IntegerFieldEditor(
+                LogCatMessageList.MAX_MESSAGES_PREFKEY,
+                Messages.LogCatPreferencePage_MaxMessages, getFieldEditorParent());
+        addField(mMaxMessages);
 
         ComboFieldEditor cfe = new ComboFieldEditor(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM,
                 Messages.LogCatPreferencePage_Double_Click_Action, new String[][] {
@@ -101,5 +109,8 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     protected void performDefaults() {
         super.performDefaults();
         mWhichPerspective.setEnabled(mSwitchPerspective.getBooleanValue(), getFieldEditorParent());
+
+        mMaxMessages.setStringValue(
+                Integer.toString(LogCatMessageList.MAX_MESSAGES_DEFAULT));
     }
 }
