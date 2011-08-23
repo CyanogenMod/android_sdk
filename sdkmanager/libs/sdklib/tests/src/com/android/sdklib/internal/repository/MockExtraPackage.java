@@ -38,11 +38,15 @@ public class MockExtraPackage extends ExtraPackage {
         this(null /*source*/, vendor, path, revision, min_platform_tools_rev);
     }
 
-    public MockExtraPackage(SdkSource source,
-            String vendor, String path, int revision, int min_platform_tools_rev) {
+    public MockExtraPackage(
+            SdkSource source,
+            Properties props,
+            String vendor,
+            String path,
+            int revision) {
         super(
             source,
-            createProps(min_platform_tools_rev), // props,
+            props, // props,
             vendor,
             path,
             revision,
@@ -53,6 +57,15 @@ public class MockExtraPackage extends ExtraPackage {
             Arch.getCurrentArch(), // archiveArch,
             "foo" // archiveOsPath
             );
+    }
+
+    public MockExtraPackage(
+            SdkSource source,
+            String vendor,
+            String path,
+            int revision,
+            int min_platform_tools_rev) {
+        this(source, createProps(min_platform_tools_rev), vendor, path, revision);
     }
 
     private static Properties createProps(int min_platform_tools_rev) {

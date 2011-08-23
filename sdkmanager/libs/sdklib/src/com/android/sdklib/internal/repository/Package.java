@@ -154,21 +154,31 @@ public abstract class Package implements IDescription, Comparable<Package> {
         }
         mSource = source;
 
-        mArchives = new Archive[1];
-        mArchives[0] = createLocalArchive(props, archiveOs, archiveArch, archiveOsPath);
+        mArchives = initializeArchives(props, archiveOs, archiveArch, archiveOsPath);
     }
 
+    /**
+     * Called by the constructor to get the initial {@link #mArchives} array.
+     * <p/>
+     * This is invoked by the local-package constructor and allows mock testing
+     * classes to override the archives created.
+     * This is an <em>implementation</em> details and clients must <em>not</em>
+     * rely on this.
+     *
+     * @return Always return a non-null array. The array may be empty.
+     */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected Archive createLocalArchive(
+    protected Archive[] initializeArchives(
             Properties props,
             Os archiveOs,
             Arch archiveArch,
             String archiveOsPath) {
-        return new Archive(this,
-                props,
-                archiveOs,
-                archiveArch,
-                archiveOsPath);
+        return new Archive[] {
+                new Archive(this,
+                    props,
+                    archiveOs,
+                    archiveArch,
+                    archiveOsPath) };
     }
 
     /**

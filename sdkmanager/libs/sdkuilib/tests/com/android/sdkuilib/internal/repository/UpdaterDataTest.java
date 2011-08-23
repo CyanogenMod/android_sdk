@@ -17,6 +17,7 @@
 package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.MockEmptyPackage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +67,9 @@ public class UpdaterDataTest extends TestCase {
         archives.add(ai2);
 
         m._installArchives(archives);
-        assertEquals("[MockEmptyPackage 'a1', MockEmptyPackage 'a2']", Arrays.toString(m.getInstalled()));
+        assertEquals(
+                "[MockEmptyPackage 'a1', MockEmptyPackage 'a2']",
+                Arrays.toString(m.getInstalled()));
     }
 
     /**
@@ -87,7 +90,9 @@ public class UpdaterDataTest extends TestCase {
         archives.add(ai1);
 
         m._installArchives(archives);
-        assertEquals("[MockEmptyPackage 'a1', MockEmptyPackage 'a2']", Arrays.toString(m.getInstalled()));
+        assertEquals(
+                "[MockEmptyPackage 'a1', MockEmptyPackage 'a2']",
+                Arrays.toString(m.getInstalled()));
     }
 
 }

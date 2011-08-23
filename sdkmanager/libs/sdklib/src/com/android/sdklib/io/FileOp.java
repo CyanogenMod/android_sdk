@@ -23,30 +23,42 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 
 /**
- * Helper methods used when dealing with archives installation.
+ * Wraps some common {@link File} operations on files and folders.
+ * <p/>
+ * This makes it possible to override/mock/stub some file operations in unit tests.
  */
-public abstract class OsHelper {
+public class FileOp implements IFileOp {
 
     /**
      * Reflection method for File.setExecutable(boolean, boolean). Only present in Java 6.
      */
     private static Method sFileSetExecutable = null;
-    /**
-     * Whether File.setExecutable was queried through reflection. This is to only
-     * attempt reflection once.
-     */
-    private static boolean sFileReflectionDone = false;
+
     /**
      * Parameters to call File.setExecutable through reflection.
      */
     private final static Object[] sFileSetExecutableParams = new Object[] {
         Boolean.TRUE, Boolean.FALSE };
+
+    // static initialization of sFileSetExecutable.
+    static {
+        try {
+            sFileSetExecutable = File.class.getMethod("setExecutable", //$NON-NLS-1$
+                    boolean.class, boolean.class);
+
+        } catch (SecurityException e) {
+            // do nothing we'll use chdmod instead
+        } catch (NoSuchMethodException e) {
+            // do nothing we'll use chdmod instead
+        }
+    }
 
     /**
      * Helper to delete a file or a directory.
@@ -54,9 +66,9 @@ public abstract class OsHelper {
      * Files that cannot be deleted right away are marked for deletion on exit.
      * The argument can be null.
      */
-    public static void deleteFileOrFolder(File fileOrFolder) {
+    public void deleteFileOrFolder(File fileOrFolder) {
         if (fileOrFolder != null) {
-            if (fileOrFolder.isDirectory()) {
+            if (isDirectory(fileOrFolder)) {
                 // Must delete content recursively first
                 for (File item : fileOrFolder.listFiles()) {
                     deleteFileOrFolder(item);
@@ -107,20 +119,7 @@ public abstract class OsHelper {
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
-    public static void setExecutablePermission(File file) throws IOException {
-        if (sFileReflectionDone == false) {
-            try {
-                sFileSetExecutable = File.class.getMethod("setExecutable", //$NON-NLS-1$
-                        boolean.class, boolean.class);
-
-            } catch (SecurityException e) {
-                // do nothing we'll use chdmod instead
-            } catch (NoSuchMethodException e) {
-                // do nothing we'll use chdmod instead
-            }
-
-            sFileReflectionDone = true;
-        }
+    public void setExecutablePermission(File file) throws IOException {
 
         if (sFileSetExecutable != null) {
             try {
@@ -148,7 +147,7 @@ public abstract class OsHelper {
      * @throws FileNotFoundException if the source file doesn't exist.
      * @throws IOException if there's a problem reading or writing the file.
      */
-    public static void copyFile(File source, File dest) throws IOException {
+    public void copyFile(File source, File dest) throws IOException {
         byte[] buffer = new byte[8192];
 
         FileInputStream fis = null;
@@ -188,7 +187,7 @@ public abstract class OsHelper {
      * @throws FileNotFoundException if the source files don't exist.
      * @throws IOException if there's a problem reading the files.
      */
-    public static boolean isSameFile(File source, File destination) throws IOException {
+    public boolean isSameFile(File source, File destination) throws IOException {
 
         if (source.length() != destination.length()) {
             return false;
@@ -240,5 +239,53 @@ public abstract class OsHelper {
         }
 
         return true;
+    }
+
+    /** Invokes {@link File#isFile()} on the given {@code file}. */
+    public boolean isFile(File file) {
+        return file.isFile();
+    }
+
+    /** Invokes {@link File#isDirectory()} on the given {@code file}. */
+    public boolean isDirectory(File file) {
+        return file.isDirectory();
+    }
+
+    /** Invokes {@link File#exists()} on the given {@code file}. */
+    public boolean exists(File file) {
+        return file.exists();
+    }
+
+    /** Invokes {@link File#length()} on the given {@code file}. */
+    public long length(File file) {
+        return file.length();
+    }
+
+    /**
+     * Invokes {@link File#delete()} on the given {@code file}.
+     * Note: for a recursive folder version, consider {@link #deleteFileOrFolder(File)}.
+     */
+    public boolean delete(File file) {
+        return file.delete();
+    }
+
+    /** Invokes {@link File#mkdirs()} on the given {@code file}. */
+    public boolean mkdirs(File file) {
+        return file.mkdirs();
+    }
+
+    /** Invokes {@link File#listFiles()} on the given {@code file}. */
+    public File[] listFiles(File file) {
+        return file.listFiles();
+    }
+
+    /** Invokes {@link File#renameTo(File)} on the given files. */
+    public boolean renameTo(File oldFile, File newFile) {
+        return oldFile.renameTo(newFile);
+    }
+
+    /** Creates a new {@link FileOutputStream} for the given {@code file}. */
+    public OutputStream newFileOutputStream(File file) throws FileNotFoundException {
+        return new FileOutputStream(file);
     }
 }
