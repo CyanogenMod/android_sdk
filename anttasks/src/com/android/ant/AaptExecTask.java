@@ -50,7 +50,7 @@ import java.util.ArrayList;
  * <tr><td></td><td></td><td></td></tr>
  * </table>
  */
-public final class AaptExecLoopTask extends BaseTask {
+public final class AaptExecTask extends BaseTask {
 
     /**
      * Class representing a &lt;nocompress&gt; node in the main task XML.
@@ -352,6 +352,8 @@ public final class AaptExecLoopTask extends BaseTask {
                               && dependenciesHaveChanged() == false) {
                 System.out.println("No changed resources. R.java and Manifest.java untouched.");
                 return;
+            } else {
+                System.out.println("Generating resource IDs...");
             }
         } else {
             // Find our dependency file. It should have the same name as our target .ap_ but

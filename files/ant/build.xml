@@ -66,7 +66,7 @@
             classpathref="android.antlibs" />
 
     <taskdef name="aapt"
-            classname="com.android.ant.AaptExecLoopTask"
+            classname="com.android.ant.AaptExecTask"
             classpathref="android.antlibs" />
 
     <taskdef name="aidl"
@@ -535,14 +535,16 @@
     <target name="-code-gen">
         <do-only-if-manifest-hasCode
                 elseText="hasCode = false. Skipping aidl/renderscript/R.java">
-            <echo>Compiling aidl files into Java classes...</echo>
+            <echo>----------</echo>
+            <echo>Handling aidl files...</echo>
             <aidl executable="${aidl}" framework="${android.aidl}"
                     genFolder="${gen.absolute.dir}">
                 <source path="${source.absolute.dir}"/>
             </aidl>
 
             <!-- renderscript generates resources so it must be called before aapt -->
-            <echo>Compiling RenderScript files into Java classes and RenderScript bytecode...</echo>
+            <echo>----------</echo>
+            <echo>Handling RenderScript files...</echo>
             <renderscript executable="${renderscript}"
                     framework="${android.rs}"
                     genFolder="${gen.absolute.dir}"
@@ -550,7 +552,8 @@
                 <source path="${source.absolute.dir}"/>
             </renderscript>
 
-            <echo>Generating R.java / Manifest.java from the resources...</echo>
+            <echo>----------</echo>
+            <echo>Handling Resources...</echo>
             <aapt executable="${aapt}"
                     command="package"
                     verbose="${verbose}"
