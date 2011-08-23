@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import com.android.sdkstats.SdkStatsPermissionDialog;
 import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -55,21 +56,21 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.widthHint = 200;
         text.setLayoutData(gd);
-        text.setText(SdkStatsService.BODY_TEXT);
+        text.setText(SdkStatsPermissionDialog.BODY_TEXT);
 
         text.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent event) {
-                SdkStatsService.openUrl(event.text);
+                SdkStatsPermissionDialog.openUrl(event.text);
             }
         });
 
         mOptInCheckBox = new BooleanFieldEditor(SdkStatsService.PING_OPT_IN,
-                SdkStatsService.CHECKBOX_TEXT, top);
+                SdkStatsPermissionDialog.CHECKBOX_TEXT, top);
         mOptInCheckBox.setPage(this);
         mOptInCheckBox.setPreferenceStore(SdkStatsService.getPreferenceStore());
         mOptInCheckBox.load();
-        
+
         return top;
     }
 
@@ -108,7 +109,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
         save();
         super.performApply();
     }
-    
+
     private void save() {
         try {
             PreferenceStore store = SdkStatsService.getPreferenceStore();

@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdkstats.SdkStatsService;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
@@ -30,6 +31,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -221,6 +223,18 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
             public void onTargetLoaded(IAndroidTarget target) {
                 // do nothing.
             }
+        }
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+
+        /* When the ADT preferences page is made visible, display the dialog to obtain
+         * permissions for the ping service. */
+        if (!SdkStatsService.pingPermissionsSet()) {
+            Shell parent = getShell();
+            SdkStatsService.getUserPermissionForPing(parent);
         }
     }
 }

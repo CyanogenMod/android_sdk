@@ -24,6 +24,7 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.PortFieldEditor;
 import com.android.ddmuilib.logcat.LogCatPanel;
+import com.android.sdkstats.SdkStatsPermissionDialog;
 import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -529,17 +530,17 @@ public final class PrefsDialog {
 
             Link text = new Link(mTop, SWT.WRAP);
             text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            text.setText(SdkStatsService.BODY_TEXT);
+            text.setText(SdkStatsPermissionDialog.BODY_TEXT);
 
             text.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent event) {
-                    SdkStatsService.openUrl(event.text);
+                    SdkStatsPermissionDialog.openUrl(event.text);
                 }
             });
 
             mOptInCheckbox = new BooleanFieldEditor(SdkStatsService.PING_OPT_IN,
-                    SdkStatsService.CHECKBOX_TEXT, mTop);
+                    SdkStatsPermissionDialog.CHECKBOX_TEXT, mTop);
             mOptInCheckbox.setPage(this);
             mOptInCheckbox.setPreferenceStore(getPreferenceStore());
             mOptInCheckbox.load();
