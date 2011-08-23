@@ -496,7 +496,6 @@ public class NewSetupTask extends Task {
 
         // the rest is done only if there's a library.
         if (jarsPath.list().length > 0) {
-            System.out.println("DEBUG: " + rootPath.toString());
             antProject.addReference(mProjectLibrariesRootOut, rootPath);
             antProject.addReference(mProjectLibrariesResOut, resPath);
             antProject.setProperty(mProjectLibrariesPackageOut, packageStrBuilder.toString());
