@@ -50,6 +50,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
@@ -528,11 +529,13 @@ public final class PrefsDialog {
             mTop.setLayout(new GridLayout(1, false));
             mTop.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-            Link text = new Link(mTop, SWT.WRAP);
+            Label text = new Label(mTop, SWT.WRAP);
             text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             text.setText(SdkStatsPermissionDialog.BODY_TEXT);
 
-            text.addSelectionListener(new SelectionAdapter() {
+            Link privacyPolicyLink = new Link(mTop, SWT.WRAP);
+            privacyPolicyLink.setText(SdkStatsPermissionDialog.PRIVACY_POLICY_LINK_TEXT);
+            privacyPolicyLink.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent event) {
                     SdkStatsPermissionDialog.openUrl(event.text);
