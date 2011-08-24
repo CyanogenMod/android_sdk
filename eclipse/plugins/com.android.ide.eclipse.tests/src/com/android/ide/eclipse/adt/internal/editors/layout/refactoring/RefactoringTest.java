@@ -19,13 +19,16 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFI
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
 import com.android.ide.common.rendering.api.ViewInfo;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -52,6 +55,27 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("restriction")
 public class RefactoringTest extends AdtProjectTest {
+
+    protected boolean autoFormat() {
+        return true;
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+
+        // Ensure that the defaults are initialized so for example formatting options are
+        // initialized properly
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        AdtPrefs.init(store);
+        AdtPrefs prefs = AdtPrefs.getPrefs();
+        prefs.initializeStoreWithDefaults(store);
+
+        store.setValue(AdtPrefs.PREFS_FORMAT_GUI_XML, autoFormat());
+
+        prefs.loadValues(null);
+
+        super.setUp();
+    }
 
     protected static Element findElementById(Element root, String id) {
         if (id.equals(VisualRefactoring.getId(root))) {
@@ -104,6 +128,12 @@ public class RefactoringTest extends AdtProjectTest {
         }
 
         String actual = document.get();
+
+        // Ensure that the document is still valid to make sure the edits don't
+        // mangle it:
+        org.w3c.dom.Document doc = DomUtilities.parseDocument(actual, true);
+        assertNotNull(actual, doc);
+
         assertEqualsGolden(basename, actual);
     }
 

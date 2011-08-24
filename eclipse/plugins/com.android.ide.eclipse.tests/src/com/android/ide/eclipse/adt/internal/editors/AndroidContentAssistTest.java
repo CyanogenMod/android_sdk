@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.eclipse.adt.internal.editors;
 
 import static com.android.AndroidConstants.FD_RES_ANIM;
@@ -24,11 +25,16 @@ import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.color.ColorEditor;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestContentAssist;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesContentAssist;
 
 import org.eclipse.core.resources.IFile;
@@ -44,6 +50,11 @@ import org.eclipse.ui.ide.IDE;
 
 public class AndroidContentAssistTest extends AdtProjectTest {
     private static final String CARET = "^"; //$NON-NLS-1$
+
+    @Override
+    protected boolean testCaseNeedsUniqueProject() {
+        return true;
+    }
 
     public void testStartsWith() {
         assertTrue(AndroidContentAssist.startsWith("", ""));
@@ -740,42 +751,43 @@ public class AndroidContentAssistTest extends AdtProjectTest {
     // --- Code Completion test infrastructure ----
 
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
-        checkCompletion(name, getLayoutFile(getProject(), name), caretLocation,
+        IFile file = getLayoutFile(getProject(), name);
+        IDE.setDefaultEditor(file, LayoutEditor.ID);
+        checkCompletion(name, file, caretLocation,
                 new LayoutContentAssist());
     }
 
     private void checkColorCompletion(String name, String caretLocation) throws Exception {
-        IFile file = getTestDataFile(getProject(), name,
-                FD_RES + "/" + FD_RES_COLOR + "/" + name);
-        checkCompletion(name, file, caretLocation,
-                new ColorContentAssist());
+        IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_COLOR + "/" + name);
+        IDE.setDefaultEditor(file, ColorEditor.ID);
+        checkCompletion(name, file, caretLocation, new ColorContentAssist());
     }
+
     private void checkAnimCompletion(String name, String caretLocation) throws Exception {
-        IFile file = getTestDataFile(getProject(), name,
-                FD_RES + "/" + FD_RES_ANIM + "/" + name);
-        checkCompletion(name, file, caretLocation,
-                new AnimationContentAssist());
+        IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIM + "/" + name);
+        IDE.setDefaultEditor(file, AnimationEditor.ID);
+        checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
     private void checkAnimatorCompletion(String name, String caretLocation) throws Exception {
-        IFile file = getTestDataFile(getProject(), name,
-                FD_RES + "/" + FD_RES_ANIMATOR + "/" + name);
-        checkCompletion(name, file, caretLocation,
-                new AnimationContentAssist());
+        IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIMATOR + "/"
+                + name);
+        IDE.setDefaultEditor(file, AnimationEditor.ID);
+        checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
-
     private void checkDrawableCompletion(String name, String caretLocation) throws Exception {
-        IFile file = getTestDataFile(getProject(), name,
-                FD_RES + "/" + FD_RES_DRAWABLE + "/" + name);
-        checkCompletion(name, file, caretLocation,
-                new DrawableContentAssist());
+        IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_DRAWABLE + "/"
+                + name);
+        IDE.setDefaultEditor(file, DrawableEditor.ID);
+        checkCompletion(name, file, caretLocation, new DrawableContentAssist());
     }
 
     private void checkManifestCompletion(String name, String caretLocation) throws Exception {
         // Manifest files must be named AndroidManifest.xml. Must overwrite to replace
         // the default manifest created in the test project.
         IFile file = getTestDataFile(getProject(), name, "AndroidManifest.xml", true);
+        IDE.setDefaultEditor(file, ManifestEditor.ID);
 
         checkCompletion(name, file, caretLocation,
                 new ManifestContentAssist());
@@ -855,18 +867,19 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         assertTrue(diff + " versus " + actual, diff.length() > 0 || beforeWithCaret.equals(actual));
 
         StringBuilder summary = new StringBuilder();
-        summary.append("Code completion in " + basename + " for " + caretLocation + " selecting " + match + ":\n");
+        summary.append("Code completion in " + basename + " for " + caretLocation + " selecting "
+                + match + ":\n");
         if (diff.length() == 0) {
             diff = "No changes";
         }
         summary.append(diff);
 
-        //assertEqualsGolden(basename, actual);
+        // assertEqualsGolden(basename, actual);
         assertEqualsGolden(basename, summary.toString(), "diff");
     }
 
     private void checkCompletion(String basename, IFile file, String caretLocation,
-                AndroidContentAssist assist) throws Exception {
+            AndroidContentAssist assist) throws Exception {
         ICompletionProposal[] proposals = complete(file, caretLocation, assist);
         StringBuilder sb = new StringBuilder(1000);
         sb.append("Code completion in " + basename + " for " + caretLocation + ":\n");

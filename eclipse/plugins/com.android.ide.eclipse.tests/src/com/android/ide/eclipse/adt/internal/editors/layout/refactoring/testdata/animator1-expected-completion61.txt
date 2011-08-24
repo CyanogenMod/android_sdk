@@ -9,10 +9,9 @@ Code completion in animator1.xml for android:interpolator="^@android:anim/bounce
 @android:anim/linear_interpolator
 @android:anim/cycle_interpolator
 @android:
-@anim/
-@animator/
-@color/
+@+id/
 @drawable/
+@id/
 @layout/
 @string/
 @style/

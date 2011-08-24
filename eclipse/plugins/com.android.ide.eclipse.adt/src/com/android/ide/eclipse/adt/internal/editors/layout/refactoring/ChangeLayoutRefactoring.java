@@ -35,11 +35,13 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -204,7 +206,6 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         List<Change> changes = new ArrayList<Change>();
         TextFileChange change = new TextFileChange(file.getName(), file);
         MultiTextEdit rootEdit = new MultiTextEdit();
-        change.setEdit(rootEdit);
         change.setTextType(EXT_XML);
         changes.add(change);
 
@@ -268,6 +269,14 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             convertGeneric(rootEdit, oldType, newType);
             removeUndefinedLayoutAttrs(rootEdit, layout);
         }
+
+        if (AdtPrefs.getPrefs().getFormatGuiXml()) {
+            MultiTextEdit formatted = reformat(rootEdit, XmlFormatStyle.LAYOUT);
+            if (formatted != null) {
+                rootEdit = formatted;
+            }
+        }
+        change.setEdit(rootEdit);
 
         return changes;
     }
