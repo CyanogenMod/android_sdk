@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 
@@ -36,7 +35,7 @@ import java.util.regex.Matcher;
 /**
  * Centralized state for Android Eclipse project.
  * <p>This gives raw access to the properties (from <code>project.properties</code>), as well
- * as direct access to target, apksettings and library information.
+ * as direct access to target and library information.
  *
  * This also gives access to library information.
  *
@@ -156,7 +155,7 @@ public final class ProjectState {
     private final IProject mProject;
     private final ProjectProperties mProperties;
     private IAndroidTarget mTarget;
-    private ApkSettings mApkSettings;
+
     /**
      * list of libraries. Access to this list must be protected by
      * <code>synchronized(mLibraries)</code>, but it is important that such code do not call
@@ -179,9 +178,6 @@ public final class ProjectState {
 
         mProject = project;
         mProperties = properties;
-
-        // load the ApkSettings
-        mApkSettings = new ApkSettings(properties);
 
         // load the libraries
         synchronized (mLibraries) {
@@ -309,14 +305,6 @@ public final class ProjectState {
         }
 
         return diff;
-    }
-
-    public void setApkSettings(ApkSettings apkSettings) {
-        mApkSettings = apkSettings;
-    }
-
-    public ApkSettings getApkSettings() {
-        return mApkSettings;
     }
 
     /**
