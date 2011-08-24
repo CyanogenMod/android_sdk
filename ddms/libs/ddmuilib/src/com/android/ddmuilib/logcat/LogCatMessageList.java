@@ -16,28 +16,56 @@
 
 package com.android.ddmuilib.logcat;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Container for a list of log messages. The list of messages are
  * maintained in a circular buffer (FIFO).
  */
 public final class LogCatMessageList {
-    /** Size of the FIFO.
-     * FIXME: this should be a user preference.
-     */
-    private static final int MAX_MESSAGES = 1000;
+    /** Preference key for size of the FIFO. */
+    public static final String MAX_MESSAGES_PREFKEY =
+            "logcat.messagelist.max.size";
 
-    private Queue<LogCatMessage> mQ;
+    /** Default value for max # of messages. */
+    public static final int MAX_MESSAGES_DEFAULT = 5000;
+
+    private int mFifoSize;
+    private BlockingQueue<LogCatMessage> mQ;
     private LogCatMessage[] mQArray;
 
     /**
      * Construct an empty message list.
+     * @param maxMessages capacity of the circular buffer
      */
-    public LogCatMessageList() {
-        mQ = new ArrayBlockingQueue<LogCatMessage>(MAX_MESSAGES);
-        mQArray = new LogCatMessage[MAX_MESSAGES];
+    public LogCatMessageList(int maxMessages) {
+        mFifoSize = maxMessages;
+
+        mQ = new ArrayBlockingQueue<LogCatMessage>(mFifoSize);
+        mQArray = new LogCatMessage[mFifoSize];
+    }
+
+    /**
+     * Resize the message list.
+     * @param n new size for the list
+     */
+    public synchronized void resize(int n) {
+        mFifoSize = n;
+
+        if (mFifoSize > mQ.size()) {
+            /* if resizing to a bigger fifo, we can copy over all elements from the current mQ */
+            mQ = new ArrayBlockingQueue<LogCatMessage>(mFifoSize, true, mQ);
+        } else {
+            /* for a smaller fifo, copy over the last n entries */
+            LogCatMessage[] curMessages = mQ.toArray(new LogCatMessage[mQ.size()]);
+            mQ = new ArrayBlockingQueue<LogCatMessage>(mFifoSize);
+            for (int i = curMessages.length - mFifoSize; i < curMessages.length; i++) {
+                mQ.offer(curMessages[i]);
+            }
+        }
+
+        mQArray = new LogCatMessage[mFifoSize];
     }
 
     /**
@@ -46,7 +74,7 @@ public final class LogCatMessageList {
      * @param m log to be inserted
      */
     public synchronized void appendMessage(final LogCatMessage m) {
-        if (mQ.size() == MAX_MESSAGES) {
+        if (mQ.remainingCapacity() == 0) {
             /* make space by removing the first entry */
             mQ.poll();
         }
@@ -65,7 +93,7 @@ public final class LogCatMessageList {
      * @return array containing all the log messages
      */
     public Object[] toArray() {
-        if (mQ.size() == MAX_MESSAGES) {
+        if (mQ.size() == mFifoSize) {
             /*
              * Once the queue is full, it stays full until the user explicitly clears
              * all the logs. Optimize for this case by not reallocating the array.

@@ -1368,7 +1368,9 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     }
 
     private void createLogCatView(Composite parent) {
-        mLogCatPanel = new LogCatPanel(new LogCatReceiver(), DdmUiPreferences.getStore());
+        IPreferenceStore prefStore = DdmUiPreferences.getStore();
+        LogCatReceiver receiver = new LogCatReceiver(prefStore);
+        mLogCatPanel = new LogCatPanel(receiver, prefStore);
         mLogCatPanel.createPanel(parent);
 
         if (mCurrentDevice != null) {

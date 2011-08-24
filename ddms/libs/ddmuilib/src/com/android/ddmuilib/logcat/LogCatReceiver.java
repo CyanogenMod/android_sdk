@@ -20,6 +20,8 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,11 +39,15 @@ public final class LogCatReceiver {
     private List<ILogCatMessageEventListener> mLogCatMessageListeners;
     private LogCatMessageParser mLogCatMessageParser;
     private LogCatPidToNameMapper mPidToNameMapper;
+    private IPreferenceStore mPrefStore;
 
     /**
      * Construct a LogCat message receiver.
+     * @param prefStore
      */
-    public LogCatReceiver() {
+    public LogCatReceiver(IPreferenceStore prefStore) {
+        mPrefStore = prefStore;
+
         mLogCatMessageListeners = new ArrayList<ILogCatMessageEventListener>();
         mLogCatMessageParser = new LogCatMessageParser();
         mPidToNameMapper = new LogCatPidToNameMapper();
@@ -83,12 +89,17 @@ public final class LogCatReceiver {
         }
 
         mCurrentDevice = device;
-        mLogMessages = new LogCatMessageList();
+        mLogMessages = new LogCatMessageList(getFifoSize());
 
         mLogCatMessageParser.resetState();
         startReceiverThread();
 
         mPidToNameMapper.setDevice(mCurrentDevice);
+    }
+
+    private int getFifoSize() {
+        int n = mPrefStore.getInt(LogCatMessageList.MAX_MESSAGES_PREFKEY);
+        return n == 0 ? LogCatMessageList.MAX_MESSAGES_DEFAULT : n;
     }
 
     private void startReceiverThread() {
@@ -191,5 +202,13 @@ public final class LogCatReceiver {
         for (ILogCatMessageEventListener l : mLogCatMessageListeners) {
             l.messageReceived(messages);
         }
+    }
+
+    /**
+     * Resize the internal FIFO.
+     * @param size new size
+     */
+    public void resizeFifo(int size) {
+        mLogMessages.resize(size);
     }
 }
