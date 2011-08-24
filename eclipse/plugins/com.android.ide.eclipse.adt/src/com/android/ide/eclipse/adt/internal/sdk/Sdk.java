@@ -302,7 +302,7 @@ public final class Sdk  {
     }
 
     /**
-     * Initializes a new project with a target. This creates the <code>default.properties</code>
+     * Initializes a new project with a target. This creates the <code>project.properties</code>
      * file.
      * @param project the project to intialize
      * @param target the project's target.
@@ -332,7 +332,7 @@ public final class Sdk  {
                     return;
                 }
 
-                properties = ProjectProperties.create(location.toOSString(), PropertyType.DEFAULT);
+                properties = ProjectProperties.create(location.toOSString(), PropertyType.PROJECT);
             }
 
             // save the target hash string in the project persistent property
@@ -353,6 +353,7 @@ public final class Sdk  {
      * @param project the request project
      * @return the ProjectState for the project.
      */
+    @SuppressWarnings("deprecation")
     public static ProjectState getProjectState(IProject project) {
         if (project == null) {
             return null;
@@ -361,19 +362,44 @@ public final class Sdk  {
         synchronized (LOCK) {
             ProjectState state = sProjectStateMap.get(project);
             if (state == null) {
-                // load the default.properties from the project folder.
+                // load the project.properties from the project folder.
                 IPath location = project.getLocation();
                 if (location == null) {  // can return null when the project is being deleted.
                     // do nothing and return null;
                     return null;
                 }
 
-                ProjectProperties properties = ProjectProperties.load(location.toOSString(),
-                        PropertyType.DEFAULT);
+                String projectLocation = location.toOSString();
+
+                ProjectProperties properties = ProjectProperties.load(projectLocation,
+                        PropertyType.PROJECT);
                 if (properties == null) {
-                    AdtPlugin.log(IStatus.ERROR, "Failed to load properties file for project '%s'",
-                            project.getName());
-                    return null;
+                    // legacy support: look for default.properties and rename it if needed.
+                    properties = ProjectProperties.load(projectLocation,
+                            PropertyType.LEGACY_DEFAULT);
+
+                    if (properties == null) {
+                        AdtPlugin.log(IStatus.ERROR,
+                                "Failed to load properties file for project '%s'",
+                                project.getName());
+                        return null;
+                    } else {
+                        //legacy mode.
+                        // get a working copy with the new type "project"
+                        ProjectPropertiesWorkingCopy wc = properties.makeWorkingCopy(
+                                PropertyType.PROJECT);
+                        // and save it
+                        try {
+                            wc.save();
+
+                            // delete the old file.
+                            ProjectProperties.delete(projectLocation, PropertyType.LEGACY_DEFAULT);
+                        } catch (Exception e) {
+                            AdtPlugin.log(IStatus.ERROR,
+                                    "Failed to rename properties file to %1$s for project '%s2$'",
+                                    PropertyType.PROJECT.getFilename(), project.getName());
+                        }
+                    }
                 }
 
                 state = new ProjectState(project, properties);
@@ -934,10 +960,10 @@ public final class Sdk  {
      */
     private IFileListener mFileListener = new IFileListener() {
         public void fileChanged(final IFile file, IMarkerDelta[] markerDeltas, int kind) {
-            if (SdkConstants.FN_DEFAULT_PROPERTIES.equals(file.getName()) &&
+            if (SdkConstants.FN_PROJECT_PROPERTIES.equals(file.getName()) &&
                     file.getParent() == file.getProject()) {
                 try {
-                    // reload the content of the default.properties file and update
+                    // reload the content of the project.properties file and update
                     // the target.
                     IProject iProject = file.getProject();
 

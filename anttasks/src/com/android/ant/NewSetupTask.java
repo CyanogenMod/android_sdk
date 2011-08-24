@@ -538,13 +538,13 @@ public class NewSetupTask extends Task {
             File library = inLibraries.get(i);
 
             // get the default.property file for it
-            final ProjectProperties defaultProp = ProjectProperties.load(
-                    new FolderWrapper(library), PropertyType.DEFAULT);
+            final ProjectProperties projectProp = ProjectProperties.load(
+                    new FolderWrapper(library), PropertyType.PROJECT);
 
             // get its libraries
             List<File> dependencies = getDirectDependencies(library, new IPropertySource() {
                 public String getProperty(String name) {
-                    return defaultProp.getProperty(name);
+                    return projectProp.getProperty(name);
                 }
             });
 
@@ -585,12 +585,12 @@ public class NewSetupTask extends Task {
                 File library = new File(baseFolder, rootPath).getCanonicalFile();
 
                 // check for validity
-                File defaultProp = new File(library, PropertyType.DEFAULT.getFilename());
-                if (defaultProp.isFile() == false) {
+                File projectProp = new File(library, PropertyType.PROJECT.getFilename());
+                if (projectProp.isFile() == false) {
                     // error!
                     throw new BuildException(String.format(
                             "%1$s resolve to a path with no %2$s file for project %3$s", rootPath,
-                            PropertyType.DEFAULT.getFilename(), baseFolder.getAbsolutePath()));
+                            PropertyType.PROJECT.getFilename(), baseFolder.getAbsolutePath()));
                 }
 
                 if (libraries.contains(library) == false) {

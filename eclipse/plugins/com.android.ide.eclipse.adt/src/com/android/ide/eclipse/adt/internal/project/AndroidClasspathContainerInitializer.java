@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 
 import org.eclipse.core.resources.IMarker;
@@ -176,9 +177,10 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                 // check if the project has a valid target.
                 ProjectState state = Sdk.getProjectState(iProject);
                 if (state == null) {
-                    // looks like the project state (default.properties) couldn't be read!
+                    // looks like the project state (project.properties) couldn't be read!
                     markerMessage = String.format(
-                            "Project has no default.properties file! Edit the project properties to set one.");
+                            "Project has no %1$s file! Edit the project properties to set one.",
+                            SdkConstants.FN_PROJECT_PROPERTIES);
                 } else {
                     // this might be null if the sdk is not yet loaded.
                     target = state.getTarget();
@@ -633,7 +635,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             IAndroidTarget target = currentSdk.loadTarget(Sdk.getProjectState(iProject));
             if (target == null) {
                 // this is really not supposed to happen. This would mean there are cached paths,
-                // but default.properties was deleted. Keep the project in the list to force
+                // but project.properties was deleted. Keep the project in the list to force
                 // a resolve which will display the error.
                 i++;
                 continue;

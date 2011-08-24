@@ -83,10 +83,10 @@ public class ProjectProperties {
     public final static String PROPERTY_KEY_ALIAS = "key.alias";
 
     public static enum PropertyType {
-        BUILD(SdkConstants.FN_BUILD_PROPERTIES, BUILD_HEADER, new String[] {
+        ANT(SdkConstants.FN_ANT_PROPERTIES, BUILD_HEADER, new String[] {
                 PROPERTY_BUILD_SOURCE_DIR, PROPERTY_BUILD_OUT_DIR
             }, null),
-        DEFAULT(SdkConstants.FN_DEFAULT_PROPERTIES, DEFAULT_HEADER, new String[] {
+        PROJECT(SdkConstants.FN_PROJECT_PROPERTIES, DEFAULT_HEADER, new String[] {
                 PROPERTY_TARGET, PROPERTY_LIBRARY, PROPERTY_LIB_REF_REGEX,
                 PROPERTY_KEY_STORE, PROPERTY_KEY_ALIAS, PROPERTY_PROGUARD_CONFIG,
                 PROPERTY_RULES_PATH
@@ -94,7 +94,12 @@ public class ProjectProperties {
         LOCAL(SdkConstants.FN_LOCAL_PROPERTIES, LOCAL_HEADER, new String[] {
                 PROPERTY_SDK
             },
-            new String[] { PROPERTY_SDK_LEGACY });
+            new String[] { PROPERTY_SDK_LEGACY }),
+        @Deprecated
+        LEGACY_DEFAULT("default.properties", null, null, null),
+        @Deprecated
+        LEGACY_BUILD("build.properties", null, null, null);
+
 
         private final String mFilename;
         private final String mHeader;
@@ -170,7 +175,7 @@ public class ProjectProperties {
            "# This file must be checked in Version Control Systems.\n" +
            "#\n" +
            "# To customize properties used by the Ant build system use,\n" +
-           "# \"build.properties\", and override values to adapt the script to your\n" +
+           "# \"ant.properties\", and override values to adapt the script to your\n" +
            "# project structure.\n" +
            "\n";
 
@@ -194,31 +199,13 @@ public class ProjectProperties {
            "# The password will be asked during the build when you use the 'release' target.\n" +
            "\n";
 
-    private final static String EXPORT_HEADER =
-//          1-------10--------20--------30--------40--------50--------60--------70--------80
-           "# Export properties\n" +
-           "#\n" +
-           "# This file must be checked in Version Control Systems.\n" +
-           "\n" +
-           "# The main content for this file is:\n" +
-           "# - package name for the application being export\n" +
-           "# - list of the projects being export\n" +
-           "# - version code for the application\n" +
-           "\n" +
-           "# You can also use it define how the release builds are signed by declaring\n" +
-           "# the following properties:\n" +
-           "#  'key.store' for the location of your keystore and\n" +
-           "#  'key.alias' for the name of the key alias to use.\n" +
-           "# The password will be asked during the build when you use the 'release' target.\n" +
-           "\n";
-
     protected final IAbstractFolder mProjectFolder;
     protected final Map<String, String> mProperties;
     protected final PropertyType mType;
 
     /**
      * Loads a project properties file and return a {@link ProjectProperties} object
-     * containing the properties
+     * containing the properties.
      *
      * @param projectFolderOsPath the project folder.
      * @param type One the possible {@link PropertyType}s.
@@ -230,7 +217,7 @@ public class ProjectProperties {
 
     /**
      * Loads a project properties file and return a {@link ProjectProperties} object
-     * containing the properties
+     * containing the properties.
      *
      * @param projectFolder the project folder.
      * @param type One the possible {@link PropertyType}s.
@@ -247,6 +234,37 @@ public class ProjectProperties {
         }
         return null;
     }
+
+    /**
+     * Deletes a project properties file.
+     *
+     * @param projectFolder the project folder.
+     * @param type One the possible {@link PropertyType}s.
+     * @return true if success.
+     */
+    public static boolean delete(IAbstractFolder projectFolder, PropertyType type) {
+        if (projectFolder.exists()) {
+            IAbstractFile propFile = projectFolder.getFile(type.mFilename);
+            if (propFile.exists()) {
+                return propFile.delete();
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Deletes a project properties file.
+     *
+     * @param projectFolderOsPath the project folder.
+     * @param type One the possible {@link PropertyType}s.
+     * @return true if success.
+     */
+    public static boolean delete(String projectFolderOsPath, PropertyType type) {
+        IAbstractFolder wrapper = new FolderWrapper(projectFolderOsPath);
+        return delete(wrapper, type);
+    }
+
 
     /**
      * Creates a new project properties object, with no properties.
@@ -279,11 +297,24 @@ public class ProjectProperties {
      * @return a new instance of {@link ProjectPropertiesWorkingCopy}
      */
     public ProjectPropertiesWorkingCopy makeWorkingCopy() {
+        return makeWorkingCopy(mType);
+    }
+
+    /**
+     * Creates and returns a copy of the current properties as a
+     * {@link ProjectPropertiesWorkingCopy} that can be modified and saved. This also allows
+     * converting to a new type, by specifying a different {@link PropertyType}.
+     *
+     * @param type the {@link PropertyType} of the prop file to save.
+     *
+     * @return a new instance of {@link ProjectPropertiesWorkingCopy}
+     */
+    public ProjectPropertiesWorkingCopy makeWorkingCopy(PropertyType type) {
         // copy the current properties in a new map
         HashMap<String, String> propList = new HashMap<String, String>();
         propList.putAll(mProperties);
 
-        return new ProjectPropertiesWorkingCopy(mProjectFolder, propList, mType);
+        return new ProjectPropertiesWorkingCopy(mProjectFolder, propList, type);
     }
 
     /**
