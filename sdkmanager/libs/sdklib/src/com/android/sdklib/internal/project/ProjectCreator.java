@@ -17,6 +17,8 @@
 package com.android.sdklib.internal.project;
 
 import com.android.AndroidConstants;
+import com.android.io.FileWrapper;
+import com.android.io.FolderWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
@@ -203,7 +205,7 @@ public class ProjectCreator {
 
             // target goes in default properties
             ProjectPropertiesWorkingCopy defaultProperties = ProjectProperties.create(folderPath,
-                    PropertyType.DEFAULT);
+                    PropertyType.PROJECT);
             defaultProperties.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
             if (library) {
                 defaultProperties.setProperty(ProjectProperties.PROPERTY_LIBRARY, "true");
@@ -212,7 +214,7 @@ public class ProjectCreator {
 
             // create a build.properties file with just the application package
             ProjectPropertiesWorkingCopy buildProperties = ProjectProperties.create(folderPath,
-                    PropertyType.BUILD);
+                    PropertyType.ANT);
 
             if (isTestProject) {
                 buildProperties.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT,
@@ -420,7 +422,8 @@ public class ProjectCreator {
      * Workflow:
      * <ul>
      * <li> Check AndroidManifest.xml is present (required)
-     * <li> Check there's a default.properties with a target *or* --target was specified
+     * <li> Check if there's a legacy properties file and convert it
+     * <li> Check there's a project.properties with a target *or* --target was specified
      * <li> Update default.prop if --target was specified
      * <li> Refresh/create "sdk" in local.properties
      * <li> Build.xml: create if not present or if version-tag is found or not. version-tag:custom
@@ -434,22 +437,32 @@ public class ProjectCreator {
      * @param libraryPath the path to a library to add to the references. Can be null.
      * @return true if the project was successfully updated.
      */
+    @SuppressWarnings("deprecation")
     public boolean updateProject(String folderPath, IAndroidTarget target, String projectName,
             String libraryPath) {
         // since this is an update, check the folder does point to a project
-        File androidManifest = checkProjectFolder(folderPath, SdkConstants.FN_ANDROID_MANIFEST_XML);
+        FileWrapper androidManifest = checkProjectFolder(folderPath,
+                SdkConstants.FN_ANDROID_MANIFEST_XML);
         if (androidManifest == null) {
             return false;
         }
 
-        // get the parent File.
-        File projectFolder = androidManifest.getParentFile();
+        // get the parent folder.
+        FolderWrapper projectFolder = (FolderWrapper) androidManifest.getParentFolder();
 
         boolean hasProguard = false;
 
-        // Check there's a default.properties with a target *or* --target was specified
+        // Check there's a project.properties with a target *or* --target was specified
         IAndroidTarget originalTarget = null;
-        ProjectProperties props = ProjectProperties.load(folderPath, PropertyType.DEFAULT);
+        boolean writeProjectProp = false;
+        ProjectProperties props = ProjectProperties.load(projectFolder, PropertyType.PROJECT);
+
+        if (props == null) {
+            // no project.properties, try to load default.properties
+            props = ProjectProperties.load(projectFolder, PropertyType.LEGACY_DEFAULT);
+            writeProjectProp = true;
+        }
+
         if (props != null) {
             String targetHash = props.getProperty(ProjectProperties.PROPERTY_TARGET);
             originalTarget = mSdkManager.getTargetFromHashString(targetHash);
@@ -466,22 +479,24 @@ public class ProjectCreator {
             return false;
         }
 
-        boolean saveDefaultProps = false;
+        boolean saveProjectProps = false;
 
         ProjectPropertiesWorkingCopy propsWC = null;
 
         // Update default.prop if --target was specified
-        if (target != null) {
+        if (target != null || writeProjectProp) {
             // we already attempted to load the file earlier, if that failed, create it.
             if (props == null) {
-                propsWC = ProjectProperties.create(folderPath, PropertyType.DEFAULT);
+                propsWC = ProjectProperties.create(projectFolder, PropertyType.PROJECT);
             } else {
-                propsWC = props.makeWorkingCopy();
+                propsWC = props.makeWorkingCopy(PropertyType.PROJECT);
             }
 
             // set or replace the target
-            propsWC.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
-            saveDefaultProps = true;
+            if (target != null) {
+                propsWC.setProperty(ProjectProperties.PROPERTY_TARGET, target.hashString());
+            }
+            saveProjectProps = true;
         }
 
         if (libraryPath != null) {
@@ -496,7 +511,7 @@ public class ProjectCreator {
             File libProject = new File(libraryPath);
             String resolvedPath;
             if (libProject.isAbsolute() == false) {
-                libProject = new File(folderPath, libraryPath);
+                libProject = new File(projectFolder, libraryPath);
                 try {
                     resolvedPath = libProject.getCanonicalPath();
                 } catch (IOException e) {
@@ -530,29 +545,40 @@ public class ProjectCreator {
 
             String propName = ProjectProperties.PROPERTY_LIB_REF + Integer.toString(index);
             propsWC.setProperty(propName, libraryPath);
-            saveDefaultProps = true;
+            saveProjectProps = true;
         }
 
         // save the default props if needed.
-        if (saveDefaultProps) {
+        if (saveProjectProps) {
             try {
                 assert propsWC != null;
                 propsWC.save();
-                println("Updated %1$s", PropertyType.DEFAULT.getFilename());
+                if (writeProjectProp) {
+                    println("Updated and renamed %1$s to %2$s",
+                            PropertyType.LEGACY_DEFAULT.getFilename(),
+                            PropertyType.PROJECT.getFilename());
+                } else {
+                    println("Updated %1$s", PropertyType.PROJECT.getFilename());
+                }
             } catch (Exception e) {
                 mLog.error(e, "Failed to write %1$s file in '%2$s'",
-                        PropertyType.DEFAULT.getFilename(),
+                        PropertyType.PROJECT.getFilename(),
                         folderPath);
                 return false;
+            }
+
+            if (writeProjectProp) {
+                // need to delete the default prop file.
+                ProjectProperties.delete(projectFolder, PropertyType.LEGACY_DEFAULT);
             }
         }
 
         // Refresh/create "sdk" in local.properties
         // because the file may already exists and contain other values (like apk config),
         // we first try to load it.
-        props = ProjectProperties.load(folderPath, PropertyType.LOCAL);
+        props = ProjectProperties.load(projectFolder, PropertyType.LOCAL);
         if (props == null) {
-            propsWC = ProjectProperties.create(folderPath, PropertyType.LOCAL);
+            propsWC = ProjectProperties.create(projectFolder, PropertyType.LOCAL);
         } else {
             propsWC = props.makeWorkingCopy();
         }
@@ -567,6 +593,31 @@ public class ProjectCreator {
                     PropertyType.LOCAL.getFilename(),
                     folderPath);
             return false;
+        }
+
+        // legacy: check if build.properties must be renamed to ant.properties.
+        props = ProjectProperties.load(projectFolder, PropertyType.ANT);
+        if (props == null) {
+            props = ProjectProperties.load(projectFolder, PropertyType.LEGACY_BUILD);
+            if (props != null) {
+                try {
+                    // get a working copy with the new property type
+                    propsWC = props.makeWorkingCopy(PropertyType.ANT);
+                    propsWC.save();
+
+                    // delete the old file
+                    ProjectProperties.delete(projectFolder, PropertyType.LEGACY_BUILD);
+
+                    println("Renamed %1$s to %2$s",
+                            PropertyType.LEGACY_BUILD.getFilename(),
+                            PropertyType.ANT.getFilename());
+                } catch (Exception e) {
+                    mLog.error(e, "Failed to write %1$s file in '%2$s'",
+                            PropertyType.ANT.getFilename(),
+                            folderPath);
+                    return false;
+                }
+            }
         }
 
         // Build.xml: create if not present or no <androidinit/> in it
@@ -713,6 +764,7 @@ public class ProjectCreator {
      * @param folderPath the path of the test project.
      * @param pathToMainProject the path to the main project, relative to the test project.
      */
+    @SuppressWarnings("deprecation")
     public void updateTestProject(final String folderPath, final String pathToMainProject,
             final SdkManager sdkManager) {
         // since this is an update, check the folder does point to a project
@@ -744,16 +796,21 @@ public class ProjectCreator {
         }
 
         // now get the target from the main project
-        ProjectProperties defaultProp = ProjectProperties.load(resolvedPath, PropertyType.DEFAULT);
-        if (defaultProp == null) {
-            mLog.error(null, "No %1$s at: %2$s", PropertyType.DEFAULT.getFilename(), resolvedPath);
-            return;
+        ProjectProperties projectProp = ProjectProperties.load(resolvedPath, PropertyType.PROJECT);
+        if (projectProp == null) {
+            // legacy support for older file name.
+            projectProp = ProjectProperties.load(resolvedPath, PropertyType.LEGACY_DEFAULT);
+            if (projectProp == null) {
+                mLog.error(null, "No %1$s at: %2$s", PropertyType.PROJECT.getFilename(),
+                        resolvedPath);
+                return;
+            }
         }
 
-        String targetHash = defaultProp.getProperty(ProjectProperties.PROPERTY_TARGET);
+        String targetHash = projectProp.getProperty(ProjectProperties.PROPERTY_TARGET);
         if (targetHash == null) {
             mLog.error(null, "%1$s in the main project has no target property.",
-                    PropertyType.DEFAULT.getFilename());
+                    PropertyType.PROJECT.getFilename());
             return;
         }
 
@@ -802,125 +859,40 @@ public class ProjectCreator {
         }
 
         // add the test project specific properties.
-        ProjectProperties buildProps = ProjectProperties.load(folderPath, PropertyType.BUILD);
-        ProjectPropertiesWorkingCopy buildWorkingCopy;
-        if (buildProps == null) {
-            buildWorkingCopy = ProjectProperties.create(folderPath, PropertyType.BUILD);
+        // At this point, we know build.prop has been renamed ant.prop
+        ProjectProperties antProps = ProjectProperties.load(folderPath, PropertyType.ANT);
+        ProjectPropertiesWorkingCopy antWorkingCopy;
+        if (antProps == null) {
+            antWorkingCopy = ProjectProperties.create(folderPath, PropertyType.ANT);
         } else {
-            buildWorkingCopy = buildProps.makeWorkingCopy();
+            antWorkingCopy = antProps.makeWorkingCopy();
         }
 
         // set or replace the path to the main project
-        buildWorkingCopy.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT, pathToMainProject);
+        antWorkingCopy.setProperty(ProjectProperties.PROPERTY_TESTED_PROJECT, pathToMainProject);
         try {
-            buildWorkingCopy.save();
-            println("Updated %1$s", PropertyType.BUILD.getFilename());
+            antWorkingCopy.save();
+            println("Updated %1$s", PropertyType.ANT.getFilename());
         } catch (Exception e) {
             mLog.error(e, "Failed to write %1$s file in '%2$s'",
-                    PropertyType.BUILD.getFilename(),
+                    PropertyType.ANT.getFilename(),
                     folderPath);
             return;
         }
-
-    }
-
-    /**
-     * Updates an existing project.
-     * <p/>
-     * Workflow:
-     * <ul>
-     * <li> Check export.properties is present (required)
-     * <li> Refresh/create "sdk" in local.properties
-     * <li> Build.xml: create if not present or no <androidinit(\w|/>) in it
-     * </ul>
-     *
-     * @param folderPath the folder of the project to update. This folder must exist.
-     * @param projectName The project name from --name. Can be null.
-     * @param force whether to force a new build.xml file.
-     * @return true if the project was successfully updated.
-     */
-    public boolean updateExportProject(String folderPath, String projectName, boolean force) {
-        // since this is an update, check the folder does point to a project
-        File androidManifest = checkProjectFolder(folderPath, SdkConstants.FN_EXPORT_PROPERTIES);
-        if (androidManifest == null) {
-            return false;
-        }
-
-        // get the parent File.
-        File projectFolder = androidManifest.getParentFile();
-
-        // Refresh/create "sdk" in local.properties
-        // because the file may already exist and contain other values (like apk config),
-        // we first try to load it.
-        ProjectProperties props = ProjectProperties.load(folderPath, PropertyType.LOCAL);
-        ProjectPropertiesWorkingCopy localPropsWorkingCopy;
-        if (props == null) {
-            localPropsWorkingCopy = ProjectProperties.create(folderPath, PropertyType.LOCAL);
-        } else {
-            localPropsWorkingCopy = props.makeWorkingCopy();
-        }
-
-        // set or replace the sdk location.
-        localPropsWorkingCopy.setProperty(ProjectProperties.PROPERTY_SDK, mSdkFolder);
-        try {
-            localPropsWorkingCopy.save();
-            println("Updated %1$s", PropertyType.LOCAL.getFilename());
-        } catch (Exception e) {
-            mLog.error(e, "Failed to write %1$s file in '%2$s'",
-                    PropertyType.LOCAL.getFilename(),
-                    folderPath);
-            return false;
-        }
-
-        // Build.xml: create if not present
-        File buildXml = new File(projectFolder, SdkConstants.FN_BUILD_XML);
-        boolean needsBuildXml = force || projectName != null || !buildXml.exists();
-
-        if (needsBuildXml) {
-            // create the map for place-holders of values to replace in the templates
-            final HashMap<String, String> keywords = new HashMap<String, String>();
-
-            // Take the project name from the command line if there's one
-            if (projectName != null) {
-                keywords.put(PH_PROJECT_NAME, projectName);
-            } else {
-                // We need a project name. Just pick up the basename of the project
-                // directory.
-                projectName = projectFolder.getName();
-                keywords.put(PH_PROJECT_NAME, projectName);
-            }
-
-            if (mLevel == OutputLevel.VERBOSE) {
-                println("Regenerating %1$s with project name %2$s",
-                        SdkConstants.FN_BUILD_XML,
-                        keywords.get(PH_PROJECT_NAME));
-            }
-
-            try {
-                installTemplate("build.export.template",
-                        new File(projectFolder, SdkConstants.FN_BUILD_XML),
-                        keywords);
-            } catch (ProjectCreateException e) {
-                mLog.error(e, null);
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
      * Checks whether the give <var>folderPath</var> is a valid project folder, and returns
-     * a {@link File} to the required file.
+     * a {@link FileWrapper} to the required file.
      * <p/>This checks that the folder exists and contains an AndroidManifest.xml file in it.
      * <p/>Any error are output using {@link #mLog}.
      * @param folderPath the folder to check
      * @param requiredFilename the file name of the file that's required.
-     * @return a {@link File} to the AndroidManifest.xml file, or null otherwise.
+     * @return a {@link FileWrapper} to the AndroidManifest.xml file, or null otherwise.
      */
-    private File checkProjectFolder(String folderPath, String requiredFilename) {
+    private FileWrapper checkProjectFolder(String folderPath, String requiredFilename) {
         // project folder must exist and be a directory, since this is an update
-        File projectFolder = new File(folderPath);
+        FolderWrapper projectFolder = new FolderWrapper(folderPath);
         if (!projectFolder.isDirectory()) {
             mLog.error(null, "Project folder '%1$s' is not a valid directory.",
                     projectFolder);
@@ -928,7 +900,7 @@ public class ProjectCreator {
         }
 
         // Check AndroidManifest.xml is present
-        File requireFile = new File(projectFolder, requiredFilename);
+        FileWrapper requireFile = new FileWrapper(projectFolder, requiredFilename);
         if (!requireFile.isFile()) {
             mLog.error(null,
                     "%1$s is not a valid project (%2$s not found).",

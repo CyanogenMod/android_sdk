@@ -42,7 +42,9 @@ import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.util.Pair;
 
@@ -350,9 +352,17 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         if (rootEdit.hasChildren()) {
             IFile sourceFile = mEditor.getInputFile();
             TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
-            change.setEdit(rootEdit);
             change.setTextType(EXT_XML);
             changes.add(change);
+
+            if (AdtPrefs.getPrefs().getFormatGuiXml()) {
+                MultiTextEdit formatted = reformat(rootEdit, XmlFormatStyle.LAYOUT);
+                if (formatted != null) {
+                    rootEdit = formatted;
+                }
+            }
+
+            change.setEdit(rootEdit);
         }
 
         return changes;

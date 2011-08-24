@@ -37,11 +37,15 @@ import com.android.AndroidConstants;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.sdklib.SdkConstants;
 
@@ -316,7 +320,13 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         TextFileChange addFile = new TextFileChange("Create new separate layout", file);
         addFile.setTextType(AdtConstants.EXT_XML);
         changes.add(addFile);
-        addFile.setEdit(new InsertEdit(0, sb.toString()));
+
+        String newFile = sb.toString();
+        if (AdtPrefs.getPrefs().getFormatGuiXml()) {
+            newFile = XmlPrettyPrinter.prettyPrint(newFile,
+                    XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT, null /*lineSeparator*/);
+        }
+        addFile.setEdit(new InsertEdit(0, newFile));
 
         Change finishHook = createFinishHook(file);
         changes.add(finishHook);
@@ -328,7 +338,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             IFile sourceFile, int begin, int end, Document document, Element primary) {
         TextFileChange change = new TextFileChange(sourceFile.getName(), sourceFile);
         MultiTextEdit rootEdit = new MultiTextEdit();
-        change.setEdit(rootEdit);
         change.setTextType(EXT_XML);
         changes.add(change);
 
@@ -353,6 +362,14 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                     for (TextEdit edit : replaceIds) {
                         rootEdit.addChild(edit);
                     }
+
+                    if (AdtPrefs.getPrefs().getFormatGuiXml()) {
+                        MultiTextEdit formatted = reformat(doc.get(), rootEdit,
+                                XmlFormatStyle.LAYOUT);
+                        if (formatted != null) {
+                            rootEdit = formatted;
+                        }
+                    }
                 }
             } catch (IOException e) {
                 AdtPlugin.log(e, null);
@@ -364,6 +381,8 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                 }
             }
         }
+
+        change.setEdit(rootEdit);
     }
 
     /**

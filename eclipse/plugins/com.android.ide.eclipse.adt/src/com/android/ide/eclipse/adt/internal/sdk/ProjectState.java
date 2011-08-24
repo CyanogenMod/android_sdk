@@ -18,7 +18,6 @@ package com.android.ide.eclipse.adt.internal.sdk;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.internal.project.ApkSettings;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 
@@ -35,8 +34,8 @@ import java.util.regex.Matcher;
 
 /**
  * Centralized state for Android Eclipse project.
- * <p>This gives raw access to the properties (from <code>default.properties</code>), as well
- * as direct access to target, apksettings and library information.
+ * <p>This gives raw access to the properties (from <code>project.properties</code>), as well
+ * as direct access to target and library information.
  *
  * This also gives access to library information.
  *
@@ -106,7 +105,7 @@ public final class ProjectState {
 
         /**
          * Returns the relative path of the library from the main project.
-         * <p/>This is identical to the value defined in the main project's default.properties.
+         * <p/>This is identical to the value defined in the main project's project.properties.
          */
         public String getRelativePath() {
             return mRelativePath;
@@ -156,7 +155,7 @@ public final class ProjectState {
     private final IProject mProject;
     private final ProjectProperties mProperties;
     private IAndroidTarget mTarget;
-    private ApkSettings mApkSettings;
+
     /**
      * list of libraries. Access to this list must be protected by
      * <code>synchronized(mLibraries)</code>, but it is important that such code do not call
@@ -179,9 +178,6 @@ public final class ProjectState {
 
         mProject = project;
         mProperties = properties;
-
-        // load the ApkSettings
-        mApkSettings = new ApkSettings(properties);
 
         // load the libraries
         synchronized (mLibraries) {
@@ -309,14 +305,6 @@ public final class ProjectState {
         }
 
         return diff;
-    }
-
-    public void setApkSettings(ApkSettings apkSettings) {
-        mApkSettings = apkSettings;
-    }
-
-    public ApkSettings getApkSettings() {
-        return mApkSettings;
     }
 
     /**
@@ -485,7 +473,7 @@ public final class ProjectState {
      * and the {@link LibraryState} for the library is returned.
      * <p/>Updating the project does two things:<ul>
      * <li>Update LibraryState with new relative path and new {@link IProject} object.</li>
-     * <li>Update the main project's <code>default.properties</code> with the new relative path
+     * <li>Update the main project's <code>project.properties</code> with the new relative path
      * for the changed library.</li>
      * </ul>
      *
@@ -521,7 +509,7 @@ public final class ProjectState {
                             state.setRelativePath(newRelativePath);
                             state.setProject(newLibraryState);
 
-                            // update the default.properties file
+                            // update the project.properties file
                             IStatus status = replaceLibraryProperty(oldProperty, newRelativePath);
                             if (status != null) {
                                 if (status.getSeverity() != IStatus.OK) {
@@ -563,7 +551,7 @@ public final class ProjectState {
      * <p/>This loops on all current dependency looking for the value to replace and then replaces
      * it.
      * <p/>This both updates the in-memory {@link #mProperties} values and on-disk
-     * default.properties file.
+     * project.properties file.
      * @param oldValue the old value to replace
      * @param newValue the new value to set.
      * @return the status of the replacement. If null, no replacement was done (value not found).

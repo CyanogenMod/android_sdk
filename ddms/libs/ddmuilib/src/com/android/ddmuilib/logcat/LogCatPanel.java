@@ -130,11 +130,13 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         mReceiver.addMessageReceivedEventListener(this);
 
-        initializeFilters(prefStore);
-        initializeFonts(prefStore);
+        initializeFilters();
+
+        setupDefaultPreferences();
+        initializePreferenceUpdateListeners();
     }
 
-    private void initializeFilters(IPreferenceStore prefStore) {
+    private void initializeFilters() {
         mLogCatFilters = new ArrayList<LogCatFilter>();
 
         /* add default filter matching all messages */
@@ -150,14 +152,25 @@ public final class LogCatPanel extends SelectionDependentPanel
         mLogCatFilters.addAll(savedFilters);
     }
 
-    private void initializeFonts(IPreferenceStore prefStore) {
+    private void setupDefaultPreferences() {
         PreferenceConverter.setDefault(mPrefStore, LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
                 DEFAULT_LOGCAT_FONT);
+        mPrefStore.setDefault(LogCatMessageList.MAX_MESSAGES_PREFKEY,
+                LogCatMessageList.MAX_MESSAGES_DEFAULT);
+    }
 
+    private void initializePreferenceUpdateListeners() {
         mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent event) {
-                if (event.getProperty().equals(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY)) {
+                String changedProperty = event.getProperty();
+
+                if (changedProperty.equals(LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY)) {
                     mLogCatMessageLabelProvider.setFont(getFontFromPrefStore());
+                    refreshLogCatTable();
+                } else if (changedProperty.equals(
+                        LogCatMessageList.MAX_MESSAGES_PREFKEY)) {
+                    mReceiver.resizeFifo(mPrefStore.getInt(
+                            LogCatMessageList.MAX_MESSAGES_PREFKEY));
                     refreshLogCatTable();
                 }
             }

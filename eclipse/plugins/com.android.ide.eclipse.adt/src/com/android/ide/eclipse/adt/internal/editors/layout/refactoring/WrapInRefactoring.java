@@ -28,8 +28,10 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -199,7 +201,6 @@ public class WrapInRefactoring extends VisualRefactoring {
         List<Change> changes = new ArrayList<Change>();
         TextFileChange change = new TextFileChange(file.getName(), file);
         MultiTextEdit rootEdit = new MultiTextEdit();
-        change.setEdit(rootEdit);
         change.setTextType(EXT_XML);
 
         String id = ensureNewId(mId);
@@ -386,6 +387,14 @@ public class WrapInRefactoring extends VisualRefactoring {
         InsertEdit endEdit = new InsertEdit(mSelectionEnd, sb.toString());
         rootEdit.addChild(endEdit);
 
+        if (AdtPrefs.getPrefs().getFormatGuiXml()) {
+            MultiTextEdit formatted = reformat(rootEdit, XmlFormatStyle.LAYOUT);
+            if (formatted != null) {
+                rootEdit = formatted;
+            }
+        }
+
+        change.setEdit(rootEdit);
         changes.add(change);
         return changes;
     }

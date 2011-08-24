@@ -417,7 +417,10 @@ public class AdtProjectTest extends SdkTestCase {
             sb.append('\n');
         }
         for (int i = firstDelta; i < beforeLines.length - lastDelta; i++) {
-            sb.append("< ");
+            sb.append("<");
+            if (beforeLines[i].length() > 0) {
+                sb.append(" ");
+            }
             sb.append(beforeLines[i]);
             sb.append('\n');
         }
@@ -435,7 +438,10 @@ public class AdtProjectTest extends SdkTestCase {
             sb.append('\n');
         }
         for (int i = firstDelta; i < afterLines.length - lastDelta; i++) {
-            sb.append("> ");
+            sb.append(">");
+            if (afterLines[i].length() > 0) {
+                sb.append(" ");
+            }
             sb.append(afterLines[i]);
             sb.append('\n');
         }

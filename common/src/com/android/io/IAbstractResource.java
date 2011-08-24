@@ -42,4 +42,9 @@ public interface IAbstractResource {
      * Returns the parent folder or null if there is no parent.
      */
     IAbstractFolder getParentFolder();
+
+    /**
+     * Deletes the resource.
+     */
+    boolean delete();
 }

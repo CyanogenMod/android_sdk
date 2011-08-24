@@ -96,17 +96,14 @@ public final class SdkConstants {
     /** hardware properties definition file */
     public final static String FN_HARDWARE_INI = "hardware-properties.ini";
 
-    /** project default property file */
-    public final static String FN_DEFAULT_PROPERTIES = "default.properties";
-
-    /** project export property file */
-    public final static String FN_EXPORT_PROPERTIES = "export.properties";
+    /** project property file */
+    public final static String FN_PROJECT_PROPERTIES = "project.properties";
 
     /** project local property file */
     public final static String FN_LOCAL_PROPERTIES = "local.properties";
 
-    /** project build property file */
-    public final static String FN_BUILD_PROPERTIES = "build.properties";
+    /** project ant property file */
+    public final static String FN_ANT_PROPERTIES = "ant.properties";
 
     /** Skin layout file */
     public final static String FN_SKIN_LAYOUT = "layout";//$NON-NLS-1$

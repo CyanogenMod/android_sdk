@@ -599,10 +599,10 @@ public class Main {
 
         // now get the target hash
         ProjectProperties p = ProjectProperties.load(parentProject.getAbsolutePath(),
-                PropertyType.DEFAULT);
+                PropertyType.PROJECT);
         if (p == null) {
             errorAndExit("Unable to load the main project's %1$s",
-                    PropertyType.DEFAULT.getFilename());
+                    PropertyType.PROJECT.getFilename());
             return;
         }
 

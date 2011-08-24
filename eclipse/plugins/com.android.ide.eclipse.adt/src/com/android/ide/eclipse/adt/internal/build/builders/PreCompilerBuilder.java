@@ -201,7 +201,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // get the project info
             ProjectState projectState = Sdk.getProjectState(project);
 
-            // this can happen if the project has no default.properties.
+            // this can happen if the project has no project.properties.
             if (projectState == null) {
                 return null;
             }

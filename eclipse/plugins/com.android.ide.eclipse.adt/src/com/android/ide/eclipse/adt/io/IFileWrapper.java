@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -88,6 +89,15 @@ public class IFileWrapper implements IAbstractFile {
 
     public boolean exists() {
         return mFile.exists();
+    }
+
+    public boolean delete() {
+        try {
+            mFile.delete(true /*force*/, new NullProgressMonitor());
+            return true;
+        } catch (CoreException e) {
+            return false;
+        }
     }
 
     /**

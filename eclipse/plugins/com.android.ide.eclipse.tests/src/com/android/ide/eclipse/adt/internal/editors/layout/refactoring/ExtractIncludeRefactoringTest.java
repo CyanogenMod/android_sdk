@@ -17,9 +17,13 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.w3c.dom.Element;
@@ -29,6 +33,12 @@ import java.util.List;
 import java.util.Map;
 
 public class ExtractIncludeRefactoringTest extends RefactoringTest {
+
+    @Override
+    protected boolean autoFormat() {
+        return false;
+    }
+
     @Override
     protected boolean testCaseNeedsUniqueProject() {
         // Because some of these tests look at ALL layouts in the project
@@ -103,6 +113,20 @@ public class ExtractIncludeRefactoringTest extends RefactoringTest {
 
         checkRefactoring("sample7.xml", "newlayout6", true, extraFiles, 4, true /* diffs */,
                 "@+id/linearLayout4");
+    }
+
+    public void testExtract7() throws Exception {
+        // Just like testExtract6, except we turn on auto-formatting
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        AdtPrefs.init(store);
+        AdtPrefs prefs = AdtPrefs.getPrefs();
+        prefs.initializeStoreWithDefaults(store);
+        store.setValue(AdtPrefs.PREFS_FORMAT_GUI_XML, true);
+        prefs.loadValues(null);
+
+        assertTrue(AdtPrefs.getPrefs().getFormatGuiXml());
+
+        testExtract6();
     }
 
 
