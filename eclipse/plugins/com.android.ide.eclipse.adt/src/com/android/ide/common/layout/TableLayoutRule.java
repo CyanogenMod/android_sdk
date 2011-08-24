@@ -181,7 +181,7 @@ public class TableLayoutRule extends LinearLayoutRule {
 
     @Override
     public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge) {
+            SegmentType verticalEdge, Object childView, Object parentView) {
         // Children of a table layout cannot set their widths (it is controlled by column
         // settings on the table). They can set their heights (though for TableRow, the
         // height is always wrap_content).
@@ -195,6 +195,7 @@ public class TableLayoutRule extends LinearLayoutRule {
         }
 
         // Allow resizing heights only
-        return super.onResizeBegin(child, parent, horizontalEdge, null /*verticalEdge*/);
+        return super.onResizeBegin(child, parent, horizontalEdge, null /*verticalEdge*/,
+                childView, parentView);
     }
 }

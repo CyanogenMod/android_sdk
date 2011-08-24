@@ -32,7 +32,7 @@ import com.android.ide.common.api.INode;
  */
 public abstract class IgnoredLayoutRule extends BaseLayoutRule {
     @Override
-    public DropFeedback onDropEnter(INode targetNode, IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         // Do nothing; this layout rule corresponds to a layout that
         // should not be handled as a layout by the visual editor - usually
         // because some widget is extending a layout for implementation purposes

@@ -78,17 +78,25 @@ class ResizeState {
     public int modifierMask;
 
     /**
+     * The actual view object for the layout containing the resizing operation,
+     * or null if not known
+     */
+    public Object layoutView;
+
+    /**
      * Constructs a new {@link ResizeState}
      *
      * @param rule the associated rule
      * @param layout the parent layout containing the resized node
+     * @param layoutView the actual View instance for the layout, or null if not known
      * @param node the node being resized
      */
-    ResizeState(BaseLayoutRule rule, INode layout, INode node) {
+    ResizeState(BaseLayoutRule rule, INode layout, Object layoutView, INode node) {
         mRule = rule;
 
         this.layout = layout;
         this.node = node;
+        this.layoutView = layoutView;
     }
 
     /**

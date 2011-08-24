@@ -25,9 +25,9 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.ViewRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -298,13 +298,13 @@ public class RulesEngine {
     }
 
     public void callPaintSelectionFeedback(GCWrapper gcWrapper, NodeProxy parentNode,
-            List<? extends INode> childNodes) {
+            List<? extends INode> childNodes, Object view) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(parentNode.getNode());
 
         if (rule != null) {
             try {
-                rule.paintSelectionFeedback(gcWrapper, parentNode, childNodes);
+                rule.paintSelectionFeedback(gcWrapper, parentNode, childNodes, view);
 
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.callPaintSelectionFeedback() failed: %s",
@@ -321,13 +321,13 @@ public class RulesEngine {
      * Followed by a paint.
      */
     public DropFeedback callOnDropEnter(NodeProxy targetNode,
-            IDragElement[] elements) {
+            Object targetView, IDragElement[] elements) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(targetNode.getNode());
 
         if (rule != null) {
             try {
-                return rule.onDropEnter(targetNode, elements);
+                return rule.onDropEnter(targetNode, targetView, elements);
 
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onDropEnter() failed: %s",
@@ -430,16 +430,18 @@ public class RulesEngine {
      * Called when pasting elements in an existing document on the selected target.
      *
      * @param targetNode The first node selected.
+     * @param targetView The view object for the target node, or null if not known
      * @param pastedElements The elements being pasted.
      */
-    public void callOnPaste(NodeProxy targetNode, SimpleElement[] pastedElements) {
+    public void callOnPaste(NodeProxy targetNode, Object targetView,
+            SimpleElement[] pastedElements) {
         // try to find a rule for this element's FQCN
         IViewRule rule = loadRule(targetNode.getNode());
 
         if (rule != null) {
             try {
                 mInsertType = InsertType.PASTE;
-                rule.onPaste(targetNode, pastedElements);
+                rule.onPaste(targetNode, targetView, pastedElements);
 
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onPaste() failed: %s",
@@ -452,12 +454,14 @@ public class RulesEngine {
     // ---- Resize operations ----
 
     public DropFeedback callOnResizeBegin(NodeProxy child, NodeProxy parent, Rect newBounds,
-            SegmentType horizontalEdge, SegmentType verticalEdge) {
+            SegmentType horizontalEdge, SegmentType verticalEdge, Object childView,
+            Object parentView) {
         IViewRule rule = loadRule(parent.getNode());
 
         if (rule != null) {
             try {
-                return rule.onResizeBegin(child, parent, horizontalEdge, verticalEdge);
+                return rule.onResizeBegin(child, parent, horizontalEdge, verticalEdge,
+                        childView, parentView);
             } catch (Exception e) {
                 AdtPlugin.log(e, "%s.onResizeBegin() failed: %s", rule.getClass().getSimpleName(),
                         e.toString());

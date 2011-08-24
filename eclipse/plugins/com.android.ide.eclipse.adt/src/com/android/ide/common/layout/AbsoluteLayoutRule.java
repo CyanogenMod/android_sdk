@@ -56,7 +56,8 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
     // The AbsoluteLayout accepts any drag'n'drop anywhere on its surface.
 
     @Override
-    public DropFeedback onDropEnter(final INode targetNode, final IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView,
+            final IDragElement[] elements) {
 
         if (elements.length == 0) {
             return null;

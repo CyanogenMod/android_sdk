@@ -66,7 +66,7 @@ public class TableRowRule extends LinearLayoutRule {
 
     @Override
     public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge) {
+            SegmentType verticalEdge, Object childView, Object parentView) {
         // No resizing in TableRows; the width is *always* match_parent and the height is
         // *always* wrap_content.
         return null;

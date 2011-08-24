@@ -134,26 +134,44 @@ public interface IViewRule {
      * @param graphics the graphics context to paint into
      * @param parentNode the parent layout node
      * @param childNodes the child nodes selected in the parent layout
+     * @param view An instance of the view to be painted (may be null)
      */
     void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes);
+            List<? extends INode> childNodes, Object view);
 
     // ==== Drag'n'drop support ====
 
     /**
-     * Called when the d'n'd starts dragging over the target node.
-     * If interested, returns a DropFeedback passed to onDrop/Move/Leave/Paint.
-     * If not interested in drop, return null.
-     * Followed by a paint.
+     * Called when the d'n'd starts dragging over the target node. If
+     * interested, returns a DropFeedback passed to onDrop/Move/Leave/Paint. If
+     * not interested in drop, return null. Followed by a paint.
+     *
+     * @param targetNode the {@link INode} for the target layout receiving a
+     *            drop event
+     * @param targetView the corresponding View object for the target layout, or
+     *            null if not known
+     * @param elements an array of {@link IDragElement} element descriptors for
+     *            the dragged views
+     * @return a {@link DropFeedback} object with drop state (which will be
+     *         supplied to a follow-up {@link #onDropMove} call), or null if the
+     *         drop should be ignored
      */
-    DropFeedback onDropEnter(INode targetNode,
-            IDragElement[] elements);
+    DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements);
 
     /**
-     * Called after onDropEnter.
-     * Returns a DropFeedback passed to onDrop/Move/Leave/Paint (typically same
-     * as input one).
-     * Returning null will invalidate the drop workflow.
+     * Called after onDropEnter. Returns a DropFeedback passed to
+     * onDrop/Move/Leave/Paint (typically same as input one). Returning null
+     * will invalidate the drop workflow.
+     *
+     * @param targetNode the {@link INode} for the target layout receiving a
+     *            drop event
+     * @param elements an array of {@link IDragElement} element descriptors for
+     *            the dragged views
+     * @param feedback the {@link DropFeedback} object created by
+     *            {@link #onDropEnter(INode, Object, IDragElement[])}
+     * @param where the current mouse drag position
+     * @return a {@link DropFeedback} (which is usually just the same one passed
+     *         into this method)
      */
     DropFeedback onDropMove(INode targetNode,
             IDragElement[] elements,
@@ -176,6 +194,12 @@ public interface IViewRule {
      * <i>...user leaves canvas...</i>
      * - onDropLeave(node2, feedback2)
      * </pre>
+     * @param targetNode the {@link INode} for the target layout receiving a
+     *            drop event
+     * @param elements an array of {@link IDragElement} element descriptors for
+     *            the dragged views
+     * @param feedback the {@link DropFeedback} object created by
+     *            {@link #onDropEnter(INode, Object, IDragElement[])}
      */
     void onDropLeave(INode targetNode,
             IDragElement[] elements,
@@ -186,7 +210,15 @@ public interface IViewRule {
      * <p>
      * TODO: Document that this method will be called under an edit lock so you can
      * directly manipulate the nodes without wrapping it in an
-     * {@link INode#editXml(String, INodeHandler)} call
+     * {@link INode#editXml(String, INodeHandler)} call.
+     *
+     * @param targetNode the {@link INode} for the target layout receiving a
+     *            drop event
+     * @param elements an array of {@link IDragElement} element descriptors for
+     *            the dragged views
+     * @param feedback the {@link DropFeedback} object created by
+     *            {@link #onDropEnter(INode, Object, IDragElement[])}
+     * @param where the mouse drop position
      */
     void onDropped(INode targetNode,
             IDragElement[] elements,
@@ -197,9 +229,11 @@ public interface IViewRule {
      * Called when pasting elements in an existing document on the selected target.
      *
      * @param targetNode The first node selected.
+     * @param targetView the corresponding View object for the target layout, or
+     *            null if not known
      * @param pastedElements The elements being pasted.
      */
-    void onPaste(INode targetNode, IDragElement[] pastedElements);
+    void onPaste(INode targetNode, Object targetView, IDragElement[] pastedElements);
 
     // ==== XML Creation ====
 
@@ -261,11 +295,15 @@ public interface IViewRule {
      * @param parent the layout containing the child
      * @param horizEdge The horizontal edge being resized, or null
      * @param verticalEdge the vertical edge being resized, or null
+     * @param childView an instance of the resized node view, or null if not known
+     * @param parentView an instance of the parent layout view object, or null if not known
      * @return a {@link DropFeedback} object which performs an update painter callback
      *         etc.
      */
-    DropFeedback onResizeBegin(INode child, INode parent,
-            SegmentType horizEdge, SegmentType verticalEdge);
+    DropFeedback onResizeBegin(
+            INode child, INode parent,
+            SegmentType horizEdge, SegmentType verticalEdge,
+            Object childView, Object parentView);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This

@@ -31,10 +31,10 @@ import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.RuleAction;
-import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
+import com.android.ide.common.api.RuleAction.Choices;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.grid.GridDropHandler;
 import com.android.ide.common.layout.grid.GridLayoutPainter;
@@ -177,7 +177,7 @@ public class GridLayoutRule extends BaseLayoutRule {
                             return;
                         }
 
-                        GridModel grid = new GridModel(mRulesEngine, parentNode);
+                        GridModel grid = new GridModel(mRulesEngine, parentNode, null);
                         if (id.equals(ACTION_ADD_ROW)) {
                             grid.addRow(children);
                         } else if (id.equals(ACTION_REMOVE_ROW)) {
@@ -236,8 +236,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, final IDragElement[] elements) {
-        GridDropHandler userData = new GridDropHandler(this, targetNode);
+    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
+        GridDropHandler userData = new GridDropHandler(this, targetNode, targetView);
         IFeedbackPainter painter = GridLayoutPainter.createDropFeedbackPainter(this, elements);
         return new DropFeedback(userData, painter);
     }
@@ -292,7 +292,7 @@ public class GridLayoutRule extends BaseLayoutRule {
 
         // Attempt to clean up spacer objects for any newly-empty rows or columns
         // as the result of this deletion
-        GridModel grid = new GridModel(mRulesEngine, parent);
+        GridModel grid = new GridModel(mRulesEngine, parent, null);
         for (INode child : deleted) {
             // We don't care about deletion of spacers
             if (child.getFqcn().equals(FQCN_SPACE)) {
@@ -333,7 +333,7 @@ public class GridLayoutRule extends BaseLayoutRule {
     private GridModel getGrid(ResizeState resizeState) {
         GridModel grid = (GridModel) resizeState.clientData;
         if (grid == null) {
-            grid = new GridModel(mRulesEngine, resizeState.layout);
+            grid = new GridModel(mRulesEngine, resizeState.layout, resizeState.layoutView);
             resizeState.clientData = grid;
         }
 
@@ -412,16 +412,21 @@ public class GridLayoutRule extends BaseLayoutRule {
 
     @Override
     public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes) {
-        super.paintSelectionFeedback(graphics, parentNode, childNodes);
+            List<? extends INode> childNodes, Object view) {
+        super.paintSelectionFeedback(graphics, parentNode, childNodes, view);
 
         if (sShowStructure) {
             // TODO: Cache the grid
-            GridLayoutPainter.paintStructure(DrawingStyle.GUIDELINE_DASHED,
-                    parentNode, graphics, new GridModel(mRulesEngine, parentNode));
+            if (view != null) {
+                GridLayoutPainter.paintStructure(view, DrawingStyle.GUIDELINE_DASHED,
+                        parentNode, graphics);
+            } else {
+                GridLayoutPainter.paintStructure(DrawingStyle.GUIDELINE_DASHED,
+                        parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
+            }
         } else if (sDebugGridLayout) {
             GridLayoutPainter.paintStructure(DrawingStyle.GRID,
-                    parentNode, graphics, new GridModel(mRulesEngine, parentNode));
+                    parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
         }
 
         // TBD: Highlight the cells around the selection, and display easy controls
