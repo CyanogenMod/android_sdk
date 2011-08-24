@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.IImageFactory;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -35,8 +36,23 @@ import java.awt.image.WritableRaster;
  * The {@link ImageOverlay} class renders an image as an overlay.
  */
 public class ImageOverlay extends Overlay implements IImageFactory {
+    /**
+     * Whether the image should be pre-scaled (scaled to the zoom level) once
+     * instead of dynamically during each paint; this is necessary on some
+     * platforms (see issue #19447)
+     */
+    private static final boolean PRESCALE =
+            // Currently this is necessary on Linux because the "Cairo" library
+            // seems to be a bottleneck
+            SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX
+                    && !(Boolean.getBoolean("adt.noprescale")); //$NON-NLS-1$
+
     /** Current background image. Null when there's no image. */
     private Image mImage;
+
+    /** A pre-scaled version of the image */
+    private Image mPreScaledImage;
+
     /** Current background AWT image. This is created by {@link #getImage()}, which is called
      * by the LayoutLib. */
     private BufferedImage mAwtImage;
@@ -49,7 +65,6 @@ public class ImageOverlay extends Overlay implements IImageFactory {
 
     /** Horizontal scaling & scrollbar information. */
     private CanvasTransform mHScale;
-
 
     /**
      * Constructs an {@link ImageOverlay} tied to the given canvas.
@@ -74,6 +89,10 @@ public class ImageOverlay extends Overlay implements IImageFactory {
         if (mImage != null) {
             mImage.dispose();
             mImage = null;
+        }
+        if (mPreScaledImage != null) {
+            mPreScaledImage.dispose();
+            mPreScaledImage = null;
         }
     }
 
@@ -112,6 +131,8 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             }
         }
 
+        mPreScaledImage = null; // Force refresh on next paint
+
         return mImage;
     }
 
@@ -134,6 +155,34 @@ public class ImageOverlay extends Overlay implements IImageFactory {
 
             CanvasTransform hi = mHScale;
             CanvasTransform vi = mVScale;
+
+            // On some platforms, dynamic image scaling is very slow (see issue #19447) so
+            // compute a pre-scaled version of the image once and render that instead.
+            // This is done lazily in paint rather than when the image changes because
+            // the image must be rescaled each time the zoom level changes, which varies
+            // independently from when the image changes.
+            if (PRESCALE && mAwtImage != null) {
+                if (mPreScaledImage == null ||
+                        mPreScaledImage.getImageData().width != hi.getScalledImgSize()) {
+                    double xScale = hi.getScalledImgSize() / (double) mAwtImage.getWidth();
+                    double yScale = vi.getScalledImgSize() / (double) mAwtImage.getHeight();
+                    BufferedImage scaledAwtImage;
+                    if (xScale == 1.0 && yScale == 1.0) {
+                        // Scaling to 100% is easy!
+                        scaledAwtImage = mAwtImage;
+                    } else {
+                        scaledAwtImage = ImageUtils.scale(mAwtImage, xScale, yScale);
+                    }
+                    assert scaledAwtImage.getWidth() == hi.getScalledImgSize();
+                    mPreScaledImage = SwtUtils.convertToSwt(mCanvas.getDisplay(), scaledAwtImage,
+                            true /*transferAlpha*/, -1);
+                }
+
+                if (mPreScaledImage != null) {
+                    gc.drawImage(mPreScaledImage, hi.translate(0), vi.translate(0));
+                }
+                return;
+            }
 
             // we only anti-alias when reducing the image size.
             int oldAlias = -2;
