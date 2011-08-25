@@ -60,6 +60,42 @@ public class AdtUtils {
     }
 
     /**
+     * Strips off the last file extension from the given filename, e.g.
+     * "foo.backup.diff" will be turned into "foo.backup".
+     * <p>
+     * Note that dot files (e.g. ".profile") will be left alone.
+     *
+     * @param filename the filename to be stripped
+     * @return the filename without the last file extension.
+     */
+    public static String stripLastExtension(String filename) {
+        int dotIndex = filename.lastIndexOf('.');
+        if (dotIndex > 0) { // > 0 instead of != -1: Treat dot files (e.g. .profile) differently
+            return filename.substring(0, dotIndex);
+        } else {
+            return filename;
+        }
+    }
+
+    /**
+     * Strips off all extensions from the given filename, e.g. "foo.9.png" will
+     * be turned into "foo".
+     * <p>
+     * Note that dot files (e.g. ".profile") will be left alone.
+     *
+     * @param filename the filename to be stripped
+     * @return the filename without any file extensions
+     */
+    public static String stripAllExtensions(String filename) {
+        int dotIndex = filename.indexOf('.');
+        if (dotIndex > 0) { // > 0 instead of != -1: Treat dot files (e.g. .profile) differently
+            return filename.substring(0, dotIndex);
+        } else {
+            return filename;
+        }
+    }
+
+    /**
      * Capitalizes the string, i.e. transforms the initial [a-z] into [A-Z].
      * Returns the string unmodified if the first character is not [a-z].
      *

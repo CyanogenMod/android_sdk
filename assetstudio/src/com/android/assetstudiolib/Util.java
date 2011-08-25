@@ -84,7 +84,7 @@ public class Util {
     }
 
     /**
-     * Applies a gaussion blur of the given radius to the given {@link BufferedImage} using a kernel
+     * Applies a gaussian blur of the given radius to the given {@link BufferedImage} using a kernel
      * convolution.
      *
      * @param source The source image.

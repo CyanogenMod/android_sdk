@@ -16,93 +16,136 @@
 
 package com.android.assetstudiolib;
 
-import com.android.resources.Density;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A {@link GraphicGenerator} that generates Android "launcher" icons.
  */
 public class LauncherIconGenerator extends GraphicGenerator {
-    private static final Rectangle BASE_IMAGE_RECT = new Rectangle(0, 0, 48, 48);
-    private static final Rectangle BASE_TARGET_RECT = new Rectangle(4, 4, 40, 40);
+    private static final Rectangle IMAGE_SIZE_HDPI = new Rectangle(0, 0, 72, 72);
+    /* TODO: Adapt from html version:
+          'square-web-targetRect': { x: 57, y: 57, w: 398, h: 398 },
+          'circle-web-targetRect': { x: 42, y: 42, w: 428, h: 428 },
+        'square-xhdpi-targetRect': { x: 11, y: 11, w:  74, h:  74 },
+        'circle-xhdpi-targetRect': { x:  8, y:  8, w:  80, h:  80 },
+         'square-hdpi-targetRect': { x:  8, y:  8, w:  56, h:  56 },
+         'circle-hdpi-targetRect': { x:  6, y:  6, w:  60, h:  60 }, <====
+         'square-mdpi-targetRect': { x:  5, y:  5, w:  38, h:  38 },
+         'circle-mdpi-targetRect': { x:  4, y:  4, w:  40, h:  40 },
+         'square-ldpi-targetRect': { x:  4, y:  4, w:  28, h:  28 },
+         'circle-ldpi-targetRect': { x:  3, y:  3, w:  30, h:  30 }
+     */
+    private static final Rectangle TARGET_RECT_HDPI = new Rectangle(6, 6, 60, 60);
 
-    private Options mOptions;
-    private BufferedImage mBackImage;
-    private BufferedImage mMaskImage;
-    private BufferedImage mForeImage;
+    @Override
+    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+        LauncherOptions launcherOptions = (LauncherOptions) options;
 
-    public LauncherIconGenerator(GraphicGeneratorContext context, Options options) {
-        mOptions = options;
-        mBackImage = context.loadImageResource("/images/launcher_stencil/"
-                + options.shape.id + "/" + options.density.getResourceValue() + "/back.png");
-        mForeImage = context.loadImageResource("/images/launcher_stencil/"
-                + options.shape.id + "/" + options.density.getResourceValue() + "/"
-                + options.style.id + ".png");
-        mMaskImage = context.loadImageResource("/images/launcher_stencil/"
-                + options.shape.id + "/" + options.density.getResourceValue() + "/mask.png");
-    }
+        String density;
+        if (launcherOptions.isWebGraphic) {
+            density = "web";
+        } else {
+            density = launcherOptions.density.getResourceValue();
+        }
+        String shape = launcherOptions.shape.id;
+        BufferedImage mBackImage = context.loadImageResource("/images/launcher_stencil/"
+                + shape + "/" + density + "/back.png");
+        BufferedImage mForeImage = context.loadImageResource("/images/launcher_stencil/"
+                + shape + "/" + density + "/" + launcherOptions.style.id + ".png");
+        BufferedImage mMaskImage = context.loadImageResource("/images/launcher_stencil/"
+                + shape + "/" + density + "/mask.png");
 
-    public BufferedImage generate() {
-        final float scaleFactor = GraphicGenerator.getScaleFactor(mOptions.density);
-        Rectangle imageRect = Util.scaleRectangle(BASE_IMAGE_RECT, scaleFactor);
-        Rectangle targetRect = Util.scaleRectangle(BASE_TARGET_RECT, scaleFactor);
+        float scaleFactor = GraphicGenerator.getHdpiScaleFactor(launcherOptions.density);
+        if (launcherOptions.isWebGraphic) {
+            // Target size for the web graphic is 512
+            scaleFactor = 512 / (float) IMAGE_SIZE_HDPI.height;
+        }
+        Rectangle imageRect = Util.scaleRectangle(IMAGE_SIZE_HDPI, scaleFactor);
+        Rectangle targetRect = Util.scaleRectangle(TARGET_RECT_HDPI, scaleFactor);
 
         BufferedImage outImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g = (Graphics2D) outImage.getGraphics();
         g.drawImage(mBackImage, 0, 0, null);
 
-        {
-            BufferedImage tempImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
-            Graphics2D g2 = (Graphics2D) tempImage.getGraphics();
-            g2.drawImage(mMaskImage, 0, 0, null);
-            g2.setComposite(AlphaComposite.SrcAtop);
-            g2.setPaint(new Color(mOptions.backgroundColor));
-            g2.fillRect(0, 0, imageRect.width, imageRect.height);
+        BufferedImage tempImage = Util.newArgbBufferedImage(imageRect.width, imageRect.height);
+        Graphics2D g2 = (Graphics2D) tempImage.getGraphics();
+        g2.drawImage(mMaskImage, 0, 0, null);
+        g2.setComposite(AlphaComposite.SrcAtop);
+        g2.setPaint(new Color(launcherOptions.backgroundColor));
+        g2.fillRect(0, 0, imageRect.width, imageRect.height);
 
-            if (mOptions.crop) {
-                Util.drawCenterCrop(g2, mOptions.sourceImage, targetRect);
-            } else {
-                Util.drawCenterInside(g2, mOptions.sourceImage, targetRect);
-            }
-
-            g.drawImage(tempImage, 0, 0, null);
+        if (launcherOptions.crop) {
+            Util.drawCenterCrop(g2, launcherOptions.sourceImage, targetRect);
+        } else {
+            Util.drawCenterInside(g2, launcherOptions.sourceImage, targetRect);
         }
 
+        g.drawImage(tempImage, 0, 0, null);
         g.drawImage(mForeImage, 0, 0, null);
+
+        g.dispose();
+        g2.dispose();
+
         return outImage;
     }
 
-    public static class Options {
-        public BufferedImage sourceImage;
+    @Override
+    public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
+            GraphicGeneratorContext context, Options options, String name) {
+        LauncherOptions launcherOptions = (LauncherOptions) options;
+        boolean generateWebImage = launcherOptions.isWebGraphic;
+        launcherOptions.isWebGraphic = false;
+        super.generate(category, categoryMap, context, options, name);
+
+        if (generateWebImage) {
+            launcherOptions.isWebGraphic = true;
+            BufferedImage image = generate(context, options);
+            if (image != null) {
+                Map<String, BufferedImage> imageMap = new HashMap<String, BufferedImage>();
+                categoryMap.put("Web", imageMap);
+                imageMap.put(getIconPath(options, name), image);
+            }
+        }
+    }
+
+    @Override
+    protected String getIconPath(Options options, String name) {
+        if (((LauncherOptions) options).isWebGraphic) {
+            return name + "-web.png"; // Store at the root of the project
+        }
+
+        return super.getIconPath(options, name);
+    }
+
+    /** Options specific to generating launcher icons */
+    public static class LauncherOptions extends GraphicGenerator.Options {
+        /** Background color, as an RRGGBB packed integer */
         public int backgroundColor = 0;
+
+        /** Whether the image should be cropped or not */
         public boolean crop = true;
+
+        /** The shape to use for the background */
         public Shape shape = Shape.SQUARE;
+
+        /** The effects to apply to the foreground */
         public Style style = Style.SIMPLE;
-        public Density density = Density.XHIGH;
 
-        public static enum Shape {
-            CIRCLE("circle"), SQUARE("square");
-
-            public String id;
-
-            Shape(String id) {
-                this.id = id;
-            }
-        }
-
-        public static enum Style {
-            SIMPLE("fore1"), FANCY("fore2"), GLOSSY("fore3");
-
-            public String id;
-
-            Style(String id) {
-                this.id = id;
-            }
-        }
+        /**
+         * Whether a web graphic should be generated (will ignore normal density
+         * setting). The {@link #generate(GraphicGeneratorContext, Options)}
+         * method will use this to decide whether to generate a normal density
+         * icon or a high res web image. The
+         * {@link GraphicGenerator#generate(String, Map, GraphicGeneratorContext, Options, String)}
+         * method will use this flag to determine whether it should include a
+         * web graphic in its iteration.
+         */
+        public boolean isWebGraphic;
     }
 }

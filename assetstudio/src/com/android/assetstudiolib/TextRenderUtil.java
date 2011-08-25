@@ -16,14 +16,14 @@
 
 package com.android.assetstudiolib;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
-import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * A set of utility classes for rendering text to a {@link BufferedImage}, suitable for use as a
@@ -31,13 +31,18 @@ import java.util.Map;
  */
 public class TextRenderUtil {
     /**
-     * Renders the given string with the provided {@link Options} to a {@link BufferedImage}.
+     * Renders the given string with the provided {@link Options} to a
+     * {@link BufferedImage}.
      *
-     * @param text    The text to render.
+     * @param text The text to render.
+     * @param paddingPercentage If nonzero, a percentage of the width or height
+     *            (whichever is smaller) to add as padding around the text
      * @param options The optional parameters for rendering the text.
-     * @return An image, suitable for use as an input to a {@link GraphicGenerator}.
+     * @return An image, suitable for use as an input to a
+     *         {@link GraphicGenerator}.
      */
-    public static BufferedImage renderTextImage(String text, Options options) {
+    public static BufferedImage renderTextImage(String text, int paddingPercentage,
+            Options options) {
         if (options == null) {
             options = new Options();
         }
@@ -59,13 +64,32 @@ public class TextRenderUtil {
 
         FontRenderContext frc = tempG.getFontRenderContext();
 
-        Rectangle2D bounds = font.getStringBounds(text, frc);
+        TextLayout layout = new TextLayout(text, font, frc);
+        Rectangle2D bounds = layout.getBounds();
+
+        // The padding is a percentage relative to the overall minimum of the width or height
+        if (paddingPercentage != 0) {
+            double minDimension = Math.min(bounds.getWidth(), bounds.getHeight());
+            double delta = minDimension * paddingPercentage / 100;
+            bounds.setRect(bounds.getMinX() - delta, bounds.getMinY() - delta,
+                    bounds.getWidth() + 2 * delta, bounds.getHeight() + 2 * delta);
+        }
 
         BufferedImage image = Util.newArgbBufferedImage(
                 Math.max(1, (int) bounds.getWidth()), Math.max(1, (int) bounds.getHeight()));
         Graphics2D g = (Graphics2D) image.getGraphics();
+        g.setColor(new Color(options.foregroundColor, true));
         g.setFont(font);
-        g.drawString(text, 0, (float) -bounds.getY());
+
+        g.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(
+                RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        g.drawString(text, (float) -bounds.getX(), (float) -bounds.getY());
+
+        g.dispose();
+        tempG.dispose();
 
         return image;
     }
@@ -78,6 +102,9 @@ public class TextRenderUtil {
         // We use a large default font size to reduce the need to scale generated images up.
         // TODO: Instead, a graphic generator should use a different source image for each density.
         private static final int DEFAULT_FONT_SIZE = 512;
+
+        /** Foreground color to render text with, as an AARRGGBB packed integer */
+        public int foregroundColor = 0xFFFFFFFF;
 
         /**
          * The optional {@link Font} to use. If null, a {@link Font} object will be generated using
