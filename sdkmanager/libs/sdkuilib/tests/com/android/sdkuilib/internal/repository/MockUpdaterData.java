@@ -18,8 +18,8 @@ package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ArchiveInstaller;
+import com.android.sdklib.internal.repository.ArchiveReplacement;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -38,7 +38,7 @@ public class MockUpdaterData extends UpdaterData {
 
     public final static String SDK_PATH = "/tmp/SDK";
 
-    private final List<Archive> mInstalled = new ArrayList<Archive>();
+    private final List<ArchiveReplacement> mInstalled = new ArrayList<ArchiveReplacement>();
 
     public MockUpdaterData() {
         super(SDK_PATH, new MockLog());
@@ -52,8 +52,8 @@ public class MockUpdaterData extends UpdaterData {
         installArchives(result);
     }
 
-    public Archive[] getInstalled() {
-        return mInstalled.toArray(new Archive[mInstalled.size()]);
+    public ArchiveReplacement[] getInstalled() {
+        return mInstalled.toArray(new ArchiveReplacement[mInstalled.size()]);
     }
 
     @Override
@@ -72,12 +72,12 @@ public class MockUpdaterData extends UpdaterData {
         return new ArchiveInstaller() {
             @Override
             public boolean install(
-                    Archive archive,
+                    ArchiveReplacement archiveInfo,
                     String osSdkRoot,
                     boolean forceHttp,
                     SdkManager sdkManager,
                     ITaskMonitor monitor) {
-                mInstalled.add(archive);
+                mInstalled.add(archiveInfo);
                 return true;
             }
         };

@@ -66,7 +66,7 @@ public class UpdaterDataTest extends TestCase {
         archives.add(ai2);
 
         m._installArchives(archives);
-        assertEquals("[a1, a2]", Arrays.toString(m.getInstalled()));
+        assertEquals("[MockEmptyPackage 'a1', MockEmptyPackage 'a2']", Arrays.toString(m.getInstalled()));
     }
 
     /**
@@ -87,8 +87,7 @@ public class UpdaterDataTest extends TestCase {
         archives.add(ai1);
 
         m._installArchives(archives);
-        // TODO fix bug 14393: a2 is not installed because a1 has not been installed yet.
-        assertEquals("[a1, a2]", Arrays.toString(m.getInstalled()));
+        assertEquals("[MockEmptyPackage 'a1', MockEmptyPackage 'a2']", Arrays.toString(m.getInstalled()));
     }
 
 }

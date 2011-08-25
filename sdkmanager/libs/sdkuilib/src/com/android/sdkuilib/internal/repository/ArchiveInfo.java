@@ -17,8 +17,7 @@
 package com.android.sdkuilib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.ArchiveReplacement;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,16 +41,19 @@ import java.util.Collection;
  *
  * @see ArchiveInfo#ArchiveInfo(Archive, Archive, ArchiveInfo[])
  */
-class ArchiveInfo implements IDescription, Comparable<ArchiveInfo> {
+class ArchiveInfo extends ArchiveReplacement implements Comparable<ArchiveInfo> {
 
-    private final Archive mNewArchive;
-    private final Archive mReplaced;
     private final ArchiveInfo[] mDependsOn;
     private final ArrayList<ArchiveInfo> mDependencyFor = new ArrayList<ArchiveInfo>();
     private boolean mAccepted;
     private boolean mRejected;
 
     /**
+     * Creates a new replacement where the {@code newArchive} will replace the
+     * currently installed {@code replaced} archive.
+     * When {@code newArchive} is not intended to replace anything (e.g. because
+     * the user is installing a new package not present on her system yet), then
+     * {@code replace} shall be null.
      *
      * @param newArchive A "new archive" to be installed. This is always an archive
      *          that comes from a remote site. This <em>may</em> be null.
@@ -64,25 +66,8 @@ class ArchiveInfo implements IDescription, Comparable<ArchiveInfo> {
      *          However it cannot contain nulls.
      */
     public ArchiveInfo(Archive newArchive, Archive replaced, ArchiveInfo[] dependsOn) {
-        mNewArchive = newArchive;
-        mReplaced = replaced;
+        super(newArchive, replaced);
         mDependsOn = dependsOn;
-    }
-
-    /**
-     * Returns the "new archive" to be installed.
-     * This <em>may</em> be null for missing archives.
-     */
-    public Archive getNewArchive() {
-        return mNewArchive;
-    }
-
-    /**
-     * Returns an optional local archive that the new one will replace.
-     * Can be null if this archive does not replace anything.
-     */
-    public Archive getReplaced() {
-        return mReplaced;
     }
 
     /**
@@ -161,61 +146,14 @@ class ArchiveInfo implements IDescription, Comparable<ArchiveInfo> {
     }
 
     /**
-     * Returns the long description of the parent package of the new archive, if not null.
-     * Otherwise returns an empty string.
-     */
-    public String getLongDescription() {
-        if (mNewArchive != null) {
-            Package p = mNewArchive.getParentPackage();
-            if (p != null) {
-                return p.getLongDescription();
-            }
-        }
-        return "";
-    }
-
-    /**
-     * Returns the short description of the parent package of the new archive, if not null.
-     * Otherwise returns an empty string.
-     */
-    public String getShortDescription() {
-        if (mNewArchive != null) {
-            Package p = mNewArchive.getParentPackage();
-            if (p != null) {
-                return p.getShortDescription();
-            }
-        }
-        return "";
-    }
-
-    /**
-     * Returns the short description of the parent package of the new archive, if not null.
-     * Otherwise returns the default Object toString result.
-     * <p/>
-     * This is mostly helpful for debugging. For UI display, use the {@link IDescription}
-     * interface.
-     */
-    @Override
-    public String toString() {
-        if (mNewArchive != null) {
-            Package p = mNewArchive.getParentPackage();
-            if (p != null) {
-                return p.getShortDescription();
-            }
-        }
-        return super.toString();
-    }
-
-    /**
      * ArchiveInfos are compared using ther "new archive" ordering.
      *
      * @see Archive#compareTo(Archive)
      */
     public int compareTo(ArchiveInfo rhs) {
-        if (mNewArchive != null && rhs != null) {
-            return mNewArchive.compareTo(rhs.getNewArchive());
+        if (getNewArchive() != null && rhs != null) {
+            return getNewArchive().compareTo(rhs.getNewArchive());
         }
         return 0;
     }
-
 }
