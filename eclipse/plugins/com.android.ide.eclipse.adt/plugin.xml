@@ -144,7 +144,7 @@
             hasPages="true"
             icon="icons/new_asset_set.png"
             id="com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizard"
-            name="Asset Set"
+            name="Android Icon Set"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
             project="false" />
     </extension>

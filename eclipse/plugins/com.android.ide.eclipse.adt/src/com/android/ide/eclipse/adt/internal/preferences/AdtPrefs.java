@@ -374,7 +374,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public void initializeStoreWithDefaults(IPreferenceStore store) {
         store.setDefault(PREFS_BUILD_RES_AUTO_REFRESH, true);
         store.setDefault(PREFS_BUILD_FORCE_ERROR_ON_NATIVELIB_IN_JAR, true);
-        store.setDefault(PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE, false);
+        store.setDefault(PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE, true);
 
         store.setDefault(PREFS_BUILD_VERBOSITY, BuildVerbosity.ALWAYS.name());
 

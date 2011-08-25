@@ -175,7 +175,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         HashMap<ViewClassInfo, ViewElementDescriptor> infoDescMap =
             new HashMap<ViewClassInfo, ViewElementDescriptor>();
 
-        ArrayList<ViewElementDescriptor> newViews = new ArrayList<ViewElementDescriptor>();
+        ArrayList<ViewElementDescriptor> newViews = new ArrayList<ViewElementDescriptor>(40);
         if (views != null) {
             for (ViewClassInfo info : views) {
                 ViewElementDescriptor desc = convertView(info, infoDescMap);
@@ -188,7 +188,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         // Note: ViewStub is already described by attrs.xml
         insertInclude(newViews);
 
-        List<ViewElementDescriptor> newLayouts = new ArrayList<ViewElementDescriptor>();
+        List<ViewElementDescriptor> newLayouts = new ArrayList<ViewElementDescriptor>(30);
         if (layouts != null) {
             for (ViewClassInfo info : layouts) {
                 ViewElementDescriptor desc = convertView(info, infoDescMap);
@@ -206,7 +206,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
             newViews.add(fragmentTag);
         }
 
-        List<ElementDescriptor> newDescriptors = new ArrayList<ElementDescriptor>();
+        List<ElementDescriptor> newDescriptors = new ArrayList<ElementDescriptor>(80);
         newDescriptors.addAll(newLayouts);
         newDescriptors.addAll(newViews);
 
@@ -268,7 +268,8 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         }
         String tooltip = info.getJavaDoc();
 
-        ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>();
+        // Average is around 90, max (in 3.2) is 145
+        ArrayList<AttributeDescriptor> attributes = new ArrayList<AttributeDescriptor>(120);
 
         // All views and groups have an implicit "style" attribute which is a reference.
         AttributeInfo styleInfo = new AttributeInfo(

@@ -30,6 +30,7 @@ bitmask
 breadcrumb
 builtin
 bytecode
+cairo
 callback
 callbacks
 carlo
