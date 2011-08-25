@@ -54,6 +54,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -669,7 +670,8 @@ public class PreCompilerBuilder extends BaseBuilder {
 
         // launch aapt: create the command line
         ArrayList<String> array = new ArrayList<String>();
-        array.add(projectTarget.getPath(IAndroidTarget.AAPT));
+        String aaptPath = projectTarget.getPath(IAndroidTarget.AAPT);
+        array.add(aaptPath);
         array.add("package"); //$NON-NLS-1$
         array.add("-m"); //$NON-NLS-1$
         if (AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE) {
@@ -759,6 +761,24 @@ public class PreCompilerBuilder extends BaseBuilder {
             // mark the project and exit
             String msg = String.format(Messages.AAPT_Exec_Error, array.get(0));
             markProject(AdtConstants.MARKER_ADT, msg, IMarker.SEVERITY_ERROR);
+
+            // Add workaround for the Linux problem described here:
+            //    http://developer.android.com/sdk/installing.html#troubleshooting
+            // There are various posts on StackOverflow elsewhere where people are asking
+            // about aapt failing to run, so even though this is documented in the
+            // Troubleshooting section add an error message to help with this
+            // scenario.
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX
+                    && System.getProperty("os.arch").endsWith("64") //$NON-NLS-1$ //$NON-NLS-2$
+                    && new File(aaptPath).exists()
+                    && new File("/usr/bin/apt-get").exists()) {     //$NON-NLS-1$
+                markProject(AdtConstants.MARKER_ADT,
+                        "Hint: On 64-bit systems, make sure the 32-bit libraries are installed: sudo apt-get install ia32-libs",
+                        IMarker.SEVERITY_ERROR);
+                // Note - this uses SEVERITY_ERROR even though it's really SEVERITY_INFO because
+                // we want this error message to show up adjacent to the aapt error message
+                // (and Eclipse sorts by priority)
+            }
 
             // This interrupts the build.
             throw new AbortBuildException();

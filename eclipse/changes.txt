@@ -1,10 +1,64 @@
-13.0.0
+14.0.0 (In development)
 - Build system:
+  - (TODO: More info) Improved library projects
+  - Improved incremental builds
+    - Resource compilation is run much less frequently. It is no
+      longer run when strings are edited, or when layouts are edited
+      (unless a new id is introduced), and it is no longer run once
+      per library project (!)
+    - Resource compilation is no longer done for normal save
+      operations, only when running or debugging (option added in ADT
+      12 now on by default.)
+    - There is a new "PNG crunch cache", which means image crunching
+      is only done once, not once per build which is significant for
+      projects with many resources
+    - Incremental ant builds
   - ADT now uses bin/classes to output the java compilation
     and bin/ for Android specific classes. This will make bin show up
     in the package explorer.
+- DDMS
+  - Brand new logcat view. Fixes bugs, displays and filters by
+    application names instead of just pids, fronts when application
+    runs.
+- XML Editing
+  - New XML formatter which formats all XML files according to the
+    standard Android coding style. The formatter can also reorder
+    attributes to follow the recommended order.
+  - Improved "smart indent": automatic indentation and un-indentation
+    when pressing Return in XML editors
+  - Go to Matching (Ctrl-Shift-P) in XML files can now jump between
+    opening and closing tags
+  - Changes made by the layout editor are automatically run through
+    the new XML formatter.
+  - Select Enclosing Element should now work on the Mac as well.
+- Java Editing
+  - Quickfix for extracting Strings when the caret is inside a String
+- Layout Editor
+  - New GridLayout support
+  - Tooltip feedback for resizing and dragging operations. For
+    example, when dragging in a relative layout, the proposed
+    constraints are shown, and when resizing the new dimensions are
+    shown.
+  - New "Remove Container" visual refactoring which removes the
+    children of a container up to the top level and transfers
+    namespace and layout attributes if necessary.
+  - Improved access to properties in the context menu: The most
+    frequently set attributes for each view are listed at the top of
+    the menu, and the properties menu offers access to the most
+    recently set attributes, attributes organized by their defining
+    view, and layout attributes only or all attributes alphabetically.
+  - The context menu now also contains pull-right menus for accessing
+    properties of the parents, which is useful when the children fully
+    cover the parent making it hard to select on its own.
+  - Ability to suppress rendering fidelity warnings.
+- Asset Studio integration: Wizard creation of launcher icons, menu
+    icons, tab icons, etc.
+- Many bug fixes, and some critical bug fixes on Linux
 
-12.0.0
+13.0.0
+- Tools release only (command line tools)
+
+12.0.0 (July 6th, 2011)
 - Many bug fixes!
 - Visual Layout Editor:
   - New RelativeLayout drop support with guideline suggestions for
@@ -18,7 +72,7 @@
   to speed up interactive file saves. (This is off by default but can
   be enabled in the ADT options panel.)
 
-11.0.0
+11.0.0 (June 6th, 2011)
 - Visual Refactoring:
   - The new "Extract Style" refactoring pulls out style constants and
     defines them as style rules instead.
@@ -99,14 +153,14 @@
   system menu bar.
 - Most of the tools have new launcher icons.
 
-10.0.1
+10.0.1 (March, 2011)
 - Temporary work-around to resolve the rare cases in which the layout
   editor will not open.
 - Fix issue in which ADT 10.0.0 would install on Eclipse 3.4 and
   lower, even though ADT requires Eclipse 3.5 or higher (as of
   10.0.0).
 
-10.0.0
+10.0.0 (February 22nd, 2011)
 - The tools now automatically generate Java Programming Language
   source files (in the gen/ directory) and bytecode (in the res/raw/
   directory) from your .rs files.
@@ -131,7 +185,7 @@
     gesture overlays.
   - Improved rendering error diagnostics.
 
-9.0.0
+9.0.0 (January 26, 2011)
 - Visual Layout Editor
     - Empty layouts with 0,0 size are now automatically expanded when
       selected and during drag and drop
@@ -162,12 +216,12 @@
   to the XML declarations, etc.
 - Logcat view in DDMS now properly displays UTF-8 characters.
 
-8.0.1:
+8.0.1 (October 2010)
 - Fix compilation issue in Android projects referencing standard Java
   projects.
 - Better error reporting when exporting applications for release.
 
-8.0.0
+8.0.0 (October 2010)
 - New version number scheme following the SDK Tools revision number.
 - Support for true debug build. No need to change the value of
   debuggable in the Android Manifest.  Incremental build will
