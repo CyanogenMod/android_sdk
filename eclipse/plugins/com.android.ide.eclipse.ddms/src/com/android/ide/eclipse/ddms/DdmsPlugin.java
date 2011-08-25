@@ -27,6 +27,10 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
+import com.android.ddmuilib.logcat.ILogCatMessageEventListener;
+import com.android.ddmuilib.logcat.LogCatMessage;
+import com.android.ddmuilib.logcat.LogCatReceiver;
+import com.android.ddmuilib.logcat.LogCatReceiverFactory;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
@@ -58,6 +62,7 @@ import org.osgi.framework.BundleContext;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -778,5 +783,14 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         }
 
         return false;
+    }
+
+    private LogCatMonitor mLogCatMonitor;
+    public void startLogCatMonitor(IDevice device) {
+        if (mLogCatMonitor == null) {
+            mLogCatMonitor = new LogCatMonitor(getDebuggerConnectors(), getPreferenceStore());
+        }
+
+        mLogCatMonitor.monitorDevice(device);
     }
 }

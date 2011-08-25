@@ -32,7 +32,7 @@ public class LogCatReceiverFactory {
     /** Singleton instance. */
     public static final LogCatReceiverFactory INSTANCE = new LogCatReceiverFactory();
 
-    private Map<IDevice, LogCatReceiver> mReceiverCache = new HashMap<IDevice, LogCatReceiver>();
+    private Map<String, LogCatReceiver> mReceiverCache = new HashMap<String, LogCatReceiver>();
 
     /** Private constructor: cannot instantiate. */
     private LogCatReceiverFactory() {
@@ -50,17 +50,17 @@ public class LogCatReceiverFactory {
     }
 
     private synchronized void removeReceiverFor(IDevice device) {
-        mReceiverCache.remove(device);
+        mReceiverCache.remove(device.getSerialNumber());
     }
 
     public synchronized LogCatReceiver newReceiver(IDevice device, IPreferenceStore prefs) {
-        LogCatReceiver r = mReceiverCache.get(device);
+        LogCatReceiver r = mReceiverCache.get(device.getSerialNumber());
         if (r != null) {
             return r;
         }
 
         r = new LogCatReceiver(device, prefs);
-        mReceiverCache.put(device, r);
+        mReceiverCache.put(device.getSerialNumber(), r);
         return r;
     }
 }

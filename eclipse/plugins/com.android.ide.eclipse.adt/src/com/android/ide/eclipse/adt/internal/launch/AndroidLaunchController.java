@@ -40,6 +40,8 @@ import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.views.LogCatView;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -1156,6 +1158,10 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
             // lets stop the Launch
             stopLaunch(info);
         }
+
+        // Monitor the logcat output on the launched device to notify
+        // the user if any significant error occurs that is visible from logcat
+        DdmsPlugin.getDefault().startLogCatMonitor(device);
     }
 
     private boolean launchEmulator(AndroidLaunchConfiguration config, AvdInfo avdToLaunch) {
