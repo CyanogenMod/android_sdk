@@ -73,7 +73,7 @@ public class LayoutTestBase extends TestCase {
                 "android.widget.Button", dragBounds).id(draggedButtonId));
 
         // Enter target
-        DropFeedback feedback = rule.onDropEnter(targetNode, elements);
+        DropFeedback feedback = rule.onDropEnter(targetNode, null/*targetView*/, elements);
         assertNotNull(feedback);
         assertFalse(feedback.invalidTarget);
         assertNotNull(feedback.painter);

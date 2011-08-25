@@ -63,10 +63,11 @@ public class GridDropHandler {
      * Creates a new {@link GridDropHandler} for
      * @param gridLayoutRule the corresponding {@link GridLayoutRule}
      * @param layout the GridLayout node
+     * @param view the view instance of the grid layout receiving the drop
      */
-    public GridDropHandler(GridLayoutRule gridLayoutRule, INode layout) {
+    public GridDropHandler(GridLayoutRule gridLayoutRule, INode layout, Object view) {
         mRule = gridLayoutRule;
-        mGrid = new GridModel(mRule.getRulesEngine(), layout);
+        mGrid = new GridModel(mRule.getRulesEngine(), layout, view);
     }
 
     /**

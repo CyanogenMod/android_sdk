@@ -43,7 +43,7 @@ public class ZoomControlsRuleTest extends LayoutTestBase {
         ZoomControlsRule rule = new ZoomControlsRule();
 
         // Enter target
-        DropFeedback feedback = rule.onDropEnter(layout, elements);
+        DropFeedback feedback = rule.onDropEnter(layout, null/*targetView*/, elements);
         // Zoom controls don't respond to drags
         assertNull(feedback);
     }

@@ -264,7 +264,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
     // ==== Drag'n'drop support ====
 
     @Override
-    public DropFeedback onDropEnter(final INode targetNode, final IDragElement[] elements) {
+    public DropFeedback onDropEnter(final INode targetNode, Object targetView,
+            final IDragElement[] elements) {
 
         if (elements.length == 0) {
             return null;
@@ -764,8 +765,9 @@ public class LinearLayoutRule extends BaseLayoutRule {
         /** List of nodes which should have their weights cleared */
         public List<INode> mClearWeights;
 
-        private LinearResizeState(BaseLayoutRule rule, INode layout, INode node) {
-            super(rule, layout, node);
+        private LinearResizeState(BaseLayoutRule rule, INode layout, Object layoutView,
+                INode node) {
+            super(rule, layout, layoutView, node);
 
             unweightedSizes = mRulesEngine.measureChildren(layout,
                     new IClientRulesEngine.AttributeFilter() {
@@ -843,8 +845,8 @@ public class LinearLayoutRule extends BaseLayoutRule {
     }
 
     @Override
-    protected ResizeState createResizeState(INode layout, INode node) {
-        return new LinearResizeState(this, layout, node);
+    protected ResizeState createResizeState(INode layout, Object layoutView, INode node) {
+        return new LinearResizeState(this, layout, layoutView, node);
     }
 
     protected void updateResizeState(LinearResizeState resizeState, final INode node, INode layout,

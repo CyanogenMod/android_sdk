@@ -866,7 +866,7 @@ public class BaseViewRule implements IViewRule {
     // ==== Drag'n'drop support ====
 
     // By default Views do not accept drag'n'drop.
-    public DropFeedback onDropEnter(INode targetNode, IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         return null;
     }
 
@@ -894,7 +894,7 @@ public class BaseViewRule implements IViewRule {
      * this case, defer the call to the parent layout and use the target node as
      * an indication of where to paste.
      */
-    public void onPaste(INode targetNode, IDragElement[] elements) {
+    public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
         //
         INode parent = targetNode.getParent();
         if (parent != null) {
@@ -902,7 +902,8 @@ public class BaseViewRule implements IViewRule {
             IViewRule parentRule = mRulesEngine.loadRule(parentFqcn);
 
             if (parentRule instanceof BaseLayoutRule) {
-                ((BaseLayoutRule) parentRule).onPasteBeforeChild(parent, targetNode, elements);
+                ((BaseLayoutRule) parentRule).onPasteBeforeChild(parent, targetView, targetNode,
+                        elements);
             }
         }
     }
@@ -1010,13 +1011,13 @@ public class BaseViewRule implements IViewRule {
     }
 
     public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes) {
+            List<? extends INode> childNodes, Object view) {
     }
 
     // ---- Resizing ----
 
     public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge) {
+            SegmentType verticalEdge, Object childView, Object parentView) {
         return null;
     }
 

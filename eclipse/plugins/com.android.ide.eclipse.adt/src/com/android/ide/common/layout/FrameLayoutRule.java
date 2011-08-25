@@ -29,12 +29,12 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewMetadata;
+import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
-import com.android.ide.common.api.IViewMetadata.FillPreference;
+import com.android.ide.common.api.RuleAction;
 import com.android.util.Pair;
 
 import java.util.List;
@@ -50,7 +50,8 @@ public class FrameLayoutRule extends BaseLayoutRule {
     // The FrameLayout accepts any drag'n'drop anywhere on its surface.
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, final IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView,
+            final IDragElement[] elements) {
         if (elements.length == 0) {
             return null;
         }

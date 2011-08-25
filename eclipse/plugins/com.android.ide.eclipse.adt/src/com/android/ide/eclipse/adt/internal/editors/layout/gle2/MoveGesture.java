@@ -626,7 +626,7 @@ public class MoveGesture extends DropGesture {
                      targetVi = targetVi.getParent()) {
                     targetNode = mCanvas.getNodeFactory().create(targetVi);
                     df = mCanvas.getRulesEngine().callOnDropEnter(targetNode,
-                                                                  mCurrentDragElements);
+                            targetVi.getViewObject(), mCurrentDragElements);
 
                     if (df != null) {
                         // We should also dispatch an onDropMove() call to the initial enter

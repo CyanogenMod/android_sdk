@@ -27,7 +27,7 @@ import com.android.ide.common.api.Rect;
 /** Rule for AdapterView subclasses that don't have more specific rules */
 public class AdapterViewRule extends BaseLayoutRule {
     @Override
-    public DropFeedback onDropEnter(INode targetNode, IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         // You are not allowed to insert children into AdapterViews; you must
         // use the dedicated addView methods etc dynamically
         DropFeedback dropFeedback = new DropFeedback(null,  new IFeedbackPainter() {

@@ -279,7 +279,7 @@ public class ClipboardSupport {
 
         NodeProxy targetNode = mCanvas.getNodeFactory().create(target);
 
-        mCanvas.getRulesEngine().callOnPaste(targetNode, pasted);
+        mCanvas.getRulesEngine().callOnPaste(targetNode, target.getViewObject(), pasted);
     }
 
     /**

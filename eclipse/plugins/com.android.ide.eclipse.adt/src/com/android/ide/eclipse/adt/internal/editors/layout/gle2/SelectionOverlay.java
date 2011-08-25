@@ -99,7 +99,7 @@ public class SelectionOverlay extends Overlay {
                 if (root != null) {
                     NodeProxy parent = mCanvas.getNodeFactory().create(root);
                     rulesEngine.callPaintSelectionFeedback(gcWrapper,
-                            parent, Collections.<INode>emptyList());
+                            parent, Collections.<INode>emptyList(), root.getViewObject());
                 }
             }
 
@@ -114,7 +114,7 @@ public class SelectionOverlay extends Overlay {
             if (root != null) {
                 NodeProxy parent = mCanvas.getNodeFactory().create(root);
                 rulesEngine.callPaintSelectionFeedback(gcWrapper,
-                        parent, Collections.<INode>emptyList());
+                        parent, Collections.<INode>emptyList(), root.getViewObject());
             }
         }
     }
@@ -167,6 +167,7 @@ public class SelectionOverlay extends Overlay {
                 parents.add(parentNode);
             }
         }
+        ViewHierarchy viewHierarchy = mCanvas.getViewHierarchy();
         for (INode parent : parents) {
             List<INode> children = new ArrayList<INode>();
             for (INode node : nodes) {
@@ -175,8 +176,11 @@ public class SelectionOverlay extends Overlay {
                     children.add(node);
                 }
             }
+            CanvasViewInfo viewInfo = viewHierarchy.findViewInfoFor((NodeProxy) parent);
+            Object view = viewInfo != null ? viewInfo.getViewObject() : null;
+
             rulesEngine.callPaintSelectionFeedback(gcWrapper,
-                    (NodeProxy) parent, children);
+                    (NodeProxy) parent, children, view);
         }
     }
 

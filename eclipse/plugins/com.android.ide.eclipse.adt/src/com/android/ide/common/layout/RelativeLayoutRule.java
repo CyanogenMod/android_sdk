@@ -50,9 +50,9 @@ import com.android.ide.common.api.INode.IAttribute;
 import com.android.ide.common.api.INodeHandler;
 import com.android.ide.common.api.IViewRule;
 import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.relative.ConstraintPainter;
 import com.android.ide.common.layout.relative.GuidelinePainter;
@@ -132,8 +132,8 @@ public class RelativeLayoutRule extends BaseLayoutRule {
 
     @Override
     public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes) {
-        super.paintSelectionFeedback(graphics, parentNode, childNodes);
+            List<? extends INode> childNodes, Object view) {
+        super.paintSelectionFeedback(graphics, parentNode, childNodes, view);
 
         boolean showDependents = true;
         if (sShowStructure) {
@@ -150,7 +150,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
     // ==== Drag'n'drop support ====
 
     @Override
-    public DropFeedback onDropEnter(INode targetNode, final IDragElement[] elements) {
+    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         return new DropFeedback(new MoveHandler(targetNode, elements, mRulesEngine),
                 new GuidelinePainter());
     }
@@ -286,7 +286,8 @@ public class RelativeLayoutRule extends BaseLayoutRule {
 
     @Override
     public DropFeedback onResizeBegin(INode child, INode parent,
-            SegmentType horizontalEdgeType, SegmentType verticalEdgeType) {
+            SegmentType horizontalEdgeType, SegmentType verticalEdgeType,
+            Object childView, Object parentView) {
         ResizeHandler state = new ResizeHandler(parent, child, mRulesEngine,
                 horizontalEdgeType, verticalEdgeType);
         return new DropFeedback(state, new GuidelinePainter());

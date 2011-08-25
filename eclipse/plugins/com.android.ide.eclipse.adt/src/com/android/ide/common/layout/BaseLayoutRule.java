@@ -235,15 +235,14 @@ public class BaseLayoutRule extends BaseViewRule {
      * The default behavior for pasting in a layout is to simulate a drop in the
      * top-left corner of the view.
      * <p/>
-     * Note that we explicitly do not call super() here -- the BasView.onPaste
+     * Note that we explicitly do not call super() here -- the BaseViewRule.onPaste handler
      * will call onPasteBeforeChild() instead.
      * <p/>
      * Derived layouts should override this behavior if not appropriate.
      */
     @Override
-    public void onPaste(INode targetNode, IDragElement[] elements) {
-
-        DropFeedback feedback = onDropEnter(targetNode, elements);
+    public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
+        DropFeedback feedback = onDropEnter(targetNode, targetView, elements);
         if (feedback != null) {
             Point p = targetNode.getBounds().getTopLeft();
             feedback = onDropMove(targetNode, elements, feedback, p);
@@ -263,12 +262,13 @@ public class BaseLayoutRule extends BaseViewRule {
      * a hint to paste "before" it.
      *
      * @param parentNode the parent node we're pasting into
+     * @param parentView the view object for the parent layout, or null
      * @param targetNode the first selected node
      * @param elements the elements being pasted
      */
-    public void onPasteBeforeChild(INode parentNode, INode targetNode, IDragElement[] elements) {
-
-        DropFeedback feedback = onDropEnter(parentNode, elements);
+    public void onPasteBeforeChild(INode parentNode, Object parentView, INode targetNode,
+            IDragElement[] elements) {
+        DropFeedback feedback = onDropEnter(parentNode, parentView, elements);
         if (feedback != null) {
             Point parentP = parentNode.getBounds().getTopLeft();
             Point targetP = targetNode.getBounds().getTopLeft();
@@ -625,14 +625,15 @@ public class BaseLayoutRule extends BaseViewRule {
     // ---- Resizing ----
 
     /** Creates a new {@link ResizeState} object to track resize state */
-    protected ResizeState createResizeState(INode layout, INode node) {
-        return new ResizeState(this, layout, node);
+    protected ResizeState createResizeState(INode layout, Object layoutView, INode node) {
+        return new ResizeState(this, layout, layoutView, node);
     }
 
     @Override
     public DropFeedback onResizeBegin(INode child, INode parent,
-            SegmentType horizontalEdge, SegmentType verticalEdge) {
-        ResizeState state = createResizeState(parent, child);
+            SegmentType horizontalEdge, SegmentType verticalEdge,
+            Object childView, Object parentView) {
+        ResizeState state = createResizeState(parent, parentView, child);
         state.horizontalEdgeType = horizontalEdge;
         state.verticalEdgeType = verticalEdge;
 
