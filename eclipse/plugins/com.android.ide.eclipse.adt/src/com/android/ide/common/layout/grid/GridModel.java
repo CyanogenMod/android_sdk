@@ -44,10 +44,12 @@ import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.GridLayoutRule;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.util.Pair;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -137,14 +139,21 @@ public class GridModel {
     private boolean stale;
 
     /**
+     * An actual instance of a GridLayout object that this grid model corresponds to.
+     */
+    private Object mViewObject;
+
+    /**
      * Constructs a {@link GridModel} for the given layout
      *
      * @param rulesEngine the associated rules engine
      * @param node the GridLayout node
+     * @param viewObject an actual GridLayout instance, or null
      */
-    public GridModel(IClientRulesEngine rulesEngine, INode node) {
+    public GridModel(IClientRulesEngine rulesEngine, INode node, Object viewObject) {
         mRulesEngine = rulesEngine;
         layout = node;
+        mViewObject = viewObject;
         loadFromXml();
     }
 
@@ -317,20 +326,8 @@ public class GridModel {
                 declaredRowCount == UNDEFINED ? children.length : declaredRowCount,
                 declaredColumnCount == UNDEFINED ? children.length : declaredColumnCount);
 
-        // Compute the actualColumnCount and actualRowCount. This -should- be
-        // as easy as declaredColumnCount + extraColumnsMap.size(),
-        // but the user doesn't *have* to declare a column count (or a row count)
-        // and we need both, so go and find the actual row and column maximums.
-        int maxColumn = 0;
-        int maxRow = 0;
-        for (ViewData view : mChildViews) {
-            maxColumn = max(maxColumn, view.column);
-            maxRow = max(maxRow, view.row);
-        }
-        actualColumnCount = maxColumn + 1;
-        actualRowCount = maxRow + 1;
-
         assignCellBounds();
+
         for (int i = 0; i <= actualRowCount; i++) {
             mBaselines[i] = UNDEFINED;
         }
@@ -498,21 +495,77 @@ public class GridModel {
     }
 
     /**
+     * Computes the positions of the column and row boundaries
+     */
+    private void assignCellBounds() {
+        if (!assignCellBoundsFromView()) {
+            assignCellBoundsFromBounds();
+        }
+        initializeMaxBounds();
+        mBaselines = new int[actualRowCount + 1];
+    }
+
+    /**
+     * Computes the positions of the column and row boundaries, using actual
+     * layout data from the associated GridLayout instance (stored in
+     * {@link #mViewObject})
+     */
+    private boolean assignCellBoundsFromView() {
+        if (mViewObject != null) {
+            Pair<int[], int[]> cellBounds = GridModel.getAxisBounds(mViewObject);
+            if (cellBounds != null) {
+                int[] xs = cellBounds.getFirst();
+                int[] ys = cellBounds.getSecond();
+
+                actualColumnCount = xs.length - 1;
+                actualRowCount = ys.length - 1;
+
+                Rect layoutBounds = layout.getBounds();
+                int layoutBoundsX = layoutBounds.x;
+                int layoutBoundsY = layoutBounds.y;
+                mLeft = new int[xs.length];
+                mTop = new int[ys.length];
+                for (int i = 0; i < xs.length; i++) {
+                    mLeft[i] = xs[i] + layoutBoundsX;
+                }
+                for (int i = 0; i < ys.length; i++) {
+                    mTop[i] = ys[i] + layoutBoundsY;
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Computes the boundaries of the rows and columns by considering the bounds of the
      * children.
      */
-    private void assignCellBounds() {
+    private void assignCellBoundsFromBounds() {
         Rect layoutBounds = layout.getBounds();
+
+        // Compute the actualColumnCount and actualRowCount. This -should- be
+        // as easy as declaredColumnCount + extraColumnsMap.size(),
+        // but the user doesn't *have* to declare a column count (or a row count)
+        // and we need both, so go and find the actual row and column maximums.
+        int maxColumn = 0;
+        int maxRow = 0;
+        for (ViewData view : mChildViews) {
+            maxColumn = max(maxColumn, view.column);
+            maxRow = max(maxRow, view.row);
+        }
+        actualColumnCount = maxColumn + 1;
+        actualRowCount = maxRow + 1;
+
         mLeft = new int[actualColumnCount + 1];
-        mMaxRight = new int[actualColumnCount + 1];
         for (int i = 1; i < actualColumnCount; i++) {
             mLeft[i] = UNDEFINED;
         }
         mLeft[0] = layoutBounds.x;
         mLeft[actualColumnCount] = layoutBounds.x2();
         mTop = new int[actualRowCount + 1];
-        mMaxBottom = new int[actualRowCount + 1];
-        mBaselines = new int[actualRowCount + 1];
         for (int i = 1; i < actualRowCount; i++) {
             mTop[i] = UNDEFINED;
         }
@@ -536,27 +589,6 @@ public class GridModel {
                 mTop[row] = bounds.y;
             } else {
                 mTop[row] = Math.min(bounds.y, mTop[row]);
-            }
-
-            if (!view.isSpacer()) {
-                int x2 = bounds.x2();
-                int y2 = bounds.y2();
-                int targetColumn = min(actualColumnCount - 1, column + view.columnSpan - 1);
-                int targetRow = min(actualRowCount - 1, row + view.rowSpan - 1);
-                IViewMetadata metadata = mRulesEngine.getMetadata(view.node.getFqcn());
-                if (metadata != null) {
-                    Margins insets = metadata.getInsets();
-                    if (insets != null) {
-                        x2 -= insets.right;
-                        y2 -= insets.bottom;
-                    }
-                }
-                if (mMaxRight[targetColumn] < x2) {
-                    mMaxRight[targetColumn] = x2;
-                }
-                if (mMaxBottom[targetRow] < y2) {
-                    mMaxBottom[targetRow] = y2;
-                }
             }
         }
 
@@ -597,6 +629,78 @@ public class GridModel {
         for (int i = 0; i < actualColumnCount; i++) {
             assert mLeft[i + 1] >= mLeft[i];
         }
+    }
+
+    /**
+     * Determine, for each row and column, what the largest x and y edges are
+     * within that row or column. This is used to find a natural split point to
+     * suggest when adding something "to the right of" or "below" another view.
+     */
+    private void initializeMaxBounds() {
+        mMaxRight = new int[actualColumnCount + 1];
+        mMaxBottom = new int[actualRowCount + 1];
+
+        for (ViewData view : mChildViews) {
+            Rect bounds = view.node.getBounds();
+            if (!bounds.isValid()) {
+                continue;
+            }
+
+            if (!view.isSpacer()) {
+                int x2 = bounds.x2();
+                int y2 = bounds.y2();
+                int column = view.column;
+                int row = view.row;
+                int targetColumn = min(actualColumnCount - 1,
+                        column + view.columnSpan - 1);
+                int targetRow = min(actualRowCount - 1, row + view.rowSpan - 1);
+                IViewMetadata metadata = mRulesEngine.getMetadata(view.node.getFqcn());
+                if (metadata != null) {
+                    Margins insets = metadata.getInsets();
+                    if (insets != null) {
+                        x2 -= insets.right;
+                        y2 -= insets.bottom;
+                    }
+                }
+                if (mMaxRight[targetColumn] < x2) {
+                    mMaxRight[targetColumn] = x2;
+                }
+                if (mMaxBottom[targetRow] < y2) {
+                    mMaxBottom[targetRow] = y2;
+                }
+            }
+        }
+    }
+
+    /**
+     * Looks up the x[] and y[] locations of the columns and rows in the given GridLayout
+     * instance.
+     *
+     * @param view the GridLayout object, which should already have performed layout
+     * @return a pair of x[] and y[] integer arrays, or null if it could not be found
+     */
+    public static Pair<int[], int[]> getAxisBounds(Object view) {
+        try {
+            Class<?> clz = view.getClass();
+            Field horizontalAxis = clz.getDeclaredField("mHorizontalAxis"); //$NON-NLS-1$
+            Field verticalAxis = clz.getDeclaredField("mVerticalAxis"); //$NON-NLS-1$
+            horizontalAxis.setAccessible(true);
+            verticalAxis.setAccessible(true);
+            Object horizontal = horizontalAxis.get(view);
+            Object vertical = verticalAxis.get(view);
+            Field locations = horizontal.getClass().getDeclaredField("locations"); //$NON-NLS-1$
+            assert locations.getType().isArray() : locations.getType();
+            locations.setAccessible(true);
+            Object horizontalLocations = locations.get(horizontal);
+            Object verticalLocations = locations.get(vertical);
+            int[] xs = (int[]) horizontalLocations;
+            int[] ys = (int[]) verticalLocations;
+            return Pair.of(xs, ys);
+        } catch (Throwable t) {
+            AdtPlugin.log(t, null); // TODO: Add to API!
+        }
+
+        return null;
     }
 
     /**

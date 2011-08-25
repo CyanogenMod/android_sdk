@@ -38,7 +38,7 @@ public class GridModelTest extends LayoutTestBase {
         TestNode targetNode = TestNode.create("android.widget.GridLayout").id("@+id/GridLayout1")
                 .bounds(new Rect(0, 0, 240, 480)).set(ANDROID_URI, ATTR_COLUMN_COUNT, "3");
 
-        GridModel model = new GridModel(null, targetNode);
+        GridModel model = new GridModel(null, targetNode, null);
         assertEquals(3, model.declaredColumnCount);
         assertEquals(1, model.actualColumnCount);
         assertEquals(1, model.actualRowCount);
@@ -48,7 +48,7 @@ public class GridModelTest extends LayoutTestBase {
         targetNode.add(TestNode.create(FQCN_BUTTON).id("@+id/Button3"));
         targetNode.add(TestNode.create(FQCN_BUTTON).id("@+id/Button4"));
 
-        model = new GridModel(null, targetNode);
+        model = new GridModel(null, targetNode, null);
         assertEquals(3, model.declaredColumnCount);
         assertEquals(3, model.actualColumnCount);
         assertEquals(2, model.actualRowCount);

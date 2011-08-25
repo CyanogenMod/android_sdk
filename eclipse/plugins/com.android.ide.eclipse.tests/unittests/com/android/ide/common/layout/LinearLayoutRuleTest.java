@@ -57,7 +57,7 @@ public class LinearLayoutRuleTest extends LayoutTestBase {
                 "android.widget.Button", dragBounds).id("@+id/Button01"));
 
         // Enter target
-        DropFeedback feedback = rule.onDropEnter(targetNode, elements);
+        DropFeedback feedback = rule.onDropEnter(targetNode, null/*targetView*/, elements);
         assertNotNull(feedback);
         assertFalse(feedback.invalidTarget);
         assertNotNull(feedback.painter);

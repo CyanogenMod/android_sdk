@@ -28,6 +28,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.GridLayoutRule;
+import com.android.util.Pair;
 
 /**
  * Painter which paints feedback during drag, drop and resizing operations, as well as
@@ -296,6 +297,33 @@ public class GridLayoutPainter {
 
             gc.useStyle(DrawingStyle.DROP_PREVIEW);
             mRule.drawElement(gc, first, offsetX, offsetY);
+        }
+    }
+
+    /**
+     * Paints the structure (the row and column boundaries) of the given GridLayout
+     *
+     * @param view the instance of the GridLayout whose structure should be painted
+     * @param style the drawing style to use for the cell boundaries
+     * @param layout the layout element
+     * @param gc the graphics context
+     */
+    public static void paintStructure(Object view, DrawingStyle style, INode layout,
+            IGraphics gc) {
+        Pair<int[],int[]> cellBounds = GridModel.getAxisBounds(view);
+        if (cellBounds != null) {
+            int[] xs = cellBounds.getFirst();
+            int[] ys = cellBounds.getSecond();
+            Rect b = layout.getBounds();
+            gc.useStyle(style);
+            for (int row = 0; row < ys.length; row++) {
+                int y = ys[row] + b.y;
+                gc.drawLine(b.x, y, b.x2(), y);
+            }
+            for (int column = 0; column < xs.length; column++) {
+                int x = xs[column] + b.x;
+                gc.drawLine(x, b.y, x, b.y2());
+            }
         }
     }
 }

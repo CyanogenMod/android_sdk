@@ -78,8 +78,13 @@ public class ResizeGesture extends Gesture {
 
         RulesEngine rulesEngine = mCanvas.getRulesEngine();
         Rect newBounds = getNewBounds(pos);
+        ViewHierarchy viewHierarchy = mCanvas.getViewHierarchy();
+        CanvasViewInfo childInfo = viewHierarchy.findViewInfoFor(mChildNode);
+        CanvasViewInfo parentInfo = viewHierarchy.findViewInfoFor(mParentNode);
+        Object childView = childInfo != null ? childInfo.getViewObject() : null;
+        Object parentView = parentInfo != null ? parentInfo.getViewObject() : null;
         mFeedback = rulesEngine.callOnResizeBegin(mChildNode, mParentNode, newBounds,
-                mHorizontalEdge, mVerticalEdge);
+                mHorizontalEdge, mVerticalEdge, childView, parentView);
         update(pos);
         mCanvas.getGestureManager().updateMessage(mFeedback);
     }
