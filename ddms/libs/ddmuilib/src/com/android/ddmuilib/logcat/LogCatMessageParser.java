@@ -89,14 +89,4 @@ public final class LogCatMessageParser {
 
         return messages;
     }
-
-    /**
-     * Reset any header state information stored from previous calls to the parser.
-     */
-    public void resetState() {
-        mCurLogLevel = LogLevel.WARN;
-        mCurPid = "?";
-        mCurTag = "?";
-        mCurTime = "?:??";
-    }
 }

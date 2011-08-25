@@ -121,14 +121,10 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     /**
      * Construct a logcat panel.
-     * @param r source of logcat messages.
      * @param prefStore preference store where UI preferences will be saved
      */
-    public LogCatPanel(LogCatReceiver r, IPreferenceStore prefStore) {
-        mReceiver = r;
+    public LogCatPanel(IPreferenceStore prefStore) {
         mPrefStore = prefStore;
-
-        mReceiver.addMessageReceivedEventListener(this);
 
         initializeFilters();
 
@@ -194,9 +190,28 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     @Override
     public void deviceSelected() {
-        mReceiver.stop();
-        mReceiver.start(getCurrentDevice());
+        if (mReceiver != null) {
+            // Don't need to listen to new logcat messages from previous device anymore.
+            mReceiver.removeMessageReceivedEventListener(this);
+
+            // When switching between devices, existing filter match count should be reset.
+            for (LogCatFilter f : mLogCatFilters) {
+                f.resetUnreadCount();
+            }
+        }
+
+        mReceiver = LogCatReceiverFactory.INSTANCE.newReceiver(getCurrentDevice(), mPrefStore);
+        mReceiver.addMessageReceivedEventListener(this);
         mViewer.setInput(mReceiver.getMessages());
+
+        // Always scroll to last line whenever the selected device changes.
+        // Run this in a separate async thread to give the table some time to update after the
+        // setInput above.
+        Display.getDefault().asyncExec(new Runnable() {
+            public void run() {
+                scrollToLatestLog();
+            }
+        });
     }
 
     @Override
@@ -579,7 +594,6 @@ public final class LogCatPanel extends SelectionDependentPanel
                 mViewer.getTable());
         mViewer.setLabelProvider(mLogCatMessageLabelProvider);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
-        mViewer.setInput(mReceiver.getMessages());
 
         initDoubleClickListener();
     }

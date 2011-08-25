@@ -18,7 +18,6 @@ package com.android.ide.eclipse.ddms.views;
 import com.android.ddmuilib.logcat.ILogCatMessageSelectionListener;
 import com.android.ddmuilib.logcat.LogCatMessage;
 import com.android.ddmuilib.logcat.LogCatPanel;
-import com.android.ddmuilib.logcat.LogCatReceiver;
 import com.android.ddmuilib.logcat.LogCatStackTraceParser;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
@@ -84,7 +83,7 @@ public class LogCatView extends SelectionDependentViewPart {
         parent.setLayout(new FillLayout());
 
         IPreferenceStore prefStore = DdmsPlugin.getDefault().getPreferenceStore();
-        mLogCatPanel = new LogCatPanel(new LogCatReceiver(prefStore), prefStore);
+        mLogCatPanel = new LogCatPanel(prefStore);
         mLogCatPanel.createPanel(parent);
         setSelectionDependentPanel(mLogCatPanel);
 

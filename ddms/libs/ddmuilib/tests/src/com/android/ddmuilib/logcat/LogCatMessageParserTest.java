@@ -63,7 +63,7 @@ public final class LogCatMessageParserTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LogCatMessageParser parser = new LogCatMessageParser();
-        mParsedMessages = parser.processLogLines(MESSAGES, new LogCatPidToNameMapper());
+        mParsedMessages = parser.processLogLines(MESSAGES, new LogCatPidToNameMapper(null));
     }
 
     /** Check that the correct number of messages are received. */
