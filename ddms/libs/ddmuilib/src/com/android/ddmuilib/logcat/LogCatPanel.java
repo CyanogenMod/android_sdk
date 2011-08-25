@@ -379,6 +379,50 @@ public final class LogCatPanel extends SelectionDependentPanel
         saveFilterPreferences();
     }
 
+    /**
+     * Select the transient filter for the specified application. If no such filter
+     * exists, then create one and then select that. This method should be called from
+     * the UI thread.
+     * @param appName application name to filter by
+     */
+    public void selectTransientAppFilter(String appName) {
+        assert mViewer.getTable().getDisplay().getThread() == Thread.currentThread();
+
+        LogCatFilter f = findTransientAppFilter(appName);
+        if (f == null) {
+            f = createTransientAppFilter(appName);
+            mLogCatFilters.add(f);
+        }
+
+        selectFilterAt(mLogCatFilters.indexOf(f));
+    }
+
+    private LogCatFilter findTransientAppFilter(String appName) {
+        for (LogCatFilter f : mLogCatFilters) {
+            if (f.isTransient() && f.getAppName().equals(appName)) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    private LogCatFilter createTransientAppFilter(String appName) {
+        LogCatFilter f = new LogCatFilter(appName + " (Session Filter)",
+                "",
+                "",
+                "",
+                appName,
+                LogLevel.VERBOSE);
+        f.setTransient();
+        return f;
+    }
+
+    private void selectFilterAt(final int index) {
+        mFiltersTableViewer.refresh();
+        mFiltersTableViewer.getTable().setSelection(index);
+        filterSelectionChanged();
+    }
+
     private void createFiltersTable(Composite parent) {
         final Table table = new Table(parent, SWT.FULL_SELECTION);
 
@@ -575,7 +619,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "    0000",
                 "    com.android.launcher",
                 "    SampleTagText",
-                "    Log Message field should be pretty long by default.",
+                "    Log Message field should be pretty long by default. As long as possible for correct display on Mac.",
         };
 
         for (int i = 0; i < properties.length; i++) {

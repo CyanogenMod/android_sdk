@@ -48,6 +48,10 @@ public final class LogCatFilter {
      * then it is probably better to move it out into a separate class. */
     private int mUnreadCount;
 
+    /** Indicates that this filter is transient, and should not be persisted
+     * across Eclipse sessions. */
+    private boolean mTransient;
+
     private boolean mCheckPid;
     private boolean mCheckAppName;
     private boolean mCheckTag;
@@ -59,7 +63,9 @@ public final class LogCatFilter {
 
     /**
      * Construct a filter with the provided restrictions for the logcat message. All the text
-     * fields accept Java regexes as input, but ignore invalid regexes.
+     * fields accept Java regexes as input, but ignore invalid regexes. Filters are saved and
+     * restored across Eclipse sessions unless explicitly marked transient using
+     * {@link LogCatFilter#setTransient}.
      * @param name name for the filter
      * @param tag value for the logcat message's tag field.
      * @param text value for the logcat message's text field.
@@ -78,6 +84,10 @@ public final class LogCatFilter {
         mLogLevel = logLevel;
 
         mUnreadCount = 0;
+
+        // By default, all filters are persistent. Transient filters should explicitly
+        // mark it so by calling setTransient.
+        mTransient = false;
 
         mCheckPid = mPid.length() != 0;
 
@@ -247,5 +257,14 @@ public final class LogCatFilter {
      */
     public int getUnreadCount() {
         return mUnreadCount;
+    }
+
+    /** Make this filter transient: It will not be persisted across sessions. */
+    public void setTransient() {
+        mTransient = true;
+    }
+
+    public boolean isTransient() {
+        return mTransient;
     }
 }

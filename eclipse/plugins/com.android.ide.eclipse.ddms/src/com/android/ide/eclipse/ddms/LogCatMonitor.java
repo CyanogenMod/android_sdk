@@ -130,19 +130,35 @@ public class LogCatMonitor {
                     return;
                 }
 
+                // display view
+                final LogCatView v = displayLogCatView(page);
+                if (v == null) {
+                    return;
+                }
+
+                // select correct device
+                v.selectionChanged(device);
+
+                // select appropriate filter
+                v.selectTransientAppFilter(appName);
+            }
+
+            private LogCatView displayLogCatView(IWorkbenchPage page) {
                 // if the view is already in the page, just bring it to the front
                 // without giving it focus.
-                IViewPart logCatView = page.findView(LogCatView.ID);
-                if (logCatView != null) {
-                    page.bringToTop(logCatView);
-                    return;
+                IViewPart view = page.findView(LogCatView.ID);
+                if (view != null) {
+                    page.bringToTop(view);
+                    if (view instanceof LogCatView) {
+                        return (LogCatView)view;
+                    }
                 }
 
                 // if the view is not in the page, then create and show it.
                 try {
-                    page.showView(LogCatView.ID);
+                    return (LogCatView) page.showView(LogCatView.ID);
                 } catch (PartInitException e) {
-                    return;
+                    return null;
                 }
             }
         });
