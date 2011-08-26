@@ -19,8 +19,8 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdklib.internal.repository.SdkSource;
 
 /**
  * A {@link PkgItem} represents one main {@link Package} combined with its state
@@ -133,6 +133,14 @@ public class PkgItem implements Comparable<PkgItem> {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Returns true if the main package has at least one archive
+     * compatible with the current platform.
+     */
+    public boolean hasCompatibleArchive() {
+        return mMainPkg.hasCompatibleArchive();
     }
 
     /**
