@@ -798,8 +798,7 @@ public class Main {
                     for (IOptionalLibrary library : libraries) {
                         mSdkLog.printf("      * %1$s (%2$s)\n",
                                 library.getName(), library.getJarName());
-                        mSdkLog.printf(String.format(
-                                "          %1$s\n", library.getDescription()));
+                        mSdkLog.printf("          %1$s\n", library.getDescription());
                     }
                 }
             }
