@@ -38,22 +38,40 @@ rem Search for an alternative in %ProgramFiles%\Java\*\bin\java.exe
 echo.
 echo WARNING: Java not found in your path.
 
-rem Check if there's a 64-bit version of Java in %ProgramW6432%
-if not defined ProgramW6432 goto :Check32
-echo Checking if it's installed in %ProgramW6432%\Java instead (64-bit).
+rem The strategy is to look for Java under these 3 locations:
+rem - %ProgramFiles%, which may point to either a 32-bit or 64-bit install
+rem                   depending on the current invocation context
+rem - %ProgramW6432%, which points to a 32-bit install. This may not be defined.
+rem - %ProgramFiles(x86)%, which points to a 64-bit install. This may not be defined.
+
+if not defined ProgramFiles goto :Check64
+echo Checking if Java is installed in %ProgramFiles%\Java.
 
 set java_exe=
 for /D %%a in ( "%ProgramW6432%\Java\*" ) do call :TestJavaDir "%%a"
 if defined java_exe goto :EOF
 
-rem Check for the "default" 32-bit version
-:Check32
-echo Checking if it's installed in %ProgramFiles%\Java instead.
+rem Check for the "default" 64-bit version if it's not the same path
+:Check64
+if not defined ProgramW6432 goto :Check32
+if "%ProgramW6432%"=="%ProgramFiles%" goto :Check32
+echo Checking if Java is installed in %ProgramW6432%\Java instead (64-bit).
 
 set java_exe=
-for /D %%a in ( "%ProgramFiles%\Java\*" ) do call :TestJavaDir "%%a"
+for /D %%a in ( "%ProgramW6432%\Java\*" ) do call :TestJavaDir "%%a"
 if defined java_exe goto :EOF
 
+rem Check for the "default" 32-bit version if it's not the same path
+:Check32
+if not defined ProgramFiles(x86) goto :CheckFailed
+if "%ProgramFiles(x86)%"=="%ProgramFiles%" goto :CheckFailed
+echo Checking if Java is installed in %ProgramFiles(x86)%\Java instead (32-bit).
+
+set java_exe=
+for /D %%a in ( "%ProgramFiles(x86)%\Java\*" ) do call :TestJavaDir "%%a"
+if defined java_exe goto :EOF
+
+:CheckFailed
 echo.
 echo ERROR: No suitable Java found. In order to properly use the Android Developer
 echo Tools, you need a suitable version of Java JDK installed on your system.
