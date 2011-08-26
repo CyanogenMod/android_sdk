@@ -131,7 +131,11 @@ public class ImageOverlay extends Overlay implements IImageFactory {
             }
         }
 
-        mPreScaledImage = null; // Force refresh on next paint
+        if (mPreScaledImage != null) {
+            // Force refresh on next paint
+            mPreScaledImage.dispose();
+            mPreScaledImage = null;
+        }
 
         return mImage;
     }
