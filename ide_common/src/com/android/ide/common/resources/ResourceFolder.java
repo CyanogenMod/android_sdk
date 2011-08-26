@@ -128,11 +128,13 @@ public final class ResourceFolder implements Configurable {
     }
 
     protected void dispose() {
-        for (ResourceFile file : mFiles) {
-            file.dispose();
-        }
+        if (mFiles != null) {
+            for (ResourceFile file : mFiles) {
+                file.dispose();
+            }
 
-        mFiles.clear();
+            mFiles.clear();
+        }
     }
 
     /**
