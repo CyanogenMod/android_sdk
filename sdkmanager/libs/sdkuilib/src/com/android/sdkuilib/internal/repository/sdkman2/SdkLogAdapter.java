@@ -43,7 +43,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      */
     public void setDescription(final String description) {
         if (acceptLog(description)) {
-            mSdkLog.printf("%1$s", description);
+            mSdkLog.printf("%1$s", description);    //$NON-NLS-1$
         }
     }
 
@@ -53,7 +53,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      */
     public void log(String log) {
         if (acceptLog(log)) {
-            mSdkLog.printf("  %1$s", log);
+            mSdkLog.printf("  %1$s", log);          //$NON-NLS-1$
         }
     }
 
@@ -63,7 +63,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      */
     public void logError(String log) {
         if (acceptLog(log)) {
-            mSdkLog.error(null, "  %1$s", log);
+            mSdkLog.error(null, "  %1$s", log);     //$NON-NLS-1$
         }
     }
 
@@ -74,7 +74,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      */
     public void logVerbose(String log) {
         if (acceptLog(log)) {
-            mSdkLog.printf("    %1$s", log);
+            mSdkLog.printf("    %1$s", log);        //$NON-NLS-1$
         }
     }
 

@@ -106,10 +106,9 @@ public class ArchiveInstaller {
             ITaskMonitor monitor,
             boolean forceHttp) {
 
-        String name = archive.getParentPackage().getShortDescription();
-        String desc = String.format("Downloading %1$s", name);
-        monitor.setDescription(desc);
-        monitor.log(desc);
+        String pkgName = archive.getParentPackage().getShortDescription();
+        monitor.setDescription("Downloading %1$s", pkgName);
+        monitor.log("Downloading %1$s", pkgName);
 
         String link = archive.getUrl();
         if (!link.startsWith("http://")                          //$NON-NLS-1$
@@ -119,7 +118,7 @@ public class ArchiveInstaller {
             Package pkg = archive.getParentPackage();
             SdkSource src = pkg.getParentSource();
             if (src == null) {
-                monitor.logError("Internal error: no source for archive %1$s", name);
+                monitor.logError("Internal error: no source for archive %1$s", pkgName);
                 return null;
             }
 
@@ -180,7 +179,7 @@ public class ArchiveInstaller {
             OsHelper.deleteFileOrFolder(tmpFile);
         }
 
-        if (fetchUrl(archive, tmpFile, link, desc, monitor)) {
+        if (fetchUrl(archive, tmpFile, link, pkgName, monitor)) {
             // Fetching was successful, let's use this file.
             return tmpFile;
         } else {
@@ -216,7 +215,7 @@ public class ArchiveInstaller {
             monitor.logError("File not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.logError(e.getMessage());
+            monitor.logError("%1$s", e.getMessage());   //$NON-NLS-1$
 
         } finally {
             if (is != null) {
@@ -263,10 +262,8 @@ public class ArchiveInstaller {
     private boolean fetchUrl(Archive archive,
             File tmpFile,
             String urlString,
-            String description,
+            String pkgName,
             ITaskMonitor monitor) {
-
-        description += " (%1$d%%, %2$.0f KiB/s, %3$d %4$s left)";
 
         FileOutputStream os = null;
         InputStream is = null;
@@ -318,7 +315,13 @@ public class ArchiveInstaller {
                             timeLeft /= 60;
                         }
 
-                        monitor.setDescription(description, percent, speed, timeLeft, timeUnit);
+                        monitor.setDescription(
+                                "Downloading %1$s (%2$d%%, %3$.0f KiB/s, %4$d %5$s left)",
+                                pkgName,
+                                percent,
+                                speed,
+                                timeLeft,
+                                timeUnit);
                     }
                     nextMs = timeMs + 1000;  // update every second
                 }
@@ -353,7 +356,7 @@ public class ArchiveInstaller {
             monitor.logError("File not found: %1$s", e.getMessage());
 
         } catch (Exception e) {
-            monitor.logError(e.getMessage());
+            monitor.logError("%1$s", e.getMessage());   //$NON-NLS-1$
 
         } finally {
             if (os != null) {
@@ -387,9 +390,8 @@ public class ArchiveInstaller {
         boolean success = false;
         Package pkg = archive.getParentPackage();
         String pkgName = pkg.getShortDescription();
-        String pkgDesc = String.format("Installing %1$s", pkgName);
-        monitor.setDescription(pkgDesc);
-        monitor.log(pkgDesc);
+        monitor.setDescription("Installing %1$s", pkgName);
+        monitor.log("Installing %1$s", pkgName);
 
         // Ideally we want to always unzip in a temp folder which name depends on the package
         // type (e.g. addon, tools, etc.) and then move the folder to the destination folder.
@@ -491,7 +493,7 @@ public class ArchiveInstaller {
                 return false;
             }
 
-            if (!unzipFolder(archiveFile, archive.getSize(), destFolder, pkgDesc, monitor)) {
+            if (!unzipFolder(archiveFile, archive.getSize(), destFolder, pkgName, monitor)) {
                 return false;
             }
 
@@ -574,10 +576,8 @@ public class ArchiveInstaller {
     private boolean unzipFolder(File archiveFile,
             long compressedSize,
             File unzipDestFolder,
-            String description,
+            String pkgName,
             ITaskMonitor monitor) {
-
-        description += " (%1$d%%)";
 
         ZipFile zipFile = null;
         try {
@@ -675,7 +675,7 @@ public class ArchiveInstaller {
 
                 int percent = (int) (100 * incTotal / compressedSize);
                 if (percent != lastPercent) {
-                    monitor.setDescription(description, percent);
+                    monitor.setDescription("Unzipping %1$s (%2$d%%)", pkgName, percent);
                     lastPercent = percent;
                 }
 
