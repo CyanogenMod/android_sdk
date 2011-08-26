@@ -77,6 +77,10 @@
             classname="com.android.ant.RenderScriptTask"
             classpathref="android.antlibs" />
 
+    <taskdef name="dex"
+            classname="com.android.ant.DexExecTask"
+            classpathref="android.antlibs" />
+
     <taskdef name="apkbuilder"
             classname="com.android.ant.ApkBuilderTask"
             classpathref="android.antlibs" />
@@ -152,10 +156,6 @@
     <condition property="v.option" value="-v" else="">
         <istrue value="${verbose}" />
     </condition>
-    <!-- This is needed to switch verbosity of dx. Depends exclusively on 'verbose' -->
-    <condition property="verbose.option" value="--verbose" else="">
-        <istrue value="${verbose}" />
-    </condition>
 
     <!-- properties for signing in release mode -->
     <condition property="has.keystore">
@@ -229,7 +229,7 @@
          output dex filename and external libraries to dex (optional) -->
     <macrodef name="dex-helper">
         <element name="external-libs" optional="yes" />
-        <element name="extra-parameters" optional="yes" />
+        <attribute name="nolocals" default="false" />
         <sequential>
             <!-- sets the primary input for dex. If a pre-dex task sets it to
                  something else this has no effect -->
@@ -248,17 +248,16 @@
                 </else>
             </if>
 
-            <echo>Converting compiled files and external libraries into ${intermediate.dex.file}...</echo>
-            <apply executable="${dx}" failonerror="true" parallel="true">
-                <arg value="--dex" />
-                <arg value="--output" />
-                <arg path="${intermediate.dex.file}" />
-                <extra-parameters />
-                <arg line="${verbose.option}" />
-                <arg path="${out.dex.input.absolute.dir}" />
+            <dex executable="${dx}"
+                    output="${intermediate.dex.file}"
+                    nolocals="@{nolocals}"
+                    verbose="${verbose}"
+                    previousBuildType="${build.last.target}"
+                    buildType="${build.target}">
+                <path path="${out.dex.input.absolute.dir}"/>
                 <path refid="out.dex.jar.input.ref" />
                 <external-libs />
-            </apply>
+            </dex>
         </sequential>
     </macrodef>
 
@@ -730,10 +729,7 @@
                      to pass in the emma jar. -->
                 <if condition="${build.is.instrumented}">
                     <then>
-                        <dex-helper>
-                            <extra-parameters>
-                                <arg value="--no-locals" />
-                            </extra-parameters>
+                        <dex-helper nolocals="true">
                             <external-libs>
                                 <fileset file="${emma.dir}/emma_device.jar" />
                             </external-libs>

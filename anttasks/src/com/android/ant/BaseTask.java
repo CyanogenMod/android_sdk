@@ -20,8 +20,10 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -59,18 +61,14 @@ public abstract class BaseTask extends Task {
         }
     }
 
-    @Override
-    public void execute() throws BuildException {
-
-    }
-
     /**
-     * Set up the dependency graph by passing it the location of the ".d" file
+     * Set up the dependency graph by passing it the location of the ".d" file, and the new input
+     * paths.
      * @param dependencyFile path to the dependency file to use
-     * @param watchPaths a list of folders to watch for new files
+     * @param the new input paths for this new compilation.
      * @return true if the dependency graph was successfully initialized
      */
-    protected boolean initDependencies(String dependencyFile, ArrayList<File> watchPaths) {
+    protected boolean initDependencies(String dependencyFile, List<File> inputPaths) {
         if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
             // we don't care about deps, we need to execute the task no matter what.
             return true;
@@ -78,7 +76,7 @@ public abstract class BaseTask extends Task {
 
         File depFile = new File(dependencyFile);
         if (depFile.exists()) {
-            mDependencies = new DependencyGraph(dependencyFile, watchPaths);
+            mDependencies = new DependencyGraph(dependencyFile, inputPaths);
             return true;
         } else {
             return false;
@@ -94,9 +92,12 @@ public abstract class BaseTask extends Task {
         if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
             String execName = getExecTaskName();
             if (execName == null) {
-                System.out.println("Current build type is different than previous build: forced task run.");
+                System.out.println(
+                        "Current build type is different than previous build: forced task run.");
             } else {
-                System.out.println("Current build type is different than previous build: forced " + execName + " run.");
+                System.out.println(
+                        "Current build type is different than previous build: forced " +
+                        execName + " run.");
             }
             return true;
         }
@@ -104,5 +105,48 @@ public abstract class BaseTask extends Task {
         assert mDependencies != null : "Dependencies have not been initialized";
         return mDependencies.dependenciesHaveChanged(mRestrictTouchedExtensionsTo,
                 true /*printStatus*/);
+    }
+
+    protected void generateDependencyFile(String depFilePath,
+            List<File> inputs, String outputFile) {
+        File file = new File(depFilePath);
+
+        try {
+            PrintStream ps = new PrintStream(file);
+
+            // write the output file.
+            ps.print(outputFile);
+            ps.println(" : \\");
+
+            //write the input files
+            int count = inputs.size();
+            for (int i = 0 ; i < count ; i++) {
+                File input = inputs.get(i);
+                if (input.isDirectory()) {
+                    writeContent(ps, input);
+                } else {
+                    ps.print(input.getAbsolutePath());
+                    ps.println(" \\");
+                }
+            }
+
+            ps.close();
+        } catch (FileNotFoundException e) {
+            new BuildException(e);
+        }
+    }
+
+    private void writeContent(PrintStream ps, File input) {
+        File[] files = input.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    writeContent(ps, f);
+                } else {
+                    ps.print(f.getAbsolutePath());
+                    ps.println(" \\");
+                }
+            }
+        }
     }
 }
