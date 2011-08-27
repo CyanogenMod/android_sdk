@@ -186,10 +186,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             + "strings.template"; //$NON-NLS-1$
     private static final String TEMPLATE_STRING = TEMPLATES_DIRECTORY
             + "string.template"; //$NON-NLS-1$
-    private static final String PROJECT_ICON = "icon.png"; //$NON-NLS-1$
-    private static final String ICON_HDPI = "icon_hdpi.png"; //$NON-NLS-1$
-    private static final String ICON_MDPI = "icon_mdpi.png"; //$NON-NLS-1$
-    private static final String ICON_LDPI = "icon_ldpi.png"; //$NON-NLS-1$
+    private static final String PROJECT_ICON = "ic_launcher.png"; //$NON-NLS-1$
+    private static final String ICON_HDPI = "ic_launcher_hdpi.png"; //$NON-NLS-1$
+    private static final String ICON_MDPI = "ic_launcher_mdpi.png"; //$NON-NLS-1$
+    private static final String ICON_LDPI = "ic_launcher_ldpi.png"; //$NON-NLS-1$
 
     private static final String STRINGS_FILE = "strings.xml";       //$NON-NLS-1$
 

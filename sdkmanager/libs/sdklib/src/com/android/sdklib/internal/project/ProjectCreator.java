@@ -348,7 +348,7 @@ public class ProjectCreator {
 
                 // create the icons
                 if (installIcons(resourceFolder, target)) {
-                    keywords.put(PH_ICON, "android:icon=\"@drawable/icon\"");
+                    keywords.put(PH_ICON, "android:icon=\"@drawable/ic_launcher\"");
                 } else {
                     keywords.put(PH_ICON, "");
                 }
@@ -1147,9 +1147,12 @@ public class ProjectCreator {
 
         boolean installedIcon = false;
 
-        installedIcon |= installIcon(templateFolder, "icon_hdpi.png", resourceFolder, "drawable-hdpi");
-        installedIcon |= installIcon(templateFolder, "icon_mdpi.png", resourceFolder, "drawable-mdpi");
-        installedIcon |= installIcon(templateFolder, "icon_ldpi.png", resourceFolder, "drawable-ldpi");
+        installedIcon |= installIcon(templateFolder, "ic_launcher_hdpi.png", resourceFolder,
+                "drawable-hdpi");
+        installedIcon |= installIcon(templateFolder, "ic_launcher_mdpi.png", resourceFolder,
+                "drawable-mdpi");
+        installedIcon |= installIcon(templateFolder, "ic_launcher_ldpi.png", resourceFolder,
+                "drawable-ldpi");
 
         return installedIcon;
     }
@@ -1163,7 +1166,7 @@ public class ProjectCreator {
         File icon = new File(templateFolder, iconName);
         if (icon.exists()) {
             File drawable = createDirs(resourceFolder, folderName);
-            installBinaryFile(icon, new File(drawable, "icon.png"));
+            installBinaryFile(icon, new File(drawable, "ic_launcher.png"));
             return true;
         }
 
