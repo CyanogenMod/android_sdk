@@ -23,6 +23,7 @@ import com.android.ddmlib.log.EventContainer.EventValueType;
 import com.android.ddmlib.log.EventLogParser;
 import com.android.ddmlib.log.EventValueDescription.ValueType;
 import com.android.ddmlib.log.InvalidTypeException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -432,7 +433,7 @@ abstract class EventDisplay {
 
     void setPidFilterList(ArrayList<Integer> pids) {
         if (mPidFiltering == false) {
-            new InvalidParameterException();
+            throw new InvalidParameterException();
         }
 
         mPidFilterList = pids;
@@ -444,7 +445,7 @@ abstract class EventDisplay {
 
     void addPidFiler(int pid) {
         if (mPidFiltering == false) {
-            new InvalidParameterException();
+            throw new InvalidParameterException();
         }
 
         if (mPidFilterList == null) {

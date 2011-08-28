@@ -42,6 +42,7 @@ import java.lang.reflect.Modifier;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * A monitor for the compiled resources. This only monitors changes in the resources of type
@@ -111,7 +112,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         String pathWithoutExtension = path.substring(0, path.indexOf(AdtConstants.DOT_CLASS));
 
         // then split the components of each path by their separators
-        String [] pathArray = pathWithoutExtension.split(File.separator);
+        String [] pathArray = pathWithoutExtension.split(Pattern.quote(File.separator));
         String [] packageArray = packageName.split(AdtConstants.RE_DOT);
 
 
