@@ -141,19 +141,33 @@ public class TabIconGenerator extends GraphicGenerator {
 
     @Override
     public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
-            GraphicGeneratorContext context, Options options, String name) {
-        TabOptions tabOptions = (TabOptions) options;
+            GraphicGeneratorContext context, Options baseOptions, String name) {
+        TabOptions options = (TabOptions) baseOptions;
         // Generate all permutations of tabOptions.selected and tabOptions.oldStyle
-        tabOptions.selected = true;
-        tabOptions.oldStyle = false;
-        super.generate("Selected (v5+)", categoryMap, context, options, name);
-        tabOptions.oldStyle = true;
-        super.generate("Selected", categoryMap, context, options, name);
-        tabOptions.selected = false;
-        tabOptions.oldStyle = false;
-        super.generate("Unselected (v5+)", categoryMap, context, options, name);
-        tabOptions.oldStyle = true;
-        super.generate("Unselected", categoryMap, context, options, name);
+        options.selected = true;
+        options.oldStyle = false;
+
+        String selectedLabelV5 = "Selected (v5+)";
+        String unselectedLabelV5 = "Unselected (v5+)";
+        String selectedLabel = "Selected";
+        String unselectedLabel = "Unselected";
+
+        boolean generateOldStyle = options.minSdk < 5;
+        if (generateOldStyle) {
+            options.oldStyle = true;
+            options.selected = true;
+            super.generate(selectedLabel, categoryMap, context, options, name);
+            options.selected = false;
+            super.generate(unselectedLabel, categoryMap, context, options, name);
+        }
+
+        options.oldStyle = false;
+        options.selected = true;
+        super.generate(generateOldStyle ? unselectedLabelV5 : unselectedLabel,
+                categoryMap, context, options, name);
+        options.selected = false;
+        super.generate(generateOldStyle ? selectedLabelV5 : selectedLabel,
+                categoryMap, context, options, name);
     }
 
     @Override
@@ -161,7 +175,7 @@ public class TabIconGenerator extends GraphicGenerator {
         String folder = super.getIconFolder(options);
 
         TabOptions tabOptions = (TabOptions) options;
-        if (tabOptions.oldStyle) {
+        if (tabOptions.oldStyle || options.minSdk >= 5) {
             return folder;
         } else {
             return folder + "-v5"; //$NON-NLS-1$
