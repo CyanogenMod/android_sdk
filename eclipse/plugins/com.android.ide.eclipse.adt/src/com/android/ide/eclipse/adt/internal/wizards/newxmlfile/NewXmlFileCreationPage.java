@@ -35,8 +35,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectButton;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -407,8 +407,7 @@ class NewXmlFileCreationPage extends WizardPage {
     private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AdtConstants.WS_SEP;
 
     private IProject mProject;
-    private Text mProjectTextField;
-    private Button mProjectBrowseButton;
+    private ProjectButton mProjectButton;
     private Text mFileNameTextField;
     private Text mWsFolderPathTextField;
     private Combo mRootElementCombo;
@@ -418,7 +417,6 @@ class NewXmlFileCreationPage extends WizardPage {
     private boolean mInternalWsFolderPathUpdate;
     private boolean mInternalTypeUpdate;
     private boolean mInternalConfigSelectorUpdate;
-    private ProjectChooserHelper mProjectChooserHelper;
     private TargetChangeListener mSdkTargetChangeListener;
     private TypeInfo mCurrentTypeInfo;
 
@@ -655,26 +653,19 @@ class NewXmlFileCreationPage extends WizardPage {
         label.setToolTipText(tooltip);
         ++col;
 
-        mProjectTextField = new Text(parent, SWT.BORDER);
-        mProjectTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mProjectTextField.setToolTipText(tooltip);
-        mProjectTextField.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onProjectFieldUpdated();
-            }
-        });
-        ++col;
-
-        mProjectBrowseButton = new Button(parent, SWT.NONE);
-        mProjectBrowseButton.setText("Browse...");
-        mProjectBrowseButton.setToolTipText("Allows you to select the Android project to modify.");
-        mProjectBrowseButton.addSelectionListener(new SelectionAdapter() {
-           @Override
+        mProjectButton = new ProjectButton(parent, mProject);
+        mProjectButton.setToolTipText(tooltip);
+        mProjectButton.setAlignment(SWT.LEFT);
+        mProjectButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mProjectButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
-               onProjectBrowse();
-            }
+                IProject project = mProjectButton.getSelectedProject();
+                if (project != mProject) {
+                    changeProject(project);
+                }
+            };
         });
-        mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(), null /*filter*/);
         ++col;
 
         col = padWithEmptyCells(parent, col);
@@ -932,7 +923,7 @@ class NewXmlFileCreationPage extends WizardPage {
         // Now set the UI accordingly
         if (targetScore > 0) {
             mProject = targetProject;
-            mProjectTextField.setText(targetProject != null ? targetProject.getName() : ""); //$NON-NLS-1$
+            mProjectButton.setSelectedProject(targetProject);
             mFileNameTextField.setText(targetFileName != null ? targetFileName : ""); //$NON-NLS-1$
             mWsFolderPathTextField.setText(targetWsFolderPath != null ? targetWsFolderPath : ""); //$NON-NLS-1$
         }
@@ -1033,39 +1024,6 @@ class NewXmlFileCreationPage extends WizardPage {
             if (!visited.contains(child)) {
                 initRootElementDescriptor(roots, child, visited);
             }
-        }
-    }
-
-    /**
-     * Callback called when the user edits the project text field.
-     */
-    private void onProjectFieldUpdated() {
-        String project = mProjectTextField.getText();
-
-        // Is this a valid project?
-        IJavaProject[] projects = mProjectChooserHelper.getAndroidProjects(null /*javaModel*/);
-        IProject found = null;
-        for (IJavaProject p : projects) {
-            if (p.getProject().getName().equals(project)) {
-                found = p.getProject();
-                break;
-            }
-        }
-
-        if (found != mProject) {
-            changeProject(found);
-        }
-    }
-
-    /**
-     * Callback called when the user uses the "Browse Projects" button.
-     */
-    private void onProjectBrowse() {
-        IJavaProject p = mProjectChooserHelper.chooseJavaProject(mProjectTextField.getText(),
-                "Please select the target project");
-        if (p != null) {
-            changeProject(p.getProject());
-            mProjectTextField.setText(mProject.getName());
         }
     }
 
