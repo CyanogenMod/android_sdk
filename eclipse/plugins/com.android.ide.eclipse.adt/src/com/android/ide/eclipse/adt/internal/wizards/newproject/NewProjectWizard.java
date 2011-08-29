@@ -79,8 +79,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * A "New Android Project" Wizard.
@@ -929,7 +929,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
                 // append to the other string
                 if (stringNodes.length() > 0) {
-                    stringNodes.append("\n");
+                    stringNodes.append('\n');
                 }
                 stringNodes.append(stringDef);
             }

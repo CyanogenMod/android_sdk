@@ -190,7 +190,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
 
         sb.append('<').append(root);
         if (xmlns != null) {
-            sb.append('\n').append("  xmlns:android=\"").append(xmlns).append("\"");  //$NON-NLS-1$ //$NON-NLS-2$
+            sb.append('\n').append("  xmlns:android=\"").append(xmlns).append('"');  //$NON-NLS-1$
         }
 
         if (rootAttributes != null) {

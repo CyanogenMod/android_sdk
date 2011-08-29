@@ -26,9 +26,9 @@ import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.rendering.api.ViewInfo;
+import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
 import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
@@ -589,7 +589,7 @@ public class PreviewIconFactory {
                 Properties properties = new Properties();
                 InputStream is = null;
                 try {
-                    is = new BufferedInputStream(new FileInputStream(file));;
+                    is = new BufferedInputStream(new FileInputStream(file));
                     properties.load(is);
                 } catch (IOException e) {
                     AdtPlugin.log(e, "Can't read preview properties");

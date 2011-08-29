@@ -56,7 +56,7 @@ import java.util.Set;
 /**
  * Represents an XML attribute that is defined by a set of flag values,
  * i.e. enum names separated by pipe (|) characters.
- * 
+ *
  * Note: in Android resources, a "flag" is a list of fixed values where one or
  * more values can be selected using an "or", e.g. "align='left|top'".
  * By contrast, an "enum" is a list of fixed values of which only one can be
@@ -96,24 +96,24 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
         // Fixes missing text borders under GTK... also requires adding a 1-pixel margin
         // for the text field below
         toolkit.paintBordersFor(composite);
-        
+
         final Text text = toolkit.createText(composite, getCurrentValue());
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalIndent = 1;  // Needed by the fixed composite borders under GTK
         text.setLayoutData(gd);
         final Button selectButton = toolkit.createButton(composite, "Select...", SWT.PUSH);
-        
+
         setTextWidget(text);
-        
+
         selectButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
 
                 String currentText = getTextWidgetValue();
-                
+
                 String result = showDialog(selectButton.getShell(), currentText);
-                
+
                 if (result != null) {
                     setTextWidgetValue(result);
                 }
@@ -124,16 +124,16 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
     /**
      * Get the flag names, either from the initial names set in the attribute
      * or by querying the framework resource parser.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String[] getPossibleValues(String prefix) {
         String attr_name = getDescriptor().getXmlLocalName();
         String element_name = getUiParent().getDescriptor().getXmlName();
-        
+
         String[] values = null;
-        
+
         if (getDescriptor() instanceof FlagAttributeDescriptor &&
                 ((FlagAttributeDescriptor) getDescriptor()).getNames() != null) {
             // Get enum values from the descriptor
@@ -149,10 +149,10 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
                 values = data.getAttributeValues(element_name, attr_name);
             }
         }
-        
+
         return values;
     }
-    
+
     /**
      * Shows a dialog letting the user choose a set of enum, and returns a string
      * containing the result.
@@ -167,19 +167,19 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
             for (Object name : result) {
                 if (name instanceof String) {
                     if (buf.length() > 0) {
-                        buf.append("|"); //$NON-NLS-1$
+                        buf.append('|');
                     }
                     buf.append(name);
                 }
             }
-            
+
             return buf.toString();
         }
-        
+
         return null;
 
     }
-    
+
     /**
      * Displays a list of flag names with checkboxes.
      */
@@ -190,7 +190,7 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
 
         public FlagSelectionDialog(Shell parentShell, String[] currentNames) {
             super(parentShell);
-            
+
             mCurrentSet = new HashSet<String>();
             for (String name : currentNames) {
                 if (name.length() > 0) {
@@ -206,13 +206,13 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
         protected void computeResult() {
             if (mTable != null) {
                 ArrayList<String> results = new ArrayList<String>();
-                
+
                 for (TableItem item : mTable.getItems()) {
                     if (item.getChecked()) {
                         results.add((String)item.getData());
                     }
                 }
-                
+
                 setResult(results);
             }
         }
@@ -223,12 +223,12 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
             composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
             composite.setLayout(new GridLayout(1, true));
             composite.setFont(parent.getFont());
-            
+
             Label label = new Label(composite, SWT.NONE);
             label.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
             label.setText(String.format("Select the flag values for attribute %1$s:",
                     ((FlagAttributeDescriptor) getDescriptor()).getUiName()));
- 
+
             mTable = new Table(composite, SWT.CHECK | SWT.BORDER);
             GridData data = new GridData();
             // The 60,18 hints are the ones used by AbstractElementListSelectionDialog
@@ -250,7 +250,7 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
                     TableItem item = new TableItem(mTable, SWT.NONE);
                     item.setText(name);
                     item.setData(name);
-                    
+
                     boolean hasName = mCurrentSet.contains(name);
                     item.setChecked(hasName);
                     if (hasName) {
@@ -274,7 +274,7 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
                     item.setFont(font);
                 }
             }
-            
+
             // Add a listener that will resize the column to the full width of the table
             // so that only one column appears in the table even if the dialog is resized.
             ControlAdapter listener = new ControlAdapter() {
@@ -284,7 +284,7 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
                     column.setWidth(r.width);
                 }
             };
-            
+
             mTable.addControlListener(listener);
             listener.controlResized(null /* event not used */);
 
@@ -298,12 +298,12 @@ public class UiFlagAttributeNode extends UiTextAttributeNode {
                         i.setChecked(!i.getChecked());
                     }
                     super.widgetDefaultSelected(e);
-                } 
+                }
             });
-            
-            Dialog.applyDialogFont(composite);            
+
+            Dialog.applyDialogFont(composite);
             setHelpAvailable(false);
-            
+
             return composite;
         }
     }
