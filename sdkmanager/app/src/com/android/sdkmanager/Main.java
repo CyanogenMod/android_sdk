@@ -1174,7 +1174,8 @@ public class Main {
                 File originalFolder = new File(
                         AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
                         info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
-                if (originalFolder.equals(info.getDataFolderPath())) {
+                if (info.getDataFolderPath() != null &&
+                        originalFolder.equals(new File(info.getDataFolderPath()))) {
                     try {
                         // The AVD is using the default data folder path based on the AVD name.
                         // That folder needs to be adjusted to use the new name.

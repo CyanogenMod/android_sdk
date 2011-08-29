@@ -63,7 +63,7 @@ abstract class PkgCategory {
 
     @Override
     public String toString() {
-        return String.format("%s <key=%08x, label=%s, #items=%d>",
+        return String.format("%s <key=%s, label=%s, #items=%d>",
                 this.getClass().getSimpleName(),
                 mKey == null ? "null" : mKey.toString(),
                 mLabel,

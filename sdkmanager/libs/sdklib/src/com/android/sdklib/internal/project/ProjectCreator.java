@@ -1113,8 +1113,8 @@ public class ProjectCreator {
 
             while ((line = in.readLine()) != null) {
                 if (placeholderMap != null) {
-                    for (String key : placeholderMap.keySet()) {
-                        line = line.replace(key, placeholderMap.get(key));
+                    for (Map.Entry<String, String> entry : placeholderMap.entrySet()) {
+                        line = line.replace(entry.getKey(), entry.getValue());
                     }
                 }
 
@@ -1174,8 +1174,9 @@ public class ProjectCreator {
      * Installs a binary file
      * @param source the source file to copy
      * @param destination the destination file to write
+     * @throws ProjectCreateException
      */
-    private void installBinaryFile(File source, File destination) {
+    private void installBinaryFile(File source, File destination) throws ProjectCreateException {
         byte[] buffer = new byte[8192];
 
         FileInputStream fis = null;
@@ -1192,7 +1193,7 @@ public class ProjectCreator {
         } catch (FileNotFoundException e) {
             // shouldn't happen since we check before.
         } catch (IOException e) {
-            new ProjectCreateException(e, "Failed to read binary file: %1$s",
+            throw new ProjectCreateException(e, "Failed to read binary file: %1$s",
                     source.getAbsolutePath());
         } finally {
             if (fis != null) {
