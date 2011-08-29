@@ -395,7 +395,6 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         IFolder resources = mProject.getFolder(SdkConstants.FD_RESOURCES);
         try {
             for (IResource folder : resources.members()) {
-                assert resources != null;
                 if (folder.getName().startsWith(AndroidConstants.FD_RES_LAYOUT) &&
                         folder instanceof IFolder) {
                     IFolder layoutFolder = (IFolder) folder;

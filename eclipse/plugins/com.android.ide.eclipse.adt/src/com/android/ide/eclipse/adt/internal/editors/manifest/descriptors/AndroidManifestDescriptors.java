@@ -26,13 +26,13 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ITextAttributeCreator;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ListAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.runtime.IStatus;
@@ -42,9 +42,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 
 /**
@@ -232,7 +232,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 LayoutConstants.ANDROID_NS_NAME, SdkConstants.NS_RESOURCES);
         insertAttribute(MANIFEST_ELEMENT, xmlns);
 
-        sanityCheck(manifestMap, MANIFEST_ELEMENT);
+        assert sanityCheck(manifestMap, MANIFEST_ELEMENT);
     }
 
     /**
@@ -500,7 +500,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
      * manifestMap are actually defined in the actual element descriptors and reachable from
      * the manifestElement root node.
      */
-    private void sanityCheck(Map<String, DeclareStyleableInfo> manifestMap,
+    private boolean sanityCheck(Map<String, DeclareStyleableInfo> manifestMap,
             ElementDescriptor manifestElement) {
         TreeSet<String> elementsDeclared = new TreeSet<String>();
         findAllElementNames(manifestElement, elementsDeclared);
@@ -526,7 +526,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             for (String name : stylesDeclared) {
                 sb.append(guessXmlName(name));
 
-                if (name != stylesDeclared.last()) {
+                if (!name.equals(stylesDeclared.last())) {
                     sb.append(", ");    //$NON-NLS-1$
                 }
             }
@@ -540,7 +540,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             sb.append("Warning, ADT/SDK Mismatch! The following elements are declared by ADT but not by the SDK: ");
             for (String name : elementsDeclared) {
                 sb.append(name);
-                if (name != elementsDeclared.last()) {
+                if (!name.equals(elementsDeclared.last())) {
                     sb.append(", ");    //$NON-NLS-1$
                 }
             }
@@ -548,6 +548,8 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             AdtPlugin.log(IStatus.WARNING, "%s", sb.toString());
             AdtPlugin.printToConsole((String)null, sb);
         }
+
+        return true;
     }
 
     /**

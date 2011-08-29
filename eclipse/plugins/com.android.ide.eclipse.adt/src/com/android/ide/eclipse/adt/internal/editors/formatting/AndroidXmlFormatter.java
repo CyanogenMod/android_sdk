@@ -57,15 +57,7 @@ public class AndroidXmlFormatter implements IContentFormatter, IContentFormatter
 
     public void format(IDocument document, IFormattingContext context) {
         context.setProperty(FormattingContextProperties.CONTEXT_MEDIUM, document);
-        if (document == null) {
-            IRegion region =
-                    (IRegion) context.getProperty(FormattingContextProperties.CONTEXT_REGION);
-            if (region != null) {
-                formatMaster(context, document, region.getOffset(), region.getLength());
-            }
-        } else {
-            formatMaster(context, document, 0, document.getLength());
-        }
+        formatMaster(context, document, 0, document.getLength());
     }
 
     protected void formatMaster(IFormattingContext context, IDocument document, int offset,
