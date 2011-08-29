@@ -644,8 +644,8 @@ class CommandLineProcessor {
                     arg.setCurrentValue(Integer.parseInt(extra));
                     return null;
                 } catch (NumberFormatException e) {
-                    return String.format("Failed to parse '%1$s' as an integer: %2%s",
-                            extra, e.getMessage());
+                    return String.format("Failed to parse '%1$s' as an integer: %2$s", extra,
+                            e.getMessage());
                 }
             }
         },

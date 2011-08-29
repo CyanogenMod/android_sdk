@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Shell;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Dialog displaying the details of an AVD.
@@ -121,9 +120,8 @@ final class AvdDetailsDialog extends SwtBaseDialog {
                         gl.marginHeight = gl.marginWidth = 0;
                         c.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-                        Set<String> keys = copy.keySet();
-                        for (String key : keys) {
-                            displayValue(c, key + ":", copy.get(key));
+                        for (Map.Entry<String, String> entry : copy.entrySet()) {
+                            displayValue(c, entry.getKey() + ":", entry.getValue());
                         }
                     }
                 }
