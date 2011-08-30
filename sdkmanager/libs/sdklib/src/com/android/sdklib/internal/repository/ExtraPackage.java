@@ -40,11 +40,16 @@ import java.util.regex.Pattern;
 public class ExtraPackage extends MinToolsPackage
     implements IMinApiLevelDependency {
 
-    static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
-    static final String PROP_OLD_PATHS     = "Extra.OldPaths";     //$NON-NLS-1$
-    static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
-    static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
-    static final String PROP_PROJECT_FILES = "Extra.ProjectFiles"; //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_OLD_PATHS     = "Extra.OldPaths";     //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_PROJECT_FILES = "Extra.ProjectFiles"; //$NON-NLS-1$
 
     /**
      * The vendor folder name. It must be a non-empty single-segment path.
