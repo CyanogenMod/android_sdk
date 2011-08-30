@@ -62,7 +62,7 @@ public class AvdManagerWindowImpl1 {
 
     private static final String APP_NAME = "Android Virtual Device Manager";
     private static final String APP_NAME_MAC_MENU = "AVD Manager";
-
+    private static final String SIZE_POS_PREFIX = "avdman1"; //$NON-NLS-1$
 
     private final Shell mParentShell;
     private final AvdInvocationContext mContext;
@@ -135,23 +135,31 @@ public class AvdManagerWindowImpl1 {
         mShell.open();
         mShell.layout();
 
-        if (postCreateContent()) {    //$hide$ (hide from SWT designer)
+        boolean ok = postCreateContent();
+
+        if (ok && mContext == AvdInvocationContext.STANDALONE) {
             Display display = Display.getDefault();
             while (!mShell.isDisposed()) {
                 if (!display.readAndDispatch()) {
                     display.sleep();
                 }
             }
-        }
 
-        dispose();  //$hide$
+            dispose();  //$hide$
+        }
     }
 
     private void createShell() {
         mShell = new Shell(mParentShell, SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
-                onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
+                ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);
+
+                if (mContext != AvdInvocationContext.SDK_MANAGER) {
+                    // When invoked from the sdk manager, don't dispose
+                    // resources that the sdk manager still needs.
+                    onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
+                }
             }
         });
 
@@ -165,6 +173,8 @@ public class AvdManagerWindowImpl1 {
         mShell.setMinimumSize(new Point(500, 300));
         mShell.setSize(700, 500);
         mShell.setText(APP_NAME);
+
+        ShellSizeAndPos.loadSizeAndPos(mShell, SIZE_POS_PREFIX);
     }
 
     private void createContents() {

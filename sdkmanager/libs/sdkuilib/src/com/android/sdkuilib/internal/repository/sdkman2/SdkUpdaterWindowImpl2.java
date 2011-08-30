@@ -73,6 +73,8 @@ import java.util.ArrayList;
 public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     private static final String APP_NAME = "Android SDK Manager";
+    private static final String SIZE_POS_PREFIX = "sdkman2"; //$NON-NLS-1$
+
     private final Shell mParentShell;
     private final SdkInvocationContext mContext;
     /** Internal data shared between the window and its pages. */
@@ -166,6 +168,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         mShell = new Shell(mParentShell, SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
+                ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
             }
         });
@@ -180,6 +183,8 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         mShell.setMinimumSize(new Point(500, 300));
         mShell.setSize(700, 500);
         mShell.setText(APP_NAME);
+
+        ShellSizeAndPos.loadSizeAndPos(mShell, SIZE_POS_PREFIX);
     }
 
     private void createContents() {
@@ -671,7 +676,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
             }
 
             getShell().setText(
-                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));  //$NON-NLS-1$
+                    String.format("%1$s - %2$s", APP_NAME, content.getPageTitle()));
 
             Label filler = new Label(shell, SWT.NONE);
             GridDataBuilder.create(filler).hFill().hGrab();
