@@ -289,7 +289,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         }
 
         if (xml != null) {
-            monitor.setDescription(String.format("Validate XML: %1$s", url));
+            monitor.setDescription("Validate XML: %1$s", url);
 
             ITaskMonitor subMonitor = monitor.createSubMonitor(2);
             subMonitor.setProgressMax(2);
@@ -439,7 +439,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         monitor.incProgress(1);
 
         if (xml != null) {
-            monitor.setDescription(String.format("Parse XML:    %1$s", url));
+            monitor.setDescription("Parse XML:    %1$s", url);
             monitor.incProgress(1);
             parsePackages(validatedDoc, validatedUri, monitor);
             if (mPackages == null || mPackages.length == 0) {

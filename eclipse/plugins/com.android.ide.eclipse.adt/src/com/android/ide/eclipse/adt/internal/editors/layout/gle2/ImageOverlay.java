@@ -171,6 +171,12 @@ public class ImageOverlay extends Overlay implements IImageFactory {
                     double xScale = hi.getScalledImgSize() / (double) mAwtImage.getWidth();
                     double yScale = vi.getScalledImgSize() / (double) mAwtImage.getHeight();
                     BufferedImage scaledAwtImage;
+
+                    // NOTE: == comparison on floating point numbers is okay
+                    // here because we normalize the scaling factor
+                    // to an exact 1.0 in the zooming code when the value gets
+                    // near 1.0 to make painting more efficient in the presence
+                    // of rounding errors.
                     if (xScale == 1.0 && yScale == 1.0) {
                         // Scaling to 100% is easy!
                         scaledAwtImage = mAwtImage;

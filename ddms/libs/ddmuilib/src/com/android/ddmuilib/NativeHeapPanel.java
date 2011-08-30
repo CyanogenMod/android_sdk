@@ -16,14 +16,14 @@
 
 package com.android.ddmuilib;
 
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
+import com.android.ddmlib.HeapSegment.HeapSegmentElement;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.NativeAllocationInfo;
 import com.android.ddmlib.NativeLibraryMapInfo;
 import com.android.ddmlib.NativeStackCallInfo;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.HeapSegment.HeapSegmentElement;
 import com.android.ddmuilib.annotation.WorkerThread;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -224,10 +224,11 @@ public final class NativeHeapPanel extends BaseHeapPanel {
     private static DecimalFormat sFormatter;
     static {
         sFormatter = (DecimalFormat)NumberFormat.getInstance();
-        if (sFormatter != null)
+        if (sFormatter == null) {
             sFormatter = new DecimalFormat("#,###");
-        else
+        } else {
             sFormatter.applyPattern("#,###");
+        }
     }
 
 
@@ -236,7 +237,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
      * address several times.
      */
     private HashMap<Long, NativeStackCallInfo> mSourceCache =
-        new HashMap<Long,NativeStackCallInfo>();
+        new HashMap<Long, NativeStackCallInfo>();
     private long mTotalSize;
     private Button mSaveButton;
     private Button mSymbolsButton;

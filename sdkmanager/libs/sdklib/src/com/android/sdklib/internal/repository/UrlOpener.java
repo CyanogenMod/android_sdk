@@ -191,6 +191,13 @@ public class UrlOpener {
                 else {
                     // Use a buffered entity because the stream in which it will
                     // be transfered, will not be closed later, unexpectedly
+
+                    // TODO: an unfortunate side effect is that creating the BufferedHttpEntity
+                    // seems to perform the *actual* download (looking at it, there's a buffer
+                    // being filled in there). So the caller doesn't have a chance to produce
+                    // a meaningful callback with download speed/ETA stats.
+                    // Behavior might be different with a slower network.
+
                     BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
                     stream = bufferedEntity.getContent();
                 }

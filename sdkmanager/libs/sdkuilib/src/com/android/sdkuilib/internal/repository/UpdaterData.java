@@ -510,8 +510,8 @@ public class UpdaterData implements IUpdaterData {
                                     baos.toString());
                         }
 
-                        monitor.log(msg);
-                        mSdkLog.error(t, msg);
+                        monitor.log(     "%1$s", msg);      //$NON-NLS-1$
+                        mSdkLog.error(t, "%1$s", msg);      //$NON-NLS-1$
                     } finally {
 
                         // Always move the progress bar to the desired position.
