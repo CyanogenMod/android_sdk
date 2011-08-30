@@ -58,6 +58,9 @@
          - v5 is used by the SDK Updater in Tools R14:
             - <extra> now has an <old_paths> element, a ;-separated list of old paths that
               should be detected and migrated to the new <path> for that package.
+            - <platform> has a new optional <abi-included> that describes the ABI of the
+              system image included in the platform, if any.
+            - New <system-image> package type, to store system images outside of <platform>s.
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />
@@ -70,6 +73,7 @@
         </xsd:annotation>
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="platform"        type="sdk:platformType"     />
+            <xsd:element name="system-image"    type="sdk:systemImageType"  />
             <xsd:element name="tool"            type="sdk:toolType"         />
             <xsd:element name="platform-tool"   type="sdk:platformToolType" />
             <xsd:element name="doc"             type="sdk:docType"          />
@@ -118,6 +122,12 @@
                  Optional. If present, must be an int > 0. -->
             <xsd:element name="min-tools-rev" type="xsd:positiveInteger" minOccurs="0" />
 
+            <!-- The ABI of the system image *included* in this platform, if any.
+                 When the field is present, it means the platform already embeds one
+                 system image. A platform can also have any number of external
+                 &lt;system-image&gt; associated with it.  -->
+            <xsd:element name="abi-included"  type="sdk:abiType" minOccurs="0" />
+
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
             <xsd:element name="obsolete"      type="xsd:string" minOccurs="0" />
@@ -142,6 +152,60 @@
             <xsd:element name="revision"     type="xsd:nonNegativeInteger" minOccurs="0" />
         </xsd:all>
     </xsd:complexType>
+
+
+    <!-- The definition of a system image used by a platform. -->
+
+    <xsd:complexType name="systemImageType" >
+        <xsd:annotation>
+            <xsd:documentation>
+                System Image for a platform.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- api-level + codename identifies the platform to which this system image belongs. -->
+
+            <!-- The Android API Level for the platform. An int > 0. -->
+            <xsd:element name="api-level" type="xsd:positiveInteger"  />
+            <!-- The optional codename for this platform, if it's a preview. -->
+            <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
+
+            <!-- The revision, an int > 0, incremented each time a new
+                 package is generated. -->
+            <xsd:element name="revision"  type="xsd:positiveInteger" />
+
+            <!-- The ABI of the system emulated by this image. -->
+            <xsd:element name="abi"       type="sdk:abiType" />
+
+            <!-- The optional license of this package. If present, users will have
+                 to agree to it before downloading. -->
+            <xsd:element name="uses-license"  type="sdk:usesLicenseType" minOccurs="0" />
+            <!-- The optional description of this package. -->
+            <xsd:element name="description"   type="xsd:string"      minOccurs="0" />
+            <!-- The optional description URL of this package -->
+            <xsd:element name="desc-url"      type="xsd:token"       minOccurs="0" />
+            <!-- The optional release note for this package. -->
+            <xsd:element name="release-note"  type="xsd:string"      minOccurs="0" />
+            <!-- The optional release note URL of this package -->
+            <xsd:element name="release-url"   type="xsd:token"       minOccurs="0" />
+
+            <!-- A list of file archives for this package. -->
+            <xsd:element name="archives"  type="sdk:archivesType" />
+        </xsd:all>
+    </xsd:complexType>
+
+    <!-- The definition of the ABI supported by a platform's system image. -->
+
+    <xsd:simpleType name="abiType">
+        <xsd:annotation>
+            <xsd:documentation>The ABI of a platform's system image.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="armeabi"     />
+            <xsd:enumeration value="armeabi-v7a" />
+            <xsd:enumeration value="x86"         />
+        </xsd:restriction>
+    </xsd:simpleType>
 
 
     <!-- The definition of an SDK tool package. -->
