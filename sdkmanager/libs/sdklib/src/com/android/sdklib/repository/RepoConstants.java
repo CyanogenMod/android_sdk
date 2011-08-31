@@ -80,7 +80,7 @@ public class RepoConstants {
     public static final String NODE_PATH      = "path";                         //$NON-NLS-1$
 
     /** The old_path segments, a string, for extra packages. */
-    public static final String NODE_OLD_PATHS = "old_paths";                    //$NON-NLS-1$
+    public static final String NODE_OLD_PATHS = "old-paths";                    //$NON-NLS-1$
 
     /** The archives container, for all packages. */
     public static final String NODE_ARCHIVES = "archives";                      //$NON-NLS-1$

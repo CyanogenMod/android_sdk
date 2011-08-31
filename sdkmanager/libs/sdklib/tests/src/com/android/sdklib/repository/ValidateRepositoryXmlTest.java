@@ -18,7 +18,6 @@ package com.android.sdklib.repository;
 
 import com.android.annotations.Nullable;
 
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -40,75 +39,13 @@ import junit.framework.TestCase;
  * References:
  * http://www.ibm.com/developerworks/xml/library/x-javaxmlvalidapi.html
  */
-public class SdkRepositoryTest extends TestCase {
+public class ValidateRepositoryXmlTest extends TestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    /**
-     * A SAX error handler that captures the errors and warnings.
-     * This allows us to capture *all* errors and just not get an exception on the first one.
-     */
-    private static class CaptureErrorHandler implements ErrorHandler {
-
-        private String mWarnings = "";
-        private String mErrors = "";
-
-        @SuppressWarnings("unused")
-        public String getErrors() {
-            return mErrors;
-        }
-
-        @SuppressWarnings("unused")
-        public String getWarnings() {
-            return mWarnings;
-        }
-
-        /**
-         * Verifies if the handler captures some errors or warnings.
-         * Prints them on stderr.
-         * Also fails the unit test if any error was generated.
-         */
-        public void verify() {
-            if (mWarnings.length() > 0) {
-                System.err.println(mWarnings);
-            }
-
-            if (mErrors.length() > 0) {
-                System.err.println(mErrors);
-                fail(mErrors);
-            }
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void error(SAXParseException ex) throws SAXException {
-            mErrors += "Error: " + ex.getMessage() + "\n";
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void fatalError(SAXParseException ex) throws SAXException {
-            mErrors += "Fatal Error: " + ex.getMessage() + "\n";
-        }
-
-        /**
-         * @throws SAXException
-         */
-        public void warning(SAXParseException ex) throws SAXException {
-            mWarnings += "Warning: " + ex.getMessage() + "\n";
-        }
-
-    }
+    private static String OPEN_TAG_REPO =
+        "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/" +
+        Integer.toString(SdkRepoConstants.NS_LATEST_VERSION) +
+        "\">";
+    private static String CLOSE_TAG_REPO = "</r:sdk-repository>";
 
     // --- Helpers ------------
 
@@ -128,29 +65,6 @@ public class SdkRepositoryTest extends TestCase {
             Schema schema = factory.newSchema(new StreamSource(xsdStream));
             validator = schema.newValidator();
 
-            if (handler != null) {
-                validator.setErrorHandler(handler);
-            }
-        }
-
-        return validator;
-    }
-
-    /**
-     * Helper method that returns a validator for our Addon XSD
-     *
-     * @param version The versoion number, in range {@code 1..NS_LATEST_VERSION}
-     * @param handler A {@link CaptureErrorHandler}. If null the default will be used,
-     *   which will most likely print errors to stderr.
-     */
-    private Validator getAddonValidator(int version, @Nullable CaptureErrorHandler handler)
-            throws SAXException {
-        Validator validator = null;
-        InputStream xsdStream = SdkAddonConstants.getXsdStream(version);
-        if (xsdStream != null) {
-            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = factory.newSchema(new StreamSource(xsdStream));
-            validator = schema.newValidator();
             if (handler != null) {
                 validator.setErrorHandler(handler);
             }
@@ -232,49 +146,27 @@ public class SdkRepositoryTest extends TestCase {
         Validator validator = getRepoValidator(4, handler);
         validator.validate(source);
         handler.verify();
+
     }
+
+    /** Validate a valid sample using namespace version 5 using an InputStream */
+    public void testValidateLocalRepositoryFile5() throws Exception {
+        InputStream xmlStream = this.getClass().getResourceAsStream(
+                    "/com/android/sdklib/testdata/repository_sample_5.xml");
+        Source source = new StreamSource(xmlStream);
+
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+        Validator validator = getRepoValidator(5, handler);
+        validator.validate(source);
+        handler.verify();
+
+    }
+
+    // IMPORTANT: each time you add a test here, you should add a corresponding
+    // test in SdkRepoSourceTest to validate the XML content is parsed correctly.
+
 
     // ---
-
-    /** Validates that NS_LATEST_VERSION points to the max avaialble XSD schema. */
-    public void testAddonLatestVersionNumber() throws Exception {
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-
-        // There should be a schema matching NS_LATEST_VERSION
-        assertNotNull(getRepoValidator(SdkAddonConstants.NS_LATEST_VERSION, handler));
-
-        // There should NOT be a schema with NS_LATEST_VERSION+1
-        assertNull(
-                String.format(
-                        "There's an ADDON XSD at version %d but SdkAddonConstants.NS_LATEST_VERSION is still set to %d.",
-                        SdkAddonConstants.NS_LATEST_VERSION + 1,
-                        SdkAddonConstants.NS_LATEST_VERSION),
-                getAddonValidator(SdkAddonConstants.NS_LATEST_VERSION + 1, handler));
-    }
-
-    /** Validate a valid sample using namespace version 1 using an InputStream */
-    public void testValidateLocalAddonFile1() throws Exception {
-        InputStream xmlStream = this.getClass().getResourceAsStream(
-                    "/com/android/sdklib/testdata/addon_sample_1.xml");
-        Source source = new StreamSource(xmlStream);
-
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getAddonValidator(1, handler);
-        validator.validate(source);
-        handler.verify();
-    }
-
-    /** Validate a valid sample using namespace version 2 using an InputStream */
-    public void testValidateLocalAddonFile2() throws Exception {
-        InputStream xmlStream = this.getClass().getResourceAsStream(
-                    "/com/android/sdklib/testdata/addon_sample_2.xml");
-        Source source = new StreamSource(xmlStream);
-
-        CaptureErrorHandler handler = new CaptureErrorHandler();
-        Validator validator = getAddonValidator(2, handler);
-        validator.validate(source);
-        handler.verify();
-    }
 
     /** A document should at least have a root to be valid */
     public void testEmptyXml() throws Exception {
@@ -296,18 +188,6 @@ public class SdkRepositoryTest extends TestCase {
         handler.verify();
         fail();
     }
-
-    private static String OPEN_TAG_REPO =
-        "<r:sdk-repository xmlns:r=\"http://schemas.android.com/sdk/android/repository/" +
-        Integer.toString(SdkRepoConstants.NS_LATEST_VERSION) +
-        "\">";
-    private static String CLOSE_TAG_REPO = "</r:sdk-repository>";
-
-    private static String OPEN_TAG_ADDON =
-        "<r:sdk-addon xmlns:r=\"http://schemas.android.com/sdk/android/addon/" +
-        Integer.toString(SdkAddonConstants.NS_LATEST_VERSION) +
-        "\">";
-    private static String CLOSE_TAG_ADDON = "</r:sdk-addon>";
 
     /** A document with a root element containing no platform, addon, etc., is valid. */
     public void testEmptyRootXml() throws Exception {
@@ -437,39 +317,6 @@ public class SdkRepositoryTest extends TestCase {
         } catch (SAXParseException e) {
             // We expect a parse error referring to this grammar rule
             assertRegex("cvc-pattern-valid: Value 'path/cannot\\\\contain\\\\segments' is not facet-valid with respect to pattern.*",
-                    e.getMessage());
-            return;
-        }
-        // If we get here, the validator has not failed as we expected it to.
-        fail();
-    }
-
-    /** An addon does not support a codename.
-     * There used to be a typo in the repository.XSD versions 1-2 & the addon XSD versions 1-2
-     * where addons had an optional element 'codename'. This was a typo and it's been fixed.
-     */
-    public void testAddonCodename() throws Exception {
-        // we define a license named "lic1" and then reference "lic2" instead
-        String document = "<?xml version=\"1.0\"?>" +
-            OPEN_TAG_ADDON +
-            "<r:license id=\"lic1\"> some license </r:license> " +
-            "<r:add-on> <r:uses-license ref=\"lic1\" /> <r:revision>1</r:revision> " +
-            "<r:name>AddonName</r:name> <r:vendor>AddonVendor</r:vendor> <r:api-level>42</r:api-level> " +
-            "<r:codename>Addons do not support codenames</r:codenames> " +
-            "<r:libs><r:lib><r:name>com.example.LibName</r:name></r:lib></r:libs> " +
-            "<r:archives> <r:archive os=\"any\"> <r:size>1</r:size> <r:checksum>2822ae37115ebf13412bbef91339ee0d9454525e</r:checksum> " +
-            "<r:url>url</r:url> </r:archive> </r:archives> </r:add-on>" +
-            CLOSE_TAG_ADDON;
-
-        Source source = new StreamSource(new StringReader(document));
-
-        // don't capture the validator errors, we want it to fail and catch the exception
-        Validator validator = getAddonValidator(SdkAddonConstants.NS_LATEST_VERSION, null);
-        try {
-            validator.validate(source);
-        } catch (SAXParseException e) {
-            // We expect a parse error referring to this grammar rule
-            assertRegex("cvc-complex-type.2.4.a: Invalid content was found starting with element 'r:codename'.*",
                     e.getMessage());
             return;
         }

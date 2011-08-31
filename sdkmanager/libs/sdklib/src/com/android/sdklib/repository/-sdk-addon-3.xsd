@@ -42,7 +42,7 @@
               and revision of the layout library for this particular add-on, if any.
 
          - v3 is used by the SDK Updater in Tools R14:
-            - <extra> now has an <old_paths> element, a ;-separated list of old paths that
+            - <extra> now has an <old-paths> element, a ;-separated list of old paths that
               should be detected and migrated to the new <path> for that package.
     -->
 
@@ -173,9 +173,9 @@
             <xsd:element name="path" type="sdk:segmentType" />
 
             <!-- A semi-colon separated list of "obsolete" path names which are equivalent
-                 to the current 'path' name. When a package is seen using an old_paths' name,
+                 to the current 'path' name. When a package is seen using an old-paths' name,
                  the package manager will try to upgrade it to the new path. -->
-            <xsd:element name="old_paths" type="sdk:segmentListType"  minOccurs="0" />
+            <xsd:element name="old-paths" type="sdk:segmentListType"  minOccurs="0" />
 
             <!-- The revision, an int > 0, incremented each time a new
                  package is generated. -->
