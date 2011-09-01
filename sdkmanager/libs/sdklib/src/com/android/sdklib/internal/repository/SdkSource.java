@@ -493,7 +493,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             byte[] result = new byte[inc];
 
             try {
-                is = UrlOpener.openURL(urlString, monitor);
+                is = UrlOpener.openUrl(urlString, monitor);
 
                 int n;
                 while ((n = is.read(result, curr, result.length - curr)) != -1) {
