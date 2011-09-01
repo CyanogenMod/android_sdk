@@ -35,7 +35,7 @@ import junit.framework.TestCase;
  * Test case that allocates a temporary SDK, a temporary AVD base folder
  * with an SdkManager and an AvdManager that points to them.
  */
-public abstract class SdkManagerTestCase extends TestCase {
+public class SdkManagerTestCase extends TestCase {
 
     private File mFakeSdk;
     private MockLog mLog;
@@ -77,6 +77,13 @@ public abstract class SdkManagerTestCase extends TestCase {
     @Override
     public void tearDown() throws Exception {
         deleteDir(mFakeSdk);
+    }
+
+    /**
+     * A empty test method to placate the JUnit test runner, which doesn't
+     * like TestCase classes with no test methods.
+     */
+    public void testSetup() {
     }
 
     /**
