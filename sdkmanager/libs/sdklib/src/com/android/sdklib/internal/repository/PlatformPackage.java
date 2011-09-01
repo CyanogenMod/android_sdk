@@ -38,7 +38,8 @@ import java.util.Properties;
  */
 public class PlatformPackage extends MinToolsPackage implements IPackageVersion, ILayoutlibVersion {
 
-    public static final String PROP_VERSION       = "Platform.Version";
+    public static final String PROP_VERSION       = "Platform.Version";         //$NON-NLS-1$
+    public static final String PROP_INCLUDED_ABI  = "Platform.Included.Abi";    //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -46,9 +47,10 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
     /** The version, a string, for platform packages. */
     private final String mVersionName;
 
-    /**
-     * The helper handling the layoutlib version.
-     */
+    /** The ABI of the system-image included in this platform. Can be null but not empty. */
+    private final String mIncludedAbi;
+
+    /** The helper handling the layoutlib version. */
     private final LayoutlibVersionMixin mLayoutlibVersion;
 
     /**
@@ -65,13 +67,16 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
         super(source, packageNode, nsUri, licenses);
 
         mVersionName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_VERSION);
+
         int apiLevel = XmlParserUtils.getXmlInt   (packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
         String codeName = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
         if (codeName.length() == 0) {
             codeName = null;
         }
-
         mVersion = new AndroidVersion(apiLevel, codeName);
+
+        mIncludedAbi = XmlParserUtils.getOptionalXmlString(
+                packageNode, SdkRepoConstants.NODE_ABI_INCLUDED);
 
         mLayoutlibVersion = new LayoutlibVersionMixin(packageNode);
     }
@@ -109,6 +114,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
         mVersion = target.getVersion();
         mVersionName  = target.getVersionName();
         mLayoutlibVersion = new LayoutlibVersionMixin(props);
+        mIncludedAbi = props == null ? null : props.getProperty(PROP_INCLUDED_ABI);
     }
 
     /**
@@ -126,6 +132,10 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
             props.setProperty(PROP_VERSION, mVersionName);
         }
 
+        if (mIncludedAbi != null) {
+            props.setProperty(PROP_INCLUDED_ABI, mIncludedAbi);
+        }
+
     }
 
     /** Returns the version, a string, for platform packages. */
@@ -136,6 +146,16 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
     /** Returns the package version, for platform, add-on and doc packages. */
     public AndroidVersion getVersion() {
         return mVersion;
+    }
+
+    /**
+     * Returns the ABI of the system-image included in this platform.
+     *
+     * @return Null if the platform does not include any system-image.
+     *  Otherwise should be a valid non-empty ABI string (e.g. "x86" or "armeabi-v7a").
+     */
+    public String getIncludedAbi() {
+        return mIncludedAbi;
     }
 
     /**

@@ -25,6 +25,8 @@ import java.util.Properties;
 
 public class MinToolsPackageTest extends PackageTest {
 
+    protected static final String LOCAL_ARCHIVE_PATH = "/local/archive/path";
+
     /** Local class used to test the abstract MinToolsPackage class */
     protected static class MockMinToolsPackage extends MinToolsPackage {
         public MockMinToolsPackage(
@@ -70,16 +72,6 @@ public class MinToolsPackageTest extends PackageTest {
     }
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    @Override
     public void testCreate() {
         Properties props = createProps();
 
@@ -92,7 +84,7 @@ public class MinToolsPackageTest extends PackageTest {
                 null, //descUrl
                 Os.ANY, //archiveOs
                 Arch.ANY, //archiveArch
-                "/local/archive/path" //archiveOsPath
+                LOCAL_ARCHIVE_PATH
                 );
 
         testCreatedPackage(p);
@@ -111,7 +103,7 @@ public class MinToolsPackageTest extends PackageTest {
                 null, //descUrl
                 Os.ANY, //archiveOs
                 Arch.ANY, //archiveArch
-                "/local/archive/path" //archiveOsPath
+                LOCAL_ARCHIVE_PATH
                 );
 
         Properties props2 = new Properties();

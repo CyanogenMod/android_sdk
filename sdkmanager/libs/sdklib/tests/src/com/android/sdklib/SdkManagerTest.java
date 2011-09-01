@@ -31,6 +31,7 @@ public class SdkManagerTest extends SdkManagerTestCase {
         super.tearDown();
     }
 
+    @SuppressWarnings("deprecation")
     public void testSdkManager_LayoutlibVersion() {
         SdkManager sdkman = getSdkManager();
         IAndroidTarget t = sdkman.getTargets()[0];

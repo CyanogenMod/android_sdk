@@ -119,6 +119,7 @@ public class MainTest extends SdkManagerTestCase {
         // These are the values we expect checkFilterValues() to match.
         String[] expectedValues = {
                 "platform",
+                "system-image",
                 "tool",
                 "platform-tool",
                 "doc",
