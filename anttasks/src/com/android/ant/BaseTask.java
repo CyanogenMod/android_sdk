@@ -102,6 +102,7 @@ public abstract class BaseTask extends Task {
         }
 
         assert mDependencies != null : "Dependencies have not been initialized";
-        return mDependencies.dependenciesHaveChanged(mRestrictTouchedExtensionsTo);
+        return mDependencies.dependenciesHaveChanged(mRestrictTouchedExtensionsTo,
+                true /*printStatus*/);
     }
 }

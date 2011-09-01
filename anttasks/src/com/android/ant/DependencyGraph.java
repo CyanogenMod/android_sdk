@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,8 +34,10 @@ import java.util.Set;
 public class DependencyGraph {
 
     // Files that we know about from the dependency file
-    private Set<File> mTargets = Collections.emptySet();
-    private Set<File> mPrereqs = mTargets;
+    private List<File> mTargets = Collections.emptyList();
+    private List<File> mPrereqs = mTargets;
+    private boolean mMissingDepFile = false;
+    private long mDepFileLastModified;
     private final ArrayList<File> mWatchPaths;
 
     public DependencyGraph(String dependencyFilePath, ArrayList<File> watchPaths) {
@@ -48,34 +50,45 @@ public class DependencyGraph {
      * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
      *        be considered for a modification check. All deleted/created files will still be
      *        checked. If this is null, all files will be checked for modification date
+     * @param printStatus will print to {@link System#out} the dependencies status.
      * @return true if new prerequisites have appeared, target files are missing or if
      *         prerequisite files have been modified since the last target generation.
      */
-    public boolean dependenciesHaveChanged(Set<String> extensionsToCheck) {
-        boolean noFile = (mTargets.size() == 0);
+    public boolean dependenciesHaveChanged(Set<String> extensionsToCheck, boolean printStatus) {
         boolean missingPrereq = missingPrereqFile();
         boolean newPrereq = newPrereqFile();
         boolean missingTarget = missingTargetFile();
         boolean modPrereq = modifiedPrereq(extensionsToCheck);
 
-        if (noFile) {
-            System.out.println("No Dependency File Found");
+        if (printStatus) {
+            if (mMissingDepFile) {
+                System.out.println("No Dependency File Found");
+            }
+            if (missingPrereq) {
+                System.out.println("Found Deleted Prereq File");
+            }
+            if (newPrereq) {
+                System.out.println("Found New Prereq File");
+            }
+            if (missingTarget) {
+                System.out.println("Found Deleted Target File");
+            }
+            if (modPrereq) {
+                System.out.println("Found Modified Prereq File");
+            }
         }
-        if (missingPrereq) {
-            System.out.println("Found Deleted Prereq File");
-        }
-        if (newPrereq) {
-            System.out.println("Found New Prereq File");
-        }
-        if (missingTarget) {
-            System.out.println("Found Deleted Target File");
-        }
-        if (modPrereq) {
-            System.out.println("Found Modified Prereq File");
-        }
+
         // If no dependency file has been set up, then we'll just return true
         // if we have a dependency file, we'll check to see what's been changed
-        return noFile || missingPrereq || newPrereq || missingTarget || modPrereq;
+        return mMissingDepFile || missingPrereq || newPrereq || missingTarget || modPrereq;
+    }
+
+    public List<File> getTargets() {
+        return mTargets;
+    }
+
+    public List<File> getPrereqs() {
+        return mPrereqs;
     }
 
     /**
@@ -84,6 +97,16 @@ public class DependencyGraph {
      * @param dependencyFilePath the dependency file
      */
     private void parseDependencyFile(String dependencyFilePath) {
+        // first check if the dependency file is here.
+        File depFile = new File(dependencyFilePath);
+        if (depFile.isFile() == false) {
+            mMissingDepFile = true;
+            return;
+        }
+
+        // get the modification time of the dep file as we may need it later
+        mDepFileLastModified = depFile.lastModified();
+
         // Read in our dependency file
         String content = readFile(dependencyFilePath);
         if (content == null) {
@@ -121,14 +144,20 @@ public class DependencyGraph {
             prereqs = files[1].trim().split(" ");
         }
 
-        mTargets = new HashSet<File>(targets.length);
+        mTargets = new ArrayList<File>(targets.length);
         for (String path : targets) {
-            mTargets.add(new File(path));
+            if (path.length() > 0) {
+                mTargets.add(new File(path));
+            }
         }
-        mPrereqs = new HashSet<File>(prereqs.length);
+        mTargets = Collections.unmodifiableList(mTargets);
+        mPrereqs = new ArrayList<File>(prereqs.length);
         for (String path : prereqs) {
-            mPrereqs.add(new File(path));
+            if (path.length() > 0) {
+                mPrereqs.add(new File(path));
+            }
         }
+        mPrereqs = Collections.unmodifiableList(mPrereqs);
     }
 
     /**
@@ -137,9 +166,11 @@ public class DependencyGraph {
      * @return true if a new file is encountered in the dependency folders
      */
     private boolean newPrereqFile() {
-        for (File dir : mWatchPaths) {
-            if (newFileInTree(dir)) {
-                return true;
+        if (mWatchPaths != null) {
+            for (File dir : mWatchPaths) {
+                if (newFileInTree(dir)) {
+                    return true;
+                }
             }
         }
         // If we make it all the way through our directories we're good.
@@ -212,9 +243,14 @@ public class DependencyGraph {
     private boolean modifiedPrereq(Set<String> extensionsToCheck) {
         // Find the oldest target
         long oldestTarget = Long.MAX_VALUE;
-        for (File target : mTargets) {
-            if (target.lastModified() < oldestTarget) {
-                oldestTarget = target.lastModified();
+        // if there's no output, then compare to the time of the dependency file.
+        if (mTargets.size() == 0) {
+            oldestTarget = mDepFileLastModified;
+        } else {
+            for (File target : mTargets) {
+                if (target.lastModified() < oldestTarget) {
+                    oldestTarget = target.lastModified();
+                }
             }
         }
 
@@ -273,4 +309,5 @@ public class DependencyGraph {
         // Don't include the leading '.' in the extension
         return filename.substring(filename.lastIndexOf('.') + 1);
     }
+
 }

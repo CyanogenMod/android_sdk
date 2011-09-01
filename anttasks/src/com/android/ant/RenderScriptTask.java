@@ -105,6 +105,8 @@ public class RenderScriptTask extends Task {
         File exe = new File(mExecutable);
         String execTaskName = exe.getName();
 
+        int count = 0;
+
         // now loop on all the source folders to find all the renderscript to compile
         // and compile them
         for (String sourceFolder : sourceFolders) {
@@ -145,5 +147,12 @@ public class RenderScriptTask extends Task {
                 task.execute();
             }
         }
+
+        if (count > 0) {
+            System.out.println(String.format("Compiled %d renderscript files.", count));
+        } else {
+            System.out.println("No renderscript files to compile.");
+        }
+
     }
 }
