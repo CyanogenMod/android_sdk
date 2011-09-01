@@ -323,32 +323,40 @@ public final class AaptExecTask extends BaseTask {
         // Get whether we have libraries
         Object libResRef = taskProject.getReference(mProjectLibrariesResName);
 
-        // Set up our folders to check for changed files
-        ArrayList<File> watchPaths = new ArrayList<File>();
-        // We need to watch for changes in the main project res folder
+        // Set up our input paths that matter for dependency checks
+        ArrayList<File> inputPaths = new ArrayList<File>();
+
+        // the project res folder is an input path of course
         for (Path pathList : mResources) {
             for (String path : pathList.list()) {
-                watchPaths.add(new File(path));
+                inputPaths.add(new File(path));
             }
         }
-        // and if libraries exist, in their res folders
+
+        // as is its AndroidManifest.xml
+        if (mManifest != null) {
+            inputPaths.add(new File(mManifest));
+        }
+
+        // and if libraries exist, their res folders folders too.
         if (libResRef instanceof Path) {
             for (String path : ((Path)libResRef).list()) {
-                watchPaths.add(new File(path));
+                inputPaths.add(new File(path));
             }
         }
-        // If we're here to generate a .ap_ file we need to watch assets as well
+
+        // If we're here to generate a .ap_ file we need to use assets as an input path as well.
         if (!generateRClass) {
             File assetsDir = new File(mAssets);
             if (mAssets != null && assetsDir.isDirectory()) {
-                watchPaths.add(assetsDir);
+                inputPaths.add(assetsDir);
             }
         }
 
         // Now we figure out what we need to do
         if (generateRClass) {
             // Check to see if our dependencies have changed. If not, then skip
-            if (initDependencies(mRFolder + File.separator + "R.java.d", watchPaths)
+            if (initDependencies(mRFolder + File.separator + "R.java.d", inputPaths)
                               && dependenciesHaveChanged() == false) {
                 System.out.println("No changed resources. R.java and Manifest.java untouched.");
                 return;
@@ -362,7 +370,7 @@ public final class AaptExecTask extends BaseTask {
             dependencyFilePath += ".d";
 
             // Check to see if our dependencies have changed
-            if (initDependencies(dependencyFilePath , watchPaths)
+            if (initDependencies(dependencyFilePath, inputPaths)
                             && dependenciesHaveChanged() == false) {
                 System.out.println("No changed resources or assets. " + mApkName
                                     + " remains untouched");
