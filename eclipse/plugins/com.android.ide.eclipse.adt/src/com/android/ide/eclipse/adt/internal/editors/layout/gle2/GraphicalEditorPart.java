@@ -23,6 +23,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.ANDROID_PKG;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor.viewNeedsPackage;
 import static com.android.sdklib.SdkConstants.FD_GEN_SOURCES;
 
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.rendering.StaticRenderSession;
 import com.android.ide.common.rendering.api.Capability;
@@ -84,7 +85,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelMarker;
@@ -1102,7 +1102,7 @@ public class GraphicalEditorPart extends EditorPart
      *
      * @return the bounds of the screen, never null
      */
-    public Rectangle getScreenBounds() {
+    public Rect getScreenBounds() {
         return mConfigComposite.getScreenBounds();
     }
 
@@ -1286,7 +1286,7 @@ public class GraphicalEditorPart extends EditorPart
             LayoutLibrary layoutLib) {
         LayoutCanvas canvas = getCanvasControl();
         Set<UiElementNode> explodeNodes = canvas.getNodesToExplode();
-        Rectangle rect = getScreenBounds();
+        Rect rect = getScreenBounds();
         RenderLogger logger = new RenderLogger(mEditedFile.getName());
         RenderingMode renderingMode = RenderingMode.NORMAL;
         // FIXME set the rendering mode using ViewRule or something.
@@ -1298,7 +1298,7 @@ public class GraphicalEditorPart extends EditorPart
 
         RenderSession session = RenderService.create(this)
             .setModel(model)
-            .setSize(rect.width, rect.height)
+            .setSize(rect.w, rect.h)
             .setLog(logger)
             .setRenderingMode(renderingMode)
             .setIncludedWithin(mIncludedWithin)

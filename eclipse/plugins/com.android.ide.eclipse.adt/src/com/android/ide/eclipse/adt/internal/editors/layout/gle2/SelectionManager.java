@@ -28,7 +28,6 @@ import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
 import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.gef.ui.parts.TreeViewer;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IAction;
@@ -117,8 +116,6 @@ public class SelectionManager implements ISelectionProvider {
      * Returns the native {@link SelectionItem} list.
      *
      * @return An immutable list of {@link SelectionItem}. Can be empty but not null.
-     * @see #getSelection() {@link #getSelection()} to retrieve a {@link TreeViewer}
-     *                      compatible {@link ISelection}.
      */
     List<SelectionItem> getSelections() {
         return mUnmodifiableSelection;
@@ -135,8 +132,8 @@ public class SelectionManager implements ISelectionProvider {
     }
 
     /**
-     * Returns a {@link TreeSelection} compatible with a TreeViewer
-     * where each {@link TreePath} item is actually a {@link CanvasViewInfo}.
+     * Returns a {@link TreeSelection} where each {@link TreePath} item is
+     * actually a {@link CanvasViewInfo}.
      */
     public ISelection getSelection() {
         if (mSelections.isEmpty()) {
