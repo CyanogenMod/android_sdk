@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdkuilib.internal.repository;
+package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive;
@@ -34,7 +34,8 @@ public class MockEmptyPackage extends Package {
     private final String mTestHandle;
 
     /**
-     * Create a new {@link MockEmptyPackage}.
+     * Creates a new {@link MockEmptyPackage} with a local archive.
+     *
      * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
      */
     public MockEmptyPackage(String testHandle) {
@@ -53,7 +54,8 @@ public class MockEmptyPackage extends Package {
     }
 
     /**
-     * Create a new {@link MockEmptyPackage}.
+     * Creates a new {@link MockEmptyPackage} with a local archive.
+     *
      * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
      * @param revision The revision of the package, printed in the short description.
      */
@@ -73,7 +75,8 @@ public class MockEmptyPackage extends Package {
     }
 
     /**
-     * Create a new {@link MockEmptyPackage}.
+     * Creates a new {@link MockEmptyPackage} with a local archive.
+     *
      * @param source The source associate with this package.
      * @param testHandle The comparison handle for {@link #sameItemAs(Package)}.
      * @param revision The revision of the package, printed in the short description.
@@ -94,17 +97,18 @@ public class MockEmptyPackage extends Package {
     }
 
     @Override
-    protected Archive createLocalArchive(
+    protected Archive[] initializeArchives(
             Properties props,
             Os archiveOs,
             Arch archiveArch,
             String archiveOsPath) {
-        return new Archive(this, props, archiveOs, archiveArch, archiveOsPath) {
-            @Override
-            public String toString() {
-                return mTestHandle;
-            }
-        };
+        return new Archive[] {
+            new Archive(this, props, archiveOs, archiveArch, archiveOsPath) {
+                @Override
+                public String toString() {
+                    return mTestHandle;
+                }
+            } };
     }
 
     public Archive getLocalArchive() {
@@ -113,7 +117,7 @@ public class MockEmptyPackage extends Package {
 
     @Override
     public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
-        return null;
+        return new File(new File(osSdkRoot, "mock"), mTestHandle);
     }
 
     @Override

@@ -21,7 +21,7 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.io.OsHelper;
+import com.android.sdklib.io.FileOp;
 import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
 import com.android.util.Pair;
 
@@ -219,8 +219,9 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         File destPath = loc.toFile();
 
         // Only modify the file if necessary so that we don't trigger unnecessary recompilations
-        if (!destPath.isFile() || !OsHelper.isSameFile(jarPath, destPath)) {
-            OsHelper.copyFile(jarPath, destPath);
+        FileOp f = new FileOp();
+        if (!f.isFile(destPath) || !f.isSameFile(jarPath, destPath)) {
+            f.copyFile(jarPath, destPath);
             // Make sure Eclipse discovers java.io file changes
             resFolder.refreshLocal(1, new NullProgressMonitor());
         }

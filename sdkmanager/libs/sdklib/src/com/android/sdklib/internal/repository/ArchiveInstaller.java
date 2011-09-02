@@ -16,9 +16,12 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.io.OsHelper;
+import com.android.sdklib.io.FileOp;
+import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.repository.RepoConstants;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -30,6 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
@@ -43,6 +47,30 @@ import java.util.Set;
 public class ArchiveInstaller {
 
     public static final int NUM_MONITOR_INC = 100;
+
+    /** The current {@link FileOp} to use. Never null. */
+    private final IFileOp mFileOp;
+
+    /**
+     * Generates an {@link ArchiveInstaller} that relies on the default {@link FileOp}.
+     */
+    public ArchiveInstaller() {
+        mFileOp = new FileOp();
+    }
+
+    /**
+     * Generates an {@link ArchiveInstaller} that relies on the given {@link FileOp}.
+     *
+     * @param fileUtils An alternate version of {@link FileOp} to use for file operations.
+     */
+    protected ArchiveInstaller(IFileOp fileUtils) {
+        mFileOp = fileUtils;
+    }
+
+    /** Returns current {@link FileOp} to use. Never null. */
+    protected IFileOp getFileOp() {
+        return mFileOp;
+    }
 
     /**
      * Install this {@link ArchiveReplacement}s.
@@ -95,7 +123,7 @@ public class ArchiveInstaller {
             if (unarchive(archiveInfo, osSdkRoot, archiveFile, sdkManager, monitor)) {
                 monitor.log("Installed %1$s", name);
                 // Delete the temp archive if it exists, only on success
-                OsHelper.deleteFileOrFolder(archiveFile);
+                mFileOp.deleteFileOrFolder(archiveFile);
                 return true;
             }
         }
@@ -107,7 +135,8 @@ public class ArchiveInstaller {
      * Downloads an archive and returns the temp file with it.
      * Caller is responsible with deleting the temp file when done.
      */
-    private File downloadFile(Archive archive,
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected File downloadFile(Archive archive,
             String osSdkRoot,
             ITaskMonitor monitor,
             boolean forceHttp) {
@@ -151,11 +180,11 @@ public class ArchiveInstaller {
         // download. This allows us to reuse or continue downloads.
 
         File tmpFolder = getTempFolder(osSdkRoot);
-        if (!tmpFolder.isDirectory()) {
-            if (tmpFolder.isFile()) {
-                OsHelper.deleteFileOrFolder(tmpFolder);
+        if (!mFileOp.isDirectory(tmpFolder)) {
+            if (mFileOp.isFile(tmpFolder)) {
+                mFileOp.deleteFileOrFolder(tmpFolder);
             }
-            if (!tmpFolder.mkdirs()) {
+            if (!mFileOp.mkdirs(tmpFolder)) {
                 monitor.logError("Failed to create directory %1$s", tmpFolder.getPath());
                 return null;
             }
@@ -163,8 +192,8 @@ public class ArchiveInstaller {
         File tmpFile = new File(tmpFolder, base);
 
         // if the file exists, check its checksum & size. Use it if complete
-        if (tmpFile.exists()) {
-            if (tmpFile.length() == archive.getSize()) {
+        if (mFileOp.exists(tmpFile)) {
+            if (mFileOp.length(tmpFile) == archive.getSize()) {
                 String chksum = "";                             //$NON-NLS-1$
                 try {
                     chksum = fileChecksum(archive.getChecksumType().getMessageDigest(),
@@ -182,7 +211,7 @@ public class ArchiveInstaller {
             // Existing file is either of different size or content.
             // TODO: continue download when we support continue mode.
             // Right now, let's simply remove the file and start over.
-            OsHelper.deleteFileOrFolder(tmpFile);
+            mFileOp.deleteFileOrFolder(tmpFile);
         }
 
         if (fetchUrl(archive, tmpFile, link, pkgName, monitor)) {
@@ -191,7 +220,7 @@ public class ArchiveInstaller {
         } else {
             // Delete the temp file if we aborted the download
             // TODO: disable this when we want to support partial downloads.
-            OsHelper.deleteFileOrFolder(tmpFile);
+            mFileOp.deleteFileOrFolder(tmpFile);
             return null;
         }
     }
@@ -450,7 +479,7 @@ public class ArchiveInstaller {
 
             // -1- move old folder.
 
-            if (destFolder.exists()) {
+            if (mFileOp.exists(destFolder)) {
                 // Create a new temp/old dir
                 if (oldDestFolder == null) {
                     oldDestFolder = getNewTempFolder(osSdkRoot, pkgKind, "old");  //$NON-NLS-1$
@@ -491,11 +520,11 @@ public class ArchiveInstaller {
                 }
             }
 
-            assert !destFolder.exists();
+            assert !mFileOp.exists(destFolder);
 
             // -2- Unzip new content directly in place.
 
-            if (!destFolder.mkdirs()) {
+            if (!mFileOp.mkdirs(destFolder)) {
                 monitor.logError("Failed to create directory %1$s", destFolder.getPath());
                 return false;
             }
@@ -520,9 +549,10 @@ public class ArchiveInstaller {
                     oldFolder = oldArchive.getParentPackage().getInstallFolder(
                             osSdkRoot, sdkManager);
                 }
-                if (oldFolder != null && oldFolder.exists() && !oldFolder.equals(destFolder)) {
+                if (oldFolder != null && mFileOp.exists(oldFolder) &&
+                        !oldFolder.equals(destFolder)) {
                     monitor.logVerbose("Removing old archive at %1$s", oldFolder.getAbsolutePath());
-                    OsHelper.deleteFileOrFolder(oldFolder);
+                    mFileOp.deleteFileOrFolder(oldFolder);
                 }
             }
 
@@ -543,7 +573,7 @@ public class ArchiveInstaller {
             }
 
             // Cleanup if the unzip folder is still set.
-            OsHelper.deleteFileOrFolder(oldDestFolder);
+            mFileOp.deleteFileOrFolder(oldDestFolder);
         }
     }
 
@@ -576,7 +606,7 @@ public class ArchiveInstaller {
         // (e.g. right after we unzip our archive), so it fails let's be nice and give
         // it a bit of time to succeed.
         for (int i = 0; i < 5; i++) {
-            if (oldDir.renameTo(newDir)) {
+            if (mFileOp.renameTo(oldDir, newDir)) {
                 return true;
             }
             try {
@@ -596,7 +626,8 @@ public class ArchiveInstaller {
      * This root folder is skipped when unarchiving.
      */
     @SuppressWarnings("unchecked")
-    private boolean unzipFolder(File archiveFile,
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected boolean unzipFolder(File archiveFile,
             long compressedSize,
             File unzipDestFolder,
             String pkgName,
@@ -647,8 +678,8 @@ public class ArchiveInstaller {
                 if (name.endsWith("/")) {  //$NON-NLS-1$
                     // Create directory if it doesn't exist yet. This allows us to create
                     // empty directories.
-                    if (!destFile.isDirectory() && !destFile.mkdirs()) {
-                        monitor.logError("Failed to create temp directory %1$s",
+                    if (!mFileOp.isDirectory(destFile) && !mFileOp.mkdirs(destFile)) {
+                        monitor.logError("Failed to create directory %1$s",
                                 destFile.getPath());
                         return false;
                     }
@@ -657,9 +688,9 @@ public class ArchiveInstaller {
                     // Otherwise it's a file in a sub-directory.
                     // Make sure the parent directory has been created.
                     File parentDir = destFile.getParentFile();
-                    if (!parentDir.isDirectory()) {
-                        if (!parentDir.mkdirs()) {
-                            monitor.logError("Failed to create temp directory %1$s",
+                    if (!mFileOp.isDirectory(parentDir)) {
+                        if (!mFileOp.mkdirs(parentDir)) {
+                            monitor.logError("Failed to create directory %1$s",
                                     parentDir.getPath());
                             return false;
                         }
@@ -683,11 +714,11 @@ public class ArchiveInstaller {
                 }
 
                 // if needed set the permissions.
-                if (usingUnixPerm && destFile.isFile()) {
+                if (usingUnixPerm && mFileOp.isFile(destFile)) {
                     // get the mode and test if it contains the executable bit
                     int mode = entry.getUnixMode();
                     if ((mode & 0111) != 0) {
-                        OsHelper.setExecutablePermission(destFile);
+                        mFileOp.setExecutablePermission(destFile);
                     }
                 }
 
@@ -741,11 +772,11 @@ public class ArchiveInstaller {
     private File getNewTempFolder(String osBasePath, String prefix, String suffix) {
         File baseTempFolder = getTempFolder(osBasePath);
 
-        if (!baseTempFolder.isDirectory()) {
-            if (baseTempFolder.isFile()) {
-                OsHelper.deleteFileOrFolder(baseTempFolder);
+        if (!mFileOp.isDirectory(baseTempFolder)) {
+            if (mFileOp.isFile(baseTempFolder)) {
+                mFileOp.deleteFileOrFolder(baseTempFolder);
             }
-            if (!baseTempFolder.mkdirs()) {
+            if (!mFileOp.mkdirs(baseTempFolder)) {
                 return null;
             }
         }
@@ -753,7 +784,7 @@ public class ArchiveInstaller {
         for (int i = 1; i < 100; i++) {
             File folder = new File(baseTempFolder,
                     String.format("%1$s.%2$s%3$02d", prefix, suffix, i));  //$NON-NLS-1$
-            if (!folder.exists()) {
+            if (!mFileOp.exists(folder)) {
                 return folder;
             }
         }
@@ -776,7 +807,8 @@ public class ArchiveInstaller {
      * relevant to this archive, this package and the source so that we can reload them
      * locally later.
      */
-    private boolean generateSourceProperties(Archive archive, File unzipDestFolder) {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected boolean generateSourceProperties(Archive archive, File unzipDestFolder) {
         Properties props = new Properties();
 
         archive.saveProperties(props);
@@ -786,13 +818,13 @@ public class ArchiveInstaller {
             pkg.saveProperties(props);
         }
 
-        FileOutputStream fos = null;
+        OutputStream fos = null;
         try {
             File f = new File(unzipDestFolder, SdkConstants.FN_SOURCE_PROP);
 
-            fos = new FileOutputStream(f);
+            fos = mFileOp.newFileOutputStream(f);
 
-            props.store( fos, "## Android Tool: Source of this archive.");  //$NON-NLS-1$
+            props.store(fos, "## Android Tool: Source of this archive.");  //$NON-NLS-1$
 
             return true;
         } catch (IOException e) {
@@ -822,40 +854,42 @@ public class ArchiveInstaller {
         boolean result = true;
 
         // Process sub-folders first
-        File[] srcFiles = srcFolder.listFiles();
+        File[] srcFiles = mFileOp.listFiles(srcFolder);
         if (srcFiles == null) {
             // Source does not exist. That is quite odd.
             return false;
         }
 
-        if (destFolder.isFile()) {
-            if (!destFolder.delete()) {
+        if (mFileOp.isFile(destFolder)) {
+            if (!mFileOp.delete(destFolder)) {
                 // There's already a file in there where we want a directory and
                 // we can't delete it. This is rather unexpected. Just give up on
                 // that folder.
                 return false;
             }
-        } else if (!destFolder.isDirectory()) {
-            destFolder.mkdirs();
+        } else if (!mFileOp.isDirectory(destFolder)) {
+            mFileOp.mkdirs(destFolder);
         }
 
-        // Get all the files and dirs of the current destination. We are not going
-        // to clean up the destination first. Instead we'll copy over and just remove
-        // any remaining files or directories.
-        File[] files = destFolder.listFiles();
+        // Get all the files and dirs of the current destination.
+        // We are not going to clean up the destination first.
+        // Instead we'll copy over and just remove any remaining files or directories.
         Set<File> destDirs = new HashSet<File>();
         Set<File> destFiles = new HashSet<File>();
-        for (File f : files) {
-            if (f.isDirectory()) {
-                destDirs.add(f);
-            } else {
-                destFiles.add(f);
+        File[] files = mFileOp.listFiles(destFolder);
+        if (files != null) {
+            for (File f : files) {
+                if (mFileOp.isDirectory(f)) {
+                    destDirs.add(f);
+                } else {
+                    destFiles.add(f);
+                }
             }
         }
 
         // First restore all source directories.
         for (File dir : srcFiles) {
-            if (dir.isDirectory()) {
+            if (mFileOp.isDirectory(dir)) {
                 File d = new File(destFolder, dir.getName());
                 destDirs.remove(d);
                 if (!restoreFolder(dir, d)) {
@@ -866,16 +900,16 @@ public class ArchiveInstaller {
 
         // Remove any remaining directories not processed above.
         for (File dir : destDirs) {
-            OsHelper.deleteFileOrFolder(dir);
+            mFileOp.deleteFileOrFolder(dir);
         }
 
         // Copy any source files over to the destination.
         for (File file : srcFiles) {
-            if (file.isFile()) {
+            if (mFileOp.isFile(file)) {
                 File f = new File(destFolder, file.getName());
                 destFiles.remove(f);
                 try {
-                    OsHelper.copyFile(file, f);
+                    mFileOp.copyFile(file, f);
                 } catch (IOException e) {
                     result = false;
                 }
@@ -884,7 +918,7 @@ public class ArchiveInstaller {
 
         // Remove any remaining files not processed above.
         for (File file : destFiles) {
-            OsHelper.deleteFileOrFolder(file);
+            mFileOp.deleteFileOrFolder(file);
         }
 
         return result;
