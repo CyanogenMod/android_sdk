@@ -75,7 +75,7 @@ public class AndroidDocumentChange extends DocumentChange {
      * @param document the document this change is working on
      */
     public AndroidDocumentChange(IDocument document) {
-        super(SdkConstants.FN_ANDROID_MANIFEST_XML , document);
+        super(SdkConstants.FN_ANDROID_MANIFEST_XML, document);
     }
 
      @Override
