@@ -16,8 +16,6 @@
 
 package com.android.ant;
 
-import com.android.ant.DependencyGraph.InputPath;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
@@ -113,11 +111,11 @@ public abstract class BaseTask extends Task {
     }
 
     protected void generateDependencyFile(String depFilePath,
-            List<File> inputs, String outputFile) {
-        File file = new File(depFilePath);
+            List<InputPath> inputs, String outputFile) {
+        File depFile = new File(depFilePath);
 
         try {
-            PrintStream ps = new PrintStream(file);
+            PrintStream ps = new PrintStream(depFile);
 
             // write the output file.
             ps.print(outputFile);
@@ -126,11 +124,12 @@ public abstract class BaseTask extends Task {
             //write the input files
             int count = inputs.size();
             for (int i = 0 ; i < count ; i++) {
-                File input = inputs.get(i);
-                if (input.isDirectory()) {
-                    writeContent(ps, input);
+                InputPath input = inputs.get(i);
+                File file = input.getFile();
+                if (file.isDirectory()) {
+                    writeContent(ps, file, input);
                 } else {
-                    ps.print(input.getAbsolutePath());
+                    ps.print(file.getAbsolutePath());
                     ps.println(" \\");
                 }
             }
@@ -141,13 +140,17 @@ public abstract class BaseTask extends Task {
         }
     }
 
-    private void writeContent(PrintStream ps, File input) {
-        File[] files = input.listFiles();
+    private void writeContent(PrintStream ps, File file, InputPath input) {
+        if (input.ignores(file)) {
+            return;
+        }
+
+        File[] files = file.listFiles();
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory()) {
-                    writeContent(ps, f);
-                } else {
+                    writeContent(ps, f, input);
+                } else if (input.ignores(f) == false) {
                     ps.print(f.getAbsolutePath());
                     ps.println(" \\");
                 }

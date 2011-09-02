@@ -20,17 +20,18 @@ import com.android.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
+import com.android.sdklib.build.ApkBuilder.FileEntry;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Path;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
-public class ApkBuilderTask extends Task {
+public class ApkBuilderTask extends BaseTask {
 
     private final static Pattern PATTERN_JAR_EXT = Pattern.compile("^.+\\.jar$",
             Pattern.CASE_INSENSITIVE);
@@ -42,16 +43,29 @@ public class ApkBuilderTask extends Task {
     private boolean mDebugPackaging = false;
     private boolean mDebugSigning = false;
     private boolean mHasCode = true;
-    private String mAbiFilter = null;
 
     private Path mDexPath;
 
     private final ArrayList<Path> mZipList = new ArrayList<Path>();
-    private final ArrayList<Path> mFileList = new ArrayList<Path>();
     private final ArrayList<Path> mSourceList = new ArrayList<Path>();
     private final ArrayList<Path> mJarfolderList = new ArrayList<Path>();
     private final ArrayList<Path> mJarfileList = new ArrayList<Path>();
     private final ArrayList<Path> mNativeList = new ArrayList<Path>();
+
+    private static class SourceFolderInputPath extends InputPath {
+        public SourceFolderInputPath(File file) {
+            super(file);
+        }
+
+        @Override
+        public boolean ignores(File file) {
+            if (file.isDirectory()) {
+                return !ApkBuilder.checkFolderForPackaging(file.getName());
+            } else {
+                return !ApkBuilder.checkFileForPackaging(file.getName());
+            }
+        }
+    }
 
     /**
      * Sets the value of the "outfolder" attribute.
@@ -113,21 +127,6 @@ public class ApkBuilderTask extends Task {
     }
 
     /**
-     * Sets an ABI filter. If non <code>null</code>, then only native libraries matching the given
-     * ABI will be packaged with the APK.
-     * @param abiFilter the ABI to accept (and reject all other). If null or empty string, no ABIs
-     * are rejected. This must be a single ABI name as defined by the Android NDK. For a list
-     * of valid ABI names, see $NDK/docs/CPU-ARCH-ABIS.TXT
-     */
-    public void setAbifilter(String abiFilter) {
-        if (abiFilter != null && abiFilter.length() > 0) {
-            mAbiFilter = abiFilter.trim();
-        } else {
-            mAbiFilter = null;
-        }
-    }
-
-    /**
      * Sets the hascode attribute. Default is true.
      * If set to false, then <dex> and <sourcefolder> nodes are ignored and not processed.
      * @param hasCode the value of the attribute.
@@ -156,17 +155,6 @@ public class ApkBuilderTask extends Task {
         } else {
             throw new BuildException("Only one <dex> inner element can be provided");
         }
-    }
-
-    /**
-     * Returns an object representing a nested <var>file</var> element.
-     */
-    public Object createFile() {
-        System.out.println("WARNING: Using deprecated <file> inner element in ApkBuilderTask." +
-        "Use <dex path=...> instead.");
-        Path path = new Path(getProject());
-        mFileList.add(path);
-        return path;
     }
 
     /**
@@ -236,6 +224,102 @@ public class ApkBuilderTask extends Task {
         }
 
         try {
+            // build list of input files/folders to compute dependencies
+            // add the content of the zip files.
+            List<InputPath> inputPaths = new ArrayList<InputPath>();
+
+            // resource file
+            InputPath resourceInputPath = new InputPath(new File(mOutFolder, mResourceFile));
+            inputPaths.add(resourceInputPath);
+
+            // dex file
+            inputPaths.add(new InputPath(dexFile));
+
+            // zip input files
+            List<File> zipFiles = new ArrayList<File>();
+            for (Path pathList : mZipList) {
+                for (String path : pathList.list()) {
+                    File f =  new File(path);
+                    zipFiles.add(f);
+                    inputPaths.add(new InputPath(f));
+                }
+            }
+
+            // now go through the list of source folders used to add non java files.
+            List<File> sourceFolderList = new ArrayList<File>();
+            if (mHasCode) {
+                for (Path pathList : mSourceList) {
+                    for (String path : pathList.list()) {
+                        File f =  new File(path);
+                        sourceFolderList.add(f);
+                        // because this is a source folder but we only care about non
+                        // java files.
+                        inputPaths.add(new SourceFolderInputPath(f));
+                    }
+                }
+            }
+
+            // now go through the list of jar folders.
+            List<File> jarFileList = new ArrayList<File>();
+            for (Path pathList : mJarfolderList) {
+                for (String path : pathList.list()) {
+                    // it's ok if top level folders are missing
+                    File folder = new File(path);
+                    if (folder.isDirectory()) {
+                        String[] filenames = folder.list(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return PATTERN_JAR_EXT.matcher(name).matches();
+                            }
+                        });
+
+                        for (String filename : filenames) {
+                            File f = new File(folder, filename);
+                            jarFileList.add(f);
+                            inputPaths.add(new InputPath(f));
+                        }
+                    }
+                }
+            }
+
+            // now go through the list of jar files.
+            for (Path pathList : mJarfileList) {
+                for (String path : pathList.list()) {
+                    File f = new File(path);
+                    jarFileList.add(f);
+                    inputPaths.add(new InputPath(f));
+                }
+            }
+
+            // now the native lib folder.
+            List<FileEntry> nativeFileList = new ArrayList<FileEntry>();
+            for (Path pathList : mNativeList) {
+                for (String path : pathList.list()) {
+                    // it's ok if top level folders are missing
+                    File folder = new File(path);
+                    if (folder.isDirectory()) {
+                        List<FileEntry> entries = ApkBuilder.getNativeFiles(folder,
+                                mDebugPackaging);
+                        // add the list to the list of native files and then create an input
+                        // path for each file
+                        nativeFileList.addAll(entries);
+
+                        for (FileEntry entry : entries) {
+                            inputPaths.add(new InputPath(entry.mFile));
+                        }
+                    }
+                }
+            }
+
+            // Finally figure out the path to the dependency file.
+            String depFile = outputFile.getAbsolutePath() + ".d";
+
+            // check dependencies
+            if (initDependencies(depFile, inputPaths) && dependenciesHaveChanged() == false) {
+                System.out.println(
+                        "No changes. No need to create apk.");
+                return;
+            }
+
             if (mDebugSigning) {
                 System.out.println(String.format(
                         "Creating %s and signing it with a debug key...", outputFile.getName()));
@@ -246,7 +330,7 @@ public class ApkBuilderTask extends Task {
 
             ApkBuilder apkBuilder = new ApkBuilder(
                     outputFile,
-                    new File(mOutFolder, mResourceFile),
+                    resourceInputPath.getFile(),
                     dexFile,
                     mDebugSigning ? ApkBuilder.getDebugKeystore() : null,
                     mVerbose ? System.out : null);
@@ -254,27 +338,13 @@ public class ApkBuilderTask extends Task {
 
 
             // add the content of the zip files.
-            for (Path pathList : mZipList) {
-                for (String path : pathList.list()) {
-                    apkBuilder.addZipFile(new File(path));
-                }
-            }
-
-            // add the files that go to the root of the archive (this is deprecated)
-            for (Path pathList : mFileList) {
-                for (String path : pathList.list()) {
-                    File f = new File(path);
-                    apkBuilder.addFile(f, f.getName());
-                }
+            for (File f : zipFiles) {
+                apkBuilder.addZipFile(f);
             }
 
             // now go through the list of file to directly add the to the list.
-            if (mHasCode) {
-                for (Path pathList : mSourceList) {
-                    for (String path : pathList.list()) {
-                        apkBuilder.addSourceFolder(new File(path));
-                    }
-                }
+            for (File f : sourceFolderList) {
+                apkBuilder.addSourceFolder(f);
             }
 
             // now go through the list of jar folders.
@@ -297,27 +367,18 @@ public class ApkBuilderTask extends Task {
             }
 
             // now go through the list of jar files.
-            for (Path pathList : mJarfileList) {
-                for (String path : pathList.list()) {
-                    apkBuilder.addResourcesFromJar(new File(path));
-                }
+            for (File f : jarFileList) {
+                apkBuilder.addResourcesFromJar(f);
             }
 
-            // now the native lib folder.
-            for (Path pathList : mNativeList) {
-                for (String path : pathList.list()) {
-                    // it's ok if top level folders are missing
-                    File folder = new File(path);
-                    if (folder.isDirectory()) {
-                        apkBuilder.addNativeLibraries(folder, mAbiFilter);
-                    }
-                }
-            }
-
+            // and finally the native files
+            apkBuilder.addNativeLibraries(nativeFileList);
 
             // close the archive
             apkBuilder.sealApk();
 
+            // and generate the dependency file
+            generateDependencyFile(depFile, inputPaths, outputFile.getAbsolutePath());
         } catch (DuplicateFileException e) {
             System.err.println(String.format(
                     "Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
@@ -330,5 +391,10 @@ public class ApkBuilderTask extends Task {
         } catch (IllegalArgumentException e) {
             throw new BuildException(e);
         }
+    }
+
+    @Override
+    protected String getExecTaskName() {
+        return "apkbuilder";
     }
 }
