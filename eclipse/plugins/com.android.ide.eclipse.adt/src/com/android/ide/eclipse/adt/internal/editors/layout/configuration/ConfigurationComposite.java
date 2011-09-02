@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout.configuration;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_STYLE;
 
+import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.ResourceFile;
@@ -66,7 +67,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -1727,7 +1727,7 @@ public class ConfigurationComposite extends Composite {
         return getDensity().getDpiValue();
     }
 
-    public Rectangle getScreenBounds() {
+    public Rect getScreenBounds() {
         // get the orientation from the current device config
         ScreenOrientationQualifier qual = mCurrentConfig.getScreenOrientationQualifier();
         ScreenOrientation orientation = ScreenOrientation.PORTRAIT;
@@ -1749,11 +1749,11 @@ public class ConfigurationComposite extends Composite {
         switch (orientation) {
             default:
             case PORTRAIT:
-                return new Rectangle(0, 0, s2, s1);
+                return new Rect(0, 0, s2, s1);
             case LANDSCAPE:
-                return new Rectangle(0, 0, s1, s2);
+                return new Rect(0, 0, s1, s2);
             case SQUARE:
-                return new Rectangle(0, 0, s1, s1);
+                return new Rect(0, 0, s1, s1);
         }
     }
 
