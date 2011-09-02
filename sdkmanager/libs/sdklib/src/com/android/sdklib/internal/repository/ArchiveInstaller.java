@@ -303,7 +303,7 @@ public class ArchiveInstaller {
         FileOutputStream os = null;
         InputStream is = null;
         try {
-            is = UrlOpener.openURL(urlString, monitor);
+            is = UrlOpener.openUrl(urlString, monitor);
             os = new FileOutputStream(tmpFile);
 
             MessageDigest digester = archive.getChecksumType().getMessageDigest();

@@ -27,12 +27,13 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
+import java.io.FileNotFoundException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProxySelector;
@@ -41,7 +42,7 @@ import java.util.Map;
 
 /**
  * This class holds methods for adding URLs management.
- * @see #openURL(String, ITaskMonitor)
+ * @see #openUrl(String, ITaskMonitor)
  */
 public class UrlOpener {
 
@@ -87,17 +88,14 @@ public class UrlOpener {
      * @throws CanceledByUserException Exception thrown if the user cancels the
      *              authentication dialog.
      */
-    @SuppressWarnings("deprecation")
-    static InputStream openURL(String url, ITaskMonitor monitor)
+    static InputStream openUrl(String url, ITaskMonitor monitor)
         throws IOException, CanceledByUserException {
 
-        InputStream stream = null;
-        HttpEntity entity = null;
         Pair<String, String> result = null;
         String realm = null;
 
         // use the simple one
-        DefaultHttpClient httpclient = new DefaultHttpClient();
+        final DefaultHttpClient httpClient = new DefaultHttpClient();
 
         // create local execution context
         HttpContext localContext = new BasicHttpContext();
@@ -105,15 +103,16 @@ public class UrlOpener {
 
         // retrieve local java configured network in case there is the need to
         // authenticate a proxy
-        ProxySelectorRoutePlanner routePlanner = new ProxySelectorRoutePlanner(httpclient
-                .getConnectionManager().getSchemeRegistry(), ProxySelector.getDefault());
-        httpclient.setRoutePlanner(routePlanner);
+        ProxySelectorRoutePlanner routePlanner = new ProxySelectorRoutePlanner(
+                    httpClient.getConnectionManager().getSchemeRegistry(),
+                    ProxySelector.getDefault());
+        httpClient.setRoutePlanner(routePlanner);
 
         boolean trying = true;
         // loop while the response is being fetched
         while (trying) {
             // connect and get status code
-            HttpResponse response = httpclient.execute(httpget, localContext);
+            HttpResponse response = httpClient.execute(httpget, localContext);
             int statusCode = response.getStatusLine().getStatusCode();
 
             // check whether any authentication is required
@@ -171,7 +170,7 @@ public class UrlOpener {
                 // proceed in case there is indeed a user
                 if (user != null && user.length() > 0) {
                     Credentials credentials = new UsernamePasswordCredentials(user, password);
-                    httpclient.getCredentialsProvider().setCredentials(authScope, credentials);
+                    httpClient.getCredentialsProvider().setCredentials(authScope, credentials);
                     trying = true;
                 } else {
                     trying = false;
@@ -179,34 +178,36 @@ public class UrlOpener {
             } else {
                 trying = false;
             }
-            entity = response.getEntity();
+
+            HttpEntity entity = response.getEntity();
+
             if (entity != null) {
-                // in case another pass to the Http Client will be performed,
-                // consume the entity
                 if (trying) {
-                    entity.consumeContent();
-                }
-                // since no pass to the Http Client is needed, retrieve the
-                // entity's content
-                else {
-                    // Use a buffered entity because the stream in which it will
-                    // be transfered, will not be closed later, unexpectedly
+                    // in case another pass to the Http Client will be performed, close the entity.
+                    entity.getContent().close();
+                } else {
+                    // since no pass to the Http Client is needed, retrieve the
+                    // entity's content.
 
-                    // TODO: an unfortunate side effect is that creating the BufferedHttpEntity
-                    // seems to perform the *actual* download (looking at it, there's a buffer
-                    // being filled in there). So the caller doesn't have a chance to produce
-                    // a meaningful callback with download speed/ETA stats.
-                    // Behavior might be different with a slower network.
+                    // Note: don't use something like a BufferedHttpEntity since it would consume
+                    // all content and store it in memory, resulting in an OutOfMemory exception
+                    // on a large download.
 
-                    BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
-                    stream = bufferedEntity.getContent();
+                    return new FilterInputStream(entity.getContent()) {
+                        @Override
+                        public void close() throws IOException {
+                            super.close();
+
+                            // since Http Client is no longer needed, close it
+                            httpClient.getConnectionManager().shutdown();
+                        }
+                    };
                 }
             }
         }
 
-        // since Http Client is no longer needed, close it
-        httpclient.getConnectionManager().shutdown();
-
-        return stream;
+        // We get here if we did not succeed. Callers do not expect a null result.
+        httpClient.getConnectionManager().shutdown();
+        throw new FileNotFoundException(url);
     }
 }
