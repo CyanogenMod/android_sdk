@@ -401,18 +401,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 return allRefProjects;
             }
 
-            // Check to see if we're going to launch or export. If not, we can skip
-            // the packaging and dexing process.
-            if (!args.containsKey(POST_C_REQUESTED)
-                    && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
-                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
-                        Messages.Skip_Post_Compiler);
-                return allRefProjects;
-            } else {
-                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
-                        Messages.Start_Full_Post_Compiler);
-            }
-
             // finished with the common init and tests. Special case of the library.
             if (isLibrary) {
                 // check the jar output file is present, if not create it.
@@ -430,6 +418,18 @@ public class PostCompilerBuilder extends BaseBuilder {
                 }
 
                 return allRefProjects;
+            }
+
+            // Check to see if we're going to launch or export. If not, we can skip
+            // the packaging and dexing process.
+            if (!args.containsKey(POST_C_REQUESTED)
+                    && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
+                        Messages.Skip_Post_Compiler);
+                return allRefProjects;
+            } else {
+                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
+                        Messages.Start_Full_Post_Compiler);
             }
 
             // first thing we do is check that the SDK directory has been setup.
