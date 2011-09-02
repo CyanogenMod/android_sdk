@@ -37,10 +37,7 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         super.tearDown();
     }
 
-    @Override
-    public final void testCreate() {
-        Properties props = createProps();
-
+    private ExtraPackage createExtraPackage(Properties props) {
         ExtraPackage p = (ExtraPackage) ExtraPackage.create(
                 null, //source
                 props,
@@ -54,32 +51,7 @@ public class ExtraPackageTest extends MinToolsPackageTest {
                 Arch.ANY, //archiveArch
                 "/local/archive/path" //archiveOsPath
                 );
-
-        testCreatedExtraPackage(p);
-    }
-
-    @Override
-    public void testSaveProperties() {
-        Properties props = createProps();
-
-        ExtraPackage p = (ExtraPackage) ExtraPackage.create(
-                null, //source
-                props,
-                null, //vendor
-                null, //path
-                -1, //revision
-                null, //license
-                null, //description
-                null, //descUrl
-                Os.ANY, //archiveOs
-                Arch.ANY, //archiveArch
-                "/local/archive/path" //archiveOsPath
-                );
-
-        Properties props2 = new Properties();
-        p.saveProperties(props2);
-
-        assertEquals(props2, props);
+        return p;
     }
 
     @Override
@@ -89,6 +61,7 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         // ExtraPackage properties
         props.setProperty(ExtraPackage.PROP_VENDOR, "vendor");
         props.setProperty(ExtraPackage.PROP_PATH, "the_path");
+        props.setProperty(ExtraPackage.PROP_OLD_PATHS, "old_path1;oldpath2");
         props.setProperty(ExtraPackage.PROP_MIN_API_LEVEL, "11");
         props.setProperty(ExtraPackage.PROP_PROJECT_FILES,
                 "path1.jar" + PS + "dir2/jar 2.jar" + PS + "dir/3/path");
@@ -102,9 +75,82 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         // Package properties
         assertEquals("vendor", p.getVendor());
         assertEquals("the_path", p.getPath());
+        assertEquals("[old_path1, oldpath2]", Arrays.toString(p.getOldPaths()));
         assertEquals(11, p.getMinApiLevel());
         assertEquals(
                 "[path1.jar, dir2/jar 2.jar, dir/3/path]",
                 Arrays.toString(p.getProjectFiles()));
     }
+
+    // ----
+
+    @Override
+    public final void testCreate() {
+        Properties props = createProps();
+        ExtraPackage p = createExtraPackage(props);
+
+        testCreatedExtraPackage(p);
+    }
+
+    @Override
+    public void testSaveProperties() {
+        Properties props = createProps();
+        ExtraPackage p = createExtraPackage(props);
+
+        Properties props2 = new Properties();
+        p.saveProperties(props2);
+
+        assertEquals(props2, props);
+    }
+
+    public void testSameItemAs() {
+        Properties props1 = createProps();
+        ExtraPackage p1 = createExtraPackage(props1);
+        assertTrue(p1.sameItemAs(p1));
+
+        // different vendor, same path
+        Properties props2 = new Properties(props1);
+        props2.setProperty(ExtraPackage.PROP_VENDOR, "vendor2");
+        ExtraPackage p2 = createExtraPackage(props2);
+        assertFalse(p1.sameItemAs(p2));
+        assertFalse(p2.sameItemAs(p1));
+
+        // different vendor, different path
+        props2.setProperty(ExtraPackage.PROP_PATH, "new_path2");
+        p2 = createExtraPackage(props2);
+        assertFalse(p1.sameItemAs(p2));
+        assertFalse(p2.sameItemAs(p1));
+
+        // same vendor, but single path using the old paths from p1
+        Properties props3 = new Properties(props1);
+        props3.setProperty(ExtraPackage.PROP_OLD_PATHS, "");
+        props3.setProperty(ExtraPackage.PROP_PATH, "old_path1");
+        ExtraPackage p3 = createExtraPackage(props3);
+        assertTrue(p1.sameItemAs(p3));
+        assertTrue(p3.sameItemAs(p1));
+
+        props3.setProperty(ExtraPackage.PROP_PATH, "oldpath2");
+        p3 = createExtraPackage(props3);
+        assertTrue(p1.sameItemAs(p3));
+        assertTrue(p3.sameItemAs(p1));
+
+        // same vendor, different old paths but there's a path=>old_path match
+        Properties props4 = new Properties(props1);
+        props4.setProperty(ExtraPackage.PROP_OLD_PATHS, "new_path4;new_path5");
+        props4.setProperty(ExtraPackage.PROP_PATH, "old_path1");
+        ExtraPackage p4 = createExtraPackage(props4);
+        assertTrue(p1.sameItemAs(p4));
+        assertTrue(p4.sameItemAs(p1));
+
+        // same vendor, incompatible paths
+        Properties props5 = new Properties(props1);
+        // and the only match is between old_paths, which doesn't count.
+        props5.setProperty(ExtraPackage.PROP_OLD_PATHS, "old_path1;new_path5");
+        props5.setProperty(ExtraPackage.PROP_PATH, "new_path4");
+        ExtraPackage p5 = createExtraPackage(props5);
+        assertFalse(p1.sameItemAs(p5));
+        assertFalse(p5.sameItemAs(p1));
+    }
+
+
 }

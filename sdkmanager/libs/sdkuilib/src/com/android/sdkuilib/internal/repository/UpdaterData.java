@@ -468,7 +468,7 @@ public class UpdaterData implements IUpdaterData {
                         }
 
                         ArchiveInstaller installer = createArchiveInstaler();
-                        if (installer.install(archive,
+                        if (installer.install(ai,
                                               mOsSdkRoot,
                                               forceHttp,
                                               mSdkManager,
