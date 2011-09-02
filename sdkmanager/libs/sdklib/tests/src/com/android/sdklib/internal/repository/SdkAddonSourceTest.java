@@ -145,7 +145,7 @@ public class SdkAddonSourceTest extends TestCase {
     }
 
     /**
-     * Validate we can still a valid add-on schema version 1
+     * Validate we can still load a valid add-on schema version 1
      */
     public void testLoadOldXml_1() throws Exception {
         InputStream xmlStream = getTestResource("/com/android/sdklib/testdata/addon_sample_1.xml");
@@ -218,7 +218,7 @@ public class SdkAddonSourceTest extends TestCase {
     }
 
     /**
-     * Validate we can still a valid add-on schema version 1
+     * Validate we can still load a valid add-on schema version 2
      */
     public void testLoadOldXml_2() throws Exception {
         InputStream xmlStream = getTestResource("/com/android/sdklib/testdata/addon_sample_2.xml");
@@ -306,6 +306,115 @@ public class SdkAddonSourceTest extends TestCase {
                   "SDK/extras/g/usb_driver, " +
                   "SDK/extras/vendor0000005f/extra0000005f]").replace('/', File.separatorChar),
                 Arrays.toString(extraInstall.toArray()));
+    }
+
+    /**
+     * Validate we can still load a valid add-on schema version 3
+     */
+    public void testLoadOldXml_3() throws Exception {
+        InputStream xmlStream = getTestResource("/com/android/sdklib/testdata/addon_sample_3.xml");
+
+        // guess the version from the XML document
+        int version = mSource._getXmlSchemaVersion(xmlStream);
+        assertEquals(3, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://" + SdkAddonConstants.URL_DEFAULT_FILENAME;
+
+        String uri = mSource._validateXml(xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkAddonConstants.getSchemaUri(3), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mSource._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the packages
+        assertTrue(mSource._parsePackages(doc, uri, monitor));
+
+        assertEquals("Found My First add-on by John Doe, Android API 1, revision 1\n" +
+                     "Found My Second add-on by John Deer, Android API 2, revision 42\n" +
+                     "Found This add-on has no libraries by Joe Bar, Android API 4, revision 3\n" +
+                     "Found G USB Driver package, revision 43 (Obsolete)\n" +
+                     "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
+                     "Found Unkown Extra package, revision 2 (Obsolete)\n",
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+
+        // check the packages we found... we expected to find 6 packages with each at least
+        // one archive.
+        // Note the order doesn't necessary match the one from the
+        // assertEquald(getCapturedVerboseLog) because packages are sorted using the
+        // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
+        Package[] pkgs = mSource.getPackages();
+
+        assertEquals(6, pkgs.length);
+        for (Package p : pkgs) {
+            assertTrue(p.getArchives().length >= 1);
+        }
+
+        // Check the layoutlib of the platform packages.
+        ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
+        for (Package p : pkgs) {
+            if (p instanceof AddonPackage) {
+                layoutlibVers.add(((AddonPackage) p).getLayoutlibVersion());
+            }
+        }
+        assertEquals(
+                 "[Pair [first=3, second=42], " +         // for #3 "This add-on has no libraries"
+                 "Pair [first=0, second=0], " +           // for #2 "My Second add-on"
+                 "Pair [first=5, second=0]]",            // for #1 "My First add-on"
+                Arrays.toString(layoutlibVers.toArray()));
+
+
+        // Check the extra packages: path, vendor, install folder, old-paths
+
+        final String osSdkPath = "SDK";
+        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+
+        ArrayList<String> extraPaths   = new ArrayList<String>();
+        ArrayList<String> extraVendors = new ArrayList<String>();
+        ArrayList<File>   extraInstall = new ArrayList<File>();
+        ArrayList<ArrayList<String>> extraFilePaths = new ArrayList<ArrayList<String>>();
+        for (Package p : pkgs) {
+            if (p instanceof ExtraPackage) {
+                ExtraPackage ep = (ExtraPackage) p;
+                // combine path and old-paths in the form "path [old_path1, old_path2]"
+                extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
+                extraVendors.add(ep.getVendor());
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+
+                ArrayList<String> filePaths = new ArrayList<String>();
+                for (String filePath : ep.getProjectFiles()) {
+                    filePaths.add(filePath);
+                }
+                extraFilePaths.add(filePaths);
+            }
+        }
+        assertEquals(
+                "[extra_api_dep [path1, old_path2, oldPath3], " +
+                 "usb_driver [], " +
+                 "extra0000005f []]",
+                Arrays.toString(extraPaths.toArray()));
+        assertEquals(
+                "[android_vendor, " +
+                 "g, " +
+                 "vendor0000005f]",
+                Arrays.toString(extraVendors.toArray()));
+        assertEquals(
+                ("[SDK/extras/android_vendor/extra_api_dep, " +
+                  "SDK/extras/g/usb_driver, " +
+                  "SDK/extras/vendor0000005f/extra0000005f]").replace('/', File.separatorChar),
+                Arrays.toString(extraInstall.toArray()));
+        assertEquals(
+                "[[v8/veggies_8.jar, root.jar, dir1/dir 2 with space/mylib.jar], " +
+                 "[], " +
+                 "[]]",
+                Arrays.toString(extraFilePaths.toArray()));
     }
 
     /**

@@ -533,6 +533,116 @@ public class SdkRepoSourceTest extends TestCase {
     }
 
     /**
+     * Validate what we can load from repository in schema version 5
+     */
+    public void testLoadXml_5() throws Exception {
+        InputStream xmlStream = getTestResource(
+                    "/com/android/sdklib/testdata/repository_sample_5.xml");
+
+        // guess the version from the XML document
+        int version = mSource._getXmlSchemaVersion(xmlStream);
+        assertEquals(5, version);
+
+        Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
+        String[] validationError = new String[] { null };
+        String url = "not-a-valid-url://" + SdkRepoConstants.URL_DEFAULT_FILENAME;
+
+        String uri = mSource._validateXml(xmlStream, url, version, validationError, validatorFound);
+        assertEquals(Boolean.TRUE, validatorFound[0]);
+        assertEquals(null, validationError[0]);
+        assertEquals(SdkRepoConstants.getSchemaUri(5), uri);
+
+        // Validation was successful, load the document
+        MockMonitor monitor = new MockMonitor();
+        Document doc = mSource._getDocument(xmlStream, monitor);
+        assertNotNull(doc);
+
+        // Get the packages
+        assertTrue(mSource._parsePackages(doc, uri, monitor));
+
+        assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
+                    "Found Documentation for Android SDK, API 1, revision 1\n" +
+                    "Found SDK Platform Android 1.1, API 2, revision 12\n" +
+                    "Found SDK Platform Android Pastry Preview, revision 3\n" +
+                    "Found Android SDK Tools, revision 1\n" +
+                    "Found Documentation for Android SDK, API 2, revision 42\n" +
+                    "Found Android SDK Tools, revision 42\n" +
+                    "Found Android SDK Platform-tools, revision 3\n" +
+                    "Found A USB Driver package, revision 43 (Obsolete)\n" +
+                    "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
+                    "Found Samples for SDK API 14, revision 24 (Obsolete)\n",
+                monitor.getCapturedVerboseLog());
+        assertEquals("", monitor.getCapturedLog());
+        assertEquals("", monitor.getCapturedErrorLog());
+
+        // check the packages we found... we expected to find 13 packages with each at least
+        // one archive.
+        // Note the order doesn't necessary match the one from the
+        // assertEquald(getCapturedVerboseLog) because packages are sorted using the
+        // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
+        Package[] pkgs = mSource.getPackages();
+
+        assertEquals(11, pkgs.length);
+        for (Package p : pkgs) {
+            assertTrue(p.getArchives().length >= 1);
+        }
+
+        // Check the layoutlib of the platform packages.
+        ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
+        for (Package p : pkgs) {
+            if (p instanceof PlatformPackage) {
+                layoutlibVers.add(((PlatformPackage) p).getLayoutlibVersion());
+            }
+        }
+        assertEquals(
+                "[Pair [first=1, second=0], " +         // platform API 5 preview
+                 "Pair [first=5, second=31415], " +     // platform API 2
+                 "Pair [first=5, second=0]]",           // platform API 1
+                Arrays.toString(layoutlibVers.toArray()));
+
+        // Check the extra packages path, vendor, install folder, project-files, old-paths
+
+        final String osSdkPath = "SDK";
+        final SdkManager sdkManager = new MockEmptySdkManager(osSdkPath);
+
+        ArrayList<String> extraPaths    = new ArrayList<String>();
+        ArrayList<String> extraVendors  = new ArrayList<String>();
+        ArrayList<File>   extraInstall  = new ArrayList<File>();
+        ArrayList<ArrayList<String>> extraFilePaths = new ArrayList<ArrayList<String>>();
+        for (Package p : pkgs) {
+            if (p instanceof ExtraPackage) {
+                ExtraPackage ep = (ExtraPackage) p;
+                // combine path and old-paths in the form "path [old_path1, old_path2]"
+                extraPaths.add(ep.getPath() + " " + Arrays.toString(ep.getOldPaths()));
+                extraVendors.add(ep.getVendor());
+                extraInstall.add(ep.getInstallFolder(osSdkPath, sdkManager));
+
+                ArrayList<String> filePaths = new ArrayList<String>();
+                for (String filePath : ep.getProjectFiles()) {
+                    filePaths.add(filePath);
+                }
+                extraFilePaths.add(filePaths);
+            }
+        }
+        assertEquals(
+                "[extra_api_dep [path1, old_path2, oldPath3], " +
+                 "usb_driver []]",
+                Arrays.toString(extraPaths.toArray()));
+        assertEquals(
+                "[android_vendor, " +
+                 "a]",
+                Arrays.toString(extraVendors.toArray()));
+        assertEquals(
+                ("[SDK/extras/android_vendor/extra_api_dep, " +
+                  "SDK/extras/a/usb_driver]").replace('/', File.separatorChar),
+                Arrays.toString(extraInstall.toArray()));
+        assertEquals(
+                "[[v8/veggies_8.jar, readme.txt, dir1/dir 2 with space/mylib.jar], " +
+                 "[]]",
+                Arrays.toString(extraFilePaths.toArray()));
+    }
+
+    /**
      * Returns an SdkLib file resource as a {@link ByteArrayInputStream},
      * which has the advantage that we can use {@link InputStream#reset()} on it
      * at any time to read it multiple times.
