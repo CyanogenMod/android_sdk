@@ -157,7 +157,7 @@ public final class ApkBuilderMain {
             }
 
             for (File nativeFolder : nativeFolders) {
-                builder.addNativeLibraries(nativeFolder, null /*abiFilter*/);
+                builder.addNativeLibraries(nativeFolder);
             }
 
             // seal the apk

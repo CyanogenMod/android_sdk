@@ -608,8 +608,7 @@ public final class ApkBuilder implements IArchiveBuilder {
      * This may or may not copy gdbserver into the apk based on whether the debug mode is set.
      *
      * @param nativeFolder the native folder.
-     * @param abiFilter an optional filter. If not null, then only the matching ABI is included in
-     * the final archive
+     *
      * @throws ApkCreationException if an error occurred
      * @throws SealedApkException if the APK is already sealed.
      * @throws DuplicateFileException if a file conflicts with another already added to the APK
@@ -617,7 +616,7 @@ public final class ApkBuilder implements IArchiveBuilder {
      *
      * @see #setDebugMode(boolean)
      */
-    public void addNativeLibraries(File nativeFolder, String abiFilter)
+    public void addNativeLibraries(File nativeFolder)
             throws ApkCreationException, SealedApkException, DuplicateFileException {
         if (mIsSealed) {
             throw new SealedApkException("APK is already sealed");
@@ -634,20 +633,11 @@ public final class ApkBuilder implements IArchiveBuilder {
 
         File[] abiList = nativeFolder.listFiles();
 
-        if (abiFilter != null) {
-            verbosePrintln("Native folder: %1$s with filter %2$ss", nativeFolder, abiFilter);
-        } else {
-            verbosePrintln("Native folder: %s", nativeFolder);
-        }
+        verbosePrintln("Native folder: %s", nativeFolder);
 
         if (abiList != null) {
             for (File abi : abiList) {
                 if (abi.isDirectory()) { // ignore files
-
-                    // check the abi filter and reject all other ABIs
-                    if (abiFilter != null && abiFilter.equals(abi.getName()) == false) {
-                        continue;
-                    }
 
                     File[] libs = abi.listFiles();
                     if (libs != null) {
@@ -675,6 +665,78 @@ public final class ApkBuilder implements IArchiveBuilder {
             }
         }
     }
+
+    public void addNativeLibraries(List<FileEntry> entries) throws SealedApkException,
+            DuplicateFileException, ApkCreationException {
+        if (mIsSealed) {
+            throw new SealedApkException("APK is already sealed");
+        }
+
+        for (FileEntry entry : entries) {
+            try {
+                doAddFile(entry.mFile, entry.mPath);
+            } catch (IOException e) {
+                throw new ApkCreationException(e, "Failed to add %s", entry.mFile);
+            }
+        }
+    }
+
+    public static final class FileEntry {
+        public final File mFile;
+        public final String mPath;
+
+        FileEntry(File file, String path) {
+            mFile = file;
+            mPath = path;
+        }
+    }
+
+    public static List<FileEntry> getNativeFiles(File nativeFolder, boolean debugMode)
+            throws ApkCreationException  {
+
+        if (nativeFolder.isDirectory() == false) {
+            // not a directory? check if it's a file or doesn't exist
+            if (nativeFolder.exists()) {
+                throw new ApkCreationException("%s is not a folder", nativeFolder);
+            } else {
+                throw new ApkCreationException("%s does not exist", nativeFolder);
+            }
+        }
+
+        List<FileEntry> files = new ArrayList<FileEntry>();
+
+        File[] abiList = nativeFolder.listFiles();
+
+        if (abiList != null) {
+            for (File abi : abiList) {
+                if (abi.isDirectory()) { // ignore files
+
+                    File[] libs = abi.listFiles();
+                    if (libs != null) {
+                        for (File lib : libs) {
+                            // only consider files that are .so or, if in debug mode, that
+                            // are gdbserver executables
+                            if (lib.isFile() &&
+                                    (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches() ||
+                                            (debugMode &&
+                                                    SdkConstants.FN_GDBSERVER.equals(
+                                                            lib.getName())))) {
+                                String path =
+                                    SdkConstants.FD_APK_NATIVE_LIBS + "/" +
+                                    abi.getName() + "/" + lib.getName();
+
+                                files.add(new FileEntry(lib, path));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return files;
+    }
+
+
 
     /**
      * Seals the APK, and signs it if necessary.
@@ -873,7 +935,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      * @return true if the file should be packaged as standard java resources.
      */
     public static boolean checkFileForPackaging(String fileName, String extension) {
-        if (fileName.charAt(0) == '.') { // ignore hidden files.
+        // ignore hidden files and backup files
+        if (fileName.charAt(0) == '.' || fileName.charAt(fileName.length()-1) == '~') {
             return false;
         }
 
@@ -887,9 +950,6 @@ public final class ApkBuilder implements IArchiveBuilder {
             "scc".equalsIgnoreCase(extension) == false &&           // VisualSourceSafe
             "swp".equalsIgnoreCase(extension) == false &&           // vi swap file
             "package.html".equalsIgnoreCase(fileName) == false &&   // Javadoc
-            "overview.html".equalsIgnoreCase(fileName) == false &&  // Javadoc
-            ".cvsignore".equalsIgnoreCase(fileName) == false &&     // CVS
-            ".DS_Store".equals(fileName) == false &&                // Mac resources
-            fileName.charAt(fileName.length()-1) != '~';            // Backup files
+            "overview.html".equalsIgnoreCase(fileName) == false;    // Javadoc
     }
 }
