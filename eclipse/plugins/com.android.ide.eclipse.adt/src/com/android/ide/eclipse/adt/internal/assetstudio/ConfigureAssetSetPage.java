@@ -28,6 +28,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -985,6 +987,11 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         options.sourceImage = sourceImage;
+
+        IProject project = wizard.getProject();
+        Pair<Integer, Integer> v = ManifestInfo.computeSdkVersions(project);
+        options.minSdk = v.getFirst();
+
         String baseName = wizard.getBaseName();
         generator.generate(null, categoryMap, this, options, baseName);
 

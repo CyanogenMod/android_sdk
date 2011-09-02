@@ -47,8 +47,12 @@ public abstract class GraphicGenerator {
      * Options used for all generators.
      */
     public static class Options {
+        /** Minimum version (API level) of the SDK to generate icons for */
+        public int minSdk = 1;
+
         /** Source image to use as a basis for the icon */
         public BufferedImage sourceImage;
+
         /** The density to generate the icon with */
         public Density density = Density.XHIGH;
     }

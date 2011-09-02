@@ -75,8 +75,7 @@ public class NotificationIconGenerator extends GraphicGenerator {
         } else if (notificationOptions.version == Version.V11) {
             Util.drawCenterInside(g2, options.sourceImage, targetRect);
             Util.drawEffects(g, tempImage, 0, 0, new Effect[] {
-                    new FillEffect(
-                            Color.WHITE),
+                    new FillEffect(Color.WHITE),
             });
         } else {
             assert notificationOptions.version == Version.V9;
@@ -106,20 +105,28 @@ public class NotificationIconGenerator extends GraphicGenerator {
 
     @Override
     public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
-            GraphicGeneratorContext context, Options options, String name) {
-        for (Version version : Version.values()) {
-            ((NotificationOptions) options).version = version;
-            super.generate(version.getDisplayName(), categoryMap, context, options, name);
+            GraphicGeneratorContext context, Options baseOptions, String name) {
+        NotificationOptions options = (NotificationOptions) baseOptions;
+        if (options.minSdk < 9) {
+            options.version = Version.OLDER;
+            super.generate(options.version.getDisplayName(), categoryMap, context, options, name);
         }
+        if (options.minSdk < 11) {
+            options.version = Version.V9;
+            super.generate(options.version.getDisplayName(), categoryMap, context, options, name);
+        }
+        options.version = Version.V11;
+        super.generate(options.minSdk < 11 ? options.version.getDisplayName() : null,
+                categoryMap, context, options, name);
     }
 
     @Override
     protected String getIconFolder(Options options) {
         String folder = super.getIconFolder(options);
         Version version = ((NotificationOptions) options).version;
-        if (version == Version.V11) {
+        if (version == Version.V11 && options.minSdk < 11) {
             return folder + "-v11"; //$NON-NLS-1$
-        } else if (version == Version.V9) {
+        } else if (version == Version.V9 && options.minSdk < 9) {
             return folder + "-v9"; //$NON-NLS-1$
         } else {
             return folder;

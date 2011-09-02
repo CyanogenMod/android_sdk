@@ -44,15 +44,16 @@ import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor;
-import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ChangeFlags;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutReloadMonitor.ILayoutReloadListener;
+import com.android.ide.eclipse.adt.internal.editors.layout.ProjectCallback;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
-import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite.IConfigListener;
+import com.android.ide.eclipse.adt.internal.editors.layout.configuration.LayoutCreatorDialog;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -62,15 +63,12 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
-import com.android.ide.eclipse.adt.io.IFolderWrapper;
-import com.android.io.IAbstractFile;
-import com.android.io.StreamException;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.xml.AndroidManifest;
+import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -146,8 +144,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.xpath.XPathExpressionException;
 
 /**
  * Graphical layout editor part, version 2.
@@ -2365,39 +2361,9 @@ public class GraphicalEditorPart extends EditorPart
         int oldMinSdkVersion = mMinSdkVersion;
         int oldTargetSdkVersion = mTargetSdkVersion;
 
-        IAbstractFile manifestFile = AndroidManifest.getManifest(
-                new IFolderWrapper(mEditedFile.getProject()));
-
-        if (manifestFile != null) {
-            try {
-                Object value = AndroidManifest.getMinSdkVersion(manifestFile);
-                mMinSdkVersion = 1; // Default case if missing
-                if (value instanceof Integer) {
-                    mMinSdkVersion = ((Integer) value).intValue();
-                } else if (value instanceof String) {
-                    // handle codename, only if we can resolve it.
-                    if (Sdk.getCurrent() != null) {
-                        IAndroidTarget target = Sdk.getCurrent().getTargetFromHashString(
-                                "android-" + value); //$NON-NLS-1$
-                        if (target != null) {
-                            // codename future API level is current api + 1
-                            mMinSdkVersion = target.getVersion().getApiLevel() + 1;
-                        }
-                    }
-                }
-
-                Integer i = AndroidManifest.getTargetSdkVersion(manifestFile);
-                if (i == null) {
-                    mTargetSdkVersion = mMinSdkVersion;
-                } else {
-                    mTargetSdkVersion = i.intValue();
-                }
-            } catch (XPathExpressionException e) {
-                // do nothing we'll use 1 below.
-            } catch (StreamException e) {
-                // do nothing we'll use 1 below.
-            }
-        }
+        Pair<Integer, Integer> v = ManifestInfo.computeSdkVersions(mEditedFile.getProject());
+        mMinSdkVersion = v.getFirst();
+        mTargetSdkVersion = v.getSecond();
 
         return oldMinSdkVersion != mMinSdkVersion || oldTargetSdkVersion != mTargetSdkVersion;
     }
