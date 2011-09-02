@@ -45,23 +45,37 @@ public class DependencyGraph {
     private File mFirstPrereq = null;
     private boolean mMissingDepFile = false;
     private long mDepFileLastModified;
-    private final List<File> mNewInputs;
+    private final List<InputPath> mNewInputs;
 
-    public DependencyGraph(String dependencyFilePath, List<File> newInputPaths) {
+    public static class InputPath {
+        File mFile;
+        /**
+         * A set of extensions. Only files with an extension in this set will
+         * be considered for a modification check. All deleted/created files will still be
+         * checked. If this is null, all files will be checked for modification date
+         */
+        Set<String> mExtensionsToCheck;
+
+        public InputPath(File file, Set<String> extensions) {
+            mFile = file;
+            mExtensionsToCheck = extensions;
+        }
+    }
+
+
+    public DependencyGraph(String dependencyFilePath, List<InputPath> newInputPaths) {
         mNewInputs = newInputPaths;
         parseDependencyFile(dependencyFilePath);
     }
 
     /**
      * Check all the dependencies to see if anything has changed.
-     * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
-     *        be considered for a modification check. All deleted/created files will still be
-     *        checked. If this is null, all files will be checked for modification date
+     *
      * @param printStatus will print to {@link System#out} the dependencies status.
      * @return true if new prerequisites have appeared, target files are missing or if
      *         prerequisite files have been modified since the last target generation.
      */
-    public boolean dependenciesHaveChanged(Set<String> extensionsToCheck, boolean printStatus) {
+    public boolean dependenciesHaveChanged(boolean printStatus) {
         // If no dependency file has been set up, then we'll just return true
         // if we have a dependency file, we'll check to see what's been changed
         if (mMissingDepFile) {
@@ -77,11 +91,11 @@ public class DependencyGraph {
             return true;
         }
 
-        // get the timestamp of the oldest target.
+        // get the time stamp of the oldest target.
         long oldestTarget = getOutputLastModified();
 
         // first look through the input folders and look for new files or modified files.
-        DependencyStatus status = checkInputs(extensionsToCheck, oldestTarget);
+        DependencyStatus status = checkInputs(oldestTarget);
 
         // this can't find missing files. This is done later.
         switch (status) {
@@ -100,7 +114,7 @@ public class DependencyGraph {
         }
 
         // now do a full check on the remaining files.
-        status = checkPrereqFiles(extensionsToCheck, oldestTarget);
+        status = checkPrereqFiles(oldestTarget);
         // this can't find new input files. This is done above.
         switch (status) {
             case ERROR:
@@ -214,26 +228,23 @@ public class DependencyGraph {
      * If a change is found, this will return immediatly with either
      * {@link DependencyStatus#NEW_FILE} or {@link DependencyStatus#UPDATED_FILE}.
      *
-     * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
-     *        be considered for a modification check. All deleted/created files will still be
-     *        checked. If this is null, all files will be checked for modification date
      * @param oldestTarget the timestamp of the oldest output file to compare against.
      *
      * @return the status of the file in the watched folders.
      *
      */
-    private DependencyStatus checkInputs(Set<String> extensionsToCheck, long oldestTarget) {
+    private DependencyStatus checkInputs(long oldestTarget) {
         if (mNewInputs != null) {
-            for (File input : mNewInputs) {
-                if (input.isDirectory()) {
-                    DependencyStatus status = checkInputFolder(input, extensionsToCheck,
-                            oldestTarget);
+            for (InputPath input : mNewInputs) {
+                if (input.mFile.isDirectory()) {
+                    DependencyStatus status = checkInputFolder(input.mFile,
+                            input.mExtensionsToCheck, oldestTarget);
                     if (status != DependencyStatus.NONE) {
                         return status;
                     }
-                } else if (input.isFile()) {
-                    DependencyStatus status = checkInputFile(input, extensionsToCheck,
-                            oldestTarget);
+                } else if (input.mFile.isFile()) {
+                    DependencyStatus status = checkInputFile(input.mFile,
+                            input.mExtensionsToCheck, oldestTarget);
                     if (status != DependencyStatus.NONE) {
                         return status;
                     }
@@ -253,7 +264,7 @@ public class DependencyGraph {
      * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
      *        be considered for a modification check. All deleted/created files will still be
      *        checked. If this is null, all files will be checked for modification date
-     * @param oldestTarget the timestamp of the oldest output file to compare against.
+     * @param oldestTarget the time stamp of the oldest output file to compare against.
      *
      * @return the status of the file in the folder.
      */
@@ -308,13 +319,11 @@ public class DependencyGraph {
      * Check all the prereq files we know about to make sure they're still there, or that they
      * haven't been modified since the last build.
      *
-     * @param extensionsToCheck a set of extensions. Only files with an extension in this set will
-     *        be considered for a modification check. All deleted/created files will still be
-     *        checked. If this is null, all files will be checked for modification date
+     * @param oldestTarget the time stamp of the oldest output file to compare against.
      *
      * @return the status of the files
      */
-    private DependencyStatus checkPrereqFiles(Set<String> extensionsToCheck, long oldestTarget) {
+    private DependencyStatus checkPrereqFiles(long oldestTarget) {
         // Loop through our prereq files and make sure they still exist
         for (File prereq : mPrereqs) {
             if (prereq.exists() == false) {
@@ -323,6 +332,18 @@ public class DependencyGraph {
 
             // check the time stamp on this file if it's a file we care about based on the
             // list of extensions to check.
+            // to get the extensions to check, we look in which input folder this file is.
+            Set<String> extensionsToCheck = null;
+            if (mNewInputs != null) {
+                String filePath = prereq.getAbsolutePath();
+                for (InputPath input : mNewInputs) {
+                    if (filePath.startsWith(input.mFile.getAbsolutePath())) {
+                        extensionsToCheck = input.mExtensionsToCheck;
+                        break;
+                    }
+                }
+            }
+
             if (extensionsToCheck == null || extensionsToCheck.contains(getExtension(prereq))) {
                 if (prereq.lastModified() > oldestTarget) {
                     return DependencyStatus.UPDATED_FILE;

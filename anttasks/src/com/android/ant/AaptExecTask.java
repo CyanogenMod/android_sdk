@@ -16,6 +16,8 @@
 
 package com.android.ant;
 
+import com.android.ant.DependencyGraph.InputPath;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
@@ -23,6 +25,8 @@ import org.apache.tools.ant.types.Path;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Task to execute aapt.
@@ -324,24 +328,24 @@ public final class AaptExecTask extends BaseTask {
         Object libResRef = taskProject.getReference(mProjectLibrariesResName);
 
         // Set up our input paths that matter for dependency checks
-        ArrayList<File> inputPaths = new ArrayList<File>();
+        ArrayList<File> paths = new ArrayList<File>();
 
         // the project res folder is an input path of course
         for (Path pathList : mResources) {
             for (String path : pathList.list()) {
-                inputPaths.add(new File(path));
+                paths.add(new File(path));
             }
         }
 
         // as is its AndroidManifest.xml
         if (mManifest != null) {
-            inputPaths.add(new File(mManifest));
+            paths.add(new File(mManifest));
         }
 
         // and if libraries exist, their res folders folders too.
         if (libResRef instanceof Path) {
             for (String path : ((Path)libResRef).list()) {
-                inputPaths.add(new File(path));
+                paths.add(new File(path));
             }
         }
 
@@ -349,12 +353,16 @@ public final class AaptExecTask extends BaseTask {
         if (!generateRClass) {
             File assetsDir = new File(mAssets);
             if (mAssets != null && assetsDir.isDirectory()) {
-                inputPaths.add(assetsDir);
+                paths.add(assetsDir);
             }
         }
 
         // Now we figure out what we need to do
         if (generateRClass) {
+            // in this case we only want to run aapt if an XML file was touched, or if any
+            // file is added/removed
+            List<InputPath> inputPaths = getInputPaths(paths, Collections.singleton("xml"));
+
             // Check to see if our dependencies have changed. If not, then skip
             if (initDependencies(mRFolder + File.separator + "R.java.d", inputPaths)
                               && dependenciesHaveChanged() == false) {
@@ -364,6 +372,10 @@ public final class AaptExecTask extends BaseTask {
                 System.out.println("Generating resource IDs...");
             }
         } else {
+            // in this case we want to run aapt if any file updated/removed/added in any of the
+            // input path
+            List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/);
+
             // Find our dependency file. It should have the same name as our target .ap_ but
             // with a .d extension
             String dependencyFilePath = mApkFolder + File.separator + mApkName;
