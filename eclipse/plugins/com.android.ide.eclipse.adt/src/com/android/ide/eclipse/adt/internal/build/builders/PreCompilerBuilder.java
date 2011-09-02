@@ -30,6 +30,8 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.FixLaunchConfig;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.XmlErrorHandler.BasicXmlErrorListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.IdeScanningContext;
+import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -255,15 +257,39 @@ public class PreCompilerBuilder extends BaseBuilder {
                 } else {
                     dv = new PreCompilerDeltaVisitor(this, sourceFolderPathList, mProcessors);
                     delta.accept(dv);
-                    // Notify the ResourceManager:
-                    ResourceManager resManager = ResourceManager.getInstance();
-                    resManager.processDelta(delta);
 
-                    // Check whether this project or its dependencies (libraries) have
-                    // resources that need compilation
-                    mMustCompileResources |= resManager.projectNeedsIdGeneration(project);
                     // Check to see if Manifest.xml, Manifest.java, or R.java have changed:
                     mMustCompileResources |= dv.getCompileResources();
+
+                    // Notify the ResourceManager:
+                    ResourceManager resManager = ResourceManager.getInstance();
+                    ProjectResources projectResources = resManager.getProjectResources(project);
+
+                    if (ResourceManager.isAutoBuilding()) {
+                        IdeScanningContext context = new IdeScanningContext(projectResources, project);
+
+                        resManager.processDelta(delta, context);
+
+                        // Check whether this project or its dependencies (libraries) have
+                        // resources that need compilation
+                        if (context.needsFullAapt()) {
+                            mMustCompileResources = true;
+
+                            assert context.getAaptRequestedProjects() != null &&
+                                    context.getAaptRequestedProjects().size() == 1 &&
+                                    context.getAaptRequestedProjects().iterator().next() == project;
+
+                            // Must also call markAaptRequested on the project to not just
+                            // store "aapt required" on this project, but also on any projects
+                            // depending on this project if it's a library project
+                            ResourceManager.markAaptRequested(project);
+                        }
+
+                        // Update error markers in the source editor
+                        if (!mMustCompileResources) {
+                            context.updateMarkers(false /* async */);
+                        }
+                    } // else: already processed the deltas in ResourceManager's IRawDeltaListener
 
                     for (SourceProcessor processor : mProcessors) {
                         processor.doneVisiting(project);
@@ -275,8 +301,12 @@ public class PreCompilerBuilder extends BaseBuilder {
                 }
             }
 
+            // Has anyone marked this project as needing aapt? Typically done when
+            // one of the library projects this project depends on has changed
+            mMustCompileResources |= ResourceManager.isAaptRequested(project);
+
             // store the build status in the persistent storage
-            saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , mMustCompileResources);
+            saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
 
             // if there was some XML errors, we just return w/o doing
             // anything since we've put some markers in the files anyway.
@@ -456,7 +486,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     processor.prepareFullBuild(project);
                 }
 
-                saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , mMustCompileResources);
+                saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
             }
 
             // run the source processors
@@ -474,7 +504,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             if ((processorStatus & SourceProcessor.COMPILE_STATUS_RES) != 0) {
                 mMustCompileResources = true;
                 // save the current state before attempting the compilation
-                saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , mMustCompileResources);
+                saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
             }
 
             // handle the resources, after the processors are run since some (renderscript)
@@ -660,6 +690,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             String osResPath, String osManifestPath, IFolder packageFolder,
             ArrayList<IFolder> libResFolders, String libraryPackages, boolean isLibrary)
             throws AbortBuildException {
+
         // We actually need to delete the manifest.java as it may become empty and
         // in this case aapt doesn't generate an empty one, but instead doesn't
         // touch it.
@@ -793,6 +824,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             // run it again, unless there's a new resource change.
             saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES,
                     mMustCompileResources = false);
+            ResourceManager.clearAaptRequest(project);
         }
     }
 

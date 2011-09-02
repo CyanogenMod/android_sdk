@@ -47,7 +47,7 @@ public final class ResourceFolder implements Configurable {
      * @param type The type of the folder
      * @param config The configuration of the folder
      * @param folder The associated {@link IAbstractFolder} object.
-     * @param isFrameworkRepository
+     * @param repository The associated {@link ResourceRepository}
      */
     protected ResourceFolder(ResourceFolderType type, FolderConfiguration config,
             IAbstractFolder folder, ResourceRepository repository) {
@@ -59,12 +59,15 @@ public final class ResourceFolder implements Configurable {
 
     /**
      * Processes a file and adds it to its parent folder resource.
+     *
      * @param file the underlying resource file.
-     * @param folder the parent of the resource file.
      * @param kind the file change kind.
+     * @param context a context object with state for the current update, such
+     *            as a place to stash errors encountered
      * @return the {@link ResourceFile} that was created.
      */
-    public ResourceFile processFile(IAbstractFile file, ResourceDeltaKind kind) {
+    public ResourceFile processFile(IAbstractFile file, ResourceDeltaKind kind,
+            ScanningContext context) {
         // look for this file if it's already been created
         ResourceFile resFile = getFile(file);
 
@@ -84,7 +87,7 @@ public final class ResourceFolder implements Configurable {
 
                 if (types.size() == 1) {
                     resFile = new SingleResourceFile(file, this);
-                } else if (types.contains(ResourceType.LAYOUT)){
+                } else if (types.contains(ResourceType.LAYOUT)) {
                     resFile = new IdGeneratingResourceFile(file, this, ResourceType.LAYOUT);
                 } else if (types.contains(ResourceType.MENU)) {
                     resFile = new IdGeneratingResourceFile(file, this, ResourceType.MENU);
@@ -92,16 +95,16 @@ public final class ResourceFolder implements Configurable {
                     resFile = new MultiResourceFile(file, this);
                 }
 
-                resFile.load();
+                resFile.load(context);
 
                 // add it to the folder
                 addFile(resFile);
             }
         } else {
             if (kind == ResourceDeltaKind.REMOVED) {
-                removeFile(resFile);
+                removeFile(resFile, context);
             } else {
-                resFile.update();
+                resFile.update(context);
             }
         }
 
@@ -122,15 +125,15 @@ public final class ResourceFolder implements Configurable {
         mFiles.add(file);
     }
 
-    protected void removeFile(ResourceFile file) {
-        file.dispose();
+    protected void removeFile(ResourceFile file, ScanningContext context) {
+        file.dispose(context);
         mFiles.remove(file);
     }
 
-    protected void dispose() {
+    protected void dispose(ScanningContext context) {
         if (mFiles != null) {
             for (ResourceFile file : mFiles) {
-                file.dispose();
+                file.dispose(context);
             }
 
             mFiles.clear();

@@ -68,8 +68,6 @@ public abstract class ResourceRepository {
 
     protected final IntArrayWrapper mWrapper = new IntArrayWrapper(null);
 
-    private boolean mNeedsIdRefresh;
-
     /**
      * Makes a resource repository
      * @param isFrameworkRepository whether the repository is for framework resources.
@@ -129,7 +127,8 @@ public abstract class ResourceRepository {
      * @param removedFolder the IAbstractFolder object.
      * @return the {@link ResourceFolder} that was removed, or null if no matches were found.
      */
-    public ResourceFolder removeFolder(ResourceFolderType type, IAbstractFolder removedFolder) {
+    public ResourceFolder removeFolder(ResourceFolderType type, IAbstractFolder removedFolder,
+            ScanningContext context) {
         // get the list of folders for the resource type.
         List<ResourceFolder> list = mFolderMap.get(type);
 
@@ -143,7 +142,7 @@ public abstract class ResourceRepository {
                     list.remove(i);
 
                     // remove its content
-                    resFolder.dispose();
+                    resFolder.dispose(context);
 
                     return resFolder;
                 }
@@ -151,6 +150,60 @@ public abstract class ResourceRepository {
         }
 
         return null;
+    }
+
+    /**
+     * Returns true if this resource repository contains a resource of the given
+     * name.
+     *
+     * @param url the resource URL
+     * @return true if the resource is known
+     */
+    public boolean hasResourceItem(String url) {
+        assert url.startsWith("@") : url;
+
+        int typeEnd = url.indexOf('/', 1);
+        if (typeEnd != -1) {
+            int nameBegin = typeEnd + 1;
+
+            // Skip @ and @+
+            int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
+
+            int colon = url.lastIndexOf(':', typeEnd);
+            if (colon != -1) {
+                typeBegin = colon + 1;
+            }
+            String typeName = url.substring(typeBegin, typeEnd);
+            ResourceType type = ResourceType.getEnum(typeName);
+            if (type != null) {
+                String name = url.substring(nameBegin);
+                return hasResourceItem(type, name);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if this resource repository contains a resource of the given
+     * name.
+     *
+     * @param type the type of resource to look up
+     * @param name the name of the resource
+     * @return true if the resource is known
+     */
+    public boolean hasResourceItem(ResourceType type, String name) {
+        List<ResourceItem> list = mResourceMap.get(type);
+
+        if (list != null) {
+            for (ResourceItem item : list) {
+                if (name.equals(item.getName())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -194,29 +247,6 @@ public abstract class ResourceRepository {
      * @return a new ResourceItem (or child class) instance.
      */
     protected abstract ResourceItem createResourceItem(String name);
-
-    /**
-     * Sets a flag which determines whether aapt needs to be run to regenerate resource IDs
-     */
-    protected void markForIdRefresh() {
-        mNeedsIdRefresh = true;
-    }
-
-    /**
-     * Returns whether this repository has been marked as "dirty"; if one or more of the constituent
-     * files have declared that the resource item names that they provide have changed.
-     */
-    public boolean needsIdRefresh() {
-        return mNeedsIdRefresh;
-    }
-
-    /**
-     * Indicates that the resources IDs have been regenerated, so the repository is now in a clean
-     * state
-     */
-    public void setIdsRefreshed() {
-        mNeedsIdRefresh = false;
-    }
 
     /**
      * Processes a folder and adds it to the list of existing folders.
@@ -496,6 +526,8 @@ public abstract class ResourceRepository {
      */
     public void loadResources(IAbstractFolder rootFolder)
             throws IOException {
+        ScanningContext context = new ScanningContext(this);
+
         IAbstractResource[] files = rootFolder.listMembers();
         for (IAbstractResource file : files) {
             if (file instanceof IAbstractFolder) {
@@ -509,7 +541,7 @@ public abstract class ResourceRepository {
                     for (IAbstractResource childRes : children) {
                         if (childRes instanceof IAbstractFile) {
                             resFolder.processFile((IAbstractFile) childRes,
-                                    ResourceDeltaKind.ADDED);
+                                    ResourceDeltaKind.ADDED, context);
                         }
                     }
                 }

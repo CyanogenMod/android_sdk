@@ -73,7 +73,7 @@ public class SingleResourceFile extends ResourceFile {
     }
 
     @Override
-    protected void load() {
+    protected void load(ScanningContext context) {
         // get a resource item matching the given type and name
         ResourceItem item = getRepository().getResourceItem(mType, mResourceName);
 
@@ -81,22 +81,22 @@ public class SingleResourceFile extends ResourceFile {
         item.add(this);
 
         // Ask for an ID refresh since we're adding an item that will generate an ID
-        getRepository().markForIdRefresh();
+        context.requestFullAapt();
     }
 
     @Override
-    protected void update() {
+    protected void update(ScanningContext context) {
         // when this happens, nothing needs to be done since the file only generates
         // a single resources that doesn't actually change (its content is the file path)
     }
 
     @Override
-    protected void dispose() {
+    protected void dispose(ScanningContext context) {
         // only remove this file from the existing ResourceItem.
         getFolder().getRepository().removeFile(mType, this);
 
         // Ask for an ID refresh since we're removing an item that previously generated an ID
-        getRepository().markForIdRefresh();
+        context.requestFullAapt();
 
         // don't need to touch the content, it'll get reclaimed as this objects disappear.
         // In the mean time other objects may need to access it.

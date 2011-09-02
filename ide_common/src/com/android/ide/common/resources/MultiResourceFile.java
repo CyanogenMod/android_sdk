@@ -59,7 +59,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
     private boolean mNeedIdRefresh;
 
     @Override
-    protected void load() {
+    protected void load(ScanningContext context) {
         // need to parse the file and find the content.
         parseFile();
 
@@ -70,11 +70,11 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         mNeedIdRefresh = true;
 
         // create/update the resource items.
-        updateResourceItems();
+        updateResourceItems(context);
     }
 
     @Override
-    protected void update() {
+    protected void update(ScanningContext context) {
         // Reset the ID generation flag
         mNeedIdRefresh = false;
 
@@ -107,18 +107,18 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
             mNeedIdRefresh = true;
         }
         // create/update the resource items.
-        updateResourceItems();
+        updateResourceItems(context);
     }
 
     @Override
-    protected void dispose() {
+    protected void dispose(ScanningContext context) {
         ResourceRepository repository = getRepository();
 
         // only remove this file from all existing ResourceItem.
         repository.removeFile(mResourceTypeList, this);
 
         // We'll need an ID refresh because we deleted items
-        repository.markForIdRefresh();
+        context.requestFullAapt();
 
         // don't need to touch the content, it'll get reclaimed as this objects disappear.
         // In the mean time other objects may need to access it.
@@ -135,7 +135,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
         return (list != null && list.size() > 0);
     }
 
-    private void updateResourceItems() {
+    private void updateResourceItems(ScanningContext context) {
         ResourceRepository repository = getRepository();
 
         // remove this file from all existing ResourceItem.
@@ -157,7 +157,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
 
         // If we need an ID refresh, ask the repository for that now
         if (mNeedIdRefresh) {
-            repository.markForIdRefresh();
+            context.requestFullAapt();
         }
     }
 

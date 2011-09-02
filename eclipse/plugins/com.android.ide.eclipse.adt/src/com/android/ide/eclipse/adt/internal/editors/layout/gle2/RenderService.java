@@ -303,7 +303,7 @@ public class RenderService {
 
             // Find the layout file.
             ResourceValue contextLayout = mResourceResolver.findResValue(
-                    LAYOUT_PREFIX + contextLayoutName , false  /* forceFrameworkOnly*/);
+                    LAYOUT_PREFIX + contextLayoutName, false  /* forceFrameworkOnly*/);
             if (contextLayout != null) {
                 File layoutFile = new File(contextLayout.getValue());
                 if (layoutFile.isFile()) {

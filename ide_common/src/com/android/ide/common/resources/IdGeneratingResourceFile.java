@@ -24,18 +24,12 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
 
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 /**
  * Represents a resource file that also generates ID resources.
@@ -44,11 +38,6 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public final class IdGeneratingResourceFile extends ResourceFile
                                             implements IValueResourceRepository {
-
-    private final static SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
-    static {
-        sParserFactory.setNamespaceAware(true);
-    }
 
     private final Map<String, ResourceValue> mIdResources =
         new HashMap<String, ResourceValue>();
@@ -75,44 +64,49 @@ public final class IdGeneratingResourceFile extends ResourceFile
         mFileName = getFileName(type);
 
         // Get the resource value of this file as a whole layout
-        mFileValue = getFileValue(file,folder);
+        mFileValue = getFileValue(file, folder);
     }
 
     @Override
-    protected void load() {
+    protected void load(ScanningContext context) {
         // Parse the file and look for @+id/ entries
-        parseFileForIds();
+        parseFileForIds(context);
 
         // create the resource items in the repository
-        updateResourceItems();
+        updateResourceItems(context);
     }
 
     @Override
-    protected void update() {
+    protected void update(ScanningContext context) {
         // Copy the previous list of ID names
-        Set<String> oldIdNames = mIdResources.keySet();
+        Set<String> oldIdNames = new HashSet<String>(mIdResources.keySet());
 
         // reset current content.
         mIdResources.clear();
 
         // need to parse the file and find the IDs.
-        parseFileForIds();
+        if (!parseFileForIds(context)) {
+            context.requestFullAapt();
+            return;
+        }
 
         // We only need to update the repository if our IDs have changed
-        if (oldIdNames.equals(mIdResources.keySet()) == false) {
-            updateResourceItems();
+        Set<String> keySet = mIdResources.keySet();
+        assert keySet != oldIdNames;
+        if (oldIdNames.equals(keySet) == false) {
+            updateResourceItems(context);
         }
     }
 
     @Override
-    protected void dispose() {
+    protected void dispose(ScanningContext context) {
         ResourceRepository repository = getRepository();
 
         // Remove declarations from this file from the repository
         repository.removeFile(mResourceTypeList, this);
 
         // Ask for an ID refresh since we'll be taking away ID generating items
-        repository.markForIdRefresh();
+        context.requestFullAapt();
     }
 
     @Override
@@ -145,22 +139,27 @@ public final class IdGeneratingResourceFile extends ResourceFile
     /**
      * Looks through the file represented for Ids and adds them to
      * our id repository
+     *
+     * @return true if parsing succeeds and false if it fails
      */
-    private void parseFileForIds() {
+    private boolean parseFileForIds(ScanningContext context) {
+        IdResourceParser parser = new IdResourceParser(this, context, isFramework());
         try {
-            SAXParser parser = sParserFactory.newSAXParser();
-            parser.parse(getFile().getContents(), new IdResourceParser(this, isFramework()));
-        } catch (ParserConfigurationException e) {
-        } catch (SAXException e) {
+            IAbstractFile file = getFile();
+            return parser.parse(mFileType, file.getOsLocation(), file.getContents());
         } catch (IOException e) {
+            // Pass
         } catch (StreamException e) {
+            // Pass
         }
+
+        return false;
     }
 
     /**
      * Add the resources represented by this file to the repository
      */
-    private void updateResourceItems() {
+    private void updateResourceItems(ScanningContext context) {
         ResourceRepository repository = getRepository();
 
         // remove this file from all existing ResourceItem.
@@ -178,7 +177,7 @@ public final class IdGeneratingResourceFile extends ResourceFile
         }
 
         //  Ask the repository for an ID refresh
-        repository.markForIdRefresh();
+        context.requestFullAapt();
     }
 
     /**

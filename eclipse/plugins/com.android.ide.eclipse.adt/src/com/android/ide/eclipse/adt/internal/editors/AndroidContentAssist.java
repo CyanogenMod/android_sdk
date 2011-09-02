@@ -696,7 +696,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
                 // inside the quotes.
                 // Special case for attributes: insert ="" stuff and locate caret inside ""
                 proposals.add(new CompletionProposal(
-                    keyword + suffix ,                  // String replacementString
+                    keyword + suffix,                   // String replacementString
                     offset - wordPrefix.length(),       // int replacementOffset
                     wordPrefix.length() + replaceLength,// int replacementLength
                     cursorPosition,                     // cursorPosition

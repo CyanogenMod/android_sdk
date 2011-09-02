@@ -1493,7 +1493,12 @@ public class Hyperlinks {
                     IRegion region = null;
                     String extension = file.getFileExtension();
                     if (mType != null && mName != null && EXT_XML.equals(extension)) {
-                        Pair<IFile, IRegion> target = findValueInXml(mType, mName, file);
+                        Pair<IFile, IRegion> target;
+                        if (mType == ResourceType.ID) {
+                            target = findIdInXml(mName, file);
+                        } else {
+                            target = findValueInXml(mType, mName, file);
+                        }
                         if (target != null) {
                             region = target.getSecond();
                         }

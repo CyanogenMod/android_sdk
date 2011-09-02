@@ -287,9 +287,5 @@ public class ProjectResources extends ResourceRepository {
         mResourceValueMap = resourceValueMap;
         mResIdValueToNameMap = resIdValueToNameMap;
         mStyleableValueToNameMap = styleableValueMap;
-
-        // Our resource IDs should now be in sync
-        setIdsRefreshed();
     }
-
 }

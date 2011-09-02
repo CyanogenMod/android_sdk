@@ -37,9 +37,9 @@ public abstract class ResourceFile implements Configurable {
         mFolder = folder;
     }
 
-    protected abstract void load();
-    protected abstract void update();
-    protected abstract void dispose();
+    protected abstract void load(ScanningContext context);
+    protected abstract void update(ScanningContext context);
+    protected abstract void dispose(ScanningContext context);
 
     public FolderConfiguration getConfiguration() {
         return mFolder.getConfiguration();
