@@ -19,11 +19,11 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 
@@ -95,6 +95,10 @@ class PackagesDiffLogic {
 
         // sort items in platforms... directly deal with items with no platform
         for (PkgItem item : getAllPkgItems(true /*byApi*/, true /*bySource*/)) {
+            if (!item.hasCompatibleArchive()) {
+                // Ignore items that have no archive compatible with the current platform.
+                continue;
+            }
 
             // Get the main package's API level. We don't need to look at the updates
             // since by definition they should target the same API level.
