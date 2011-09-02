@@ -37,6 +37,13 @@ public class AdtUtilsTest extends TestCase {
         assertEquals("foobar", AdtUtils.stripWhitespace("  foo bar  \n\t"));
     }
 
+    public void testExtractClassName() {
+        assertEquals("Foo", AdtUtils.extractClassName("foo"));
+        assertEquals("Foobar", AdtUtils.extractClassName("foo bar"));
+        assertEquals("JavasTypeSystem", AdtUtils.extractClassName("Java's Type System"));
+        assertEquals("Foo", AdtUtils.extractClassName("1foo "));
+    }
+
     public void testStripAllExtensions() {
         assertEquals("", AdtUtils.stripAllExtensions(""));
         assertEquals("foobar", AdtUtils.stripAllExtensions("foobar"));

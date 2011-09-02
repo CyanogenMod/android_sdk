@@ -23,6 +23,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
 import static com.android.ide.eclipse.adt.AdtUtils.capitalize;
+import static com.android.ide.eclipse.adt.AdtUtils.extractClassName;
 import static com.android.ide.eclipse.adt.AdtUtils.stripWhitespace;
 
 import com.android.ide.eclipse.adt.AdtConstants;
@@ -236,7 +237,6 @@ public class NewProjectCreationPage extends WizardPage {
         public IWorkingSet[] getSelectedWorkingSets();
 
     }
-
 
     /**
      * Structure that collects all externally visible information from this page.
@@ -597,6 +597,22 @@ public class NewProjectCreationPage extends WizardPage {
                 // This will invoke the selection listener on the selector defined above.
                 if (targets != null && targets.length == 1) {
                     mSdkTargetSelector.setSelection(targets[0]);
+                } else if (targets != null) {
+                    // Pick the highest available platform by default (see issue #17505
+                    // for related discussion.)
+                    IAndroidTarget initialTarget = null;
+                    for (IAndroidTarget target : targets) {
+                        if (target.isPlatform()
+                                && !target.getVersion().isPreview()
+                                && (initialTarget == null ||
+                                        target.getVersion().getApiLevel() >
+                                            initialTarget.getVersion().getApiLevel())) {
+                            initialTarget = target;
+                        }
+                    }
+                    if (initialTarget != null) {
+                        mSdkTargetSelector.setSelection(initialTarget);
+                    }
                 }
             }
 
@@ -940,12 +956,14 @@ public class NewProjectCreationPage extends WizardPage {
         if (!mInternalApplicationNameUpdate) {
                mApplicationNameModifiedByUser = true;
                if (!mActivityNameModifiedByUser) {
-                   String name = capitalize(mApplicationNameField.getText());
-                   try {
-                       mInternalActivityNameUpdate = true;
-                       mActivityNameField.setText(stripWhitespace(name) + ACTIVITY_NAME_SUFFIX);
-                   } finally {
-                       mInternalActivityNameUpdate = false;
+                   String name = extractClassName(mApplicationNameField.getText());
+                   if (name != null) {
+                       try {
+                           mInternalActivityNameUpdate = true;
+                           mActivityNameField.setText(stripWhitespace(name) + ACTIVITY_NAME_SUFFIX);
+                       } finally {
+                           mInternalActivityNameUpdate = false;
+                       }
                    }
                }
            }
@@ -1618,6 +1636,10 @@ public class NewProjectCreationPage extends WizardPage {
             return setStatus("Enter a valid activity name", MSG_ERROR);
         }
 
+        if (activityFieldContents.contains("..")) { //$NON-NLS-1$
+            return setStatus("Package segments in activity name cannot be empty (..)", MSG_ERROR);
+        }
+
         // The activity field can actually contain part of a sub-package name
         // or it can start with a dot "." to indicates it comes from the parent package name.
         String packageName = "";  //$NON-NLS-1$
@@ -1634,7 +1656,7 @@ public class NewProjectCreationPage extends WizardPage {
         // the activity field can contain a simple java identifier, or a
         // package name or one that starts with a dot. So if it starts with a dot,
         // ignore this dot -- the rest must look like a package name.
-        if (activityFieldContents.charAt(0) == '.') {
+        if (activityFieldContents.length() > 0 && activityFieldContents.charAt(0) == '.') {
             activityFieldContents = activityFieldContents.substring(1);
         }
 
