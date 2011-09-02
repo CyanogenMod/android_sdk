@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 /**
  * Test ResourceHelper
  */
+@SuppressWarnings("javadoc")
 public class ResourceHelperTest extends TestCase {
 
     /**
@@ -168,6 +169,16 @@ public class ResourceHelperTest extends TestCase {
         assertFalse(ResourceHelper.canCreateResource("@android:string/foo")); // framework
         assertFalse(ResourceHelper.canCreateResource("@android:dimen/foo"));
         assertFalse(ResourceHelper.canCreateResource("@android:color/foo"));
+    }
+
+    public void testCanCreateResourceType() throws Exception {
+        assertTrue(ResourceHelper.canCreateResourceType(ResourceType.LAYOUT));
+        assertTrue(ResourceHelper.canCreateResourceType(ResourceType.STRING));
+        assertTrue(ResourceHelper.canCreateResourceType(ResourceType.DIMEN));
+        assertTrue(ResourceHelper.canCreateResourceType(ResourceType.COLOR));
+
+        assertFalse(ResourceHelper.canCreateResourceType(ResourceType.RAW));
+        assertFalse(ResourceHelper.canCreateResourceType(ResourceType.XML));
     }
 
     public void testStyleToTheme() throws Exception {

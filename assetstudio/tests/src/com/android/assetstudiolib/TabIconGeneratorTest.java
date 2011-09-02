@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.eclipse.adt.internal.assetstudio;
 
-import org.eclipse.swt.widgets.Composite;
+package com.android.assetstudiolib;
 
-public class ConfigureLauncherAssetsPanel extends Composite {
+import java.io.IOException;
 
-    /**
-     * Create the composite.
-     * @param parent
-     * @param style
-     */
-    public ConfigureLauncherAssetsPanel(Composite parent, int style) {
-        super(parent, style);
-
+@SuppressWarnings("javadoc")
+public class TabIconGeneratorTest extends GeneratorTest {
+    private void checkGraphic(String baseName) throws IOException {
+        TabIconGenerator generator = new TabIconGenerator();
+        checkGraphic(16, "tabs", baseName, generator, new TabIconGenerator.TabOptions());
     }
 
-    @Override
-    protected void checkSubclass() {
-        // Disable the check that prevents subclassing of SWT components
+    public void testTabs1() throws Exception {
+        checkGraphic("ic_tab_1");
     }
-
 }

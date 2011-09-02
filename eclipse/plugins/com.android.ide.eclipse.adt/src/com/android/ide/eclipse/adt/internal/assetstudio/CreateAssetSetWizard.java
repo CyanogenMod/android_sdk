@@ -15,10 +15,6 @@
  */
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
-import static com.android.ide.eclipse.adt.AdtConstants.DOT_PNG;
-import static com.android.ide.eclipse.adt.AdtConstants.WS_RESOURCES;
-import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP;
-
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -67,99 +63,118 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+/**
+ * Wizard for creating a new icon set
+ */
 public class CreateAssetSetWizard extends Wizard implements INewWizard {
-    private ChooseAssetTypePage chooseAssetPage;
-    private ConfigureAssetSetPage configureAssetPage;
+    private ChooseAssetTypePage mChooseAssetPage;
+    private ConfigureAssetSetPage mConfigureAssetPage;
     private IProject mInitialProject;
+    private List<IResource> mCreatedFiles;
 
+    /** Creates a new asset set wizard */
     public CreateAssetSetWizard() {
         setWindowTitle("Create Asset Set");
     }
 
     @Override
     public void addPages() {
-        chooseAssetPage = new ChooseAssetTypePage();
-        chooseAssetPage.setProject(mInitialProject);
-        configureAssetPage = new ConfigureAssetSetPage();
+        mChooseAssetPage = new ChooseAssetTypePage();
+        mChooseAssetPage.setProject(mInitialProject);
+        mConfigureAssetPage = new ConfigureAssetSetPage();
 
-        addPage(chooseAssetPage);
-        addPage(configureAssetPage);
+        addPage(mChooseAssetPage);
+        addPage(mConfigureAssetPage);
+    }
+
+    String getBaseName() {
+        return mChooseAssetPage.getOutputName();
     }
 
     @Override
     public boolean performFinish() {
-        String name = chooseAssetPage.getOutputName();
-        Map<String, BufferedImage> previews = configureAssetPage.generatePreviews();
+        Map<String, Map<String, BufferedImage>> categories =
+                mConfigureAssetPage.generateImages(false);
+
         IProject project = getProject();
 
         // Write out the images into the project
         boolean yesToAll = false;
-        List<IFile> createdFiles = new ArrayList<IFile>();
-        for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
-            String id = entry.getKey();
+        mCreatedFiles = new ArrayList<IResource>();
 
-            IPath dest = new Path(WS_RESOURCES + WS_SEP + "drawable-" //$NON-NLS-1$
-                    + id + WS_SEP + name + DOT_PNG);
-            IFile file = project.getFile(dest);
-            if (file.exists()) {
-                // Warn that the file already exists and ask the user what to do
-                if (!yesToAll) {
-                    MessageDialog dialog = new MessageDialog(null, "File Already Exists", null,
-                            String.format("%1$s already exists.\nWould you like to replace it?",
-                                    file.getProjectRelativePath().toOSString()),
-                            MessageDialog.QUESTION, new String[] {
-                                    // Yes will be moved to the end because it's the default
-                                    "Yes", "No", "Cancel", "Yes to All"
-                            }, 0);
-                    int result = dialog.open();
-                    switch (result) {
-                        case 0:
-                            // Yes
-                            break;
-                        case 3:
-                            // Yes to all
-                            yesToAll = true;
-                            break;
-                        case 1:
-                            // No
-                            continue;
-                        case SWT.DEFAULT:
-                        case 2:
-                            // Cancel
-                            return false;
+        for (Map<String, BufferedImage> previews : categories.values()) {
+            for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
+                String relativePath = entry.getKey();
+                IPath dest = new Path(relativePath);
+                IFile file = project.getFile(dest);
+                if (file.exists()) {
+                    // Warn that the file already exists and ask the user what to do
+                    if (!yesToAll) {
+                        MessageDialog dialog = new MessageDialog(null, "File Already Exists", null,
+                                String.format(
+                                        "%1$s already exists.\nWould you like to replace it?",
+                                        file.getProjectRelativePath().toOSString()),
+                                MessageDialog.QUESTION, new String[] {
+                                        // Yes will be moved to the end because it's the default
+                                        "Yes", "No", "Cancel", "Yes to All"
+                                }, 0);
+                        int result = dialog.open();
+                        switch (result) {
+                            case 0:
+                                // Yes
+                                break;
+                            case 3:
+                                // Yes to all
+                                yesToAll = true;
+                                break;
+                            case 1:
+                                // No
+                                continue;
+                            case SWT.DEFAULT:
+                            case 2:
+                                // Cancel
+                                return false;
+                        }
+                    }
+
+                    try {
+                        file.delete(true, new NullProgressMonitor());
+                    } catch (CoreException e) {
+                        AdtPlugin.log(e, null);
                     }
                 }
 
+                NewXmlFileWizard.createWsParentDirectory(file.getParent());
+                BufferedImage image = entry.getValue();
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 try {
-                    file.delete(true, new NullProgressMonitor());
+                    ImageIO.write(image, "PNG", stream); //$NON-NLS-1$
+                    byte[] bytes = stream.toByteArray();
+                    InputStream is = new ByteArrayInputStream(bytes);
+                    file.create(is, true /*force*/, null /*progress*/);
+                    mCreatedFiles.add(file);
+                } catch (IOException e) {
+                    AdtPlugin.log(e, null);
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+
+                try {
+                    file.getParent().refreshLocal(1, new NullProgressMonitor());
                 } catch (CoreException e) {
                     AdtPlugin.log(e, null);
                 }
             }
-
-            NewXmlFileWizard.createWsParentDirectory(file.getParent());
-            BufferedImage image = entry.getValue();
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            try {
-                ImageIO.write(image, "PNG", stream); //$NON-NLS-1$
-                byte[] bytes = stream.toByteArray();
-                InputStream is = new ByteArrayInputStream(bytes);
-                file.create(is, true /*force*/, null /*progress*/);
-                createdFiles.add(file);
-            } catch (IOException e) {
-                AdtPlugin.log(e, null);
-            } catch (CoreException e) {
-                AdtPlugin.log(e, null);
-            }
-
-            try {
-                file.getParent().refreshLocal(1, new NullProgressMonitor());
-            } catch (CoreException e) {
-                AdtPlugin.log(e, null);
-            }
         }
 
+        // Finally select the files themselves
+        selectFiles(project, mCreatedFiles);
+
+        return true;
+    }
+
+    private void selectFiles(IProject project, List<? extends IResource> createdFiles) {
         // Attempt to select the newly created files in the Package Explorer
         IWorkbench workbench = AdtPlugin.getDefault().getWorkbench();
         IWorkbenchPage page = workbench.getActiveWorkbenchWindow().getActivePage();
@@ -172,50 +187,85 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
             } catch (CoreException e) {
                 AdtPlugin.log(e, null);
             }
-            ISelectionProvider provider = site.getSelectionProvider();
+            final ISelectionProvider provider = site.getSelectionProvider();
             if (provider != null) {
                 List<TreePath> pathList = new ArrayList<TreePath>();
-                for (IFile file : createdFiles) {
+                for (IResource file : createdFiles) {
                     // Create a TreePath for the given file,
                     // which should be the JavaProject, followed by the folders down to
                     // the final file.
                     List<Object> segments = new ArrayList<Object>();
                     segments.add(file);
                     IContainer folder = file.getParent();
-                    segments.add(folder);
-                    // res folder
-                    folder = folder.getParent();
-                    segments.add(folder);
+                    if (folder != null && !(folder instanceof IProject)) {
+                        segments.add(folder);
+                        // res folder
+                        folder = folder.getParent();
+                        if (folder != null && !(folder instanceof IProject)) {
+                            segments.add(folder);
+                        }
+                    }
                     // project
                     segments.add(javaProject);
 
                     Collections.reverse(segments);
                     TreePath path = new TreePath(segments.toArray());
                     pathList.add(path);
+
+                    // IDEA: Maybe normalize the files backwards (IFile objects aren't unique)
+                    // by maybe using the package explorer icons instead
                 }
 
                 TreePath[] paths = pathList.toArray(new TreePath[pathList.size()]);
-                provider.setSelection(new TreeSelection(paths));
+                final TreeSelection selection = new TreeSelection(paths);
+
+                provider.setSelection(selection);
+
+                // Workaround: The above doesn't always work; it will frequently select
+                // some siblings of the real files. I've tried a number of workarounds:
+                // normalizing the IFile objects by looking up the canonical ones via
+                // their relative paths from the project; deferring execution with
+                // Display.asyncRun; first calling select on the parents, etc.
+                // However, it turns out a simple workaround works best: Calling this
+                // method TWICE. The first call seems to expand all the necessary parents,
+                // and the second call ensures that the correct children are selected!
+                provider.setSelection(selection);
+
+                viewPart.setFocus();
             }
         }
-
-        return true;
     }
 
+    /**
+     * Returns the project to be used by the wizard (which may differ from the
+     * project initialized by {@link #init(IWorkbench, IStructuredSelection)} or
+     * set by {@link #setProject(IProject)} if the user changes the project
+     * in the first page of the wizard.
+     */
     IProject getProject() {
-        if (chooseAssetPage != null) {
-            return chooseAssetPage.getProject();
+        if (mChooseAssetPage != null) {
+            return mChooseAssetPage.getProject();
         } else {
             return mInitialProject;
         }
+    }
+
+    /** Sets the initial project to be used by the wizard */
+    void setProject(IProject project) {
+        mInitialProject = project;
+    }
+
+    /** Returns the {@link AssetType} to create */
+    AssetType getAssetType() {
+        return mChooseAssetPage.getAssetType();
     }
 
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         setHelpAvailable(false);
 
         mInitialProject = guessProject(selection);
-        if (chooseAssetPage != null) {
-            chooseAssetPage.setProject(mInitialProject);
+        if (mChooseAssetPage != null) {
+            mChooseAssetPage.setProject(mInitialProject);
         }
     }
 
@@ -275,5 +325,15 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the list of files created by the wizard. This method will return
+     * null if {@link #performFinish()} has not yet been called.
+     *
+     * @return a list of files created by the wizard, or null
+     */
+    List<IResource> getCreatedFiles() {
+        return mCreatedFiles;
     }
 }

@@ -16,25 +16,25 @@
 
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
-import static com.android.assetstudiolib.LauncherIconGenerator.Options.Shape.CIRCLE;
-import static com.android.assetstudiolib.LauncherIconGenerator.Options.Shape.SQUARE;
-
+import com.android.assetstudiolib.ActionBarIconGenerator;
 import com.android.assetstudiolib.GraphicGenerator;
 import com.android.assetstudiolib.GraphicGeneratorContext;
 import com.android.assetstudiolib.LauncherIconGenerator;
-import com.android.assetstudiolib.LauncherIconGenerator.Options.Style;
+import com.android.assetstudiolib.MenuIconGenerator;
+import com.android.assetstudiolib.NotificationIconGenerator;
+import com.android.assetstudiolib.TabIconGenerator;
 import com.android.assetstudiolib.TextRenderUtil;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageControl;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ImageUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SwtUtils;
-import com.android.resources.Density;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
@@ -54,6 +54,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.ColorDialog;
@@ -69,13 +70,12 @@ import org.eclipse.swt.widgets.Text;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
@@ -87,7 +87,8 @@ import javax.imageio.ImageIO;
 public class ConfigureAssetSetPage extends WizardPage implements SelectionListener,
         GraphicGeneratorContext, ModifyListener {
 
-    private Composite configurationArea;
+    private static final int PREVIEW_AREA_WIDTH = 120;
+    private Composite mConfigurationArea;
     private Button mImageRadio;
     private Button mClipartRadio;
     private Button mTextRadio;
@@ -123,16 +124,26 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     private static String sImagePath;
     private Button mChooseClipart;
     private Composite mClipartPreviewPanel;
+    private Label mThemeLabel;
+    private Composite mThemeComposite;
+    private Button mHoloLightRadio;
+    private Button mHoloDarkRadio;
+    private Label mScalingLabel;
+    private Composite mScalingComposite;
+    private Label mShapeLabel;
+    private Composite mShapeComposite;
+    private Label mBgColorLabel;
+    private Label mFgColorLabel;
+    private Label mEffectsLabel;
+    private Composite mEffectsComposite;
 
     /**
      * Create the wizard.
-     *
-     * @param wizard the surrounding wizard
      */
     public ConfigureAssetSetPage() {
         super("configureAssetPage");
-        setTitle("Configure Asset Set");
-        setDescription("Configure the attributes of the asset set");
+        setTitle("Configure Icon Set");
+        setDescription("Configure the attributes of the icon set");
     }
 
     /**
@@ -157,18 +168,19 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         configurationScrollArea.setExpandHorizontal(true);
         configurationScrollArea.setExpandVertical(true);
 
-        configurationArea = new Composite(configurationScrollArea, SWT.NONE);
+        mConfigurationArea = new Composite(configurationScrollArea, SWT.NONE);
         GridLayout glConfigurationArea = new GridLayout(3, false);
+        glConfigurationArea.horizontalSpacing = 0;
         glConfigurationArea.marginRight = 15;
         glConfigurationArea.marginWidth = 0;
         glConfigurationArea.marginHeight = 0;
-        configurationArea.setLayout(glConfigurationArea);
+        mConfigurationArea.setLayout(glConfigurationArea);
 
-        Label foregroundLabel = new Label(configurationArea, SWT.NONE);
+        Label foregroundLabel = new Label(mConfigurationArea, SWT.NONE);
         foregroundLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         foregroundLabel.setText("Foreground:");
 
-        Composite foregroundComposite = new Composite(configurationArea, SWT.NONE);
+        Composite foregroundComposite = new Composite(mConfigurationArea, SWT.NONE);
         foregroundComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
         GridLayout glForegroundComposite = new GridLayout(5, false);
         glForegroundComposite.horizontalSpacing = 0;
@@ -188,9 +200,9 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mTextRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
         mTextRadio.setText("Text");
         mTextRadio.addSelectionListener(this);
-        new Label(configurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
 
-        mForegroundArea = new Composite(configurationArea, SWT.NONE);
+        mForegroundArea = new Composite(mConfigurationArea, SWT.NONE);
         mForegroundArea.setLayout(new StackLayout());
         mForegroundArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 
@@ -247,120 +259,133 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mFontButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
         mFontButton.addSelectionListener(this);
         mFontButton.setText("Choose Font...");
-        new Label(configurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
 
-        mTrimCheckBox = new Button(configurationArea, SWT.CHECK);
+        mTrimCheckBox = new Button(mConfigurationArea, SWT.CHECK);
         mTrimCheckBox.setEnabled(false);
         mTrimCheckBox.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-        mTrimCheckBox.setSelection(true);
+        mTrimCheckBox.setSelection(false);
         mTrimCheckBox.setText("Trim Surrounding Blank Space");
-        new Label(configurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
 
-        Label paddingLabel = new Label(configurationArea, SWT.NONE);
+        Label paddingLabel = new Label(mConfigurationArea, SWT.NONE);
         paddingLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
         paddingLabel.setText("Additional Padding:");
-        new Label(configurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
 
-        mPaddingSlider = new Slider(configurationArea, SWT.NONE);
+        mPaddingSlider = new Slider(mConfigurationArea, SWT.NONE);
         mPaddingSlider.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mPaddingSlider.setEnabled(false);
         // This doesn't work right -- not sure why. For now just use a plain slider
-        // and subtract from it to get the real range.
+        // and subtract 10 from it to get the real range.
         //mPaddingSlider.setValues(0, -10, 50, 0, 1, 10);
-        mPaddingSlider.setSelection(10);
+        mPaddingSlider.setSelection(10 + 15);
         mPaddingSlider.addSelectionListener(this);
 
-        mPercentLabel = new Label(configurationArea, SWT.NONE);
-        mPercentLabel.setText("   0%"); // Enough available space for -10%
+        mPercentLabel = new Label(mConfigurationArea, SWT.NONE);
+        mPercentLabel.setText("  15%"); // Enough available space for -10%
 
-        Label scalingLabel = new Label(configurationArea, SWT.NONE);
-        scalingLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        scalingLabel.setText("Foreground Scaling:");
+        mScalingLabel = new Label(mConfigurationArea, SWT.NONE);
+        mScalingLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mScalingLabel.setText("Foreground Scaling:");
 
-        Composite scalingComposite = new Composite(configurationArea, SWT.NONE);
-        scalingComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-        GridLayout glScalingComposite = new GridLayout(5, false);
-        glScalingComposite.horizontalSpacing = 0;
-        scalingComposite.setLayout(glScalingComposite);
+        mScalingComposite = new Composite(mConfigurationArea, SWT.NONE);
+        mScalingComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+        GridLayout gl_mScalingComposite = new GridLayout(5, false);
+        gl_mScalingComposite.horizontalSpacing = 0;
+        mScalingComposite.setLayout(gl_mScalingComposite);
 
-        mCropRadio = new Button(scalingComposite, SWT.FLAT | SWT.TOGGLE);
+        mCropRadio = new Button(mScalingComposite, SWT.FLAT | SWT.TOGGLE);
         mCropRadio.setSelection(true);
         mCropRadio.setText("Crop");
         mCropRadio.addSelectionListener(this);
 
-        mCenterRadio = new Button(scalingComposite, SWT.FLAT | SWT.TOGGLE);
+        mCenterRadio = new Button(mScalingComposite, SWT.FLAT | SWT.TOGGLE);
         mCenterRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
         mCenterRadio.setText("Center");
         mCenterRadio.addSelectionListener(this);
 
-        Label shapeLabel = new Label(configurationArea, SWT.NONE);
-        shapeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        shapeLabel.setText("Shape");
+        mShapeLabel = new Label(mConfigurationArea, SWT.NONE);
+        mShapeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mShapeLabel.setText("Shape");
 
-        Composite shapeComposite = new Composite(configurationArea, SWT.NONE);
-        shapeComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-        GridLayout glShapeComposite = new GridLayout(5, false);
-        glShapeComposite.horizontalSpacing = 0;
-        shapeComposite.setLayout(glShapeComposite);
+        mShapeComposite = new Composite(mConfigurationArea, SWT.NONE);
+        mShapeComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+        GridLayout gl_mShapeComposite = new GridLayout(5, false);
+        gl_mShapeComposite.horizontalSpacing = 0;
+        mShapeComposite.setLayout(gl_mShapeComposite);
 
-        mSquareRadio = new Button(shapeComposite, SWT.FLAT | SWT.TOGGLE);
+        mSquareRadio = new Button(mShapeComposite, SWT.FLAT | SWT.TOGGLE);
         mSquareRadio.setSelection(true);
         mSquareRadio.setText("Square");
         mSquareRadio.addSelectionListener(this);
 
-        mCircleButton = new Button(shapeComposite, SWT.FLAT | SWT.TOGGLE);
+        mCircleButton = new Button(mShapeComposite, SWT.FLAT | SWT.TOGGLE);
         mCircleButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 4, 1));
         mCircleButton.setText("Circle");
         mCircleButton.addSelectionListener(this);
 
-        Label bgColorLabel = new Label(configurationArea, SWT.NONE);
-        bgColorLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        bgColorLabel.setText("Background Color:");
+        mThemeLabel = new Label(mConfigurationArea, SWT.NONE);
+        mThemeLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mThemeLabel.setText("Theme");
 
-        mBgButton = new Button(configurationArea, SWT.FLAT);
+        mThemeComposite = new Composite(mConfigurationArea, SWT.NONE);
+        mThemeComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        GridLayout gl_mThemeComposite = new GridLayout(2, false);
+        gl_mThemeComposite.horizontalSpacing = 0;
+        mThemeComposite.setLayout(gl_mThemeComposite);
+
+        mHoloLightRadio = new Button(mThemeComposite, SWT.FLAT | SWT.TOGGLE);
+        mHoloLightRadio.setText("Holo Light");
+        mHoloLightRadio.setSelection(true);
+        mHoloLightRadio.addSelectionListener(this);
+
+        mHoloDarkRadio = new Button(mThemeComposite, SWT.FLAT | SWT.TOGGLE);
+        mHoloDarkRadio.setText("Holo Dark");
+        mHoloDarkRadio.addSelectionListener(this);
+
+        mBgColorLabel = new Label(mConfigurationArea, SWT.NONE);
+        mBgColorLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mBgColorLabel.setText("Background Color:");
+
+        mBgButton = new Button(mConfigurationArea, SWT.FLAT);
+        mBgButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
         mBgButton.addSelectionListener(this);
         mBgButton.setAlignment(SWT.CENTER);
-        new Label(configurationArea, SWT.NONE);
 
-        Label fgColorLabel = new Label(configurationArea, SWT.NONE);
-        fgColorLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        fgColorLabel.setText("Foreground Color:");
+        mFgColorLabel = new Label(mConfigurationArea, SWT.NONE);
+        mFgColorLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mFgColorLabel.setText("Foreground Color:");
 
-        mFgButton = new Button(configurationArea, SWT.FLAT);
+        mFgButton = new Button(mConfigurationArea, SWT.FLAT);
+        mFgButton.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
         mFgButton.setAlignment(SWT.CENTER);
         mFgButton.addSelectionListener(this);
-        new Label(configurationArea, SWT.NONE);
 
-        Label effectsLabel = new Label(configurationArea, SWT.NONE);
-        effectsLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        effectsLabel.setText("Foreground Effects:");
+        mEffectsLabel = new Label(mConfigurationArea, SWT.NONE);
+        mEffectsLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mEffectsLabel.setText("Foreground Effects:");
 
-        Composite effectsComposite = new Composite(configurationArea, SWT.NONE);
-        effectsComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
-        GridLayout glEffectsComposite = new GridLayout(5, false);
-        glEffectsComposite.horizontalSpacing = 0;
-        effectsComposite.setLayout(glEffectsComposite);
+        mEffectsComposite = new Composite(mConfigurationArea, SWT.NONE);
+        mEffectsComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+        GridLayout gl_mEffectsComposite = new GridLayout(5, false);
+        gl_mEffectsComposite.horizontalSpacing = 0;
+        mEffectsComposite.setLayout(gl_mEffectsComposite);
 
-        mSimpleRadio = new Button(effectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mSimpleRadio.setEnabled(false);
+        mSimpleRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
         mSimpleRadio.setSelection(true);
         mSimpleRadio.setText("Simple");
         mSimpleRadio.addSelectionListener(this);
 
-        mFancyRadio = new Button(effectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mFancyRadio.setEnabled(false);
+        mFancyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
         mFancyRadio.setText("Fancy");
         mFancyRadio.addSelectionListener(this);
 
-        mGlossyRadio = new Button(effectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mGlossyRadio.setEnabled(false);
+        mGlossyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
         mGlossyRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
         mGlossyRadio.setText("Glossy");
         mGlossyRadio.addSelectionListener(this);
-
-        new Label(configurationArea, SWT.NONE);
-        configurationScrollArea.setContent(configurationArea);
-        configurationScrollArea.setMinSize(configurationArea.computeSize(SWT.DEFAULT,
+        configurationScrollArea.setContent(mConfigurationArea);
+        configurationScrollArea.setMinSize(mConfigurationArea.computeSize(SWT.DEFAULT,
                 SWT.DEFAULT));
 
         Label previewLabel = new Label(container, SWT.NONE);
@@ -369,8 +394,8 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         mPreviewArea = new Composite(container, SWT.BORDER);
 
-        RowLayout rlPreviewAreaPreviewArea = new RowLayout(SWT.VERTICAL);
-        rlPreviewAreaPreviewArea.wrap = false;
+        RowLayout rlPreviewAreaPreviewArea = new RowLayout(SWT.HORIZONTAL);
+        rlPreviewAreaPreviewArea.wrap = true;
         rlPreviewAreaPreviewArea.pack = true;
         rlPreviewAreaPreviewArea.center = true;
         rlPreviewAreaPreviewArea.spacing = 0;
@@ -380,12 +405,13 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         rlPreviewAreaPreviewArea.marginLeft = 0;
         mPreviewArea.setLayout(rlPreviewAreaPreviewArea);
         GridData gdMPreviewArea = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
-        gdMPreviewArea.widthHint = 120;
+        gdMPreviewArea.widthHint = PREVIEW_AREA_WIDTH;
         mPreviewArea.setLayoutData(gdMPreviewArea);
 
         // Initial color
         Display display = parent.getDisplay();
-        updateColor(display, new RGB(0xa4, 0xc6, 0x39), true /*background*/);
+        //updateColor(display, new RGB(0xa4, 0xc6, 0x39), true /*background*/);
+        updateColor(display, new RGB(0xff, 0x00, 0x00), true /*background*/);
         updateColor(display, new RGB(0x00, 0x00, 0x00), false /*background*/);
 
         // Start out showing the image form
@@ -395,8 +421,38 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         // initially and we still get images
         mTextRadio.setSelection(true);
         chooseForegroundTab(mTextRadio, mTextForm);
+        new Label(mConfigurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
+        new Label(mConfigurationArea, SWT.NONE);
 
         validatePage();
+    }
+
+    void configureAssetType(AssetType type) {
+        showGroup(type.needsForegroundScaling(), mScalingLabel, mScalingComposite);
+        showGroup(type.needsShape(), mShapeLabel, mShapeComposite);
+        showGroup(type.needsTheme(), mThemeLabel, mThemeComposite);
+        showGroup(type.needsColors(), mBgColorLabel, mBgButton);
+        showGroup(type.needsColors(), mFgColorLabel, mFgButton);
+        showGroup(type.needsEffects(), mEffectsLabel, mEffectsComposite);
+
+        Composite parent = mScalingLabel.getParent();
+        parent.pack();
+        parent.layout();
+    }
+
+    private static void showGroup(boolean show, Control control1, Control control2) {
+        showControl(show, control1);
+        showControl(show, control2);
+    }
+
+    private static void showControl(boolean show, Control control) {
+        Object data = control.getLayoutData();
+        if (data instanceof GridData) {
+            GridData gridData = (GridData) data;
+            gridData.exclude = !show;
+        }
+        control.setVisible(show);
     }
 
     @Override
@@ -407,10 +463,25 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         // that method is called when the wizard is created, and we want to wait until the
         // user has chosen a project before attempting to look up the right default image to use
         if (visible) {
+            // Clear out old previews - important if the user goes back to page one, changes
+            // asset type and steps into page 2 - at that point we arrive here and we might
+            // display the old previews for a brief period until the preview delay timer expires.
+            for (Control c : mPreviewArea.getChildren()) {
+                c.dispose();
+            }
+            mPreviewArea.layout(true);
+
+            // Update asset type configuration: will show/hide parameter controls depending
+            // on which asset type is chosen
+            CreateAssetSetWizard wizard = (CreateAssetSetWizard) getWizard();
+            AssetType type = wizard.getAssetType();
+            assert type != null;
+            configureAssetType(type);
+
             // Initial image - use the most recently used image, or the default launcher
             // icon created in our default projects, if there
             if (sImagePath == null) {
-                IProject project = ((CreateAssetSetWizard) getWizard()).getProject();
+                IProject project = wizard.getProject();
                 if (project != null) {
                     IResource icon = project.findMember("res/drawable-hdpi/icon.png"); //$NON-NLS-1$
                     if (icon != null) {
@@ -453,7 +524,6 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 error = "Enter text";
             }
         } else {
-            //error = "Clipart not yet implemented";
             assert mClipartRadio.getSelection();
             if (mSelectedClipart == null) {
                 error = "Select clip art";
@@ -471,6 +541,12 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
 
         return error == null;
+    }
+
+    @Override
+    public boolean isPageComplete() {
+        // Force user to reach second page before hitting Finish
+        return isCurrentPage();
     }
 
     // ---- Implements ModifyListener ----
@@ -517,24 +593,38 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         // Enforce Radio Groups
         if (source == mCropRadio) {
+            mCropRadio.setSelection(true); // Ensure that you can't toggle it off
             mCenterRadio.setSelection(false);
         } else if (source == mCenterRadio) {
+            mCenterRadio.setSelection(true);
             mCropRadio.setSelection(false);
         }
         if (source == mSquareRadio) {
+            mSquareRadio.setSelection(true);
             mCircleButton.setSelection(false);
         } else if (source == mCircleButton) {
+            mCircleButton.setSelection(true);
             mSquareRadio.setSelection(false);
         }
         if (source == mSimpleRadio) {
+            mSimpleRadio.setSelection(true);
             mGlossyRadio.setSelection(false);
             mFancyRadio.setSelection(false);
         } else if (source == mFancyRadio) {
+            mFancyRadio.setSelection(true);
             mSimpleRadio.setSelection(false);
             mGlossyRadio.setSelection(false);
         } else if (source == mGlossyRadio) {
+            mGlossyRadio.setSelection(true);
             mSimpleRadio.setSelection(false);
             mFancyRadio.setSelection(false);
+        }
+        if (source == mHoloDarkRadio) {
+            mHoloDarkRadio.setSelection(true);
+            mHoloLightRadio.setSelection(false);
+        } else if (source == mHoloLightRadio) {
+            mHoloLightRadio.setSelection(true);
+            mHoloDarkRadio.setSelection(false);
         }
 
         if (source == mChooseClipart) {
@@ -646,12 +736,22 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
         if (source == mFontButton) {
             FontDialog dialog = new FontDialog(mFontButton.getShell());
+            FontData[] fontList;
+            if (mFontButton.getData() == null) {
+                fontList = mFontButton.getDisplay().getFontList("Helvetica", true /*scalable*/);
+            } else {
+                fontList = mFontButton.getFont().getFontData();
+            }
+            dialog.setFontList(fontList);
             FontData data = dialog.open();
             if (data != null) {
                 Font font = new Font(mFontButton.getDisplay(), dialog.getFontList());
                 mFontButton.setFont(font);
                 updateFontLabel(font);
                 mFontButton.getParent().pack();
+                // Mark the font on the button as custom (since the renderer needs to
+                // distinguish between this font and the default font it starts out with)
+                mFontButton.setData(Boolean.TRUE);
             }
         }
 
@@ -673,6 +773,19 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
     }
 
     private java.awt.Font getSelectedFont() {
+        // Always use a large font for the rendering, even though user is typically
+        // picking small font sizes in the font chooser
+        //int dpi = mFontButton.getDisplay().getDPI().y;
+        //int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
+        int fontHeight = new TextRenderUtil.Options().fontSize;
+
+        if (mFontButton.getData() == null) {
+            // The user has not yet picked a font; look up the default font to use
+            // (Helvetica Bold, not whatever font happened to be used for button widgets
+            // in SWT on this platform)
+            return new java.awt.Font("Helvetica", java.awt.Font.BOLD, fontHeight); //$NON-NLS-1$
+        }
+
         Font font = mFontButton.getFont();
         FontData fontData = font.getFontData()[0];
 
@@ -686,13 +799,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             awtStyle = java.awt.Font.BOLD;
         }
 
-        // Always use a large font for the rendering, even though user is typically
-        // picking small font sizes in the font chooser
-        //int dpi = mFontButton.getDisplay().getDPI().y;
-        //int height = (int) Math.round(fontData.getHeight() * dpi / 72.0);
-        int height = new TextRenderUtil.Options().fontSize;
-
-        return new java.awt.Font(fontData.getName(), awtStyle, height);
+        return new java.awt.Font(fontData.getName(), awtStyle, fontHeight);
     }
 
     private int getPadding() {
@@ -700,7 +807,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         return mPaddingSlider.getSelection() - 10;
     }
 
-    public void chooseForegroundTab(Button newButton, Composite newArea) {
+    private void chooseForegroundTab(Button newButton, Composite newArea) {
         if (newButton.getSelection()) {
             mImageRadio.setSelection(false);
             mClipartRadio.setSelection(false);
@@ -709,6 +816,10 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             StackLayout stackLayout = (StackLayout) mForegroundArea.getLayout();
             stackLayout.topControl = newArea;
             mForegroundArea.layout();
+        } else {
+            // Treat it as a radio button: you can't click to turn it off, you have to
+            // click on one of the other buttons
+            newButton.setSelection(true);
         }
     }
 
@@ -745,26 +856,39 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             return;
         }
 
-        Map<String, BufferedImage> map = generatePreviews();
-        for (Map.Entry<String, BufferedImage> entry : map.entrySet()) {
-            String id = entry.getKey();
-            BufferedImage image = entry.getValue();
-            Label nameLabel = new Label(mPreviewArea, SWT.NONE);
-            nameLabel.setText(id);
+        Map<String, Map<String, BufferedImage>> map = generateImages(true /*previewOnly*/);
+        for (Entry<String, Map<String, BufferedImage>> categoryEntry : map.entrySet()) {
+            String category = categoryEntry.getKey();
+            if (category.length() > 0) {
+                Label nameLabel = new Label(mPreviewArea, SWT.NONE);
+                nameLabel.setText(String.format("%1$s:", category));
+                RowData rowData = new RowData();
+                nameLabel.setLayoutData(rowData);
+                // Ensure these get their own rows
+                rowData.width = PREVIEW_AREA_WIDTH;
+            }
 
-            Image swtImage = SwtUtils.convertToSwt(display, image, true, -1);
-            if (swtImage != null) {
-                @SuppressWarnings("unused") // Has side effect
-                ImageControl imageControl = new ImageControl(mPreviewArea, SWT.NONE, swtImage);
+            Map<String, BufferedImage> images = categoryEntry.getValue();
+            for (Entry<String, BufferedImage> entry :  images.entrySet()) {
+                BufferedImage image = entry.getValue();
+                Image swtImage = SwtUtils.convertToSwt(display, image, true, -1);
+                if (swtImage != null) {
+                    @SuppressWarnings("unused") // Has side effect
+                    ImageControl imageControl = new ImageControl(mPreviewArea, SWT.NONE, swtImage);
+                }
             }
         }
 
         mPreviewArea.layout(true);
     }
 
-    Map<String, BufferedImage> generatePreviews() {
+    Map<String, Map<String, BufferedImage>> generateImages(boolean previewOnly) {
         // Map of ids to images: Preserve insertion order (the densities)
-        Map<String, BufferedImage> imageMap = new LinkedHashMap<String, BufferedImage>();
+        Map<String, Map<String, BufferedImage>> categoryMap =
+                new LinkedHashMap<String, Map<String, BufferedImage>>();
+
+        CreateAssetSetWizard wizard = (CreateAssetSetWizard) getWizard();
+        AssetType type = wizard.getAssetType();
 
         BufferedImage sourceImage = null;
         if (mImageRadio.getSelection()) {
@@ -787,7 +911,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             String text = mText.getText();
             TextRenderUtil.Options options = new TextRenderUtil.Options();
             options.font = getSelectedFont();
-            sourceImage = TextRenderUtil.renderTextImage(text, options);
+            int color;
+            if (type.needsColors()) {
+                color = 0xFF000000 | (mFgColor.red << 16) | (mFgColor.green << 8) | mFgColor.blue;
+            } else {
+                color = 0xFFFFFFFF;
+            }
+            options.foregroundColor = color;
+            sourceImage = TextRenderUtil.renderTextImage(text, getPadding(), options);
         } else {
             assert mClipartRadio.getSelection();
             assert mSelectedClipart != null;
@@ -795,48 +926,69 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 sourceImage = GraphicGenerator.getClipartImage(mSelectedClipart);
             } catch (IOException e) {
                 AdtPlugin.log(e, null);
-                return imageMap;
+                return categoryMap;
             }
         }
 
-        LauncherIconGenerator.Options options = new LauncherIconGenerator.Options();
-        options.shape = mCircleButton.getSelection() ? CIRCLE : SQUARE;
-        options.crop = mCropRadio.getSelection();
+        GraphicGenerator generator = null;
+        GraphicGenerator.Options options = null;
+        switch (type) {
+            case LAUNCHER: {
+                generator = new LauncherIconGenerator();
+                LauncherIconGenerator.LauncherOptions launcherOptions =
+                        new LauncherIconGenerator.LauncherOptions();
+                launcherOptions.shape = mCircleButton.getSelection()
+                        ? GraphicGenerator.Shape.CIRCLE : GraphicGenerator.Shape.SQUARE;
+                launcherOptions.crop = mCropRadio.getSelection();
+                launcherOptions.style = mFancyRadio.getSelection() ?
+                        GraphicGenerator.Style.FANCY : mGlossyRadio.getSelection()
+                                ? GraphicGenerator.Style.GLOSSY : GraphicGenerator.Style.SIMPLE;
+                int color = (mBgColor.red << 16) | (mBgColor.green << 8) | mBgColor.blue;
+                launcherOptions.backgroundColor = color;
+                // Flag which tells the generator iterator to include a web graphic
+                launcherOptions.isWebGraphic = !previewOnly;
+                options = launcherOptions;
 
-        int color = (mBgColor.red << 16) | (mBgColor.green << 8) | mBgColor.blue;
-        options.backgroundColor = color;
+                break;
+            }
+            case MENU:
+                generator = new MenuIconGenerator();
+                options = new GraphicGenerator.Options();
+                break;
+            case ACTIONBAR: {
+                generator = new ActionBarIconGenerator();
+                ActionBarIconGenerator.ActionBarOptions actionBarOptions =
+                        new ActionBarIconGenerator.ActionBarOptions();
+                actionBarOptions.theme = mHoloDarkRadio.getSelection()
+                        ? ActionBarIconGenerator.Theme.HOLO_DARK
+                                : ActionBarIconGenerator.Theme.HOLO_LIGHT;
+
+                options = actionBarOptions;
+                break;
+            }
+            case NOTIFICATION: {
+                generator = new NotificationIconGenerator();
+                NotificationIconGenerator.NotificationOptions notificationOptions =
+                        new NotificationIconGenerator.NotificationOptions();
+                notificationOptions.shape = mCircleButton.getSelection()
+                        ? GraphicGenerator.Shape.CIRCLE : GraphicGenerator.Shape.SQUARE;
+                options = notificationOptions;
+                break;
+            }
+            case TAB:
+                generator = new TabIconGenerator();
+                options = new TabIconGenerator.TabOptions();
+                break;
+            default:
+                AdtPlugin.log(IStatus.ERROR, "Unsupported asset type: %1$s", type);
+                return categoryMap;
+        }
+
         options.sourceImage = sourceImage;
+        String baseName = wizard.getBaseName();
+        generator.generate(null, categoryMap, this, options, baseName);
 
-        Density[] densityValues = Density.values();
-        // Sort density values into ascending order
-        Arrays.sort(densityValues, new Comparator<Density>() {
-            public int compare(Density d1, Density d2) {
-                return d1.getDpiValue() - d2.getDpiValue();
-            }
-
-        });
-        Style[] styleValues = LauncherIconGenerator.Options.Style.values();
-
-        for (Density density : densityValues) {
-            if (!density.isValidValueForDevice()) {
-                continue;
-            }
-            if (density == Density.TV) {
-                // Not yet supported -- missing stencil image
-                continue;
-            }
-            options.density = density;
-            for (LauncherIconGenerator.Options.Style style : styleValues) {
-                options.style = style;
-                LauncherIconGenerator generator = new LauncherIconGenerator(this, options);
-                BufferedImage image = generator.generate();
-                if (image != null) {
-                    imageMap.put(density.getResourceValue(), image);
-                }
-            }
-        }
-
-        return imageMap;
+        return categoryMap;
     }
 
     private void updateColor(Display display, RGB color, boolean isBackground) {

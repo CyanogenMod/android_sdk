@@ -102,6 +102,8 @@ guava
 hardcode
 hardcoded
 hardcodes
+hdpi
+helvetica
 highlighter
 holo
 hotfix
