@@ -483,8 +483,6 @@ public class PreCompilerBuilder extends BaseBuilder {
             if (mMustCompileResources) {
                 handleResources(project, javaPackage, projectTarget, manifestFile, libProjects,
                         projectState.isLibrary());
-                saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES , false);
-                // The project resources will find out that they're in sync when their IDs are set
             }
 
             if (processorStatus == SourceProcessor.COMPILE_STATUS_NONE &&
@@ -790,17 +788,11 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // This interrupts the build.
             throw new AbortBuildException();
-        }
-
-        // if the return code was OK, we refresh the folder that
-        // contains R.java to force a java recompile.
-        if (execError == 0) {
-            // build has been done. reset the state of the builder
-            mMustCompileResources = false;
-
-            // and store it
+        } finally {
+            // we've at least attempted to run aapt, save the fact that we don't have to
+            // run it again, unless there's a new resource change.
             saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES,
-                    mMustCompileResources);
+                    mMustCompileResources = false);
         }
     }
 
