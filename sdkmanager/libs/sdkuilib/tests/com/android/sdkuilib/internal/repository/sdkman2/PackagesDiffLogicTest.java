@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.MockAddonPackage;
 import com.android.sdklib.internal.repository.MockEmptyPackage;
 import com.android.sdklib.internal.repository.MockExtraPackage;
@@ -26,6 +27,8 @@ import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkRepoSource;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdkuilib.internal.repository.MockUpdaterData;
+
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -1126,6 +1129,62 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategorySource <source=repo3 (repo.com), #items=2>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testRenamedExtraPackage() {
+        // Starting with schemas repo v5 and addon v3, an extra package can be renamed
+        // using the "old-paths" attribute. This test checks that the diff logic will
+        // match an old extra and its new name together.
+
+        // First scenario: local pkg "old_path1" and remote pkg "new_path2".
+        // Since the new package does not provide an old_paths attribute, the
+        // new package is not treated as an update.
+
+        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockExtraPackage(src1, "vendor1", "old_path1", 1, 1),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockExtraPackage(src1, "vendor1", "new_path2", 2, 1),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
+                "-- <NEW, pkg:Vendor1 New Path2 package, revision 2>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "-- <NEW, pkg:Vendor1 New Path2 package, revision 2>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now, start again, but this time the new package used the old_path attribute
+        Properties props = new Properties();
+        props.setProperty(ExtraPackage.PROP_OLD_PATHS, "old_path1;oldpath2");
+        m.clear();
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockExtraPackage(src1, "vendor1", "old_path1", 1, 1),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockExtraPackage(src1, props, "vendor1", "new_path2", 2),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
