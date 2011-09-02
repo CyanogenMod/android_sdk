@@ -170,46 +170,41 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
     @Override
     protected void createFormPages() {
         try {
-            // The graphical layout editor is now enabled by default.
-            // In case there's an issue we provide a way to disable it using an
-            // env variable.
-            if (System.getenv("ANDROID_DISABLE_LAYOUT") == null) {      //$NON-NLS-1$
-                // get the file being edited so that it can be passed to the layout editor.
-                IFile editedFile = null;
-                IEditorInput input = getEditorInput();
-                if (input instanceof FileEditorInput) {
-                    FileEditorInput fileInput = (FileEditorInput)input;
-                    editedFile = fileInput.getFile();
-                } else {
-                    AdtPlugin.log(IStatus.ERROR,
-                            "Input is not of type FileEditorInput: %1$s",  //$NON-NLS-1$
-                            input.toString());
-                }
-
-                // It is possible that the Layout Editor already exits if a different version
-                // of the same layout is being opened (either through "open" action from
-                // the user, or through a configuration change in the configuration selector.)
-                if (mGraphicalEditor == null) {
-
-                    // Instantiate GLE v2
-                    mGraphicalEditor = new GraphicalEditorPart(this);
-
-                    mGraphicalEditorIndex = addPage(mGraphicalEditor, getEditorInput());
-                    setPageText(mGraphicalEditorIndex, mGraphicalEditor.getTitle());
-
-                    mGraphicalEditor.openFile(editedFile);
-                } else {
-                    if (mNewFileOnConfigChange) {
-                        mGraphicalEditor.changeFileOnNewConfig(editedFile);
-                        mNewFileOnConfigChange = false;
-                    } else {
-                        mGraphicalEditor.replaceFile(editedFile);
-                    }
-                }
-
-                // put in place the listener to handle layout recompute only when needed.
-                getSite().getPage().addPartListener(this);
+            // get the file being edited so that it can be passed to the layout editor.
+            IFile editedFile = null;
+            IEditorInput input = getEditorInput();
+            if (input instanceof FileEditorInput) {
+                FileEditorInput fileInput = (FileEditorInput)input;
+                editedFile = fileInput.getFile();
+            } else {
+                AdtPlugin.log(IStatus.ERROR,
+                        "Input is not of type FileEditorInput: %1$s",  //$NON-NLS-1$
+                        input.toString());
             }
+
+            // It is possible that the Layout Editor already exits if a different version
+            // of the same layout is being opened (either through "open" action from
+            // the user, or through a configuration change in the configuration selector.)
+            if (mGraphicalEditor == null) {
+
+                // Instantiate GLE v2
+                mGraphicalEditor = new GraphicalEditorPart(this);
+
+                mGraphicalEditorIndex = addPage(mGraphicalEditor, getEditorInput());
+                setPageText(mGraphicalEditorIndex, mGraphicalEditor.getTitle());
+
+                mGraphicalEditor.openFile(editedFile);
+            } else {
+                if (mNewFileOnConfigChange) {
+                    mGraphicalEditor.changeFileOnNewConfig(editedFile);
+                    mNewFileOnConfigChange = false;
+                } else {
+                    mGraphicalEditor.replaceFile(editedFile);
+                }
+            }
+
+            // put in place the listener to handle layout recompute only when needed.
+            getSite().getPage().addPartListener(this);
         } catch (PartInitException e) {
             AdtPlugin.log(e, "Error creating nested page"); //$NON-NLS-1$
         }

@@ -656,11 +656,7 @@ public class DomUtilities {
             Element nextElement2 = (Element) (nextIndex2 < children2.getLength()
                     ? children2.item(nextIndex2) : null);
             if (nextElement1 == null) {
-                if (nextElement2 == null) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return nextElement2 == null;
             } else if (nextElement2 == null) {
                 return false;
             } else if (!isEquivalent(nextElement1, nextElement2)) {

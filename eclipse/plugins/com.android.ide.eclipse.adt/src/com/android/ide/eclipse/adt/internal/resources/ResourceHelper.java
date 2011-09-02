@@ -537,7 +537,7 @@ public class ResourceHelper {
                     // Drop alpha channel
                     return ImageUtils.intToRgb(rgba);
                 } catch (NumberFormatException nfe) {
-                    ;
+                    // Pass
                 }
                 return null;
             }
