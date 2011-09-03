@@ -748,6 +748,8 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                                 p = new PlatformToolPackage(this, child, nsUri, licenses);
                             } else if (SdkRepoConstants.NODE_SAMPLE.equals(name)) {
                                 p = new SamplePackage(this, child, nsUri, licenses);
+                            } else if (SdkRepoConstants.NODE_SYSTEM_IMAGE.equals(name)) {
+                                p = new SystemImagePackage(this, child, nsUri, licenses);
                             }
                         }
 

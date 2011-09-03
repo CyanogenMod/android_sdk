@@ -25,8 +25,6 @@ import java.util.Properties;
 
 public class MinToolsPackageTest extends PackageTest {
 
-    protected static final String LOCAL_ARCHIVE_PATH = "/local/archive/path";
-
     /** Local class used to test the abstract MinToolsPackage class */
     protected static class MockMinToolsPackage extends MinToolsPackage {
         public MockMinToolsPackage(

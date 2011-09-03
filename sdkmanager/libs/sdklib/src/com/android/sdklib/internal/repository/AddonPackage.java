@@ -392,7 +392,6 @@ public class AddonPackage extends Package
         }
 
         // Compute a folder directory using the addon declared name and vendor strings.
-        // This purposely ignores the suggestedDir.
         String name = String.format("addon_%s_%s_%s",     //$NON-NLS-1$
                                     getName(), getVendor(), mVersion.getApiString());
         name = name.toLowerCase();
