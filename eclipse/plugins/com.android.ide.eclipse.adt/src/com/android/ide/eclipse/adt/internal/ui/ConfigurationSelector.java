@@ -235,7 +235,7 @@ public class ConfigurationSelector extends Composite {
      * edited (a device config, a resource config, a given configuration).
      *
      * @param parent the composite parent.
-     * @param deviceMode the mode for the selector.
+     * @param mode the mode for the selector.
      */
     public ConfigurationSelector(Composite parent, SelectorMode mode) {
         super(parent, SWT.NONE);
