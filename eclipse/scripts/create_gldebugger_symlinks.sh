@@ -1,6 +1,6 @@
 #!/bin/bash
 #----------------------------------------------------------------------------|
-# Creates the links to use hierarchyviewer{ui}lib in the eclipse-ide plugin.
+# Creates the links to use gldebugger in the eclipse-ide plugin.
 # Run this from sdk/eclipse/scripts
 #----------------------------------------------------------------------------|
 
@@ -12,16 +12,15 @@ source $D/common_setup.sh
 # cd to the top android directory
 cd "$D/../../../"
 
-BASE="sdk/eclipse/plugins/com.android.ide.eclipse.hierarchyviewer"
+BASE="sdk/eclipse/plugins/com.android.ide.eclipse.gldebugger"
 DEST=$BASE/libs
 
 mkdir -p $DEST
 
-COPY_LIBS="hierarchyviewerlib"
-ALL_LIBS="$COPY_LIBS swtmenubar"
+LIBS="host-libprotobuf-java-2.3.0-lite liblzf sdklib"
 echo "make java libs ..."
-make -j3 showcommands $ALL_LIBS || die "Hierarchy Viewer: Fail to build one of $ALL_LIBS."
+make -j3 $LIBS || die "GL Debugger: Fail to build one of $LIBS."
 
-for LIB in $COPY_LIBS; do
+for LIB in $LIBS; do
     cpfile $DEST out/host/$PLATFORM/framework/$LIB.jar
 done

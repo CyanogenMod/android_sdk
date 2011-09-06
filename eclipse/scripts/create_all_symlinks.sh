@@ -29,5 +29,7 @@ echo ; echo "### TRACEVIEW ###" ; echo
 $DEST/create_traceview_symlinks.sh "$*"
 echo ; echo "### SDKMANAGER ###" ; echo
 $DEST/create_sdkman_symlinks.sh "$*"
+echo ; echo "### GL DEBUGGER ###" ; echo
+$DEST/create_gldebugger_symlinks.sh "$*"
 
 echo "### $0 done"
