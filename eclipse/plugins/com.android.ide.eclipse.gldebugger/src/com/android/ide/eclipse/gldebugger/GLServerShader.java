@@ -14,9 +14,9 @@
  ** limitations under the License.
  */
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
-import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
 import com.android.sdklib.util.SparseArray;
 
 import java.util.ArrayList;

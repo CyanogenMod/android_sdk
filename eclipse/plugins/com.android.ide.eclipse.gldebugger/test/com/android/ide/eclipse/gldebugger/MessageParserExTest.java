@@ -14,14 +14,18 @@
  ** limitations under the License.
  */
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.glesv2debugger.DebuggerMessage.Message;
-import com.android.glesv2debugger.DebuggerMessage.Message.Function;
-import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gldebugger.MessageFormatter;
+import com.android.ide.eclipse.gldebugger.MessageParserEx;
+import com.android.ide.eclipse.gldebugger.SampleView;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type;
 import com.google.protobuf.ByteString;
 
 import org.junit.Before;
@@ -60,7 +64,7 @@ public class MessageParserExTest {
 
     /**
      * Test method for
-     * {@link com.android.glesv2debugger.MessageParserEx#parse_glShaderSource(com.android.glesv2debugger.DebuggerMessage.Message.Builder)}
+     * {@link com.android.ide.eclipse.gldebugger.MessageParserEx#parse_glShaderSource(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Builder)}
      * .
      */
     @Test
