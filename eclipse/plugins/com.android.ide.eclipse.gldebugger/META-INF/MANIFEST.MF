@@ -1,15 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: GLESv2DebuggerClient
-Bundle-SymbolicName: GLESv2DebuggerClient; singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Name: GLESv2 Debugger Client
+Bundle-SymbolicName: com.android.ide.eclipse.gldebugger;singleton:=true
+Bundle-Version: 14.0.0.qualifier
 Bundle-Activator: com.android.ide.eclipse.gldebugger.Activator
 Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime,
- org.junit
+ org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: libs/host-libprotobuf-java-2.3.0-lite.jar,
  libs/liblzf.jar,
  libs/sdklib.jar,
  .
+Bundle-Vendor: The Android Open Source Project
+Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.eclipse.gldebugger.tests"
