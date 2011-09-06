@@ -24,6 +24,9 @@
       <category name="developer"/>
       <category name="platform"/>
    </feature>
+   <feature url="features/com.android.ide.eclipse.gldebugger_14.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="14.0.0.qualifier">
+      <category name="developer"/>
+   </feature>
    <category-def name="developer" label="Application Developer Tools">
       <description>
          Features that add Android support to Eclipse for application developers.
