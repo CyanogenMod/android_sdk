@@ -125,7 +125,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             ITableLabelProvider {
         Frame frame = null;
 
-        @Override
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
             frame = (Frame) newInput;
         }
@@ -134,7 +133,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         public void dispose() {
         }
 
-        @Override
         public Object[] getElements(Object parent) {
             return frame.get().toArray();
         }
@@ -151,7 +149,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             return msgData.getImage();
         }
 
-        @Override
         public String getColumnText(Object obj, int index) {
             MessageData msgData = (MessageData) obj;
             if (index >= msgData.columns.length)
@@ -159,7 +156,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             return msgData.columns[index];
         }
 
-        @Override
         public Image getColumnImage(Object obj, int index) {
             if (index > -1)
                 return null;
@@ -305,7 +301,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
-            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -319,7 +314,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         });
         final ScrollBar vBar = canvas.getVerticalBar();
         vBar.addListener(SWT.Selection, new Listener() {
-            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -332,7 +326,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
         canvas.addListener(SWT.Resize, new Listener() {
-            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -361,7 +354,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
         canvas.addListener(SWT.Paint, new Listener() {
-            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -394,7 +386,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         MenuManager menuMgr = new MenuManager("#PopupMenu");
         menuMgr.setRemoveAllWhenShown(true);
         menuMgr.addMenuListener(new IMenuListener() {
-            @Override
             public void menuAboutToShow(IMenuManager manager) {
                 SampleView.this.fillContextMenu(manager);
             }
@@ -650,7 +641,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             actionConnect.setText("Connect");
         }
         this.getSite().getShell().getDisplay().syncExec(new Runnable() {
-            @Override
             public void run() {
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
@@ -695,7 +685,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
     private void hookSelectionChanged() {
         viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 StructuredSelection selection = (StructuredSelection) event
                         .getSelection();
@@ -709,7 +698,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
     public void showError(final Exception e) {
         viewer.getControl().getDisplay().syncExec(new Runnable() {
-            @Override
             public void run() {
                 MessageDialog.openError(viewer.getControl().getShell(),
                         "GL ES 2.0 Debugger Client", e.getMessage());
@@ -725,7 +713,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         viewer.getControl().setFocus();
     }
 
-    @Override
     public void run() {
         int newMessages = 0;
 
@@ -738,7 +725,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 newMessages = 0;
                 if (current != null && current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
-                        @Override
                         public void run() {
                             if (frameNum.getSelection() == current.frameCount() - 1 ||
                                     frameNum.getSelection() == current.frameCount() - 2)
@@ -755,7 +741,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
                 if (shaderEditorUpdate)
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
-                        @Override
                         public void run() {
                             shaderEditor.updateUI();
                         }
@@ -789,7 +774,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     /** can be called from non-UI thread */
     void changeContext(final DebugContext newContext) {
         getSite().getShell().getDisplay().syncExec(new Runnable() {
-            @Override
             public void run() {
                 current = newContext;
                 if (current != null)
@@ -816,7 +800,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         });
     }
 
-    @Override
     public void widgetSelected(SelectionEvent e) {
         if (e.widget != frameNum)
             assert false;
@@ -828,7 +811,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         viewer.setInput(frame);
     }
 
-    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         widgetSelected(e);
     }
