@@ -43,6 +43,7 @@ import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.SegmentType;
 import com.android.ide.common.layout.BaseLayoutRule;
 import com.android.ide.common.layout.GridLayoutRule;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -554,14 +555,16 @@ public class GridDropHandler {
                 insertMarginColumn = column > 0 && distance < 2;
                 if (insertMarginColumn) {
                     int margin = mColumnMatch.margin;
-                    IViewMetadata metadata = mRule.getRulesEngine().getMetadata(element.getFqcn());
-                    if (metadata != null) {
-                        Margins insets = metadata.getInsets();
-                        if (insets != null) {
-                            // TODO:
-                            // Consider left or right side attachment
-                            // TODO: Also consider inset of element on cell to the left
-                            margin -= insets.left;
+                    if (ViewMetadataRepository.INSETS_SUPPORTED) {
+                        IViewMetadata metadata = mRule.getRulesEngine().getMetadata(fqcn);
+                        if (metadata != null) {
+                            Margins insets = metadata.getInsets();
+                            if (insets != null) {
+                                // TODO:
+                                // Consider left or right side attachment
+                                // TODO: Also consider inset of element on cell to the left
+                                margin -= insets.left;
+                            }
                         }
                     }
 

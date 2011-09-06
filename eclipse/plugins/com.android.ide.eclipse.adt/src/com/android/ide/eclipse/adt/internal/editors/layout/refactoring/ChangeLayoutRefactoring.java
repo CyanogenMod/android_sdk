@@ -23,6 +23,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_TABLE_LAYOUT;
@@ -259,6 +260,9 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 // This already handles removing undefined layout attributes -- right?
                 //removeUndefinedLayoutAttrs(rootEdit, layout);
             }
+        } else if (newType.equals(FQCN_GRID_LAYOUT)) {
+            convertAnyToGridLayout(rootEdit);
+            removeUndefinedLayoutAttrs(rootEdit, layout);
         } else if (oldType.equals(FQCN_RELATIVE_LAYOUT) && newType.equals(FQCN_LINEAR_LAYOUT)) {
             convertRelativeToLinear(rootEdit);
             removeUndefinedLayoutAttrs(rootEdit, layout);
@@ -266,8 +270,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             convertLinearToTable(rootEdit);
             removeUndefinedLayoutAttrs(rootEdit, layout);
         } else {
-            convertGeneric(rootEdit, oldType, newType);
-            removeUndefinedLayoutAttrs(rootEdit, layout);
+            convertGeneric(rootEdit, oldType, newType, layout);
         }
 
         if (AdtPrefs.getPrefs().getFormatGuiXml()) {
@@ -420,13 +423,16 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
      *            from
      * @param newType the fully qualified class name of the layout type we are converting
      *            to
+     * @param layout the layout to be converted
      */
-    private void convertGeneric(MultiTextEdit rootEdit, String oldType, String newType) {
+    private void convertGeneric(MultiTextEdit rootEdit, String oldType, String newType,
+            Element layout) {
         // TODO: Add hooks for 3rd party conversions getting registered through the
         // IViewRule interface.
 
         // For now we simply go with the default behavior, which is to just strip the
         // layout attributes that aren't supported.
+        removeUndefinedLayoutAttrs(rootEdit, layout);
     }
 
     /** Removes all the unused attributes after a conversion */
@@ -474,6 +480,22 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         RelativeLayoutConversionHelper helper =
             new RelativeLayoutConversionHelper(this, layout, mFlatten, rootEdit, rootView);
         helper.convertToRelative();
+    }
+
+    /** Hand coded conversion from any layout to a GridLayout */
+    private void convertAnyToGridLayout(MultiTextEdit rootEdit) {
+        // To perform a conversion from any other layout type, including nested conversion,
+        Element layout = getPrimaryElement();
+        CanvasViewInfo rootView = mRootView;
+        if (rootView == null) {
+            LayoutCanvas canvas = mEditor.getGraphicalEditor().getCanvasControl();
+            ViewHierarchy viewHierarchy = canvas.getViewHierarchy();
+            rootView = viewHierarchy.getRoot();
+        }
+
+        GridLayoutConverter converter = new GridLayoutConverter(this, layout, mFlatten,
+                rootEdit, rootView);
+        converter.convertToGridLayout();
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {
