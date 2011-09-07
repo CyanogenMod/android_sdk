@@ -108,6 +108,7 @@ class RelativeLayoutConversionHelper {
     private final Element mLayout;
     private final ChangeLayoutRefactoring mRefactoring;
     private final CanvasViewInfo mRootView;
+    private List<Element> mDeletedElements;
 
     RelativeLayoutConversionHelper(ChangeLayoutRefactoring refactoring,
             Element layout, boolean flatten, MultiTextEdit rootEdit, CanvasViewInfo rootView) {
@@ -138,13 +139,19 @@ class RelativeLayoutConversionHelper {
         createAttachments(views);
     }
 
+    /** Returns the elements that were deleted, or null */
+    List<Element> getDeletedElements() {
+        return mDeletedElements;
+    }
+
     /**
      * Analyzes the given view hierarchy and produces a list of {@link View} objects which
      * contain placement information for each element
      */
     private List<View> analyzeLayout(CanvasViewInfo layoutView) {
         EdgeList edgeList = new EdgeList(layoutView);
-        deleteRemovedElements(edgeList.getDeletedElements());
+        mDeletedElements = edgeList.getDeletedElements();
+        deleteRemovedElements(mDeletedElements);
 
         List<Integer> columnOffsets = edgeList.getColumnOffsets();
         List<Integer> rowOffsets = edgeList.getRowOffsets();

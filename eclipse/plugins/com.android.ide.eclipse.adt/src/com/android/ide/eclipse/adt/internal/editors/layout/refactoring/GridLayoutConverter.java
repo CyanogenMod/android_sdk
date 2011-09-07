@@ -195,6 +195,16 @@ class GridLayoutConverter {
             }
             nextRow = Math.max(nextRow, row + rowSpan);
 
+            // wrap_content is redundant in GridLayouts
+            Attr width = element.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
+            if (width != null && VALUE_WRAP_CONTENT.equals(width.getValue())) {
+                mRefactoring.removeAttribute(mRootEdit, width);
+            }
+            Attr height = element.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
+            if (height != null && VALUE_WRAP_CONTENT.equals(height.getValue())) {
+                mRefactoring.removeAttribute(mRootEdit, height);
+            }
+
             // Fix up children moved from LinearLayouts that have "invalid" sizes that
             // was intended for layout weight handling in their old parent
             if (LINEAR_LAYOUT.equals(element.getParentNode().getNodeName())) {

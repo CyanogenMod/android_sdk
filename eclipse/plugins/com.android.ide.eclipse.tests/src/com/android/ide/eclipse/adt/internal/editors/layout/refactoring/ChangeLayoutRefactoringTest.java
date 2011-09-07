@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_RELATIVE_LAYOUT;
 
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -28,6 +29,7 @@ import org.w3c.dom.Element;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("javadoc")
 public class ChangeLayoutRefactoringTest extends RefactoringTest {
 
     public void testChangeLayout1a() throws Exception {
@@ -78,6 +80,14 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
     public void testGridLayout5() throws Exception {
         // Test handling of LinearLayout "gravity" attributes on its children
         checkRefactoring(FQCN_GRID_LAYOUT, "sample5.xml", true);
+    }
+
+    public void testConvertToGrid() throws Exception {
+        checkRefactoring(FQCN_GRID_LAYOUT, "sample9.xml", true);
+    }
+
+    public void testConvertFromGrid() throws Exception {
+        checkRefactoring(FQCN_LINEAR_LAYOUT, "sample10.xml", true);
     }
 
     private void checkRefactoring(String basename, boolean flatten) throws Exception {
