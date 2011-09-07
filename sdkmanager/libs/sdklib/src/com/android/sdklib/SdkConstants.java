@@ -46,204 +46,206 @@ public final class SdkConstants {
     /**
      * Charset for the ini file handled by the SDK.
      */
-    public final static String INI_CHARSET = "UTF-8";
+    public final static String INI_CHARSET = "UTF-8";                                 //$NON-NLS-1$
 
     /** An SDK Project's AndroidManifest.xml file */
-    public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";
+    public static final String FN_ANDROID_MANIFEST_XML= "AndroidManifest.xml";        //$NON-NLS-1$
     /** pre-dex jar filename. i.e. "classes.jar" */
-    public final static String FN_CLASSES_JAR = "classes.jar"; //$NON-NLS-1$
+    public final static String FN_CLASSES_JAR = "classes.jar";                        //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
-    public final static String FN_APK_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
+    public final static String FN_APK_CLASSES_DEX = "classes.dex";                    //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
-    public final static String FN_BUILD_XML = "build.xml";
+    public final static String FN_BUILD_XML = "build.xml";                            //$NON-NLS-1$
 
     /** Name of the framework library, i.e. "android.jar" */
-    public static final String FN_FRAMEWORK_LIBRARY = "android.jar";
+    public static final String FN_FRAMEWORK_LIBRARY = "android.jar";                  //$NON-NLS-1$
     /** Name of the layout attributes, i.e. "attrs.xml" */
-    public static final String FN_ATTRS_XML = "attrs.xml";
+    public static final String FN_ATTRS_XML = "attrs.xml";                            //$NON-NLS-1$
     /** Name of the layout attributes, i.e. "attrs_manifest.xml" */
-    public static final String FN_ATTRS_MANIFEST_XML = "attrs_manifest.xml";
+    public static final String FN_ATTRS_MANIFEST_XML = "attrs_manifest.xml";          //$NON-NLS-1$
     /** framework aidl import file */
-    public static final String FN_FRAMEWORK_AIDL = "framework.aidl";
+    public static final String FN_FRAMEWORK_AIDL = "framework.aidl";                  //$NON-NLS-1$
     /** framework renderscript folder */
-    public static final String FN_FRAMEWORK_RENDERSCRIPT = "renderscript";
+    public static final String FN_FRAMEWORK_RENDERSCRIPT = "renderscript";            //$NON-NLS-1$
     /** framework include folder */
-    public static final String FN_FRAMEWORK_INCLUDE = "include";
+    public static final String FN_FRAMEWORK_INCLUDE = "include";                      //$NON-NLS-1$
     /** framework include (clang) folder */
-    public static final String FN_FRAMEWORK_INCLUDE_CLANG = "clang-include";
+    public static final String FN_FRAMEWORK_INCLUDE_CLANG = "clang-include";          //$NON-NLS-1$
     /** layoutlib.jar file */
-    public static final String FN_LAYOUTLIB_JAR = "layoutlib.jar";
+    public static final String FN_LAYOUTLIB_JAR = "layoutlib.jar";                    //$NON-NLS-1$
     /** widget list file */
-    public static final String FN_WIDGETS = "widgets.txt";
+    public static final String FN_WIDGETS = "widgets.txt";                            //$NON-NLS-1$
     /** Intent activity actions list file */
-    public static final String FN_INTENT_ACTIONS_ACTIVITY = "activity_actions.txt";
+    public static final String FN_INTENT_ACTIONS_ACTIVITY = "activity_actions.txt";   //$NON-NLS-1$
     /** Intent broadcast actions list file */
-    public static final String FN_INTENT_ACTIONS_BROADCAST = "broadcast_actions.txt";
+    public static final String FN_INTENT_ACTIONS_BROADCAST = "broadcast_actions.txt"; //$NON-NLS-1$
     /** Intent service actions list file */
-    public static final String FN_INTENT_ACTIONS_SERVICE = "service_actions.txt";
+    public static final String FN_INTENT_ACTIONS_SERVICE = "service_actions.txt";     //$NON-NLS-1$
     /** Intent category list file */
-    public static final String FN_INTENT_CATEGORIES = "categories.txt";
+    public static final String FN_INTENT_CATEGORIES = "categories.txt";               //$NON-NLS-1$
 
     /** platform build property file */
-    public final static String FN_BUILD_PROP = "build.prop";
+    public final static String FN_BUILD_PROP = "build.prop";                          //$NON-NLS-1$
     /** plugin properties file */
-    public final static String FN_PLUGIN_PROP = "plugin.prop";
+    public final static String FN_PLUGIN_PROP = "plugin.prop";                        //$NON-NLS-1$
     /** add-on manifest file */
-    public final static String FN_MANIFEST_INI = "manifest.ini";
+    public final static String FN_MANIFEST_INI = "manifest.ini";                      //$NON-NLS-1$
     /** add-on layout device XML file. */
-    public final static String FN_DEVICES_XML = "devices.xml";
+    public final static String FN_DEVICES_XML = "devices.xml";                        //$NON-NLS-1$
     /** hardware properties definition file */
-    public final static String FN_HARDWARE_INI = "hardware-properties.ini";
+    public final static String FN_HARDWARE_INI = "hardware-properties.ini";           //$NON-NLS-1$
 
     /** project property file */
-    public final static String FN_PROJECT_PROPERTIES = "project.properties";
+    public final static String FN_PROJECT_PROPERTIES = "project.properties";          //$NON-NLS-1$
 
     /** project local property file */
-    public final static String FN_LOCAL_PROPERTIES = "local.properties";
+    public final static String FN_LOCAL_PROPERTIES = "local.properties";              //$NON-NLS-1$
 
     /** project ant property file */
-    public final static String FN_ANT_PROPERTIES = "ant.properties";
+    public final static String FN_ANT_PROPERTIES = "ant.properties";                  //$NON-NLS-1$
 
     /** Skin layout file */
-    public final static String FN_SKIN_LAYOUT = "layout";//$NON-NLS-1$
+    public final static String FN_SKIN_LAYOUT = "layout";                             //$NON-NLS-1$
 
     /** dx.jar file */
-    public static final String FN_DX_JAR = "dx.jar"; //$NON-NLS-1$
+    public static final String FN_DX_JAR = "dx.jar";                                  //$NON-NLS-1$
 
     /** dx executable (with extension for the current OS)  */
     public final static String FN_DX = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "dx.bat" : "dx"; //$NON-NLS-1$ //$NON-NLS-2$
+            "dx.bat" : "dx";                                            //$NON-NLS-1$ //$NON-NLS-2$
 
     /** aapt executable (with extension for the current OS)  */
     public final static String FN_AAPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aapt.exe" : "aapt"; //$NON-NLS-1$ //$NON-NLS-2$
+            "aapt.exe" : "aapt";                                        //$NON-NLS-1$ //$NON-NLS-2$
 
     /** aidl executable (with extension for the current OS)  */
     public final static String FN_AIDL = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "aidl.exe" : "aidl"; //$NON-NLS-1$ //$NON-NLS-2$
+            "aidl.exe" : "aidl";                                        //$NON-NLS-1$ //$NON-NLS-2$
 
     /** renderscript executable (with extension for the current OS)  */
     public final static String FN_RENDERSCRIPT = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "llvm-rs-cc.exe" : "llvm-rs-cc"; //$NON-NLS-1$ //$NON-NLS-2$
+            "llvm-rs-cc.exe" : "llvm-rs-cc";                            //$NON-NLS-1$ //$NON-NLS-2$
 
     /** adb executable (with extension for the current OS)  */
     public final static String FN_ADB = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "adb.exe" : "adb"; //$NON-NLS-1$ //$NON-NLS-2$
+            "adb.exe" : "adb";                                          //$NON-NLS-1$ //$NON-NLS-2$
 
     /** emulator executable for the current OS */
     public final static String FN_EMULATOR = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "emulator.exe" : "emulator"; //$NON-NLS-1$ //$NON-NLS-2$
+            "emulator.exe" : "emulator";                                //$NON-NLS-1$ //$NON-NLS-2$
 
     /** zipalign executable (with extension for the current OS)  */
     public final static String FN_ZIPALIGN = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "zipalign.exe" : "zipalign"; //$NON-NLS-1$ //$NON-NLS-2$
+            "zipalign.exe" : "zipalign";                                //$NON-NLS-1$ //$NON-NLS-2$
 
     /** dexdump executable (with extension for the current OS)  */
     public final static String FN_DEXDUMP = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "dexdump.exe" : "dexdump"; //$NON-NLS-1$ //$NON-NLS-2$
+            "dexdump.exe" : "dexdump";                                  //$NON-NLS-1$ //$NON-NLS-2$
 
     /** zipalign executable (with extension for the current OS)  */
     public final static String FN_PROGUARD = (CURRENT_PLATFORM == PLATFORM_WINDOWS) ?
-            "proguard.bat" : "proguard.sh"; //$NON-NLS-1$ //$NON-NLS-2$
+            "proguard.bat" : "proguard.sh";                             //$NON-NLS-1$ //$NON-NLS-2$
 
     /** properties file for SDK Updater packages */
-    public final static String FN_SOURCE_PROP = "source.properties"; //$NON-NLS-1$
+    public final static String FN_SOURCE_PROP = "source.properties";                  //$NON-NLS-1$
     /** properties file for content hash of installed packages */
-    public final static String FN_CONTENT_HASH_PROP = "content_hash.properties"; //$NON-NLS-1$
+    public final static String FN_CONTENT_HASH_PROP = "content_hash.properties";      //$NON-NLS-1$
     /** properties file for the SDK */
-    public final static String FN_SDK_PROP = "sdk.properties"; //$NON-NLS-1$
+    public final static String FN_SDK_PROP = "sdk.properties";                        //$NON-NLS-1$
 
     /**
      * filename for gdbserver.
      */
-    public final static String FN_GDBSERVER = "gdbserver";
+    public final static String FN_GDBSERVER = "gdbserver";              //$NON-NLS-1$
 
     /** default proguard config file */
-    public final static String FN_PROGUARD_CFG = "proguard.cfg";
+    public final static String FN_PROGUARD_CFG = "proguard.cfg";        //$NON-NLS-1$
 
     /* Folder Names for Android Projects . */
 
     /** Resources folder name, i.e. "res". */
-    public final static String FD_RESOURCES = "res"; //$NON-NLS-1$
+    public final static String FD_RESOURCES = "res";                    //$NON-NLS-1$
     /** Assets folder name, i.e. "assets" */
-    public final static String FD_ASSETS = "assets"; //$NON-NLS-1$
+    public final static String FD_ASSETS = "assets";                    //$NON-NLS-1$
     /** Default source folder name, i.e. "src" */
-    public final static String FD_SOURCES = "src"; //$NON-NLS-1$
+    public final static String FD_SOURCES = "src";                      //$NON-NLS-1$
     /** Default generated source folder name, i.e. "gen" */
-    public final static String FD_GEN_SOURCES = "gen"; //$NON-NLS-1$
+    public final static String FD_GEN_SOURCES = "gen";                  //$NON-NLS-1$
     /** Default native library folder name inside the project, i.e. "libs"
      * While the folder inside the .apk is "lib", we call that one libs because
      * that's what we use in ant for both .jar and .so and we need to make the 2 development ways
      * compatible. */
-    public final static String FD_NATIVE_LIBS = "libs"; //$NON-NLS-1$
+    public final static String FD_NATIVE_LIBS = "libs";                 //$NON-NLS-1$
     /** Native lib folder inside the APK: "lib" */
-    public final static String FD_APK_NATIVE_LIBS = "lib"; //$NON-NLS-1$
+    public final static String FD_APK_NATIVE_LIBS = "lib";              //$NON-NLS-1$
     /** Default output folder name, i.e. "bin" */
-    public final static String FD_OUTPUT = "bin"; //$NON-NLS-1$
+    public final static String FD_OUTPUT = "bin";                       //$NON-NLS-1$
     /** Classes output folder name, i.e. "classes" */
-    public final static String FD_CLASSES_OUTPUT = "classes"; //$NON-NLS-1$
+    public final static String FD_CLASSES_OUTPUT = "classes";           //$NON-NLS-1$
     /** proguard output folder for mapping, etc.. files */
-    public final static String FD_PROGUARD = "proguard"; //$NON-NLS-1$
+    public final static String FD_PROGUARD = "proguard";                //$NON-NLS-1$
 
     /* Folder Names for the Android SDK */
 
     /** Name of the SDK platforms folder. */
-    public final static String FD_PLATFORMS = "platforms";
+    public final static String FD_PLATFORMS = "platforms";              //$NON-NLS-1$
     /** Name of the SDK addons folder. */
-    public final static String FD_ADDONS = "add-ons";
+    public final static String FD_ADDONS = "add-ons";                   //$NON-NLS-1$
     /** Name of the SDK system-images folder. */
-    public final static String FD_SYSTEM_IMAGES = "system-images";
+    public final static String FD_SYSTEM_IMAGES = "system-images";      //$NON-NLS-1$
     /** Name of the SDK tools folder. */
-    public final static String FD_TOOLS = "tools";
+    public final static String FD_TOOLS = "tools";                      //$NON-NLS-1$
     /** Name of the SDK platform tools folder. */
-    public final static String FD_PLATFORM_TOOLS = "platform-tools";
+    public final static String FD_PLATFORM_TOOLS = "platform-tools";    //$NON-NLS-1$
     /** Name of the SDK tools/lib folder. */
-    public final static String FD_LIB = "lib";
+    public final static String FD_LIB = "lib";                          //$NON-NLS-1$
     /** Name of the SDK docs folder. */
-    public final static String FD_DOCS = "docs";
+    public final static String FD_DOCS = "docs";                        //$NON-NLS-1$
     /** Name of the doc folder containing API reference doc (javadoc) */
-    public static final String FD_DOCS_REFERENCE = "reference";
+    public static final String FD_DOCS_REFERENCE = "reference";         //$NON-NLS-1$
     /** Name of the SDK images folder. */
-    public final static String FD_IMAGES = "images";
+    public final static String FD_IMAGES = "images";                    //$NON-NLS-1$
     /** Name of the ABI to support. */
-    public final static String ABI_ARMEABI = "armeabi";
-    public final static String ABI_ARMEABI_V7A = "armeabi-v7a";
-    public final static String ABI_INTEL_ATOM = "x86";
+    public final static String ABI_ARMEABI = "armeabi";                 //$NON-NLS-1$
+    public final static String ABI_ARMEABI_V7A = "armeabi-v7a";         //$NON-NLS-1$
+    public final static String ABI_INTEL_ATOM = "x86";                  //$NON-NLS-1$
     /** Name of the CPU arch to support. */
-    public final static String CPU_ARCH_ARM = "arm";
-    public final static String CPU_ARCH_INTEL_ATOM = "x86";
+    public final static String CPU_ARCH_ARM = "arm";                    //$NON-NLS-1$
+    public final static String CPU_ARCH_INTEL_ATOM = "x86";             //$NON-NLS-1$
     /** Name of the CPU model to support. */
-    public final static String CPU_MODEL_CORTEX_A8 = "cortex-a8";
+    public final static String CPU_MODEL_CORTEX_A8 = "cortex-a8";       //$NON-NLS-1$
 
     /** Name of the SDK skins folder. */
-    public final static String FD_SKINS = "skins";
+    public final static String FD_SKINS = "skins";                      //$NON-NLS-1$
     /** Name of the SDK samples folder. */
-    public final static String FD_SAMPLES = "samples";
+    public final static String FD_SAMPLES = "samples";                  //$NON-NLS-1$
     /** Name of the SDK extras folder. */
-    public final static String FD_EXTRAS = "extras";
+    public final static String FD_EXTRAS = "extras";                    //$NON-NLS-1$
     /** Name of the SDK templates folder, i.e. "templates" */
-    public final static String FD_TEMPLATES = "templates";
+    public final static String FD_TEMPLATES = "templates";              //$NON-NLS-1$
     /** Name of the SDK Ant folder, i.e. "ant" */
-    public final static String FD_ANT = "ant";
+    public final static String FD_ANT = "ant";                          //$NON-NLS-1$
     /** Name of the SDK data folder, i.e. "data" */
-    public final static String FD_DATA = "data";
+    public final static String FD_DATA = "data";                        //$NON-NLS-1$
     /** Name of the SDK renderscript folder, i.e. "rs" */
-    public final static String FD_RENDERSCRIPT = "rs";
+    public final static String FD_RENDERSCRIPT = "rs";                  //$NON-NLS-1$
     /** Name of the SDK resources folder, i.e. "res" */
-    public final static String FD_RES = "res";
+    public final static String FD_RES = "res";                          //$NON-NLS-1$
     /** Name of the SDK font folder, i.e. "fonts" */
-    public final static String FD_FONTS = "fonts";
+    public final static String FD_FONTS = "fonts";                      //$NON-NLS-1$
     /** Name of the android sources directory */
-    public static final String FD_ANDROID_SOURCES = "sources";
+    public static final String FD_ANDROID_SOURCES = "sources";          //$NON-NLS-1$
     /** Name of the addon libs folder. */
-    public final static String FD_ADDON_LIBS = "libs";
+    public final static String FD_ADDON_LIBS = "libs";                  //$NON-NLS-1$
 
     /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
-    public final static String NS_RESOURCES = "http://schemas.android.com/apk/res/android";
+    public final static String NS_RESOURCES =
+        "http://schemas.android.com/apk/res/android";                   //$NON-NLS-1$
 
     /** The name of the uses-library that provides "android.test.runner" */
-    public final static String ANDROID_TEST_RUNNER_LIB = "android.test.runner";
+    public final static String ANDROID_TEST_RUNNER_LIB =
+        "android.test.runner";                                          //$NON-NLS-1$
 
     /* Folder path relative to the SDK root */
     /** Path of the documentation directory relative to the sdk folder.
@@ -264,7 +266,7 @@ public final class SdkConstants {
      * folder. This is an OS path, ending with a separator.
      */
     public final static String OS_SDK_TOOLS_LIB_EMULATOR_FOLDER = OS_SDK_TOOLS_LIB_FOLDER
-            + "emulator" + File.separator;
+            + "emulator" + File.separator;                              //$NON-NLS-1$
 
     /** Path of the platform tools directory relative to the sdk folder.
      *  This is an OS path, ending with a separator. */
@@ -278,7 +280,9 @@ public final class SdkConstants {
     /** Path of the bin folder of proguard folder relative to the sdk folder.
      *  This is an OS path, ending with a separator. */
     public final static String OS_SDK_TOOLS_PROGUARD_BIN_FOLDER =
-        SdkConstants.OS_SDK_TOOLS_FOLDER + "proguard" + File.separator + "bin" + File.separator; //$NON-NLS-1$ //$NON-NLS-2$
+        SdkConstants.OS_SDK_TOOLS_FOLDER +
+        "proguard" + File.separator +                                   //$NON-NLS-1$
+        "bin" + File.separator;                                         //$NON-NLS-1$
 
     /* Folder paths relative to a platform or add-on folder */
 
@@ -355,10 +359,11 @@ public final class SdkConstants {
     public final static String OS_ADDON_LIBS_FOLDER = FD_ADDON_LIBS + File.separator;
 
     /** Skin default **/
-    public final static String SKIN_DEFAULT = "default";
+    public final static String SKIN_DEFAULT = "default";                    //$NON-NLS-1$
 
     /** SDK property: ant templates revision */
-    public final static String PROP_SDK_ANT_TEMPLATES_REVISION = "sdk.ant.templates.revision"; //$NON-NLS-1$
+    public final static String PROP_SDK_ANT_TEMPLATES_REVISION =
+        "sdk.ant.templates.revision";                                       //$NON-NLS-1$
 
     /** SDK property: default skin */
     public final static String PROP_SDK_DEFAULT_SKIN = "sdk.skin.default"; //$NON-NLS-1$
@@ -403,10 +408,10 @@ public final class SdkConstants {
     /** Returns the appropriate name for the 'android' command, which is 'android.bat' for
      * Windows and 'android' for all other platforms. */
     public static String androidCmdName() {
-        String os = System.getProperty("os.name");
-        String cmd = "android";
-        if (os.startsWith("Windows")) {
-            cmd += ".bat";
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+        String cmd = "android";                             //$NON-NLS-1$
+        if (os.startsWith("Windows")) {                     //$NON-NLS-1$
+            cmd += ".bat";                                  //$NON-NLS-1$
         }
         return cmd;
     }
@@ -414,10 +419,10 @@ public final class SdkConstants {
     /** Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for
      * Windows and 'mkdsdcard' for all other platforms. */
     public static String mkSdCardCmdName() {
-        String os = System.getProperty("os.name");
-        String cmd = "mksdcard";
-        if (os.startsWith("Windows")) {
-            cmd += ".exe";
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+        String cmd = "mksdcard";                            //$NON-NLS-1$
+        if (os.startsWith("Windows")) {                     //$NON-NLS-1$
+            cmd += ".exe";                                  //$NON-NLS-1$
         }
         return cmd;
     }
