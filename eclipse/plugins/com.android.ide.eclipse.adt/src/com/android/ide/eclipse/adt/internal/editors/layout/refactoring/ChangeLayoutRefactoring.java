@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
@@ -86,6 +87,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
     private static final String KEY_FLATTEN = "flatten"; //$NON-NLS-1$
 
     private String mTypeFqcn;
+    private String mInitializedAttributes;
     private boolean mFlatten;
 
     /**
@@ -161,6 +163,10 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
     void setType(String typeFqcn) {
         mTypeFqcn = typeFqcn;
+    }
+
+    void setInitializedAttributes(String initializedAttributes) {
+        mInitializedAttributes = initializedAttributes;
     }
 
     void setFlatten(boolean flatten) {
@@ -281,6 +287,24 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, null);
         } else {
             convertGeneric(rootEdit, oldType, newType, layout);
+        }
+
+        if (mInitializedAttributes != null && mInitializedAttributes.length() > 0) {
+            String namespace = getAndroidNamespacePrefix();
+            for (String s : mInitializedAttributes.split(",")) { //$NON-NLS-1$
+                String[] nameValue = s.split("="); //$NON-NLS-1$
+                String attribute = nameValue[0];
+                String value = nameValue[1];
+                String prefix = null;
+                String namespaceUri = null;
+                if (attribute.startsWith(ANDROID_NS_NAME_PREFIX)) {
+                    prefix = namespace;
+                    namespaceUri = ANDROID_URI;
+                    attribute = attribute.substring(ANDROID_NS_NAME_PREFIX.length());
+                }
+                setAttribute(rootEdit, layout, namespaceUri,
+                        prefix, attribute, value);
+            }
         }
 
         if (AdtPrefs.getPrefs().getFormatGuiXml()) {
