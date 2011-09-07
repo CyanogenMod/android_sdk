@@ -22,6 +22,7 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
+import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.util.Pair;
 
@@ -36,6 +37,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -444,7 +447,9 @@ public class SdkManager {
                     return null;
                 }
 
-                String[] abiList = getAbiList(platformFolder.getAbsolutePath());
+                ISystemImage[] systemImages =
+                    getPlatformSystemImages(sdkOsPath, platformFolder, apiNumber, apiCodename);
+
                 // create the target.
                 PlatformTarget target = new PlatformTarget(
                         sdkOsPath,
@@ -454,7 +459,7 @@ public class SdkManager {
                         apiName,
                         revision,
                         layoutlibVersion,
-                        abiList,
+                        systemImages,
                         map);
 
                 // need to parse the skins.
@@ -473,28 +478,132 @@ public class SdkManager {
     }
 
     /**
-    * Get all the abi types supported for a given target
-    * @param path Path where the images folder for a target is located
-    * @return an array of strings containing all the abi names for the target
+     * Get all the system images supported by an add-on target.
+     * For an add-on, we first look for sub-folders in the addon/images directory.
+     * If none are found but the directory exists and is not empty, assume it's a legacy
+     * arm eabi system image.
+     * <p/>
+     * Note that it's OK for an add-on to have no system-images at all, since it can always
+     * rely on the ones from its base platform.
+     *
+     * @param root Root of the add-on target being loaded.
+     * @return an array of ISystemImage containing all the system images for the target.
+     *              The list can be empty.
     */
-    private static String[] getAbiList(String path) {
-        ArrayList<String> list = new ArrayList<String>();
+    private static ISystemImage[] getAddonSystemImages(File root) {
+        Set<ISystemImage> found = new TreeSet<ISystemImage>();
 
-        File imagesFolder = new File(path + File.separator + SdkConstants.OS_IMAGES_FOLDER);
-        File[] files = imagesFolder.listFiles();
+        root = new File(root, SdkConstants.OS_IMAGES_FOLDER);
+        File[] files = root.listFiles();
+        boolean hasImgFiles = false;
 
         if (files != null) {
-            // Loop through Images directory.  If subdirectories exist, set multiprocessor mode
+            // Look for sub-directories
             for (File file : files) {
                 if (file.isDirectory()) {
-                    list.add(file.getName());
+                    found.add(new SystemImage(
+                            file,
+                            LocationType.IN_PLATFORM_SUBFOLDER,
+                            file.getName()));
+                } else if (!hasImgFiles && file.isFile()) {
+                    if (file.getName().endsWith(".img")) {      //$NON-NLS-1$
+                        hasImgFiles = true;
+                    }
                 }
             }
         }
-        String[] abis = new String[list.size()];
-        list.toArray(abis);
 
-        return abis;
+        if (found.size() == 0 && hasImgFiles && root.isDirectory()) {
+            // We found no sub-folder system images but it looks like the top directory
+            // has some img files in it. It must be a legacy ARM EABI system image folder.
+            found.add(new SystemImage(
+                    root,
+                    LocationType.IN_PLATFORM_LEGACY,
+                    SdkConstants.ABI_ARMEABI));
+        }
+
+        return found.toArray(new ISystemImage[found.size()]);
+    }
+
+    /**
+     * Get all the system images supported by a platform target.
+     * For a platform, we first look in the new sdk/system-images folders then we
+     * look for sub-folders in the platform/images directory and/or the one legacy
+     * folder.
+     * If any given API appears twice or more, the first occurrence wins.
+     *
+     * @param sdkOsPath The path to the SDK.
+     * @param root Root of the platform target being loaded.
+     * @param apiCodename
+     * @return an array of ISystemImage containing all the system images for the target.
+     *              The list can be empty.
+    */
+    private static ISystemImage[] getPlatformSystemImages(
+            String sdkOsPath,
+            File root,
+            int apiNumber,
+            String apiCodename) {
+        Set<ISystemImage> found = new TreeSet<ISystemImage>();
+        Set<String> abiFound = new HashSet<String>();
+
+        // First look in the SDK/system-image folder
+
+        AndroidVersion version = new AndroidVersion(apiNumber, apiCodename);
+        File siFolder = SystemImage.getCanonicalFolder(sdkOsPath, version, null /*abiType*/);
+        File[] files = siFolder.listFiles();
+
+        if (files != null) {
+            // Look for sub-directories
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    String abi = file.getName();
+                    found.add(new SystemImage(
+                            file,
+                            LocationType.IN_SYSTEM_IMAGE,
+                            abi));
+                    abiFound.add(abi);
+                }
+            }
+        }
+
+        // Then look in either the platform/images/abi or the legacy folder
+        root = new File(root, SdkConstants.OS_IMAGES_FOLDER);
+        files = root.listFiles();
+        boolean useLegacy = true;
+        boolean hasImgFiles = false;
+
+        if (files != null) {
+            // Look for sub-directories
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    useLegacy = false;
+                    String abi = file.getName();
+                    if (!abiFound.contains(abi)) {
+                        found.add(new SystemImage(
+                                file,
+                                LocationType.IN_PLATFORM_SUBFOLDER,
+                                abi));
+                        abiFound.add(abi);
+                    }
+                } else if (!hasImgFiles && file.isFile()) {
+                    if (file.getName().endsWith(".img")) {      //$NON-NLS-1$
+                        hasImgFiles = true;
+                    }
+                }
+            }
+        }
+
+        if (useLegacy && hasImgFiles && root.isDirectory() &&
+                !abiFound.contains(SdkConstants.ABI_ARMEABI)) {
+            // We found no sub-folder system images but it looks like the top directory
+            // has some img files in it. It must be a legacy ARM EABI system image folder.
+            found.add(new SystemImage(
+                    root,
+                    LocationType.IN_PLATFORM_LEGACY,
+                    SdkConstants.ABI_ARMEABI));
+        }
+
+        return found.toArray(new ISystemImage[found.size()]);
     }
 
     /**
@@ -638,7 +747,7 @@ public class SdkManager {
             }
 
             // get the abi list.
-            String[] abiList = getAbiList(addonDir.getAbsolutePath());
+            ISystemImage[] systemImages = getAddonSystemImages(addonDir);
 
             // check whether the add-on provides its own rendering info/library.
             boolean hasRenderingLibrary = false;
@@ -652,7 +761,7 @@ public class SdkManager {
             }
 
             AddOnTarget target = new AddOnTarget(addonDir.getAbsolutePath(), name, vendor,
-                    revisionValue, description, abiList, libMap,
+                    revisionValue, description, systemImages, libMap,
                     hasRenderingLibrary, hasRenderingResources,baseTarget);
 
             // need to parse the skins.

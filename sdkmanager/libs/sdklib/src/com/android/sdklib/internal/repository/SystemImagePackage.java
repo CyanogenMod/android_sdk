@@ -19,9 +19,9 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.SystemImage;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -39,7 +39,7 @@ public class SystemImagePackage extends Package
         implements IPackageVersion, IPlatformDependency {
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    static final String PROP_ABI      = "System.Image.Abi";      //$NON-NLS-1$
+    static final String PROP_ABI = "SystemImage.Abi";      //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -71,21 +71,6 @@ public class SystemImagePackage extends Package
         mVersion = new AndroidVersion(apiLevel, codeName);
 
         mAbi = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_ABI);
-    }
-
-    /**
-     * TODO OBSOLETE DOC
-     * Creates and returns a new system image package based on an actual {@link IAndroidTarget}
-     * (which {@link IAndroidTarget#isPlatform()} is true) from the {@link SdkManager}.
-     * This is used to list local SDK folders in which case there is one archive which
-     * URL is the actual target location.
-     * <p/>
-     * By design, this creates a package with one and only one archive.
-     * @deprecated TODO CHANGE AS ACTUALLY NEEDED
-     */
-    @Deprecated
-    static Package create(AndroidVersion platformVersion, int revision, String abi, Properties props) {
-        return new SystemImagePackage(platformVersion, revision, abi, props);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
@@ -123,6 +108,45 @@ public class SystemImagePackage extends Package
     }
 
     /**
+     * Creates a {@link BrokenPackage} representing a system image that failed to load
+     * with the regular {@link SdkManager} workflow.
+     *
+     * @param abiDir The SDK/system-images/android-N/abi folder
+     * @param props The properties located in {@code abiDir} or null if not found.
+     * @return A new {@link BrokenPackage} that represents this installed package.
+     */
+    public static Package createBroken(File abiDir, Properties props) {
+
+        String abiType = abiDir.getName();
+
+        StringBuilder sb = new StringBuilder(String.format("Broken %1$s System Image",
+                getAbiDisplayNameInternal(abiType)));
+
+        int apiLevel = IExactApiLevelDependency.API_LEVEL_INVALID;
+        try {
+            // Try to parse the first number out of the platform folder name.
+            String platform = abiDir.getParentFile().getName();
+            platform = platform.replaceAll("[^0-9]+", " ").trim();     //$NON-NLS-1$ //$NON-NLS-2$
+            int pos = platform.indexOf(' ');
+            if (pos >= 0) {
+                platform = platform.substring(0, pos);
+            }
+
+            apiLevel = Integer.parseInt(platform);
+
+            sb.append(String.format(", API %1$d", apiLevel));
+        } catch (Exception ignore) {
+        }
+
+        String shortDesc = sb.toString();
+
+        return new BrokenPackage(props, shortDesc, shortDesc /*longDesc*/,
+                IMinApiLevelDependency.MIN_API_LEVEL_NOT_SPECIFIED,
+                apiLevel,
+                abiDir.getAbsolutePath());
+    }
+
+    /**
      * Save the properties of the current packages in the given {@link Properties} object.
      * These properties will later be given to a constructor that takes a {@link Properties} object.
      */
@@ -141,11 +165,13 @@ public class SystemImagePackage extends Package
 
     /** Returns a display-friendly name for the ABI of the system-image. */
     public String getAbiDisplayName() {
-        String abi = mAbi
-                        .replace("armeabi", "ARM EABI")         //$NON-NLS-1$  //$NON-NLS-2$
-                        .replace("x86",     "Intel x86 Atom")   //$NON-NLS-1$  //$NON-NLS-2$
-                        .replace("-", " ");                     //$NON-NLS-1$  //$NON-NLS-2$
-        return abi;
+        return getAbiDisplayNameInternal(mAbi);
+    }
+
+    private static String getAbiDisplayNameInternal(String abi) {
+        return abi.replace("armeabi", "ARM EABI")         //$NON-NLS-1$  //$NON-NLS-2$
+                  .replace("x86",     "Intel x86 Atom")   //$NON-NLS-1$  //$NON-NLS-2$
+                  .replace("-", " ");                     //$NON-NLS-1$  //$NON-NLS-2$
     }
 
     /**
@@ -219,7 +245,7 @@ public class SystemImagePackage extends Package
     @Override
     public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
         File folder = new File(osSdkRoot, SdkConstants.FD_SYSTEM_IMAGES);
-        folder = new File(folder, "android-" + mVersion.getApiString());    //$NON-NLS-1$
+        folder = new File(folder, SystemImage.ANDROID_PREFIX + mVersion.getApiString());
 
         // Computes a folder directory using the sanitized abi string.
         String abi = mAbi;

@@ -21,6 +21,7 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
@@ -522,22 +523,37 @@ public class AvdManager {
             iniFile = createAvdIniFile(avdName, avdFolder, target, removePrevious);
 
             // writes the userdata.img in it.
-            String imagePath = target.getImagePath(abiType);
 
-            File userdataSrc = new File(imagePath, USERDATA_IMG);
+            File userdataSrc = null;
 
-            if (userdataSrc.exists() == false && target.isPlatform() == false) {
-                imagePath = target.getParent().getImagePath(abiType);
-                userdataSrc = new File(imagePath, USERDATA_IMG);
+            // Look for a system image in the add-on.
+            // If we don't find one there, look in the base platform.
+            ISystemImage systemImage = target.getSystemImage(abiType);
+
+            if (systemImage != null) {
+                File imageFolder = systemImage.getLocation();
+                userdataSrc = new File(imageFolder, USERDATA_IMG);
             }
 
-            if (userdataSrc.exists() == false) {
+            if ((userdataSrc == null || !userdataSrc.exists()) && !target.isPlatform()) {
+                // If we don't find a system-image in the add-on, look into the platform.
+
+                systemImage = target.getParent().getSystemImage(abiType);
+                if (systemImage != null) {
+                    File imageFolder = systemImage.getLocation();
+                    userdataSrc = new File(imageFolder, USERDATA_IMG);
+                }
+            }
+
+            if (userdataSrc == null || !userdataSrc.exists()) {
                 log.error(null,
-                        "Unable to find a '%1$s' file of '%2$s' to copy into the AVD folder.",
-                        USERDATA_IMG, imagePath);
+                        "Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
+                        USERDATA_IMG,
+                        abiType);
                 needCleanup = true;
                 return null;
             }
+
             File userdataDest = new File(avdFolder, USERDATA_IMG);
 
             copyImageFile(userdataSrc, userdataDest);
@@ -863,17 +879,26 @@ public class AvdManager {
      */
     private String getImageRelativePath(IAndroidTarget target, String abiType)
             throws InvalidTargetPathException {
-        String imageFullPath = target.getImagePath(abiType);
+
+        ISystemImage systemImage = target.getSystemImage(abiType);
+        if (systemImage == null) {
+            throw new IllegalArgumentException(String.format(
+                    "ABI Type %s is unknown for target %s",
+                    abiType,
+                    target.getDescription()));
+        }
+
+        File folder = systemImage.getLocation();
+        String imageFullPath = folder.getAbsolutePath();
 
         // make this path relative to the SDK location
         String sdkLocation = mSdkManager.getLocation();
-        if (imageFullPath.startsWith(sdkLocation) == false) {
+        if (!imageFullPath.startsWith(sdkLocation)) {
             // this really really should not happen.
             assert false;
             throw new InvalidTargetPathException("Target location is not inside the SDK.");
         }
 
-        File folder = new File(imageFullPath);
         if (folder.isDirectory()) {
             String[] list = folder.list(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
@@ -882,9 +907,16 @@ public class AvdManager {
             });
 
             if (list.length > 0) {
+                // Remove the SDK root path, e.g. /sdk/dir1/dir2 => /dir1/dir2
                 imageFullPath = imageFullPath.substring(sdkLocation.length());
+                // The path is relative, so it must not start with a file separator
                 if (imageFullPath.charAt(0) == File.separatorChar) {
                     imageFullPath = imageFullPath.substring(1);
+                }
+                // For compatibility with previous versions, we denote folders
+                // by ending the path with file separator
+                if (!imageFullPath.endsWith(File.separator)) {
+                    imageFullPath += File.separator;
                 }
 
                 return imageFullPath;
@@ -1573,6 +1605,7 @@ public class AvdManager {
 
     /**
      * Sets the paths to the system images in a properties map.
+     *
      * @param target the target in which to find the system images.
      * @param abiType the abi type of the avd to find
      *        the architecture-dependent system images.
@@ -1581,7 +1614,9 @@ public class AvdManager {
      * @return true if success, false if some path are missing.
      */
     private boolean setImagePathProperties(IAndroidTarget target,
-        String abiType, Map<String, String> properties, ISdkLog log) {
+            String abiType,
+            Map<String, String> properties,
+            ISdkLog log) {
         properties.remove(AVD_INI_IMAGES_1);
         properties.remove(AVD_INI_IMAGES_2);
 

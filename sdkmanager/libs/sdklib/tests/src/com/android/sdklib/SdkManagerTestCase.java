@@ -83,7 +83,7 @@ public class SdkManagerTestCase extends TestCase {
      * A empty test method to placate the JUnit test runner, which doesn't
      * like TestCase classes with no test methods.
      */
-    public void testSetup() {
+    public void testPlaceholder() {
     }
 
     /**
@@ -132,7 +132,6 @@ public class SdkManagerTestCase extends TestCase {
      * @throws IOException
      */
     private File makeFakeSdk() throws IOException {
-
         // First we create a temp file to "reserve" the temp directory name we want to use.
         File tmpFile = File.createTempFile(
                 this.getClass().getSimpleName() + '_' + this.getName(), null);
@@ -171,12 +170,24 @@ public class SdkManagerTestCase extends TestCase {
 
         File imagesDir = new File(targetDir, "images");
         imagesDir.mkdirs();
-
         new File(imagesDir, "userdata.img").createNewFile();
+
         File skinsDir = new File(targetDir, "skins");
         File hvgaDir = new File(skinsDir, "HVGA");
         hvgaDir.mkdirs();
         return tmpFile;
+    }
+
+    /**
+     * Creates the system image folder and places a fake userdata.img in it.
+     *
+     * @param systemImage A system image with a valid location.
+     * @throws IOException if the file fails to be created.
+     */
+    protected void makeSystemImageFolder(ISystemImage systemImage) throws IOException {
+        File imagesDir = systemImage.getLocation();
+        imagesDir.mkdirs();
+        new File(imagesDir, "userdata.img").createNewFile();
     }
 
     /**

@@ -20,6 +20,7 @@ import com.android.sdklib.SdkManager.LayoutlibVersion;
 import com.android.sdklib.util.SparseArray;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -44,8 +45,7 @@ final class PlatformTarget implements IAndroidTarget {
     private final Map<String, String> mProperties;
     private final SparseArray<String> mPaths = new SparseArray<String>();
     private String[] mSkins;
-    private String[] mAbis;
-    private boolean mAbiCompatibilityMode;
+    private final ISystemImage[] mSystemImages;
     private final LayoutlibVersion mLayoutlibVersion;
 
     /**
@@ -58,7 +58,7 @@ final class PlatformTarget implements IAndroidTarget {
      * @param versionName the version name of the platform.
      * @param revision the revision of the platform component.
      * @param layoutlibVersion The {@link LayoutlibVersion}. May be null.
-     * @param abis the list of supported abis
+     * @param systemImages list of supported system images
      * @param properties the platform properties
      */
     @SuppressWarnings("deprecation")
@@ -70,7 +70,7 @@ final class PlatformTarget implements IAndroidTarget {
             String versionName,
             int revision,
             LayoutlibVersion layoutlibVersion,
-            String[] abis,
+            ISystemImage[] systemImages,
             Map<String, String> properties) {
         if (platformOSPath.endsWith(File.separator) == false) {
             platformOSPath = platformOSPath + File.separator;
@@ -81,6 +81,8 @@ final class PlatformTarget implements IAndroidTarget {
         mVersionName = versionName;
         mRevision = revision;
         mLayoutlibVersion = layoutlibVersion;
+        mSystemImages = systemImages == null ? new ISystemImage[0] : systemImages;
+        Arrays.sort(mSystemImages);
 
         if (mVersion.isPreview()) {
             mName =  String.format(PLATFORM_NAME_PREVIEW, mVersionName);
@@ -126,14 +128,6 @@ final class PlatformTarget implements IAndroidTarget {
                 SdkConstants.FN_DX);
         mPaths.put(DX_JAR, sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_LIB_FOLDER +
                 SdkConstants.FN_DX_JAR);
-
-        //set compatibility mode, abis length would be 0 for older APIs
-        if (abis.length > 0) {
-            mAbis = abis;
-        } else {
-            mAbiCompatibilityMode = true;
-            mAbis = new String[] { SdkConstants.ABI_ARMEABI };
-        }
     }
 
     /**
@@ -143,25 +137,17 @@ final class PlatformTarget implements IAndroidTarget {
         return mLayoutlibVersion;
     }
 
-    /**
-     * Return the full path for images
-     * @param abiType type of the abi
-     * @return complete path where the image files are located
-     */
-    public String getImagePath(String abiType) {
-        if (mAbiCompatibilityMode) {
-            // Use legacy directory structure if only arm is supported
-            return mRootFolderOsPath + SdkConstants.OS_IMAGES_FOLDER;
-        } else {
-            return mRootFolderOsPath + SdkConstants.OS_IMAGES_FOLDER + abiType + File.separator;
+    public ISystemImage getSystemImage(String abiType) {
+        for (ISystemImage sysImg : mSystemImages) {
+            if (sysImg.getAbiType().equals(abiType)) {
+                return sysImg;
+            }
         }
+        return null;
     }
 
-    /**
-     * Retrieve and return the list of abis
-     */
-    public String[] getAbiList() {
-        return mAbis;
+    public ISystemImage[] getSystemImages() {
+        return mSystemImages;
     }
 
     public String getLocation() {
@@ -353,6 +339,21 @@ final class PlatformTarget implements IAndroidTarget {
         return versionDiff;
     }
 
+    /**
+     * Returns a string representation suitable for debugging.
+     * The representation is not intended for display to the user.
+     *
+     * The representation is also purposely compact. It does not describe _all_ the properties
+     * of the target, only a few key ones.
+     *
+     * @see #getDescription()
+     */
+    @Override
+    public String toString() {
+        return String.format("PlatformTarget %1$s rev %2$d",     //$NON-NLS-1$
+                getVersion(),
+                getRevision());
+    }
 
     public String getProperty(String name) {
         return mProperties.get(name);

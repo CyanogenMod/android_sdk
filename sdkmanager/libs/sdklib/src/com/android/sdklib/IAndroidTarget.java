@@ -239,14 +239,19 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     int getUsbVendorId();
 
     /**
-     * Returns array of permitted processor architectures
+     * Returns an array of system images for this target.
+     * The array can be empty but not null.
      */
-    public String[] getAbiList();
+    public ISystemImage[] getSystemImages();
 
     /**
-     * Returns string to append to images directory for current ProcessorType
+     * Returns the system image information for the given {@code abiType}.
+     *
+     * @param abiType An ABI type string.
+     * @return An existing {@link ISystemImage} for the requested {@code abiType}
+     *         or null if none exists for this type.
      */
-    public String getImagePath(String abiType);
+    public ISystemImage getSystemImage(String abiType);
 
     /**
      * Returns whether the given target is compatible with the receiver.

@@ -18,7 +18,11 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SystemImage;
+import com.android.sdklib.ISystemImage.LocationType;
+import com.android.sdklib.io.FileOp;
 
 import java.util.Map;
 
@@ -30,6 +34,7 @@ class MockPlatformTarget implements IAndroidTarget {
 
     private final int mApiLevel;
     private final int mRevision;
+    private ISystemImage[] mSystemImages;
 
     public MockPlatformTarget(int apiLevel, int revision) {
         mApiLevel = apiLevel;
@@ -56,16 +61,26 @@ class MockPlatformTarget implements IAndroidTarget {
         return getName();
     }
 
-    public String[] getAbiList() {
-        return new String[] { SdkConstants.ABI_ARMEABI };
+    public ISystemImage[] getSystemImages() {
+        if (mSystemImages == null) {
+            SystemImage si = new SystemImage(
+                    FileOp.append(getLocation(), SdkConstants.OS_IMAGES_FOLDER),
+                    LocationType.IN_PLATFORM_LEGACY,
+                    SdkConstants.ABI_ARMEABI);
+            mSystemImages = new SystemImage[] { si };
+        }
+        return mSystemImages;
     }
 
-    public String getImagePath(String abiType) {
-        return SdkConstants.OS_IMAGES_FOLDER;
+    public ISystemImage getSystemImage(String abiType) {
+        if (SdkConstants.ABI_ARMEABI.equals(abiType)) {
+            return getSystemImages()[0];
+        }
+        return null;
     }
 
     public String getLocation() {
-        return "";
+        return "/sdk/platforms/android-" + getVersion().getApiString();
     }
 
     public IOptionalLibrary[] getOptionalLibraries() {
@@ -77,7 +92,7 @@ class MockPlatformTarget implements IAndroidTarget {
     }
 
     public String getPath(int pathId) {
-        return null;
+        throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
     public String[] getPlatformLibraries() {

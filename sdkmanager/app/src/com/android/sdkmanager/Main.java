@@ -23,6 +23,7 @@ import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
@@ -775,6 +776,7 @@ public class Main {
 
         int index = 1;
         for (IAndroidTarget target : mSdkManager.getTargets()) {
+            mSdkLog.printf("----------\n");
             mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, target.hashString());
             mSdkLog.printf("     Name: %s\n", target.getName());
             if (target.isPlatform()) {
@@ -803,8 +805,9 @@ public class Main {
                 }
             }
 
-            // get the target skins
+            // get the target skins & ABIs
             displaySkinList(target, "     Skins: ");
+            displayAbiList (target, "     ABIs : ");
 
             if (target.getUsbVendorId() != IAndroidTarget.NO_USB_ID) {
                 mSdkLog.printf("     Adds USB support for devices (Vendor: 0x%04X)\n",
@@ -846,17 +849,17 @@ public class Main {
      * Displays the ABIs valid for the given target.
      */
     private void displayAbiList(IAndroidTarget target, String message) {
-        String[] abis = target.getAbiList();
+        ISystemImage[] systemImages = target.getSystemImages();
         mSdkLog.printf(message);
-        if (abis != null) {
+        if (systemImages.length > 0) {
             boolean first = true;
-            for (String skin : abis) {
+            for (ISystemImage si : systemImages) {
                 if (first == false) {
                     mSdkLog.printf(", ");
                 } else {
                     first = false;
                 }
-                mSdkLog.printf(skin);
+                mSdkLog.printf(si.getAbiType());
             }
             mSdkLog.printf("\n");
         } else {
@@ -906,6 +909,7 @@ public class Main {
                 mSdkLog.printf("          Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
             }
+            mSdkLog.printf("     ABI: %s\n", info.getAbiType());
 
             // display some extra values.
             Map<String, String> properties = info.getProperties();
@@ -1069,16 +1073,15 @@ public class Main {
 
             String abiType = mSdkCommandLine.getParamAbi();
             if (target != null && (abiType == null || abiType.length() == 0)) {
-                String[] abis = target.getAbiList();
-                if (abis != null && abis.length == 1) {
+                ISystemImage[] systemImages = target.getSystemImages();
+                if (systemImages != null && systemImages.length == 1) {
                     // Auto-select the single ABI available
-                    abiType = abis[0];
+                    abiType = systemImages[0].getAbiType();
                     mSdkLog.printf("Auto-selecting single ABI %1$s", abiType);
                 } else {
                     displayAbiList(target, "Valid ABIs: ");
                     errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
                             SdkCommandLine.KEY_ABI);
-
                 }
             }
 
