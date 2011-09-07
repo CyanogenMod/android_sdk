@@ -232,6 +232,7 @@ stateful
 stateless
 stderr
 stdout
+stretchable
 stretchiness
 struct
 styleable

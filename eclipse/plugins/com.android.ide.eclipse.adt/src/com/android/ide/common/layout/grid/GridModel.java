@@ -44,7 +44,6 @@ import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.layout.GridLayoutRule;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.util.Pair;
 
 import java.io.PrintWriter;
@@ -697,10 +696,10 @@ public class GridModel {
             int[] ys = (int[]) verticalLocations;
             return Pair.of(xs, ys);
         } catch (Throwable t) {
-            AdtPlugin.log(t, null); // TODO: Add to API!
+            // Probably trying to show a GridLayout on a platform that does not support it.
+            // Return null to indicate that the grid bounds must be computed from view bounds.
+            return null;
         }
-
-        return null;
     }
 
     /**
