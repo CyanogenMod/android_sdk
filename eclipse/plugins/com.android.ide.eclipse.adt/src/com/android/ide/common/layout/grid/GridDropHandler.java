@@ -335,6 +335,21 @@ public class GridDropHandler {
             columnX = mGrid.getColumnMaxX(columnRight);
             matchedLine = columnX;
             distance = abs(matchedLine - x1);
+
+            // Let's say you have this arrangement:
+            //     [button1][button2]
+            // This is two columns, where the right hand side edge of column 1 is
+            // flush with the left side edge of column 2, because in fact the width of
+            // button1 is what defines the width of column 1, and that in turn is what
+            // defines the left side position of column 2.
+            //
+            // In this case we don't want to consider inserting a new column at the
+            // right hand side of button1 a better match than matching left on column 2.
+            // Therefore, to ensure that this doesn't happen, we "penalize" right column
+            // matches such that they don't get preferential treatment when the matching
+            // line is on the left side of the column.
+            distance += 2;
+
             if (distance <= max) {
                 boolean createCell = mGrid.getColumnX(mGrid.getColumn(matchedLine)) != matchedLine;
                 columnMatches.add(new GridMatch(SegmentType.LEFT, distance, matchedLine,
@@ -381,6 +396,7 @@ public class GridDropHandler {
             rowY = mGrid.getRowMaxY(rowBottom);
             matchedLine = rowY;
             distance = abs(matchedLine - y1);
+            distance += 2; // See explanation in addColumnGapMatch
             if (distance <= max) {
                 boolean createCell = mGrid.getRowY(mGrid.getRow(matchedLine)) != matchedLine;
                 rowMatches.add(new GridMatch(SegmentType.TOP, distance, matchedLine,

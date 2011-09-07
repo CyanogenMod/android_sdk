@@ -95,7 +95,7 @@ class GridMatch implements Comparable<GridMatch> {
                     return String.format("Insert into column %1$d", cellIndex);
                 }
                 if (margin != UNDEFINED) {
-                    if (cellIndex == 0) {
+                    if (cellIndex == 0 && margin != 0) {
                         return "Add one margin distance from the left";
                     }
                     return String.format("Add next to column %1$d", cellIndex);
@@ -111,7 +111,7 @@ class GridMatch implements Comparable<GridMatch> {
                     return String.format("Insert into row %1$d", cellIndex);
                 }
                 if (margin != UNDEFINED) {
-                    if (cellIndex == 0) {
+                    if (cellIndex == 0 && margin != 0) {
                         return "Add one margin distance from the top";
                     }
                     return String.format("Add below row %1$d", cellIndex);

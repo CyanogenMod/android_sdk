@@ -364,9 +364,18 @@ public class GridLayoutRule extends BaseLayoutRule {
             String width = state.getWidthAttribute();
             String height = state.getHeightAttribute();
 
-            // U+00D7: Unicode for multiplication sign
-            return String.format("%s \u00D7 %s\n(Press Shift to resize row/column spans)",
-                    width, height);
+            String message;
+            if (horizontalEdge == null) {
+                message = width;
+            } else if (verticalEdge == null) {
+                message = height;
+            } else {
+                // U+00D7: Unicode for multiplication sign
+                message = String.format("%s \u00D7 %s", width, height);
+            }
+
+            // Tack on a tip about using the Shift modifier key
+            return String.format("%s\n(Press Shift to resize row/column spans)", message);
         } else {
             int rowSpan = spans.getFirst();
             int columnSpan = spans.getSecond();
