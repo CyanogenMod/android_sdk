@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt.internal.editors.formatting;
 
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findLineStart;
 import static com.android.ide.eclipse.adt.internal.editors.AndroidXmlAutoEditStrategy.findTextStart;
+import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.SELECTOR_TAG;
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_MEDIUM;
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_PARTITION;
 import static org.eclipse.jface.text.formatter.FormattingContextProperties.CONTEXT_REGION;
@@ -55,6 +56,7 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMNode;
 import org.eclipse.wst.xml.ui.internal.XMLFormattingStrategy;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
@@ -506,9 +508,14 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
         // The "resource" style is used for most value-based XML files:
         // strings, dimensions, booleans, colors, integers, plurals,
         // integer-arrays, string-arrays, and typed-arrays
-        if (domDocument.getDocumentElement() != null
-                && ResourcesDescriptors.ROOT_ELEMENT.equals(domDocument.getDocumentElement()
-                        .getTagName())) {
+        Element rootElement = domDocument.getDocumentElement();
+        if (rootElement != null
+                && ResourcesDescriptors.ROOT_ELEMENT.equals(rootElement.getTagName())) {
+            style = XmlFormatStyle.RESOURCE;
+        }
+
+        // Selectors are also used similar to resources
+        if (rootElement != null && SELECTOR_TAG.equals(rootElement.getTagName())) {
             style = XmlFormatStyle.RESOURCE;
         }
 

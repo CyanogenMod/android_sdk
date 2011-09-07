@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
+import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.ATTR_COLOR;
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -225,6 +226,11 @@ public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
             }
 
             return 50;
+        }
+
+        // "color" sorts to the end
+        if (ATTR_COLOR.equals(name)) {
+            return 100;
         }
 
         return 60;
