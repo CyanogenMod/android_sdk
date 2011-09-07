@@ -25,6 +25,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthState;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -37,6 +38,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProxySelector;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,6 +93,20 @@ public class UrlOpener {
     static InputStream openUrl(String url, ITaskMonitor monitor)
         throws IOException, CanceledByUserException {
 
+        try {
+            return openWithHttpClient(url, monitor);
+
+        } catch (ClientProtocolException e) {
+            // If the protocol is not supported by HttpClient (e.g. file:///),
+            // revert to the standard java.net.Url.open
+
+            URL u = new URL(url);
+            return u.openStream();
+        }
+    }
+
+    private static InputStream openWithHttpClient(String url, ITaskMonitor monitor)
+            throws IOException, ClientProtocolException, CanceledByUserException {
         Pair<String, String> result = null;
         String realm = null;
 
