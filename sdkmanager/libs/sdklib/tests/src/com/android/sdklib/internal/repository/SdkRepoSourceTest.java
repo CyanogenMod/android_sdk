@@ -563,8 +563,8 @@ public class SdkRepoSourceTest extends TestCase {
         assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
                     "Found Documentation for Android SDK, API 1, revision 1\n" +
                     "Found SDK Platform Android 1.1, API 2, revision 12\n" +
-                    "Found x86 System Image, Android API 2, revision 1\n" +
-                    "Found armeabi-v7a System Image, Android API 2, revision 2\n" +
+                    "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
+                    "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
                     "Found SDK Platform Android Pastry Preview, revision 3\n" +
                     "Found Android SDK Tools, revision 1\n" +
                     "Found Documentation for Android SDK, API 2, revision 42\n" +
@@ -573,7 +573,7 @@ public class SdkRepoSourceTest extends TestCase {
                     "Found A USB Driver package, revision 43 (Obsolete)\n" +
                     "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
                     "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
-                    "Found armeabi System Image, Android API 42, revision 12\n",
+                    "Found ARM EABI System Image, Android API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
         assertEquals("", monitor.getCapturedErrorLog());
