@@ -139,6 +139,30 @@
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard$NewLayoutWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_xml.png"
+            id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard.Layout"
+            name="Android XML Layout File"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false">
+        </wizard>
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard$NewValuesWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_xml.png"
+            id="com.android.ide.eclipse.editors.wizards.NewXmlFileWizard.Values"
+            name="Android XML Values File"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="false">
+        </wizard>
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
             class="com.android.ide.eclipse.adt.internal.assetstudio.CreateAssetSetWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"
