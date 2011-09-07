@@ -25,7 +25,19 @@ package com.android.sdklib.internal.repository;
 public class MockBrokenPackage extends BrokenPackage {
 
     public MockBrokenPackage(int minApiLevel, int exactApiLevel) {
-        this(null, null, minApiLevel, exactApiLevel);
+        this(createDesription(minApiLevel, exactApiLevel),  // short description
+             createDesription(minApiLevel, exactApiLevel),  // long description
+             minApiLevel,
+             exactApiLevel);
+    }
+
+    private static String createDesription(int minApiLevel, int exactApiLevel) {
+        String s = "Broken package";
+        s += exactApiLevel == BrokenPackage.API_LEVEL_INVALID ? " (No API level)" :
+                String.format(" for API %d", exactApiLevel);
+        s += minApiLevel == BrokenPackage.MIN_API_LEVEL_NOT_SPECIFIED ? "" :
+                String.format(", min API %d", minApiLevel);
+        return s;
     }
 
     public MockBrokenPackage(

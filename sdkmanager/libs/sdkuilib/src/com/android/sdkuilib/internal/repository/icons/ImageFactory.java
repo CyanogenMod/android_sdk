@@ -100,8 +100,10 @@ public class ImageFactory {
 
         String clz = object.getClass().getSimpleName();
         if (clz.endsWith(Package.class.getSimpleName())) {
-            String name = clz.replaceFirst(Package.class.getSimpleName(), "").toLowerCase() + //$NON-NLS-1$
-                            "_pkg_16.png";                                      //$NON-NLS-1$
+            String name = clz.replaceFirst(Package.class.getSimpleName(), "")   //$NON-NLS-1$
+                             .replace("SystemImage", "sysimg")    //$NON-NLS-1$ //$NON-NLS-2$
+                             .toLowerCase();
+            name += "_pkg_16.png";                                              //$NON-NLS-1$
             return getImageByName(name);
         }
 
