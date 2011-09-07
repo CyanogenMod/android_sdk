@@ -679,6 +679,11 @@ public class GridDropHandler {
             newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_ROW_SPAN, Integer.toString(rowSpan));
         }
 
+        // Ensure that we don't store columnCount=0
+        if (mGrid.actualColumnCount == 0) {
+            mGrid.layout.setAttribute(ANDROID_URI, ATTR_COLUMN_COUNT, VALUE_1);
+        }
+
         return newChild;
     }
 

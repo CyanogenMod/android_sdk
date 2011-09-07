@@ -25,32 +25,48 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_RI
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_TOP;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN_SPAN;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
+import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.RADIO_GROUP;
 import static com.android.ide.common.layout.LayoutConstants.RELATIVE_LAYOUT;
+import static com.android.ide.common.layout.LayoutConstants.SPACE;
 import static com.android.ide.common.layout.LayoutConstants.TABLE_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.TABLE_ROW;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
+import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.layout.BaseLayoutRule;
+import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -91,6 +107,10 @@ class GridLayoutConverter {
     private final ChangeLayoutRefactoring mRefactoring;
     private final CanvasViewInfo mRootView;
 
+    private List<View> mViews;
+    private String mNamespace;
+    private int mColumnCount;
+
     /** Creates a new {@link GridLayoutConverter} */
     GridLayoutConverter(ChangeLayoutRefactoring refactoring,
             Element layout, boolean flatten, MultiTextEdit rootEdit, CanvasViewInfo rootView) {
@@ -115,12 +135,158 @@ class GridLayoutConverter {
         }
 
         // Study the layout and get information about how to place individual elements
-        GridModel edgeList = new GridModel(layoutView);
-        List<View> views = edgeList.getViews();
-        deleteRemovedElements(edgeList.getDeletedElements());
+        GridModel gridModel = new GridModel(layoutView, mLayout, mFlatten);
+        mViews = gridModel.getViews();
+        mColumnCount = gridModel.computeColumnCount();
+
+        deleteRemovedElements(gridModel.getDeletedElements());
+        mNamespace = mRefactoring.getAndroidNamespacePrefix();
+
+        processGravities();
+
+        // Insert space views if necessary
+        insertStretchableSpans();
 
         // Create/update relative layout constraints
-        assignGridAttributes(views);
+        assignGridAttributes();
+
+        removeUndefinedAttrs();
+
+        if (mColumnCount > 0) {
+            mRefactoring.setAttribute(mRootEdit, mLayout, ANDROID_URI,
+                mNamespace, ATTR_COLUMN_COUNT, Integer.toString(mColumnCount));
+        }
+    }
+
+    private void insertStretchableSpans() {
+        // Look at the rows and columns and determine if we need to have a stretchable
+        // row and/or a stretchable column in the layout.
+        // In a GridLayout, a row or column is stretchable if it defines a gravity (regardless
+        // of what the gravity is -- in other words, a column is not just stretchable if it
+        // has gravity=fill but also if it has gravity=left). Furthermore, ALL the elements
+        // in the row/column have to be stretchable for the overall row/column to be
+        // considered stretchable.
+
+        // Map from row index to boolean for "is the row fixed/inflexible?"
+        Map<Integer, Boolean> rowFixed = new HashMap<Integer, Boolean>();
+        Map<Integer, Boolean> columnFixed = new HashMap<Integer, Boolean>();
+        for (View view : mViews) {
+            if (view.mElement == mLayout) {
+                continue;
+            }
+
+            int gravity = RelativeLayoutConversionHelper.getGravity(view.mGravity, 0);
+            if ((gravity & RelativeLayoutConversionHelper.GRAVITY_HORIZ_MASK) == 0) {
+                columnFixed.put(view.mCol, true);
+            } else if (!columnFixed.containsKey(view.mCol)) {
+                columnFixed.put(view.mCol, false);
+            }
+            if ((gravity & RelativeLayoutConversionHelper.GRAVITY_VERT_MASK) == 0) {
+                rowFixed.put(view.mRow, true);
+            } else if (!rowFixed.containsKey(view.mRow)) {
+                rowFixed.put(view.mRow, false);
+            }
+        }
+
+        boolean hasStretchableRow = false;
+        boolean hasStretchableColumn = false;
+        for (boolean fixed : rowFixed.values()) {
+            if (!fixed) {
+                hasStretchableRow = true;
+            }
+        }
+        for (boolean fixed : columnFixed.values()) {
+            if (!fixed) {
+                hasStretchableColumn = true;
+            }
+        }
+
+        if (!hasStretchableRow || !hasStretchableColumn) {
+            // Insert <Space> to hold stretchable space
+            // TODO: May also have to increment column count!
+            int offset = 0; // WHERE?
+
+            if (mLayout instanceof IndexedRegion) {
+                IndexedRegion region = (IndexedRegion) mLayout;
+                int end = region.getEndOffset();
+                // TODO: Look backwards for the "</"
+                // (and can it ever be <foo/>) ?
+                end -= (mLayout.getTagName().length() + 3); // 3: <, /, >
+                offset = end;
+            }
+
+            int row = rowFixed.size();
+            int column = columnFixed.size();
+            StringBuilder sb = new StringBuilder(64);
+            String tag = SPACE;
+            sb.append('<').append(tag).append(' ');
+            String gravity;
+            if (!hasStretchableRow && !hasStretchableColumn) {
+                gravity = GRAVITY_VALUE_FILL;
+            } else if (!hasStretchableRow) {
+                gravity = GRAVITY_VALUE_FILL_VERTICAL;
+            } else {
+                assert !hasStretchableColumn;
+                gravity = GRAVITY_VALUE_FILL_HORIZONTAL;
+            }
+
+            sb.append(mNamespace).append(':');
+            sb.append(ATTR_LAYOUT_GRAVITY).append('=').append('"').append(gravity);
+            sb.append('"').append(' ');
+
+            sb.append(mNamespace).append(':');
+            sb.append(ATTR_LAYOUT_ROW).append('=').append('"').append(Integer.toString(row));
+            sb.append('"').append(' ');
+
+            sb.append(mNamespace).append(':');
+            sb.append(ATTR_LAYOUT_COLUMN).append('=').append('"').append(Integer.toString(column));
+            sb.append('"').append('/').append('>');
+
+            String space = sb.toString();
+            InsertEdit replace = new InsertEdit(offset, space);
+            mRootEdit.addChild(replace);
+
+            mColumnCount++;
+        }
+    }
+
+    private void removeUndefinedAttrs() {
+        ViewElementDescriptor descriptor = mRefactoring.getElementDescriptor(FQCN_GRID_LAYOUT);
+        if (descriptor == null) {
+            return;
+        }
+
+        Set<String> defined = new HashSet<String>();
+        AttributeDescriptor[] layoutAttributes = descriptor.getLayoutAttributes();
+        for (AttributeDescriptor attribute : layoutAttributes) {
+            defined.add(attribute.getXmlLocalName());
+        }
+
+        for (View view : mViews) {
+            Element child = view.mElement;
+
+            List<Attr> attributes = mRefactoring.findLayoutAttributes(child);
+            for (Attr attribute : attributes) {
+                String name = attribute.getLocalName();
+                if (!defined.contains(name)) {
+                    // Remove it
+                    try {
+                        mRefactoring.removeAttribute(mRootEdit, child, attribute.getNamespaceURI(),
+                                name);
+                    } catch (MalformedTreeException mte) {
+                        // Sometimes refactoring has modified attribute; not
+                        // removing
+                        // it is non-fatal so just warn instead of letting
+                        // refactoring
+                        // operation abort
+                        AdtPlugin.log(IStatus.WARNING,
+                                "Could not remove unsupported attribute %1$s; " + //$NON-NLS-1$
+                                        "already modified during refactoring?", //$NON-NLS-1$
+                                attribute.getLocalName());
+                    }
+                }
+            }
+        }
     }
 
     /** Removes any elements targeted for deletion */
@@ -136,31 +302,23 @@ class GridLayoutConverter {
     /**
      * Creates refactoring edits which adds or updates the grid attributes
      */
-    private void assignGridAttributes(List<View> views) {
-        String namespace = mRefactoring.getAndroidNamespacePrefix();
-
+    private void assignGridAttributes() {
         // We always convert to horizontal grid layouts for now
         mRefactoring.setAttribute(mRootEdit, mLayout, ANDROID_URI,
-                namespace, ATTR_ORIENTATION, VALUE_HORIZONTAL);
+                mNamespace, ATTR_ORIENTATION, VALUE_HORIZONTAL);
 
-        int columnCount = computeColumnCount(views);
-        if (columnCount > 0) {
-            mRefactoring.setAttribute(mRootEdit, mLayout, ANDROID_URI,
-                namespace, ATTR_COLUMN_COUNT, Integer.toString(columnCount));
-        }
-
-        assignCellAttributes(views, namespace, columnCount);
+        assignCellAttributes();
     }
 
     /**
      * Assign cell attributes to the table, skipping those that will be implied
      * by the grid model
      */
-    private void assignCellAttributes(List<View> views, String namespace, int columnCount) {
+    private void assignCellAttributes() {
         int implicitRow = 0;
         int implicitColumn = 0;
         int nextRow = 0;
-        for (View view : views) {
+        for (View view : mViews) {
             Element element = view.getElement();
             if (element == mLayout) {
                 continue;
@@ -169,15 +327,18 @@ class GridLayoutConverter {
             int row = view.getRow();
             int column = view.getColumn();
 
+            if (column != implicitColumn && (implicitColumn > 0 || implicitRow > 0)) {
+                mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
+                        mNamespace, ATTR_LAYOUT_COLUMN, Integer.toString(column));
+                if (column < implicitColumn) {
+                    implicitRow++;
+                }
+                implicitColumn = column;
+            }
             if (row != implicitRow) {
                 mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
-                        namespace, ATTR_LAYOUT_ROW, Integer.toString(row));
+                        mNamespace, ATTR_LAYOUT_ROW, Integer.toString(row));
                 implicitRow = row;
-            }
-            if (column != implicitColumn) {
-                mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
-                        namespace, ATTR_LAYOUT_COLUMN, Integer.toString(column));
-                implicitColumn = column;
             }
 
             int rowSpan = view.getRowSpan();
@@ -186,11 +347,11 @@ class GridLayoutConverter {
 
             if (rowSpan > 1) {
                 mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
-                        namespace, ATTR_LAYOUT_ROW_SPAN, Integer.toString(rowSpan));
+                        mNamespace, ATTR_LAYOUT_ROW_SPAN, Integer.toString(rowSpan));
             }
             if (columnSpan > 1) {
                 mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
-                        namespace, ATTR_LAYOUT_COLUMN_SPAN,
+                        mNamespace, ATTR_LAYOUT_COLUMN_SPAN,
                         Integer.toString(columnSpan));
             }
             nextRow = Math.max(nextRow, row + rowSpan);
@@ -212,7 +373,7 @@ class GridLayoutConverter {
             }
 
             implicitColumn += columnSpan;
-            if (implicitColumn >= columnCount) {
+            if (implicitColumn >= mColumnCount) {
                 implicitColumn = 0;
                 assert nextRow > implicitRow;
                 implicitRow = nextRow;
@@ -220,22 +381,55 @@ class GridLayoutConverter {
         }
     }
 
-    /** Compute column count */
-    private int computeColumnCount(List<View> views) {
-        int columnCount = 0;
-        for (View view : views) {
-            if (view.getElement() == mLayout) {
+    private void processGravities() {
+        for (View view : mViews) {
+            Element element = view.getElement();
+            if (element == mLayout) {
                 continue;
             }
 
-            int column = view.getColumn();
-            int columnSpan = view.getColumnSpan();
-            if (column + columnSpan > columnCount) {
-                columnCount = column + columnSpan;
+            Attr width = element.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
+            Attr height = element.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
+            String gravity = element.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY);
+            String newGravity = null;
+            if (width != null && (VALUE_MATCH_PARENT.equals(width.getValue()) ||
+                    VALUE_FILL_PARENT.equals(width.getValue()))) {
+                mRefactoring.removeAttribute(mRootEdit, width);
+                newGravity = gravity = GRAVITY_VALUE_FILL_HORIZONTAL;
             }
+            if (height != null && (VALUE_MATCH_PARENT.equals(height.getValue()) ||
+                    VALUE_FILL_PARENT.equals(height.getValue()))) {
+                mRefactoring.removeAttribute(mRootEdit, height);
+                if (newGravity == GRAVITY_VALUE_FILL_HORIZONTAL) {
+                    newGravity = GRAVITY_VALUE_FILL;
+                } else {
+                    newGravity = GRAVITY_VALUE_FILL_VERTICAL;
+                }
+                gravity = newGravity;
+            }
+
+            if (gravity == null || gravity.length() == 0) {
+                ElementDescriptor descriptor = view.mInfo.getUiViewNode().getDescriptor();
+                if (descriptor instanceof ViewElementDescriptor) {
+                    ViewElementDescriptor viewDescriptor = (ViewElementDescriptor) descriptor;
+                    String fqcn = viewDescriptor.getFullClassName();
+                    FillPreference fill = ViewMetadataRepository.get().getFillPreference(fqcn);
+                    gravity = GridLayoutRule.computeDefaultGravity(fill);
+                    if (gravity != null) {
+                        newGravity = gravity;
+                    }
+                }
+            }
+
+            if (newGravity != null) {
+                mRefactoring.setAttribute(mRootEdit, element, ANDROID_URI,
+                        mNamespace, ATTR_LAYOUT_GRAVITY, newGravity);
+            }
+
+            view.mGravity = newGravity != null ? newGravity : gravity;
         }
-        return columnCount;
     }
+
 
     /** Converts 0dip values in layout_width and layout_height to wrap_content instead */
     private void convert0dipToWrapContent(Element child) {
@@ -304,6 +498,7 @@ class GridLayoutConverter {
         private int mX2;
         private int mY2;
         private CanvasViewInfo mInfo;
+        private String mGravity;
 
         public View(CanvasViewInfo view, Element element) {
             mInfo = view;
@@ -404,12 +599,17 @@ class GridLayoutConverter {
     }
 
     /** Grid model for the views found in the view hierarchy, partitioned into rows and columns */
-    private class GridModel {
+    private static class GridModel {
         private final List<View> mViews = new ArrayList<View>();
         private final List<Element> mDelete = new ArrayList<Element>();
         private final Map<Element, View> mElementToView = new HashMap<Element, View>();
+        private Element mLayout;
+        private boolean mFlatten;
 
-        GridModel(CanvasViewInfo view) {
+        GridModel(CanvasViewInfo view, Element layout, boolean flatten) {
+            mLayout = layout;
+            mFlatten = flatten;
+
             scan(view, true);
             analyzeKnownLayouts();
             initializeColumns();
@@ -437,13 +637,34 @@ class GridLayoutConverter {
         }
 
         /**
+         * Compute and return column count
+         *
+         * @return the column count
+         */
+        public int computeColumnCount() {
+            int columnCount = 0;
+            for (View view : mViews) {
+                if (view.getElement() == mLayout) {
+                    continue;
+                }
+
+                int column = view.getColumn();
+                int columnSpan = view.getColumnSpan();
+                if (column + columnSpan > columnCount) {
+                    columnCount = column + columnSpan;
+                }
+            }
+            return columnCount;
+        }
+
+        /**
          * Initializes the column and columnSpan attributes of the views
          */
         private void initializeColumns() {
             // Now initialize table view row, column and spans
             Map<Integer, List<View>> mColumnViews = new HashMap<Integer, List<View>>();
             for (View view : mViews) {
-                if (view == mLayout) {
+                if (view.mElement == mLayout) {
                     continue;
                 }
                 int x = view.getLeftEdge();
@@ -470,7 +691,7 @@ class GridLayoutConverter {
             }
             // Initialize column spans
             for (View view : mViews) {
-                if (view == mLayout) {
+                if (view.mElement == mLayout) {
                     continue;
                 }
                 int index = Collections.binarySearch(columnOffsets, view.getRightEdge());
@@ -494,7 +715,7 @@ class GridLayoutConverter {
         private void initializeRows() {
             Map<Integer, List<View>> mRowViews = new HashMap<Integer, List<View>>();
             for (View view : mViews) {
-                if (view == mLayout) {
+                if (view.mElement == mLayout) {
                     continue;
                 }
                 int y = view.getTopEdge();
@@ -522,7 +743,7 @@ class GridLayoutConverter {
 
             // Initialize row spans
             for (View view : mViews) {
-                if (view == mLayout) {
+                if (view.mElement == mLayout) {
                     continue;
                 }
                 int index = Collections.binarySearch(rowOffsets, view.getBottomEdge());

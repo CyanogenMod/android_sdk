@@ -334,23 +334,39 @@ class RelativeLayoutConversionHelper {
         }
     }
 
-    private static final int GRAVITY_LEFT = 1 << 0;
-    private static final int GRAVITY_RIGHT = 1<< 1;
-    private static final int GRAVITY_CENTER_HORIZ = 1 << 2;
-    private static final int GRAVITY_FILL_HORIZ = 1 << 3;
-    private static final int GRAVITY_CENTER_VERT = 1 << 4;
-    private static final int GRAVITY_FILL_VERT = 1 << 5;
-    private static final int GRAVITY_TOP = 1 << 6;
-    private static final int GRAVITY_BOTTOM = 1 << 7;
-    private static final int GRAVITY_HORIZ_MASK = GRAVITY_CENTER_HORIZ | GRAVITY_FILL_HORIZ
+    public static final int GRAVITY_LEFT = 1 << 0;
+    public static final int GRAVITY_RIGHT = 1<< 1;
+    public static final int GRAVITY_CENTER_HORIZ = 1 << 2;
+    public static final int GRAVITY_FILL_HORIZ = 1 << 3;
+    public static final int GRAVITY_CENTER_VERT = 1 << 4;
+    public static final int GRAVITY_FILL_VERT = 1 << 5;
+    public static final int GRAVITY_TOP = 1 << 6;
+    public static final int GRAVITY_BOTTOM = 1 << 7;
+    public static final int GRAVITY_HORIZ_MASK = GRAVITY_CENTER_HORIZ | GRAVITY_FILL_HORIZ
             | GRAVITY_LEFT | GRAVITY_RIGHT;
-    private static final int GRAVITY_VERT_MASK = GRAVITY_CENTER_VERT | GRAVITY_FILL_VERT
+    public static final int GRAVITY_VERT_MASK = GRAVITY_CENTER_VERT | GRAVITY_FILL_VERT
             | GRAVITY_TOP | GRAVITY_BOTTOM;
 
-    /** Returns the gravity of the given element */
-    private static int getGravity(Element element) {
-        int gravity = GRAVITY_LEFT | GRAVITY_TOP;
+    /**
+     * Returns the gravity of the given element
+     *
+     * @param element the element to look up the gravity for
+     * @return a bit mask corresponding to the selected gravities
+     */
+    public static int getGravity(Element element) {
         String gravityString = element.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY);
+        return getGravity(gravityString, GRAVITY_LEFT | GRAVITY_TOP);
+    }
+
+    /**
+     * Returns the gravity bitmask for the given gravity string description
+     *
+     * @param gravityString the gravity string description
+     * @param defaultMask the default/initial bitmask to start with
+     * @return a bitmask corresponding to the gravity description
+     */
+    public static int getGravity(String gravityString, int defaultMask) {
+        int gravity = defaultMask;
         if (gravityString != null && gravityString.length() > 0) {
             String[] anchors = gravityString.split("\\|"); //$NON-NLS-1$
             for (String anchor : anchors) {
