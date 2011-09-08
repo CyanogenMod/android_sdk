@@ -20,7 +20,6 @@ import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -198,8 +197,11 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
 
         } else {
             // new file, just write it all
-            // write the header
-            writer.write(mType.getHeader());
+
+            // write the header (can be null, for example for PropertyType.LEGACY_BUILD)
+            if (mType.getHeader() != null) {
+                writer.write(mType.getHeader());
+            }
 
             // write the properties.
             for (Entry<String, String> entry : mProperties.entrySet()) {

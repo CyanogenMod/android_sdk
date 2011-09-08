@@ -66,7 +66,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import java.util.TreeSet;
 
 /**
- * Represents an XML attribute to select an exisintg manifest package, that can be modified using
+ * Represents an XML attribute to select an existing manifest package, that can be modified using
  * a simple text field or a dialog to choose an existing package.
  * <p/>
  * See {@link UiTextAttributeNode} for more information.

@@ -18,15 +18,15 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 
 /**
- * A "New Test Android Project" Wizard.
+ * A "New Sample Android Project" Wizard.
  * <p/>
- * This is really the {@link NewProjectWizard} that only displays the "test project" pages.
+ * This displays the new project wizard pre-configured for samples only.
  */
-public class NewTestProjectWizard extends NewProjectWizard {
+public class NewSampleProjectWizard extends NewProjectWizard {
     /**
-     * Creates a new wizard for creating an Android Test Project
+     * Creates a new wizard for creating a sample Android project
      */
-    public NewTestProjectWizard() {
-        super(Mode.TEST);
+    public NewSampleProjectWizard() {
+        super(Mode.SAMPLE);
     }
 }

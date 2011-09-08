@@ -15,7 +15,10 @@
  */
 package com.android.ide.eclipse.tests.functests.sampleProjects;
 
-import com.android.ide.eclipse.adt.wizards.newproject.StubProjectWizard;
+import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -30,9 +33,12 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.operation.IRunnableContext;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -93,16 +99,24 @@ public class SampleProjectTest extends SdkTestCase {
 
             prepareProject(path, target);
 
-            final StubProjectWizard newProjCreator = new StubProjectWizard(
-                    name, path, target);
-            newProjCreator.init(null, null);
-            // need to run finish on ui thread since it invokes a perspective switch
-            Display.getDefault().syncExec(new Runnable() {
-                public void run() {
-                    newProjCreator.performFinish();
+            IRunnableContext context = new IRunnableContext() {
+                public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable)
+                        throws InvocationTargetException, InterruptedException {
+                    runnable.run(new NullProgressMonitor());
                 }
-            });
+            };
+            NewProjectWizardState state = new NewProjectWizardState(Mode.SAMPLE);
+            state.projectName = name;
+            state.target = target;
+            state.packageName = "com.android.samples";
+            state.activityName = name;
+            state.applicationName = name;
+            state.chosenSample = new File(path);
+            state.useDefaultLocation = false;
+            state.createActivity = false;
 
+            NewProjectCreator creator = new NewProjectCreator(state, context);
+            creator.createAndroidProjects();
             iproject = validateProjectExists(name);
             validateNoProblems(iproject);
         }
@@ -164,6 +178,7 @@ public class SampleProjectTest extends SdkTestCase {
                 }
             }
         }
+        failureBuilder.append("Project location: " + AdtUtils.getAbsolutePath(iproject));
         assertFalse(failureBuilder.toString(), hasErrors);
     }
 
