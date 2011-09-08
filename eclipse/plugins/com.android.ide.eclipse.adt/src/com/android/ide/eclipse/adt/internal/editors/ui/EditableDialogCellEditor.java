@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.ui;
 
+import com.android.sdklib.SdkConstants;
+
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.swt.SWT;
@@ -44,9 +46,9 @@ import java.text.MessageFormat;
  * <p/>Most of the code comes from TextCellEditor.
  */
 public abstract class EditableDialogCellEditor extends DialogCellEditor {
-    
-    private Text text; 
-    
+
+    private Text text;
+
     private ModifyListener modifyListener;
 
     /**
@@ -57,7 +59,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     private boolean isDeleteable = false;
 
     private boolean isSelectable = false;
-    
+
     EditableDialogCellEditor(Composite parent) {
         super(parent);
     }
@@ -73,7 +75,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
         return result;
     }
 
-    
+
     @Override
     protected Control createContents(Composite cell) {
         text = new Text(cell, SWT.SINGLE);
@@ -84,7 +86,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
             }
         });
         text.addKeyListener(new KeyAdapter() {
-            // hook key pressed - see PR 14201  
+            // hook key pressed - see PR 14201
             @Override
             public void keyPressed(KeyEvent e) {
                 keyReleaseOccured(e);
@@ -197,7 +199,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
             text.addModifyListener(getModifyListener());
         }
     }
-    
+
     /**
      * The <code>TextCellEditor</code> implementation of
      * this <code>CellEditor</code> framework method returns
@@ -254,9 +256,9 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * Handles a default selection event from the text control by applying the editor
      * value and deactivating this cell editor.
-     * 
+     *
      * @param event the selection event
-     * 
+     *
      * @since 3.0
      */
     protected void handleDefaultSelection(SelectionEvent event) {
@@ -266,8 +268,8 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     }
 
     /**
-     * The <code>TextCellEditor</code>  implementation of this 
-     * <code>CellEditor</code> method returns <code>true</code> if 
+     * The <code>TextCellEditor</code>  implementation of this
+     * <code>CellEditor</code> method returns <code>true</code> if
      * the current selection is not empty.
      */
     @Override
@@ -279,8 +281,8 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     }
 
     /**
-     * The <code>TextCellEditor</code>  implementation of this 
-     * <code>CellEditor</code> method returns <code>true</code> if 
+     * The <code>TextCellEditor</code>  implementation of this
+     * <code>CellEditor</code> method returns <code>true</code> if
      * the current selection is not empty.
      */
     @Override
@@ -292,9 +294,9 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     }
 
     /**
-     * The <code>TextCellEditor</code>  implementation of this 
+     * The <code>TextCellEditor</code>  implementation of this
      * <code>CellEditor</code> method returns <code>true</code>
-     * if there is a selection or if the caret is not positioned 
+     * if there is a selection or if the caret is not positioned
      * at the end of the text.
      */
     @Override
@@ -307,7 +309,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     }
 
     /**
-     * The <code>TextCellEditor</code>  implementation of this 
+     * The <code>TextCellEditor</code>  implementation of this
      * <code>CellEditor</code> method always returns <code>true</code>.
      */
     @Override
@@ -320,7 +322,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
 
     /**
      * Check if save all is enabled
-     * @return true if it is 
+     * @return true if it is
      */
     public boolean isSaveAllEnabled() {
         if (text == null || text.isDisposed()) {
@@ -333,7 +335,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
      * Returns <code>true</code> if this cell editor is
      * able to perform the select all action.
      * <p>
-     * This default implementation always returns 
+     * This default implementation always returns
      * <code>false</code>.
      * </p>
      * <p>
@@ -353,11 +355,11 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * Processes a key release event that occurred in this cell editor.
      * <p>
-     * The <code>TextCellEditor</code> implementation of this framework method 
-     * ignores when the RETURN key is pressed since this is handled in 
+     * The <code>TextCellEditor</code> implementation of this framework method
+     * ignores when the RETURN key is pressed since this is handled in
      * <code>handleDefaultSelection</code>.
      * An exception is made for Ctrl+Enter for multi-line texts, since
-     * a default selection event is not sent in this case. 
+     * a default selection event is not sent in this case.
      * </p>
      *
      * @param keyEvent the key event
@@ -368,11 +370,11 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
             // Enter is handled in handleDefaultSelection.
             // Do not apply the editor value in response to an Enter key event
             // since this can be received from the IME when the intent is -not-
-            // to apply the value.  
+            // to apply the value.
             // See bug 39074 [CellEditors] [DBCS] canna input mode fires bogus event from Text Control
             //
             // An exception is made for Ctrl+Enter for multi-line texts, since
-            // a default selection event is not sent in this case. 
+            // a default selection event is not sent in this case.
             if (text != null && !text.isDisposed()
                     && (text.getStyle() & SWT.MULTI) != 0) {
                 if ((keyEvent.stateMask & SWT.CTRL) != 0) {
@@ -387,7 +389,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * The <code>TextCellEditor</code> implementation of this
      * <code>CellEditor</code> method copies the
-     * current selection to the clipboard. 
+     * current selection to the clipboard.
      */
     @Override
     public void performCopy() {
@@ -397,7 +399,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * The <code>TextCellEditor</code> implementation of this
      * <code>CellEditor</code> method cuts the
-     * current selection to the clipboard. 
+     * current selection to the clipboard.
      */
     @Override
     public void performCut() {
@@ -411,7 +413,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
      * The <code>TextCellEditor</code> implementation of this
      * <code>CellEditor</code> method deletes the
      * current selection or, if there is no selection,
-     * the character next character from the current position. 
+     * the character next character from the current position.
      */
     @Override
     public void performDelete() {
@@ -434,7 +436,7 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * The <code>TextCellEditor</code> implementation of this
      * <code>CellEditor</code> method pastes the
-     * the clipboard contents over the current selection. 
+     * the clipboard contents over the current selection.
      */
     @Override
     public void performPaste() {
@@ -447,12 +449,40 @@ public abstract class EditableDialogCellEditor extends DialogCellEditor {
     /**
      * The <code>TextCellEditor</code> implementation of this
      * <code>CellEditor</code> method selects all of the
-     * current text. 
+     * current text.
      */
     @Override
     public void performSelectAll() {
         text.selectAll();
         checkSelection();
         checkDeleteable();
+    }
+
+    @Override
+    protected void focusLost() {
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX) {
+            // On Linux, something about the order of focus event delivery prevents the
+            // callback on the "..." button to be invoked, which means the
+            // customizer dialog never shows up (see issue #18348).
+            // (Note that simply trying to Display.asyncRun() the super.focusLost()
+            // method does not work.)
+            //
+            // We can work around this by not deactivating on a focus loss.
+            // This means that in some cases the cell editor will still be
+            // shown in the property sheet, but I've tested that the values
+            // are all committed as before. This is better than having a non-operational
+            // customizer, but since this issue only happens on Linux the workaround
+            // is only done on Linux such that on other platforms we deactivate
+            // immediately on focus loss.
+            //
+            if (isActivated()) {
+                fireApplyEditorValue();
+                // super.focusLost calls the following which we're deliberately
+                // suppressing here:
+                //    deactivate();
+            }
+        } else {
+            super.focusLost();
+        }
     }
 }
