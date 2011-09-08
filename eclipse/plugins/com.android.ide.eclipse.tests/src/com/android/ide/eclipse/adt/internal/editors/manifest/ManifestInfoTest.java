@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjec
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISystemImage;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -225,10 +226,6 @@ public class ManifestInfoTest extends AdtProjectTest {
             return false;
         }
 
-        public String[] getAbiList() {
-            return null;
-        }
-
         public String getClasspathName() {
             return null;
         }
@@ -245,8 +242,12 @@ public class ManifestInfoTest extends AdtProjectTest {
             return null;
         }
 
-        public String getImagePath(String abiType) {
+        public ISystemImage getSystemImage(String abiType) {
             return null;
+        }
+
+        public ISystemImage[] getSystemImages() {
+            return new ISystemImage[0];
         }
 
         public String getLocation() {
