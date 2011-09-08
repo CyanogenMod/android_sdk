@@ -8,15 +8,11 @@
 
     <Button
         android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="FirstButton" >
     </Button>
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_column="0"
         android:layout_row="1"
         android:text="SecondButton" >
@@ -24,38 +20,29 @@
 
     <Button
         android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="ThirdButton" >
     </Button>
 
     <CheckBox
         android:id="@+id/checkBox1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="CheckBox" >
     </CheckBox>
 
     <Button
         android:id="@+id/button4"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_columnSpan="3"
         android:text="FourthButton" >
     </Button>
 
     <Button
         android:id="@+id/button5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_gravity="right"
         android:text="FifthButton" >
     </Button>
 
     <Button
         android:id="@+id/button6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:layout_column="0"
         android:layout_row="4"
         android:text="Button" >
