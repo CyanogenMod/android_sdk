@@ -94,8 +94,17 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         checkRefactoring(FQCN_RELATIVE_LAYOUT, basename, flatten);
     }
 
+    public void testInitialAttributes() throws Exception {
+        checkRefactoring(FQCN_LINEAR_LAYOUT, "sample10.xml", true, "android:orientation=vertical");
+    }
+
     private void checkRefactoring(String newLayoutType, String basename,
             boolean flatten) throws Exception {
+        checkRefactoring(newLayoutType, basename, flatten, null);
+    }
+
+    private void checkRefactoring(String newLayoutType, String basename,
+            boolean flatten, String initialAttributes) throws Exception {
         IFile file = getLayoutFile(getProject(), basename);
         TestContext info = setupTestContext(file, basename);
         TestLayoutEditor layoutEditor = info.mLayoutEditor;
@@ -107,6 +116,9 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
                 layoutEditor);
         refactoring.setFlatten(flatten);
         refactoring.setType(newLayoutType);
+        if (initialAttributes != null) {
+            refactoring.setInitializedAttributes(initialAttributes);
+        }
         refactoring.setRootView(rootView);
 
         List<Change> changes = refactoring.computeChanges(new NullProgressMonitor());
