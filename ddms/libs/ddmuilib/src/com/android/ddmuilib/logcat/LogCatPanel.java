@@ -29,9 +29,15 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -50,10 +56,12 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -593,9 +601,11 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void createLogcatViewTable(Composite parent) {
-        /* SWT.VIRTUAL style will make the table render faster, but all rows will be
-         * of equal heights which causes wrapped messages to just be clipped. */
-        final Table table = new Table(parent, SWT.FULL_SELECTION | SWT.MULTI);
+        // The SWT.VIRTUAL bit causes the table to be rendered faster. However it makes all rows
+        // to be of the same height, thereby clipping any rows with multiple lines of text.
+        // In such a case, users can view the full text by hovering over the item and looking at
+        // the tooltip.
+        final Table table = new Table(parent, SWT.FULL_SELECTION | SWT.MULTI | SWT.VIRTUAL);
         mViewer = new TableViewer(table);
 
         table.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -622,24 +632,64 @@ public final class LogCatPanel extends SelectionDependentPanel
                 "    Log Message field should be pretty long by default. As long as possible for correct display on Mac.",
         };
 
+        mLogCatMessageLabelProvider = new LogCatMessageLabelProvider(getFontFromPrefStore());
         for (int i = 0; i < properties.length; i++) {
-            TableHelper.createTableColumn(mViewer.getTable(),
+            TableColumn tc = TableHelper.createTableColumn(mViewer.getTable(),
                     properties[i],                      /* Column title */
                     SWT.LEFT,                           /* Column Style */
                     sampleText[i],                      /* String to compute default col width */
                     getColPreferenceKey(properties[i]), /* Preference Store key for this column */
                     mPrefStore);
+            TableViewerColumn tvc = new TableViewerColumn(mViewer, tc);
+            tvc.setLabelProvider(mLogCatMessageLabelProvider);
         }
 
         mViewer.getTable().setLinesVisible(true); /* zebra stripe the table */
         mViewer.getTable().setHeaderVisible(true);
-
-        mLogCatMessageLabelProvider = new LogCatMessageLabelProvider(getFontFromPrefStore(),
-                mViewer.getTable());
-        mViewer.setLabelProvider(mLogCatMessageLabelProvider);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
+        WrappingToolTipSupport.enableFor(mViewer, ToolTip.NO_RECREATE);
 
         initDoubleClickListener();
+    }
+
+    private static class WrappingToolTipSupport extends ColumnViewerToolTipSupport {
+        protected WrappingToolTipSupport(ColumnViewer viewer, int style,
+                boolean manualActivation) {
+            super(viewer, style, manualActivation);
+        }
+
+        @Override
+        protected Composite createViewerToolTipContentArea(Event event, ViewerCell cell,
+                Composite parent) {
+            Composite comp = new Composite(parent, SWT.NONE);
+            GridLayout l = new GridLayout(1, false);
+            l.horizontalSpacing = 0;
+            l.marginWidth = 0;
+            l.marginHeight = 0;
+            l.verticalSpacing = 0;
+            comp.setLayout(l);
+
+            // Use a browser widget since it automatically provides both wrapping text,
+            // and adds a scroll bar if necessary
+            Browser browser = new Browser(comp, SWT.BORDER);
+            browser.setText(getBrowserText(cell.getElement()));
+            browser.setLayoutData(new GridData(500, 150));
+
+            return comp;
+        }
+
+        private String getBrowserText(Object element) {
+            return String.format("<html><body><code>%s</code></body></html>", element.toString());
+        }
+
+        @Override
+        public boolean isHideOnMouseDown() {
+            return false;
+        }
+
+        public static final void enableFor(ColumnViewer viewer, int style) {
+            new WrappingToolTipSupport(viewer, style, false);
+        }
     }
 
     private String getColPreferenceKey(String field) {
