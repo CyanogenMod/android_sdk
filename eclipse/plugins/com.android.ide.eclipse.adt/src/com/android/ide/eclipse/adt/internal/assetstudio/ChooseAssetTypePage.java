@@ -16,7 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
-import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectButton;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceFolderType;
 
@@ -24,6 +25,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,7 +41,7 @@ import org.eclipse.swt.widgets.Text;
 
 /** Page for choosing the type of asset to create, as well as the target project */
 public class ChooseAssetTypePage extends WizardPage implements SelectionListener, ModifyListener {
-    private ProjectButton mProjectButton;
+    private ProjectCombo mProjectButton;
     private Button mClipboardButton;
     private IProject mProject;
     private Text mNameText;
@@ -83,8 +87,9 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         projectLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         projectLabel.setText("Project:");
 
-        mProjectButton = new ProjectButton(container, mProject);
-        mProjectButton.setAlignment(SWT.LEFT);
+        ProjectChooserHelper helper =
+                new ProjectChooserHelper(getShell(), null /* filter */);
+        mProjectButton = new ProjectCombo(helper, container, mProject);
         mProjectButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mProjectButton.addSelectionListener(this);
 
@@ -101,7 +106,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         resourceLabel.setText("Resource:");
 
         mResourceName = new Label(container, SWT.NONE);
-        mResourceName.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+        mResourceName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
         mClipboardButton = new Button(container, SWT.FLAT);
         mClipboardButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -159,6 +164,13 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         if (source == mProjectButton) {
             mProject = mProjectButton.getSelectedProject();
             validatePage();
+        } else if (source == mClipboardButton) {
+            Clipboard clipboard = new Clipboard(getShell().getDisplay());
+            TextTransfer textTransfer = TextTransfer.getInstance();
+            clipboard.setContents(
+                    new Object[] { mResourceName.getText() },
+                    new Transfer[] { textTransfer });
+            clipboard.dispose();
         } else if (source instanceof Button) {
             // User selected a different asset type to be created
             Object data = ((Button) source).getData();
