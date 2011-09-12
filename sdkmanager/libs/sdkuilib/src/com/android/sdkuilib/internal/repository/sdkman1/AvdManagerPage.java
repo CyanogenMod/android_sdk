@@ -57,9 +57,13 @@ public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
         label.setLayoutData(new GridData());
 
         try {
-            label.setText(String.format(
-                    "List of existing Android Virtual Devices located at %s",
-                    mUpdaterData.getAvdManager().getBaseAvdFolder()));
+            if (mUpdaterData != null && mUpdaterData.getAvdManager() != null) {
+                label.setText(String.format(
+                        "List of existing Android Virtual Devices located at %s",
+                        mUpdaterData.getAvdManager().getBaseAvdFolder()));
+            } else {
+                label.setText("Error: cannot find the AVD folder location.\r\n Please set the 'ANDROID_SDK_HOME' env variable.");
+            }
         } catch (AndroidLocationException e) {
             label.setText(e.getMessage());
         }
