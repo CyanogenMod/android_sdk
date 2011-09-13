@@ -53,7 +53,12 @@
   - Ability to suppress rendering fidelity warnings.
 - Asset Studio integration: Wizard creation of launcher icons, menu
     icons, tab icons, etc.
-- Many bug fixes, and some critical bug fixes on Linux
+- The New Project and the New XML File wizards have been reworked into
+  multiple pages. Sample Projects are now copied into the workspace
+  such that they can be modified and deleted without affecting the
+  master copy.
+- The dependency on Eclipse GEF was removed.
+- Many bug fixes, and in particular some critical bug fixes on Linux
 
 13.0.0
 - Tools release only (command line tools)

@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.wizards.newproject;
 
+import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -252,11 +253,15 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
     private void validatePage() {
         String error = null;
 
-        if (mValues.target == null) {
+        if (AdtPlugin.getDefault().getSdkLoadStatus() == LoadStatus.LOADING) {
+            error = "The SDK is still loading; please wait.";
+        }
+
+        if (error == null && mValues.target == null) {
             error = "An SDK Target must be specified.";
         }
 
-        if (mValues.mode == Mode.SAMPLE) {
+        if (error == null && mValues.mode == Mode.SAMPLE) {
             // Make sure this SDK target contains samples
             if (mValues.samples == null || mValues.samples.size() == 0) {
                 error = "This target has no samples. Please select another target.";
@@ -318,6 +323,8 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
                 onSdkTargetModified();
             }
         }
+
+        validatePage();
     }
 
     public void onProjectTargetChange(IProject changedProject) {
