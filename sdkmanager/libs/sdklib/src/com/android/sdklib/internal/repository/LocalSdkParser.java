@@ -310,7 +310,7 @@ public class LocalSdkParser {
                 Map<String, String> props = infos.getFirst();
                 String error = infos.getSecond();
                 try {
-                    Package pkg = AddonPackage.create(dir.getAbsolutePath(), props, error);
+                    Package pkg = AddonPackage.createBroken(dir.getAbsolutePath(), props, error);
                     packages.add(pkg);
                     visited.add(dir);
                 } catch (Exception e) {

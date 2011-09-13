@@ -36,9 +36,13 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -190,6 +194,12 @@ public class PackagesPage extends UpdaterPage
         mTreeViewer.addCheckStateListener(new ICheckStateListener() {
             public void checkStateChanged(CheckStateChangedEvent event) {
                 onTreeCheckStateChanged(event); //$hide$
+            }
+        });
+
+        mTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            public void doubleClick(DoubleClickEvent event) {
+                onTreeDoubleClick(event); //$hide$
             }
         });
 
@@ -701,6 +711,42 @@ public class PackagesPage extends UpdaterPage
         // When selecting, we want to only select compatible archives and expand the super nodes.
         checkAndExpandItem(elem, checked, true/*fixChildren*/, true/*fixParent*/);
         updateButtonsState();
+    }
+
+    private void onTreeDoubleClick(DoubleClickEvent event) {
+        assert event.getSource() == mTreeViewer;
+        ISelection sel = event.getSelection();
+        if (sel.isEmpty() || !(sel instanceof ITreeSelection)) {
+            return;
+        }
+        ITreeSelection tsel = (ITreeSelection) sel;
+        Object elem = tsel.getFirstElement();
+        if (elem == null) {
+            return;
+        }
+
+        ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
+        Object[] children = provider.getElements(elem);
+        if (children == null) {
+            return;
+        }
+
+        if (children.length > 0) {
+            // If the element has children, expand/collapse it.
+            if (mTreeViewer.getExpandedState(elem)) {
+                mTreeViewer.collapseToLevel(elem, 1);
+            } else {
+                mTreeViewer.expandToLevel(elem, 1);
+            }
+        } else {
+            // If the element is a terminal one, select/deselect it.
+            checkAndExpandItem(
+                    elem,
+                    !mTreeViewer.getChecked(elem),
+                    false /*fixChildren*/,
+                    true /*fixParent*/);
+            updateButtonsState();
+        }
     }
 
     private void checkAndExpandItem(

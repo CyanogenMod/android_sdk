@@ -188,7 +188,7 @@ public class AddonPackage extends Package
      * @param props The properties parsed from the addon manifest (not the source.properties).
      * @param error The error indicating why this addon failed to be loaded.
      */
-    static Package create(String archiveOsPath, Map<String, String> props, String error) {
+    static Package createBroken(String archiveOsPath, Map<String, String> props, String error) {
         String name     = props.get(SdkManager.ADDON_NAME);
         String vendor   = props.get(SdkManager.ADDON_VENDOR);
         String api      = props.get(SdkManager.ADDON_API);
