@@ -273,7 +273,8 @@ class TaskMonitorImpl implements ITaskMonitor {
         }
 
         public int getProgress() {
-            assert mSubCoef > 0;
+            // subCoef can be 0 if setProgressMax() and incProgress() haven't been called yet
+            assert mSubValue == mStart || mSubCoef > 0;
             return mSubCoef > 0 ? (int)((mSubValue - mStart) / mSubCoef) : 0;
         }
 

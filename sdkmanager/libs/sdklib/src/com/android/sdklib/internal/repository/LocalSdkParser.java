@@ -83,7 +83,7 @@ public class LocalSdkParser {
         ArrayList<Package> packages = new ArrayList<Package>();
         HashSet<File> visited = new HashSet<File>();
 
-        monitor.setProgressMax(8);
+        monitor.setProgressMax(9);
 
         File dir = new File(osSdkRoot, SdkConstants.FD_DOCS);
         Package pkg = scanDoc(dir, monitor);
