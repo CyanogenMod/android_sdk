@@ -878,7 +878,12 @@ public final class LogCatPanel extends SelectionDependentPanel
             return true;
         }
 
-        return sb.getSelection() + sb.getThumb() == sb.getMaximum();
+        // On Mac & Linux, when the scroll bar is at the bottom,
+        //        sb.getSelection + sb.getThumb = sb.getMaximum
+        // But on Windows 7, the scrollbar never touches the bottom, and as a result
+        //        sb.getSelection + sb.getThumb is slightly less than sb.getMaximum.
+        // So we assume that as long as the thumb is close to the bottom, we want to scroll.
+        return Math.abs(sb.getSelection() + sb.getThumb() - sb.getMaximum()) < 10;
     }
 
     private List<ILogCatMessageSelectionListener> mMessageSelectionListeners;
