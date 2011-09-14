@@ -108,7 +108,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(ATTR_LOGCAT_FONT,
                 new FontData("Courier", 10, SWT.NORMAL).toString()); //$NON-NLS-1$
 
-        store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_OPEN);
+        store.setDefault(ATTR_HPROF_ACTION, HProfHandler.ACTION_SAVE);
 
         store.setDefault(ATTR_TIME_OUT, DdmPreferences.DEFAULT_TIMEOUT);
 
