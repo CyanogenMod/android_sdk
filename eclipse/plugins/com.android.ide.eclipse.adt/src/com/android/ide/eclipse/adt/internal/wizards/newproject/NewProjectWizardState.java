@@ -183,6 +183,9 @@ public class NewProjectWizardState {
      */
     public void extractFromAndroidManifest(Path path) {
         String osPath = path.append(SdkConstants.FN_ANDROID_MANIFEST_XML).toOSString();
+        if (!(new File(osPath).exists())) {
+            return;
+        }
 
         ManifestData manifestData = AndroidManifestHelper.parseForData(osPath);
         if (manifestData == null) {

@@ -17,6 +17,7 @@
 package com.android.sdkuilib.internal.widgets;
 
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -27,11 +28,13 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -56,6 +59,9 @@ public class SdkTargetSelector {
     private Table mTable;
     private Label mDescription;
     private Composite mInnerGroup;
+
+    /** Cache for {@link #getCheckboxWidth()} */
+    private static int sCheckboxWidth = -1;
 
     /**
      * Creates a new SDK Target Selector.
@@ -245,10 +251,20 @@ public class SdkTargetSelector {
             @Override
             public void controlResized(ControlEvent e) {
                 Rectangle r = table.getClientArea();
-                column0.setWidth(r.width * 30 / 100); // 30%
-                column1.setWidth(r.width * 45 / 100); // 45%
-                column2.setWidth(r.width * 15 / 100); // 15%
-                column3.setWidth(r.width * 10 / 100); // 10%
+                int width = r.width;
+
+                // On the Mac, the width of the checkbox column is not included (and checkboxes
+                // are shown if mAllowSelection=true). Subtract this size from the available
+                // width to be distributed among the columns.
+                if (mAllowSelection
+                        && SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                    width -= getCheckboxWidth();
+                }
+
+                column0.setWidth(width * 30 / 100); // 30%
+                column1.setWidth(width * 45 / 100); // 45%
+                column2.setWidth(width * 15 / 100); // 15%
+                column3.setWidth(width * 10 / 100); // 10%
             }
         });
     }
@@ -426,4 +442,15 @@ public class SdkTargetSelector {
         }
     }
 
+    /** Computes the width of a checkbox */
+    private int getCheckboxWidth() {
+        if (sCheckboxWidth == -1) {
+            Shell shell = new Shell(mTable.getShell(), SWT.NO_TRIM);
+            Button checkBox = new Button(shell, SWT.CHECK);
+            sCheckboxWidth = checkBox.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+            shell.dispose();
+        }
+
+        return sCheckboxWidth;
+    }
 }
