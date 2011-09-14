@@ -24,6 +24,7 @@ TOOLS=$TEMP_SDK_DIR/tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{android,apkbuilder,ddms,draw9patch}
 rm $V $TOOLS/{emulator,emulator-arm,emulator-x86}
+rm $V $TOOLS/lib/{libOpenglRender.so,libGLES_CM_translator.so,libGLES_V2_translator.so,libEGL_translator.so}
 rm $V $TOOLS/{hierarchyviewer,layoutopt,mksdcard,traceview,monkeyrunner}
 rm $V $TOOLS/proguard/bin/*.sh
 
@@ -32,6 +33,8 @@ rm $V $TOOLS/proguard/bin/*.sh
 # script in development.git/tools/build/patch_windows_sdk.sh. This will
 # be obsolete when we switch to an .atree format.
 # -- cp $V $WIN_OUT_DIR/host/windows-x86/bin/*.{exe,dll} $TOOLS/
+
+cp $V $WIN_OUT_DIR/host/windows-x86/lib/lib*.dll $LIB
 
 # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
 # and move it also in SDK/tools/lib (so that tools updates can update the root one too)

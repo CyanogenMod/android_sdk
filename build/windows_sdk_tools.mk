@@ -10,3 +10,12 @@ WIN_SDK_TARGETS := \
 	mksdcard \
 	sdklauncher
 
+# Add OpenGLES emulation host libraries if needed.
+ifeq (true,$(BUILD_EMULATOR_OPENGL))
+WIN_SDK_TARGETS += \
+	libOpenglRender \
+	libGLES_CM_translator \
+	libGLES_V2_translator \
+	libEGL_translator
+endif
+
