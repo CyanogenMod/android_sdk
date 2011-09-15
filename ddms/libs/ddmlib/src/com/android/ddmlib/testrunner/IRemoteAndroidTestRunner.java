@@ -186,6 +186,15 @@ public interface IRemoteAndroidTestRunner {
     public void setMaxtimeToOutputResponse(int maxTimeToOutputResponse);
 
     /**
+     * Set a custom run name to be reported to the {@link ITestRunListener} on {@link #run}
+     * <p/>
+     * If unspecified, will use package name
+     *
+     * @param runName
+     */
+    public void setRunName(String runName);
+
+    /**
      * Execute this test run.
      * <p/>
      * Convenience method for {@link #run(Collection)}.
