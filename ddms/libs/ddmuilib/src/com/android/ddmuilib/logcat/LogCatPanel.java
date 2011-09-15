@@ -59,6 +59,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -84,10 +85,16 @@ public final class LogCatPanel extends SelectionDependentPanel
     /** Preference key to use for storing font settings. */
     public static final String LOGCAT_VIEW_FONT_PREFKEY = "logcat.view.font";
 
+    // Use a monospace font family
     private static final String FONT_FAMILY =
             DdmConstants.CURRENT_PLATFORM == DdmConstants.PLATFORM_DARWIN ? "Monaco":"Courier New";
-    private static final FontData DEFAULT_LOGCAT_FONT = new FontData(
-            FONT_FAMILY, 12, SWT.NORMAL);
+
+    // Use the default system font size
+    private static final FontData DEFAULT_LOGCAT_FONTDATA;
+    static {
+        int h = Display.getDefault().getSystemFont().getFontData()[0].getHeight();
+        DEFAULT_LOGCAT_FONTDATA = new FontData(FONT_FAMILY, h, SWT.NORMAL);
+    }
 
     private static final String LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX = "logcat.view.colsize.";
 
@@ -158,7 +165,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void setupDefaultPreferences() {
         PreferenceConverter.setDefault(mPrefStore, LogCatPanel.LOGCAT_VIEW_FONT_PREFKEY,
-                DEFAULT_LOGCAT_FONT);
+                DEFAULT_LOGCAT_FONTDATA);
         mPrefStore.setDefault(LogCatMessageList.MAX_MESSAGES_PREFKEY,
                 LogCatMessageList.MAX_MESSAGES_DEFAULT);
     }
@@ -648,6 +655,15 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.getTable().setHeaderVisible(true);
         mViewer.setContentProvider(new LogCatMessageContentProvider());
         WrappingToolTipSupport.enableFor(mViewer, ToolTip.NO_RECREATE);
+
+        // Set the row height to be sufficient enough to display the current font.
+        // This is not strictly necessary, except that on WinXP, the rows showed up clipped. So
+        // we explicitly set it to be sure.
+        mViewer.getTable().addListener(SWT.MeasureItem, new Listener() {
+            public void handleEvent(Event event) {
+                event.height = event.gc.getFontMetrics().getHeight();
+            }
+        });
 
         initDoubleClickListener();
     }
