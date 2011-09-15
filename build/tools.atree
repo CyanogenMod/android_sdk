@@ -104,6 +104,7 @@ framework/monkeyrunner.jar       tools/lib/monkeyrunner.jar
 framework/guavalib.jar           tools/lib/guavalib.jar
 framework/jsilver.jar            tools/lib/jsilver.jar
 framework/jython.jar             tools/lib/jython.jar
+framework/mkidentity-prebuilt.jar tools/lib/mkidentity.jar
 
 # 3rd Party java libraries
 framework/groovy-all-1.7.0.jar                                tools/lib/groovy-all-1.7.0.jar

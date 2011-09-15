@@ -31,6 +31,7 @@ import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
+import com.android.sdklib.internal.build.MakeIdentity;
 import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
@@ -253,6 +254,9 @@ public class Main {
 
             } else if (SdkCommandLine.OBJECT_LIB_PROJECT.equals(directObject)) {
                 createProject(true /*library*/);
+
+            } else if (SdkCommandLine.OBJECT_IDENTITY.equals(directObject)) {
+                createIdentity();
 
             }
         } else if (SdkCommandLine.VERB_UPDATE.equals(verb)) {
@@ -1259,6 +1263,44 @@ public class Main {
             errorAndExit(e.getMessage());
         }
     }
+
+
+    private void createIdentity() {
+        String account = (String) mSdkCommandLine.getValue(
+                SdkCommandLine.VERB_CREATE,
+                SdkCommandLine.OBJECT_IDENTITY,
+                SdkCommandLine.KEY_ACCOUNT);
+
+        String keystorePath = (String) mSdkCommandLine.getValue(
+                SdkCommandLine.VERB_CREATE,
+                SdkCommandLine.OBJECT_IDENTITY,
+                SdkCommandLine.KEY_KEYSTORE);
+
+        String aliasName = (String) mSdkCommandLine.getValue(
+                SdkCommandLine.VERB_CREATE,
+                SdkCommandLine.OBJECT_IDENTITY,
+                SdkCommandLine.KEY_ALIAS);
+
+        String keystorePass = (String) mSdkCommandLine.getValue(
+                SdkCommandLine.VERB_CREATE,
+                SdkCommandLine.OBJECT_IDENTITY,
+                SdkCommandLine.KEY_STOREPASS);
+
+        String aliasPass = (String) mSdkCommandLine.getValue(
+                SdkCommandLine.VERB_CREATE,
+                SdkCommandLine.OBJECT_IDENTITY,
+                SdkCommandLine.KEY_KEYPASS);
+
+        MakeIdentity mi = new MakeIdentity(account, keystorePath, keystorePass,
+                aliasName, aliasPass);
+
+        try {
+            mi.make(System.out, mSdkLog);
+        } catch (Exception e) {
+            errorAndExit("Unexpected error: %s", e.getMessage());
+        }
+    }
+
 
     /**
      * Prompts the user to setup a hardware config for a Platform-based AVD.

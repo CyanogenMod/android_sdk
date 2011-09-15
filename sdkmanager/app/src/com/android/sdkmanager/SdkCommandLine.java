@@ -55,6 +55,7 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String OBJECT_TEST_PROJECT   = "test-project";              //$NON-NLS-1$
     public static final String OBJECT_LIB_PROJECT    = "lib-project";               //$NON-NLS-1$
     public static final String OBJECT_ADB            = "adb";                       //$NON-NLS-1$
+    public static final String OBJECT_IDENTITY       = "identity";                  //$NON-NLS-1$
 
     public static final String ARG_ALIAS        = "alias";                          //$NON-NLS-1$
     public static final String ARG_ACTIVITY     = "activity";                       //$NON-NLS-1$
@@ -84,6 +85,11 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_COMPACT      = "compact";                        //$NON-NLS-1$
     public static final String KEY_EOL_NULL     = "null";                           //$NON-NLS-1$
     public static final String KEY_ABI          = "abi";                            //$NON-NLS-1$
+    public static final String KEY_ACCOUNT      = "account";                        //$NON-NLS-1$
+    public static final String KEY_KEYSTORE     = "keystore";                       //$NON-NLS-1$
+    public static final String KEY_ALIAS        = "alias";                          //$NON-NLS-1$
+    public static final String KEY_STOREPASS    = "storepass";                      //$NON-NLS-1$
+    public static final String KEY_KEYPASS      = "keypass";                        //$NON-NLS-1$
 
     /**
      * Action definitions for SdkManager command line.
@@ -148,6 +154,9 @@ class SdkCommandLine extends CommandLineProcessor {
 
             { VERB_UPDATE, OBJECT_SDK,
                 "Updates the SDK by suggesting new platforms to install if available." },
+
+            { VERB_CREATE, OBJECT_IDENTITY,
+                "Creates an identity file." },
     };
 
     public SdkCommandLine(ISdkLog logger) {
@@ -355,20 +364,6 @@ class SdkCommandLine extends CommandLineProcessor {
                 VERB_CREATE, OBJECT_LIB_PROJECT, "k", KEY_PACKAGE,                  //$NON-NLS-1$
                 "Android package name for the library.", null);
 
-        // --- create export-project ---
-/*
- * disabled until the feature is officially supported.
-
-        define(Mode.STRING, true,
-                VERB_CREATE, OBJECT_EXPORT_PROJECT, "p", KEY_PATH,                  //$NON-NLS-1$
-                "Location path of new project.", null);
-        define(Mode.STRING, false,
-                VERB_CREATE, OBJECT_EXPORT_PROJECT, "n", KEY_NAME,                  //$NON-NLS-1$
-                "Project name.", null);
-        define(Mode.STRING, true,
-                VERB_CREATE, OBJECT_EXPORT_PROJECT, "k", KEY_PACKAGE,               //$NON-NLS-1$
-                "Package name.", null);
-*/
         // --- update project ---
 
         define(Mode.STRING, true,
@@ -406,19 +401,24 @@ class SdkCommandLine extends CommandLineProcessor {
                 VERB_UPDATE, OBJECT_LIB_PROJECT, "t", KEY_TARGET_ID,                //$NON-NLS-1$
                 "Target ID to set for the project.", null);
 
-        // --- update export project ---
-/*
- * disabled until the feature is officially supported.
+        // --- create identity file ---
+
         define(Mode.STRING, true,
-                VERB_UPDATE, OBJECT_EXPORT_PROJECT, "p", KEY_PATH,                  //$NON-NLS-1$
-                "Location path of the project.", null);
-        define(Mode.STRING, false,
-                VERB_UPDATE, OBJECT_EXPORT_PROJECT, "n", KEY_NAME,                  //$NON-NLS-1$
-                "Project name.", null);
-        define(Mode.BOOLEAN, false,
-                VERB_UPDATE, OBJECT_EXPORT_PROJECT, "f", KEY_FORCE,                 //$NON-NLS-1$
-                "Force replacing the build.xml file.", false);
-*/
+                VERB_CREATE, OBJECT_IDENTITY, "a", KEY_ACCOUNT,                      //$NON-NLS-1$
+                "The publisher account.", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_IDENTITY, "s", KEY_KEYSTORE,                     //$NON-NLS-1$
+                "The keystore path.", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_IDENTITY, "k", KEY_ALIAS,                        //$NON-NLS-1$
+                "The key alias.", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_IDENTITY, "p", KEY_STOREPASS,                    //$NON-NLS-1$
+                "The keystore password.", null);
+        define(Mode.STRING, true,
+                VERB_CREATE, OBJECT_IDENTITY, "w", KEY_KEYPASS,                      //$NON-NLS-1$
+                "The alias password.", null);
+
     }
 
     @Override
