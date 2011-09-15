@@ -386,10 +386,7 @@ public class PackagesPage extends UpdaterPage
 
                 switch (action) {
                 case RELOAD:
-                    // Clear all source caches, otherwise loading will use the cached data
-                    mUpdaterData.getLocalSdkParser().clearPackages();
-                    mUpdaterData.getSources().clearAllPackages();
-                    loadPackages();
+                    fullReload();
                     break;
                 case SHOW_ADDON_SITES:
                     AddonSitesDialog d = new AddonSitesDialog(getShell(), mUpdaterData);
@@ -525,6 +522,33 @@ public class PackagesPage extends UpdaterPage
                 mTreeFontItalic = null;
             }
         });
+    }
+
+    /**
+     * Performs a full reload by removing all cached packages data, including the platforms
+     * and addons from the sdkmanager instance. This will perform a full local parsing
+     * as well as a full reload of the remote data (by fetching all sources again.)
+     */
+    private void fullReload() {
+        // Clear all source information, forcing them to be refreshed.
+        mUpdaterData.getSources().clearAllPackages();
+        // Clear and reload all local data too.
+        localReload();
+    }
+
+    /**
+     * Performs a full reload of all the local package information, including the platforms
+     * and addons from the sdkmanager instance. This will perform a full local parsing.
+     * <p/>
+     * This method does NOT force a new fetch of the remote sources.
+     *
+     * @see #fullReload()
+     */
+    private void localReload() {
+        // Clear all source caches, otherwise loading will use the cached data
+        mUpdaterData.getLocalSdkParser().clearPackages();
+        mUpdaterData.getSdkManager().reloadSdk(mUpdaterData.getSdkLog());
+        loadPackages();
     }
 
     private void loadPackages() {
@@ -1071,8 +1095,7 @@ public class PackagesPage extends UpdaterPage
 
                 if (needsRefresh) {
                     // The local package list has changed, make sure to refresh it
-                    mUpdaterData.getLocalSdkParser().clearPackages();
-                    loadPackages();
+                    localReload();
                 }
             }
         }
@@ -1147,8 +1170,7 @@ public class PackagesPage extends UpdaterPage
                     endOperationPending();
 
                     // The local package list has changed, make sure to refresh it
-                    mUpdaterData.getLocalSdkParser().clearPackages();
-                    loadPackages();
+                    localReload();
                 }
             }
         }
@@ -1414,6 +1436,8 @@ public class PackagesPage extends UpdaterPage
     }
 
     public void onSdkReload() {
+        // The sdkmanager finished reloading its data. We must not call localReload() from here
+        // since we don't want to alter the sdkmanager's data that just finished loading.
         loadPackages();
     }
 
