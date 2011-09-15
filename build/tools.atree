@@ -32,26 +32,26 @@ sdk/files/plugin.prop tools/lib/plugin.prop
 sdk/files/adb_has_moved.txt tools/adb_has_moved.txt
 
 # native host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/sqlite3      tools/sqlite3
-bin/dmtracedump  tools/dmtracedump
-bin/etc1tool     tools/etc1tool
-bin/hprof-conv   tools/hprof-conv
-bin/mksdcard     tools/mksdcard
-bin/zipalign     tools/zipalign
+bin/sqlite3      strip tools/sqlite3
+bin/dmtracedump  strip tools/dmtracedump
+bin/etc1tool     strip tools/etc1tool
+bin/hprof-conv   strip tools/hprof-conv
+bin/mksdcard     strip tools/mksdcard
+bin/zipalign     strip tools/zipalign
 
 # emulator
-bin/emulator                         tools/emulator
-bin/emulator-x86                     tools/emulator-x86
-bin/emulator-arm                     tools/emulator-arm
+bin/emulator                         strip tools/emulator
+bin/emulator-x86                     strip tools/emulator-x86
+bin/emulator-arm                     strip tools/emulator-arm
 sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
 usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
 usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin
 
 # OpenGLES emulation libraries
-lib/libOpenglRender${DLL_EXTENSION}       tools/lib/libOpenglRender${DLL_EXTENSION}
-lib/libGLES_CM_translator${DLL_EXTENSION} tools/lib/libGLES_CM_translator${DLL_EXTENSION}
-lib/libGLES_V2_translator${DLL_EXTENSION} tools/lib/libGLES_V2_translator${DLL_EXTENSION}
-lib/libEGL_translator${DLL_EXTENSION}     tools/lib/libEGL_translator${DLL_EXTENSION}
+lib/libOpenglRender${DLL_EXTENSION}       strip tools/lib/libOpenglRender${DLL_EXTENSION}
+lib/libGLES_CM_translator${DLL_EXTENSION} strip tools/lib/libGLES_CM_translator${DLL_EXTENSION}
+lib/libGLES_V2_translator${DLL_EXTENSION} strip tools/lib/libGLES_V2_translator${DLL_EXTENSION}
+lib/libEGL_translator${DLL_EXTENSION}     strip tools/lib/libEGL_translator${DLL_EXTENSION}
 
 # Java-Based SDK Tools
 bin/ddms            tools/ddms
