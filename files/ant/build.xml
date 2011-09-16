@@ -176,11 +176,6 @@
     <!-- properties for packaging -->
     <property name="build.packaging.nocrunch" value="true" />
 
-    <!-- Name of the application package extracted from manifest file -->
-    <xpath input="AndroidManifest.xml" expression="/manifest/@package"
-                output="manifest.package" />
-
-
     <!-- ********** Macros ********** -->
 
     <!-- macro to do a task on if project.is.library is false.
@@ -417,6 +412,7 @@
                         projectLibrariesResOut="project.libraries.res"
                         projectLibrariesPackageOut="project.libraries.package"
                         projectLibrariesLibsOut="project.libraries.libs"
+                        targetApiOut="target.api"
                 />
 
                 <!-- sets a few boolean based on android.project.type
@@ -547,7 +543,8 @@
             <renderscript executable="${renderscript}"
                     framework="${android.rs}"
                     genFolder="${gen.absolute.dir}"
-                    resFolder="${resource.absolute.dir}/raw">
+                    resFolder="${resource.absolute.dir}/raw"
+                    targetApi="${target.api}">
                 <source path="${source.absolute.dir}"/>
             </renderscript>
 
@@ -1159,6 +1156,10 @@
     <!-- Uninstalls the package from the default emulator/device -->
     <target name="uninstall"
                 description="Uninstalls the application from a running emulator or device.">
+        <!-- Name of the application package extracted from manifest file -->
+        <xpath input="AndroidManifest.xml" expression="/manifest/@package"
+                output="manifest.package" />
+
         <if>
             <condition>
                 <isset property="manifest.package" />
