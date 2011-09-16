@@ -97,4 +97,11 @@ public class PlatformPackageTest extends MinToolsPackageTest {
         assertEquals(props2.toString(), props.toString());
         assertEquals(props2, props);
     }
+
+    public void testInstallId() {
+        Properties props = createProps();
+        PlatformPackage p = createPlatformPackage(props);
+
+        assertEquals("android-5", p.installId());
+    }
 }

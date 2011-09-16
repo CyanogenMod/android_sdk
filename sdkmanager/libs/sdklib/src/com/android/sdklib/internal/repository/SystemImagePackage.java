@@ -184,6 +184,17 @@ public class SystemImagePackage extends Package
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For system images, we use "sysimg-N" where N is the API or the preview codename.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return "sysimg-" + mVersion.getApiString();    //$NON-NLS-1$
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

@@ -67,6 +67,11 @@ public class MinToolsPackageTest extends PackageTest {
         public boolean sameItemAs(Package pkg) {
             throw new UnsupportedOperationException("abstract method not used in test"); //$NON-NLS-1$
         }
+
+        @Override
+        public String installId() {
+            return "";  //$NON-NLS-1$
+        }
     }
 
     @Override

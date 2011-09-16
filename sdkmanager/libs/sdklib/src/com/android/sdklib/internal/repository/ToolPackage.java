@@ -40,6 +40,9 @@ import java.util.regex.Pattern;
  */
 public class ToolPackage extends Package implements IMinPlatformToolsDependency {
 
+    /** The value returned by {@link ToolPackage#installId()}. */
+    public static final String INSTALL_ID = "tools";                             //$NON-NLS-1$
+
     protected static final String PROP_MIN_PLATFORM_TOOLS_REV =
                                                 "Platform.MinPlatformToolsRev";  //$NON-NLS-1$
 
@@ -149,6 +152,17 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
      */
     public int getMinPlatformToolsRevision() {
         return mMinPlatformToolsRevision;
+    }
+
+    /**
+     * Returns a string identifier to install this package from the command line.
+     * For tools, we use "tools" since this package is unique.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return INSTALL_ID;
     }
 
     /**

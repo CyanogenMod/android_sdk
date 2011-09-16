@@ -176,6 +176,17 @@ public class SamplePackage extends MinToolsPackage
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For samples, we use "sample-N" where N is the API or the preview codename.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return "sample-" + mVersion.getApiString();    //$NON-NLS-1$
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

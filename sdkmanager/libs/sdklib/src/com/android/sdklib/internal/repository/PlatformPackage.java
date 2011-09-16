@@ -175,6 +175,17 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For platforms, we use "android-N" where N is the API or the preview codename.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return "android-" + mVersion.getApiString();    //$NON-NLS-1$
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

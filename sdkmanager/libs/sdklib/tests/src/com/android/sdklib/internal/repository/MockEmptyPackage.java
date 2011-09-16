@@ -121,6 +121,11 @@ public class MockEmptyPackage extends Package {
     }
 
     @Override
+    public String installId() {
+        return "mock-empty-" + mTestHandle;  //$NON-NLS-1$
+    }
+
+    @Override
     public String getListDescription() {
         return this.getClass().getSimpleName();
     }

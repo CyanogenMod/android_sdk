@@ -125,4 +125,11 @@ public class SystemImagePackageTest extends PackageTest {
         assertTrue(p1.sameItemAs(p3));
         assertTrue(p3.sameItemAs(p1));
     }
+
+    public void testInstallId() {
+        Properties props = createProps();
+        SystemImagePackage p = createSystemImagePackage(props);
+
+        assertEquals("sysimg-5", p.installId());
+    }
 }
