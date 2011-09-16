@@ -421,6 +421,19 @@ public class ExtraPackage extends MinToolsPackage
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For extras, we use "extra-vendor-path".
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return String.format("extra-%1$s-%2$s",     //$NON-NLS-1$
+                getVendor(),
+                getPath());
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

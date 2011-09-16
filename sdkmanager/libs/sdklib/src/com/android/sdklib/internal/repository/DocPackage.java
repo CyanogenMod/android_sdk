@@ -126,6 +126,17 @@ public class DocPackage extends Package implements IPackageVersion {
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For docs, we use "doc-N" where N is the API or the preview codename.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return "doc-" + mVersion.getApiString();    //$NON-NLS-1$
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

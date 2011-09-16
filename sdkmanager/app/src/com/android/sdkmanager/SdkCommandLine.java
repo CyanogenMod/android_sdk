@@ -79,6 +79,7 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_PROXY_HOST   = "proxy-host";                     //$NON-NLS-1$
     public static final String KEY_DRY_MODE     = "dry-mode";                       //$NON-NLS-1$
     public static final String KEY_OBSOLETE     = "obsolete";                       //$NON-NLS-1$
+    public static final String KEY_EXTENDED     = "extended";                       //$NON-NLS-1$
     public static final String KEY_SNAPSHOT     = "snapshot";                       //$NON-NLS-1$
     public static final String KEY_COMPACT      = "compact";                        //$NON-NLS-1$
     public static final String KEY_EOL_NULL     = "null";                           //$NON-NLS-1$
@@ -250,7 +251,12 @@ class SdkCommandLine extends CommandLineProcessor {
 
         define(Mode.BOOLEAN, false,
                 VERB_LIST, OBJECT_SDK, "o", KEY_OBSOLETE,                           //$NON-NLS-1$
-                "Installs obsolete packages.",
+                "Lists all packages (including obsolete and installed ones)",
+                false);
+
+        define(Mode.BOOLEAN, false,
+                VERB_LIST, OBJECT_SDK, "e", KEY_EXTENDED,                           //$NON-NLS-1$
+                "Displays extended details on each package",
                 false);
 
         // --- update sdk ---
@@ -281,7 +287,8 @@ class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, false,
                 VERB_UPDATE, OBJECT_SDK, "t", KEY_FILTER,                           //$NON-NLS-1$
                 "A filter that limits the update to the specified types of packages in the form of a comma-separated list of " +
-                Arrays.toString(SdkRepoConstants.NODES),
+                Arrays.toString(SdkRepoConstants.NODES) +
+                ". This also accepts the identifiers returned by 'list sdk --extended'.",
                 null);
 
         define(Mode.BOOLEAN, false,
@@ -528,6 +535,11 @@ class SdkCommandLine extends CommandLineProcessor {
     /** Helper to retrieve the --obsolete flag. */
     public boolean getFlagObsolete() {
         return ((Boolean) getValue(null, null, KEY_OBSOLETE)).booleanValue();
+    }
+
+    /** Helper to retrieve the --extended flag. */
+    public boolean getFlagExtended() {
+        return ((Boolean) getValue(null, null, KEY_EXTENDED)).booleanValue();
     }
 
     /** Helper to retrieve the --filter value. */

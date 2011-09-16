@@ -116,9 +116,10 @@ public class SdkUpdaterNoWindow {
      * Lists remote packages available for install using 'android update sdk --no-ui'.
      *
      * @param includeObsoletes True to also list and install obsolete packages.
+     * @param extendedOutput True to display more details on each package.
      */
-    public void listRemotePackages(boolean includeObsoletes) {
-        mUpdaterData.listRemotePackages_NoGUI(includeObsoletes);
+    public void listRemotePackages(boolean includeObsoletes, boolean extendedOutput) {
+        mUpdaterData.listRemotePackages_NoGUI(includeObsoletes, extendedOutput);
     }
 
     // -----

@@ -391,6 +391,33 @@ public abstract class Package implements IDescription, Comparable<Package> {
     }
 
     /**
+     * Returns a short, reasonably unique string identifier that can be used
+     * to identify this package when installing from the command-line interface.
+     * {@code 'android list sdk'} will show these IDs and then in turn they can
+     * be provided to {@code 'android update sdk --no-ui --filter'} to select
+     * some specific packages.
+     * <p/>
+     * The identifiers must have the following properties: <br/>
+     * - They must contain only simple alphanumeric characters. <br/>
+     * - Commas, whitespace and any special character that could be obviously problematic
+     *   to a shell interface should be avoided (so dash/underscore are OK, but things
+     *   like colon, pipe or dollar should be avoided.) <br/>
+     * - The name must be consistent across calls and reasonably unique for the package
+     *   type. Collisions can occur but should be rare. <br/>
+     * - Different package types should have a clearly different name pattern. <br/>
+     * - The revision number should not be included, as this would prevent updates
+     *   from being automated (which is the whole point.) <br/>
+     * - It must remain reasonably human readable. <br/>
+     * - If no such id can exist (for example for a local package that cannot be installed)
+     *   then an empty string should be returned. Don't return null.
+     * <p/>
+     * Important: This is <em>not</em> a strong unique identifier for the package.
+     * If you need a strong unique identifier, you should use {@link #comparisonKey()}
+     * and the {@link Comparable} interface.
+     */
+    public abstract String installId();
+
+    /**
      * Returns the short description of the source, if not null.
      * Otherwise returns the default Object toString result.
      * <p/>

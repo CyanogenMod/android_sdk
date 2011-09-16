@@ -142,5 +142,10 @@ public class ExtraPackageTest extends MinToolsPackageTest {
         assertFalse(p5.sameItemAs(p1));
     }
 
+    public void testInstallId() {
+        Properties props = createProps();
+        ExtraPackage p = createExtraPackage(props);
 
+        assertEquals("extra-vendor-the_path", p.installId());
+    }
 }

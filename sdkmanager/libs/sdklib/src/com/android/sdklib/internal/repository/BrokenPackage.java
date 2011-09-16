@@ -100,6 +100,17 @@ public class BrokenPackage extends Package
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For broken packages, we return an empty string. These are not installable.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return "";    //$NON-NLS-1$
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}

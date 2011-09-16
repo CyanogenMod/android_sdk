@@ -36,6 +36,9 @@ import java.util.Set;
  */
 public class PlatformToolPackage extends Package {
 
+    /** The value returned by {@link PlatformToolPackage#installId()}. */
+    public static final String INSTALL_ID = "platform-tools";                       //$NON-NLS-1$
+
     /**
      * Creates a new platform-tool package from the attributes and elements of the given XML node.
      * This constructor should throw an exception if the package cannot be created.
@@ -141,6 +144,17 @@ public class PlatformToolPackage extends Package {
                 archiveOs,
                 archiveArch,
                 archiveOsPath);
+    }
+
+    /**
+     * Returns a string identifier to install this package from the command line.
+     * For platform-tools, we use "platform-tools" since this package type is unique.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return INSTALL_ID;
     }
 
     /**
