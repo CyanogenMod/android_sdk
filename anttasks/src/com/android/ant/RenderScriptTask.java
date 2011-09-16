@@ -31,16 +31,17 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Task to execute aidl.
+ * Task to execute renderscript.
  * <p>
- * It expects 3 attributes:<br>
- * 'executable' ({@link Path} with a single path) for the location of the aidl executable<br>
- * 'framework' ({@link Path} with a single path) for the "preprocessed" file containing all the
- *     parcelables exported by the framework<br>
- * 'genFolder' ({@link Path} with a single path) for the location of the gen folder.
- *
+ * It expects 5 attributes:<br>
+ * 'executable' ({@link Path} with a single path) for the location of the llvm executable<br>
+ * 'framework' ({@link Path} with 1 or more paths) for the include paths.<br>
+ * 'genFolder' ({@link Path} with a single path) for the location of the gen folder.<br>
+ * 'resFolder' ({@link Path} with a single path) for the location of the res folder.<br>
+ * 'targetApi' for the -target-api value.<br>
+ * <p>
  * It also expects one or more inner elements called "source" which are identical to {@link Path}
- * elements.
+ * elements for where to find .rs files.
  */
 public class RenderScriptTask extends Task {
 
@@ -49,6 +50,7 @@ public class RenderScriptTask extends Task {
     private String mGenFolder;
     private String mResFolder;
     private final List<Path> mPaths = new ArrayList<Path>();
+    private String mTargetApi;
 
     /**
      * Sets the value of the "executable" attribute.
@@ -70,6 +72,10 @@ public class RenderScriptTask extends Task {
         mResFolder = TaskHelper.checkSinglePath("resFolder", value);
     }
 
+    public void setTargetApi(String targetApi) {
+        mTargetApi = targetApi;
+    }
+
     public Path createSource() {
         Path p = new Path(getProject());
         mPaths.add(p);
@@ -89,6 +95,9 @@ public class RenderScriptTask extends Task {
         }
         if (mResFolder == null) {
             throw new BuildException("RenderScriptTask's 'resFolder' is required.");
+        }
+        if (mTargetApi == null) {
+            throw new BuildException("RenderScriptTask's 'targetApi' is required.");
         }
 
         Project taskProject = getProject();
@@ -137,6 +146,9 @@ public class RenderScriptTask extends Task {
                     }
                 }
 
+                task.createArg().setValue("-target-api");
+                task.createArg().setValue(mTargetApi);
+
                 task.createArg().setValue("-p");
                 task.createArg().setValue(mGenFolder);
                 task.createArg().setValue("-o");
@@ -145,11 +157,15 @@ public class RenderScriptTask extends Task {
 
                 // execute it.
                 task.execute();
+
+                count++;
             }
         }
 
         if (count > 0) {
-            System.out.println(String.format("Compiled %d renderscript files.", count));
+            System.out.println(String.format(
+                    "Compiled %d renderscript files (with -target-api set to %s)",
+                    count, mTargetApi));
         } else {
             System.out.println("No renderscript files to compile.");
         }
