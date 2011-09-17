@@ -4,6 +4,7 @@
 # to device which tools we want to build from the sdk.git project.
 
 WIN_SDK_TARGETS := \
+	avdlauncher \
 	emulator \
 	emulator-arm \
 	emulator-x86 \
