@@ -19,6 +19,7 @@ package com.android.sdklib.internal.repository;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 
 import java.io.File;
 import java.util.Properties;
@@ -120,7 +121,7 @@ public class MinToolsPackageTest extends PackageTest {
         Properties props = super.createProps();
 
         // MinToolsPackage properties
-        props.setProperty(ExtraPackage.PROP_MIN_TOOLS_REV, "3");
+        props.setProperty(PkgProps.MIN_TOOLS_REV, "3");
 
         return props;
     }

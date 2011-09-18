@@ -16,8 +16,7 @@
 
 package com.android.sdklib;
 
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -38,14 +37,8 @@ import java.util.Properties;
  * with {@link #getApiLevel()} and {@link #getCodename()}.
  * <p/>
  * For generic UI display of the API version, {@link #getApiString()} is to be used.
- *
  */
 public final class AndroidVersion implements Comparable<AndroidVersion> {
-
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_API_LEVEL = "AndroidVersion.ApiLevel";  //$NON-NLS-1$
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_CODENAME = "AndroidVersion.CodeName";   //$NON-NLS-1$
 
     private final int mApiLevel;
     private final String mCodename;
@@ -82,9 +75,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
             mApiLevel = defaultApiLevel;
             mCodename = defaultCodeName;
         } else {
-            mApiLevel = Integer.parseInt(properties.getProperty(PROP_API_LEVEL,
+            mApiLevel = Integer.parseInt(properties.getProperty(PkgProps.VERSION_API_LEVEL,
                     Integer.toString(defaultApiLevel)));
-            mCodename = properties.getProperty(PROP_CODENAME, defaultCodeName);
+            mCodename = properties.getProperty(PkgProps.VERSION_CODENAME, defaultCodeName);
         }
     }
 
@@ -98,11 +91,11 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     public AndroidVersion(Properties properties) throws AndroidVersionException {
         Exception error = null;
 
-        String apiLevel = properties.getProperty(PROP_API_LEVEL, null /*defaultValue*/);
+        String apiLevel = properties.getProperty(PkgProps.VERSION_API_LEVEL, null/*defaultValue*/);
         if (apiLevel != null) {
             try {
                 mApiLevel = Integer.parseInt(apiLevel);
-                mCodename = properties.getProperty(PROP_CODENAME, null /*defaultValue*/);
+                mCodename = properties.getProperty(PkgProps.VERSION_CODENAME, null/*defaultValue*/);
                 return;
             } catch (NumberFormatException e) {
                 error = e;
@@ -110,13 +103,13 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
         }
 
         // reaching here means the Properties object did not contain the apiLevel which is required.
-        throw new AndroidVersionException(PROP_API_LEVEL + " not found!", error);
+        throw new AndroidVersionException(PkgProps.VERSION_API_LEVEL + " not found!", error);
     }
 
     public void saveProperties(Properties props) {
-        props.setProperty(PROP_API_LEVEL, Integer.toString(mApiLevel));
+        props.setProperty(PkgProps.VERSION_API_LEVEL, Integer.toString(mApiLevel));
         if (mCodename != null) {
-            props.setProperty(PROP_CODENAME, mCodename);
+            props.setProperty(PkgProps.VERSION_CODENAME, mCodename);
         }
     }
 

@@ -18,10 +18,10 @@ package com.android.sdkmanager.internal.repository;
 
 
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
-import com.android.sdkmanager.*;
+import com.android.sdkmanager.Main;
 import com.android.sdkuilib.internal.repository.UpdaterPage;
 
 import org.eclipse.swt.SWT;
@@ -112,7 +112,7 @@ public class AboutPage extends UpdaterPage {
                 sourceProp = new File(toolsdir, SdkConstants.FN_SOURCE_PROP);
             }
             p.load(new FileInputStream(sourceProp));
-            String revision = p.getProperty(Package.PROP_REVISION);
+            String revision = p.getProperty(PkgProps.PKG_REVISION);
             if (revision != null) {
                 return revision;
             }

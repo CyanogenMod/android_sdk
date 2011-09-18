@@ -23,6 +23,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -42,8 +43,6 @@ import java.util.Properties;
  */
 public class SamplePackage extends MinToolsPackage
     implements IPackageVersion, IMinApiLevelDependency {
-
-    private static final String PROP_MIN_API_LEVEL = "Sample.MinApiLevel";  //$NON-NLS-1$
 
     /** The matching platform version. */
     private final AndroidVersion mVersion;
@@ -110,7 +109,9 @@ public class SamplePackage extends MinToolsPackage
         mVersion = target.getVersion();
 
         mMinApiLevel = Integer.parseInt(
-            getProperty(props, PROP_MIN_API_LEVEL, Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+            getProperty(props,
+                    PkgProps.SAMPLE_MIN_API_LEVEL,
+                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
     }
 
     /**
@@ -144,7 +145,9 @@ public class SamplePackage extends MinToolsPackage
         mVersion = new AndroidVersion(props);
 
         mMinApiLevel = Integer.parseInt(
-            getProperty(props, PROP_MIN_API_LEVEL, Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+            getProperty(props,
+                    PkgProps.SAMPLE_MIN_API_LEVEL,
+                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
     }
 
     /**
@@ -158,7 +161,7 @@ public class SamplePackage extends MinToolsPackage
         mVersion.saveProperties(props);
 
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
-            props.setProperty(PROP_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
+            props.setProperty(PkgProps.SAMPLE_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
         }
     }
 

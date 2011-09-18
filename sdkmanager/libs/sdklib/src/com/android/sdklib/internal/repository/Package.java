@@ -22,6 +22,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -44,15 +45,6 @@ import java.util.Properties;
  * Derived classes must implement the {@link IDescription} methods.
  */
 public abstract class Package implements IDescription, Comparable<Package> {
-
-    public static final String PROP_REVISION     = "Pkg.Revision";     //$NON-NLS-1$
-    public static final String PROP_LICENSE      = "Pkg.License";      //$NON-NLS-1$
-    public static final String PROP_DESC         = "Pkg.Desc";         //$NON-NLS-1$
-    public static final String PROP_DESC_URL     = "Pkg.DescUrl";      //$NON-NLS-1$
-    public static final String PROP_RELEASE_NOTE = "Pkg.RelNote";      //$NON-NLS-1$
-    public static final String PROP_RELEASE_URL  = "Pkg.RelNoteUrl";   //$NON-NLS-1$
-    public static final String PROP_SOURCE_URL   = "Pkg.SourceUrl";    //$NON-NLS-1$
-    public static final String PROP_OBSOLETE     = "Pkg.Obsolete";     //$NON-NLS-1$
 
     private final int mRevision;
     private final String mObsolete;
@@ -133,18 +125,19 @@ public abstract class Package implements IDescription, Comparable<Package> {
             descUrl = "";
         }
 
-        mRevision = Integer.parseInt(getProperty(props, PROP_REVISION, Integer.toString(revision)));
-        mLicense     = getProperty(props, PROP_LICENSE,      license);
-        mDescription = getProperty(props, PROP_DESC,         description);
-        mDescUrl     = getProperty(props, PROP_DESC_URL,     descUrl);
-        mReleaseNote = getProperty(props, PROP_RELEASE_NOTE, "");
-        mReleaseUrl  = getProperty(props, PROP_RELEASE_URL,  "");
-        mObsolete    = getProperty(props, PROP_OBSOLETE,     null);
+        mRevision = Integer.parseInt(
+                       getProperty(props, PkgProps.PKG_REVISION, Integer.toString(revision)));
+        mLicense     = getProperty(props, PkgProps.PKG_LICENSE,      license);
+        mDescription = getProperty(props, PkgProps.PKG_DESC,         description);
+        mDescUrl     = getProperty(props, PkgProps.PKG_DESC_URL,     descUrl);
+        mReleaseNote = getProperty(props, PkgProps.PKG_RELEASE_NOTE, "");
+        mReleaseUrl  = getProperty(props, PkgProps.PKG_RELEASE_URL,  "");
+        mObsolete    = getProperty(props, PkgProps.PKG_OBSOLETE,     null);
 
         // If source is null and we can find a source URL in the properties, generate
         // a dummy source just to store the URL. This allows us to easily remember where
         // a package comes from.
-        String srcUrl = getProperty(props, PROP_SOURCE_URL, null);
+        String srcUrl = getProperty(props, PkgProps.PKG_SOURCE_URL, null);
         if (props != null && source == null && srcUrl != null) {
             if (this instanceof AddonPackage) {
                 source = new SdkAddonSource(srcUrl, null /*uiName*/);
@@ -205,30 +198,30 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * These properties will later be give the constructor that takes a {@link Properties} object.
      */
     void saveProperties(Properties props) {
-        props.setProperty(PROP_REVISION, Integer.toString(mRevision));
+        props.setProperty(PkgProps.PKG_REVISION, Integer.toString(mRevision));
         if (mLicense != null && mLicense.length() > 0) {
-            props.setProperty(PROP_LICENSE, mLicense);
+            props.setProperty(PkgProps.PKG_LICENSE, mLicense);
         }
 
         if (mDescription != null && mDescription.length() > 0) {
-            props.setProperty(PROP_DESC, mDescription);
+            props.setProperty(PkgProps.PKG_DESC, mDescription);
         }
         if (mDescUrl != null && mDescUrl.length() > 0) {
-            props.setProperty(PROP_DESC_URL, mDescUrl);
+            props.setProperty(PkgProps.PKG_DESC_URL, mDescUrl);
         }
 
         if (mReleaseNote != null && mReleaseNote.length() > 0) {
-            props.setProperty(PROP_RELEASE_NOTE, mReleaseNote);
+            props.setProperty(PkgProps.PKG_RELEASE_NOTE, mReleaseNote);
         }
         if (mReleaseUrl != null && mReleaseUrl.length() > 0) {
-            props.setProperty(PROP_RELEASE_URL, mReleaseUrl);
+            props.setProperty(PkgProps.PKG_RELEASE_URL, mReleaseUrl);
         }
         if (mObsolete != null) {
-            props.setProperty(PROP_OBSOLETE, mObsolete);
+            props.setProperty(PkgProps.PKG_OBSOLETE, mObsolete);
         }
 
         if (mSource != null) {
-            props.setProperty(PROP_SOURCE_URL,  mSource.getUrl());
+            props.setProperty(PkgProps.PKG_SOURCE_URL,  mSource.getUrl());
         }
     }
 

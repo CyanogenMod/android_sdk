@@ -25,6 +25,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
 
@@ -41,9 +42,6 @@ import java.util.Properties;
  */
 public class AddonPackage extends Package
     implements IPackageVersion, IPlatformDependency, IExactApiLevelDependency, ILayoutlibVersion {
-
-    private static final String PROP_NAME      = "Addon.Name";      //$NON-NLS-1$
-    private static final String PROP_VENDOR    = "Addon.Vendor";    //$NON-NLS-1$
 
     private final String mVendor;
     private final String mName;
@@ -236,10 +234,10 @@ public class AddonPackage extends Package
         mLayoutlibVersion.saveProperties(props);
 
         if (mName != null) {
-            props.setProperty(PROP_NAME, mName);
+            props.setProperty(PkgProps.ADDON_NAME, mName);
         }
         if (mVendor != null) {
-            props.setProperty(PROP_VENDOR, mVendor);
+            props.setProperty(PkgProps.ADDON_VENDOR, mVendor);
         }
     }
 

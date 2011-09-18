@@ -16,10 +16,10 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -61,9 +61,9 @@ public class PlatformPackageTest extends MinToolsPackageTest {
         Properties props = super.createProps();
 
         // PlatformPackage properties
-        props.setProperty(AndroidVersion.PROP_API_LEVEL, "5");
-        props.setProperty(PlatformPackage.PROP_VERSION, "android-5");
-        props.setProperty(PlatformPackage.PROP_INCLUDED_ABI, "armeabi");
+        props.setProperty(PkgProps.VERSION_API_LEVEL, "5");
+        props.setProperty(PkgProps.PLATFORM_VERSION, "android-5");
+        props.setProperty(PkgProps.PLATFORM_INCLUDED_ABI, "armeabi");
 
         return props;
     }

@@ -20,6 +20,7 @@ import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.io.IFileOp;
 import com.android.sdklib.io.MockFileOp;
+import com.android.sdklib.repository.PkgProps;
 
 import java.io.File;
 import java.util.Arrays;
@@ -344,7 +345,7 @@ public class ArchiveInstallerTest extends TestCase {
             int revision,
             int min_platform_tools_rev) {
         Properties props = new Properties();
-        props.setProperty(ExtraPackage.PROP_OLD_PATHS, oldPaths);
+        props.setProperty(PkgProps.EXTRA_OLD_PATHS, oldPaths);
         props.setProperty(ToolPackage.PROP_MIN_PLATFORM_TOOLS_REV,
                 Integer.toString((min_platform_tools_rev)));
         return new MockExtraPackage(source, props, vendor, newPath, revision) {
