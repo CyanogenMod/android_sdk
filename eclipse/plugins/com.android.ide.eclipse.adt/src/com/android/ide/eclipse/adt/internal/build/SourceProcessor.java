@@ -271,7 +271,7 @@ public abstract class SourceProcessor {
 
     protected abstract void doCompileFiles(
             List<IFile> filesToCompile, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int minSdkVersion,
+            IProject project, IAndroidTarget projectTarget, int targetApi,
             List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
             throws CoreException;
 

@@ -50,7 +50,7 @@ public class RenderScriptTask extends Task {
     private String mGenFolder;
     private String mResFolder;
     private final List<Path> mPaths = new ArrayList<Path>();
-    private String mTargetApi;
+    private int mTargetApi = 0;
 
     /**
      * Sets the value of the "executable" attribute.
@@ -73,7 +73,14 @@ public class RenderScriptTask extends Task {
     }
 
     public void setTargetApi(String targetApi) {
-        mTargetApi = targetApi;
+        try {
+            mTargetApi = Integer.parseInt(targetApi);
+            if (mTargetApi <= 0) {
+                throw new BuildException("targetApi attribute value must be >= 1");
+            }
+        } catch (NumberFormatException e) {
+            throw new BuildException("targetApi attribute value must be an integer", e);
+        }
     }
 
     public Path createSource() {
@@ -96,7 +103,7 @@ public class RenderScriptTask extends Task {
         if (mResFolder == null) {
             throw new BuildException("RenderScriptTask's 'resFolder' is required.");
         }
-        if (mTargetApi == null) {
+        if (mTargetApi == 0) {
             throw new BuildException("RenderScriptTask's 'targetApi' is required.");
         }
 
@@ -115,6 +122,9 @@ public class RenderScriptTask extends Task {
         String execTaskName = exe.getName();
 
         int count = 0;
+
+        // get the target api value. Must be 11+ or llvm-rs-cc complains.
+        String targetApiStr = Integer.toString(mTargetApi < 11 ? 11 : mTargetApi);
 
         // now loop on all the source folders to find all the renderscript to compile
         // and compile them
@@ -147,7 +157,7 @@ public class RenderScriptTask extends Task {
                 }
 
                 task.createArg().setValue("-target-api");
-                task.createArg().setValue(mTargetApi);
+                task.createArg().setValue(targetApiStr);
 
                 task.createArg().setValue("-p");
                 task.createArg().setValue(mGenFolder);

@@ -91,7 +91,7 @@ public class AidlProcessor extends SourceProcessor {
 
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, int minSdkVersion,
+            IProject project, IAndroidTarget projectTarget, int targetApi,
             List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
             throws CoreException {
         // create the command line
