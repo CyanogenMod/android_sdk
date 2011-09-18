@@ -33,9 +33,11 @@ import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,17 +46,21 @@ import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeColumnViewerLabelProvider;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -502,15 +508,12 @@ public class PackagesPage extends UpdaterPage
         }
 
         mTreeViewer.setContentProvider(new PkgContentProvider());
+        ColumnViewerToolTipSupport.enableFor(mTreeViewer, ToolTip.NO_RECREATE);
 
-        mColumnApi.setLabelProvider(
-                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnApi)));
-        mColumnName.setLabelProvider(
-                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnName)));
-        mColumnStatus.setLabelProvider(
-                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnStatus)));
-        mColumnRevision.setLabelProvider(
-                new TreeColumnViewerLabelProvider(new PkgCellLabelProvider(mColumnRevision)));
+        mColumnApi.setLabelProvider     (new PkgTreeColumnViewerLabelProvider(mColumnApi));
+        mColumnName.setLabelProvider    (new PkgTreeColumnViewerLabelProvider(mColumnName));
+        mColumnStatus.setLabelProvider  (new PkgTreeColumnViewerLabelProvider(mColumnStatus));
+        mColumnRevision.setLabelProvider(new PkgTreeColumnViewerLabelProvider(mColumnRevision));
 
         FontData fontData = mTree.getFont().getFontData()[0];
         fontData.setStyle(SWT.ITALIC);
@@ -1178,6 +1181,116 @@ public class PackagesPage extends UpdaterPage
 
     // ----------------------
 
+    /**
+     * A custom version of {@link TreeColumnViewerLabelProvider} which
+     * handles {@link TreePath}s and delegates content to a base
+     * {@link PkgCellLabelProvider} for the given {@link TreeViewerColumn}.
+     * <p/>
+     * The implementation handles a variety of providers (table label, table
+     * color, table font) but does not implement a tooltip provider, so we
+     * delegate the calls here to the appropriate {@link PkgCellLabelProvider}.
+     * <p/>
+     * Only {@link #getToolTipText(Object)} is really useful for us but we
+     * delegate all the tooltip calls for completeness and avoid surprises later
+     * if we ever decide to override more things in the label provider.
+     */
+    public class PkgTreeColumnViewerLabelProvider extends TreeColumnViewerLabelProvider {
+
+        private CellLabelProvider mTooltipProvider;
+
+        public PkgTreeColumnViewerLabelProvider(TreeViewerColumn column) {
+            super(new PkgCellLabelProvider(column));
+        }
+
+        @Override
+        public void setProviders(Object provider) {
+            super.setProviders(provider);
+            if (provider instanceof CellLabelProvider) {
+                mTooltipProvider = (CellLabelProvider) provider;
+            }
+        }
+
+        @Override
+        public Image getToolTipImage(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipImage(object);
+            }
+            return super.getToolTipImage(object);
+        }
+
+        @Override
+        public String getToolTipText(Object element) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipText(element);
+            }
+            return super.getToolTipText(element);
+        }
+
+        @Override
+        public Color getToolTipBackgroundColor(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipBackgroundColor(object);
+            }
+            return super.getToolTipBackgroundColor(object);
+        }
+
+        @Override
+        public Color getToolTipForegroundColor(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipForegroundColor(object);
+            }
+            return super.getToolTipForegroundColor(object);
+        }
+
+        @Override
+        public Font getToolTipFont(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipFont(object);
+            }
+            return super.getToolTipFont(object);
+        }
+
+        @Override
+        public Point getToolTipShift(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipShift(object);
+            }
+            return super.getToolTipShift(object);
+        }
+
+        @Override
+        public boolean useNativeToolTip(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.useNativeToolTip(object);
+            }
+            return super.useNativeToolTip(object);
+        }
+
+        @Override
+        public int getToolTipTimeDisplayed(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipTimeDisplayed(object);
+            }
+            return super.getToolTipTimeDisplayed(object);
+        }
+
+        @Override
+        public int getToolTipDisplayDelayTime(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipDisplayDelayTime(object);
+            }
+            return super.getToolTipDisplayDelayTime(object);
+        }
+
+        @Override
+        public int getToolTipStyle(Object object) {
+            if (mTooltipProvider != null) {
+                return mTooltipProvider.getToolTipStyle(object);
+            }
+            return super.getToolTipStyle(object);
+        }
+    }
+
     public class PkgCellLabelProvider extends ColumnLabelProvider implements ITableFontProvider {
 
         private final TreeViewerColumn mColumn;
@@ -1336,6 +1449,29 @@ public class PackagesPage extends UpdaterPage
                 return mTreeFontItalic;
             }
             return super.getFont(element);
+        }
+
+        // -- Tooltip support
+
+        @Override
+        public String getToolTipText(Object element) {
+            if (element instanceof PkgItem) {
+                element = ((PkgItem) element).getMainPackage();
+            }
+            if (element instanceof IDescription) {
+                return ((IDescription) element).getLongDescription();
+            }
+            return super.getToolTipText(element);
+        }
+
+        @Override
+        public Point getToolTipShift(Object object) {
+            return new Point(15, 5);
+        }
+
+        @Override
+        public int getToolTipDisplayDelayTime(Object object) {
+            return 500;
         }
     }
 
