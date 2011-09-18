@@ -24,6 +24,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.mock.MockLog;
+import com.android.sdklib.repository.PkgProps;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -157,8 +158,8 @@ public class SdkManagerTestCase extends TestCase {
         File sourceProp = new File(targetDir, SdkConstants.FN_SOURCE_PROP);
         sourceProp.createNewFile();
         FileWriter out = new FileWriter(sourceProp);
-        out.write("Layoutlib.Api=5\n");
-        out.write("Layoutlib.Revision=2\n");
+        out.write(PkgProps.LAYOUTLIB_API + "=5\n");
+        out.write(PkgProps.LAYOUTLIB_REV + "=2\n");
         out.close();
 
         File buildProp = new File(targetDir, SdkConstants.FN_BUILD_PROP);
@@ -187,7 +188,15 @@ public class SdkManagerTestCase extends TestCase {
     protected void makeSystemImageFolder(ISystemImage systemImage) throws IOException {
         File imagesDir = systemImage.getLocation();
         imagesDir.mkdirs();
+
         new File(imagesDir, "userdata.img").createNewFile();
+
+        File sourceProp = new File(imagesDir, SdkConstants.FN_SOURCE_PROP);
+        sourceProp.createNewFile();
+        FileWriter out = new FileWriter(sourceProp);
+        out.write(PkgProps.VERSION_API_LEVEL + "=0\n");
+        out.write(PkgProps.SYS_IMG_ABI + "=" + systemImage.getAbiType() + "\n");
+        out.close();
     }
 
     /**
