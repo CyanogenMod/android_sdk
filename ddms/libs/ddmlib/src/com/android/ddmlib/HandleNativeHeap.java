@@ -105,7 +105,7 @@ final class HandleNativeHeap extends ChunkHandler {
         packet = new JdwpPacket(rawBuf);
         buf = getChunkDataBuf(rawBuf);
 
-        buf.put((byte)HandleHeap.WHEN_GC);
+        buf.put((byte)HandleHeap.WHEN_DISABLE);
         buf.put((byte)HandleHeap.WHAT_OBJ);
 
         finishChunkPacket(packet, CHUNK_NHSG, buf.position());
