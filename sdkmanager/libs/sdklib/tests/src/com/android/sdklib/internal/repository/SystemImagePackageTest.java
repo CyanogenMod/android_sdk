@@ -19,6 +19,7 @@ package com.android.sdklib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -65,8 +66,8 @@ public class SystemImagePackageTest extends PackageTest {
         Properties props = super.createProps();
 
         // SystemImagePackage properties
-        props.setProperty(AndroidVersion.PROP_API_LEVEL, "5");
-        props.setProperty(SystemImagePackage.PROP_ABI, "armeabi-v7a");
+        props.setProperty(PkgProps.VERSION_API_LEVEL, "5");
+        props.setProperty(PkgProps.SYS_IMG_ABI, "armeabi-v7a");
 
         return props;
     }
@@ -107,20 +108,20 @@ public class SystemImagePackageTest extends PackageTest {
 
         // different abi, same version
         Properties props2 = new Properties(props1);
-        props2.setProperty(SystemImagePackage.PROP_ABI, "x86");
+        props2.setProperty(PkgProps.SYS_IMG_ABI, "x86");
         SystemImagePackage p2 = createSystemImagePackage(props2);
         assertFalse(p1.sameItemAs(p2));
         assertFalse(p2.sameItemAs(p1));
 
         // different vendor, different version
-        props2.setProperty(AndroidVersion.PROP_API_LEVEL, "6");
+        props2.setProperty(PkgProps.VERSION_API_LEVEL, "6");
         p2 = createSystemImagePackage(props2);
         assertFalse(p1.sameItemAs(p2));
         assertFalse(p2.sameItemAs(p1));
 
         // same abi, different version
         Properties props3 = new Properties(props1);
-        props3.setProperty(AndroidVersion.PROP_API_LEVEL, "6");
+        props3.setProperty(PkgProps.VERSION_API_LEVEL, "6");
         SystemImagePackage p3 = createSystemImagePackage(props3);
         assertTrue(p1.sameItemAs(p3));
         assertTrue(p3.sameItemAs(p1));

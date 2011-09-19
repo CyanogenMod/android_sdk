@@ -23,6 +23,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
 
 import org.w3c.dom.Node;
@@ -39,17 +40,6 @@ import java.util.regex.Pattern;
  */
 public class ExtraPackage extends MinToolsPackage
     implements IMinApiLevelDependency {
-
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_OLD_PATHS     = "Extra.OldPaths";     //$NON-NLS-1$
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    public static final String PROP_PROJECT_FILES = "Extra.ProjectFiles"; //$NON-NLS-1$
 
     /**
      * The vendor folder name. It must be a non-empty single-segment path.
@@ -202,17 +192,19 @@ public class ExtraPackage extends MinToolsPackage
         // exist prior to schema repo-v3 and tools r8, which means we need to cope with a
         // lack of it when reading back old local repositories. In this case we allow an
         // empty string.
-        mVendor = vendor != null ? vendor : getProperty(props, PROP_VENDOR, "");
+        mVendor = vendor != null ? vendor : getProperty(props, PkgProps.EXTRA_VENDOR, "");
 
         // The path argument comes before whatever could be in the properties
-        mPath   = path != null ? path : getProperty(props, PROP_PATH, path);
+        mPath   = path != null ? path : getProperty(props, PkgProps.EXTRA_PATH, path);
 
-        mOldPaths = getProperty(props, PROP_OLD_PATHS, null);
+        mOldPaths = getProperty(props, PkgProps.EXTRA_OLD_PATHS, null);
 
         mMinApiLevel = Integer.parseInt(
-            getProperty(props, PROP_MIN_API_LEVEL, Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
+            getProperty(props,
+                    PkgProps.EXTRA_MIN_API_LEVEL,
+                    Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
 
-        String projectFiles = getProperty(props, PROP_PROJECT_FILES, null);
+        String projectFiles = getProperty(props, PkgProps.EXTRA_PROJECT_FILES, null);
         ArrayList<String> filePaths = new ArrayList<String>();
         if (projectFiles != null && projectFiles.length() > 0) {
             for (String filePath : projectFiles.split(Pattern.quote(File.pathSeparator))) {
@@ -233,13 +225,13 @@ public class ExtraPackage extends MinToolsPackage
     void saveProperties(Properties props) {
         super.saveProperties(props);
 
-        props.setProperty(PROP_PATH, mPath);
+        props.setProperty(PkgProps.EXTRA_PATH, mPath);
         if (mVendor != null) {
-            props.setProperty(PROP_VENDOR, mVendor);
+            props.setProperty(PkgProps.EXTRA_VENDOR, mVendor);
         }
 
         if (getMinApiLevel() != MIN_API_LEVEL_NOT_SPECIFIED) {
-            props.setProperty(PROP_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
+            props.setProperty(PkgProps.EXTRA_MIN_API_LEVEL, Integer.toString(getMinApiLevel()));
         }
 
         if (mProjectFiles.length > 0) {
@@ -250,11 +242,11 @@ public class ExtraPackage extends MinToolsPackage
                 }
                 sb.append(mProjectFiles[i]);
             }
-            props.setProperty(PROP_PROJECT_FILES, sb.toString());
+            props.setProperty(PkgProps.EXTRA_PROJECT_FILES, sb.toString());
         }
 
         if (mOldPaths != null && mOldPaths.length() > 0) {
-            props.setProperty(PROP_OLD_PATHS, mOldPaths);
+            props.setProperty(PkgProps.EXTRA_OLD_PATHS, mOldPaths);
         }
     }
 

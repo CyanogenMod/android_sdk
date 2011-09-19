@@ -18,6 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -29,8 +30,6 @@ import java.util.Properties;
  * Represents an XML node in an SDK repository that has a min-tools-rev requirement.
  */
 public abstract class MinToolsPackage extends Package implements IMinToolsDependency {
-
-    static final String PROP_MIN_TOOLS_REV = "Platform.MinToolsRev";  //$NON-NLS-1$
 
     /**
      * The minimal revision of the tools package required by this extra package, if > 0,
@@ -79,7 +78,9 @@ public abstract class MinToolsPackage extends Package implements IMinToolsDepend
                 archiveOs, archiveArch, archiveOsPath);
 
         mMinToolsRevision = Integer.parseInt(
-            getProperty(props, PROP_MIN_TOOLS_REV, Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
+            getProperty(props,
+                    PkgProps.MIN_TOOLS_REV,
+                    Integer.toString(MIN_TOOLS_REV_NOT_SPECIFIED)));
     }
 
     /**
@@ -95,7 +96,8 @@ public abstract class MinToolsPackage extends Package implements IMinToolsDepend
         super.saveProperties(props);
 
         if (getMinToolsRevision() != MIN_TOOLS_REV_NOT_SPECIFIED) {
-            props.setProperty(PROP_MIN_TOOLS_REV, Integer.toString(getMinToolsRevision()));
+            props.setProperty(PkgProps.MIN_TOOLS_REV,
+                    Integer.toString(getMinToolsRevision()));
         }
     }
 

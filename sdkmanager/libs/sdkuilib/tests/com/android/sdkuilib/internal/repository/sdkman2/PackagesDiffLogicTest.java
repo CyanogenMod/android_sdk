@@ -17,7 +17,6 @@
 package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.internal.repository.BrokenPackage;
-import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.MockAddonPackage;
 import com.android.sdklib.internal.repository.MockBrokenPackage;
 import com.android.sdklib.internal.repository.MockEmptyPackage;
@@ -28,6 +27,7 @@ import com.android.sdklib.internal.repository.MockToolPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkRepoSource;
 import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdkuilib.internal.repository.MockUpdaterData;
 
 import java.util.Properties;
@@ -1167,7 +1167,7 @@ public class PackagesDiffLogicTest extends TestCase {
 
         // Now, start again, but this time the new package uses the old-path attribute
         Properties props = new Properties();
-        props.setProperty(ExtraPackage.PROP_OLD_PATHS, "old_path1;oldpath2");
+        props.setProperty(PkgProps.EXTRA_OLD_PATHS, "old_path1;oldpath2");
         m.clear();
 
         m.updateStart();

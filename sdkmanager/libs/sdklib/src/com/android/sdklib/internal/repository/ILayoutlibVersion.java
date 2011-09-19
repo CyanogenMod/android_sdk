@@ -23,8 +23,6 @@ import com.android.util.Pair;
  */
 public interface ILayoutlibVersion {
 
-    public static final String PROP_LAYOUTLIB_API = "Layoutlib.Api";       //$NON-NLS-1$
-    public static final String PROP_LAYOUTLIB_REV = "Layoutlib.Revision";  //$NON-NLS-1$
     public static final int LAYOUTLIB_API_NOT_SPECIFIED = 0;
     public static final int LAYOUTLIB_REV_NOT_SPECIFIED = 0;
 

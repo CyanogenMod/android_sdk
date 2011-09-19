@@ -24,6 +24,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.SystemImage;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -37,9 +38,6 @@ import java.util.Properties;
  */
 public class SystemImagePackage extends Package
         implements IPackageVersion, IPlatformDependency {
-
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
-    static final String PROP_ABI = "SystemImage.Abi";      //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -101,7 +99,7 @@ public class SystemImagePackage extends Package
                 );
         mVersion = platformVersion;
         if (abi == null && props != null) {
-            abi = props.getProperty(PROP_ABI);
+            abi = props.getProperty(PkgProps.SYS_IMG_ABI);
         }
         assert abi != null : "To use this SystemImagePackage constructor you must pass an ABI as a parameter or as a PROP_ABI property";
         mAbi = abi;
@@ -155,7 +153,7 @@ public class SystemImagePackage extends Package
         super.saveProperties(props);
 
         mVersion.saveProperties(props);
-        props.setProperty(PROP_ABI, mAbi);
+        props.setProperty(PkgProps.SYS_IMG_ABI, mAbi);
     }
 
     /** Returns the ABI of the system-image. Cannot be null nor empty. */
