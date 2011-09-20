@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -84,10 +85,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private Combo mSnapshotIndexCombo;
     private Label mMemoryAllocatedText;
 
-    private Tree mDetailsTree;
     private TreeViewer mDetailsTreeViewer;
-
-    private Tree mStackTraceTree;
     private TreeViewer mStackTraceTreeViewer;
 
     private ToolBar mDetailsToolBar;
@@ -171,6 +169,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
                 }
 
                 displaySnapshot(lastHeapSnapshot);
+                displayStackTraceForSelection();
             }
         });
     }
@@ -344,16 +343,16 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mDetailsToolBar = new ToolBar(c, SWT.FLAT | SWT.BORDER);
         initializeDetailsToolBar(mDetailsToolBar);
 
-        mDetailsTree = new Tree(c, SWT.VIRTUAL | SWT.BORDER);
-        initializeDetailsTree(mDetailsTree);
+        Tree detailsTree = new Tree(c, SWT.VIRTUAL | SWT.BORDER);
+        initializeDetailsTree(detailsTree);
 
         final Sash sash = new Sash(c, SWT.HORIZONTAL | SWT.BORDER);
 
         Label stackTraceLabel = new Label(c, SWT.NONE);
         stackTraceLabel.setText("Stack Trace:");
 
-        mStackTraceTree = new Tree(c, SWT.BORDER);
-        initializeStackTraceTree(mStackTraceTree);
+        Tree stackTraceTree = new Tree(c, SWT.BORDER);
+        initializeStackTraceTree(stackTraceTree);
 
         // layout the widgets created above
         FormData data = new FormData();
@@ -367,7 +366,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         data.bottom = new FormAttachment(sash, 0);
         data.left   = new FormAttachment(0, 0);
         data.right  = new FormAttachment(100, 0);
-        mDetailsTree.setLayoutData(data);
+        detailsTree.setLayoutData(data);
 
         final FormData sashData = new FormData();
         sashData.top    = new FormAttachment(mPrefStore.getInt(PREFS_SASH_HEIGHT_PERCENT), 0);
@@ -386,7 +385,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         data.left   = new FormAttachment(0, 0);
         data.bottom = new FormAttachment(100, 0);
         data.right  = new FormAttachment(100, 0);
-        mStackTraceTree.setLayoutData(data);
+        stackTraceTree.setLayoutData(data);
 
         sash.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event e) {
@@ -463,6 +462,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mDetailsTreeViewer.setLabelProvider(new NativeHeapLabelProvider());
 
         mDetailsTreeViewer.setInput(null);
+
+        tree.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                displayStackTraceForSelection();
+            }
+        });
     }
 
     private void initializeStackTraceTree(Tree tree) {
@@ -494,8 +500,30 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mStackTraceTreeViewer = new TreeViewer(tree);
 
         mStackTraceTreeViewer.setContentProvider(new NativeStackContentProvider());
+        mStackTraceTreeViewer.setLabelProvider(new NativeStackLabelProvider());
 
         mStackTraceTreeViewer.setInput(null);
+    }
+
+    private void displayStackTraceForSelection() {
+        TreeItem []items = mDetailsTreeViewer.getTree().getSelection();
+        if (items.length == 0) {
+            mStackTraceTreeViewer.setInput(null);
+            return;
+        }
+
+        Object data = items[0].getData();
+        if (!(data instanceof NativeAllocationInfo)) {
+            mStackTraceTreeViewer.setInput(null);
+            return;
+        }
+
+        NativeAllocationInfo info = (NativeAllocationInfo) data;
+        if (info.isStackCallResolved()) {
+            mStackTraceTreeViewer.setInput(info.getResolvedStackCall());
+        } else {
+            mStackTraceTreeViewer.setInput(info.getStackCallAddresses());
+        }
     }
 
     private String getPref(String prefix, String s) {

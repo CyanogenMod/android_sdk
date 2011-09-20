@@ -23,7 +23,7 @@ import java.util.List;
 
 public class NativeStackContentProvider implements ITreeContentProvider {
     public Object[] getElements(Object arg0) {
-        return null;
+        return getChildren(arg0);
     }
 
     public void dispose() {
@@ -34,8 +34,7 @@ public class NativeStackContentProvider implements ITreeContentProvider {
 
     public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof List<?>) {
-            List<?> stack = (List<?>) parentElement;
-            return stack.toArray();
+            return ((List<?>) parentElement).toArray();
         }
 
         return null;

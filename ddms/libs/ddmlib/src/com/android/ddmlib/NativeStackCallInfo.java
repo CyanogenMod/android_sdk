@@ -25,7 +25,10 @@ import java.util.regex.Pattern;
  */
 public final class NativeStackCallInfo {
     private final static Pattern SOURCE_NAME_PATTERN = Pattern.compile("^(.+):(\\d+)$");
-    
+
+    /** address of this stack frame */
+    private long mAddress;
+
     /** name of the library */
     private String mLibrary;
 
@@ -37,21 +40,23 @@ public final class NativeStackCallInfo {
      * &lt;sourcefile&gt;:&lt;linenumber&gt;
      */
     private String mSourceFile;
-    
-    private int mLineNumber = -1; 
+
+    private int mLineNumber = -1;
 
     /**
      * Basic constructor with library, method, and sourcefile information
      *
+     * @param address address of this stack frame
      * @param lib The name of the library
      * @param method the name of the method
      * @param sourceFile the name of the source file and the line number
      * as "[sourcefile]:[fileNumber]"
      */
-    public NativeStackCallInfo(String lib, String method, String sourceFile) {
+    public NativeStackCallInfo(long address, String lib, String method, String sourceFile) {
+        mAddress = address;
         mLibrary = lib;
         mMethod = method;
-        
+
         Matcher m = SOURCE_NAME_PATTERN.matcher(sourceFile);
         if (m.matches()) {
             mSourceFile = m.group(1);
@@ -64,7 +69,14 @@ public final class NativeStackCallInfo {
             mSourceFile = sourceFile;
         }
     }
-    
+
+    /**
+     * Returns the address of this stack frame.
+     */
+    public long getAddress() {
+        return mAddress;
+    }
+
     /**
      * Returns the name of the library name.
      */
@@ -72,13 +84,13 @@ public final class NativeStackCallInfo {
         return mLibrary;
     }
 
-    /** 
+    /**
      * Returns the name of the method.
      */
     public String getMethodName() {
         return mMethod;
     }
-    
+
     /**
      * Returns the name of the source file.
      */

@@ -271,7 +271,7 @@ public class Addr2Line {
 
                     // make the backtrace object and return it
                     if (method != null && source != null) {
-                        return new NativeStackCallInfo(mLibrary, method, source);
+                        return new NativeStackCallInfo(addr, mLibrary, method, source);
                     }
                 } catch (IOException e) {
                     // log the error

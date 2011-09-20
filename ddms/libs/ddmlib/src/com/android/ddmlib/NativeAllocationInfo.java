@@ -120,8 +120,8 @@ public final class NativeAllocationInfo {
      * Returns the stack call of this allocation as raw addresses.
      * @return the list of addresses where the allocation happened.
      */
-    public Long[] getStackCallAddresses() {
-        return mStackCallAddresses.toArray(new Long[mStackCallAddresses.size()]);
+    public List<Long> getStackCallAddresses() {
+        return mStackCallAddresses;
     }
 
     /**
@@ -148,9 +148,9 @@ public final class NativeAllocationInfo {
      * @see #setResolvedStackCall(ArrayList)
      * @see #isStackCallResolved()
      */
-    public synchronized NativeStackCallInfo[] getResolvedStackCall() {
+    public synchronized List<NativeStackCallInfo> getResolvedStackCall() {
         if (mIsStackCallResolved) {
-            return mResolvedStackCall.toArray(new NativeStackCallInfo[mResolvedStackCall.size()]);
+            return mResolvedStackCall;
         }
 
         return null;
