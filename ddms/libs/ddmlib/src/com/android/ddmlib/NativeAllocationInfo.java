@@ -209,6 +209,11 @@ public final class NativeAllocationInfo {
         buffer.append("\n"); //$NON-NLS-1$
 
         Iterator<Long> addrIterator = mStackCallAddresses.iterator();
+
+        if (mResolvedStackCall == null) {
+            return buffer.toString();
+        }
+
         Iterator<NativeStackCallInfo> sourceIterator = mResolvedStackCall.iterator();
 
         while (sourceIterator.hasNext()) {
