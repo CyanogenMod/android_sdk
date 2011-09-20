@@ -59,7 +59,7 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
         if (info.isStackCallResolved()) {
             return "?"; // resolved and unknown
         } else {
-            return "";  // still resolving..
+            return "Resolving...";  // still resolving...
         }
     }
 }

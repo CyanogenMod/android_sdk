@@ -17,7 +17,11 @@
 package com.android.ddmuilib.heap;
 
 import com.android.ddmlib.Client;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.NativeAllocationInfo;
+import com.android.ddmlib.NativeLibraryMapInfo;
+import com.android.ddmlib.NativeStackCallInfo;
+import com.android.ddmuilib.Addr2Line;
 import com.android.ddmuilib.BaseHeapPanel;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
@@ -51,7 +55,9 @@ import org.eclipse.swt.widgets.TreeItem;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Panel to display native heap information. */
 public class NativeHeapPanel extends BaseHeapPanel {
@@ -122,6 +128,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         mNativeHeapAllocations.add(allocations);
         updateDisplay();
+
+        // Attempt to resolve symbols in a separate thread.
+        // The UI should be refreshed once the symbols have been resolved.
+        Thread t = new Thread(new SymbolResolverTask(allocations,
+                client.getClientData().getMappedNativeLibraries()));
+        t.setName("Address to Symbol Resolver");
+        t.start();
     }
 
     private List<NativeAllocationInfo> shallowCloneList(List<NativeAllocationInfo> allocations) {
@@ -449,10 +462,20 @@ public class NativeHeapPanel extends BaseHeapPanel {
                 "PossiblyLongDemangledMethodName",
         });
 
+        // right align numbers
+        List<Integer> swtFlags = Arrays.asList(new Integer[] {
+                SWT.RIGHT, // Note: On some platforms, the first column is *always* left aligned.
+                SWT.RIGHT,
+                SWT.RIGHT,
+                SWT.LEFT,
+                SWT.LEFT,
+        });
+
         for (int i = 0; i < properties.size(); i++) {
             String p = properties.get(i);
             String v = sampleValues.get(i);
-            TableHelper.createTreeColumn(tree, p, SWT.LEFT, v, getPref("details", p), mPrefStore);
+            int flags = swtFlags.get(i);
+            TableHelper.createTreeColumn(tree, p, flags, v, getPref("details", p), mPrefStore);
         }
 
         mDetailsTreeViewer = new TreeViewer(tree);
@@ -533,5 +556,83 @@ public class NativeHeapPanel extends BaseHeapPanel {
     @Override
     public void setFocus() {
         // TODO
+    }
+
+    private class SymbolResolverTask implements Runnable {
+        private List<NativeAllocationInfo> mCallSites;
+        private List<NativeLibraryMapInfo> mMappedLibraries;
+        private Map<Long, NativeStackCallInfo> mResolvedSymbolCache;
+
+        public SymbolResolverTask(List<NativeAllocationInfo> callSites,
+                List<NativeLibraryMapInfo> mappedLibraries) {
+            mCallSites = callSites;
+            mMappedLibraries = mappedLibraries;
+
+            mResolvedSymbolCache = new HashMap<Long, NativeStackCallInfo>();
+        }
+
+        public void run() {
+            for (NativeAllocationInfo callSite: mCallSites) {
+                if (callSite.isStackCallResolved()) {
+                    continue;
+                }
+
+                List<Long> addresses = callSite.getStackCallAddresses();
+                List<NativeStackCallInfo> resolvedStackInfo =
+                        new ArrayList<NativeStackCallInfo>(addresses.size());
+
+                for (Long address : addresses) {
+                    NativeStackCallInfo info = mResolvedSymbolCache.get(address);
+
+                    if (info != null) {
+                        resolvedStackInfo.add(info);
+                    } else {
+                        info = resolveAddress(address);
+                        resolvedStackInfo.add(info);
+                        mResolvedSymbolCache.put(address, info);
+                    }
+                }
+
+                callSite.setResolvedStackCall(resolvedStackInfo);
+            }
+
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    mDetailsTreeViewer.refresh();
+                    mStackTraceTreeViewer.refresh();
+                }
+            });
+        }
+
+        private NativeStackCallInfo resolveAddress(long addr) {
+            NativeLibraryMapInfo library = getLibraryFor(addr);
+
+            if (library != null) {
+                Addr2Line process = Addr2Line.getProcess(library.getLibraryName());
+                if (process != null) {
+                    long offset = addr - library.getStartAddress();
+                    NativeStackCallInfo info = process.getAddress(offset);
+                    if (info != null) {
+                        return info;
+                    }
+                }
+            }
+
+            return new NativeStackCallInfo(addr,
+                    library != null ? library.getLibraryName() : null,
+                    Long.toHexString(addr),
+                    "");
+        }
+
+        private NativeLibraryMapInfo getLibraryFor(long addr) {
+            for (NativeLibraryMapInfo info : mMappedLibraries) {
+                if (info.isWithinLibrary(addr)) {
+                    return info;
+                }
+            }
+
+            Log.d("ddm-nativeheap", "Failed finding Library for " + Long.toHexString(addr));
+            return null;
+        }
     }
 }
