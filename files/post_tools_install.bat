@@ -30,7 +30,16 @@ rem Change current directory and drive to where the script is, to avoid
 rem issues with directories containing whitespaces.
 cd /d %~dp0
 
+:Step1
 set src=SDK Manager.exe
+set dst=..\..\%src%
+
+if not exist "%src%" goto Step2
+  echo Updating %src%
+  copy /V /Y "%src%" "%dst%"
+
+:Step2
+set src=AVD Manager.exe
 set dst=..\..\%src%
 
 if not exist "%src%" goto Cleanup
