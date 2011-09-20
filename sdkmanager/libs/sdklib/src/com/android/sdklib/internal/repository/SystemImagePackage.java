@@ -22,6 +22,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.SystemImage;
+import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
@@ -114,33 +115,65 @@ public class SystemImagePackage extends Package
      * @return A new {@link BrokenPackage} that represents this installed package.
      */
     public static Package createBroken(File abiDir, Properties props) {
-
+        AndroidVersion version = null;
         String abiType = abiDir.getName();
+        String error = null;
 
-        StringBuilder sb = new StringBuilder(String.format("Broken %1$s System Image",
-                getAbiDisplayNameInternal(abiType)));
+        // Try to load the android version & ABI from the sources.props.
+        // If we don't find them, it would explain why this package is broken.
+        if (props == null) {
+            error = String.format("Missing file %1$s", SdkConstants.FN_SOURCE_PROP);
+        } else {
+            try {
+                version = new AndroidVersion(props);
 
-        int apiLevel = IExactApiLevelDependency.API_LEVEL_INVALID;
-        try {
-            // Try to parse the first number out of the platform folder name.
-            String platform = abiDir.getParentFile().getName();
-            platform = platform.replaceAll("[^0-9]+", " ").trim();     //$NON-NLS-1$ //$NON-NLS-2$
-            int pos = platform.indexOf(' ');
-            if (pos >= 0) {
-                platform = platform.substring(0, pos);
+                String abi = props.getProperty(PkgProps.SYS_IMG_ABI);
+                if (abi != null) {
+                    abiType = abi;
+                } else {
+                    error = String.format("Invalid file %1$s: Missing property %2$s",
+                            SdkConstants.FN_SOURCE_PROP,
+                            PkgProps.SYS_IMG_ABI);
+                }
+            } catch (AndroidVersionException e) {
+                error = String.format("Invalid file %1$s: %2$s",
+                        SdkConstants.FN_SOURCE_PROP,
+                        e.getMessage());
             }
+        }
 
-            apiLevel = Integer.parseInt(platform);
+        if (version == null) {
+            try {
+                // Try to parse the first number out of the platform folder name.
+                String platform = abiDir.getParentFile().getName();
+                platform = platform.replaceAll("[^0-9]+", " ").trim();  //$NON-NLS-1$ //$NON-NLS-2$
+                int pos = platform.indexOf(' ');
+                if (pos >= 0) {
+                    platform = platform.substring(0, pos);
+                }
+                int apiLevel = Integer.parseInt(platform);
+                version = new AndroidVersion(apiLevel, null /*codename*/);
+            } catch (Exception ignore) {
+            }
+        }
 
-            sb.append(String.format(", API %1$d", apiLevel));
-        } catch (Exception ignore) {
+        StringBuilder sb = new StringBuilder(
+                String.format("Broken %1$s System Image", getAbiDisplayNameInternal(abiType)));
+        if (version != null) {
+            sb.append(String.format(", API %1$s", version.getApiString()));
         }
 
         String shortDesc = sb.toString();
 
-        return new BrokenPackage(props, shortDesc, shortDesc /*longDesc*/,
+        if (error != null) {
+            sb.append('\n').append(error);
+        }
+
+        String longDesc = sb.toString();
+
+        return new BrokenPackage(props, shortDesc, longDesc,
                 IMinApiLevelDependency.MIN_API_LEVEL_NOT_SPECIFIED,
-                apiLevel,
+                version==null ? IExactApiLevelDependency.API_LEVEL_INVALID : version.getApiLevel(),
                 abiDir.getAbsolutePath());
     }
 

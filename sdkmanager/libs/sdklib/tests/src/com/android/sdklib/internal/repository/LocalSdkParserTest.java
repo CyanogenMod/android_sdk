@@ -73,7 +73,7 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
         // Now add an x86 image using the new SDK/system-images.
-        // How this time we do NOT reload the SdkManager instance. Instead the parser
+        // Now this time we do NOT reload the SdkManager instance. Instead the parser
         // will find an unused system image and load it as a "broken package".
 
         makeSystemImageFolder(new SystemImage(

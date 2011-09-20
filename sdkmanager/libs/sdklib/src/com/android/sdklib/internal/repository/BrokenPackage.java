@@ -46,7 +46,7 @@ public class BrokenPackage extends Package
 
     /**
      * Creates a new "broken" package that represents a package that we failed to load,
-     * for whatever error indicated in <code>error</code>.
+     * for whatever error indicated in {@code longDescription}.
      * There is also an <em>optional</em> API level dependency that can be specified.
      * <p/>
      * By design, this creates a package with one and only one archive.
