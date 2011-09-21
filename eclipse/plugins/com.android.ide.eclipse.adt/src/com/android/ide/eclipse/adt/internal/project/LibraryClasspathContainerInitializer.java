@@ -91,6 +91,42 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
             return null;
         }
 
+        try {
+            // First check that the project has a library-type container.
+            IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+            IClasspathEntry[] oldRawClasspath = rawClasspath;
+
+            boolean foundLibrariesContainer = false;
+            for (IClasspathEntry entry : rawClasspath) {
+                // get the entry and kind
+                int kind = entry.getEntryKind();
+
+                if (kind == IClasspathEntry.CPE_CONTAINER) {
+                    String path = entry.getPath().toString();
+                    if (AdtConstants.CONTAINER_LIBRARIES.equals(path)) {
+                        foundLibrariesContainer = true;
+                        break;
+                    }
+                }
+            }
+
+            // same thing for the library container
+            if (foundLibrariesContainer == false) {
+                // add the android container to the array
+                rawClasspath = ProjectHelper.addEntryToClasspath(rawClasspath,
+                        JavaCore.newContainerEntry(new Path(AdtConstants.CONTAINER_LIBRARIES)));
+            }
+
+            // set the new list of entries to the project
+            if (rawClasspath != oldRawClasspath) {
+                javaProject.setRawClasspath(rawClasspath, new NullProgressMonitor());
+            }
+        } catch (JavaModelException e) {
+            // This really shouldn't happen, but if it does, simply return null (the calling
+            // method will fails as well)
+            return null;
+        }
+
         // check if the project has a valid target.
         ProjectState state = Sdk.getProjectState(iProject);
 
