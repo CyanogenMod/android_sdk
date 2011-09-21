@@ -260,6 +260,15 @@ public class ProjectChooserHelper {
          */
         public void setSelectedProject(IProject project) {
             mProject = project;
+
+            int selectionIndex = 0;
+            for (int i = 0, n = mAvailableProjects.length; i < n; i++) {
+                if (project == mAvailableProjects[i].getProject()) {
+                    selectionIndex = i + 1; // +1: Slot 0 is reserved for "Choose Project"
+                    select(selectionIndex);
+                    break;
+                }
+            }
         }
 
         /**
