@@ -157,7 +157,7 @@ public final class LogCatFilterSettingsSerializer {
      * Enclose a string in quotes, escaping all the quotes within the string.
      */
     private String quoteString(String s) {
-        return SINGLE_QUOTE + s.replace(new Character(SINGLE_QUOTE).toString(), "\\'")
+        return SINGLE_QUOTE + s.replace(Character.toString(SINGLE_QUOTE), "\\'")
                 + SINGLE_QUOTE;
     }
 
@@ -167,7 +167,7 @@ public final class LogCatFilterSettingsSerializer {
      */
     private String unquoteString(String s) {
         s = s.substring(1, s.length() - 1); /* remove start and end QUOTES */
-        return s.replace("\\'", new Character(SINGLE_QUOTE).toString());
+        return s.replace("\\'", Character.toString(SINGLE_QUOTE));
     }
 
     private String getKeyword(String pref) {
