@@ -29,6 +29,8 @@ import com.android.ddmuilib.TableHelper;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -81,6 +83,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
 
+    private static final String PREFS_SYMBOL_SEARCH_PATH = "nativeheap.search.path";
     private static final String PREFS_SASH_HEIGHT_PERCENT = "nativeheap.sash.percent";
     private IPreferenceStore mPrefStore;
 
@@ -103,6 +106,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     public NativeHeapPanel(IPreferenceStore prefStore) {
         mPrefStore = prefStore;
         mPrefStore.setDefault(PREFS_SASH_HEIGHT_PERCENT, 75);
+        mPrefStore.setDefault(PREFS_SYMBOL_SEARCH_PATH, "");
 
         mNativeHeapAllocations = new ArrayList<List<NativeAllocationInfo>>();
     }
@@ -324,6 +328,18 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mSymbolSearchPathText = new Text(c, SWT.BORDER);
         mSymbolSearchPathText.setMessage(SYMBOL_SEARCH_PATH_TEXT_MESSAGE);
         mSymbolSearchPathText.setToolTipText(SYMBOL_SEARCH_PATH_TOOLTIP_TEXT);
+        mSymbolSearchPathText.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent arg0) {
+                String path = mSymbolSearchPathText.getText();
+                updateSearchPath(path);
+                mPrefStore.setValue(PREFS_SYMBOL_SEARCH_PATH, path);
+            }
+        });
+        mSymbolSearchPathText.setText(mPrefStore.getString(PREFS_SYMBOL_SEARCH_PATH));
+    }
+
+    private void updateSearchPath(String path) {
+        Addr2Line.setSearchPath(path);
     }
 
     private void createLabel(Composite parent, String text) {

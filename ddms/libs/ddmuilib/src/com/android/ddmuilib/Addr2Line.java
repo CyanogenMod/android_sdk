@@ -21,10 +21,14 @@ import com.android.ddmlib.NativeStackCallInfo;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Represents an addr2line process to get filename/method information from a
@@ -40,6 +44,12 @@ import java.util.HashMap;
  * with multiple addresses.
  */
 public class Addr2Line {
+    private static final String ANDROID_SYMBOLS_ENVVAR = "ANDROID_SYMBOLS";
+
+    private static final String LIBRARY_NOT_FOUND_MESSAGE_FORMAT =
+            "Unable to locate library %s on disk. Addresses mapping to this library "
+          + "will not be resolved. In order to fix this, set the the library search path "
+          + "in the UI, or set the environment variable " + ANDROID_SYMBOLS_ENVVAR + ".";
 
     /**
      * Loaded processes list. This is also used as a locking object for any
@@ -71,6 +81,28 @@ public class Addr2Line {
      * process
      */
     private BufferedOutputStream mAddressWriter;
+
+    private static final String DEFAULT_LIBRARY_SYMBOLS_FOLDER;
+    static {
+        String symbols = System.getenv(ANDROID_SYMBOLS_ENVVAR);
+        if (symbols == null) {
+            DEFAULT_LIBRARY_SYMBOLS_FOLDER = DdmUiPreferences.getSymbolDirectory();
+        } else {
+            DEFAULT_LIBRARY_SYMBOLS_FOLDER = symbols;
+        }
+    }
+
+    private static List<String> mLibrarySearchPaths = new ArrayList<String>();
+
+    /**
+     * Set the search path where libraries should be found.
+     * @param path search path to use, can be a colon separated list of paths if multiple folders
+     * should be searched
+     */
+    public static void setSearchPath(String path) {
+        mLibrarySearchPaths.clear();
+        mLibrarySearchPaths.addAll(Arrays.asList(path.split(":")));
+    }
 
     /**
      * Returns the instance of a Addr2Line process for the specified library.
@@ -113,14 +145,43 @@ public class Addr2Line {
     }
 
     /**
-     * Construct the object with a library name.
-     * <br>The library should be in a format that makes<br>
-     * <code>$ANDROID_PRODUCT_OUT + "/symbols" + library</code> a valid file.
+     * Construct the object with a library name. The library should be present
+     * in the search path as provided by ANDROID_SYMBOLS, ANDROID_OUT/symbols, or in the user
+     * provided search path.
      *
      * @param library the library in which to look for address.
      */
     private Addr2Line(final String library) {
         mLibrary = library;
+    }
+
+    /**
+     * Search for the library in the library search path and obtain the full path to where it
+     * is found.
+     * @return fully resolved path to the library if found in search path, null otherwise
+     */
+    private String getLibraryPath(String library) {
+        // first check the symbols folder
+        String path = DEFAULT_LIBRARY_SYMBOLS_FOLDER + library;
+        if (new File(path).exists()) {
+            return path;
+        }
+
+        for (String p : mLibrarySearchPaths) {
+            // try appending the full path on device
+            String fullPath = p + "/" + library;
+            if (new File(fullPath).exists()) {
+                return fullPath;
+            }
+
+            // try appending basename(library)
+            fullPath = p + "/" + new File(library).getName();
+            if (new File(fullPath).exists()) {
+                return fullPath;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -133,12 +194,6 @@ public class Addr2Line {
         // because this is only called from getProcess() we know we don't need
         // to synchronize this code.
 
-        // get the output directory.
-        String symbols = System.getenv("ANDROID_SYMBOLS");
-        if (symbols == null) {
-            symbols = DdmUiPreferences.getSymbolDirectory();
-        }
-
         String addr2Line = System.getenv("ANDROID_ADDR2LINE");
         if (addr2Line == null) {
             addr2Line = DdmUiPreferences.getAddr2Line();
@@ -150,7 +205,15 @@ public class Addr2Line {
         command[1] = "-C";
         command[2] = "-f";
         command[3] = "-e";
-        command[4] = symbols + mLibrary;
+
+        String fullPath = getLibraryPath(mLibrary);
+        if (fullPath == null) {
+            String msg = String.format(LIBRARY_NOT_FOUND_MESSAGE_FORMAT, mLibrary);
+            Log.e("ddm-Addr2Line", msg);
+            return false;
+        }
+
+        command[4] = fullPath;
 
         try {
             // attempt to start the process
