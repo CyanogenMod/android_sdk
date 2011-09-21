@@ -1081,6 +1081,9 @@
             priority="high">
         </content-type>
     </extension>
+    <extension point="org.eclipse.ui.startup">
+        <startup class="com.android.ide.eclipse.adt.internal.welcome.AdtStartup"/>
+    </extension>
 
    <!-- workaround for bug 15003. -->
     <extension
