@@ -39,9 +39,9 @@ import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerIni
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
@@ -50,7 +50,6 @@ import com.android.io.StreamException;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -65,9 +64,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -101,8 +98,6 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -270,36 +265,21 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // load preferences.
         AdtPrefs.getPrefs().loadValues(null /*event*/);
 
-        // check the location of SDK
-        final boolean isSdkLocationValid = checkSdkLocationAndId();
-
         // initialize editors
         startEditors();
 
         // Listen on resource file edits for updates to file inclusion
         IncludeFinder.start();
 
-        // Ping the usage server and parse the SDK content.
+        // Parse the SDK content.
         // This is deferred in separate jobs to avoid blocking the bundle start.
-        // We also serialize them to avoid too many parallel jobs when Eclipse starts.
-        Job pingJob = createPingUsageServerJob();
-        pingJob.addJobChangeListener(new JobChangeAdapter() {
-           @Override
-            public void done(IJobChangeEvent event) {
-                super.done(event);
-
-                // Once the ping job is finished, start the SDK parser
-                if (isSdkLocationValid) {
-                    // parse the SDK resources.
-                    parseSdkContent();
-                }
-            }
-        });
-        // build jobs are run after other interactive jobs
-        pingJob.setPriority(Job.BUILD);
-        // Wait 2 seconds before starting the ping job. This leaves some time to the
-        // other bundles to initialize.
-        pingJob.schedule(2000 /*milliseconds*/);
+        final boolean isSdkLocationValid = checkSdkLocationAndId();
+        if (isSdkLocationValid) {
+            // parse the SDK resources.
+            // Wait 2 seconds before starting the job. This leaves some time to the
+            // other bundles to initialize.
+            parseSdkContent(2000 /*milliseconds*/);
+        }
     }
 
     /*
@@ -1208,31 +1188,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
-     * Creates a job than can ping the usage server.
-     */
-    private Job createPingUsageServerJob() {
-        // In order to not block the plugin loading, so we spawn another thread.
-        Job job = new Job("Android SDK Ping") {  // Job name, visible in progress view
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    pingUsageServer();
-
-                    return Status.OK_STATUS;
-                } catch (Throwable t) {
-                    log(t, "pingUsageServer failed");       //$NON-NLS-1$
-                    return new Status(IStatus.ERROR, PLUGIN_ID,
-                            "pingUsageServer failed", t);    //$NON-NLS-1$
-                }
-            }
-        };
-        return job;
-    }
-
-    /**
      * Parses the SDK resources.
      */
-    private void parseSdkContent() {
+    private void parseSdkContent(long delay) {
         // Perform the update in a thread (here an Eclipse runtime job)
         // since this should never block the caller (especially the start method)
         Job job = new Job(Messages.AdtPlugin_Android_SDK_Content_Loader) {
@@ -1338,7 +1296,11 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             }
         };
         job.setPriority(Job.BUILD); // build jobs are run after other interactive jobs
-        job.schedule();
+        if (delay > 0) {
+            job.schedule(delay);
+        } else {
+            job.schedule();
+        }
     }
 
     /** Returns the global android console */
@@ -1698,37 +1660,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     }
 
     /**
-     * Pings the usage start server.
-     */
-    private void pingUsageServer() {
-
-        // Report the version of the ADT plugin to the stat server
-        String versionString = (String) getBundle().getHeaders().get(
-                Constants.BUNDLE_VERSION);
-        Version version = new Version(versionString);
-
-        versionString = String.format("%1$d.%2$d.%3$d", version.getMajor(), //$NON-NLS-1$
-                version.getMinor(), version.getMicro());
-
-        SdkStatsService stats = new SdkStatsService();
-        stats.ping("adt", versionString); //$NON-NLS-1$
-
-        // Report the version of Eclipse to the stat server.
-        // Get the version of eclipse by getting the version of one of the runtime plugins.
-        ResourcesPlugin resPlugin = ResourcesPlugin.getPlugin();
-
-        String eclipseVersionString = (String) resPlugin.getBundle().getHeaders().get(
-                Constants.BUNDLE_VERSION);
-
-        // parse the string using the Version class.
-        Version eclipseVersion = new Version(eclipseVersionString);
-        eclipseVersionString = String.format("%1$d.%2$d",  //$NON-NLS-1$
-                eclipseVersion.getMajor(), eclipseVersion.getMinor());
-
-        stats.ping("eclipse", eclipseVersionString); //$NON-NLS-1$
-    }
-
-    /**
      * Reparses the content of the SDK and updates opened projects.
      */
     public void reparseSdk() {
@@ -1741,7 +1672,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         }
 
         // parse the SDK resources at the new location
-        parseSdkContent();
+        parseSdkContent(0 /*immediately*/);
     }
 
     /**

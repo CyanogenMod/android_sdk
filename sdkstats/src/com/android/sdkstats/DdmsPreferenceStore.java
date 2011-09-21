@@ -38,7 +38,7 @@ public class DdmsPreferenceStore {
     private final static String PING_TIME   = "pingTime";           //$NON-NLS-1$
     private final static String PING_ID     = "pingId";             //$NON-NLS-1$
 
-    private final static String ADT_FIRST_TIME = "adt1stTime";      //$NON-NLS-1$
+    private final static String ADT_USED = "adtUsed";               //$NON-NLS-1$
     private final static String LAST_SDK_PATH = "lastSdkPath";      //$NON-NLS-1$
 
     /**
@@ -146,7 +146,7 @@ public class DdmsPreferenceStore {
      * Retrieves the current ping ID, if set.
      * To know if the ping ID is set, use {@link #hasPingId()}.
      * <p/>
-     * There is no magic value reserved for "missing pind id or invalid store".
+     * There is no magic value reserved for "missing ping id or invalid store".
      * The only proper way to know if the ping id is missing is to use {@link #hasPingId()}.
      */
     public long getPingId() {
@@ -234,7 +234,7 @@ public class DdmsPreferenceStore {
      *
      * @param app The app name identifier.
      * @param timeStamp The time stamp from the store.
-     *                   0L is a sepcial value that should not be used.
+     *                   0L is a special value that should not be used.
      */
     public void setPingTime(String app, long timeStamp) {
         PreferenceStore prefs = getPreferenceStore();
@@ -251,29 +251,33 @@ public class DdmsPreferenceStore {
 
     /**
      * True if this is the first time the users runs ADT, which is detected by
-     * the lack of the setting set using {@link #setAdtFirstTimeUser(boolean)}
+     * the lack of the setting set using {@link #setAdtUsed(boolean)}
      * or this value being set to true.
      *
-     * @see #setAdtFirstTimeUser(boolean)
+     * @return true if ADT has been used  before
+     *
+     * @see #setAdtUsed(boolean)
      */
-    public boolean isAdtFirstTimeUser() {
+    public boolean isAdtUsed() {
         PreferenceStore prefs = getPreferenceStore();
         synchronized (DdmsPreferenceStore.class) {
-            if (prefs == null || !prefs.contains(ADT_FIRST_TIME)) {
-                return true;
+            if (prefs == null || !prefs.contains(ADT_USED)) {
+                return false;
             }
-            return prefs.getBoolean(ADT_FIRST_TIME);
+            return prefs.getBoolean(ADT_USED);
         }
     }
 
     /**
      * Sets whether the ADT startup wizard has been shown.
      * ADT sets first to false once the welcome wizard has been shown once.
+     *
+     * @param used true if ADT has been used
      */
-    public void setAdtFirstTimeUser(boolean shown) {
+    public void setAdtUsed(boolean used) {
         PreferenceStore prefs = getPreferenceStore();
         synchronized (DdmsPreferenceStore.class) {
-            prefs.setValue(ADT_FIRST_TIME, shown);
+            prefs.setValue(ADT_USED, used);
             try {
                 prefs.save();
             } catch (IOException ioe) {

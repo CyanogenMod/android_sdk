@@ -43,7 +43,8 @@ public class SdkStatsPermissionDialog extends Dialog {
     private static final String HEADER_TEXT =
         "Thanks for using the Android SDK!";
 
-    private static final String NOTICE_TEXT =
+    /** Used in the ADT welcome wizard as well. */
+    public static final String NOTICE_TEXT =
         "We know you just want to get started but please read this first.";
 
     /** Used in the preference pane (PrefsDialog) as well. */
@@ -56,6 +57,7 @@ public class SdkStatsPermissionDialog extends Dialog {
         "with personal information about you, and is examined on an aggregate " +
         "basis, and is maintained in accordance with the Google Privacy Policy.";
 
+    /** Used in the ADT welcome wizard as well. */
     public static final String PRIVACY_POLICY_LINK_TEXT =
         "<a href=\"http://www.google.com/intl/en/privacy.html\">Google " +
         "Privacy Policy</a>";
@@ -64,7 +66,8 @@ public class SdkStatsPermissionDialog extends Dialog {
     public static final String CHECKBOX_TEXT =
         "Send usage statistics to Google.";
 
-    private static final String FOOTER_TEXT =
+    /** Used in the ADT welcome wizard as well. */
+    public static final String FOOTER_TEXT =
         "If you later decide to change this setting, you can do so in the" +
         "\"ddms\" tool under \"File\" > \"Preferences\" > \"Usage Stats\".";
 
