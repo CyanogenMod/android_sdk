@@ -18,6 +18,7 @@ package com.android.ddmuilib.heap;
 
 import com.android.ddmlib.NativeAllocationInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,6 +30,10 @@ import java.util.List;
 public class NativeHeapSnapshot {
     private List<NativeAllocationInfo> mHeapAllocations;
     private List<NativeLibraryAllocationInfo> mHeapAllocationsByLibrary;
+
+    private List<NativeAllocationInfo> mNonZygoteHeapAllocations;
+    private List<NativeLibraryAllocationInfo> mNonZygoteHeapAllocationsByLibrary;
+
     private long mTotalSize;
 
     public NativeHeapSnapshot(List<NativeAllocationInfo> heapAllocations) {
@@ -80,5 +85,37 @@ public class NativeHeapSnapshot {
 
     public long getTotalSize() {
         return mTotalSize;
+    }
+
+    public List<NativeAllocationInfo> getNonZygoteAllocations() {
+        if (mNonZygoteHeapAllocations != null) {
+            return mNonZygoteHeapAllocations;
+        }
+
+        // filter out all zygote allocations
+        mNonZygoteHeapAllocations = new ArrayList<NativeAllocationInfo>();
+        for (NativeAllocationInfo info : mHeapAllocations) {
+            if (!info.isZygoteChild()) {
+                mNonZygoteHeapAllocations.add(info);
+            }
+        }
+
+        return mNonZygoteHeapAllocations;
+    }
+
+    public List<NativeLibraryAllocationInfo> getNonZygoteAllocationsByLibrary() {
+        if (mNonZygoteHeapAllocationsByLibrary != null) {
+            return mNonZygoteHeapAllocationsByLibrary;
+        }
+
+        List<NativeLibraryAllocationInfo> heapAllocations =
+                NativeLibraryAllocationInfo.constructFrom(getNonZygoteAllocations());
+
+        // cache for future uses only if it is fully resolved.
+        if (isFullyResolved(heapAllocations)) {
+            mNonZygoteHeapAllocationsByLibrary = heapAllocations;
+        }
+
+        return heapAllocations;
     }
 }

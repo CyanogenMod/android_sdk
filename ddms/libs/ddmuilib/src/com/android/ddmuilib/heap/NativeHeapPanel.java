@@ -27,7 +27,6 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -84,6 +83,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
 
+    private static final String PREFS_SHOW_ZYGOTE_ALLOCATIONS = "nativeheap.show.zygote";
     private static final String PREFS_GROUP_BY_LIBRARY = "nativeheap.grouby.library";
     private static final String PREFS_SYMBOL_SEARCH_PATH = "nativeheap.search.path";
     private static final String PREFS_SASH_HEIGHT_PERCENT = "nativeheap.sash.percent";
@@ -98,8 +98,8 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private TreeViewer mDetailsTreeViewer;
     private TreeViewer mStackTraceTreeViewer;
-    private ILazyTreeContentProvider mContentProviderByAllocations;
-    private ILazyTreeContentProvider mContentProviderByLibrary;
+    private NativeHeapProviderByAllocations mContentProviderByAllocations;
+    private NativeHeapProviderByLibrary mContentProviderByLibrary;
     private NativeHeapLabelProvider mDetailsTreeLabelProvider;
 
     private ToolBar mDetailsToolBar;
@@ -113,6 +113,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mPrefStore.setDefault(PREFS_SASH_HEIGHT_PERCENT, 75);
         mPrefStore.setDefault(PREFS_SYMBOL_SEARCH_PATH, "");
         mPrefStore.setDefault(PREFS_GROUP_BY_LIBRARY, false);
+        mPrefStore.setDefault(PREFS_SHOW_ZYGOTE_ALLOCATIONS, true);
 
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
     }
@@ -229,6 +230,18 @@ public class NativeHeapPanel extends BaseHeapPanel {
         } else {
             mDetailsTreeViewer.setContentProvider(mContentProviderByAllocations);
         }
+    }
+
+    private void updateDisplayForZygotes() {
+        boolean displayZygoteMemory = mShowZygoteAllocationsButton.getSelection();
+        mPrefStore.setValue(PREFS_SHOW_ZYGOTE_ALLOCATIONS, displayZygoteMemory);
+
+        // inform the content providers of the zygote display setting
+        mContentProviderByLibrary.displayZygoteMemory(displayZygoteMemory);
+        mContentProviderByAllocations.displayZygoteMemory(displayZygoteMemory);
+
+        // refresh the UI
+        mDetailsTreeViewer.refresh();
     }
 
     private String formatMemorySize(long totalMemory) {
@@ -462,16 +475,22 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mShowZygoteAllocationsButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(
                 ZYGOTE_IMAGE, toolbar.getDisplay()));
         mShowZygoteAllocationsButton.setToolTipText(TOOLTIP_ZYGOTE_ALLOCATIONS);
-        mShowZygoteAllocationsButton.setSelection(true);
+        mShowZygoteAllocationsButton.setSelection(
+                mPrefStore.getBoolean(PREFS_SHOW_ZYGOTE_ALLOCATIONS));
+        mShowZygoteAllocationsButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                updateDisplayForZygotes();
+            }
+        });
 
         mExportHeapDataButton = new ToolItem(toolbar, SWT.PUSH);
         mExportHeapDataButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(
                 EXPORT_DATA_IMAGE, toolbar.getDisplay()));
         mExportHeapDataButton.setToolTipText(TOOLTIP_EXPORT_DATA);
 
-        // disable all toolbar items until they implement the necessary features
+        // disable unimplemented toolbar items
         mDiffsOnlyButton.setEnabled(false);
-        mShowZygoteAllocationsButton.setEnabled(false);
         mExportHeapDataButton.setEnabled(false);
     }
 
@@ -518,8 +537,11 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         mDetailsTreeViewer.setUseHashlookup(true);
 
-        mContentProviderByAllocations = new NativeHeapProviderByAllocations(mDetailsTreeViewer);
-        mContentProviderByLibrary = new NativeHeapProviderByLibrary(mDetailsTreeViewer);
+        boolean displayZygotes = mPrefStore.getBoolean(PREFS_SHOW_ZYGOTE_ALLOCATIONS);
+        mContentProviderByAllocations = new NativeHeapProviderByAllocations(mDetailsTreeViewer,
+                displayZygotes);
+        mContentProviderByLibrary = new NativeHeapProviderByLibrary(mDetailsTreeViewer,
+                displayZygotes);
         if (mPrefStore.getBoolean(PREFS_GROUP_BY_LIBRARY)) {
             mDetailsTreeViewer.setContentProvider(mContentProviderByLibrary);
         } else {

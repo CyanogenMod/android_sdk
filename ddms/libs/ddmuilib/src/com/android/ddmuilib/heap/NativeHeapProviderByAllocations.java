@@ -16,9 +16,13 @@
 
 package com.android.ddmuilib.heap;
 
+import com.android.ddmlib.NativeAllocationInfo;
+
 import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
+
+import java.util.List;
 
 /**
  * Content Provider for the native heap tree viewer in {@link NativeHeapPanel}.
@@ -27,10 +31,12 @@ import org.eclipse.jface.viewers.Viewer;
  */
 public final class NativeHeapProviderByAllocations implements ILazyTreeContentProvider {
     private TreeViewer mViewer;
+    private boolean mDisplayZygoteMemory;
     private NativeHeapSnapshot mNativeHeapDump;
 
-    public NativeHeapProviderByAllocations(TreeViewer viewer) {
+    public NativeHeapProviderByAllocations(TreeViewer viewer, boolean displayZygotes) {
         mViewer = viewer;
+        mDisplayZygoteMemory = displayZygotes;
     }
 
     public void dispose() {
@@ -48,7 +54,7 @@ public final class NativeHeapProviderByAllocations implements ILazyTreeContentPr
         int childCount = 0;
 
         if (element == mNativeHeapDump) { // root element
-            childCount = mNativeHeapDump.getAllocations().size();
+            childCount = getAllocations().size();
         }
 
         mViewer.setChildCount(element, childCount);
@@ -58,10 +64,22 @@ public final class NativeHeapProviderByAllocations implements ILazyTreeContentPr
         Object item = null;
 
         if (parent == mNativeHeapDump) { // root element
-            item = mNativeHeapDump.getAllocations().get(index);
+            item = getAllocations().get(index);
         }
 
         mViewer.replace(parent, index, item);
         mViewer.setChildCount(item, 0);
+    }
+
+    public void displayZygoteMemory(boolean en) {
+        mDisplayZygoteMemory = en;
+    }
+
+    private List<NativeAllocationInfo> getAllocations() {
+        if (mDisplayZygoteMemory) {
+            return mNativeHeapDump.getAllocations();
+        } else {
+            return mNativeHeapDump.getNonZygoteAllocations();
+        }
     }
 }

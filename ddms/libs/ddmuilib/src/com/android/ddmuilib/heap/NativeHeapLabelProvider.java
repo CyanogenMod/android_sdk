@@ -56,7 +56,11 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
             case 2:
                 return getPercentageString(info.getSize() * info.getAllocationCount(), mTotalSize);
             case 3:
-                return Integer.toString(info.getAllocationCount());
+                String prefix = "";
+                if (info.isZygoteChild()) {
+                    prefix = "Z ";
+                }
+                return prefix + Integer.toString(info.getAllocationCount());
             case 4:
                 return Integer.toString(info.getSize());
             case 5:

@@ -20,6 +20,8 @@ import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 
+import java.util.List;
+
 /**
  * Content Provider for the native heap tree viewer in {@link NativeHeapPanel}.
  * It expects input of type {@link NativeHeapSnapshot}, and provides heap allocations
@@ -27,9 +29,11 @@ import org.eclipse.jface.viewers.Viewer;
  */
 public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
     private TreeViewer mViewer;
+    private boolean mDisplayZygoteMemory;
 
-    public NativeHeapProviderByLibrary(TreeViewer viewer) {
+    public NativeHeapProviderByLibrary(TreeViewer viewer, boolean displayZygotes) {
         mViewer = viewer;
+        mDisplayZygoteMemory = displayZygotes;
     }
 
     public void dispose() {
@@ -46,7 +50,8 @@ public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
         int childCount = 0;
 
         if (element instanceof NativeHeapSnapshot) {
-            childCount = ((NativeHeapSnapshot) element).getAllocationsByLibrary().size();
+            NativeHeapSnapshot snapshot = (NativeHeapSnapshot) element;
+            childCount = getLibraryAllocations(snapshot).size();
         }
 
         mViewer.setChildCount(element, childCount);
@@ -57,7 +62,8 @@ public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
         int childCount = 0;
 
         if (parent instanceof NativeHeapSnapshot) { // root element
-            item = ((NativeHeapSnapshot) parent).getAllocationsByLibrary().get(index);
+            NativeHeapSnapshot snapshot = (NativeHeapSnapshot) parent;
+            item = getLibraryAllocations(snapshot).get(index);
             childCount = ((NativeLibraryAllocationInfo) item).getAllocations().size();
         } else if (parent instanceof NativeLibraryAllocationInfo) {
             item = ((NativeLibraryAllocationInfo) parent).getAllocations().get(index);
@@ -65,5 +71,17 @@ public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
 
         mViewer.replace(parent, index, item);
         mViewer.setChildCount(item, childCount);
+    }
+
+    public void displayZygoteMemory(boolean en) {
+        mDisplayZygoteMemory = en;
+    }
+
+    private List<NativeLibraryAllocationInfo> getLibraryAllocations(NativeHeapSnapshot snapshot) {
+        if (mDisplayZygoteMemory) {
+            return snapshot.getAllocationsByLibrary();
+        } else {
+            return snapshot.getNonZygoteAllocationsByLibrary();
+        }
     }
 }
