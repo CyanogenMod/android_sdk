@@ -232,9 +232,8 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
 
         /* When the ADT preferences page is made visible, display the dialog to obtain
          * permissions for the ping service. */
-        if (!SdkStatsService.pingPermissionsSet()) {
-            Shell parent = getShell();
-            SdkStatsService.getUserPermissionForPing(parent);
-        }
+        SdkStatsService stats = new SdkStatsService();
+        Shell parent = getShell();
+        stats.checkUserPermissionForPing(parent);
     }
 }
