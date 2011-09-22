@@ -478,27 +478,27 @@ public class NativeHeapPanel extends BaseHeapPanel {
         tree.setLinesVisible(true);
 
         List<String> properties = Arrays.asList(new String[] {
+                "Library",
                 "Total",
                 "Count",
                 "Size",
-                "Library",
                 "Method",
         });
 
         List<String> sampleValues = Arrays.asList(new String[] {
-                "123456789",
-                "123456789",
-                "123456789",
                 "/path/in/device/to/system/library.so",
+                "123456789",
+                "123456789",
+                "123456789",
                 "PossiblyLongDemangledMethodName",
         });
 
-        // right align numbers
+        // right align numeric values
         List<Integer> swtFlags = Arrays.asList(new Integer[] {
-                SWT.RIGHT, // Note: On some platforms, the first column is *always* left aligned.
-                SWT.RIGHT,
-                SWT.RIGHT,
                 SWT.LEFT,
+                SWT.RIGHT,
+                SWT.RIGHT,
+                SWT.RIGHT,
                 SWT.LEFT,
         });
 

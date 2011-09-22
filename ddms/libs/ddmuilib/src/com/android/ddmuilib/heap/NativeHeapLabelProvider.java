@@ -48,13 +48,13 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
 
         switch (index) {
             case 0:
-                return Integer.toString(info.getSize() * info.getAllocationCount());
-            case 1:
-                return Integer.toString(info.getAllocationCount());
-            case 2:
-                return Integer.toString(info.getSize());
-            case 3:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getLibraryName();
+            case 1:
+                return Integer.toString(info.getSize() * info.getAllocationCount());
+            case 2:
+                return Integer.toString(info.getAllocationCount());
+            case 3:
+                return Integer.toString(info.getSize());
             case 4:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getMethodName();
             default:
@@ -65,9 +65,9 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
     private String getColumnTextForNativeLibrary(NativeLibraryAllocationInfo info, int index) {
         switch (index) {
             case 0:
-                return Long.toString(info.getTotalSize());
-            case 3:
                 return info.getLibraryName();
+            case 1:
+                return Long.toString(info.getTotalSize());
             default:
                 return null;
         }
