@@ -20,17 +20,15 @@ import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 
-import java.util.List;
-
 /**
  * Content Provider for the native heap tree viewer in {@link NativeHeapPanel}.
- * It expects a list of {@link NativeAllocationInfo} objects as input.
+ * It expects input of type {@link NativeHeapSnapshot}, and provides heap allocations
+ * grouped by library to the UI.
  */
-public final class NativeHeapContentProvider implements ILazyTreeContentProvider {
+public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
     private TreeViewer mViewer;
-    private List<?> mCurrentAllocations;
 
-    public NativeHeapContentProvider(TreeViewer viewer) {
+    public NativeHeapProviderByLibrary(TreeViewer viewer) {
         mViewer = viewer;
     }
 
@@ -38,18 +36,17 @@ public final class NativeHeapContentProvider implements ILazyTreeContentProvider
     }
 
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-        mCurrentAllocations = (List <?>) newInput;
     }
 
-    public Object getParent(Object arg0) {
+    public Object getParent(Object element) {
         return null;
     }
 
     public void updateChildCount(Object element, int currentChildCount) {
         int childCount = 0;
 
-        if (element == mCurrentAllocations) { // root element
-            childCount = mCurrentAllocations.size();
+        if (element instanceof NativeHeapSnapshot) {
+            childCount = ((NativeHeapSnapshot) element).getAllocationsByLibrary().size();
         }
 
         mViewer.setChildCount(element, childCount);
@@ -57,12 +54,16 @@ public final class NativeHeapContentProvider implements ILazyTreeContentProvider
 
     public void updateElement(Object parent, int index) {
         Object item = null;
+        int childCount = 0;
 
-        if (parent == mCurrentAllocations) { // root element
-            item = mCurrentAllocations.get(index);
+        if (parent instanceof NativeHeapSnapshot) { // root element
+            item = ((NativeHeapSnapshot) parent).getAllocationsByLibrary().get(index);
+            childCount = ((NativeLibraryAllocationInfo) item).getAllocations().size();
+        } else if (parent instanceof NativeLibraryAllocationInfo) {
+            item = ((NativeLibraryAllocationInfo) parent).getAllocations().get(index);
         }
 
         mViewer.replace(parent, index, item);
-        mViewer.setChildCount(item, 0);
+        mViewer.setChildCount(item, childCount);
     }
 }

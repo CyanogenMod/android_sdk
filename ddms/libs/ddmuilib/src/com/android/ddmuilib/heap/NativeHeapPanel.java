@@ -27,6 +27,7 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -83,11 +84,12 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
 
+    private static final String PREFS_GROUP_BY_LIBRARY = "nativeheap.grouby.library";
     private static final String PREFS_SYMBOL_SEARCH_PATH = "nativeheap.search.path";
     private static final String PREFS_SASH_HEIGHT_PERCENT = "nativeheap.sash.percent";
     private IPreferenceStore mPrefStore;
 
-    private List<List<NativeAllocationInfo>> mNativeHeapAllocations;
+    private List<NativeHeapSnapshot> mNativeHeapSnapshots;
 
     private Button mSnapshotHeapButton;
     private Text mSymbolSearchPathText;
@@ -96,6 +98,8 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private TreeViewer mDetailsTreeViewer;
     private TreeViewer mStackTraceTreeViewer;
+    private ILazyTreeContentProvider mContentProviderByAllocations;
+    private ILazyTreeContentProvider mContentProviderByLibrary;
 
     private ToolBar mDetailsToolBar;
     private ToolItem mGroupByButton;
@@ -107,8 +111,9 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mPrefStore = prefStore;
         mPrefStore.setDefault(PREFS_SASH_HEIGHT_PERCENT, 75);
         mPrefStore.setDefault(PREFS_SYMBOL_SEARCH_PATH, "");
+        mPrefStore.setDefault(PREFS_GROUP_BY_LIBRARY, false);
 
-        mNativeHeapAllocations = new ArrayList<List<NativeAllocationInfo>>();
+        mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
     }
 
     /** {@inheritDoc} */
@@ -130,7 +135,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         // the list on future updates
         allocations = shallowCloneList(allocations);
 
-        mNativeHeapAllocations.add(allocations);
+        mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
         updateDisplay();
 
         // Attempt to resolve symbols in a separate thread.
@@ -163,11 +168,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         mSnapshotHeapButton.setEnabled(c != null);
 
-        mNativeHeapAllocations = new ArrayList<List<NativeAllocationInfo>>();
+        mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
         if (c != null) {
             List<NativeAllocationInfo> allocations = c.getClientData().getNativeAllocationList();
+            allocations = shallowCloneList(allocations);
+
             if (allocations.size() > 0) {
-                mNativeHeapAllocations.add(allocations);
+                mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
             }
         }
 
@@ -179,10 +186,10 @@ public class NativeHeapPanel extends BaseHeapPanel {
             public void run() {
                 updateSnapshotIndexCombo();
 
-                List<NativeAllocationInfo> lastHeapSnapshot = null;
-                if (mNativeHeapAllocations.size() > 0) {
+                NativeHeapSnapshot lastHeapSnapshot = null;
+                if (mNativeHeapSnapshots.size() > 0) {
                     lastHeapSnapshot =
-                            mNativeHeapAllocations.get(mNativeHeapAllocations.size() - 1);
+                            mNativeHeapSnapshots.get(mNativeHeapSnapshots.size() - 1);
                 }
 
                 displaySnapshot(lastHeapSnapshot);
@@ -195,19 +202,30 @@ public class NativeHeapPanel extends BaseHeapPanel {
         Display.getDefault().syncExec(new Runnable() {
             public void run() {
                 int idx = mSnapshotIndexCombo.getSelectionIndex();
-                displaySnapshot(mNativeHeapAllocations.get(idx));
+                displaySnapshot(mNativeHeapSnapshots.get(idx));
             }
         });
     }
 
-    private void displaySnapshot(List<NativeAllocationInfo> heapSnapshot) {
-        mDetailsTreeViewer.setInput(heapSnapshot);
+    private void displaySnapshot(NativeHeapSnapshot snapshot) {
+        mDetailsTreeViewer.setInput(snapshot);
 
-        if (heapSnapshot != null) {
-            mMemoryAllocatedText.setText(formatMemorySize(getTotalMemory(heapSnapshot)));
+        if (snapshot != null) {
+            mMemoryAllocatedText.setText(formatMemorySize(snapshot.getTotalSize()));
             mMemoryAllocatedText.pack();
         } else {
             mMemoryAllocatedText.setText("");
+        }
+    }
+
+    private void updateDisplayGrouping() {
+        boolean groupByLibrary = mGroupByButton.getSelection();
+        mPrefStore.setValue(PREFS_GROUP_BY_LIBRARY, groupByLibrary);
+
+        if (groupByLibrary) {
+            mDetailsTreeViewer.setContentProvider(mContentProviderByLibrary);
+        } else {
+            mDetailsTreeViewer.setContentProvider(mContentProviderByAllocations);
         }
     }
 
@@ -215,20 +233,10 @@ public class NativeHeapPanel extends BaseHeapPanel {
         return NUMBER_FORMATTER.format(totalMemory) + " bytes";
     }
 
-    private long getTotalMemory(List<NativeAllocationInfo> heapSnapshot) {
-        long total = 0;
-
-        for (NativeAllocationInfo info : heapSnapshot) {
-            total += info.getAllocationCount() * info.getSize();
-        }
-
-        return total;
-    }
-
     private void updateSnapshotIndexCombo() {
         List<String> items = new ArrayList<String>();
 
-        int numSnapshots = mNativeHeapAllocations.size();
+        int numSnapshots = mNativeHeapSnapshots.size();
         for (int i = 0; i < numSnapshots; i++) {
             // offset indices by 1 so that users see index starting at 1 rather than 0
             items.add("Snapshot " + (i + 1));
@@ -336,6 +344,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
             }
         });
         mSymbolSearchPathText.setText(mPrefStore.getString(PREFS_SYMBOL_SEARCH_PATH));
+        mSymbolSearchPathText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
     }
 
     private void updateSearchPath(String path) {
@@ -434,6 +443,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mGroupByButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(GROUPBY_IMAGE,
                 toolbar.getDisplay()));
         mGroupByButton.setToolTipText(TOOLTIP_GROUPBY);
+        mGroupByButton.setSelection(mPrefStore.getBoolean(PREFS_GROUP_BY_LIBRARY));
+        mGroupByButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                updateDisplayGrouping();
+            }
+        });
 
         mDiffsOnlyButton = new ToolItem(toolbar, SWT.CHECK);
         mDiffsOnlyButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(DIFFS_ONLY_IMAGE,
@@ -452,7 +468,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mExportHeapDataButton.setToolTipText(TOOLTIP_EXPORT_DATA);
 
         // disable all toolbar items until they implement the necessary features
-        mGroupByButton.setEnabled(false);
         mDiffsOnlyButton.setEnabled(false);
         mShowZygoteAllocationsButton.setEnabled(false);
         mExportHeapDataButton.setEnabled(false);
@@ -497,7 +512,15 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mDetailsTreeViewer = new TreeViewer(tree);
 
         mDetailsTreeViewer.setUseHashlookup(true);
-        mDetailsTreeViewer.setContentProvider(new NativeHeapContentProvider(mDetailsTreeViewer));
+
+        mContentProviderByAllocations = new NativeHeapProviderByAllocations(mDetailsTreeViewer);
+        mContentProviderByLibrary = new NativeHeapProviderByLibrary(mDetailsTreeViewer);
+        if (mPrefStore.getBoolean(PREFS_GROUP_BY_LIBRARY)) {
+            mDetailsTreeViewer.setContentProvider(mContentProviderByLibrary);
+        } else {
+            mDetailsTreeViewer.setContentProvider(mContentProviderByAllocations);
+        }
+
         mDetailsTreeViewer.setLabelProvider(new NativeHeapLabelProvider());
 
         mDetailsTreeViewer.setInput(null);
@@ -588,7 +611,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         }
 
         public void run() {
-            for (NativeAllocationInfo callSite: mCallSites) {
+            for (NativeAllocationInfo callSite : mCallSites) {
                 if (callSite.isStackCallResolved()) {
                     continue;
                 }

@@ -32,11 +32,18 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
     }
 
     public String getColumnText(Object element, int index) {
-        if (!(element instanceof NativeAllocationInfo)) {
-            return null;
+        if (element instanceof NativeAllocationInfo) {
+            return getColumnTextForNativeAllocation((NativeAllocationInfo) element, index);
         }
 
-        NativeAllocationInfo info = (NativeAllocationInfo) element;
+        if (element instanceof NativeLibraryAllocationInfo) {
+            return getColumnTextForNativeLibrary((NativeLibraryAllocationInfo) element, index);
+        }
+
+        return null;
+    }
+
+    private String getColumnTextForNativeAllocation(NativeAllocationInfo info, int index) {
         NativeStackCallInfo stackInfo = info.getRelevantStackCallInfo();
 
         switch (index) {
@@ -50,6 +57,17 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getLibraryName();
             case 4:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getMethodName();
+            default:
+                return null;
+        }
+    }
+
+    private String getColumnTextForNativeLibrary(NativeLibraryAllocationInfo info, int index) {
+        switch (index) {
+            case 0:
+                return Long.toString(info.getTotalSize());
+            case 3:
+                return info.getLibraryName();
             default:
                 return null;
         }
