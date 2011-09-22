@@ -16,20 +16,13 @@
 
 package com.android.sdkstats;
 
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
-
-import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,11 +32,10 @@ public class SdkStatsService {
     /** Minimum interval between ping, in milliseconds. */
     private static final long PING_INTERVAL_MSEC = 86400 * 1000;  // 1 day
 
-    public final static String PING_OPT_IN = "pingOptIn"; //$NON-NLS-1$
-    public final static String PING_TIME = "pingTime"; //$NON-NLS-1$
-    public final static String PING_ID = "pingId"; //$NON-NLS-1$
+    private DdmsPreferenceStore mStore = new DdmsPreferenceStore();
 
-    private static PreferenceStore sPrefStore;
+    public SdkStatsService() {
+    }
 
     /**
      * Send a "ping" to the Google toolbar server, if enough time has
@@ -58,19 +50,8 @@ public class SdkStatsService {
      * @param app name to report in the ping
      * @param version to report in the ping
      */
-    public static void ping(final String app, final String version) {
-        doPing(app, version, getPreferenceStore());
-    }
-
-    /**
-     * Find out if user has already set permissions for the ping service.
-     * @return true if user has already set the permissions for the ping service. This could've
-     * happened only if the user has already viewed the dialog displayed by
-     * {@link #getUserPermissionForPing(Shell)}.
-     */
-    public static boolean pingPermissionsSet() {
-        PreferenceStore prefs = getPreferenceStore();
-        return prefs != null && prefs.contains(PING_ID);
+    public void ping(String app, String version) {
+        doPing(app, version);
     }
 
     /**
@@ -80,108 +61,60 @@ public class SdkStatsService {
      * Once the dialog has been shown, it sets a preference internally indicating that the user has
      * viewed this dialog. This setting can be queried using {@link #pingPermissionsSet()}.
      */
-    public static void getUserPermissionForPing(Shell parent) {
-        PreferenceStore prefs = getPreferenceStore();
-        getUserPermissionForPing(prefs, parent);
-
-        // First time: make up a new ID.  TODO: Use something more random?
-        prefs.setValue(PING_ID, new Random().nextLong());
-        try {
-            prefs.save();
-        } catch (IOException e) {
-            /* ignore exceptions while saving preferences */
+    public void checkUserPermissionForPing(Shell parent) {
+        if (!mStore.hasPingId()) {
+            askUserPermissionForPing(parent);
+            mStore.generateNewPingId();
         }
     }
 
     /**
-     * Returns the DDMS {@link PreferenceStore}.
+     * Prompt the user for whether they want to opt out of reporting, and save the user
+     * input in preferences.
      */
-    public static synchronized PreferenceStore getPreferenceStore() {
-        if (sPrefStore == null) {
-            // get the location of the preferences
-            String homeDir = null;
-            try {
-                homeDir = AndroidLocation.getFolder();
-            } catch (AndroidLocationException e1) {
-                // pass, we'll do a dummy store since homeDir is null
+    private void askUserPermissionForPing(final Shell parent) {
+        final Display display = parent.getDisplay();
+        display.syncExec(new Runnable() {
+            public void run() {
+                SdkStatsPermissionDialog dialog = new SdkStatsPermissionDialog(parent);
+                dialog.open();
+                mStore.setPingOptIn(dialog.getPingUserPreference());
             }
-
-            if (homeDir != null) {
-                String rcFileName = homeDir + "ddms.cfg"; //$NON-NLS-1$
-
-                // also look for an old pref file in the previous location
-                String oldPrefPath = System.getProperty("user.home") //$NON-NLS-1$
-                    + File.separator + ".ddmsrc"; //$NON-NLS-1$
-                File oldPrefFile = new File(oldPrefPath);
-                if (oldPrefFile.isFile()) {
-                    try {
-                        PreferenceStore oldStore = new PreferenceStore(oldPrefPath);
-                        oldStore.load();
-
-                        oldStore.save(new FileOutputStream(rcFileName), "");
-                        oldPrefFile.delete();
-
-                        PreferenceStore newStore = new PreferenceStore(rcFileName);
-                        newStore.load();
-                        sPrefStore = newStore;
-                    } catch (IOException e) {
-                        // create a new empty store.
-                        sPrefStore = new PreferenceStore(rcFileName);
-                    }
-                } else {
-                    sPrefStore = new PreferenceStore(rcFileName);
-
-                    try {
-                        sPrefStore.load();
-                    } catch (IOException e) {
-                        System.err.println("Error Loading Preferences");
-                    }
-                }
-            } else {
-                sPrefStore = new PreferenceStore();
-            }
-        }
-
-        return sPrefStore;
+        });
     }
+
+    // -------
 
     /**
      * Pings the usage stats server, as long as the prefs contain the opt-in boolean
      *
      * @param app name to report in the ping
      * @param version to report in the ping
-     * @param prefs the preference store where the opt-in value and ping times are store
      */
-    private static void doPing(final String app, String version, PreferenceStore prefs) {
+    private void doPing(final String app, String version) {
         // Validate the application and version input.
         final String normalVersion = normalizeVersion(app, version);
 
         // If the user has not opted in, do nothing and quietly return.
-        if (!prefs.getBoolean(PING_OPT_IN)) {
+        if (!mStore.isPingOptIn()) {
             // user opted out.
             return;
         }
 
         // If the last ping *for this app* was too recent, do nothing.
-        String timePref = PING_TIME + "." + app;  //$NON-NLS-1$
         long now = System.currentTimeMillis();
-        long then = prefs.getLong(timePref);
+        long then = mStore.getPingTime(app);
         if (now - then < PING_INTERVAL_MSEC) {
             // too soon after a ping.
             return;
         }
 
         // Record the time of the attempt, whether or not it succeeds.
-        prefs.setValue(timePref, now);
-        try {
-            prefs.save();
-        }
-        catch (IOException ioe) {
-        }
+        mStore.setPingTime(app, now);
 
         // Send the ping itself in the background (don't block if the
         // network is down or slow or confused).
-        final long id = prefs.getLong(PING_ID);
+        final long id = mStore.getPingId();
         new Thread() {
             @Override
             public void run() {
@@ -266,21 +199,6 @@ public class SdkStatsService {
         }
 
         return null;
-    }
-
-    /**
-     * Prompt the user for whether they want to opt out of reporting, and save the user
-     * input in preferences.
-     */
-    private static void getUserPermissionForPing(final PreferenceStore prefs, final Shell parent) {
-        final Display display = parent.getDisplay();
-        display.syncExec(new Runnable() {
-            public void run() {
-                SdkStatsPermissionDialog dialog = new SdkStatsPermissionDialog(parent);
-                dialog.open();
-                prefs.setValue(PING_OPT_IN, dialog.getPingUserPreference());
-            }
-        });
     }
 
     /**

@@ -1,19 +1,18 @@
-/* //device/tools/ddms/src/com/android/ddms/PrefsDialog.java
-**
-** Copyright 2007, The Android Open Source Project
-**
-** Licensed under the Apache License, Version 2.0 (the "License");
-** you may not use this file except in compliance with the License.
-** You may obtain a copy of the License at
-**
-**     http://www.apache.org/licenses/LICENSE-2.0
-**
-** Unless required by applicable law or agreed to in writing, software
-** distributed under the License is distributed on an "AS IS" BASIS,
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-** See the License for the specific language governing permissions and
-** limitations under the License.
-*/
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.android.ddms;
 
@@ -25,8 +24,8 @@ import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.PortFieldEditor;
 import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
+import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsPermissionDialog;
-import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
@@ -63,9 +62,6 @@ import java.io.IOException;
  */
 public final class PrefsDialog {
 
-    // Preference store.
-    private static PreferenceStore mPrefStore;
-
     // public const values for storage
     public final static String SHELL_X = "shellX"; //$NON-NLS-1$
     public final static String SHELL_Y = "shellY"; //$NON-NLS-1$
@@ -94,6 +90,8 @@ public final class PrefsDialog {
     private final static String PREFS_USE_ADBHOST = "useAdbHost"; //$NON-NLS-1$
     private final static String PREFS_ADBHOST_VALUE = "adbHostValue"; //$NON-NLS-1$
 
+    // Preference store.
+    private static DdmsPreferenceStore mStore = new DdmsPreferenceStore();
 
     /**
      * Private constructor -- do not instantiate.
@@ -102,17 +100,23 @@ public final class PrefsDialog {
 
     /**
      * Return the PreferenceStore that holds our values.
+     *
+     * @deprecated Callers should use {@link DdmsPreferenceStore} directly.
      */
+    @Deprecated
     public static PreferenceStore getStore() {
-        return mPrefStore;
+        return mStore.getPreferenceStore();
     }
 
     /**
      * Save the prefs to the config file.
+     *
+     * @deprecated Callers should use {@link DdmsPreferenceStore} directly.
      */
+    @Deprecated
     public static void save() {
         try {
-            mPrefStore.save();
+            mStore.getPreferenceStore().save();
         }
         catch (IOException ioe) {
             Log.w("ddms", "Failed saving prefs file: " + ioe.getMessage());
@@ -133,11 +137,9 @@ public final class PrefsDialog {
      * the second part later on for the "changed" events.
      */
     public static void init() {
-        assert mPrefStore == null;
+        PreferenceStore prefStore = mStore.getPreferenceStore();
 
-        mPrefStore = SdkStatsService.getPreferenceStore();
-
-        if (mPrefStore == null) {
+        if (prefStore == null) {
             // we have a serious issue here...
             Log.e("ddms",
                     "failed to access both the user HOME directory and the system wide temp folder. Quitting.");
@@ -148,20 +150,20 @@ public final class PrefsDialog {
         setDefaults(System.getProperty("user.home")); //$NON-NLS-1$
 
         // listen for changes
-        mPrefStore.addPropertyChangeListener(new ChangeListener());
+        prefStore.addPropertyChangeListener(new ChangeListener());
 
         // Now we initialize the value of the preference, from the values in the store.
 
         // First the ddm lib.
-        DdmPreferences.setDebugPortBase(mPrefStore.getInt(PREFS_DEBUG_PORT_BASE));
-        DdmPreferences.setSelectedDebugPort(mPrefStore.getInt(PREFS_SELECTED_DEBUG_PORT));
-        DdmPreferences.setLogLevel(mPrefStore.getString(PREFS_LOG_LEVEL));
-        DdmPreferences.setInitialThreadUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_THREAD_UPDATE));
-        DdmPreferences.setInitialHeapUpdate(mPrefStore.getBoolean(PREFS_DEFAULT_HEAP_UPDATE));
-        DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
-        DdmPreferences.setProfilerBufferSizeMb(mPrefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
-        DdmPreferences.setUseAdbHost(mPrefStore.getBoolean(PREFS_USE_ADBHOST));
-        DdmPreferences.setAdbHostValue(mPrefStore.getString(PREFS_ADBHOST_VALUE));
+        DdmPreferences.setDebugPortBase(prefStore.getInt(PREFS_DEBUG_PORT_BASE));
+        DdmPreferences.setSelectedDebugPort(prefStore.getInt(PREFS_SELECTED_DEBUG_PORT));
+        DdmPreferences.setLogLevel(prefStore.getString(PREFS_LOG_LEVEL));
+        DdmPreferences.setInitialThreadUpdate(prefStore.getBoolean(PREFS_DEFAULT_THREAD_UPDATE));
+        DdmPreferences.setInitialHeapUpdate(prefStore.getBoolean(PREFS_DEFAULT_HEAP_UPDATE));
+        DdmPreferences.setTimeOut(prefStore.getInt(PREFS_TIMEOUT));
+        DdmPreferences.setProfilerBufferSizeMb(prefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
+        DdmPreferences.setUseAdbHost(prefStore.getBoolean(PREFS_USE_ADBHOST));
+        DdmPreferences.setAdbHostValue(prefStore.getString(PREFS_ADBHOST_VALUE));
 
         // some static values
         String out = System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
@@ -177,8 +179,8 @@ public final class PrefsDialog {
         DdmUiPreferences.setTraceviewLocation(traceview);
 
         // Now the ddmui lib
-        DdmUiPreferences.setStore(mPrefStore);
-        DdmUiPreferences.setThreadRefreshInterval(mPrefStore.getInt(PREFS_THREAD_REFRESH_INTERVAL));
+        DdmUiPreferences.setStore(prefStore);
+        DdmUiPreferences.setThreadRefreshInterval(prefStore.getInt(PREFS_THREAD_REFRESH_INTERVAL));
     }
 
     /*
@@ -191,42 +193,44 @@ public final class PrefsDialog {
      * class.getInstance().
      */
     private static void setDefaults(String homeDir) {
-        mPrefStore.setDefault(PREFS_DEBUG_PORT_BASE, DdmPreferences.DEFAULT_DEBUG_PORT_BASE);
+        PreferenceStore prefStore = mStore.getPreferenceStore();
 
-        mPrefStore.setDefault(PREFS_SELECTED_DEBUG_PORT,
+        prefStore.setDefault(PREFS_DEBUG_PORT_BASE, DdmPreferences.DEFAULT_DEBUG_PORT_BASE);
+
+        prefStore.setDefault(PREFS_SELECTED_DEBUG_PORT,
                 DdmPreferences.DEFAULT_SELECTED_DEBUG_PORT);
 
-        mPrefStore.setDefault(PREFS_USE_ADBHOST, DdmPreferences.DEFAULT_USE_ADBHOST);
-        mPrefStore.setDefault(PREFS_ADBHOST_VALUE, DdmPreferences.DEFAULT_ADBHOST_VALUE);
+        prefStore.setDefault(PREFS_USE_ADBHOST, DdmPreferences.DEFAULT_USE_ADBHOST);
+        prefStore.setDefault(PREFS_ADBHOST_VALUE, DdmPreferences.DEFAULT_ADBHOST_VALUE);
 
-        mPrefStore.setDefault(PREFS_DEFAULT_THREAD_UPDATE, true);
-        mPrefStore.setDefault(PREFS_DEFAULT_HEAP_UPDATE, false);
-        mPrefStore.setDefault(PREFS_THREAD_REFRESH_INTERVAL,
+        prefStore.setDefault(PREFS_DEFAULT_THREAD_UPDATE, true);
+        prefStore.setDefault(PREFS_DEFAULT_HEAP_UPDATE, false);
+        prefStore.setDefault(PREFS_THREAD_REFRESH_INTERVAL,
             DdmUiPreferences.DEFAULT_THREAD_REFRESH_INTERVAL);
 
-        mPrefStore.setDefault("textSaveDir", homeDir); //$NON-NLS-1$
-        mPrefStore.setDefault("imageSaveDir", homeDir); //$NON-NLS-1$
+        prefStore.setDefault("textSaveDir", homeDir); //$NON-NLS-1$
+        prefStore.setDefault("imageSaveDir", homeDir); //$NON-NLS-1$
 
-        mPrefStore.setDefault(PREFS_LOG_LEVEL, "info"); //$NON-NLS-1$
+        prefStore.setDefault(PREFS_LOG_LEVEL, "info"); //$NON-NLS-1$
 
-        mPrefStore.setDefault(PREFS_TIMEOUT, DdmPreferences.DEFAULT_TIMEOUT);
-        mPrefStore.setDefault(PREFS_PROFILER_BUFFER_SIZE_MB,
+        prefStore.setDefault(PREFS_TIMEOUT, DdmPreferences.DEFAULT_TIMEOUT);
+        prefStore.setDefault(PREFS_PROFILER_BUFFER_SIZE_MB,
                 DdmPreferences.DEFAULT_PROFILER_BUFFER_SIZE_MB);
 
         // choose a default font for the text output
         FontData fdat = new FontData("Courier", 10, SWT.NORMAL); //$NON-NLS-1$
-        mPrefStore.setDefault("textOutputFont", fdat.toString()); //$NON-NLS-1$
+        prefStore.setDefault("textOutputFont", fdat.toString()); //$NON-NLS-1$
 
         // layout information.
-        mPrefStore.setDefault(SHELL_X, 100);
-        mPrefStore.setDefault(SHELL_Y, 100);
-        mPrefStore.setDefault(SHELL_WIDTH, 800);
-        mPrefStore.setDefault(SHELL_HEIGHT, 600);
+        prefStore.setDefault(SHELL_X, 100);
+        prefStore.setDefault(SHELL_Y, 100);
+        prefStore.setDefault(SHELL_WIDTH, 800);
+        prefStore.setDefault(SHELL_HEIGHT, 600);
 
-        mPrefStore.setDefault(EXPLORER_SHELL_X, 50);
-        mPrefStore.setDefault(EXPLORER_SHELL_Y, 50);
+        prefStore.setDefault(EXPLORER_SHELL_X, 50);
+        prefStore.setDefault(EXPLORER_SHELL_Y, 50);
 
-        mPrefStore.setDefault(SHOW_NATIVE_HEAP, false);
+        prefStore.setDefault(SHOW_NATIVE_HEAP, false);
     }
 
 
@@ -240,28 +244,29 @@ public final class PrefsDialog {
     private static class ChangeListener implements IPropertyChangeListener {
         public void propertyChange(PropertyChangeEvent event) {
             String changed = event.getProperty();
+            PreferenceStore prefStore = mStore.getPreferenceStore();
 
             if (changed.equals(PREFS_DEBUG_PORT_BASE)) {
-                DdmPreferences.setDebugPortBase(mPrefStore.getInt(PREFS_DEBUG_PORT_BASE));
+                DdmPreferences.setDebugPortBase(prefStore.getInt(PREFS_DEBUG_PORT_BASE));
             } else if (changed.equals(PREFS_SELECTED_DEBUG_PORT)) {
-                DdmPreferences.setSelectedDebugPort(mPrefStore.getInt(PREFS_SELECTED_DEBUG_PORT));
+                DdmPreferences.setSelectedDebugPort(prefStore.getInt(PREFS_SELECTED_DEBUG_PORT));
             } else if (changed.equals(PREFS_LOG_LEVEL)) {
                 DdmPreferences.setLogLevel((String)event.getNewValue());
             } else if (changed.equals("textSaveDir")) {
-                mPrefStore.setValue("lastTextSaveDir",
+                prefStore.setValue("lastTextSaveDir",
                     (String) event.getNewValue());
             } else if (changed.equals("imageSaveDir")) {
-                mPrefStore.setValue("lastImageSaveDir",
+                prefStore.setValue("lastImageSaveDir",
                     (String) event.getNewValue());
             } else if (changed.equals(PREFS_TIMEOUT)) {
-                DdmPreferences.setTimeOut(mPrefStore.getInt(PREFS_TIMEOUT));
+                DdmPreferences.setTimeOut(prefStore.getInt(PREFS_TIMEOUT));
             } else if (changed.equals(PREFS_PROFILER_BUFFER_SIZE_MB)) {
                 DdmPreferences.setProfilerBufferSizeMb(
-                        mPrefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
+                        prefStore.getInt(PREFS_PROFILER_BUFFER_SIZE_MB));
             } else if (changed.equals(PREFS_USE_ADBHOST)) {
-                DdmPreferences.setUseAdbHost(mPrefStore.getBoolean(PREFS_USE_ADBHOST));
+                DdmPreferences.setUseAdbHost(prefStore.getBoolean(PREFS_USE_ADBHOST));
             } else if (changed.equals(PREFS_ADBHOST_VALUE)) {
-                DdmPreferences.setAdbHostValue(mPrefStore.getString(PREFS_ADBHOST_VALUE));
+                DdmPreferences.setAdbHostValue(prefStore.getString(PREFS_ADBHOST_VALUE));
             } else {
                 Log.v("ddms", "Preference change: " + event.getProperty()
                     + ": '" + event.getOldValue()
@@ -275,7 +280,8 @@ public final class PrefsDialog {
      * Create and display the dialog.
      */
     public static void run(Shell shell) {
-        assert mPrefStore != null;
+        PreferenceStore prefStore = mStore.getPreferenceStore();
+        assert prefStore != null;
 
         PreferenceManager prefMgr = new PreferenceManager();
 
@@ -302,7 +308,7 @@ public final class PrefsDialog {
         prefMgr.addToRoot(node);
 
         PreferenceDialog dlg = new PreferenceDialog(shell, prefMgr);
-        dlg.setPreferenceStore(mPrefStore);
+        dlg.setPreferenceStore(prefStore);
 
         // run it
         try {
@@ -313,7 +319,7 @@ public final class PrefsDialog {
 
         // save prefs
         try {
-            mPrefStore.save();
+            prefStore.save();
         }
         catch (IOException ioe) {
         }
@@ -549,7 +555,7 @@ public final class PrefsDialog {
                 }
             });
 
-            mOptInCheckbox = new BooleanFieldEditor(SdkStatsService.PING_OPT_IN,
+            mOptInCheckbox = new BooleanFieldEditor(DdmsPreferenceStore.PING_OPT_IN,
                     SdkStatsPermissionDialog.CHECKBOX_TEXT, mTop);
             mOptInCheckbox.setPage(this);
             mOptInCheckbox.setPreferenceStore(getPreferenceStore());

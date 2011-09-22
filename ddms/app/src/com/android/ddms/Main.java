@@ -76,14 +76,13 @@ public class Main {
 
         // if this is the first time using ddms or adt, open up the stats service
         // opt out dialog, and request user for permissions.
-        if (!SdkStatsService.pingPermissionsSet()) {
-            SdkStatsService.getUserPermissionForPing(new Shell(Display.getDefault()));
-        }
+        SdkStatsService stats = new SdkStatsService();
+        stats.checkUserPermissionForPing(new Shell(Display.getDefault()));
 
         // the "ping" argument means to check in with the server and exit
         // the application name and version number must also be supplied
         if (args.length >= 3 && args[0].equals("ping")) {
-            SdkStatsService.ping(args[1], args[2]);
+            stats.ping(args[1], args[2]);
             return;
         } else if (args.length > 0) {
             Log.e("ddms", "Unknown argument: " + args[0]);
@@ -101,7 +100,8 @@ public class Main {
 
         // we're past the point where ddms can be called just to send a ping, so we can
         // ping for ddms itself.
-        ping(ddmsParentLocation);
+        ping(stats, ddmsParentLocation);
+        stats = null;
 
         DebugPortManager.setProvider(DebugPortProvider.getInstance());
 
@@ -131,7 +131,7 @@ public class Main {
         return System.getProperty("os.name").startsWith("Mac OS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    private static void ping(String ddmsParentLocation) {
+    private static void ping(SdkStatsService stats, String ddmsParentLocation) {
         Properties p = new Properties();
         try{
             File sourceProp;
@@ -143,7 +143,7 @@ public class Main {
             p.load(new FileInputStream(sourceProp));
             sRevision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (sRevision != null && sRevision.length() > 0) {
-                SdkStatsService.ping("ddms", sRevision);  //$NON-NLS-1$
+                stats.ping("ddms", sRevision);  //$NON-NLS-1$
             }
         } catch (FileNotFoundException e) {
             // couldn't find the file? don't ping.
