@@ -27,6 +27,8 @@ import org.eclipse.swt.graphics.Image;
  * A Label Provider for the Native Heap TreeViewer in {@link NativeHeapPanel}.
  */
 public class NativeHeapLabelProvider extends LabelProvider implements ITableLabelProvider {
+    private long mTotalSize;
+
     public Image getColumnImage(Object arg0, int arg1) {
         return null;
     }
@@ -52,10 +54,12 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
             case 1:
                 return Integer.toString(info.getSize() * info.getAllocationCount());
             case 2:
-                return Integer.toString(info.getAllocationCount());
+                return getPercentageString(info.getSize() * info.getAllocationCount(), mTotalSize);
             case 3:
-                return Integer.toString(info.getSize());
+                return Integer.toString(info.getAllocationCount());
             case 4:
+                return Integer.toString(info.getSize());
+            case 5:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getMethodName();
             default:
                 return null;
@@ -68,9 +72,19 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
                 return info.getLibraryName();
             case 1:
                 return Long.toString(info.getTotalSize());
+            case 2:
+                return getPercentageString(info.getTotalSize(), mTotalSize);
             default:
                 return null;
         }
+    }
+
+    private String getPercentageString(long size, long total) {
+        if (total == 0) {
+            return "";
+        }
+
+        return String.format("%.1f%%", (float)(size * 100)/(float)total);
     }
 
     private String stackResolutionStatus(NativeAllocationInfo info) {
@@ -79,5 +93,14 @@ public class NativeHeapLabelProvider extends LabelProvider implements ITableLabe
         } else {
             return "Resolving...";  // still resolving...
         }
+    }
+
+    /**
+     * Set the total size of the heap dump for use in percentage calculations.
+     * This value should be set whenever the input to the tree changes so that the percentages
+     * are computed correctly.
+     */
+    public void setTotalSize(long totalSize) {
+        mTotalSize = totalSize;
     }
 }

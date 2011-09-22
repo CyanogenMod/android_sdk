@@ -100,6 +100,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private TreeViewer mStackTraceTreeViewer;
     private ILazyTreeContentProvider mContentProviderByAllocations;
     private ILazyTreeContentProvider mContentProviderByLibrary;
+    private NativeHeapLabelProvider mDetailsTreeLabelProvider;
 
     private ToolBar mDetailsToolBar;
     private ToolItem mGroupByButton;
@@ -208,12 +209,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
     }
 
     private void displaySnapshot(NativeHeapSnapshot snapshot) {
-        mDetailsTreeViewer.setInput(snapshot);
-
         if (snapshot != null) {
+            mDetailsTreeLabelProvider.setTotalSize(snapshot.getTotalSize());
+            mDetailsTreeViewer.setInput(snapshot);
             mMemoryAllocatedText.setText(formatMemorySize(snapshot.getTotalSize()));
             mMemoryAllocatedText.pack();
         } else {
+            mDetailsTreeViewer.setInput(null);
             mMemoryAllocatedText.setText("");
         }
     }
@@ -480,6 +482,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         List<String> properties = Arrays.asList(new String[] {
                 "Library",
                 "Total",
+                "Percentage",
                 "Count",
                 "Size",
                 "Method",
@@ -488,6 +491,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         List<String> sampleValues = Arrays.asList(new String[] {
                 "/path/in/device/to/system/library.so",
                 "123456789",
+                " 100%",
                 "123456789",
                 "123456789",
                 "PossiblyLongDemangledMethodName",
@@ -496,6 +500,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         // right align numeric values
         List<Integer> swtFlags = Arrays.asList(new Integer[] {
                 SWT.LEFT,
+                SWT.RIGHT,
                 SWT.RIGHT,
                 SWT.RIGHT,
                 SWT.RIGHT,
@@ -521,7 +526,8 @@ public class NativeHeapPanel extends BaseHeapPanel {
             mDetailsTreeViewer.setContentProvider(mContentProviderByAllocations);
         }
 
-        mDetailsTreeViewer.setLabelProvider(new NativeHeapLabelProvider());
+        mDetailsTreeLabelProvider = new NativeHeapLabelProvider();
+        mDetailsTreeViewer.setLabelProvider(mDetailsTreeLabelProvider);
 
         mDetailsTreeViewer.setInput(null);
 
