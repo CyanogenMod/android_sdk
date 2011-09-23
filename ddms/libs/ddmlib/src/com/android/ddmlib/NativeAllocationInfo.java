@@ -189,6 +189,25 @@ public final class NativeAllocationInfo {
         return false;
     }
 
+
+    @Override
+    public int hashCode() {
+        // Follow Effective Java's recipe re hash codes.
+        // Includes all the fields looked at by equals().
+
+        int result = 17;    // arbitrary starting point
+
+        result = 31 * result + mSize;
+        result = 31 * result + mAllocations;
+        result = 31 * result + mStackCallAddresses.size();
+
+        for (long addr : mStackCallAddresses) {
+            result = 31 * result + (int) (addr ^ (addr >>> 32));
+        }
+
+        return result;
+    }
+
     /**
      * Returns a string representation of the object.
      * @see java.lang.Object#toString()
