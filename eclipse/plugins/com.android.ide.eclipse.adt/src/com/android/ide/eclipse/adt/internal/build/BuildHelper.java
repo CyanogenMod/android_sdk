@@ -26,18 +26,18 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.build.ApkBuilder;
-import com.android.sdklib.build.ApkBuilder.JarStatus;
-import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
+import com.android.sdklib.build.ApkBuilder.JarStatus;
+import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.internal.build.DebugKeyProvider;
-import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.internal.build.SignedJarBuilder;
+import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -304,7 +304,7 @@ public class BuildHelper {
         SigningInfo info = ApkBuilder.getDebugKey(keystoreOsPath, mVerbose ? mOutStream : null);
 
         finalPackage(intermediateApk, dex, output, javaProject, libProjects,
-                referencedJavaProjects, null /*abiFilter*/,
+                referencedJavaProjects,
                 info != null ? info.key : null, info != null ? info.certificate : null, resMarker);
     }
 
@@ -333,7 +333,7 @@ public class BuildHelper {
      */
     public void finalPackage(String intermediateApk, String dex, String output,
             final IJavaProject javaProject, List<IProject> libProjects,
-            List<IJavaProject> referencedJavaProjects, String abiFilter, PrivateKey key,
+            List<IJavaProject> referencedJavaProjects, PrivateKey key,
             X509Certificate certificate, ResourceMarker resMarker)
             throws NativeLibInJarException, ApkCreationException, DuplicateFileException,
             CoreException {
@@ -411,7 +411,7 @@ public class BuildHelper {
             if (libFolder != null && libFolder.exists() &&
                     libFolder.getType() == IResource.FOLDER) {
                 // get a File for the folder.
-                apkBuilder.addNativeLibraries(libFolder.getLocation().toFile(), abiFilter);
+                apkBuilder.addNativeLibraries(libFolder.getLocation().toFile());
             }
 
             // write the native libraries for the library projects.
@@ -420,7 +420,7 @@ public class BuildHelper {
                     libFolder = lib.findMember(SdkConstants.FD_NATIVE_LIBS);
                     if (libFolder != null && libFolder.exists() &&
                             libFolder.getType() == IResource.FOLDER) {
-                        apkBuilder.addNativeLibraries(libFolder.getLocation().toFile(), abiFilter);
+                        apkBuilder.addNativeLibraries(libFolder.getLocation().toFile());
                     }
                 }
             }
