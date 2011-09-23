@@ -86,6 +86,17 @@ class PackageLoader {
      */
     public interface IAutoInstallTask {
         /**
+         * Invoked by the loader once a source has been loaded and its packages
+         * definitions are known. The method should return the {@code packages}
+         * array and can modify it if necessary.
+         * The loader will call {@link #acceptPackage(Package)} on all the packages returned.
+         *
+         * @param source The source of the packages. Null for the locally installed packages.
+         * @param packages The packages found in the source.
+         */
+        public Package[] filterLoadedSource(SdkSource source, Package[] packages);
+
+        /**
          * Called by the install task for every package available (new ones, updates as well
          * as existing ones that don't have a potential update.)
          * The method should return true if this is the package that should be installed,
@@ -221,6 +232,12 @@ class PackageLoader {
 
         loadPackages(new ISourceLoadedCallback() {
             public boolean onUpdateSource(SdkSource source, Package[] packages) {
+                packages = installTask.filterLoadedSource(source, packages);
+                if (packages == null || packages.length == 0) {
+                    // Tell loadPackages() to process the next source.
+                    return true;
+                }
+
                 for (Package pkg : packages) {
                     if (pkg.isLocal()) {
                         // This is a local (aka installed) package
