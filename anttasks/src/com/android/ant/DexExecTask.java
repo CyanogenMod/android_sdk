@@ -16,8 +16,6 @@
 
 package com.android.ant;
 
-import com.android.ant.DependencyGraph.InputPath;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.FileSet;
@@ -163,7 +161,7 @@ public class DexExecTask extends BaseTask {
         task.createArg().setValue(mOutput);
 
 
-        for (File f :paths) {
+        for (File f : paths) {
             task.createArg().setValue(f.getAbsolutePath());
         }
 
@@ -171,7 +169,7 @@ public class DexExecTask extends BaseTask {
         task.execute();
 
         // generate the dependency file.
-        generateDependencyFile(depFile, paths, mOutput);
+        generateDependencyFile(depFile, inputPaths, mOutput);
     }
 
     @Override

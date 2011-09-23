@@ -16,8 +16,6 @@
 
 package com.android.ant;
 
-import com.android.ant.DependencyGraph.InputPath;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
@@ -337,23 +335,10 @@ public final class AaptExecTask extends BaseTask {
             }
         }
 
-        // as is its AndroidManifest.xml
-        if (mManifest != null) {
-            paths.add(new File(mManifest));
-        }
-
         // and if libraries exist, their res folders folders too.
         if (libResRef instanceof Path) {
             for (String path : ((Path)libResRef).list()) {
                 paths.add(new File(path));
-            }
-        }
-
-        // If we're here to generate a .ap_ file we need to use assets as an input path as well.
-        if (!generateRClass) {
-            File assetsDir = new File(mAssets);
-            if (mAssets != null && assetsDir.isDirectory()) {
-                paths.add(assetsDir);
             }
         }
 
@@ -362,6 +347,11 @@ public final class AaptExecTask extends BaseTask {
             // in this case we only want to run aapt if an XML file was touched, or if any
             // file is added/removed
             List<InputPath> inputPaths = getInputPaths(paths, Collections.singleton("xml"));
+
+            // let's not forget the manifest as an input path (with no extension restrictions).
+            if (mManifest != null) {
+                inputPaths.add(new InputPath(new File(mManifest)));
+            }
 
             // Check to see if our dependencies have changed. If not, then skip
             if (initDependencies(mRFolder + File.separator + "R.java.d", inputPaths)
@@ -372,9 +362,22 @@ public final class AaptExecTask extends BaseTask {
                 System.out.println("Generating resource IDs...");
             }
         } else {
-            // in this case we want to run aapt if any file updated/removed/added in any of the
-            // input path
+            // in this case we want to run aapt if any file was updated/removed/added in any of the
+            // input paths
             List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/);
+
+            // let's not forget the manifest as an input path.
+            if (mManifest != null) {
+                inputPaths.add(new InputPath(new File(mManifest)));
+            }
+
+            // If we're here to generate a .ap_ file we need to use assets as an input path as well.
+            if (mAssets != null) {
+                File assetsDir = new File(mAssets);
+                if (assetsDir.isDirectory()) {
+                    inputPaths.add(new InputPath(assetsDir));
+                }
+            }
 
             // Find our dependency file. It should have the same name as our target .ap_ but
             // with a .d extension

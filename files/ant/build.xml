@@ -43,7 +43,6 @@
     <property name="version.code" value="" />
     <property name="version.name" value="" />
     <property name="aapt.resource.filter" value="" />
-    <property name="filter.abi" value="" />
 
     <!-- compilation options -->
     <property name="java.encoding" value="UTF-8" />
@@ -274,9 +273,10 @@
                     apkfilepath="${out.packaged.file}"
                     debugpackaging="${build.is.packaging.debug}"
                     debugsigning="${build.is.signing.debug}"
-                    abifilter="${filter.abi}"
                     verbose="${verbose}"
-                    hascode="${manifest.hasCode}">
+                    hascode="${manifest.hasCode}"
+                    previousBuildType="${build.last.is.packaging.debug}/${build.last.is.signing.debug}"
+                    buildType="${build.is.packaging.debug}/${build.is.signing.debug}">
                 <dex path="${intermediate.dex.file}"/>
                 <sourcefolder path="${source.absolute.dir}"/>
                 <jarfile refid="jar.libs.ref" />
@@ -324,13 +324,22 @@
         </sequential>
     </macrodef>
 
-    <macrodef name="record-build-info">
+    <macrodef name="record-build-key">
         <attribute name="key" default="false" />
         <attribute name="value" default="false" />
         <sequential>
             <propertyfile file="${out.build.prop.file}" comment="Last build type">
                 <entry key="@{key}" value="@{value}"/>
             </propertyfile>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="record-build-info">
+        <sequential>
+            <record-build-key key="build.last.target" value="${build.target}" />
+            <record-build-key key="build.last.is.instrumented" value="${build.is.instrumented}" />
+            <record-build-key key="build.last.is.packaging.debug" value="${build.is.packaging.debug}" />
+            <record-build-key key="build.last.is.signing.debug" value="${build.is.signing.debug}" />
         </sequential>
     </macrodef>
 
@@ -444,6 +453,8 @@
         <property name="build.last.target" value="${build.target}" />
         <!-- also set the default value for whether the build is instrumented -->
         <property name="build.last.is.instrumented" value="${build.is.instrumented}" />
+        <property name="build.last.is.packaging.debug" value="${build.is.packaging.debug}" />
+        <property name="build.last.is.signing.debug" value="${build.is.signing.debug}" />
 
         <!-- compile the libraries if any -->
         <if>
@@ -853,8 +864,7 @@
     <!-- Builds debug output package -->
     <target name="debug" depends="-set-debug-files, -do-debug"
                 description="Builds the application and signs it with a debug key.">
-        <record-build-info key="build.last.target" value="${build.target}" />
-        <record-build-info key="build.last.is.instrumented" value="${build.is.instrumented}" />
+        <record-build-info />
     </target>
 
 
@@ -883,8 +893,7 @@
                 <echo>and run zipalign from the Android SDK tools.</echo>
             </sequential>
         </do-only-if-not-library>
-        <record-build-info key="build.last.target" value="${build.target}" />
-        <record-build-info key="build.last.is.instrumented" value="${build.is.instrumented}" />
+        <record-build-info />
     </target>
 
     <target name="-release-obfuscation-check">
@@ -967,8 +976,7 @@
                 <echo>Release Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
-        <record-build-info key="build.last.target" value="${build.target}" />
-        <record-build-info key="build.last.is.instrumented" value="${build.is.instrumented}" />
+        <record-build-info />
     </target>
 
     <!-- ********** Instrumented specific targets ********** -->
@@ -995,8 +1003,7 @@
                 <echo>Instrumented Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
-        <record-build-info key="build.last.target" value="${build.target}" />
-        <record-build-info key="build.last.is.instrumented" value="${build.is.instrumented}" />
+        <record-build-info />
     </target>
 
     <!-- ********** Test project specific targets ********** -->
