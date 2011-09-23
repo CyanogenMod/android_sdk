@@ -142,7 +142,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
      *
      * @param apiLevel The platform API level to match.
      *  The special value {@link #USE_MAX_REMOTE_API_LEVEL} means to use
-     *  the highest API level available on the repository.
+     *  the highest API level available in the repository.
      * @return A boolean indicating whether the installation was successful (meaning the package
      *   was either already present, or got installed or updated properly) and a {@link File}
      *   with the path to the root folder of the package. The file is null when the boolean

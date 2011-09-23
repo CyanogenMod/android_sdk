@@ -26,21 +26,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 
-/** Utility class to send "ping" usage reports to the server. */
+/**
+ * Manages persistence settings for DDMS.
+ *
+ * For convenience, this also stores persistence settings related to the "server stats" ping
+ * as well as some ADT settings that are SDK specific but not workspace specific.
+ */
 public class DdmsPreferenceStore {
 
     public  final static String PING_OPT_IN = "pingOptIn";          //$NON-NLS-1$
     private final static String PING_TIME   = "pingTime";           //$NON-NLS-1$
     private final static String PING_ID     = "pingId";             //$NON-NLS-1$
-    private final static String ADT_STARTUP_WIZARD = "adtStrtWzd";  //$NON-NLS-1$
+
+    private final static String ADT_FIRST_TIME = "adt1stTime";      //$NON-NLS-1$
     private final static String LAST_SDK_PATH = "lastSdkPath";      //$NON-NLS-1$
 
     /**
-     * Lock for the preference store.
-     */
-    private static volatile Object[] sLock = new Object[0];
-    /**
-     * PreferenceStore for DDMS. Creation and usage must be synchronized on sLock.
+     * PreferenceStore for DDMS.
+     * Creation and usage must be synchronized on {@code DdmsPreferenceStore.class}.
      * Don't use it directly, instead retrieve it via {@link #getPreferenceStore()}.
      */
     private static volatile PreferenceStore sPrefStore;
@@ -54,7 +57,7 @@ public class DdmsPreferenceStore {
      * return always the same store.
      */
     public PreferenceStore getPreferenceStore() {
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             if (sPrefStore == null) {
                 // get the location of the preferences
                 String homeDir = null;
@@ -113,7 +116,7 @@ public class DdmsPreferenceStore {
      */
     public void save() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             try {
                 prefs.save();
             }
@@ -123,7 +126,7 @@ public class DdmsPreferenceStore {
         }
     }
 
-    // ---- Utility methods to access some specifis prefs ----
+    // ---- Utility methods to access some specific prefs ----
 
     /**
      * Indicates whether the ping ID is set.
@@ -134,7 +137,7 @@ public class DdmsPreferenceStore {
      */
     public boolean hasPingId() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             return prefs != null && prefs.contains(PING_ID);
         }
     }
@@ -142,11 +145,15 @@ public class DdmsPreferenceStore {
     /**
      * Retrieves the current ping ID, if set.
      * To know if the ping ID is set, use {@link #hasPingId()}.
-     * The  value returned is 0L if there's no store or no ping ID set in the store.
+     * <p/>
+     * There is no magic value reserved for "missing pind id or invalid store".
+     * The only proper way to know if the ping id is missing is to use {@link #hasPingId()}.
      */
     public long getPingId() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
+            // Note: getLong() returns 0L if the ID is missing so we do that too when
+            // there's no store.
             return prefs == null ? 0L : prefs.getLong(PING_ID);
         }
     }
@@ -162,16 +169,7 @@ public class DdmsPreferenceStore {
         Random rnd = new Random();
         long id = rnd.nextLong();
 
-        // Let's try to be conservative and avoid 0L as an ID.
-        // (ideally it would be nice to keep 0L as a special reserved value,
-        //  to both have a default value and detect when variables aren't set
-        //  properly. It's too late to enforce this, but we can still avoid
-        //  generating new ones like this.)
-        for (int i = 0; id == 0L && i < 10; i++) {
-            id = rnd.nextLong();
-        }
-
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             prefs.setValue(PING_ID, id);
             try {
                 prefs.save();
@@ -190,7 +188,7 @@ public class DdmsPreferenceStore {
      */
     public boolean isPingOptIn() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             return prefs != null && prefs.contains(PING_OPT_IN);
         }
     }
@@ -203,7 +201,7 @@ public class DdmsPreferenceStore {
     public void setPingOptIn(boolean optIn) {
         PreferenceStore prefs = getPreferenceStore();
 
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             prefs.setValue(PING_OPT_IN, optIn);
             try {
                 prefs.save();
@@ -225,7 +223,7 @@ public class DdmsPreferenceStore {
     public long getPingTime(String app) {
         PreferenceStore prefs = getPreferenceStore();
         String timePref = PING_TIME + "." + app;  //$NON-NLS-1$
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             return prefs == null ? 0 : prefs.getLong(timePref);
         }
     }
@@ -241,7 +239,7 @@ public class DdmsPreferenceStore {
     public void setPingTime(String app, long timeStamp) {
         PreferenceStore prefs = getPreferenceStore();
         String timePref = PING_TIME + "." + app;  //$NON-NLS-1$
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             prefs.setValue(timePref, timeStamp);
             try {
                 prefs.save();
@@ -252,23 +250,30 @@ public class DdmsPreferenceStore {
     }
 
     /**
-     * True if there's a valid preference store and the ADT startup
-     * wizard has been shown once.
+     * True if this is the first time the users runs ADT, which is detected by
+     * the lack of the setting set using {@link #setAdtFirstTimeUser(boolean)}
+     * or this value being set to true.
+     *
+     * @see #setAdtFirstTimeUser(boolean)
      */
-    public boolean wasAdtStartupWizardShown() {
+    public boolean isAdtFirstTimeUser() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
-            return prefs == null ? false : prefs.getBoolean(ADT_STARTUP_WIZARD);
+        synchronized (DdmsPreferenceStore.class) {
+            if (prefs == null || !prefs.contains(ADT_FIRST_TIME)) {
+                return true;
+            }
+            return prefs.getBoolean(ADT_FIRST_TIME);
         }
     }
 
     /**
      * Sets whether the ADT startup wizard has been shown.
+     * ADT sets first to false once the welcome wizard has been shown once.
      */
-    public void setAdtStartupWizardShown(boolean shown) {
+    public void setAdtFirstTimeUser(boolean shown) {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
-            prefs.setValue(ADT_STARTUP_WIZARD, shown);
+        synchronized (DdmsPreferenceStore.class) {
+            prefs.setValue(ADT_FIRST_TIME, shown);
             try {
                 prefs.save();
             } catch (IOException ioe) {
@@ -289,7 +294,7 @@ public class DdmsPreferenceStore {
      */
     public String getLastSdkPath() {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             return prefs == null ? null : prefs.getString(LAST_SDK_PATH);
         }
     }
@@ -301,7 +306,7 @@ public class DdmsPreferenceStore {
      */
     public void setLastSdkPath(String osSdkPath) {
         PreferenceStore prefs = getPreferenceStore();
-        synchronized(sLock) {
+        synchronized (DdmsPreferenceStore.class) {
             prefs.setValue(LAST_SDK_PATH, osSdkPath);
             try {
                 prefs.save();

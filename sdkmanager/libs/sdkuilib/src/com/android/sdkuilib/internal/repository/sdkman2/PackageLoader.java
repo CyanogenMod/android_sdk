@@ -86,7 +86,7 @@ class PackageLoader {
      */
     public interface IAutoInstallTask {
         /**
-         * Invoked by the loader once a source has been loaded and its packages
+         * Invoked by the loader once a source has been loaded and its package
          * definitions are known. The method should return the {@code packages}
          * array and can modify it if necessary.
          * The loader will call {@link #acceptPackage(Package)} on all the packages returned.
