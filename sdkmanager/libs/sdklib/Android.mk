@@ -28,6 +28,7 @@ LOCAL_JAR_MANIFEST := manifest.txt
 LOCAL_JAVA_LIBRARIES := \
         androidprefs \
         common \
+        mkidentity-prebuilt \
         commons-compress-1.0 \
         httpclient-4.1.1 \
         httpcore-4.1 \
