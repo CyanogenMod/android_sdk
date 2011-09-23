@@ -212,7 +212,6 @@ public final class ExportHelper {
                     javaProject,
                     libProjects,
                     referencedJavaProjects,
-                    null /*abiFilter*/,
                     key,
                     certificate,
                     null); //resourceMarker
