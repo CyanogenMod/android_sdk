@@ -65,7 +65,7 @@ import java.util.Map;
 public class NativeHeapPanel extends BaseHeapPanel {
     private static final String TOOLTIP_EXPORT_DATA = "Export Heap Data";
     private static final String TOOLTIP_ZYGOTE_ALLOCATIONS = "Show Zygote Allocations";
-    private static final String TOOLTIP_DIFFS_ONLY = "Only show differences from previous snapshot";
+    private static final String TOOLTIP_DIFFS_ONLY = "Only show new allocations not present in previous snapshot";
     private static final String TOOLTIP_GROUPBY = "Group allocations by library.";
 
     private static final String EXPORT_DATA_IMAGE = "save.png";
@@ -83,6 +83,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
 
+    private static final String PREFS_SHOW_DIFFS_ONLY = "nativeheap.show.diffs.only";
     private static final String PREFS_SHOW_ZYGOTE_ALLOCATIONS = "nativeheap.show.zygote";
     private static final String PREFS_GROUP_BY_LIBRARY = "nativeheap.grouby.library";
     private static final String PREFS_SYMBOL_SEARCH_PATH = "nativeheap.search.path";
@@ -90,6 +91,12 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private IPreferenceStore mPrefStore;
 
     private List<NativeHeapSnapshot> mNativeHeapSnapshots;
+
+    // Maintain the differences between a snapshot and its predecessor.
+    // mDiffSnapshots[i] = mNativeHeapSnapshots[i] - mNativeHeapSnapshots[i-1]
+    // The zeroth entry is null since there is no predecessor.
+    // The list is filled lazily on demand.
+    private List<NativeHeapSnapshot> mDiffSnapshots;
 
     private Button mSnapshotHeapButton;
     private Text mSymbolSearchPathText;
@@ -114,8 +121,10 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mPrefStore.setDefault(PREFS_SYMBOL_SEARCH_PATH, "");
         mPrefStore.setDefault(PREFS_GROUP_BY_LIBRARY, false);
         mPrefStore.setDefault(PREFS_SHOW_ZYGOTE_ALLOCATIONS, true);
+        mPrefStore.setDefault(PREFS_SHOW_DIFFS_ONLY, false);
 
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
+        mDiffSnapshots = new ArrayList<NativeHeapSnapshot>();
     }
 
     /** {@inheritDoc} */
@@ -138,6 +147,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         allocations = shallowCloneList(allocations);
 
         mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
+        mDiffSnapshots.add(null); // filled in lazily on demand
         updateDisplay();
 
         // Attempt to resolve symbols in a separate thread.
@@ -171,12 +181,15 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mSnapshotHeapButton.setEnabled(c != null);
 
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
+        mDiffSnapshots = new ArrayList<NativeHeapSnapshot>();
+
         if (c != null) {
             List<NativeAllocationInfo> allocations = c.getClientData().getNativeAllocationList();
             allocations = shallowCloneList(allocations);
 
             if (allocations.size() > 0) {
                 mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
+                mDiffSnapshots.add(null); // filled in lazily on demand
             }
         }
 
@@ -188,13 +201,8 @@ public class NativeHeapPanel extends BaseHeapPanel {
             public void run() {
                 updateSnapshotIndexCombo();
 
-                NativeHeapSnapshot lastHeapSnapshot = null;
-                if (mNativeHeapSnapshots.size() > 0) {
-                    lastHeapSnapshot =
-                            mNativeHeapSnapshots.get(mNativeHeapSnapshots.size() - 1);
-                }
-
-                displaySnapshot(lastHeapSnapshot);
+                int lastSnapshotIndex = mNativeHeapSnapshots.size() - 1;
+                displaySnapshot(lastSnapshotIndex);
                 displayStackTraceForSelection();
             }
         });
@@ -204,21 +212,55 @@ public class NativeHeapPanel extends BaseHeapPanel {
         Display.getDefault().syncExec(new Runnable() {
             public void run() {
                 int idx = mSnapshotIndexCombo.getSelectionIndex();
-                displaySnapshot(mNativeHeapSnapshots.get(idx));
+                displaySnapshot(idx);
             }
         });
     }
 
-    private void displaySnapshot(NativeHeapSnapshot snapshot) {
-        if (snapshot != null) {
-            mDetailsTreeLabelProvider.setTotalSize(snapshot.getTotalSize());
-            mDetailsTreeViewer.setInput(snapshot);
-            mMemoryAllocatedText.setText(formatMemorySize(snapshot.getTotalSize()));
-            mMemoryAllocatedText.pack();
-        } else {
+    private void displaySnapshot(int index) {
+        if (index < 0 || mNativeHeapSnapshots.size() == 0) {
             mDetailsTreeViewer.setInput(null);
             mMemoryAllocatedText.setText("");
+            return;
         }
+
+        assert index < mNativeHeapSnapshots.size() : "Invalid snapshot index";
+
+        NativeHeapSnapshot snapshot = mNativeHeapSnapshots.get(index);
+        if (mDiffsOnlyButton.getSelection() && index > 0) {
+            snapshot = getDiffSnapshot(index);
+        }
+
+        long totalSize = snapshot.getTotalSize();
+
+        mDetailsTreeLabelProvider.setTotalSize(totalSize);
+        mDetailsTreeViewer.setInput(snapshot);
+        mMemoryAllocatedText.setText(formatMemorySize(totalSize));
+        mMemoryAllocatedText.pack();
+        mDetailsTreeViewer.refresh();
+    }
+
+    /** Obtain the diff of snapshot[index] & snapshot[index-1] */
+    private NativeHeapSnapshot getDiffSnapshot(int index) {
+        // if it was already computed, simply return that
+        NativeHeapSnapshot snapshot = mDiffSnapshots.get(index);
+        if (snapshot != null) {
+            return snapshot;
+        }
+
+        // compute the diff
+        List<NativeAllocationInfo> cur = mNativeHeapSnapshots.get(index).getAllocations();
+        List<NativeAllocationInfo> prev = mNativeHeapSnapshots.get(index - 1).getAllocations();
+
+        List<NativeAllocationInfo> allocations = new ArrayList<NativeAllocationInfo>();
+        allocations.addAll(cur);
+        allocations.removeAll(prev);
+        snapshot = new NativeHeapSnapshot(allocations);
+
+        // cache for future use
+        mDiffSnapshots.set(index, snapshot);
+
+        return snapshot;
     }
 
     private void updateDisplayGrouping() {
@@ -470,6 +512,16 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mDiffsOnlyButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(DIFFS_ONLY_IMAGE,
                 toolbar.getDisplay()));
         mDiffsOnlyButton.setToolTipText(TOOLTIP_DIFFS_ONLY);
+        mDiffsOnlyButton.setSelection(mPrefStore.getBoolean(PREFS_SHOW_DIFFS_ONLY));
+        mDiffsOnlyButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                // simply refresh the display, as the display logic takes care of
+                // the current state of the diffs only checkbox.
+                int idx = mSnapshotIndexCombo.getSelectionIndex();
+                displaySnapshot(idx);
+            }
+        });
 
         mShowZygoteAllocationsButton = new ToolItem(toolbar, SWT.CHECK);
         mShowZygoteAllocationsButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(
@@ -490,7 +542,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mExportHeapDataButton.setToolTipText(TOOLTIP_EXPORT_DATA);
 
         // disable unimplemented toolbar items
-        mDiffsOnlyButton.setEnabled(false);
         mExportHeapDataButton.setEnabled(false);
     }
 
