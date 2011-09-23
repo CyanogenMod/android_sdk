@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsPermissionDialog;
 import com.android.sdkstats.SdkStatsService;
 
@@ -40,6 +41,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
     private static final int WRAP_WIDTH_PX = 200;
 
     private BooleanFieldEditor mOptInCheckBox;
+    private DdmsPreferenceStore mStore = new DdmsPreferenceStore();
 
     public UsagePreferencePage() {
     }
@@ -73,10 +75,10 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
             }
         });
 
-        mOptInCheckBox = new BooleanFieldEditor(SdkStatsService.PING_OPT_IN,
+        mOptInCheckBox = new BooleanFieldEditor(DdmsPreferenceStore.PING_OPT_IN,
                 SdkStatsPermissionDialog.CHECKBOX_TEXT, top);
         mOptInCheckBox.setPage(this);
-        mOptInCheckBox.setPreferenceStore(SdkStatsService.getPreferenceStore());
+        mOptInCheckBox.setPreferenceStore(mStore.getPreferenceStore());
         mOptInCheckBox.load();
 
         return top;
@@ -119,14 +121,6 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
     }
 
     private void save() {
-        try {
-            PreferenceStore store = SdkStatsService.getPreferenceStore();
-            if (store !=  null) {
-                store.setValue(SdkStatsService.PING_OPT_IN, mOptInCheckBox.getBooleanValue());
-                store.save();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mStore.setPingOptIn(mOptInCheckBox.getBooleanValue());
     }
 }
