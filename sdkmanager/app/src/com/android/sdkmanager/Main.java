@@ -1067,6 +1067,20 @@ public class Main {
                 }
             }
 
+            String abiType = mSdkCommandLine.getParamAbi();
+            if (target != null && (abiType == null || abiType.length() == 0)) {
+                ISystemImage[] systemImages = target.getSystemImages();
+                if (systemImages != null && systemImages.length == 1) {
+                    // Auto-select the single ABI available
+                    abiType = systemImages[0].getAbiType();
+                    mSdkLog.printf("Auto-selecting single ABI %1$s", abiType);
+                } else {
+                    displayAbiList(target, "Valid ABIs: ");
+                    errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
+                            SdkCommandLine.KEY_ABI);
+                }
+            }
+
             Map<String, String> hardwareConfig = null;
             if (target != null && target.isPlatform()) {
                 try {
@@ -1080,20 +1094,6 @@ public class Main {
             AvdInfo oldAvdInfo = null;
             if (removePrevious) {
                 oldAvdInfo = avdManager.getAvd(avdName, false /*validAvdOnly*/);
-            }
-
-            String abiType = mSdkCommandLine.getParamAbi();
-            if (target != null && (abiType == null || abiType.length() == 0)) {
-                ISystemImage[] systemImages = target.getSystemImages();
-                if (systemImages != null && systemImages.length == 1) {
-                    // Auto-select the single ABI available
-                    abiType = systemImages[0].getAbiType();
-                    mSdkLog.printf("Auto-selecting single ABI %1$s", abiType);
-                } else {
-                    displayAbiList(target, "Valid ABIs: ");
-                    errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
-                            SdkCommandLine.KEY_ABI);
-                }
             }
 
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
