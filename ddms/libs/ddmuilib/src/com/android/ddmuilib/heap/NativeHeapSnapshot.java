@@ -95,7 +95,7 @@ public class NativeHeapSnapshot {
         // filter out all zygote allocations
         mNonZygoteHeapAllocations = new ArrayList<NativeAllocationInfo>();
         for (NativeAllocationInfo info : mHeapAllocations) {
-            if (!info.isZygoteChild()) {
+            if (info.isZygoteChild()) {
                 mNonZygoteHeapAllocations.add(info);
             }
         }
