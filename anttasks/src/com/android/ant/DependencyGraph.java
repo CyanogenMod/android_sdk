@@ -351,6 +351,11 @@ public class DependencyGraph {
                         }
                     }
                 }
+            } else {
+                // no input? we consider all files.
+                if (prereq.lastModified() > oldestTarget) {
+                    return DependencyStatus.UPDATED_FILE;
+                }
             }
         }
 
