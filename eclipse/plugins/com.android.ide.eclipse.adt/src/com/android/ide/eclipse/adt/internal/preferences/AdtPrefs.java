@@ -22,6 +22,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.internal.build.DebugKeyProvider;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdkstats.DdmsPreferenceStore;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -363,6 +364,27 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         // need to save this new value to the store
         IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
         store.setValue(PREFS_MONITOR_DENSITY, density);
+    }
+
+    /**
+     * Sets the new location of the SDK
+     *
+     * @param location the location of the SDK
+     */
+    public void setSdkLocation(File location) {
+        mOsSdkLocation = location != null ? location.getPath() : null;
+
+        // TODO: Also store this location in the .android settings directory
+        // such that we can support using multiple workspaces without asking
+        // over and over.
+        if (mOsSdkLocation != null && mOsSdkLocation.length() > 0) {
+            DdmsPreferenceStore ddmsStore = new DdmsPreferenceStore();
+            ddmsStore.setLastSdkPath(mOsSdkLocation);
+        }
+
+        // need to save this new value to the store
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        store.setValue(PREFS_SDK_DIR, mOsSdkLocation);
     }
 
     @Override

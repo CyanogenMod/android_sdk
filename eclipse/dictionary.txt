@@ -169,6 +169,7 @@ pings
 placeholder
 placeholders
 plugin
+plugins
 popup
 popups
 pre
@@ -226,6 +227,7 @@ snip
 spec
 standalone
 stash
+stat
 stateful
 stateless
 stderr

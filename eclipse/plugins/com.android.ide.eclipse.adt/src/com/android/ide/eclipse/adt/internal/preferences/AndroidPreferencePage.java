@@ -20,6 +20,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsService;
 import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
@@ -151,6 +152,19 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
             });
             if (ok) clearMessage();
             return ok;
+        }
+
+        @Override
+        protected void doStore() {
+            super.doStore();
+
+            // Also sync the value to the ~/.android preference settings such that we can
+            // share it with future new workspaces
+            String path = AdtPrefs.getPrefs().getOsSdkFolder();
+            if (path != null && path.length() > 0 && new File(path).exists()) {
+                DdmsPreferenceStore ddmsStore = new DdmsPreferenceStore();
+                ddmsStore.setLastSdkPath(path);
+            }
         }
 
         @Override
