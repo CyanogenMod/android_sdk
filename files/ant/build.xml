@@ -84,6 +84,10 @@
             classname="com.android.ant.ApkBuilderTask"
             classpathref="android.antlibs" />
 
+    <taskdef name="zipalign"
+            classname="com.android.ant.ZipAlignTask"
+            classpathref="android.antlibs" />
+
     <taskdef name="xpath"
             classname="com.android.ant.XPathTask"
             classpathref="android.antlibs" />
@@ -148,11 +152,6 @@
          The property 'verbosity' is not user configurable and depends exclusively on 'verbose'
          value.-->
     <condition property="verbosity" value="verbose" else="quiet">
-        <istrue value="${verbose}" />
-    </condition>
-    <!-- This is needed to switch verbosity of zipalign. Depends exclusively on 'verbose'
-         -->
-    <condition property="v.option" value="-v" else="">
         <istrue value="${verbose}" />
     </condition>
 
@@ -293,14 +292,11 @@
         <attribute name="in.package" />
         <attribute name="out.package" />
         <sequential>
-            <echo>Running zip align on final apk...</echo>
-            <exec executable="${zipalign}" failonerror="true">
-                <arg line="${v.option}" />
-                <arg value="-f" />
-                <arg value="4" />
-                <arg path="@{in.package}" />
-                <arg path="@{out.package}" />
-            </exec>
+            <zipalign
+                    executable="${zipalign}"
+                    input="@{in.package}"
+                    output="@{out.package}"
+                    verbose="${verbose}" />
         </sequential>
     </macrodef>
 
