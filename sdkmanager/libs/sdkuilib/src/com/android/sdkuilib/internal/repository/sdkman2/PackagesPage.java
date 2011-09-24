@@ -29,6 +29,7 @@ import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.ISourceLoadedCallback;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 import com.android.sdkuilib.repository.ISdkChangeListener;
+import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 
@@ -127,8 +128,11 @@ public class PackagesPage extends UpdaterPage
 
     private final Map<MenuAction, MenuItem> mMenuActions = new HashMap<MenuAction, MenuItem>();
 
+    private final SdkInvocationContext mContext;
+    private final UpdaterData mUpdaterData;
     private final PackagesDiffLogic mDiffLogic;
     private boolean mDisplayArchives = false;
+    private boolean mOperationPending;
 
     private Text mTextSdkOsPath;
     private Button mCheckSortSource;
@@ -149,12 +153,15 @@ public class PackagesPage extends UpdaterPage
     private TreeViewerColumn mColumnStatus;
     private Font mTreeFontItalic;
     private TreeColumn mTreeColumnName;
-    private boolean mOperationPending;
-    private final UpdaterData mUpdaterData;
 
-    public PackagesPage(Composite parent, int swtStyle, UpdaterData updaterData) {
+    public PackagesPage(
+            Composite parent,
+            int swtStyle,
+            UpdaterData updaterData,
+            SdkInvocationContext context) {
         super(parent, swtStyle);
         mUpdaterData = updaterData;
+        mContext = context;
 
         mDiffLogic = new PackagesDiffLogic(updaterData);
 
@@ -1091,7 +1098,10 @@ public class PackagesPage extends UpdaterPage
 
                 List<Archive> installed = mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
-                    mCheckFilterObsolete.getSelection() /* includeObsoletes */);
+                    mCheckFilterObsolete.getSelection() /* includeObsoletes */,
+                    mContext == SdkInvocationContext.IDE ?
+                            UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT :
+                                UpdaterData.TOOLS_MSG_UPDATED_FROM_SDKMAN);
                 needsRefresh = installed != null && !installed.isEmpty();
             } finally {
                 endOperationPending();
