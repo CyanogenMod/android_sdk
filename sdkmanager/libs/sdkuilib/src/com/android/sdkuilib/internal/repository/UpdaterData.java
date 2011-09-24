@@ -55,7 +55,6 @@ import com.android.sdkuilib.internal.repository.sdkman1.SdkUpdaterWindowImpl1;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.ByteArrayOutputStream;
@@ -628,16 +627,19 @@ public class UpdaterData implements IUpdaterData {
 
         if (getWindowShell() != null && getSettingsController().getAskBeforeAdbRestart()) {
             // need to ask for permission first
-            Display display = getWindowShell().getDisplay();
-
-            display.syncExec(new Runnable() {
-                public void run() {
-                    canRestart[0] = MessageDialog.openQuestion(getWindowShell(),
-                            "ADB Restart",
-                            "A package that depends on ADB has been updated. \n" +
-                            "Do you want to restart ADB now?");
-                }
-            });
+            final Shell shell = getWindowShell();
+            if (shell != null && !shell.isDisposed()) {
+                shell.getDisplay().syncExec(new Runnable() {
+                    public void run() {
+                        if (!shell.isDisposed()) {
+                            canRestart[0] = MessageDialog.openQuestion(shell,
+                                    "ADB Restart",
+                                    "A package that depends on ADB has been updated. \n" +
+                                    "Do you want to restart ADB now?");
+                        }
+                    }
+                });
+            }
         }
 
         if (canRestart[0]) {
@@ -648,23 +650,23 @@ public class UpdaterData implements IUpdaterData {
     }
 
     private void notifyToolsNeedsToBeRestarted() {
-        if (getWindowShell() == null) {
-            // We don't need to print anything if this is a standalone console update.
-            return;
+        // We don't need to print anything if this is a standalone console update with no shell.
+
+        final Shell shell = getWindowShell();
+        if (shell != null && !shell.isDisposed()) {
+            shell.getDisplay().syncExec(new Runnable() {
+                public void run() {
+                    if (!shell.isDisposed()) {
+                        MessageDialog.openInformation(getWindowShell(),
+                                "Android Tools Updated",
+                                "The Android SDK and AVD Manager that you are currently using has been updated. " +
+                                "It is recommended that you now close the manager window and re-open it. " +
+                                "If you started this window from Eclipse, please check if the Android " +
+                                "plug-in needs to be updated.");
+                    }
+                }
+            });
         }
-
-        Display display = getWindowShell().getDisplay();
-
-        display.syncExec(new Runnable() {
-            public void run() {
-                MessageDialog.openInformation(getWindowShell(),
-                        "Android Tools Updated",
-                        "The Android SDK and AVD Manager that you are currently using has been updated. " +
-                        "It is recommended that you now close the manager window and re-open it. " +
-                        "If you started this window from Eclipse, please check if the Android " +
-                        "plug-in needs to be updated.");
-            }
-        });
     }
 
 

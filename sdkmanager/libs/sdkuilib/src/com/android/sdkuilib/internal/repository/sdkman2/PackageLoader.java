@@ -30,7 +30,9 @@ import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Loads packages fetched from the remote SDK Repository and keeps track
@@ -99,8 +101,7 @@ class PackageLoader {
         /**
          * Called by the install task for every package available (new ones, updates as well
          * as existing ones that don't have a potential update.)
-         * The method should return true if this is the package that should be installed,
-         * at which point the packager loader will stop processing the next packages and sources.
+         * The method should return true if this is a package that should be installed.
          * <p/>
          * <em>Important</em>: This method is called from a sub-thread, so clients who try
          * to access any UI widgets must wrap their calls into {@link Display#syncExec(Runnable)}
@@ -111,13 +112,13 @@ class PackageLoader {
         /**
          * Called when the accepted package has been installed, successfully or not.
          * If an already installed (aka existing) package has been accepted, this will
-         * be called with a 'true' success and the actual install path.
+         * be called with a 'true' success and the actual install paths.
          * <p/>
          * <em>Important</em>: This method is called from a sub-thread, so clients who try
          * to access any UI widgets must wrap their calls into {@link Display#syncExec(Runnable)}
          * or {@link Display#asyncExec(Runnable)}.
          */
-        public void setResult(Package pkg, boolean success, File installPath);
+        public void setResult(boolean success, Map<Package, File> installPaths);
 
         /**
          * Called when the task is done iterating and completed.
@@ -231,6 +232,9 @@ class PackageLoader {
     public void loadPackagesWithInstallTask(final IAutoInstallTask installTask) {
 
         loadPackages(new ISourceLoadedCallback() {
+            List<Archive> mArchivesToInstall = new ArrayList<Archive>();
+            Map<Package, File> mInstallPaths = new HashMap<Package, File>();
+
             public boolean onUpdateSource(SdkSource source, Package[] packages) {
                 packages = installTask.filterLoadedSource(source, packages);
                 if (packages == null || packages.length == 0) {
@@ -247,30 +251,20 @@ class PackageLoader {
                             Archive[] a = pkg.getArchives();
                             // an installed package should have one local compatible archive
                             if (a.length == 1 && a[0].isCompatible()) {
-                                installTask.setResult(
-                                        pkg,
-                                        true /*success*/,
-                                        new File(a[0].getLocalOsPath()));
+                                mInstallPaths.put(pkg, new File(a[0].getLocalOsPath()));
                             }
-                            // return false to tell loadPackages() that we don't
-                            // need to continue processing any more sources.
-                            return false;
                         }
 
                     } else {
                         // This is a remote package
                         if (installTask.acceptPackage(pkg)) {
-                            // The caller is accepting this remote package. Let's try to install it.
-
+                            // The caller is accepting this remote package. We'll install it.
                             for (Archive archive : pkg.getArchives()) {
                                 if (archive.isCompatible()) {
-                                    installArchive(archive);
+                                    mArchivesToInstall.add(archive);
                                     break;
                                 }
                             }
-                            // return false to tell loadPackages() that we don't
-                            // need to continue processing any more sources.
-                            return false;
                         }
                     }
                 }
@@ -279,70 +273,75 @@ class PackageLoader {
                 return true;
             }
 
+            public void onLoadCompleted() {
+                if (!mArchivesToInstall.isEmpty()) {
+                    installArchives(mArchivesToInstall);
+                }
+                if (mInstallPaths == null) {
+                    installTask.setResult(false, null);
+                } else {
+                    installTask.setResult(true, mInstallPaths);
+                }
+
+                installTask.taskCompleted();
+            }
+
             /**
              * Shows the UI of the install selector.
              * If the package is then actually installed, refresh the local list and
              * notify the install task of the installation path.
              *
-             * @param archiveToInstall The archive to install.
+             * @param archivesToInstall The archives to install.
              */
-            private void installArchive(Archive archiveToInstall) {
-                // What we want to install
-                final ArrayList<Archive> archivesToInstall = new ArrayList<Archive>();
-                archivesToInstall.add(archiveToInstall);
-
-                Package packageToInstall = archiveToInstall.getParentPackage();
-
-                // What we'll end up installing
-                final Archive[] installedArchive = new Archive[] { null };
-
-                // Actually install the new archive that we just found.
+            private void installArchives(final List<Archive> archivesToInstall) {
+                // Actually install the new archives that we just found.
                 // This will display some UI so we need a shell's sync exec.
 
-                mUpdaterData.getWindowShell().getDisplay().syncExec(new Runnable() {
-                    public void run() {
-                        List<Archive> archives =
-                            mUpdaterData.updateOrInstallAll_WithGUI(
-                                archivesToInstall,
-                                true /* includeObsoletes */);
+                final List<Archive> installedArchives = new ArrayList<Archive>();
 
-                        if (archives != null && !archives.isEmpty()) {
-                            // We expect that at most one archive has been installed.
-                            assert archives.size() == 1;
-                            installedArchive[0] = archives.get(0);
+                Shell shell = mUpdaterData.getWindowShell();
+                if (shell != null && !shell.isDisposed()) {
+                    shell.getDisplay().syncExec(new Runnable() {;
+                        public void run() {
+                            List<Archive> archives =
+                                mUpdaterData.updateOrInstallAll_WithGUI(
+                                    archivesToInstall,
+                                    true /* includeObsoletes */);
+
+                            if (archives != null) {
+                                installedArchives.addAll(archives);
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
-                // If the desired package has been installed...
-                if (installedArchive[0] == archiveToInstall) {
+                if (installedArchives.isEmpty()) {
+                    // We failed to install anything.
+                    mInstallPaths = null;
+                    return;
+                }
 
-                    // The local package list has changed, make sure to refresh it
-                    mUpdaterData.getLocalSdkParser().clearPackages();
-                    final Package[] localPkgs = mUpdaterData.getInstalledPackages(
-                            new NullTaskMonitor(mUpdaterData.getSdkLog()));
+                // The local package list has changed, make sure to refresh it
+                mUpdaterData.getSdkManager().reloadSdk(mUpdaterData.getSdkLog());
+                mUpdaterData.getLocalSdkParser().clearPackages();
+                final Package[] localPkgs = mUpdaterData.getInstalledPackages(
+                        new NullTaskMonitor(mUpdaterData.getSdkLog()));
 
-                    // Try to locate the installed package in the new package list
+                // Scan the installed package list to find the install paths.
+                for (Archive installedArchive : installedArchives) {
+                    Package pkg = installedArchive.getParentPackage();
+
                     for (Package localPkg : localPkgs) {
-                        if (localPkg.canBeUpdatedBy(packageToInstall) == UpdateInfo.NOT_UPDATE) {
+                        if (localPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
                             Archive[] localArchive = localPkg.getArchives();
                             if (localArchive.length == 1 && localArchive[0].isCompatible()) {
-                                installTask.setResult(
-                                        localPkg,
-                                        true /*success*/,
-                                        new File(localArchive[0].getLocalOsPath()));
-                                return;
+                                mInstallPaths.put(
+                                    localPkg,
+                                    new File(localArchive[0].getLocalOsPath()));
                             }
                         }
                     }
                 }
-
-                // We failed to install the package.
-                installTask.setResult(packageToInstall, false /*success*/, null);
-            }
-
-            public void onLoadCompleted() {
-                installTask.taskCompleted();
             }
         });
     }

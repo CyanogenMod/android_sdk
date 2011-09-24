@@ -178,7 +178,15 @@ public final class ProgressView implements IProgressUiProvider {
 
     private void syncExec(final Widget widget, final Runnable runnable) {
         if (widget != null && !widget.isDisposed()) {
-            widget.getDisplay().syncExec(runnable);
+            widget.getDisplay().syncExec(new Runnable() {
+                public void run() {
+                    // Check again whether the widget got disposed between the time where
+                    // we requested the syncExec and the time it actually happened.
+                    if (!widget.isDisposed()) {
+                        runnable.run();
+                    }
+                }
+            });
         }
     }
 
