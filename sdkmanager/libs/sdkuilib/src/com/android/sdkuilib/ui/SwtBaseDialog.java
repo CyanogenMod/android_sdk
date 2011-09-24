@@ -193,7 +193,7 @@ public abstract class SwtBaseDialog extends Dialog {
      * in which case the dialog will close as soon as possible.
      */
     protected void close() {
-        if (mShell != null) {
+        if (mShell != null && !mShell.isDisposed()) {
             saveSize();
             getShell().close();
         }
