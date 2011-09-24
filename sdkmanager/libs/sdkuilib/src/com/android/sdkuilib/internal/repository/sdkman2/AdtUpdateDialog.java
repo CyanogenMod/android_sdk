@@ -22,7 +22,9 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.PlatformPackage;
+import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdkuilib.internal.repository.SettingsController;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PackageLoader.IAutoInstallTask;
@@ -42,6 +44,9 @@ import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * This is a private implementation of UpdateWindow for ADT,
@@ -68,7 +73,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     private final UpdaterData mUpdaterData;
 
     private Boolean mResultCode = Boolean.FALSE;
-    private File    mResultPath = null;
+    private Map<Package, File> mResultPaths = null;
     private SettingsController mSettingsController;
     private PackageFilter mPackageFilter;
     private PackageLoader mPackageMananger;
@@ -110,7 +115,18 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     public Pair<Boolean, File> installExtraPackage(String vendor, String path) {
         mPackageFilter = createExtraFilter(vendor, path);
         open();
-        return Pair.of(mResultCode, mResultPath);
+
+        File installPath = null;
+        if (mResultPaths != null) {
+            for (Entry<Package, File> entry : mResultPaths.entrySet()) {
+                if (entry.getKey() instanceof ExtraPackage) {
+                    installPath = entry.getValue();
+                    break;
+                }
+            }
+        }
+
+        return Pair.of(mResultCode, installPath);
     }
 
     /**
@@ -128,30 +144,39 @@ public class AdtUpdateDialog extends SwtBaseDialog {
      *   is false, otherwise it should point to an existing valid folder.
      */
     public Pair<Boolean, File> installPlatformPackage(int apiLevel) {
-        mPackageFilter = createPlatformFilter(apiLevel, false /*forceRemote*/);
+        mPackageFilter = createPlatformFilter(apiLevel);
         open();
-        return Pair.of(mResultCode, mResultPath);
+
+        File installPath = null;
+        if (mResultPaths != null) {
+            for (Entry<Package, File> entry : mResultPaths.entrySet()) {
+                if (entry.getKey() instanceof PlatformPackage) {
+                    installPath = entry.getValue();
+                    break;
+                }
+            }
+        }
+
+        return Pair.of(mResultCode, installPath);
     }
 
     /**
      * Displays the update dialog and triggers installation of a new SDK. This works by
-     * requesting a remote platform package with the specified API level.
-     * By dependency, any missing tools or platform-tools packages will also be installed.
+     * requesting a remote platform package with the specified API levels as well as
+     * the first tools or platform-tools packages available.
      * <p/>
      * Callers must not try to reuse this dialog after this call.
      *
-     * @param apiLevel The platform API level to match.
+     * @param apiLevels A set of platform API levels to match.
      *  The special value {@link #USE_MAX_REMOTE_API_LEVEL} means to use
      *  the highest API level available in the repository.
-     * @return A boolean indicating whether the installation was successful (meaning the package
-     *   was either already present, or got installed or updated properly) and a {@link File}
-     *   with the path to the root folder of the package. The file is null when the boolean
-     *   is false, otherwise it should point to an existing valid folder.
+     * @return A boolean indicating whether the installation was successful (meaning the packages
+     *   were either already present, or got installed or updated properly).
      */
-    public Pair<Boolean, File> installNewSdk(int apiLevel) {
-        mPackageFilter = createPlatformFilter(apiLevel, true /*forceRemote*/);
+    public boolean installNewSdk(Set<Integer> apiLevels) {
+        mPackageFilter = createNewSdkFilter(apiLevels);
         open();
-        return Pair.of(mResultCode, mResultPath);
+        return mResultCode.booleanValue();
     }
 
     @Override
@@ -214,10 +239,10 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                 return mPackageFilter.accept(pkg);
             }
 
-            public void setResult(Package pkg, boolean success, File installPath) {
+            public void setResult(boolean success, Map<Package, File> installPaths) {
                 // Capture the result from the installation.
                 mResultCode = Boolean.valueOf(success);
-                mResultPath = installPath;
+                mResultPaths = installPaths;
             }
 
             public void taskCompleted() {
@@ -288,9 +313,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
         };
     }
 
-    public static PackageFilter createPlatformFilter(
-            final int apiLevel,
-            final boolean forceRemote) {
+    public static PackageFilter createPlatformFilter(final int apiLevel) {
         return new PackageFilter() {
             int mApiLevel = apiLevel;
             boolean mFindMaxApi = apiLevel == USE_MAX_REMOTE_API_LEVEL;
@@ -298,10 +321,6 @@ public class AdtUpdateDialog extends SwtBaseDialog {
             @Override
             boolean accept(Package pkg) {
                 if (pkg instanceof PlatformPackage) {
-                    if (forceRemote && pkg.isLocal()) {
-                        // We only want remote packages, to force a fresh install.
-                        return false;
-                    }
                     PlatformPackage pp = (PlatformPackage) pkg;
                     AndroidVersion v = pp.getVersion();
                     return !v.isPreview() && v.getApiLevel() == mApiLevel;
@@ -321,6 +340,60 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                         int api = v.getApiLevel();
                         if (api > mApiLevel) {
                             mApiLevel = api;
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    public static PackageFilter createNewSdkFilter(final Set<Integer> apiLevels) {
+        return new PackageFilter() {
+            int mMaxApiLevel;
+            boolean mFindMaxApi = apiLevels.contains(USE_MAX_REMOTE_API_LEVEL);
+            boolean mNeedTools = true;
+            boolean mNeedPlatformTools = true;
+
+            @Override
+            boolean accept(Package pkg) {
+                if (!pkg.isLocal()) {
+                    if (pkg instanceof PlatformPackage) {
+                        PlatformPackage pp = (PlatformPackage) pkg;
+                        AndroidVersion v = pp.getVersion();
+                        if (!v.isPreview()) {
+                            int level = v.getApiLevel();
+                            if ((mFindMaxApi && level == mMaxApiLevel) ||
+                                    (level > 0 && apiLevels.contains(level))) {
+                                return true;
+                            }
+                        }
+                    } else if (mNeedTools && pkg instanceof ToolPackage) {
+                        // We want a tool package. There should be only one,
+                        // but in case of error just take the first one.
+                        mNeedTools = false;
+                        return true;
+                    } else if (mNeedPlatformTools && pkg instanceof PlatformToolPackage) {
+                        // We want a platform-tool package. There should be only one,
+                        // but in case of error just take the first one.
+                        mNeedPlatformTools = false;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            void visit(Package pkg) {
+                // Try to find the max API in all remote packages
+                if (mFindMaxApi &&
+                        pkg instanceof PlatformPackage &&
+                        !pkg.isLocal()) {
+                    PlatformPackage pp = (PlatformPackage) pkg;
+                    AndroidVersion v = pp.getVersion();
+                    if (!v.isPreview()) {
+                        int api = v.getApiLevel();
+                        if (api > mMaxApiLevel) {
+                            mMaxApiLevel = api;
                         }
                     }
                 }

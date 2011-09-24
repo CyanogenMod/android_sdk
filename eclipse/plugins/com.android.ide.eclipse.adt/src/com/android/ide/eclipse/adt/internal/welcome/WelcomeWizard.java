@@ -21,11 +21,12 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
-import com.android.util.Pair;
 
 import org.eclipse.jface.wizard.Wizard;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Wizard shown on first start for new users: configure SDK location, accept or
@@ -82,12 +83,14 @@ public class WelcomeWizard extends Wizard {
             public void run() {
                 if (createNew) {
                     try {
+                        Set<Integer> apiLevels = new HashSet<Integer>();
                         if (installCommon) {
-                            installSdk(path, 7);
+                            apiLevels.add(7);
                         }
                         if (installLatest) {
-                            installSdk(path, AdtUpdateDialog.USE_MAX_REMOTE_API_LEVEL);
+                            apiLevels.add(AdtUpdateDialog.USE_MAX_REMOTE_API_LEVEL);
                         }
+                        installSdk(path, apiLevels);
                     } catch (Exception e) {
                         AdtPlugin.logAndPrintError(e, "ADT Welcome Wizard", "Installation failed");
                     }
@@ -107,7 +110,7 @@ public class WelcomeWizard extends Wizard {
      * a confirmation window showing which packages are selected for install
      * and display a progress dialog during installation.
      */
-    private boolean installSdk(File path, int apiLevel) {
+    private boolean installSdk(File path, Set<Integer> apiLevels) {
         if (!path.isDirectory()) {
             if (!path.mkdirs()) {
                 AdtPlugin.logAndPrintError(null, "ADT Welcome Wizard",
@@ -123,9 +126,9 @@ public class WelcomeWizard extends Wizard {
                 path.getAbsolutePath());
         // Note: we don't have to specify tools & platform-tools since they
         // are required dependencies of any platform.
-        Pair<Boolean, File> result = updater.installNewSdk(apiLevel);
+        boolean result = updater.installNewSdk(apiLevels);
 
-        if (!result.getFirst().booleanValue()) {
+        if (!result) {
             AdtPlugin.printErrorToConsole("Failed to install Android SDK.");
             return false;
         }
