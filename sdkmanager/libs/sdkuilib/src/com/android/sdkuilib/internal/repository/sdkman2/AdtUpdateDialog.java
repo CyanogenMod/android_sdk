@@ -226,7 +226,9 @@ public class AdtUpdateDialog extends SwtBaseDialog {
 
     @Override
     protected void eventLoop() {
-        mPackageMananger.loadPackagesWithInstallTask(new IAutoInstallTask() {
+        mPackageMananger.loadPackagesWithInstallTask(
+                mPackageFilter.installFlags(),
+                new IAutoInstallTask() {
             public Package[] filterLoadedSource(SdkSource source, Package[] packages) {
                 for (Package pkg : packages) {
                     mPackageFilter.visit(pkg);
@@ -282,6 +284,9 @@ public class AdtUpdateDialog extends SwtBaseDialog {
     // ----
 
     private static abstract class PackageFilter {
+        /** Returns the installer flags for the corresponding mode. */
+        abstract int installFlags();
+
         /** Visit a new package definition, in case we need to adjust the filter dynamically. */
         abstract void visit(Package pkg);
 
@@ -309,6 +314,11 @@ public class AdtUpdateDialog extends SwtBaseDialog {
             @Override
             void visit(Package pkg) {
                 // nop
+            }
+
+            @Override
+            int installFlags() {
+                return UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT;
             }
         };
     }
@@ -343,6 +353,11 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                         }
                     }
                 }
+            }
+
+            @Override
+            int installFlags() {
+                return UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT;
             }
         };
     }
@@ -397,6 +412,11 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                         }
                     }
                 }
+            }
+
+            @Override
+            int installFlags() {
+                return UpdaterData.NO_TOOLS_MSG;
             }
         };
     }

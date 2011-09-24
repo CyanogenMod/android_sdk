@@ -342,7 +342,8 @@ public class RemotePackagesPage extends UpdaterPage implements ISdkChangeListene
         if (mUpdaterData != null) {
             mUpdaterData.updateOrInstallAll_WithGUI(
                     archives,
-                    mUpdateOnlyCheckBox.getSelection() /* includeObsoletes */);
+                    mUpdateOnlyCheckBox.getSelection() /* includeObsoletes */,
+                    0 /* flags */);
         }
     }
 

@@ -321,7 +321,8 @@ public class SdkUpdaterWindowImpl1 implements ISdkUpdaterWindow {
         if (mRequestAutoUpdate) {
             mUpdaterData.updateOrInstallAll_WithGUI(
                     null /*selectedArchives*/,
-                    false /* includeObsoletes */);
+                    false /* includeObsoletes */,
+                    0 /* flags */);
         }
 
         return true;

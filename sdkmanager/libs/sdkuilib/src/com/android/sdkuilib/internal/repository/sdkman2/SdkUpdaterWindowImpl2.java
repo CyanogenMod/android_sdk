@@ -189,7 +189,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
     private void createContents() {
 
-        mPkgPage = new PackagesPage(mShell, SWT.NONE, mUpdaterData);
+        mPkgPage = new PackagesPage(mShell, SWT.NONE, mUpdaterData, mContext);
         mPkgPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 
         Composite composite1 = new Composite(mShell, SWT.NONE);
@@ -512,7 +512,10 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         if (mRequestAutoUpdate) {
             mUpdaterData.updateOrInstallAll_WithGUI(
                     null /*selectedArchives*/,
-                    false /* includeObsoletes */);
+                    false /* includeObsoletes */,
+                    mContext == SdkInvocationContext.IDE ?
+                            UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT :
+                                UpdaterData.TOOLS_MSG_UPDATED_FROM_SDKMAN);
         }
 
         // Tell the one page its the selected one
