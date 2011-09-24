@@ -74,6 +74,11 @@ import java.util.Set;
  * Data shared between {@link SdkUpdaterWindowImpl1} and its pages.
  */
 public class UpdaterData implements IUpdaterData {
+
+    public static final int NO_TOOLS_MSG = 0;
+    public static final int TOOLS_MSG_UPDATED_FROM_ADT = 1;
+    public static final int TOOLS_MSG_UPDATED_FROM_SDKMAN = 2;
+
     private String mOsSdkRoot;
 
     private final ISdkLog mSdkLog;
@@ -390,10 +395,11 @@ public class UpdaterData implements IUpdaterData {
      * packages in the remote page and then clicking "install selected".
      *
      * @param archives The archives to install. Incompatible ones will be skipped.
+     * @param flags Optional flags for the installer, such as {@link #NO_TOOLS_MSG}.
      * @return A list of archives that have been installed. Can be empty but not null.
      */
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected List<Archive> installArchives(final List<ArchiveInfo> archives) {
+    protected List<Archive> installArchives(final List<ArchiveInfo> archives, final int flags) {
         if (mTaskFactory == null) {
             throw new IllegalArgumentException("Task Factory is null");
         }
@@ -548,7 +554,7 @@ public class UpdaterData implements IUpdaterData {
                 }
 
                 if (installedTools) {
-                    notifyToolsNeedsToBeRestarted();
+                    notifyToolsNeedsToBeRestarted(flags);
                 }
 
                 if (numInstalled == 0) {
@@ -649,20 +655,33 @@ public class UpdaterData implements IUpdaterData {
         }
     }
 
-    private void notifyToolsNeedsToBeRestarted() {
-        // We don't need to print anything if this is a standalone console update with no shell.
+    private void notifyToolsNeedsToBeRestarted(int flags) {
+
+        String msg = null;
+        if ((flags & TOOLS_MSG_UPDATED_FROM_ADT) != 0) {
+            msg =
+            "The Android SDK and AVD Manager that you are currently using has been updated. " +
+            "Please also run Eclipse > Help > Check for Updates to see if the Android " +
+            "plug-in needs to be updated.";
+
+        } else if ((flags & TOOLS_MSG_UPDATED_FROM_SDKMAN) != 0) {
+            msg =
+            "The Android SDK and AVD Manager that you are currently using has been updated. " +
+            "It is recommended that you now close the manager window and re-open it. " +
+            "If you use Eclipse, please run Help > Check for Updates to see if the Android " +
+            "plug-in needs to be updated.";
+        }
+
+        final String msg2 = msg;
 
         final Shell shell = getWindowShell();
-        if (shell != null && !shell.isDisposed()) {
+        if (msg2 != null && shell != null && !shell.isDisposed()) {
             shell.getDisplay().syncExec(new Runnable() {
                 public void run() {
                     if (!shell.isDisposed()) {
-                        MessageDialog.openInformation(getWindowShell(),
+                        MessageDialog.openInformation(shell,
                                 "Android Tools Updated",
-                                "The Android SDK and AVD Manager that you are currently using has been updated. " +
-                                "It is recommended that you now close the manager window and re-open it. " +
-                                "If you started this window from Eclipse, please check if the Android " +
-                                "plug-in needs to be updated.");
+                                msg2);
                     }
                 }
             });
@@ -686,11 +705,15 @@ public class UpdaterData implements IUpdaterData {
      * @param selectedArchives The list of remote archives to consider for the update.
      *  This can be null, in which case a list of remote archive is fetched from all
      *  available sources.
+     * @param includeObsoletes True if obsolete packages should be used when resolving what
+     *  to update.
+     * @param flags Optional flags for the installer, such as {@link #NO_TOOLS_MSG}.
      * @return A list of archives that have been installed. Can be null if nothing was done.
      */
     public List<Archive> updateOrInstallAll_WithGUI(
             Collection<Archive> selectedArchives,
-            boolean includeObsoletes) {
+            boolean includeObsoletes,
+            int flags) {
 
         // Note: we no longer call refreshSources(true) here. This will be done
         // automatically by computeUpdates() iif it needs to access sources to
@@ -723,7 +746,7 @@ public class UpdaterData implements IUpdaterData {
 
         ArrayList<ArchiveInfo> result = dialog.getResult();
         if (result != null && result.size() > 0) {
-            return installArchives(result);
+            return installArchives(result, flags);
         }
         return null;
     }
@@ -922,7 +945,7 @@ public class UpdaterData implements IUpdaterData {
                 }
                 mSdkLog.printf("\nDry mode is on so nothing is actually being installed.\n");
             } else {
-                return installArchives(archives);
+                return installArchives(archives, NO_TOOLS_MSG);
             }
         } else {
             mSdkLog.printf("There is nothing to install or update.\n");

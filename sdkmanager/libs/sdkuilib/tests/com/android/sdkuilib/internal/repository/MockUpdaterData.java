@@ -47,9 +47,9 @@ public class MockUpdaterData extends UpdaterData {
         setImageFactory(new NullImageFactory());
     }
 
-    /** Gives access to the internal {@link #installArchives(List)}. */
+    /** Gives access to the internal {@link #installArchives(List, int)}. */
     public void _installArchives(List<ArchiveInfo> result) {
-        installArchives(result);
+        installArchives(result, 0/*flags*/);
     }
 
     public ArchiveReplacement[] getInstalled() {

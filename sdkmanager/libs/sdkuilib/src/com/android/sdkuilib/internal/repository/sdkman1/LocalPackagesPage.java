@@ -232,7 +232,8 @@ public class LocalPackagesPage extends UpdaterPage implements ISdkChangeListener
     private void onUpdateSelected() {
         mUpdaterData.updateOrInstallAll_WithGUI(
                 null /*selectedArchives*/,
-                false /* includeObsoletes */);
+                false /* includeObsoletes */,
+                0 /* flags */);
     }
 
     private void onDeleteSelected() {

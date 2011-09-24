@@ -336,7 +336,10 @@ public class AvdManagerWindowImpl1 {
         if (mRequestAutoUpdate) {
             mUpdaterData.updateOrInstallAll_WithGUI(
                     null /*selectedArchives*/,
-                    false /* includeObsoletes */);
+                    false /* includeObsoletes */,
+                    mContext == AvdInvocationContext.IDE ?
+                            UpdaterData.TOOLS_MSG_UPDATED_FROM_ADT :
+                                UpdaterData.TOOLS_MSG_UPDATED_FROM_SDKMAN);
         }
 
         return true;

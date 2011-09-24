@@ -82,9 +82,9 @@ class PackageLoader {
     /**
      * Interface describing the task of installing a specific package.
      * For details on the operation,
-     * see {@link PackageLoader#loadPackagesWithInstallTask(IAutoInstallTask)}.
+     * see {@link PackageLoader#loadPackagesWithInstallTask(int, IAutoInstallTask)}.
      *
-     * @see PackageLoader#loadPackagesWithInstallTask(IAutoInstallTask)
+     * @see PackageLoader#loadPackagesWithInstallTask(int, IAutoInstallTask)
      */
     public interface IAutoInstallTask {
         /**
@@ -227,9 +227,13 @@ class PackageLoader {
      * The call is blocking. Although the name says "Task", this is not an {@link ITask}
      * running in its own thread but merely a synchronous call.
      *
+     * @param installFlags Flags for installation such as
+     *  {@link UpdaterData#TOOLS_MSG_UPDATED_FROM_ADT}.
      * @param installTask The task to perform.
      */
-    public void loadPackagesWithInstallTask(final IAutoInstallTask installTask) {
+    public void loadPackagesWithInstallTask(
+            final int installFlags,
+            final IAutoInstallTask installTask) {
 
         loadPackages(new ISourceLoadedCallback() {
             List<Archive> mArchivesToInstall = new ArrayList<Archive>();
@@ -306,7 +310,8 @@ class PackageLoader {
                             List<Archive> archives =
                                 mUpdaterData.updateOrInstallAll_WithGUI(
                                     archivesToInstall,
-                                    true /* includeObsoletes */);
+                                    true /* includeObsoletes */,
+                                    installFlags);
 
                             if (archives != null) {
                                 installedArchives.addAll(archives);
