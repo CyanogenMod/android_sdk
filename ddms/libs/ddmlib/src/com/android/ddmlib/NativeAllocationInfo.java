@@ -17,8 +17,11 @@
 package com.android.ddmlib;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Stores native allocation information.
@@ -31,29 +34,20 @@ public final class NativeAllocationInfo {
     private static final int FLAG_ZYGOTE_CHILD  = (1<<31);
     private static final int FLAG_MASK          = (FLAG_ZYGOTE_CHILD);
 
-    /**
-     * list of alloc functions that are filtered out when attempting to display
-     * a relevant method responsible for an allocation
-     */
-    private static ArrayList<String> sAllocFunctionFilter;
-    static {
-        sAllocFunctionFilter = new ArrayList<String>();
-        sAllocFunctionFilter.add("malloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("calloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("realloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("get_backtrace"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("get_hash"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("??"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("internal_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("operator new"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("leak_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("chk_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("chk_memalign"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("Malloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("leak_memalign"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("strcmp"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("dlrealloc"); //$NON-NLS-1$
-    }
+    /** Libraries whose methods will be assumed to be not part of the user code. */
+    private static final List<String> FILTERED_LIBRARIES = Arrays.asList(new String[] {
+            "libc.so",
+            "libc_malloc_debug_leak.so",
+    });
+
+    /** Method names that should be assumed to be not part of the user code. */
+    private static final List<Pattern> FILTERED_METHOD_NAME_PATTERNS = Arrays.asList(new Pattern[] {
+            Pattern.compile("malloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("calloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("realloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("operator new", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("memalign", Pattern.CASE_INSENSITIVE),
+    });
 
     private final int mSize;
 
@@ -266,21 +260,14 @@ public final class NativeAllocationInfo {
      */
     public synchronized NativeStackCallInfo getRelevantStackCallInfo() {
         if (mIsStackCallResolved && mResolvedStackCall != null) {
-            Iterator<NativeStackCallInfo> sourceIterator = mResolvedStackCall.iterator();
-            Iterator<Long> addrIterator = mStackCallAddresses.iterator();
-
-            while (sourceIterator.hasNext() && addrIterator.hasNext()) {
-                long addr = addrIterator.next();
-                NativeStackCallInfo info = sourceIterator.next();
-                if (addr != 0 && info != null) {
-                    if (isRelevant(info.getMethodName(), addr)) {
-                        return info;
-                    }
+            for (NativeStackCallInfo info : mResolvedStackCall) {
+                if (isRelevantLibrary(info.getLibraryName())
+                        && isRelevantMethod(info.getMethodName())) {
+                    return info;
                 }
             }
 
-            // couldnt find a relevant one, so we'll return the first one if it
-            // exists.
+            // couldnt find a relevant one, so we'll return the first one if it exists.
             if (mResolvedStackCall.size() > 0)
                 return mResolvedStackCall.get(0);
         }
@@ -288,19 +275,24 @@ public final class NativeAllocationInfo {
         return null;
     }
 
-    /**
-     * Returns true if the method name is relevant.
-     * @param methodName the method name to test.
-     * @param addr the original address. This is used because sometimes the name of the method is
-     * the address itself which is not relevant
-     */
-    private boolean isRelevant(String methodName, long addr) {
-        for (String filter : sAllocFunctionFilter) {
-            if (methodName.contains(filter)) {
+    private boolean isRelevantLibrary(String libPath) {
+        for (String l : FILTERED_LIBRARIES) {
+            if (libPath.endsWith(l)) {
                 return false;
             }
         }
 
-        return methodName.equals(Long.toString(addr, 16)) == false;
+        return true;
+    }
+
+    private boolean isRelevantMethod(String methodName) {
+        for (Pattern p : FILTERED_METHOD_NAME_PATTERNS) {
+            Matcher m = p.matcher(methodName);
+            if (m.find()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
