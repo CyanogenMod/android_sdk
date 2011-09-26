@@ -85,7 +85,8 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
         GridData gdLaterLabel = new GridData(SWT.FILL, SWT.BOTTOM, false, true, 1, 1);
         gdLaterLabel.widthHint = 580;
         laterLabel.setLayoutData(gdLaterLabel);
-        laterLabel.setText(SdkStatsPermissionDialog.FOOTER_TEXT);
+        laterLabel.setText("If you later decide to change this setting, you can do so in the " +
+               "options panel under Android > Usage Stats");
 
         mLink = new Link(container, SWT.NONE);
         mLink.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
