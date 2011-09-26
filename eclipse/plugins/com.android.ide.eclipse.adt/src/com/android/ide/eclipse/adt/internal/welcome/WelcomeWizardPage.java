@@ -90,7 +90,7 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
         mInstallLatestCheckbox.setSelection(true);
         mInstallLatestCheckbox.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3,
                 1));
-        mInstallLatestCheckbox.setText("Install Android 4.0, the latest available version (supports all the latest features)");
+        mInstallLatestCheckbox.setText("Install the latest available version of Android APIs (supports all the latest features)");
         mInstallLatestCheckbox.addSelectionListener(this);
 
         new Label(container, SWT.NONE);
