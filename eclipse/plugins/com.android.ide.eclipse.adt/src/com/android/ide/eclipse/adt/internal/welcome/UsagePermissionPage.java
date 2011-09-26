@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.welcome;
 
 import com.android.sdkstats.SdkStatsPermissionDialog;
 
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -37,8 +38,9 @@ import java.net.URL;
 
 /** Page which displays the permission dialog for collecting usage statistics */
 public class UsagePermissionPage extends WizardPage implements SelectionListener {
-    private Button mSendCheckbox;
     private Link mLink;
+    private Button mYesRadio;
+    private Button mNoRadio;
 
     /**
      * Create the wizard.
@@ -66,8 +68,18 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
         label.setLayoutData(gd_lblByChoosingTo);
         label.setText(SdkStatsPermissionDialog.BODY_TEXT);
 
-        mSendCheckbox = new Button(container, SWT.CHECK);
-        mSendCheckbox.setText(SdkStatsPermissionDialog.CHECKBOX_TEXT);
+        Label blankLine = new Label(container, SWT.NONE);
+
+        Label questionLabel = new Label(container, SWT.NONE);
+        questionLabel.setText("Send usage statistics to Google?");
+
+        mYesRadio = new Button(container, SWT.RADIO);
+        mYesRadio.setText("Yes");
+        mYesRadio.addSelectionListener(this);
+
+        mNoRadio = new Button(container, SWT.RADIO);
+        mNoRadio.setText("No");
+        mNoRadio.addSelectionListener(this);
 
         Label laterLabel = new Label(container, SWT.WRAP);
         GridData gdLaterLabel = new GridData(SWT.FILL, SWT.BOTTOM, false, true, 1, 1);
@@ -79,16 +91,18 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
         mLink.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         mLink.setText(SdkStatsPermissionDialog.PRIVACY_POLICY_LINK_TEXT);
         mLink.addSelectionListener(this);
+
+        validatePage();
     }
 
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        mSendCheckbox.setFocus();
+        mYesRadio.setFocus();
     }
 
     boolean isUsageCollectionApproved() {
-        return mSendCheckbox.getSelection();
+        return mYesRadio.getSelection();
     }
 
     public void widgetSelected(SelectionEvent event) {
@@ -103,9 +117,28 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
                 MessageDialog.openError(getWizard().getContainer().getShell(),
                         "Browser Error", message);
             }
+        } else {
+            // Radio buttons selected
+            validatePage();
         }
     }
 
     public void widgetDefaultSelected(SelectionEvent e) {
+    }
+
+    private void validatePage() {
+        String error = null;
+
+        if (!mYesRadio.getSelection() && !mNoRadio.getSelection()) {
+            error = "Select Yes or No";
+        }
+
+        setPageComplete(error == null);
+        if (error != null) {
+            setMessage(error, IMessageProvider.ERROR);
+        } else {
+            setErrorMessage(null);
+            setMessage(null);
+        }
     }
 }

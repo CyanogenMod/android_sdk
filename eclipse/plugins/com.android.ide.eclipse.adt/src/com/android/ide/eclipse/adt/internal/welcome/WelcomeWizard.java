@@ -22,7 +22,14 @@ import com.android.ide.eclipse.adt.internal.sdk.AdtConsoleSdkLog;
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkuilib.internal.repository.sdkman2.AdtUpdateDialog;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 import java.util.HashSet;
@@ -46,6 +53,8 @@ public class WelcomeWizard extends Wizard {
         mStore = store;
 
         setWindowTitle("Welcome to Android Development");
+        ImageDescriptor image = AdtPlugin.getImageDescriptor("icons/android-64.png"); //$NON-NLS-1$
+        setDefaultPageImageDescriptor(image);
     }
 
     @Override
@@ -67,6 +76,23 @@ public class WelcomeWizard extends Wizard {
         if (mUsagePage != null) {
             boolean isUsageCollectionApproved = mUsagePage.isUsageCollectionApproved();
             DdmsPreferenceStore store = new DdmsPreferenceStore();
+
+            // Workaround: Store a new ping id if one doesn't exist, regardless of
+            // whether usage statistics gathering is enabled, to ensure that ddms and
+            // ADT agree upon whether usage data collection is enabled. The reason this
+            // is necessary is that the Eclipse PreferenceStore optimizes out writing
+            // property values that equal their default values, and in our case, the
+            // default value for usage-collection is "false", so it just doesn't write
+            // it into the config file is the user opts out - which means that nothing
+            // is written in ddms.config. That works in the sense that the getter returns
+            // "usage collection"=false, but it doesn't work in the sense that it looks
+            // like the property has not yet been decided by the user. DDMS will look at
+            // the existence of a ping id to see whether we've already considered the
+            // question, so do the same here.
+            if (!store.hasPingId()) {
+                store.generateNewPingId();
+            }
+
             store.setPingOptIn(isUsageCollectionApproved);
         }
 
@@ -120,13 +146,35 @@ public class WelcomeWizard extends Wizard {
             }
         }
 
+        // Get a shell to use for the SDK installation. There are cases where getActiveShell
+        // returns null so attempt to obtain it through other means.
+        Display display = AdtPlugin.getDisplay();
+        Shell shell = display.getActiveShell();
+        if (shell == null) {
+            IWorkbench workbench = PlatformUI.getWorkbench();
+            IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+            if (window != null) {
+                shell = window.getShell();
+            }
+        }
+        boolean disposeShell = false;
+        if (shell == null) {
+            shell = new Shell(display);
+            AdtPlugin.log(IStatus.WARNING, "No parent shell for SDK installation dialog");
+            disposeShell = true;
+        }
+
         AdtUpdateDialog updater = new AdtUpdateDialog(
-                AdtPlugin.getDisplay().getActiveShell(),
+                shell,
                 new AdtConsoleSdkLog(),
                 path.getAbsolutePath());
         // Note: we don't have to specify tools & platform-tools since they
         // are required dependencies of any platform.
         boolean result = updater.installNewSdk(apiLevels);
+
+        if (disposeShell) {
+            shell.dispose();
+        }
 
         if (!result) {
             AdtPlugin.printErrorToConsole("Failed to install Android SDK.");
