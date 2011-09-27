@@ -53,6 +53,8 @@
   - Ability to suppress rendering fidelity warnings.
 - Asset Studio integration: Wizard creation of launcher icons, menu
     icons, tab icons, etc.
+- New Welcome Wizard to help installing and configuring the SDK
+  platforms.
 - The New Project and the New XML File wizards have been reworked into
   multiple pages. Sample Projects are now copied into the workspace
   such that they can be modified and deleted without affecting the
