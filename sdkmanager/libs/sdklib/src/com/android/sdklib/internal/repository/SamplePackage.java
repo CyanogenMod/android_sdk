@@ -291,7 +291,7 @@ public class SamplePackage extends MinToolsPackage
         if (pkg instanceof SamplePackage) {
             SamplePackage newPkg = (SamplePackage)pkg;
 
-            // check they are the same platform.
+            // check they are the same version.
             return newPkg.getVersion().equals(this.getVersion());
         }
 

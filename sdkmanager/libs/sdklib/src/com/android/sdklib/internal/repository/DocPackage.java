@@ -211,7 +211,8 @@ public class DocPackage extends Package implements IPackageVersion {
 
     @Override
     public boolean sameItemAs(Package pkg) {
-        // only one doc package so any doc package is the same item.
+        // only one doc package so any doc package is the same item
+        // and we explicitly don't check whether the version is the same.
         return pkg instanceof DocPackage;
     }
 
