@@ -127,7 +127,8 @@ public class MainTest extends SdkManagerTestCase {
                 "doc",
                 "sample",
                 "add-on",
-                "extra"
+                "extra",
+                "source"
         };
 
         Set<String> expectedSet = new TreeSet<String>(Arrays.asList(expectedValues));

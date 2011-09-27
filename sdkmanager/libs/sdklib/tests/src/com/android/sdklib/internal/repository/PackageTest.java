@@ -82,7 +82,7 @@ public class PackageTest extends TestCase {
         }
     }
 
-    public void testCreate() {
+    public void testCreate() throws Exception {
         Properties props = createProps();
 
         Package p = new MockPackage(
@@ -100,7 +100,7 @@ public class PackageTest extends TestCase {
         testCreatedPackage(p);
     }
 
-    public void testSaveProperties() {
+    public void testSaveProperties() throws Exception {
         Properties props = createProps();
 
         Package p = new MockPackage(

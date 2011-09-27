@@ -21,11 +21,9 @@ import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.SystemImage;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
-import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -35,19 +33,19 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Represents a system-image XML node in an SDK repository.
+ * Represents a source XML node in an SDK repository.
+ * <p/>
+ * Note that a source package has a version and thus implements {@link IPackageVersion}.
+ * However there is no mandatory dependency that limits installation so this does not
+ * implement {@link IPlatformDependency}.
  */
-public class SystemImagePackage extends Package
-        implements IPackageVersion, IPlatformDependency {
+public class SourcePackage extends Package implements IPackageVersion {
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
 
-    /** The ABI of the system-image. Must not be null nor empty. */
-    private final String mAbi;
-
     /**
-     * Creates a new system-image package from the attributes and elements of the given XML node.
+     * Creates a new source package from the attributes and elements of the given XML node.
      * This constructor should throw an exception if the package cannot be created.
      *
      * @param source The {@link SdkSource} where this is loaded from.
@@ -56,7 +54,7 @@ public class SystemImagePackage extends Package
      *          parameters that vary according to the originating XML schema.
      * @param licenses The licenses loaded from the XML originating document.
      */
-    SystemImagePackage(SdkSource source,
+    SourcePackage(SdkSource source,
             Node packageNode,
             String nsUri,
             Map<String,String> licenses) {
@@ -68,25 +66,21 @@ public class SystemImagePackage extends Package
             codeName = null;
         }
         mVersion = new AndroidVersion(apiLevel, codeName);
-
-        mAbi = XmlParserUtils.getXmlString(packageNode, SdkRepoConstants.NODE_ABI);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected SystemImagePackage(
+    protected SourcePackage(
             AndroidVersion platformVersion,
             int revision,
-            String abi,
             Properties props) {
-        this(null /*source*/, platformVersion, revision, abi, props);
+        this(null /*source*/, platformVersion, revision, props);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected SystemImagePackage(
+    protected SourcePackage(
             SdkSource source,
             AndroidVersion platformVersion,
             int revision,
-            String abi,
             Properties props) {
         super(  source,                     //source
                 props,                      //properties
@@ -99,42 +93,33 @@ public class SystemImagePackage extends Package
                 null                        //archiveOsPath
                 );
         mVersion = platformVersion;
-        if (abi == null && props != null) {
-            abi = props.getProperty(PkgProps.SYS_IMG_ABI);
-        }
-        assert abi != null : "To use this SystemImagePackage constructor you must pass an ABI as a parameter or as a PROP_ABI property";
-        mAbi = abi;
     }
 
     /**
-     * Creates a {@link BrokenPackage} representing a system image that failed to load
-     * with the regular {@link SdkManager} workflow.
+     * Creates either a valid {@link SourcePackage} or a {@link BrokenPackage}.
+     * <p/>
+     * If the source directory contains valid properties, this creates a new {@link SourcePackage}
+     * with the android version listed in the properties.
+     * Otherwise returns a new {@link BrokenPackage} with some explanation on what failed.
      *
-     * @param abiDir The SDK/system-images/android-N/abi folder
-     * @param props The properties located in {@code abiDir} or null if not found.
-     * @return A new {@link BrokenPackage} that represents this installed package.
+     * @param srcDir The SDK/sources/android-N folder
+     * @param props The properties located in {@code srcDir} or null if not found.
+     * @return A new {@link SourcePackage} or a new {@link BrokenPackage}.
      */
-    public static Package createBroken(File abiDir, Properties props) {
+    public static Package create(File srcDir, Properties props) {
         AndroidVersion version = null;
-        String abiType = abiDir.getName();
         String error = null;
 
-        // Try to load the android version & ABI from the sources.props.
+        // Try to load the android version from the sources.props.
         // If we don't find them, it would explain why this package is broken.
         if (props == null) {
             error = String.format("Missing file %1$s", SdkConstants.FN_SOURCE_PROP);
         } else {
             try {
                 version = new AndroidVersion(props);
-
-                String abi = props.getProperty(PkgProps.SYS_IMG_ABI);
-                if (abi != null) {
-                    abiType = abi;
-                } else {
-                    error = String.format("Invalid file %1$s: Missing property %2$s",
-                            SdkConstants.FN_SOURCE_PROP,
-                            PkgProps.SYS_IMG_ABI);
-                }
+                // The constructor will extract the revision from the properties
+                // and it will not consider a missing revision as being fatal.
+                return new SourcePackage(version, 0 /*revision*/, props);
             } catch (AndroidVersionException e) {
                 error = String.format("Invalid file %1$s: %2$s",
                         SdkConstants.FN_SOURCE_PROP,
@@ -145,7 +130,8 @@ public class SystemImagePackage extends Package
         if (version == null) {
             try {
                 // Try to parse the first number out of the platform folder name.
-                String platform = abiDir.getParentFile().getName();
+                // This is just a wild guess in case we can create a broken package using that info.
+                String platform = srcDir.getParentFile().getName();
                 platform = platform.replaceAll("[^0-9]+", " ").trim();  //$NON-NLS-1$ //$NON-NLS-2$
                 int pos = platform.indexOf(' ');
                 if (pos >= 0) {
@@ -157,8 +143,7 @@ public class SystemImagePackage extends Package
             }
         }
 
-        StringBuilder sb = new StringBuilder(
-                String.format("Broken %1$s System Image", getAbiDisplayNameInternal(abiType)));
+        StringBuilder sb = new StringBuilder("Broken Source Package");
         if (version != null) {
             sb.append(String.format(", API %1$s", version.getApiString()));
         }
@@ -174,7 +159,7 @@ public class SystemImagePackage extends Package
         return new BrokenPackage(props, shortDesc, longDesc,
                 IMinApiLevelDependency.MIN_API_LEVEL_NOT_SPECIFIED,
                 version==null ? IExactApiLevelDependency.API_LEVEL_INVALID : version.getApiLevel(),
-                abiDir.getAbsolutePath());
+                srcDir.getAbsolutePath());
     }
 
     /**
@@ -184,31 +169,11 @@ public class SystemImagePackage extends Package
     @Override
     void saveProperties(Properties props) {
         super.saveProperties(props);
-
         mVersion.saveProperties(props);
-        props.setProperty(PkgProps.SYS_IMG_ABI, mAbi);
-    }
-
-    /** Returns the ABI of the system-image. Cannot be null nor empty. */
-    public String getAbi() {
-        return mAbi;
-    }
-
-    /** Returns a display-friendly name for the ABI of the system-image. */
-    public String getAbiDisplayName() {
-        return getAbiDisplayNameInternal(mAbi);
-    }
-
-    private static String getAbiDisplayNameInternal(String abi) {
-        return abi.replace("armeabi", "ARM EABI")         //$NON-NLS-1$  //$NON-NLS-2$
-                  .replace("x86",     "Intel x86 Atom")   //$NON-NLS-1$  //$NON-NLS-2$
-                  .replace("-", " ");                     //$NON-NLS-1$  //$NON-NLS-2$
     }
 
     /**
-     * Returns the version of the platform dependency of this package.
-     * <p/>
-     * A system-image has the same {@link AndroidVersion} as the platform it depends on.
+     * Returns the android version of this package.
      */
     public AndroidVersion getVersion() {
         return mVersion;
@@ -216,13 +181,13 @@ public class SystemImagePackage extends Package
 
     /**
      * Returns a string identifier to install this package from the command line.
-     * For system images, we use "sysimg-N" where N is the API or the preview codename.
+     * For sources, we use "source-N" where N is the API or the preview codename.
      * <p/>
      * {@inheritDoc}
      */
     @Override
     public String installId() {
-        return "sysimg-" + mVersion.getApiString();    //$NON-NLS-1$
+        return "source-" + mVersion.getApiString();    //$NON-NLS-1$
     }
 
     /**
@@ -232,9 +197,15 @@ public class SystemImagePackage extends Package
      */
     @Override
     public String getListDescription() {
-        return String.format("%1$s System Image%2$s",
-                getAbiDisplayName(),
-                isObsolete() ? " (Obsolete)" : "");
+        if (mVersion.isPreview()) {
+            return String.format("Sources for Android '%1$s' Preview SDK%2$s",
+                    mVersion.getCodename(),
+                    isObsolete() ? " (Obsolete)" : "");
+        } else {
+            return String.format("Sources for Android SDK%2$s",
+                    mVersion.getApiLevel(),
+                    isObsolete() ? " (Obsolete)" : "");
+        }
     }
 
     /**
@@ -242,11 +213,17 @@ public class SystemImagePackage extends Package
      */
     @Override
     public String getShortDescription() {
-        return String.format("%1$s System Image, Android API %2$s, revision %3$s%4$s",
-                getAbiDisplayName(),
-                mVersion.getApiString(),
+        if (mVersion.isPreview()) {
+            return String.format("Sources for Android '%1$s' Preview SDK, revision %2$s%3$s",
+                mVersion.getCodename(),
                 getRevision(),
                 isObsolete() ? " (Obsolete)" : "");
+        } else {
+            return String.format("Sources for Android SDK, API %1$d, revision %2$s%3$s",
+                mVersion.getApiLevel(),
+                getRevision(),
+                isObsolete() ? " (Obsolete)" : "");
+        }
     }
 
     /**
@@ -268,8 +245,6 @@ public class SystemImagePackage extends Package
                     isObsolete() ? " (Obsolete)" : "");
         }
 
-        s += String.format("\nRequires SDK Platform Android API %1$s",
-                mVersion.getApiString());
         return s;
     }
 
@@ -277,8 +252,7 @@ public class SystemImagePackage extends Package
      * Computes a potential installation folder if an archive of this package were
      * to be installed right away in the given SDK root.
      * <p/>
-     * A system-image package is typically installed in SDK/systems/platform/abi.
-     * The name needs to be sanitized to be acceptable as a directory name.
+     * A sources package is typically installed in SDK/sources/platform.
      *
      * @param osSdkRoot The OS path of the SDK root folder.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
@@ -286,27 +260,18 @@ public class SystemImagePackage extends Package
      */
     @Override
     public File getInstallFolder(String osSdkRoot, SdkManager sdkManager) {
-        File folder = new File(osSdkRoot, SdkConstants.FD_SYSTEM_IMAGES);
-        folder = new File(folder, SystemImage.ANDROID_PREFIX + mVersion.getApiString());
-
-        // Computes a folder directory using the sanitized abi string.
-        String abi = mAbi;
-        abi = abi.toLowerCase();
-        abi = abi.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
-        abi = abi.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
-
-        folder = new File(folder, abi);
+        File folder = new File(osSdkRoot, SdkConstants.FD_PKG_SOURCES);
+        folder = new File(folder, "android-" + mVersion.getApiString());    //$NON-NLS-1$
         return folder;
     }
 
     @Override
     public boolean sameItemAs(Package pkg) {
-        if (pkg instanceof SystemImagePackage) {
-            SystemImagePackage newPkg = (SystemImagePackage)pkg;
+        if (pkg instanceof SourcePackage) {
+            SourcePackage newPkg = (SourcePackage)pkg;
 
-            // check they are the same abi and version.
-            return getAbi().equals(newPkg.getAbi()) &&
-                    getVersion().equals(newPkg.getVersion());
+            // check they are the same version.
+            return getVersion().equals(newPkg.getVersion());
         }
 
         return false;
@@ -316,7 +281,6 @@ public class SystemImagePackage extends Package
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((mAbi == null) ? 0 : mAbi.hashCode());
         result = prime * result + ((mVersion == null) ? 0 : mVersion.hashCode());
         return result;
     }
@@ -329,17 +293,10 @@ public class SystemImagePackage extends Package
         if (!super.equals(obj)) {
             return false;
         }
-        if (!(obj instanceof SystemImagePackage)) {
+        if (!(obj instanceof SourcePackage)) {
             return false;
         }
-        SystemImagePackage other = (SystemImagePackage) obj;
-        if (mAbi == null) {
-            if (other.mAbi != null) {
-                return false;
-            }
-        } else if (!mAbi.equals(other.mAbi)) {
-            return false;
-        }
+        SourcePackage other = (SourcePackage) obj;
         if (mVersion == null) {
             if (other.mVersion != null) {
                 return false;
