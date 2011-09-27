@@ -83,7 +83,7 @@ public class LocalSdkParser {
         ArrayList<Package> packages = new ArrayList<Package>();
         HashSet<File> visited = new HashSet<File>();
 
-        monitor.setProgressMax(9);
+        monitor.setProgressMax(10);
 
         File dir = new File(osSdkRoot, SdkConstants.FD_DOCS);
         Package pkg = scanDoc(dir, monitor);
@@ -171,11 +171,13 @@ public class LocalSdkParser {
         monitor.incProgress(1);
         scanMissingAddons(sdkManager, visited, packages, monitor);
         monitor.incProgress(1);
-        scanMissingSamples(osSdkRoot, visited, packages, monitor);
+        scanMissingSamples(sdkManager, visited, packages, monitor);
         monitor.incProgress(1);
-        scanExtras(osSdkRoot, visited, packages, monitor);
+        scanExtras(sdkManager, visited, packages, monitor);
         monitor.incProgress(1);
         scanExtrasDirectory(osSdkRoot, visited, packages, monitor);
+        monitor.incProgress(1);
+        scanSources(sdkManager, visited, packages, monitor);
         monitor.incProgress(1);
 
         Collections.sort(packages);
@@ -188,11 +190,11 @@ public class LocalSdkParser {
      * Find any directory in the /extras/vendors/path folders for extra packages.
      * This isn't a recursive search.
      */
-    private void scanExtras(String osSdkRoot,
+    private void scanExtras(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ISdkLog log) {
-        File root = new File(osSdkRoot, SdkConstants.FD_EXTRAS);
+        File root = new File(sdkManager.getLocation(), SdkConstants.FD_EXTRAS);
 
         if (!root.isDirectory()) {
             // This should not happen. It makes listFiles() return null so let's avoid it.
@@ -256,11 +258,11 @@ public class LocalSdkParser {
      * <p/>
      * The use case is to find samples dirs under /samples when their target isn't loaded.
      */
-    private void scanMissingSamples(String osSdkRoot,
+    private void scanMissingSamples(SdkManager sdkManager,
             HashSet<File> visited,
             ArrayList<Package> packages,
             ISdkLog log) {
-        File root = new File(osSdkRoot);
+        File root = new File(sdkManager.getLocation());
         root = new File(root, SdkConstants.FD_SAMPLES);
 
         if (!root.isDirectory()) {
@@ -362,6 +364,42 @@ public class LocalSdkParser {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Scan the sources/folders and register valid as well as broken source packages.
+     */
+    private void scanSources(SdkManager sdkManager,
+            HashSet<File> visited,
+            ArrayList<Package> packages,
+            ISdkLog log) {
+        File srcRoot = new File(sdkManager.getLocation(), SdkConstants.FD_PKG_SOURCES);
+
+        File[] subDirs = srcRoot.listFiles();
+        if (subDirs == null) {
+            return;
+        }
+
+        // The sources folder contains a list of platform folders.
+        for (File platformDir : subDirs) {
+            if (platformDir.isDirectory() && !visited.contains(platformDir)) {
+                visited.add(platformDir);
+
+                // Ignore empty directories
+                File[] srcFiles = platformDir.listFiles();
+                if (srcFiles != null && srcFiles.length > 0) {
+                    Properties props =
+                        parseProperties(new File(platformDir, SdkConstants.FN_SOURCE_PROP));
+
+                    try {
+                        Package pkg = SourcePackage.create(platformDir, props);
+                        packages.add(pkg);
+                    } catch (Exception e) {
+                        log.error(e, null);
                     }
                 }
             }
