@@ -17,6 +17,7 @@
 package com.android.ddmuilib;
 
 import com.android.ddmlib.Log;
+import com.android.ddmlib.NativeLibraryMapInfo;
 import com.android.ddmlib.NativeStackCallInfo;
 
 import java.io.BufferedOutputStream;
@@ -68,7 +69,7 @@ public class Addr2Line {
     };
 
     /** Path to the library */
-    private String mLibrary;
+    private NativeLibraryMapInfo mLibrary;
 
     /** the command line process */
     private Process mProcess;
@@ -114,12 +115,14 @@ public class Addr2Line {
      *         be queried for addresses. If any error happened when launching a
      *         new process, <code>null</code> will be returned.
      */
-    public static Addr2Line getProcess(final String library) {
+    public static Addr2Line getProcess(final NativeLibraryMapInfo library) {
+        String libName = library.getLibraryName();
+
         // synchronize around the hashmap object
-        if (library != null) {
+        if (libName != null) {
             synchronized (sProcessCache) {
                 // look for an existing process
-                Addr2Line process = sProcessCache.get(library);
+                Addr2Line process = sProcessCache.get(libName);
 
                 // if we don't find one, we create it
                 if (process == null) {
@@ -131,7 +134,7 @@ public class Addr2Line {
                     if (status) {
                         // if starting the process worked, then we add it to the
                         // list.
-                        sProcessCache.put(library, process);
+                        sProcessCache.put(libName, process);
                     } else {
                         // otherwise we just drop the object, to return null
                         process = null;
@@ -151,7 +154,7 @@ public class Addr2Line {
      *
      * @param library the library in which to look for address.
      */
-    private Addr2Line(final String library) {
+    private Addr2Line(final NativeLibraryMapInfo library) {
         mLibrary = library;
     }
 
@@ -206,7 +209,7 @@ public class Addr2Line {
         command[2] = "-f";
         command[3] = "-e";
 
-        String fullPath = getLibraryPath(mLibrary);
+        String fullPath = getLibraryPath(mLibrary.getLibraryName());
         if (fullPath == null) {
             String msg = String.format(LIBRARY_NOT_FOUND_MESSAGE_FORMAT, mLibrary);
             Log.e("ddm-Addr2Line", msg);
@@ -307,6 +310,8 @@ public class Addr2Line {
      *         processed, or if an IO exception happened.
      */
     public NativeStackCallInfo getAddress(long addr) {
+        long offset = addr - mLibrary.getStartAddress();
+
         // even though we don't access the hashmap object, we need to
         // synchronized on it to prevent
         // another thread from stopping the process we're going to query.
@@ -316,7 +321,7 @@ public class Addr2Line {
                 // prepare to the write the address to the output buffer.
 
                 // first, conversion to a string containing the hex value.
-                String tmp = Long.toString(addr, 16);
+                String tmp = Long.toString(offset, 16);
 
                 try {
                     // write the address to the buffer
@@ -334,7 +339,7 @@ public class Addr2Line {
 
                     // make the backtrace object and return it
                     if (method != null && source != null) {
-                        return new NativeStackCallInfo(addr, mLibrary, method, source);
+                        return new NativeStackCallInfo(addr, mLibrary.getLibraryName(), method, source);
                     }
                 } catch (IOException e) {
                     // log the error
