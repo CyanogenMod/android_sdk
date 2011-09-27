@@ -104,4 +104,10 @@ public final class NativeStackCallInfo {
     public int getLineNumber() {
         return mLineNumber;
     }
+
+    @Override
+    public String toString() {
+        return String.format("\t%1$08x\t%2$s --- %3$s --- %4$s:%5$d",
+                getAddress(), getLibraryName(), getMethodName(), getSourceFile(), getLineNumber());
+    }
 }

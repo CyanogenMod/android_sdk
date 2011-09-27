@@ -23,12 +23,19 @@ import com.android.ddmlib.NativeLibraryMapInfo;
 import com.android.ddmlib.NativeStackCallInfo;
 import com.android.ddmuilib.Addr2Line;
 import com.android.ddmuilib.BaseHeapPanel;
+import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
+import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -438,7 +445,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mDetailsToolBar = new ToolBar(c, SWT.FLAT | SWT.BORDER);
         initializeDetailsToolBar(mDetailsToolBar);
 
-        Tree detailsTree = new Tree(c, SWT.VIRTUAL | SWT.BORDER);
+        Tree detailsTree = new Tree(c, SWT.VIRTUAL | SWT.BORDER | SWT.MULTI);
         initializeDetailsTree(detailsTree);
 
         final Sash sash = new Sash(c, SWT.HORIZONTAL | SWT.BORDER);
@@ -446,7 +453,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         Label stackTraceLabel = new Label(c, SWT.NONE);
         stackTraceLabel.setText("Stack Trace:");
 
-        Tree stackTraceTree = new Tree(c, SWT.BORDER);
+        Tree stackTraceTree = new Tree(c, SWT.BORDER | SWT.MULTI);
         initializeStackTraceTree(stackTraceTree);
 
         // layout the widgets created above
@@ -673,7 +680,77 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     @Override
     public void setFocus() {
-        // TODO
+    }
+
+    private ITableFocusListener mTableFocusListener;
+
+    @Override
+    public void setTableFocusListener(ITableFocusListener listener) {
+        mTableFocusListener = listener;
+
+        final Tree heapSitesTree = mDetailsTreeViewer.getTree();
+        final IFocusedTableActivator heapSitesActivator = new IFocusedTableActivator() {
+            public void copy(Clipboard clipboard) {
+                TreeItem[] items = heapSitesTree.getSelection();
+                copyToClipboard(items, clipboard);
+            }
+
+            public void selectAll() {
+                heapSitesTree.selectAll();
+            }
+        };
+
+        heapSitesTree.addFocusListener(new FocusListener() {
+            public void focusLost(FocusEvent arg0) {
+                mTableFocusListener.focusLost(heapSitesActivator);
+            }
+
+            public void focusGained(FocusEvent arg0) {
+                mTableFocusListener.focusGained(heapSitesActivator);
+            }
+        });
+
+        final Tree stackTraceTree = mStackTraceTreeViewer.getTree();
+        final IFocusedTableActivator stackTraceActivator = new IFocusedTableActivator() {
+            public void copy(Clipboard clipboard) {
+                TreeItem[] items = stackTraceTree.getSelection();
+                copyToClipboard(items, clipboard);
+            }
+
+            public void selectAll() {
+                stackTraceTree.selectAll();
+            }
+        };
+
+        stackTraceTree.addFocusListener(new FocusListener() {
+            public void focusLost(FocusEvent arg0) {
+                mTableFocusListener.focusLost(stackTraceActivator);
+            }
+
+            public void focusGained(FocusEvent arg0) {
+                mTableFocusListener.focusGained(stackTraceActivator);
+            }
+        });
+    }
+
+    private void copyToClipboard(TreeItem[] items, Clipboard clipboard) {
+        StringBuilder sb = new StringBuilder();
+
+        for (TreeItem item : items) {
+            Object data = item.getData();
+            if (data != null) {
+                sb.append(data.toString());
+                sb.append('\n');
+            }
+        }
+
+        String content = sb.toString();
+        if (content.length() > 0) {
+            clipboard.setContents(
+                    new Object[] {sb.toString()},
+                    new Transfer[] {TextTransfer.getInstance()}
+                    );
+        }
     }
 
     private class SymbolResolverTask implements Runnable {
