@@ -606,6 +606,17 @@
             class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.JavaQuickAssistant">
         </quickAssistProcessor>
     </extension>
+    <extension
+        point="org.eclipse.jdt.ui.quickFixProcessors">
+        <quickFixProcessor
+            name="Android Convert Switch Quickfix Processor"
+            class="com.android.ide.eclipse.adt.internal.build.ConvertSwitchQuickFixProcessor"
+            id="com.android.ide.eclipse.adt.internal.build.ConvertSwitchQuickFixProcessor">
+            <handledMarkerTypes>
+                <markerType id="org.eclipse.jdt.core.problem"/>
+            </handledMarkerTypes>
+        </quickFixProcessor>
+    </extension>
     <extension point="org.eclipse.ui.propertyPages">
         <page
             adaptable="true"
