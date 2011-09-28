@@ -1195,16 +1195,27 @@ public class GraphicalEditorPart extends EditorPart
 
                     // display error is asked.
                     if (displayError) {
+                        String targetName = target.getName();
                         switch (targetLoadStatus) {
                             case LOADING:
-                                displayError("The project target (%1$s) is still loading.\n%2$s will refresh automatically once the process is finished.",
-                                        target.getName(), mEditedFile.getName());
+                                String s;
+                                if (currentSdk.getTarget(getProject()) == target) {
+                                    s = String.format(
+                                            "The project target (%1$s) is still loading.",
+                                            targetName);
+                                } else {
+                                    s = String.format(
+                                            "The rendering target (%1$s) is still loading.",
+                                            targetName);
+                                }
+                                s += "\nThe layout will refresh automatically once the process is finished.";
+                                displayError(s);
 
                                 break;
                             case FAILED: // known failure
                             case LOADED: // success but data isn't loaded?!?!
                                 displayError("The project target (%s) was not properly loaded.",
-                                        target.getName());
+                                        targetName);
                                 break;
                         }
                     }
