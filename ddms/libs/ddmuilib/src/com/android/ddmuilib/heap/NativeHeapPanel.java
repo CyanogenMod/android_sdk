@@ -28,6 +28,7 @@ import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -52,6 +53,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Sash;
@@ -61,6 +63,10 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -207,6 +213,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         Display.getDefault().syncExec(new Runnable() {
             public void run() {
                 updateSnapshotIndexCombo();
+                updateToolbars();
 
                 int lastSnapshotIndex = mNativeHeapSnapshots.size() - 1;
                 displaySnapshot(lastSnapshotIndex);
@@ -314,6 +321,11 @@ public class NativeHeapPanel extends BaseHeapPanel {
         } else {
             mSnapshotIndexCombo.setEnabled(false);
         }
+    }
+
+    private void updateToolbars() {
+        int numSnapshots = mNativeHeapSnapshots.size();
+        mExportHeapDataButton.setEnabled(numSnapshots > 0);
     }
 
     @Override
@@ -547,9 +559,56 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mExportHeapDataButton.setImage(ImageLoader.getDdmUiLibLoader().loadImage(
                 EXPORT_DATA_IMAGE, toolbar.getDisplay()));
         mExportHeapDataButton.setToolTipText(TOOLTIP_EXPORT_DATA);
+        mExportHeapDataButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                exportSnapshot();
+            }
+        });
+    }
 
-        // disable unimplemented toolbar items
-        mExportHeapDataButton.setEnabled(false);
+    /** Export currently displayed snapshot to a file */
+    private void exportSnapshot() {
+        FileDialog fileDialog = new FileDialog(Display.getDefault().getActiveShell(),
+                SWT.SAVE);
+
+        fileDialog.setText("Save Allocations");
+        fileDialog.setFileName("allocations.txt");
+
+        final String fileName = fileDialog.open();
+        if (fileName == null) {
+            return;
+        }
+
+        int idx = mSnapshotIndexCombo.getSelectionIndex();
+        final NativeHeapSnapshot snapshot = mNativeHeapSnapshots.get(idx);
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                PrintWriter out;
+                try {
+                    out = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+                } catch (IOException e) {
+                    displayErrorMessage(e.getMessage());
+                    return;
+                }
+
+                for (NativeAllocationInfo alloc : snapshot.getAllocations()) {
+                    out.println(alloc.toString());
+                }
+                out.close();
+            }
+
+            private void displayErrorMessage(final String message) {
+                Display.getDefault().syncExec(new Runnable() {
+                    public void run() {
+                        MessageDialog.openError(Display.getDefault().getActiveShell(),
+                                "Failed to export heap data", message);
+                    }
+                });
+            }
+        });
+        t.setName("Saving Heap Data to File...");
+        t.start();
     }
 
     private void initializeDetailsTree(Tree tree) {
