@@ -61,6 +61,7 @@
             - <platform> has a new optional <abi-included> that describes the ABI of the
               system image included in the platform, if any.
             - New <system-image> package type, to store system images outside of <platform>s.
+            - New <source> package type.
     -->
 
     <xsd:element name="sdk-repository" type="sdk:repositoryType" />
@@ -74,6 +75,7 @@
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="platform"        type="sdk:platformType"     />
             <xsd:element name="system-image"    type="sdk:systemImageType"  />
+            <xsd:element name="source"          type="sdk:sourceType"       />
             <xsd:element name="tool"            type="sdk:toolType"         />
             <xsd:element name="platform-tool"   type="sdk:platformToolType" />
             <xsd:element name="doc"             type="sdk:docType"          />
@@ -206,6 +208,44 @@
             <xsd:enumeration value="x86"         />
         </xsd:restriction>
     </xsd:simpleType>
+
+
+    <!-- The definition of a source package. -->
+
+    <xsd:complexType name="sourceType" >
+        <xsd:annotation>
+            <xsd:documentation>
+                Sources for a platform.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <!-- api-level + codename identifies the platform to which this source belongs. -->
+
+            <!-- The Android API Level for the platform. An int > 0. -->
+            <xsd:element name="api-level" type="xsd:positiveInteger"  />
+            <!-- The optional codename for this platform, if it's a preview. -->
+            <xsd:element name="codename"  type="xsd:string" minOccurs="0" />
+
+            <!-- The revision, an int > 0, incremented each time a new
+                 package is generated. -->
+            <xsd:element name="revision"  type="xsd:positiveInteger" />
+
+            <!-- The optional license of this package. If present, users will have
+                 to agree to it before downloading. -->
+            <xsd:element name="uses-license"  type="sdk:usesLicenseType" minOccurs="0" />
+            <!-- The optional description of this package. -->
+            <xsd:element name="description"   type="xsd:string"      minOccurs="0" />
+            <!-- The optional description URL of this package -->
+            <xsd:element name="desc-url"      type="xsd:token"       minOccurs="0" />
+            <!-- The optional release note for this package. -->
+            <xsd:element name="release-note"  type="xsd:string"      minOccurs="0" />
+            <!-- The optional release note URL of this package -->
+            <xsd:element name="release-url"   type="xsd:token"       minOccurs="0" />
+
+            <!-- A list of file archives for this package. -->
+            <xsd:element name="archives"  type="sdk:archivesType" />
+        </xsd:all>
+    </xsd:complexType>
 
 
     <!-- The definition of an SDK tool package. -->

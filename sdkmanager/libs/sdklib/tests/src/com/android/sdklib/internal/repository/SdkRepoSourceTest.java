@@ -561,19 +561,22 @@ public class SdkRepoSourceTest extends TestCase {
         assertTrue(mSource._parsePackages(doc, uri, monitor));
 
         assertEquals("Found SDK Platform Android 1.0, API 1, revision 3\n" +
-                    "Found Documentation for Android SDK, API 1, revision 1\n" +
-                    "Found SDK Platform Android 1.1, API 2, revision 12\n" +
-                    "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
-                    "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
-                    "Found SDK Platform Android Pastry Preview, revision 3\n" +
-                    "Found Android SDK Tools, revision 1\n" +
-                    "Found Documentation for Android SDK, API 2, revision 42\n" +
-                    "Found Android SDK Tools, revision 42\n" +
-                    "Found Android SDK Platform-tools, revision 3\n" +
-                    "Found A USB Driver package, revision 43 (Obsolete)\n" +
-                    "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
-                    "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
-                    "Found ARM EABI System Image, Android API 42, revision 12\n",
+                     "Found Documentation for Android SDK, API 1, revision 1\n" +
+                     "Found Sources for Android SDK, API 1, revision 1\n" +
+                     "Found SDK Platform Android 1.1, API 2, revision 12\n" +
+                     "Found Intel x86 Atom System Image, Android API 2, revision 1\n" +
+                     "Found ARM EABI v7a System Image, Android API 2, revision 2\n" +
+                     "Found Sources for Android SDK, API 2, revision 2\n" +
+                     "Found SDK Platform Android Pastry Preview, revision 3\n" +
+                     "Found Android SDK Tools, revision 1\n" +
+                     "Found Documentation for Android SDK, API 2, revision 42\n" +
+                     "Found Android SDK Tools, revision 42\n" +
+                     "Found Android SDK Platform-tools, revision 3\n" +
+                     "Found A USB Driver package, revision 43 (Obsolete)\n" +
+                     "Found Android Vendor Extra API Dep package, revision 2 (Obsolete)\n" +
+                     "Found Samples for SDK API 14, revision 24 (Obsolete)\n" +
+                     "Found ARM EABI System Image, Android API 42, revision 12\n" +
+                     "Found Sources for Android SDK, API 42, revision 12\n",
                 monitor.getCapturedVerboseLog());
         assertEquals("", monitor.getCapturedLog());
         assertEquals("", monitor.getCapturedErrorLog());
@@ -585,7 +588,7 @@ public class SdkRepoSourceTest extends TestCase {
         // Packages' sorting order, e.g. all platforms are sorted by descending API level, etc.
         Package[] pkgs = mSource.getPackages();
 
-        assertEquals(14, pkgs.length);
+        assertEquals(17, pkgs.length);
         for (Package p : pkgs) {
             assertTrue(p.getArchives().length >= 1);
         }
@@ -651,6 +654,35 @@ public class SdkRepoSourceTest extends TestCase {
                 "[[v8/veggies_8.jar, readme.txt, dir1/dir 2 with space/mylib.jar], " +
                  "[]]",
                 Arrays.toString(extraFilePaths.toArray()));
+
+        // Check the system-image packages
+        ArrayList<String> sysImgVersionAbi = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof SystemImagePackage) {
+                SystemImagePackage sip = (SystemImagePackage) p;
+                String v = sip.getVersion().getApiString();
+                String a = sip.getAbi();
+                sysImgVersionAbi.add(String.format("%1$s %2$s", v, a)); //$NON-NLS-1$
+            }
+        }
+        assertEquals(
+                "[42 armeabi, " +
+                "2 x86, " +
+                "2 armeabi-v7a]",
+                Arrays.toString(sysImgVersionAbi.toArray()));
+
+        // Check the source packages
+        ArrayList<String> sourceVersion = new ArrayList<String>();
+        for (Package p : pkgs) {
+            if (p instanceof SourcePackage) {
+                SourcePackage sp = (SourcePackage) p;
+                String v = sp.getVersion().getApiString();
+                sourceVersion.add(v);
+            }
+        }
+        assertEquals(
+                "[42, 2, 1]",
+                Arrays.toString(sourceVersion.toArray()));
     }
 
     /**

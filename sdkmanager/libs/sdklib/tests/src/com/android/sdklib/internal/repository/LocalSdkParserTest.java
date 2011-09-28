@@ -36,7 +36,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         // a legacy armeabi system image (this is not a separate system image package)
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1]",
+                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                 "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
         // Now add a few "platform subfolders" system images and reload the SDK.
@@ -52,7 +53,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         t = sdkman.getTargets()[0];
 
         assertEquals(
-                "[SDK Platform Android 0.0, API 0, revision 1]",
+                "[SDK Platform Android 0.0, API 0, revision 1, " +
+                 "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
         // Now add arm + arm v7a images using the new SDK/system-images.
@@ -69,7 +71,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
                  "ARM EABI System Image, Android API 0, revision 0, " +
-                 "ARM EABI v7a System Image, Android API 0, revision 0]",
+                 "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
         // Now add an x86 image using the new SDK/system-images.
@@ -83,6 +86,7 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
                  "ARM EABI System Image, Android API 0, revision 0, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "Sources for Android SDK, API 0, revision 0, " +
                  "Broken Intel x86 Atom System Image, API 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
     }

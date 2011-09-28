@@ -24,21 +24,20 @@ import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
-public class SystemImagePackageTest extends PackageTest {
+public class SourcePackageTest extends PackageTest {
 
     /**
-     * SystemImagePackage implicitly generates a local archive wrapper
+     * SourcePackageTest implicitly generates a local archive wrapper
      * that matches the current platform OS and architecture. Since this
      * is not convenient for testing, this class overrides it to always
      * create archives for any OS and any architecture.
      */
-    private static class SysImgPackageFakeArchive extends SystemImagePackage {
-        protected SysImgPackageFakeArchive(
+    private static class SourcePackageFakeArchive extends SourcePackage {
+        protected SourcePackageFakeArchive(
                 AndroidVersion platformVersion,
                 int revision,
-                String abi,
                 Properties props) {
-            super(platformVersion, revision, abi, props);
+            super(platformVersion, revision, props);
         }
 
         @Override
@@ -53,12 +52,10 @@ public class SystemImagePackageTest extends PackageTest {
         }
     }
 
-    private SystemImagePackage createSystemImagePackage(Properties props)
-            throws AndroidVersionException {
-        SystemImagePackage p = new SysImgPackageFakeArchive(
+    private SourcePackage createSourcePackageTest(Properties props) throws AndroidVersionException {
+        SourcePackage p = new SourcePackageFakeArchive(
                 new AndroidVersion(props),
                 1 /*revision*/,
-                null /*abi*/,
                 props);
         return p;
     }
@@ -67,19 +64,17 @@ public class SystemImagePackageTest extends PackageTest {
     protected Properties createProps() {
         Properties props = super.createProps();
 
-        // SystemImagePackage properties
+        // SourcePackageTest properties
         props.setProperty(PkgProps.VERSION_API_LEVEL, "5");
-        props.setProperty(PkgProps.SYS_IMG_ABI, "armeabi-v7a");
 
         return props;
     }
 
-    protected void testCreatedSystemImagePackage(SystemImagePackage p) {
+    protected void testCreatedSourcePackageTest(SourcePackage p) {
         super.testCreatedPackage(p);
 
-        // SystemImagePackage properties
+        // SourcePackageTest properties
         assertEquals("API 5", p.getVersion().toString());
-        assertEquals("armeabi-v7a", p.getAbi());
     }
 
     // ----
@@ -87,15 +82,15 @@ public class SystemImagePackageTest extends PackageTest {
     @Override
     public final void testCreate() throws Exception {
         Properties props = createProps();
-        SystemImagePackage p = createSystemImagePackage(props);
+        SourcePackage p = createSourcePackageTest(props);
 
-        testCreatedSystemImagePackage(p);
+        testCreatedSourcePackageTest(p);
     }
 
     @Override
     public void testSaveProperties() throws Exception {
         Properties props = createProps();
-        SystemImagePackage p = createSystemImagePackage(props);
+        SourcePackage p = createSourcePackageTest(props);
 
         Properties props2 = new Properties();
         p.saveProperties(props2);
@@ -105,34 +100,21 @@ public class SystemImagePackageTest extends PackageTest {
 
     public void testSameItemAs() throws Exception {
         Properties props1 = createProps();
-        SystemImagePackage p1 = createSystemImagePackage(props1);
+        SourcePackage p1 = createSourcePackageTest(props1);
         assertTrue(p1.sameItemAs(p1));
 
-        // different abi, same version
+        // different version
         Properties props2 = new Properties(props1);
-        props2.setProperty(PkgProps.SYS_IMG_ABI, "x86");
-        SystemImagePackage p2 = createSystemImagePackage(props2);
-        assertFalse(p1.sameItemAs(p2));
-        assertFalse(p2.sameItemAs(p1));
-
-        // different abi, different version
         props2.setProperty(PkgProps.VERSION_API_LEVEL, "6");
-        p2 = createSystemImagePackage(props2);
+        SourcePackage p2 = createSourcePackageTest(props2);
         assertFalse(p1.sameItemAs(p2));
         assertFalse(p2.sameItemAs(p1));
-
-        // same abi, different version
-        Properties props3 = new Properties(props1);
-        props3.setProperty(PkgProps.VERSION_API_LEVEL, "6");
-        SystemImagePackage p3 = createSystemImagePackage(props3);
-        assertFalse(p1.sameItemAs(p3));
-        assertFalse(p3.sameItemAs(p1));
     }
 
     public void testInstallId() throws Exception {
         Properties props = createProps();
-        SystemImagePackage p = createSystemImagePackage(props);
+        SourcePackage p = createSourcePackageTest(props);
 
-        assertEquals("sysimg-5", p.installId());
+        assertEquals("source-5", p.installId());
     }
 }

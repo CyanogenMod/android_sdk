@@ -73,6 +73,18 @@
         </sdk:archives>
     </sdk:doc>
 
+    <sdk:source>
+        <sdk:api-level>1</sdk:api-level>
+        <sdk:revision>1</sdk:revision>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>65535</sdk:size>
+                <sdk:checksum type="sha1">1234ae37115ebf13412bbef91339ee0d94541234</sdk:checksum>
+                <sdk:url>http://www.example.com/plat1/sources1.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:source>
+
     <sdk:platform>
         <sdk:version>1.1</sdk:version>
         <sdk:api-level>2</sdk:api-level>
@@ -139,6 +151,18 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:system-image>
+
+    <sdk:source>
+        <sdk:api-level>2</sdk:api-level>
+        <sdk:revision>2</sdk:revision>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>65534</sdk:size>
+                <sdk:checksum type="sha1">1234ae37115ebf13412bbef91339ee0d94541234</sdk:checksum>
+                <sdk:url>http://www.example.com/plat1/sources2.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:source>
 
    <sdk:platform>
         <sdk:version>Pastry</sdk:version>
@@ -316,5 +340,17 @@
             </sdk:archive>
         </sdk:archives>
     </sdk:system-image>
+
+    <sdk:source>
+        <sdk:api-level>42</sdk:api-level>
+        <sdk:revision>12</sdk:revision>
+        <sdk:archives>
+            <sdk:archive os="any">
+                <sdk:size>1234</sdk:size>
+                <sdk:checksum type="sha1">12345637115ebf13412bbef91339ee0d94541234</sdk:checksum>
+                <sdk:url>http://www.example.com/plat42/source12.zip</sdk:url>
+            </sdk:archive>
+        </sdk:archives>
+    </sdk:source>
 
 </sdk:sdk-repository>

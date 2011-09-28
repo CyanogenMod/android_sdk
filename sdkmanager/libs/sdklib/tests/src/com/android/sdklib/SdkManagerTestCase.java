@@ -23,6 +23,7 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.io.FileOp;
 import com.android.sdklib.mock.MockLog;
 import com.android.sdklib.repository.PkgProps;
 
@@ -134,22 +135,49 @@ public class SdkManagerTestCase extends TestCase {
      */
     private File makeFakeSdk() throws IOException {
         // First we create a temp file to "reserve" the temp directory name we want to use.
-        File tmpFile = File.createTempFile(
+        File sdkDir = File.createTempFile(
                 this.getClass().getSimpleName() + '_' + this.getName(), null);
         // Then erase the file and make the directory
-        tmpFile.delete();
-        tmpFile.mkdirs();
+        sdkDir.delete();
+        sdkDir.mkdirs();
 
         AndroidLocation.resetFolder();
-        System.setProperty("user.home", tmpFile.getAbsolutePath());
-        File addonsDir = new File(tmpFile, SdkConstants.FD_ADDONS);
+        System.setProperty("user.home", sdkDir.getAbsolutePath());
+        File addonsDir = new File(sdkDir, SdkConstants.FD_ADDONS);
         addonsDir.mkdir();
-        File toolsLibEmuDir = new File(tmpFile, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + "emulator");
+        File toolsLibEmuDir = new File(sdkDir, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + "emulator");
         toolsLibEmuDir.mkdirs();
         new File(toolsLibEmuDir, "snapshots.img").createNewFile();
-        File platformsDir = new File(tmpFile, SdkConstants.FD_PLATFORMS);
+        File platformsDir = new File(sdkDir, SdkConstants.FD_PLATFORMS);
 
         // Creating a fake target here on down
+        File targetDir = makeFakeTargetInternal(platformsDir);
+
+        File imagesDir = new File(targetDir, "images");
+        makeFakeSysImgInternal(imagesDir, SdkConstants.ABI_ARMEABI);
+
+        makeFakeSkinInternal(targetDir);
+        makeFakeSourceInternal(sdkDir);
+        return sdkDir;
+    }
+
+    /**
+     * Creates the system image folder and places a fake userdata.img in it.
+     *
+     * @param systemImage A system image with a valid location.
+     * @throws IOException if the file fails to be created.
+     */
+    protected void makeSystemImageFolder(ISystemImage systemImage) throws IOException {
+        File imagesDir = systemImage.getLocation();
+        imagesDir.mkdirs();
+
+        makeFakeSysImgInternal(imagesDir, systemImage.getAbiType());
+    }
+
+    //----
+
+    /** Utility used by {@link #makeFakeSdk()} to create a fake target with API 0, rev 0. */
+    private File makeFakeTargetInternal(File platformsDir) throws IOException {
         File targetDir = new File(platformsDir, "v0_0");
         targetDir.mkdirs();
         new File(targetDir, SdkConstants.FN_FRAMEWORK_LIBRARY).createNewFile();
@@ -168,35 +196,45 @@ public class SdkManagerTestCase extends TestCase {
         out.write(SdkManager.PROP_VERSION_SDK + "=0\n");
         out.write(SdkManager.PROP_VERSION_CODENAME + "=REL\n");
         out.close();
-
-        File imagesDir = new File(targetDir, "images");
-        imagesDir.mkdirs();
-        new File(imagesDir, "userdata.img").createNewFile();
-
-        File skinsDir = new File(targetDir, "skins");
-        File hvgaDir = new File(skinsDir, "HVGA");
-        hvgaDir.mkdirs();
-        return tmpFile;
+        return targetDir;
     }
 
-    /**
-     * Creates the system image folder and places a fake userdata.img in it.
-     *
-     * @param systemImage A system image with a valid location.
-     * @throws IOException if the file fails to be created.
-     */
-    protected void makeSystemImageFolder(ISystemImage systemImage) throws IOException {
-        File imagesDir = systemImage.getLocation();
+    /** Utility to create a fake sys image in the given folder. */
+    private void makeFakeSysImgInternal(File imagesDir, String abiType) throws IOException {
         imagesDir.mkdirs();
-
         new File(imagesDir, "userdata.img").createNewFile();
 
         File sourceProp = new File(imagesDir, SdkConstants.FN_SOURCE_PROP);
         sourceProp.createNewFile();
         FileWriter out = new FileWriter(sourceProp);
         out.write(PkgProps.VERSION_API_LEVEL + "=0\n");
-        out.write(PkgProps.SYS_IMG_ABI + "=" + systemImage.getAbiType() + "\n");
+        out.write(PkgProps.SYS_IMG_ABI + "=" + abiType + "\n");
         out.close();
+    }
+
+    /** Utility to make a fake skin for the given target */
+    private void makeFakeSkinInternal(File targetDir) {
+        FileOp.append(targetDir, "skins", "HVGA").mkdirs();
+    }
+
+    /** Utility to create a fake source with a few files in the given sdk folder. */
+    private void makeFakeSourceInternal(File sdkDir) throws IOException {
+        File sourcesDir = FileOp.append(sdkDir, SdkConstants.FD_PKG_SOURCES, "android-0");
+        sourcesDir.mkdirs();
+
+        File sourceProp = new File(sourcesDir, SdkConstants.FN_SOURCE_PROP);
+        sourceProp.createNewFile();
+        FileWriter out = new FileWriter(sourceProp);
+        out.write(PkgProps.VERSION_API_LEVEL + "=0\n");
+        out.close();
+
+        File dir1 = FileOp.append(sourcesDir, "src", "com", "android");
+        dir1.mkdirs();
+        FileOp.append(dir1, "File1.java").createNewFile();
+        FileOp.append(dir1, "File2.java").createNewFile();
+
+        FileOp.append(sourcesDir, "res", "values").mkdirs();
+        FileOp.append(sourcesDir, "res", "values", "styles.xml").createNewFile();
     }
 
     /**
