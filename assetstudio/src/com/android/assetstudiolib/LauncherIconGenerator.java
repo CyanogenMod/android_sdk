@@ -30,18 +30,18 @@ import java.util.Map;
 public class LauncherIconGenerator extends GraphicGenerator {
     private static final Rectangle IMAGE_SIZE_HDPI = new Rectangle(0, 0, 72, 72);
     /* TODO: Adapt from html version:
-          'square-web-targetRect': { x: 57, y: 57, w: 398, h: 398 },
-          'circle-web-targetRect': { x: 42, y: 42, w: 428, h: 428 },
-        'square-xhdpi-targetRect': { x: 11, y: 11, w:  74, h:  74 },
-        'circle-xhdpi-targetRect': { x:  8, y:  8, w:  80, h:  80 },
-         'square-hdpi-targetRect': { x:  8, y:  8, w:  56, h:  56 },
-         'circle-hdpi-targetRect': { x:  6, y:  6, w:  60, h:  60 }, <====
-         'square-mdpi-targetRect': { x:  5, y:  5, w:  38, h:  38 },
-         'circle-mdpi-targetRect': { x:  4, y:  4, w:  40, h:  40 },
-         'square-ldpi-targetRect': { x:  4, y:  4, w:  28, h:  28 },
-         'circle-ldpi-targetRect': { x:  3, y:  3, w:  30, h:  30 }
+          'square-web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
+          'circle-web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
+        'square-xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
+        'circle-xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
+         'square-hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 },
+         'circle-hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 }, <====
+         'square-mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
+         'circle-mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
+         'square-ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 },
+         'circle-ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 }
      */
-    private static final Rectangle TARGET_RECT_HDPI = new Rectangle(6, 6, 60, 60);
+    private static final Rectangle TARGET_RECT_HDPI = new Rectangle(3, 3, 66, 66);
 
     @Override
     public BufferedImage generate(GraphicGeneratorContext context, Options options) {
