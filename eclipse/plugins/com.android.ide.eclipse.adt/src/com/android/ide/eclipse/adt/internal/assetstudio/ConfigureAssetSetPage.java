@@ -90,6 +90,14 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         GraphicGeneratorContext, ModifyListener {
 
     private static final int PREVIEW_AREA_WIDTH = 120;
+
+    /** Whether the alternative launcher icon styles are supported. Right now
+     * the generator and stencils produce icons that don't fit within the overall
+     * icon guidelines, so until that's fixed disable these from the UI to avoid
+     * creating icons that don't fit in.
+     */
+    private static boolean SUPPORT_LAUNCHER_ICON_TYPES = false;
+
     private Composite mConfigurationArea;
     private Button mImageRadio;
     private Button mClipartRadio;
@@ -363,29 +371,32 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mFgButton.setAlignment(SWT.CENTER);
         mFgButton.addSelectionListener(this);
 
-        mEffectsLabel = new Label(mConfigurationArea, SWT.NONE);
-        mEffectsLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        mEffectsLabel.setText("Foreground Effects:");
+        if (SUPPORT_LAUNCHER_ICON_TYPES) {
+            mEffectsLabel = new Label(mConfigurationArea, SWT.NONE);
+            mEffectsLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+            mEffectsLabel.setText("Foreground Effects:");
 
-        mEffectsComposite = new Composite(mConfigurationArea, SWT.NONE);
-        mEffectsComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
-        GridLayout gl_mEffectsComposite = new GridLayout(5, false);
-        gl_mEffectsComposite.horizontalSpacing = 0;
-        mEffectsComposite.setLayout(gl_mEffectsComposite);
+            mEffectsComposite = new Composite(mConfigurationArea, SWT.NONE);
+            mEffectsComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+            GridLayout gl_mEffectsComposite = new GridLayout(5, false);
+            gl_mEffectsComposite.horizontalSpacing = 0;
+            mEffectsComposite.setLayout(gl_mEffectsComposite);
 
-        mSimpleRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mSimpleRadio.setSelection(true);
-        mSimpleRadio.setText("Simple");
-        mSimpleRadio.addSelectionListener(this);
+            mSimpleRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
+            mSimpleRadio.setSelection(true);
+            mSimpleRadio.setText("Simple");
+            mSimpleRadio.addSelectionListener(this);
 
-        mFancyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mFancyRadio.setText("Fancy");
-        mFancyRadio.addSelectionListener(this);
+            mFancyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
+            mFancyRadio.setText("Fancy");
+            mFancyRadio.addSelectionListener(this);
 
-        mGlossyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
-        mGlossyRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        mGlossyRadio.setText("Glossy");
-        mGlossyRadio.addSelectionListener(this);
+            mGlossyRadio = new Button(mEffectsComposite, SWT.FLAT | SWT.TOGGLE);
+            mGlossyRadio.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+            mGlossyRadio.setText("Glossy");
+            mGlossyRadio.addSelectionListener(this);
+        }
+
         configurationScrollArea.setContent(mConfigurationArea);
         configurationScrollArea.setMinSize(mConfigurationArea.computeSize(SWT.DEFAULT,
                 SWT.DEFAULT));
@@ -436,7 +447,9 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         showGroup(type.needsTheme(), mThemeLabel, mThemeComposite);
         showGroup(type.needsColors(), mBgColorLabel, mBgButton);
         showGroup(type.needsColors(), mFgColorLabel, mFgButton);
-        showGroup(type.needsEffects(), mEffectsLabel, mEffectsComposite);
+        if (SUPPORT_LAUNCHER_ICON_TYPES) {
+            showGroup(type.needsEffects(), mEffectsLabel, mEffectsComposite);
+        }
 
         Composite parent = mScalingLabel.getParent();
         parent.pack();
@@ -608,19 +621,23 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
             mCircleButton.setSelection(true);
             mSquareRadio.setSelection(false);
         }
-        if (source == mSimpleRadio) {
-            mSimpleRadio.setSelection(true);
-            mGlossyRadio.setSelection(false);
-            mFancyRadio.setSelection(false);
-        } else if (source == mFancyRadio) {
-            mFancyRadio.setSelection(true);
-            mSimpleRadio.setSelection(false);
-            mGlossyRadio.setSelection(false);
-        } else if (source == mGlossyRadio) {
-            mGlossyRadio.setSelection(true);
-            mSimpleRadio.setSelection(false);
-            mFancyRadio.setSelection(false);
+
+        if (SUPPORT_LAUNCHER_ICON_TYPES) {
+            if (source == mSimpleRadio) {
+                mSimpleRadio.setSelection(true);
+                mGlossyRadio.setSelection(false);
+                mFancyRadio.setSelection(false);
+            } else if (source == mFancyRadio) {
+                mFancyRadio.setSelection(true);
+                mSimpleRadio.setSelection(false);
+                mGlossyRadio.setSelection(false);
+            } else if (source == mGlossyRadio) {
+                mGlossyRadio.setSelection(true);
+                mSimpleRadio.setSelection(false);
+                mFancyRadio.setSelection(false);
+            }
         }
+
         if (source == mHoloDarkRadio) {
             mHoloDarkRadio.setSelection(true);
             mHoloLightRadio.setSelection(false);
@@ -942,9 +959,15 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
                 launcherOptions.shape = mCircleButton.getSelection()
                         ? GraphicGenerator.Shape.CIRCLE : GraphicGenerator.Shape.SQUARE;
                 launcherOptions.crop = mCropRadio.getSelection();
-                launcherOptions.style = mFancyRadio.getSelection() ?
+
+                if (SUPPORT_LAUNCHER_ICON_TYPES) {
+                    launcherOptions.style = mFancyRadio.getSelection() ?
                         GraphicGenerator.Style.FANCY : mGlossyRadio.getSelection()
                                 ? GraphicGenerator.Style.GLOSSY : GraphicGenerator.Style.SIMPLE;
+                } else {
+                    launcherOptions.style = GraphicGenerator.Style.SIMPLE;
+                }
+
                 int color = (mBgColor.red << 16) | (mBgColor.green << 8) | mBgColor.blue;
                 launcherOptions.backgroundColor = color;
                 // Flag which tells the generator iterator to include a web graphic
