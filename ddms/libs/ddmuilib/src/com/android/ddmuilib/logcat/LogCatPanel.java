@@ -864,9 +864,12 @@ public final class LogCatPanel extends SelectionDependentPanel
             synchronized (LogCatPanel.this) {
                 mCurrentRefresher = null;
             }
+
+            // find out if we need to scroll before refreshing the table
+            boolean shouldScroll = shouldScrollToLatestLog();
             mViewer.refresh();
 
-            if (shouldScrollToLatestLog()) {
+            if (shouldScroll) {
                 scrollToLatestLog();
             }
         }
