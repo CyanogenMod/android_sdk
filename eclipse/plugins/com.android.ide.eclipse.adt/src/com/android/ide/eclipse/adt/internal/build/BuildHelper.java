@@ -227,7 +227,11 @@ public class BuildHelper {
             // libraries?
             if (libProjects != null) {
                 for (IProject lib : libProjects) {
-                    IFolder libResFolder = lib.getFolder(SdkConstants.FD_RES);
+                    IFolder libCacheFolder = lib.getFolder(AdtConstants.WS_CRUNCHCACHE);
+                    if (libCacheFolder.exists()) {
+                        osResPaths.add(libCacheFolder.getLocation().toOSString());
+                    }
+                    IFolder libResFolder = lib.getFolder(AdtConstants.WS_RESOURCES);
                     if (libResFolder.exists()) {
                         osResPaths.add(libResFolder.getLocation().toOSString());
                     }

@@ -748,17 +748,14 @@
 
 <!-- Updates the pre-processed PNG cache -->
     <target name="-crunch">
-        <!-- only crunch if *not* a library project -->
-        <do-only-if-not-library elseText="Library project: do not optimize PNGs..." >
-            <exec executable="${aapt}" taskName="crunch">
-                <arg value="crunch" />
-                <arg value="-v" />
-                <arg value="-S" />
-                <arg path="${resource.absolute.dir}" />
-                <arg value="-C" />
-                <arg path="${out.res.absolute.dir}" />
-            </exec>
-        </do-only-if-not-library>
+        <exec executable="${aapt}" taskName="crunch">
+            <arg value="crunch" />
+            <arg value="-v" />
+            <arg value="-S" />
+            <arg path="${resource.absolute.dir}" />
+            <arg value="-C" />
+            <arg path="${out.res.absolute.dir}" />
+        </exec>
     </target>
 
     <!-- Puts the project's resources into the output package file
