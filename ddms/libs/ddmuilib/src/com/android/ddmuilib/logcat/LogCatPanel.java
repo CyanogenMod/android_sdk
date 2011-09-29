@@ -37,7 +37,6 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.window.ToolTip;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -705,17 +704,12 @@ public final class LogCatPanel extends SelectionDependentPanel
             l.verticalSpacing = 0;
             comp.setLayout(l);
 
-            // Use a browser widget since it automatically provides both wrapping text,
-            // and adds a scroll bar if necessary
-            Browser browser = new Browser(comp, SWT.BORDER);
-            browser.setText(getBrowserText(cell.getElement()));
-            browser.setLayoutData(new GridData(500, 150));
+            Text text = new Text(comp, SWT.BORDER | SWT.V_SCROLL | SWT.WRAP);
+            text.setEditable(false);
+            text.setText(cell.getElement().toString());
+            text.setLayoutData(new GridData(500, 150));
 
             return comp;
-        }
-
-        private String getBrowserText(Object element) {
-            return String.format("<html><body><code>%s</code></body></html>", element.toString());
         }
 
         @Override
