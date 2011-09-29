@@ -99,6 +99,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private static final String LOGCAT_VIEW_COLSIZE_PREFKEY_PREFIX = "logcat.view.colsize.";
+    private static final String DISPLAY_FILTERS_COLUMN_PREFKEY = "logcat.view.display.filters";
 
     /** Default message to show in the message search field. */
     private static final String DEFAULT_SEARCH_MESSAGE =
@@ -116,6 +117,10 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final String IMAGE_EDIT_FILTER = "edit.png"; //$NON-NLS-1$
     private static final String IMAGE_SAVE_LOG_TO_FILE = "save.png"; //$NON-NLS-1$
     private static final String IMAGE_CLEAR_LOG = "clear.png"; //$NON-NLS-1$
+    private static final String IMAGE_DISPLAY_FILTERS = "displayfilters.png"; //$NON-NLS-1$
+
+    private static final int[] WEIGHTS_SHOW_FILTERS = new int[] {15, 85};
+    private static final int[] WEIGHTS_LOGCAT_ONLY = new int[] {0, 100};
 
     private LogCatReceiver mReceiver;
     private IPreferenceStore mPrefStore;
@@ -135,6 +140,8 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private String mLogFileExportFolder;
     private LogCatMessageLabelProvider mLogCatMessageLabelProvider;
+
+    private SashForm mSash;
 
     /**
      * Construct a logcat panel.
@@ -170,6 +177,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                 DEFAULT_LOGCAT_FONTDATA);
         mPrefStore.setDefault(LogCatMessageList.MAX_MESSAGES_PREFKEY,
                 LogCatMessageList.MAX_MESSAGES_DEFAULT);
+        mPrefStore.setDefault(DISPLAY_FILTERS_COLUMN_PREFKEY, true);
     }
 
     private void initializePreferenceUpdateListeners() {
@@ -251,14 +259,13 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void createViews(Composite parent) {
-        SashForm sash = createSash(parent);
+        mSash = createSash(parent);
 
-        createListOfFilters(sash);
-        createLogTableView(sash);
+        createListOfFilters(mSash);
+        createLogTableView(mSash);
 
-        /* allocate widths of the two columns 20%:80% */
-        /* FIXME: save/restore sash widths */
-        sash.setWeights(new int[] {20, 80});
+        boolean showFilters = mPrefStore.getBoolean(DISPLAY_FILTERS_COLUMN_PREFKEY);
+        updateFiltersColumn(showFilters);
     }
 
     private SashForm createSash(Composite parent) {
@@ -520,10 +527,35 @@ public final class LogCatPanel extends SelectionDependentPanel
         clearLog.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent arg0) {
-                mReceiver.clearMessages();
-                refreshLogCatTable();
+                if (mReceiver != null) {
+                    mReceiver.clearMessages();
+                    refreshLogCatTable();
+                }
             }
         });
+
+        final ToolItem showFiltersColumn = new ToolItem(toolBar, SWT.CHECK);
+        showFiltersColumn.setImage(
+                ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_DISPLAY_FILTERS,
+                        toolBar.getDisplay()));
+        showFiltersColumn.setSelection(mPrefStore.getBoolean(DISPLAY_FILTERS_COLUMN_PREFKEY));
+        showFiltersColumn.setToolTipText("Display Saved Filters View");
+        showFiltersColumn.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                boolean showFilters = showFiltersColumn.getSelection();
+                mPrefStore.setValue(DISPLAY_FILTERS_COLUMN_PREFKEY, showFilters);
+                updateFiltersColumn(showFilters);
+            }
+        });
+    }
+
+    private void updateFiltersColumn(boolean showFilters) {
+        if (showFilters) {
+            mSash.setWeights(WEIGHTS_SHOW_FILTERS);
+        } else {
+            mSash.setWeights(WEIGHTS_LOGCAT_ONLY);
+        }
     }
 
     /**
