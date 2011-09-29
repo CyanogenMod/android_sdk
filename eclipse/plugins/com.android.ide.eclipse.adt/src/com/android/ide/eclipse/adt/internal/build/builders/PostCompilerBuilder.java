@@ -869,6 +869,12 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // do the same for all the referencedJava project
             for (IJavaProject javaProject : referencedJavaProjects) {
+                // in case an Android project was referenced (which won't work), the
+                // best thing is to ignore this project.
+                if (javaProject.getProject().hasNature(AdtConstants.NATURE_DEFAULT)) {
+                    continue;
+                }
+
                 IFolder refProjectOutput = BaseProjectHelper.getJavaOutputFolder(
                         javaProject.getProject());
 
