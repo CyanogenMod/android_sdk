@@ -22,7 +22,6 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Point;
 
 /**
  * A JFace Column label provider for the LogCat log messages. It expects elements of type
@@ -44,6 +43,7 @@ public final class LogCatMessageLabelProvider extends ColumnLabelProvider {
     private static final Color VERBOSE_MSG_COLOR = new Color(null, 0, 0, 0);
 
     private Font mLogFont;
+    private int mWrapWidth = 100;
 
     /**
      * Construct a column label provider for the logcat table.
@@ -112,8 +112,22 @@ public final class LogCatMessageLabelProvider extends ColumnLabelProvider {
         mLogFont = preferredFont;
     }
 
+    public void setMinimumLengthForToolTips(int widthInChars) {
+        mWrapWidth  = widthInChars;
+    }
+
+    /**
+     * Obtain the tool tip to show for a particular logcat message.
+     * We display a tool tip only for messages longer than the width set by
+     * {@link #setMinimumLengthForToolTips(int)}.
+     */
     @Override
     public String getToolTipText(Object element) {
-        return element.toString();
+        String text = element.toString();
+        if (text.length() > mWrapWidth) {
+            return text;
+        } else {
+            return null;
+        }
     }
 }

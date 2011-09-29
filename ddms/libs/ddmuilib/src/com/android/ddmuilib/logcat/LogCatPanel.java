@@ -42,6 +42,8 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -50,6 +52,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -662,6 +665,23 @@ public final class LogCatPanel extends SelectionDependentPanel
         mViewer.getTable().addListener(SWT.MeasureItem, new Listener() {
             public void handleEvent(Event event) {
                 event.height = event.gc.getFontMetrics().getHeight();
+            }
+        });
+
+        // Update the label provider whenever the text column's width changes
+        TableColumn textColumn = mViewer.getTable().getColumn(properties.length - 1);
+        textColumn.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent event) {
+                TableColumn tc = (TableColumn) event.getSource();
+                int width = tc.getWidth();
+                GC gc = new GC(tc.getParent());
+                int avgCharWidth = gc.getFontMetrics().getAverageCharWidth();
+                gc.dispose();
+
+                if (mLogCatMessageLabelProvider != null) {
+                    mLogCatMessageLabelProvider.setMinimumLengthForToolTips(width/avgCharWidth);
+                }
             }
         });
 
