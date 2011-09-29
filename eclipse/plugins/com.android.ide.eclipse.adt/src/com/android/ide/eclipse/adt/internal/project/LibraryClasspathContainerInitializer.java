@@ -137,15 +137,17 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
             // get the project output
             IFolder outputFolder = BaseProjectHelper.getAndroidOutputFolder(libProject);
 
-            IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
-                    AdtConstants.DOT_JAR);
+            if (outputFolder != null) { // can happen when closing/deleting a library)
+                IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
+                        AdtConstants.DOT_JAR);
 
-            IClasspathEntry entry = JavaCore.newLibraryEntry(
-                    jarIFile.getLocation(),
-                    libProject.getLocation(), // source attachment path
-                    null);                    // default source attachment root path.
+                IClasspathEntry entry = JavaCore.newLibraryEntry(
+                        jarIFile.getLocation(),
+                        libProject.getLocation(), // source attachment path
+                        null);                    // default source attachment root path.
 
-            entries.add(entry);
+                entries.add(entry);
+            }
         }
 
         return new AndroidClasspathContainer(

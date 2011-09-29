@@ -23,10 +23,10 @@ import com.android.ide.eclipse.adt.internal.build.AaptExecException;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AaptResultException;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
@@ -410,12 +410,22 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                 }
 
-                if (mConvertToDex) {
+                if (mConvertToDex) { // in this case this means some class files changed and
+                                     // we need to update the jar file.
                     IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
 
                     writeLibraryPackage(jarIFile, project, javaOutputFolder,
                             referencedJavaProjects);
                     saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
+                }
+
+                // also update the crunch cache if needed.
+                if (mUpdateCrunchCache) {
+                    BuildHelper helper = new BuildHelper(project,
+                            mOutStream, mErrStream,
+                            true /*debugMode*/,
+                            AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
+                    updateCrunchCache(project, helper);
                 }
 
                 return allRefProjects;
@@ -536,27 +546,9 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // Check if we need to update the PNG cache
                 if (mUpdateCrunchCache) {
-                    try {
-                        helper.updateCrunchCache();
-                    } catch (AaptExecException e) {
-                        BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING,
-                                e.getMessage(), IMarker.SEVERITY_ERROR);
+                    if (updateCrunchCache(project, helper) == false) {
                         return allRefProjects;
-                    } catch (AaptResultException e) {
-                        // attempt to parse the error output
-                        String[] aaptOutput = e.getOutput();
-                        boolean parsingError = AaptParser.parseOutput(aaptOutput, project);
-                        // if we couldn't parse the output we display it in the console.
-                        if (parsingError) {
-                            AdtPlugin.printErrorToConsole(project, (Object[]) aaptOutput);
-                        }
                     }
-
-                    // crunch has been done. Reset state
-                    mUpdateCrunchCache = false;
-
-                    // and store it
-                    saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
                 }
 
                 // Check if we need to package the resources.
@@ -824,6 +816,35 @@ public class PostCompilerBuilder extends BaseBuilder {
                 }
             }
         }
+    }
+
+    /**
+     * Updates the crunch cache if needed and return true if the build must continue.
+     */
+    private boolean updateCrunchCache(IProject project, BuildHelper helper) {
+        try {
+            helper.updateCrunchCache();
+        } catch (AaptExecException e) {
+            BaseProjectHelper.markResource(project, AdtConstants.MARKER_PACKAGING,
+                    e.getMessage(), IMarker.SEVERITY_ERROR);
+            return false;
+        } catch (AaptResultException e) {
+            // attempt to parse the error output
+            String[] aaptOutput = e.getOutput();
+            boolean parsingError = AaptParser.parseOutput(aaptOutput, project);
+            // if we couldn't parse the output we display it in the console.
+            if (parsingError) {
+                AdtPlugin.printErrorToConsole(project, (Object[]) aaptOutput);
+            }
+        }
+
+        // crunch has been done. Reset state
+        mUpdateCrunchCache = false;
+
+        // and store it
+        saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
+
+        return true;
     }
 
     private void writeLibraryPackage(IFile jarIFile, IProject project, IFolder javaOutputFolder,

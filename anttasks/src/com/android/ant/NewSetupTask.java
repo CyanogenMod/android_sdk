@@ -465,7 +465,10 @@ public class NewSetupTask extends Task {
                 PathElement element = rootPath.createPathElement();
                 element.setPath(libRootPath);
 
-                // get the res path. Always $PROJECT/res
+                // get the res path. Always $PROJECT/res as well as the crunch cache.
+                element = resPath.createPathElement();
+                element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
+                        "/" + SdkConstants.FD_RES);
                 element = resPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_RESOURCES);
 
