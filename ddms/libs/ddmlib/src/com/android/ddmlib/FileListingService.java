@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -736,7 +737,38 @@ public final class FileListingService {
         return null;
     }
 
+    /**
+     * Returns the children of a {@link FileEntry}.
+     * <p/>
+     * This method is the explicit synchronous version of
+     * {@link #getChildren(FileEntry, boolean, IListingReceiver)}. It is roughly equivalent to
+     * calling
+     * getChildren(FileEntry, false, null)
+     *
+     * @param entry The parent entry.
+     * @return The list of children
+     * @throws TimeoutException in case of timeout on the connection when sending the command.
+     * @throws AdbCommandRejectedException if adb rejects the command.
+     * @throws ShellCommandUnresponsiveException in case the shell command doesn't send any output
+     *            for a period longer than <var>maxTimeToOutputResponse</var>.
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public FileEntry[] getChildrenSync(final FileEntry entry) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+        doLsAndThrow(entry);
+        return entry.getCachedChildren();
+    }
+
     private void doLs(FileEntry entry) {
+        try {
+            doLsAndThrow(entry);
+        } catch (Exception e) {
+            // do nothing
+        }
+    }
+
+    private void doLsAndThrow(FileEntry entry) throws TimeoutException,
+            AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
         // create a list that will receive the list of the entries
         ArrayList<FileEntry> entryList = new ArrayList<FileEntry>();
 
@@ -755,16 +787,14 @@ public final class FileListingService {
 
             // finish the process of the receiver to handle links
             receiver.finishLinks();
-        } catch (Exception e) {
-            // catch all and do nothing.
+        } finally {
+            // at this point we need to refresh the viewer
+            entry.fetchTime = System.currentTimeMillis();
+
+            // sort the children and set them as the new children
+            Collections.sort(entryList, FileEntry.sEntryComparator);
+            entry.setChildren(entryList);
         }
-
-
-        // at this point we need to refresh the viewer
-        entry.fetchTime = System.currentTimeMillis();
-
-        // sort the children and set them as the new children
-        Collections.sort(entryList, FileEntry.sEntryComparator);
-        entry.setChildren(entryList);
     }
+
 }
