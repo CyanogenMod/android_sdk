@@ -20,7 +20,12 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_HORIZONTAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 
 import com.android.ide.common.api.DrawingStyle;
 import com.android.ide.common.api.DropFeedback;
@@ -30,7 +35,10 @@ import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.INodeHandler;
+import com.android.ide.common.api.IViewMetadata;
+import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.api.IViewRule;
+import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.RuleAction;
@@ -88,6 +96,10 @@ public class GridLayoutRule extends BaseLayoutRule {
      * (and thereby enlarge it) before it is spread with row or column spans.
      */
     public static final double MAX_CELL_DIFFERENCE = 1.2;
+
+    /** Whether debugging diagnostics is available in the toolbar */
+    private static final boolean CAN_DEBUG =
+            VALUE_TRUE.equals(System.getenv("ADT_DEBUG_GRIDLAYOUT")); //$NON-NLS-1$
 
     private static final String ACTION_ADD_ROW = "_addrow"; //$NON-NLS-1$
     private static final String ACTION_REMOVE_ROW = "_removerow"; //$NON-NLS-1$
@@ -219,8 +231,10 @@ public class GridLayoutRule extends BaseLayoutRule {
                 sShowStructure, actionCallback, ICON_SHOW_GRID, 200, false));
 
         // Temporary: Diagnostics for GridLayout
-        actions.add(RuleAction.createToggle(ACTION_DEBUG, "Debug",
-                sDebugGridLayout, actionCallback, null, 210, false));
+        if (CAN_DEBUG) {
+            actions.add(RuleAction.createToggle(ACTION_DEBUG, "Debug",
+                    sDebugGridLayout, actionCallback, null, 210, false));
+        }
     }
 
     /**
@@ -284,6 +298,56 @@ public class GridLayoutRule extends BaseLayoutRule {
 
             addInnerElements(newChild, element, idMap);
         }
+    }
+
+    @Override
+    public void onChildInserted(INode node, INode parent, InsertType insertType) {
+        if (insertType == InsertType.MOVE_WITHIN) {
+            // Don't adjust widths/heights/weights when just moving within a single layout
+            return;
+        }
+
+        // Attempt to set "fill" properties on newly added views such that for example
+        // a text field will stretch horizontally.
+        String fqcn = node.getFqcn();
+        IViewMetadata metadata = mRulesEngine.getMetadata(fqcn);
+        if (metadata == null) {
+            return;
+        }
+        FillPreference fill = metadata.getFillPreference();
+        String gravity = computeDefaultGravity(fill);
+        if (gravity != null) {
+            node.setAttribute(ANDROID_URI, ATTR_LAYOUT_GRAVITY, gravity);
+        }
+    }
+
+    /**
+     * Computes the default gravity to be used for a widget of the given fill
+     * preference when added to a grid layout
+     *
+     * @param fill the fill preference for the widget
+     * @return the gravity value, or null, to be set on the widget
+     */
+    public static String computeDefaultGravity(FillPreference fill) {
+        String horizontal = GRAVITY_VALUE_LEFT;
+        String vertical = null;
+        if (fill.fillHorizontally(true /*verticalContext*/)) {
+            horizontal = GRAVITY_VALUE_FILL_HORIZONTAL;
+        }
+        if (fill.fillVertically(true /*verticalContext*/)) {
+            vertical = GRAVITY_VALUE_FILL_VERTICAL;
+        }
+        String gravity;
+        if (horizontal == GRAVITY_VALUE_FILL_HORIZONTAL
+                && vertical == GRAVITY_VALUE_FILL_VERTICAL) {
+            gravity = GRAVITY_VALUE_FILL;
+        } else if (vertical != null) {
+            gravity = horizontal + '|' + vertical;
+        } else {
+            gravity = horizontal;
+        }
+
+        return gravity;
     }
 
     @Override

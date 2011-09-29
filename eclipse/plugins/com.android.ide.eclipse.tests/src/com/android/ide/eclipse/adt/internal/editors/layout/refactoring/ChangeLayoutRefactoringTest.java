@@ -98,6 +98,10 @@ public class ChangeLayoutRefactoringTest extends RefactoringTest {
         checkRefactoring(FQCN_LINEAR_LAYOUT, "sample10.xml", true, "android:orientation=vertical");
     }
 
+    public void testInsertSpacer() throws Exception {
+        checkRefactoring(FQCN_GRID_LAYOUT, "sample11.xml", true);
+    }
+
     private void checkRefactoring(String newLayoutType, String basename,
             boolean flatten) throws Exception {
         checkRefactoring(newLayoutType, basename, flatten, null);

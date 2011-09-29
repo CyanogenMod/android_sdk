@@ -40,6 +40,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
@@ -53,6 +54,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -60,6 +62,7 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -276,7 +279,9 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
             }
         } else if (newType.equals(FQCN_GRID_LAYOUT)) {
             convertAnyToGridLayout(rootEdit);
-            removeUndefinedAttrs(rootEdit, layout);
+            // Layout attributes on children have already been removed as part of conversion
+            // during the flattening
+            removeUndefinedAttrs(rootEdit, layout, false /*removeLayoutAttrs*/);
         } else if (oldType.equals(FQCN_RELATIVE_LAYOUT) && newType.equals(FQCN_LINEAR_LAYOUT)) {
             convertRelativeToLinear(rootEdit);
             removeUndefinedAttrs(rootEdit, layout);
@@ -497,29 +502,46 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
      * children
      */
     private void removeUndefinedAttrs(MultiTextEdit rootEdit, Element layout) {
+        removeUndefinedAttrs(rootEdit, layout, true /*removeLayoutAttrs*/);
+    }
+
+    private void removeUndefinedAttrs(MultiTextEdit rootEdit, Element layout,
+            boolean removeLayoutAttrs) {
         ViewElementDescriptor descriptor = getElementDescriptor(mTypeFqcn);
         if (descriptor == null) {
             return;
         }
 
-        Set<String> defined = new HashSet<String>();
-        AttributeDescriptor[] layoutAttributes = descriptor.getLayoutAttributes();
-        for (AttributeDescriptor attribute : layoutAttributes) {
-            defined.add(attribute.getXmlLocalName());
-        }
+        if (removeLayoutAttrs) {
+            Set<String> defined = new HashSet<String>();
+            AttributeDescriptor[] layoutAttributes = descriptor.getLayoutAttributes();
+            for (AttributeDescriptor attribute : layoutAttributes) {
+                defined.add(attribute.getXmlLocalName());
+            }
 
-        NodeList children = layout.getChildNodes();
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element child = (Element) node;
+            NodeList children = layout.getChildNodes();
+            for (int i = 0, n = children.getLength(); i < n; i++) {
+                Node node = children.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element child = (Element) node;
 
-                List<Attr> attributes = findLayoutAttributes(child);
-                for (Attr attribute : attributes) {
-                    String name = attribute.getLocalName();
-                    if (!defined.contains(name)) {
-                        // Remove it
-                        removeAttribute(rootEdit, child, attribute.getNamespaceURI(), name);
+                    List<Attr> attributes = findLayoutAttributes(child);
+                    for (Attr attribute : attributes) {
+                        String name = attribute.getLocalName();
+                        if (!defined.contains(name)) {
+                            // Remove it
+                            try {
+                                removeAttribute(rootEdit, child, attribute.getNamespaceURI(), name);
+                            } catch (MalformedTreeException mte) {
+                                // Sometimes refactoring has modified attribute; not removing
+                                // it is non-fatal so just warn instead of letting refactoring
+                                // operation abort
+                                AdtPlugin.log(IStatus.WARNING,
+                                        "Could not remove unsupported attribute %1$s; " + //$NON-NLS-1$
+                                        "already modified during refactoring?", //$NON-NLS-1$
+                                        attribute.getLocalName());
+                            }
+                        }
                     }
                 }
             }
@@ -527,7 +549,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
         // Also remove the unavailable attributes (not layout attributes) on the
         // converted element
-        defined = new HashSet<String>();
+        Set<String> defined = new HashSet<String>();
         AttributeDescriptor[] attributes = descriptor.getAttributes();
         for (AttributeDescriptor attribute : attributes) {
             defined.add(attribute.getXmlLocalName());
