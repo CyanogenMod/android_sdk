@@ -53,8 +53,6 @@ public class AdtConstants {
 
     /** Nature of default Android projects */
     public final static String NATURE_DEFAULT = "com.android.ide.eclipse.adt.AndroidNature"; //$NON-NLS-1$
-    /** Nature of Android export projects */
-    public final static String NATURE_EXPORT = "com.android.ide.eclipse.adt.AndroidExportNature"; //$NON-NLS-1$
 
     /** The container id for the android framework jar file */
     public final static String CONTAINER_FRAMEWORK =
