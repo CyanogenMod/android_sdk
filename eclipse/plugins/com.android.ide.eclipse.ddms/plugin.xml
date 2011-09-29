@@ -33,7 +33,7 @@
             allowMultiple="false"
             category="com.android.ide.eclipse.ddms.views.category"
             class="com.android.ide.eclipse.ddms.views.LogCatView"
-            icon="icons/android.png"
+            icon="icons/logcat.png"
             id="com.android.ide.eclipse.ddms.views.LogCatView"
             name="%view.name.LogCat"/>
       <!-- Disabled for now due to AWT/SWT bridge issue on Leopard.
