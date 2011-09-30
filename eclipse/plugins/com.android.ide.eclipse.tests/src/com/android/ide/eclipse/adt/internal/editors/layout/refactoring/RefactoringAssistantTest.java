@@ -44,13 +44,12 @@ public class RefactoringAssistantTest extends AdtProjectTest {
     }
 
     public void testAssistant3() throws Exception {
-        // Negative test: ensure that we don't get completion items in other parts of the XML
         checkFixes("sample1a.xml", "<Button andr^oid:text=\"FirstButton\"");
     }
 
     public void testAssistant4() throws Exception {
         // Negative test: ensure that we don't offer extract string on a value that is
-        // already a resource
+        // already a resource (should list all but extract string)
         checkFixes("sample1a.xml", "android:id=\"@+id/Linea^rLayout2\"");
     }
 
