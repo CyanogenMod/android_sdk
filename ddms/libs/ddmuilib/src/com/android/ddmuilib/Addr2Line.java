@@ -211,7 +211,7 @@ public class Addr2Line {
 
         String fullPath = getLibraryPath(mLibrary.getLibraryName());
         if (fullPath == null) {
-            String msg = String.format(LIBRARY_NOT_FOUND_MESSAGE_FORMAT, mLibrary);
+            String msg = String.format(LIBRARY_NOT_FOUND_MESSAGE_FORMAT, mLibrary.getLibraryName());
             Log.e("ddm-Addr2Line", msg);
             return false;
         }

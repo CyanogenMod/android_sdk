@@ -18,7 +18,9 @@ package com.android.ddmuilib.heap;
 
 import com.android.ddmlib.NativeAllocationInfo;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,6 +30,8 @@ import java.util.List;
  * other objects of interest to the UI are computed and cached for future use.
  */
 public class NativeHeapSnapshot {
+    private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
+
     private List<NativeAllocationInfo> mHeapAllocations;
     private List<NativeLibraryAllocationInfo> mHeapAllocationsByLibrary;
 
@@ -43,7 +47,7 @@ public class NativeHeapSnapshot {
         mTotalSize = getTotalMemory(heapAllocations);
     }
 
-    private long getTotalMemory(List<NativeAllocationInfo> heapSnapshot) {
+    protected long getTotalMemory(Collection<NativeAllocationInfo> heapSnapshot) {
         long total = 0;
 
         for (NativeAllocationInfo info : heapSnapshot) {
@@ -85,6 +89,14 @@ public class NativeHeapSnapshot {
 
     public long getTotalSize() {
         return mTotalSize;
+    }
+
+    public String getFormattedMemorySize() {
+        return String.format("%s bytes", formatMemorySize(getTotalSize()));
+    }
+
+    protected String formatMemorySize(long memSize) {
+        return NUMBER_FORMATTER.format(memSize);
     }
 
     public List<NativeAllocationInfo> getNonZygoteAllocations() {

@@ -67,7 +67,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,8 +92,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private static final String SYMBOL_SEARCH_PATH_TOOLTIP_TEXT =
             "Colon separated paths that contain unstripped libraries with debug symbols.\n"
                     + "e.g.: <android-src>/out/target/product/generic/symbols/system/lib:/path/to/my/app/obj/local/armeabi";
-
-    private static final NumberFormat NUMBER_FORMATTER = NumberFormat.getInstance();
 
     private static final String PREFS_SHOW_DIFFS_ONLY = "nativeheap.show.diffs.only";
     private static final String PREFS_SHOW_ZYGOTE_ALLOCATIONS = "nativeheap.show.zygote";
@@ -245,36 +242,31 @@ public class NativeHeapPanel extends BaseHeapPanel {
             snapshot = getDiffSnapshot(index);
         }
 
-        long totalSize = snapshot.getTotalSize();
-
-        mDetailsTreeLabelProvider.setTotalSize(totalSize);
-        mDetailsTreeViewer.setInput(snapshot);
-        mMemoryAllocatedText.setText(formatMemorySize(totalSize));
+        mMemoryAllocatedText.setText(snapshot.getFormattedMemorySize());
         mMemoryAllocatedText.pack();
+
+        mDetailsTreeLabelProvider.setTotalSize(snapshot.getTotalSize());
+        mDetailsTreeViewer.setInput(snapshot);
         mDetailsTreeViewer.refresh();
     }
 
     /** Obtain the diff of snapshot[index] & snapshot[index-1] */
     private NativeHeapSnapshot getDiffSnapshot(int index) {
         // if it was already computed, simply return that
-        NativeHeapSnapshot snapshot = mDiffSnapshots.get(index);
-        if (snapshot != null) {
-            return snapshot;
+        NativeHeapSnapshot diffSnapshot = mDiffSnapshots.get(index);
+        if (diffSnapshot != null) {
+            return diffSnapshot;
         }
 
         // compute the diff
-        List<NativeAllocationInfo> cur = mNativeHeapSnapshots.get(index).getAllocations();
-        List<NativeAllocationInfo> prev = mNativeHeapSnapshots.get(index - 1).getAllocations();
-
-        List<NativeAllocationInfo> allocations = new ArrayList<NativeAllocationInfo>();
-        allocations.addAll(cur);
-        allocations.removeAll(prev);
-        snapshot = new NativeHeapSnapshot(allocations);
+        NativeHeapSnapshot cur = mNativeHeapSnapshots.get(index);
+        NativeHeapSnapshot prev = mNativeHeapSnapshots.get(index - 1);
+        diffSnapshot = new NativeHeapDiffSnapshot(cur, prev);
 
         // cache for future use
-        mDiffSnapshots.set(index, snapshot);
+        mDiffSnapshots.set(index, diffSnapshot);
 
-        return snapshot;
+        return diffSnapshot;
     }
 
     private void updateDisplayGrouping() {
@@ -298,10 +290,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         // refresh the UI
         mDetailsTreeViewer.refresh();
-    }
-
-    private String formatMemorySize(long totalMemory) {
-        return NUMBER_FORMATTER.format(totalMemory) + " bytes";
     }
 
     private void updateSnapshotIndexCombo() {
@@ -569,10 +557,13 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     /** Export currently displayed snapshot to a file */
     private void exportSnapshot() {
+        int idx = mSnapshotIndexCombo.getSelectionIndex();
+        String snapshotName = mSnapshotIndexCombo.getItem(idx);
+
         FileDialog fileDialog = new FileDialog(Display.getDefault().getActiveShell(),
                 SWT.SAVE);
 
-        fileDialog.setText("Save Allocations");
+        fileDialog.setText("Save " + snapshotName);
         fileDialog.setFileName("allocations.txt");
 
         final String fileName = fileDialog.open();
@@ -580,7 +571,6 @@ public class NativeHeapPanel extends BaseHeapPanel {
             return;
         }
 
-        int idx = mSnapshotIndexCombo.getSelectionIndex();
         final NativeHeapSnapshot snapshot = mNativeHeapSnapshots.get(idx);
         Thread t = new Thread(new Runnable() {
             public void run() {
