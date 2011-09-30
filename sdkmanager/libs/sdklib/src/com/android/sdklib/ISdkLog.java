@@ -71,7 +71,8 @@ public interface ISdkLog {
     void error(Throwable t, String errorFormat, Object... args);
 
     /**
-     * Prints a message as-is on stdout.
+     * Prints a message on stdout.
+     * IF the message does not end with \n, a carriage return will be inserted.
      * <p/>
      * Implementation can omit printing such messages when not in verbose mode.
      * No prefix is used, the message is printed as-is after formatting.
