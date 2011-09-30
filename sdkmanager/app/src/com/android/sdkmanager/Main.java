@@ -143,6 +143,9 @@ public class Main {
 
             public void printf(String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
+                if (!msgFormat.endsWith("\n")) {
+                    System.out.printf("\n");
+                }
             }
         };
     }
