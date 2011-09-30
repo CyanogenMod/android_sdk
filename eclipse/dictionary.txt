@@ -193,6 +193,7 @@ rect
 redo
 refactor
 refactoring
+refactorings
 regex
 regexp
 regexps
