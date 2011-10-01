@@ -210,12 +210,14 @@ public class ClipboardSupport {
                 for (SelectionItem cs : selection) {
                     NodeProxy node = cs.getNode();
                     INode parent = node.getParent();
-                    List<INode> children = clusters.get(parent);
-                    if (children == null) {
-                        children = new ArrayList<INode>();
-                        clusters.put((NodeProxy) parent, children);
+                    if (parent != null) {
+                        List<INode> children = clusters.get(parent);
+                        if (children == null) {
+                            children = new ArrayList<INode>();
+                            clusters.put((NodeProxy) parent, children);
+                        }
+                        children.add(node);
                     }
-                    children.add(node);
                 }
 
                 // Notify parent views about children getting deleted
