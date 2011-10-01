@@ -19,12 +19,14 @@ package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
@@ -41,11 +43,16 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocumentRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegion;
 import org.eclipse.wst.sse.ui.StructuredTextEditor;
 import org.eclipse.wst.xml.core.internal.regions.DOMRegionContext;
+import org.w3c.dom.Node;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * QuickAssistProcessor which helps invoke refactoring operations on text elements.
@@ -53,6 +60,9 @@ import org.eclipse.wst.xml.core.internal.regions.DOMRegionContext;
 @SuppressWarnings("restriction") // XML model
 public class RefactoringAssistant implements IQuickAssistProcessor {
 
+    /**
+     * Creates a new {@link RefactoringAssistant}
+     */
     public RefactoringAssistant() {
     }
 
@@ -80,8 +90,10 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         // operations) or a value (for the extract include refactoring)
 
         boolean isValue = false;
+        boolean isReferenceValue = false;
         boolean isTagName = false;
         boolean isAttributeName = false;
+        boolean isStylableAttribute = false;
         IStructuredModel model = null;
         try {
             model = xmlEditor.getModelForRead();
@@ -94,16 +106,26 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
                     String value = region.getText(subRegion);
                     // Only extract values that aren't already resources
                     // (and value includes leading ' or ")
-                    if (!value.startsWith("'@") && !value.startsWith("\"@")) { //$NON-NLS-1$ //$NON-NLS-2$
-                        isValue = true;
+                    isValue = true;
+                    if (value.startsWith("'@") || value.startsWith("\"@")) { //$NON-NLS-1$ //$NON-NLS-2$
+                        isReferenceValue = true;
                     }
                 } else if (type.equals(DOMRegionContext.XML_TAG_NAME)
                         || type.equals(DOMRegionContext.XML_TAG_OPEN)
                         || type.equals(DOMRegionContext.XML_TAG_CLOSE)) {
                     isTagName = true;
-                } else if (type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_NAME)
-                        || type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_EQUALS)) {
+                } else if (type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_NAME) ) {
                     isAttributeName = true;
+                    String name = region.getText(subRegion);
+                    int index = name.indexOf(':');
+                    if (index != -1) {
+                        name = name.substring(index + 1);
+                    }
+                    isStylableAttribute = ExtractStyleRefactoring.isStylableAttribute(name);
+                } else if (type.equals(DOMRegionContext.XML_TAG_ATTRIBUTE_EQUALS)) {
+                    // On the edge of an attribute name and an attribute value
+                    isAttributeName = true;
+                    isStylableAttribute = true;
                 }
             }
         } finally {
@@ -112,70 +134,84 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             }
         }
 
-        if (isValue || isTagName || isAttributeName) {
+        List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+        if (isTagName || isAttributeName || isValue) {
             StructuredTextEditor structuredEditor = xmlEditor.getStructuredTextEditor();
             ISelectionProvider provider = structuredEditor.getSelectionProvider();
             ISelection selection = provider.getSelection();
             if (selection instanceof ITextSelection) {
                 ITextSelection textSelection = (ITextSelection) selection;
 
-                // These operations currently do not work on ranges
-                if (textSelection.getLength() > 0) {
-                    // ...except for Extract Style where the actual attributes overlapping
-                    // the selection is going to be the set of eligible attributes
-                    if (isAttributeName && xmlEditor instanceof LayoutEditor) {
-                        LayoutEditor editor = (LayoutEditor) xmlEditor;
-                        return new ICompletionProposal[] {
-                                new RefactoringProposal(editor,
-                                    new ExtractStyleRefactoring(file, editor, textSelection, null))
-                        };
+                ITextSelection originalSelection = textSelection;
+
+                // Most of the visual refactorings do not work on text ranges
+                // ...except for Extract Style where the actual attributes overlapping
+                // the selection is going to be the set of eligible attributes
+                boolean selectionOkay = false;
+
+                if (textSelection.getLength() == 0 && !isValue) {
+                    selectionOkay = true;
+                    ISourceViewer textViewer = xmlEditor.getStructuredSourceViewer();
+                    int caretOffset = textViewer.getTextWidget().getCaretOffset();
+                    if (caretOffset >= 0) {
+                        Node node = DomUtilities.getNode(textViewer.getDocument(), caretOffset);
+                        if (node instanceof IndexedRegion) {
+                            IndexedRegion region = (IndexedRegion) node;
+                            int startOffset = region.getStartOffset();
+                            int length = region.getEndOffset() - region.getStartOffset();
+                            textSelection = new TextSelection(startOffset, length);
+                        }
                     }
-                    return null;
                 }
 
-                if (isAttributeName && xmlEditor instanceof LayoutEditor) {
+                if (isValue && !isReferenceValue) {
+                    proposals.add(new RefactoringProposal(xmlEditor,
+                            new ExtractStringRefactoring(file, xmlEditor, textSelection)));
+                }
+
+                if (xmlEditor instanceof LayoutEditor) {
                     LayoutEditor editor = (LayoutEditor) xmlEditor;
-                    return new ICompletionProposal[] {
-                            new RefactoringProposal(editor,
-                                new ExtractStyleRefactoring(file, editor, textSelection, null)),
-                    };
-                } else if (isValue) {
-                    if (xmlEditor instanceof LayoutEditor) {
-                        LayoutEditor editor = (LayoutEditor) xmlEditor;
-                        return new ICompletionProposal[] {
-                                new RefactoringProposal(xmlEditor,
-                                        new ExtractStringRefactoring(file, xmlEditor,
-                                                textSelection)),
-                                new RefactoringProposal(editor,
-                                        new ExtractStyleRefactoring(file, editor,
-                                                textSelection, null)),
-                        };
-                    } else {
-                        return new ICompletionProposal[] {
-                            new RefactoringProposal(xmlEditor,
-                                    new ExtractStringRefactoring(file, xmlEditor, textSelection))
-                        };
+
+                    boolean showStyleFirst = isValue || (isAttributeName && isStylableAttribute);
+                    if (showStyleFirst) {
+                        proposals.add(new RefactoringProposal(editor,
+                                new ExtractStyleRefactoring(file, editor, originalSelection,
+                                        null)));
                     }
-                } else if (xmlEditor instanceof LayoutEditor) {
-                    LayoutEditor editor = (LayoutEditor) xmlEditor;
-                    return new ICompletionProposal[] {
-                        new RefactoringProposal(editor,
-                            new WrapInRefactoring(file, editor, textSelection, null)),
-                        new RefactoringProposal(editor,
-                                new UnwrapRefactoring(file, editor, textSelection, null)),
-                        new RefactoringProposal(editor,
-                            new ChangeViewRefactoring(file, editor, textSelection, null)),
-                        new RefactoringProposal(editor,
-                            new ChangeLayoutRefactoring(file, editor, textSelection, null)),
-                        new RefactoringProposal(editor,
-                            new ExtractStyleRefactoring(file, editor, textSelection, null)),
-                        new RefactoringProposal(editor,
-                            new ExtractIncludeRefactoring(file, editor, textSelection, null)),
-                    };
+
+                    if (selectionOkay) {
+                        proposals.add(new RefactoringProposal(editor,
+                                new WrapInRefactoring(file, editor, textSelection, null)));
+                        proposals.add(new RefactoringProposal(editor,
+                                new UnwrapRefactoring(file, editor, textSelection, null)));
+                        proposals.add(new RefactoringProposal(editor,
+                                new ChangeViewRefactoring(file, editor, textSelection, null)));
+                        proposals.add(new RefactoringProposal(editor,
+                                new ChangeLayoutRefactoring(file, editor, textSelection, null)));
+                    }
+
+                    // Extract Include must always have an actual block to be extracted
+                    if (textSelection.getLength() > 0) {
+                        proposals.add(new RefactoringProposal(editor,
+                                new ExtractIncludeRefactoring(file, editor, textSelection, null)));
+                    }
+
+                    // If it's not a value or attribute name, don't place it on top
+                    if (!showStyleFirst) {
+                        proposals.add(new RefactoringProposal(editor,
+                                new ExtractStyleRefactoring(file, editor, originalSelection,
+                                        null)));
+                    }
+
                 }
             }
         }
-        return null;
+
+        if (proposals.size() == 0) {
+            return null;
+        } else {
+            return proposals.toArray(new ICompletionProposal[proposals.size()]);
+        }
     }
 
     public String getErrorMessage() {

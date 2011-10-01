@@ -250,13 +250,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
                 Attr attribute = (Attr) attributeMap.item(i);
 
                 String name = attribute.getLocalName();
-                if (name == null || name.equals(ATTR_ID) || name.startsWith(ATTR_STYLE)
-                        || (name.startsWith(ATTR_LAYOUT_PREFIX) &&
-                                !name.startsWith(ATTR_LAYOUT_MARGIN))
-                        || name.equals(ATTR_TEXT)
-                        || name.equals(ATTR_HINT)
-                        || name.equals(ATTR_SRC)
-                        || name.equals(ATTR_ON_CLICK)) {
+                if (!isStylableAttribute(name)) {
                     // Don't offer to extract attributes that don't make sense in
                     // styles (like "id" or "style"), or attributes that the user
                     // probably does not want to define in styles (like layout
@@ -295,6 +289,25 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         }
 
         return Pair.of(mAvailableAttributes, withinSelection);
+    }
+
+    /**
+     * Returns whether the given local attribute name is one the style wizard
+     * should present as a selectable attribute to be extracted.
+     *
+     * @param name the attribute name, not including a namespace prefix
+     * @return true if the name is one that the user can extract
+     */
+    public static boolean isStylableAttribute(String name) {
+        return !(name == null
+                || name.equals(ATTR_ID)
+                || name.startsWith(ATTR_STYLE)
+                || (name.startsWith(ATTR_LAYOUT_PREFIX) &&
+                        !name.startsWith(ATTR_LAYOUT_MARGIN))
+                || name.equals(ATTR_TEXT)
+                || name.equals(ATTR_HINT)
+                || name.equals(ATTR_SRC)
+                || name.equals(ATTR_ON_CLICK));
     }
 
     IFile getStyleFile(IProject project) {
