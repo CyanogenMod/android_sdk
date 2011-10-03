@@ -46,6 +46,41 @@ public class AdtUtils {
     }
 
     /**
+     * Returns true if the given sequence ends with the given suffix (case
+     * sensitive).
+     *
+     * @param sequence the character sequence to be checked
+     * @param suffix the suffix to look for
+     * @return true if the given sequence ends with the given suffix
+     */
+    public static boolean endsWith(CharSequence sequence, CharSequence suffix) {
+        return endsWith(sequence, sequence.length(), suffix);
+    }
+
+    /**
+     * Returns true if the given sequence ends at the given offset with the given suffix (case
+     * sensitive)
+     *
+     * @param sequence the character sequence to be checked
+     * @param endOffset the offset at which the sequence is considered to end
+     * @param suffix the suffix to look for
+     * @return true if the given sequence ends with the given suffix
+     */
+    public static boolean endsWith(CharSequence sequence, int endOffset, CharSequence suffix) {
+        if (endOffset < suffix.length()) {
+            return false;
+        }
+
+        for (int i = endOffset - 1, j = suffix.length() - 1; j >= 0; i--, j--) {
+            if (sequence.charAt(i) != suffix.charAt(j)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Strips the whitespace from the given string
      *
      * @param string the string to be cleaned up

@@ -281,7 +281,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
      * @throws BadLocationException if the offset is invalid
      */
     public static int findLineStart(IDocument document, int offset) throws BadLocationException {
-        offset = Math.min(offset, document.getLength() - 1);
+        offset = Math.max(0, Math.min(offset, document.getLength() - 1));
         IRegion info = document.getLineInformationOfOffset(offset);
         return info.getOffset();
     }

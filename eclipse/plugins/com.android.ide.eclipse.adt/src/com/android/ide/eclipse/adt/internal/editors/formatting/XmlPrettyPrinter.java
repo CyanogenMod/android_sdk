@@ -22,6 +22,7 @@ import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STRING_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
 
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 
 import org.eclipse.wst.xml.core.internal.document.DocumentTypeImpl;
@@ -400,7 +401,7 @@ public class XmlPrettyPrinter {
                 index--;
             }
 
-            end = recentNewline == -1 ? index : recentNewline;
+            end = recentNewline == -1 ? index + 1 : recentNewline;
             if (start >= end) {
                 // It's a blank comment like <!-- \n\n--> - just clean it up
                 if (!isSuffixComment) {
@@ -450,20 +451,84 @@ public class XmlPrettyPrinter {
                 if (!startsWithNewline) {
                     Node previous = node.getPreviousSibling();
                     if (previous != null && previous.getNodeType() == Node.TEXT_NODE) {
+                        int TAB_SIZE = 4; // TODO: Look up Eclipse settings
                         String prevText = previous.getNodeValue();
                         int indentation = COMMENT_BEGIN.length();
                         for (int i = prevText.length() - 1; i >= 0; i--) {
                             char c = prevText.charAt(i);
                             if (c == '\n') {
                                 break;
-                            } else if (c == '\t') {
-                                indentation += 4; // TODO: Look up Eclipse settings
                             } else {
-                                indentation++;
+                                indentation += (c == '\t') ? TAB_SIZE : 1;
                             }
                         }
+
+                        // See if the next line after the newline has indentation; if it doesn't,
+                        // leave things alone. This fixes a case like this:
+                        //     <!-- This is the
+                        //     comment block -->
+                        // such that it doesn't turn it into
+                        //     <!--
+                        //          This is the
+                        //     comment block
+                        //     -->
+                        // In this case we instead want
+                        //     <!--
+                        //     This is the
+                        //     comment block
+                        //     -->
+                        int minIndent = Integer.MAX_VALUE;
+                        String[] lines = trimmed.split("\n"); //$NON-NLS-1$
+                        // Skip line 0 since we know that it doesn't start with a newline
+                        for (int i = 1; i < lines.length; i++) {
+                            int indent = 0;
+                            String line = lines[i];
+                            for (int j = 0; j < line.length(); j++) {
+                                char c = line.charAt(j);
+                                if (!Character.isWhitespace(c)) {
+                                    // Only set minIndent if there's text content on the line;
+                                    // blank lines can exist in the comment without affecting
+                                    // the overall minimum indentation boundary.
+                                    if (indent < minIndent) {
+                                        minIndent = indent;
+                                    }
+                                    break;
+                                } else {
+                                    indent += (c == '\t') ? TAB_SIZE : 1;
+                                }
+                            }
+                        }
+
+                        if (minIndent < indentation) {
+                            indentation = minIndent;
+
+                            // Subtract any indentation that is already present on the line
+                            String line = lines[0];
+                            for (int j = 0; j < line.length(); j++) {
+                                char c = line.charAt(j);
+                                if (!Character.isWhitespace(c)) {
+                                    break;
+                                } else {
+                                    indentation -= (c == '\t') ? TAB_SIZE : 1;
+                                }
+                            }
+                        }
+
                         for (int i = 0; i < indentation; i++) {
                             mOut.append(' ');
+                        }
+
+                        if (indentation < 0) {
+                            boolean prefixIsSpace = true;
+                            for (int i = 0; i < -indentation && i < trimmed.length(); i++) {
+                                if (!Character.isWhitespace(trimmed.charAt(i))) {
+                                    prefixIsSpace = false;
+                                    break;
+                                }
+                            }
+                            if (prefixIsSpace) {
+                                trimmed = trimmed.substring(-indentation);
+                            }
                         }
                     }
                 }
@@ -706,13 +771,30 @@ public class XmlPrettyPrinter {
     }
 
     private boolean newlineAfterElementOpen(Element element, int depth, boolean isClosed) {
+        if (hasBlankLineAbove()) {
+            return false;
+        }
+
         // In resource files we keep the child content directly on the same
         // line as the element (unless it has children). in other files, separate them
         return isClosed || !keepElementAsSingleLine(depth, element);
     }
 
     private boolean newlineBeforeElementClose(Element element, int depth) {
+        if (hasBlankLineAbove()) {
+            return false;
+        }
+
         return depth == 0 && !mPrefs.removeEmptyLines;
+    }
+
+    private boolean hasBlankLineAbove() {
+        if (mOut.length() < 2 * mLineSeparator.length()) {
+            return false;
+        }
+
+        return AdtUtils.endsWith(mOut, mLineSeparator) &&
+                AdtUtils.endsWith(mOut, mOut.length() - mLineSeparator.length(), mLineSeparator);
     }
 
     private boolean newlineAfterElementClose(Element element, int depth) {
