@@ -324,13 +324,6 @@ public class UpdaterData implements IUpdaterData {
     public void setupDefaultSources() {
         SdkSources sources = getSources();
 
-        sources.add(SdkSourceCategory.ANDROID_REPO,
-                new SdkRepoSource(SdkRepoConstants.URL_GOOGLE_SDK_SITE,
-                                  SdkSourceCategory.ANDROID_REPO.getUiName()));
-
-        // Load user sources
-        sources.loadUserAddons(getSdkLog());
-
         // SDK_TEST_URLS is a semicolon-separated list of URLs that can be used to
         // seed the SDK Updater list for full repos and addon repositories. This is
         // only meant as a debugging and QA testing tool and not for user usage.
@@ -338,9 +331,9 @@ public class UpdaterData implements IUpdaterData {
         // To be used, the URLs must either end with the / or end with the canonical
         // filename expected for either a full repo or an add-on repo. This lets QA
         // use URLs ending with / to cover all cases.
-        String str = System.getenv("SDK_TEST_URLS");
-        if (str != null) {
-            String[] urls = str.split(";");
+        String testUrls = System.getenv("SDK_TEST_URLS");
+        if (testUrls != null) {
+            String[] urls = testUrls.split(";");
             for (String url : urls) {
                 if (url != null) {
                     url = url.trim();
@@ -371,6 +364,18 @@ public class UpdaterData implements IUpdaterData {
                     }
                 }
             }
+        }
+
+        // Load the conventional sources if we didn't load anything or if
+        // there's an env var asking to do so anyway.
+        if (sources.getAllSources().length == 0 ||
+                System.getenv("SDK_MIX_WITH_TEST_URLS") != null) {
+            sources.add(SdkSourceCategory.ANDROID_REPO,
+                    new SdkRepoSource(SdkRepoConstants.URL_GOOGLE_SDK_SITE,
+                                      SdkSourceCategory.ANDROID_REPO.getUiName()));
+
+            // Load user sources
+            sources.loadUserAddons(getSdkLog());
         }
     }
 
