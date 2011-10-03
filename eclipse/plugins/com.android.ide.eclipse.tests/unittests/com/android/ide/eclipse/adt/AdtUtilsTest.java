@@ -31,6 +31,29 @@ public class AdtUtilsTest extends TestCase {
         assertFalse(AdtUtils.endsWithIgnoreCase("foo", "fo"));
     }
 
+    public void testEndsWith() {
+        assertTrue(AdtUtils.endsWith("foo", "foo"));
+        assertTrue(AdtUtils.endsWith("foobar", "obar"));
+        assertTrue(AdtUtils.endsWith("foobar", "bar"));
+        assertTrue(AdtUtils.endsWith("foobar", "ar"));
+        assertTrue(AdtUtils.endsWith("foobar", "r"));
+        assertTrue(AdtUtils.endsWith("foobar", ""));
+
+        assertTrue(AdtUtils.endsWith(new StringBuilder("foobar"), "bar"));
+        assertTrue(AdtUtils.endsWith(new StringBuilder("foobar"), new StringBuffer("obar")));
+        assertTrue(AdtUtils.endsWith("foobar", new StringBuffer("obar")));
+
+        assertFalse(AdtUtils.endsWith("foo", "fo"));
+        assertFalse(AdtUtils.endsWith("foobar", "Bar"));
+        assertFalse(AdtUtils.endsWith("foobar", "longfoobar"));
+    }
+
+    public void testEndsWith2() {
+        assertTrue(AdtUtils.endsWith("foo", "foo".length(), "foo"));
+        assertTrue(AdtUtils.endsWith("foo", "fo".length(), "fo"));
+        assertTrue(AdtUtils.endsWith("foo", "f".length(), "f"));
+    }
+
     public void testStripWhitespace() {
         assertEquals("foo", AdtUtils.stripWhitespace("foo"));
         assertEquals("foobar", AdtUtils.stripWhitespace("foo bar"));
