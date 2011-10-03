@@ -19,6 +19,9 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder;
 
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.internal.editors.text.EditorsPlugin;
+import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants;
 import org.eclipse.wst.xml.core.internal.XMLCorePlugin;
 import org.eclipse.wst.xml.core.internal.preferences.XMLCorePreferenceNames;
 
@@ -49,6 +52,9 @@ public class XmlFormatPreferences {
 
     /** The string to insert for each indentation level */
     private String mOneIndentUnit = "    "; //$NON-NLS-1$
+
+    /** Tab width (number of spaces to display for a tab) */
+    private int mTabWidth = -1; // -1: uninitialized
 
     private XmlFormatPreferences() {
     }
@@ -104,5 +110,28 @@ public class XmlFormatPreferences {
         }
 
         return mOneIndentUnit;
+    }
+
+    /**
+     * Returns the number of spaces used to display a single tab character
+     *
+     * @return the number of spaces used to display a single tab character
+     */
+    @SuppressWarnings("restriction") // Editor settings
+    public int getTabWidth() {
+        if (mTabWidth == -1) {
+            String key = AbstractDecoratedTextEditorPreferenceConstants.EDITOR_TAB_WIDTH;
+            try {
+                IPreferenceStore prefs = EditorsPlugin.getDefault().getPreferenceStore();
+                mTabWidth = prefs.getInt(key);
+            } catch (Throwable t) {
+                // Pass: We'll pick a suitable default instead below
+            }
+            if (mTabWidth <= 0) {
+                mTabWidth = 4;
+            }
+        }
+
+        return mTabWidth;
     }
 }
