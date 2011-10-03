@@ -446,7 +446,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "    <!--\n" +
                 "         Deprecated strings - Move the identifiers to this section, mark as DO NOT TRANSLATE,\n" +
-                "         and remove the actual text.  These will be removed in a bulk operation\n" +
+                "         and remove the actual text.  These will be removed in a bulk operation.\n" +
                 "    -->\n" +
                 "    <!-- Do Not Translate.  Unused string. -->\n" +
                 "    <string name=\"meeting_invitation\"></string>\n" +
@@ -490,4 +490,47 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "</resources>");
     }
 
+    public void testCommentHandling() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                "<foo >\n" +
+                "\n" +
+                "    <!-- abc\n" +
+                "         def\n" +
+                "         ghi -->\n" +
+                "\n" +
+                "    <!-- abc\n" +
+                "    def\n" +
+                "    ghi -->\n" +
+                "    \n" +
+                "<!-- abc\n" +
+                "def\n" +
+                "ghi -->\n" +
+                "\n" +
+                "</foo>",
+
+                "<foo >\n" +
+                "\n" +
+                "    <!--\n" +
+                "         abc\n" +
+                "         def\n" +
+                "         ghi\n" +
+                "    -->\n" +
+                "\n" +
+                "\n" +
+                "    <!--\n" +
+                "    abc\n" +
+                "    def\n" +
+                "    ghi\n" +
+                "    -->\n" +
+                "\n" +
+                "\n" +
+                "    <!--\n" +
+                "abc\n" +
+                "def\n" +
+                "ghi\n" +
+                "    -->\n" +
+                "\n" +
+                "</foo>");
+    }
 }
