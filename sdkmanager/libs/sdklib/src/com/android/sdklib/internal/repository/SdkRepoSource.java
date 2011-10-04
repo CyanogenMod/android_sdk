@@ -461,7 +461,7 @@ public class SdkRepoSource extends SdkSource {
             Attr attr = (Attr) attrs.item(i);
             Attr newAttr = null;
 
-            String attrName = oldNode.getNodeName();
+            String attrName = attr.getNodeName();
             pos = attrName.indexOf(':');
             if (pos > 0 && pos < attrName.length() - 1) {
                 attrName = attrName.substring(pos + 1);
