@@ -26,6 +26,10 @@ import java.io.InputStream;
  */
 public class SdkRepoConstants extends RepoConstants {
 
+    /** The latest version of the sdk-repository XML Schema.
+     *  Valid version numbers are between 1 and this number, included. */
+    public static final int NS_LATEST_VERSION = 5;
+
     /** The URL of the official Google sdk-repository site. */
     public static final String URL_GOOGLE_SDK_SITE =
         "https://dl-ssl.google.com/android/repository/";                        //$NON-NLS-1$
@@ -33,6 +37,13 @@ public class SdkRepoConstants extends RepoConstants {
     /** The default name looked for by {@link SdkSource} when trying to load an
      * sdk-repository XML if the URL doesn't match an existing resource. */
     public static final String URL_DEFAULT_FILENAME = "repository.xml";         //$NON-NLS-1$
+
+    /** The pattern name looked by {@link SdkSource} when trying to load
+     * the latest sdk-repository XML that is specific to the current XSD
+     * schema revision.
+     */
+    public static final String URL_DEFAULT_FILENAME2 =
+        String.format("repository-%d.xml", NS_LATEST_VERSION);                  //$NON-NLS-1$
 
     /** The base of our sdk-repository XML namespace. */
     private static final String NS_BASE =
@@ -43,10 +54,6 @@ public class SdkRepoConstants extends RepoConstants {
      * Matcher's group(1) is the schema version (integer).
      */
     public static final String NS_PATTERN = NS_BASE + "([1-9][0-9]*)";          //$NON-NLS-1$
-
-    /** The latest version of the sdk-repository XML Schema.
-     *  Valid version numbers are between 1 and this number, included. */
-    public static final int NS_LATEST_VERSION = 5;
 
     /** The XML namespace of the latest sdk-repository XML. */
     public static final String NS_URI = getSchemaUri(NS_LATEST_VERSION);
