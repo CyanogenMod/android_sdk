@@ -451,7 +451,6 @@ public class XmlPrettyPrinter {
                 if (!startsWithNewline) {
                     Node previous = node.getPreviousSibling();
                     if (previous != null && previous.getNodeType() == Node.TEXT_NODE) {
-                        int TAB_SIZE = 4; // TODO: Look up Eclipse settings
                         String prevText = previous.getNodeValue();
                         int indentation = COMMENT_BEGIN.length();
                         for (int i = prevText.length() - 1; i >= 0; i--) {
@@ -459,7 +458,7 @@ public class XmlPrettyPrinter {
                             if (c == '\n') {
                                 break;
                             } else {
-                                indentation += (c == '\t') ? TAB_SIZE : 1;
+                                indentation += (c == '\t') ? mPrefs.getTabWidth() : 1;
                             }
                         }
 
@@ -494,7 +493,7 @@ public class XmlPrettyPrinter {
                                     }
                                     break;
                                 } else {
-                                    indent += (c == '\t') ? TAB_SIZE : 1;
+                                    indent += (c == '\t') ? mPrefs.getTabWidth() : 1;
                                 }
                             }
                         }
@@ -509,7 +508,7 @@ public class XmlPrettyPrinter {
                                 if (!Character.isWhitespace(c)) {
                                     break;
                                 } else {
-                                    indentation -= (c == '\t') ? TAB_SIZE : 1;
+                                    indentation -= (c == '\t') ? mPrefs.getTabWidth() : 1;
                                 }
                             }
                         }
