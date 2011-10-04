@@ -11,6 +11,7 @@ eclipse/final*Versions*.properties
 eclipse/plugins/com.android.ide.eclipse.*/@dot*
 eclipse/plugins/com.android.*/javaCompiler...args
 eclipse/plugins/com.android.ide.eclipse.adt/build.xml
+eclipse/plugins/com.android.ide.eclipse.adt.overlay/build.xml
 eclipse/plugins/com.android.ide.eclipse.ddms/build.xml
 eclipse/plugins/com.android.ide.eclipse.hierarchyviewer/build.xml
 eclipse/plugins/com.android.ide.eclipse.traceview/build.xml

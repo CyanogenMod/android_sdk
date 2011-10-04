@@ -34,11 +34,6 @@
              <property name="id" value="com.android.ide.eclipse.traceview" />
          </ant>
 
-         <ant antfile="${genericTargets}" target="${target}">
-             <property name="type" value="feature" />
-             <property name="id" value="com.android.ide.eclipse.adt.xml" />
-         </ant>
-
         <antcall target="buildInternalFeatures"/>
          
      </target>
@@ -75,7 +70,7 @@
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
 
-     <target name="assemble.com.android.ide.eclipse.adt.xml">
+     <target name="assemble.com.android.ide.eclipse.adt.overlay">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
 
