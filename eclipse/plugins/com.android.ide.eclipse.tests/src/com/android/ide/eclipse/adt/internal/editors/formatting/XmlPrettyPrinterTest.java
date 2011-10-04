@@ -25,6 +25,7 @@ import org.w3c.dom.NodeList;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class XmlPrettyPrinterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
@@ -530,6 +531,24 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "def\n" +
                 "ghi\n" +
                 "    -->\n" +
+                "\n" +
+                "</foo>");
+    }
+
+    public void testCommentHandling2() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                "<foo >\n" +
+                "    <!-- multi -->\n" +
+                "\n" +
+                "    <bar />\n" +
+                "</foo>",
+
+                "<foo >\n" +
+                "\n" +
+                "    <!-- multi -->\n" +
+                "\n" +
+                "    <bar />\n" +
                 "\n" +
                 "</foo>");
     }
