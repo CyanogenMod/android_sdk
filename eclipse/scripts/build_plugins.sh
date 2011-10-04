@@ -181,7 +181,7 @@ fi
 #
 # Ensure that the src dir exists since it's empty
 #
-mkdir -p $PWD/eclipse/plugins/com.android.ide.eclipse.adt.overlay/src
+mkdir -p $PWD/plugins/com.android.ide.eclipse.adt.overlay/src
 
 #
 # -- Print configuration used and actually execute the build --
