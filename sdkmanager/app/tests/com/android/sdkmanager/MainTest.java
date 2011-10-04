@@ -117,6 +117,50 @@ public class MainTest extends SdkManagerTestCase {
                 getLog().toString());
     }
 
+    public void testDisplayTargetList() {
+        Main main = new Main();
+        main.setLogger(getLog());
+        main.setSdkManager(getSdkManager());
+        getLog().clear();
+        main.displayTargetList();
+        assertEquals(
+                "[P Available Android targets:\n" +
+                ", P ----------\n" +
+                ", P id: 1 or \"android-0\"\n" +
+                ", P      Name: Android 0.0\n" +
+                ", P      Type: Platform\n" +
+                ", P      API level: 0\n" +
+                ", P      Revision: 1\n" +
+                ", P      Skins: , P \n" +
+                ", P      ABIs : , P armeabi, P \n" +
+                "]",
+                getLog().toString());
+    }
+
+    public void testDisplayAbiList() {
+        Main main = new Main();
+        main.setLogger(getLog());
+        main.setSdkManager(getSdkManager());
+        getLog().clear();
+        main.displayAbiList(mTarget, "message");
+        assertEquals(
+                "[P message, P armeabi, P \n" +
+                "]",
+                getLog().toString());
+    }
+
+    public void testDisplaySkinList() {
+        Main main = new Main();
+        main.setLogger(getLog());
+        main.setSdkManager(getSdkManager());
+        getLog().clear();
+        main.displaySkinList(mTarget, "message");
+        assertEquals(
+                "[P message, P \n" +
+                "]",
+                getLog().toString());
+    }
+
     public void testCheckFilterValues() {
         // These are the values we expect checkFilterValues() to match.
         String[] expectedValues = {

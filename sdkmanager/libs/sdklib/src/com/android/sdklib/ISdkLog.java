@@ -72,7 +72,7 @@ public interface ISdkLog {
 
     /**
      * Prints a message on stdout.
-     * IF the message does not end with \n, a carriage return will be inserted.
+     * This does <em>not</em> automatically end the line with \n.
      * <p/>
      * Implementation can omit printing such messages when not in verbose mode.
      * No prefix is used, the message is printed as-is after formatting.

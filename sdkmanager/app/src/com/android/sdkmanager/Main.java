@@ -102,6 +102,12 @@ public class Main {
         new Main().run(args);
     }
 
+    /** Used by tests to set the sdk manager. */
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    void setSdkManager(SdkManager sdkManager) {
+        mSdkManager = sdkManager;
+    }
+
     /**
      * Runs the sdk manager app
      */
@@ -143,9 +149,6 @@ public class Main {
 
             public void printf(String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
-                if (!msgFormat.endsWith("\n")) {
-                    System.out.printf("\n");
-                }
             }
         };
     }
@@ -773,7 +776,8 @@ public class Main {
     /**
      * Displays the list of available Targets (Platforms and Add-ons)
      */
-    private void displayTargetList() {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    void displayTargetList() {
 
         // Compact output, suitable for scripts.
         if (mSdkCommandLine != null && mSdkCommandLine.getFlagCompact()) {
@@ -835,7 +839,8 @@ public class Main {
     /**
      * Displays the skins valid for the given target.
      */
-    private void displaySkinList(IAndroidTarget target, String message) {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    void displaySkinList(IAndroidTarget target, String message) {
         String[] skins = target.getSkins();
         String defaultSkin = target.getDefaultSkin();
         mSdkLog.printf(message);
@@ -862,7 +867,8 @@ public class Main {
     /**
      * Displays the ABIs valid for the given target.
      */
-    private void displayAbiList(IAndroidTarget target, String message) {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    void displayAbiList(IAndroidTarget target, String message) {
         ISystemImage[] systemImages = target.getSystemImages();
         mSdkLog.printf(message);
         if (systemImages.length > 0) {
@@ -886,7 +892,8 @@ public class Main {
      *
      * @param avdManager
      */
-    public void displayAvdList(AvdManager avdManager) {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    void displayAvdList(AvdManager avdManager) {
 
         AvdInfo[] avds = avdManager.getValidAvds();
 
@@ -1076,7 +1083,7 @@ public class Main {
                 if (systemImages != null && systemImages.length == 1) {
                     // Auto-select the single ABI available
                     abiType = systemImages[0].getAbiType();
-                    mSdkLog.printf("Auto-selecting single ABI %1$s", abiType);
+                    mSdkLog.printf("Auto-selecting single ABI %1$s\n", abiType);
                 } else {
                     displayAbiList(target, "Valid ABIs: ");
                     errorAndExit("This platform has more than one ABI. Please specify one using --%1$s.",
