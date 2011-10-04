@@ -344,127 +344,126 @@ public class SdkManager {
     private static PlatformTarget loadPlatform(String sdkOsPath, File platformFolder,
             ISdkLog log) {
         FileWrapper buildProp = new FileWrapper(platformFolder, SdkConstants.FN_BUILD_PROP);
+        FileWrapper sourcePropFile = new FileWrapper(platformFolder, SdkConstants.FN_SOURCE_PROP);
 
-        if (buildProp.isFile()) {
+        if (buildProp.isFile() && sourcePropFile.isFile()) {
+            Map<String, String> platformProp = new HashMap<String, String>();
+
+            // add all the property files
             Map<String, String> map = ProjectProperties.parsePropertyFile(buildProp, log);
-
             if (map != null) {
-                // look for some specific values in the map.
+                platformProp.putAll(map);
+            }
 
-                // version string
-                String apiName = map.get(PROP_VERSION_RELEASE);
-                if (apiName == null) {
-                    log.warning(
-                            "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
-                            platformFolder.getName(), PROP_VERSION_RELEASE,
-                            SdkConstants.FN_BUILD_PROP);
-                    return null;
+            map = ProjectProperties.parsePropertyFile(sourcePropFile, log);
+            if (map != null) {
+                platformProp.putAll(map);
+            }
+
+            FileWrapper sdkPropFile = new FileWrapper(platformFolder, SdkConstants.FN_SDK_PROP);
+            if (sdkPropFile.isFile()) { // obsolete platforms don't have this.
+                map = ProjectProperties.parsePropertyFile(sdkPropFile, log);
+                if (map != null) {
+                    platformProp.putAll(map);
                 }
+            }
 
-                // api level
-                int apiNumber;
-                String stringValue = map.get(PROP_VERSION_SDK);
-                if (stringValue == null) {
+            // look for some specific values in the map.
+
+            // api level
+            int apiNumber;
+            String stringValue = platformProp.get(PROP_VERSION_SDK);
+            if (stringValue == null) {
+                log.warning(
+                        "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
+                        platformFolder.getName(), PROP_VERSION_SDK,
+                        SdkConstants.FN_BUILD_PROP);
+                return null;
+            } else {
+                try {
+                     apiNumber = Integer.parseInt(stringValue);
+                } catch (NumberFormatException e) {
+                    // looks like apiNumber does not parse to a number.
+                    // Ignore this platform.
                     log.warning(
-                            "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
+                            "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
                             platformFolder.getName(), PROP_VERSION_SDK,
                             SdkConstants.FN_BUILD_PROP);
                     return null;
-                } else {
-                    try {
-                         apiNumber = Integer.parseInt(stringValue);
-                    } catch (NumberFormatException e) {
-                        // looks like apiNumber does not parse to a number.
-                        // Ignore this platform.
-                        log.warning(
-                                "Ignoring platform '%1$s': %2$s is not a valid number in %3$s.",
-                                platformFolder.getName(), PROP_VERSION_SDK,
-                                SdkConstants.FN_BUILD_PROP);
-                        return null;
-                    }
                 }
-
-                // codename (optional)
-                String apiCodename = map.get(PROP_VERSION_CODENAME);
-                if (apiCodename != null && apiCodename.equals("REL")) {
-                    apiCodename = null; // REL means it's a release version and therefore the
-                                        // codename is irrelevant at this point.
-                }
-
-                // platform rev number & layoutlib version are extracted from the source.properties
-                // saved by the SDK Manager when installing the package.
-
-                int revision = 1;
-                LayoutlibVersion layoutlibVersion = null;
-
-                FileWrapper sourcePropFile =
-                    new FileWrapper(platformFolder, SdkConstants.FN_SOURCE_PROP);
-
-                Map<String, String> sourceProp = ProjectProperties.parsePropertyFile(
-                        sourcePropFile, log);
-
-                if (sourceProp != null) {
-                    try {
-                        revision = Integer.parseInt(sourceProp.get(PkgProps.PKG_REVISION));
-                    } catch (NumberFormatException e) {
-                        // do nothing, we'll keep the default value of 1.
-                    }
-
-                    try {
-                        String propApi = sourceProp.get(PkgProps.LAYOUTLIB_API);
-                        String propRev = sourceProp.get(PkgProps.LAYOUTLIB_REV);
-                        int llApi = propApi == null ? LayoutlibVersion.NOT_SPECIFIED :
-                                                      Integer.parseInt(propApi);
-                        int llRev = propRev == null ? LayoutlibVersion.NOT_SPECIFIED :
-                                                      Integer.parseInt(propRev);
-                        if (llApi > LayoutlibVersion.NOT_SPECIFIED &&
-                                llRev >= LayoutlibVersion.NOT_SPECIFIED) {
-                            layoutlibVersion = new LayoutlibVersion(llApi, llRev);
-                        }
-                    } catch (NumberFormatException e) {
-                        // do nothing, we'll ignore the layoutlib version if it's invalid
-                    }
-
-                    map.putAll(sourceProp);
-                }
-
-                // Ant properties
-                FileWrapper sdkPropFile = new FileWrapper(platformFolder, SdkConstants.FN_SDK_PROP);
-                Map<String, String> antProp = null;
-                if (sdkPropFile.isFile()) { // obsolete platforms don't have this.
-                    antProp = ProjectProperties.parsePropertyFile(sdkPropFile, log);
-                }
-
-                if (antProp != null) {
-                    map.putAll(antProp);
-                }
-
-                // api number and name look valid, perform a few more checks
-                if (checkPlatformContent(platformFolder, log) == false) {
-                    return null;
-                }
-
-                ISystemImage[] systemImages =
-                    getPlatformSystemImages(sdkOsPath, platformFolder, apiNumber, apiCodename);
-
-                // create the target.
-                PlatformTarget target = new PlatformTarget(
-                        sdkOsPath,
-                        platformFolder.getAbsolutePath(),
-                        apiNumber,
-                        apiCodename,
-                        apiName,
-                        revision,
-                        layoutlibVersion,
-                        systemImages,
-                        map);
-
-                // need to parse the skins.
-                String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
-                target.setSkins(skins);
-
-                return target;
             }
+
+            // codename (optional)
+            String apiCodename = platformProp.get(PROP_VERSION_CODENAME);
+            if (apiCodename != null && apiCodename.equals("REL")) {
+                apiCodename = null; // REL means it's a release version and therefore the
+                                    // codename is irrelevant at this point.
+            }
+
+            // version string
+            String apiName = platformProp.get(PkgProps.PLATFORM_VERSION);
+            if (apiName == null) {
+                apiName = platformProp.get(PROP_VERSION_RELEASE);
+            }
+            if (apiName == null) {
+                log.warning(
+                        "Ignoring platform '%1$s': %2$s is missing from '%3$s'",
+                        platformFolder.getName(), PROP_VERSION_RELEASE,
+                        SdkConstants.FN_BUILD_PROP);
+                return null;
+            }
+
+            // platform rev number & layoutlib version are extracted from the source.properties
+            // saved by the SDK Manager when installing the package.
+
+            int revision = 1;
+            LayoutlibVersion layoutlibVersion = null;
+            try {
+                revision = Integer.parseInt(platformProp.get(PkgProps.PKG_REVISION));
+            } catch (NumberFormatException e) {
+                // do nothing, we'll keep the default value of 1.
+            }
+
+            try {
+                String propApi = platformProp.get(PkgProps.LAYOUTLIB_API);
+                String propRev = platformProp.get(PkgProps.LAYOUTLIB_REV);
+                int llApi = propApi == null ? LayoutlibVersion.NOT_SPECIFIED :
+                                              Integer.parseInt(propApi);
+                int llRev = propRev == null ? LayoutlibVersion.NOT_SPECIFIED :
+                                              Integer.parseInt(propRev);
+                if (llApi > LayoutlibVersion.NOT_SPECIFIED &&
+                        llRev >= LayoutlibVersion.NOT_SPECIFIED) {
+                    layoutlibVersion = new LayoutlibVersion(llApi, llRev);
+                }
+            } catch (NumberFormatException e) {
+                // do nothing, we'll ignore the layoutlib version if it's invalid
+            }
+
+            // api number and name look valid, perform a few more checks
+            if (checkPlatformContent(platformFolder, log) == false) {
+                return null;
+            }
+
+            ISystemImage[] systemImages =
+                getPlatformSystemImages(sdkOsPath, platformFolder, apiNumber, apiCodename);
+
+            // create the target.
+            PlatformTarget target = new PlatformTarget(
+                    sdkOsPath,
+                    platformFolder.getAbsolutePath(),
+                    apiNumber,
+                    apiCodename,
+                    apiName,
+                    revision,
+                    layoutlibVersion,
+                    systemImages,
+                    platformProp);
+
+            // need to parse the skins.
+            String[] skins = parseSkinFolder(target.getPath(IAndroidTarget.SKINS));
+            target.setSkins(skins);
+
+            return target;
         } else {
             log.warning("Ignoring platform '%1$s': %2$s is missing.",   //$NON-NLS-1$
                     platformFolder.getName(),
