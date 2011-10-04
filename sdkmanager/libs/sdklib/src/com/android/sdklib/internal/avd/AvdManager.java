@@ -578,7 +578,7 @@ public class AvdManager {
             if (createSnapshot) {
                 File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
                 if (snapshotDest.isFile() && editExisting) {
-                    log.printf("Snapshot image already present, was not changed.");
+                    log.printf("Snapshot image already present, was not changed.\n");
 
                 } else {
                     String toolsLib = mSdkManager.getLocation() + File.separator
@@ -678,7 +678,7 @@ public class AvdManager {
                             // There's already an sdcard file with the right size and we're
                             // not overriding it... so don't remove it.
                             runMkSdcard = false;
-                            log.printf("SD Card already present with same size, was not changed.");
+                            log.printf("SD Card already present with same size, was not changed.\n");
                         }
                     }
 
