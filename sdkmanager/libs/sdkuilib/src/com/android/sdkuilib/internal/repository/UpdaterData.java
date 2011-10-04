@@ -337,10 +337,12 @@ public class UpdaterData implements IUpdaterData {
             for (String url : urls) {
                 if (url != null) {
                     url = url.trim();
-                    if (url.endsWith("/") || url.endsWith(SdkRepoConstants.URL_DEFAULT_FILENAME)) {
+                    if (url.endsWith("/")
+                            || url.endsWith(SdkRepoConstants.URL_DEFAULT_FILENAME)
+                            || url.endsWith(SdkRepoConstants.URL_DEFAULT_FILENAME2)) {
                         String fullUrl = url;
                         if (fullUrl.endsWith("/")) {
-                            fullUrl += SdkRepoConstants.URL_DEFAULT_FILENAME;
+                            fullUrl += SdkRepoConstants.URL_DEFAULT_FILENAME2;
                         }
 
                         SdkSource s = new SdkRepoSource(fullUrl, null/*uiName*/);
