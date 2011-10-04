@@ -64,8 +64,11 @@ public class SdkRepoSource extends SdkSource {
     }
 
     @Override
-    protected String getUrlDefaultXmlFile() {
-        return SdkRepoConstants.URL_DEFAULT_FILENAME;
+    protected String[] getDefaultXmlFileUrls() {
+        return new String[] {
+                SdkRepoConstants.URL_DEFAULT_FILENAME2,
+                SdkRepoConstants.URL_DEFAULT_FILENAME
+        };
     }
 
     @Override

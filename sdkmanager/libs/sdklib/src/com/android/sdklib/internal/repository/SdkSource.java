@@ -86,7 +86,10 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         // looked for. This way it will be obvious to the user which
         // resource we are actually trying to fetch.
         if (url.endsWith("/")) {  //$NON-NLS-1$
-            url += getUrlDefaultXmlFile();
+            String[] names = getDefaultXmlFileUrls();
+            if (names.length > 0) {
+                url += names[0];
+            }
         }
 
         mUrl = url;
@@ -100,8 +103,13 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      */
     public abstract boolean isAddonSource();
 
-    /** Returns SdkRepoConstants.URL_DEFAULT_XML_FILE or SdkAddonConstants.URL_DEFAULT_XML_FILE */
-    protected abstract String getUrlDefaultXmlFile();
+    /**
+     * Returns the basename of the default URLs to try to download the
+     * XML manifest.
+     * E.g. this is typically SdkRepoConstants.URL_DEFAULT_XML_FILE
+     * or SdkAddonConstants.URL_DEFAULT_XML_FILE
+     */
+    protected abstract String[] getDefaultXmlFileUrls();
 
     /** Returns SdkRepoConstants.NS_LATEST_VERSION or SdkAddonConstants.NS_LATEST_VERSION. */
     protected abstract int getNsLatestVersion();
@@ -250,7 +258,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      */
     public void load(ITaskMonitor monitor, boolean forceHttp) {
 
-        monitor.setProgressMax(6);
+        monitor.setProgressMax(7);
 
         setDefaultDescription();
 
@@ -266,28 +274,77 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         Boolean[] validatorFound = new Boolean[] { Boolean.FALSE };
         String[] validationError = new String[] { null };
         Exception[] exception = new Exception[] { null };
-        InputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
         Document validatedDoc = null;
         boolean usingAlternateXml = false;
         boolean usingAlternateUrl = false;
         String validatedUri = null;
+
+        String[] defaultNames = getDefaultXmlFileUrls();
+        String firstDefaultName = defaultNames.length > 0 ? defaultNames[0] : "";
+
+        InputStream xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
+        if (xml != null) {
+            int version = getXmlSchemaVersion(xml);
+            if (version == 0) {
+                xml = null;
+            }
+        }
+
+        // FIXME: this is a quick fix to support an alternate upgrade path.
+        // The whole logic below needs to be updated.
+        if (xml == null && defaultNames.length > 0) {
+            ITaskMonitor subMonitor = monitor.createSubMonitor(1);
+            subMonitor.setProgressMax(defaultNames.length);
+
+            String baseUrl = url;
+            if (!baseUrl.endsWith("/")) {
+                int pos = baseUrl.lastIndexOf('/');
+                if (pos > 0) {
+                    baseUrl = baseUrl.substring(0, pos + 1);
+                }
+            }
+
+            for(String name : defaultNames) {
+                String newUrl = baseUrl + name;
+                if (newUrl.equals(url)) {
+                    continue;
+                }
+                xml = fetchUrl(newUrl, subMonitor.createSubMonitor(1), exception);
+                if (xml != null) {
+                    int version = getXmlSchemaVersion(xml);
+                    if (version == 0) {
+                        xml = null;
+                    } else {
+                        url = newUrl;
+                        subMonitor.incProgress(
+                                subMonitor.getProgressMax() - subMonitor.getProgress());
+                        break;
+                    }
+                }
+            }
+        } else {
+            monitor.incProgress(1);
+        }
 
         // If the original URL can't be fetched
         // and the URL doesn't explicitly end with our filename
         // and it wasn't an HTTP authentication operation canceled by the user
         // then make another tentative after changing the URL.
         if (xml == null
-                && !url.endsWith(getUrlDefaultXmlFile())
+                && !url.endsWith(firstDefaultName)
                 && !(exception[0] instanceof CanceledByUserException)) {
             if (!url.endsWith("/")) {       //$NON-NLS-1$
                 url += "/";                 //$NON-NLS-1$
             }
-            url += getUrlDefaultXmlFile();
+            url += firstDefaultName;
 
             xml = fetchUrl(url, monitor.createSubMonitor(1), exception);
             usingAlternateUrl = true;
+        } else {
+            monitor.incProgress(1);
         }
 
+        // FIXME this needs to revisited.
         if (xml != null) {
             monitor.setDescription("Validate XML: %1$s", url);
 
@@ -348,11 +405,11 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
                     // If we haven't already tried the alternate URL, let's do it now.
                     // We don't capture any fetch exception that happen during the second
                     // fetch in order to avoid hidding any previous fetch errors.
-                    if (!url.endsWith(getUrlDefaultXmlFile())) {
+                    if (!url.endsWith(firstDefaultName)) {
                         if (!url.endsWith("/")) {       //$NON-NLS-1$
                             url += "/";                 //$NON-NLS-1$
                         }
-                        url += getUrlDefaultXmlFile();
+                        url += firstDefaultName;
 
                         xml = fetchUrl(url, subMonitor.createSubMonitor(1), null /* outException */);
                         subMonitor.incProgress(1);
