@@ -690,6 +690,10 @@ public class XmlPrettyPrinter {
     }
 
     private boolean newlineBeforeElementOpen(Element element, int depth) {
+        if (hasBlankLineAbove()) {
+            return false;
+        }
+
         if (mPrefs.removeEmptyLines || depth <= 0) {
             return false;
         }
@@ -797,6 +801,10 @@ public class XmlPrettyPrinter {
     }
 
     private boolean newlineAfterElementClose(Element element, int depth) {
+        if (hasBlankLineAbove()) {
+            return false;
+        }
+
         return element.getParentNode().getNodeType() == Node.ELEMENT_NODE
                 && !keepElementAsSingleLine(depth - 1, (Element) element.getParentNode());
     }
