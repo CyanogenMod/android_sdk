@@ -34,6 +34,11 @@
              <property name="id" value="com.android.ide.eclipse.traceview" />
          </ant>
 
+         <ant antfile="${genericTargets}" target="${target}">
+             <property name="type" value="feature" />
+             <property name="id" value="com.android.ide.eclipse.adt.xml" />
+         </ant>
+
         <antcall target="buildInternalFeatures"/>
          
      </target>
@@ -67,6 +72,10 @@
      <!-- Replace element.id with the id of the top level element being built   -->
      <!-- ===================================================================== -->
      <target name="assemble.com.android.ide.eclipse.adt">
+         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
+     </target>
+
+     <target name="assemble.com.android.ide.eclipse.adt.xml">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
 
