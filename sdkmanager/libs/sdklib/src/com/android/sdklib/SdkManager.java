@@ -559,7 +559,15 @@ public class SdkManager {
                         try {
                             File propFile = new File(secondLevel, SdkConstants.FN_SOURCE_PROP);
                             Properties props = new Properties();
-                            props.load(new FileInputStream(propFile));
+                            FileInputStream fis = null;
+                            try {
+                                fis = new FileInputStream(propFile);
+                                props.load(fis);
+                            } finally {
+                                if (fis != null) {
+                                    fis.close();
+                                }
+                            }
 
                             AndroidVersion propsVersion = new AndroidVersion(props);
                             if (!propsVersion.equals(version)) {
@@ -1024,7 +1032,15 @@ public class SdkManager {
         File sourceProp = new File(folder, SdkConstants.FN_SOURCE_PROP);
         try {
             Properties p = new Properties();
-            p.load(new FileInputStream(sourceProp));
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(sourceProp);
+                p.load(fis);
+            } finally {
+                if (fis != null) {
+                    fis.close();
+                }
+            }
 
             return new AndroidVersion(p);
         } catch (FileNotFoundException e) {
