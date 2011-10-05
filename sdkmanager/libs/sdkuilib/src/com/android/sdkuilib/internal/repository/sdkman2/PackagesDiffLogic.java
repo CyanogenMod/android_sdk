@@ -19,14 +19,15 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -562,8 +563,13 @@ class PackagesDiffLogic {
 
         // Only process items matching the current source.
         if (currentSource == newItemSource) {
-            // Same source. accept it.
+            // Object identity, so definitely the same source. Accept it.
             return true;
+
+        } else if (currentSource != null && newItemSource != null &&
+                !currentSource.getClass().equals(newItemSource.getClass())) {
+            // Both sources don't have the same type (e.g. sdk repository versus add-on repository)
+            return false;
 
         } else if (currentSource != null && currentSource.equals(newItemSource)) {
             // Same source. Accept it.
@@ -576,7 +582,7 @@ class PackagesDiffLogic {
             return true;
 
         } else if (currentSource != null && currentSource.getUrl().startsWith("file://")) {
-            // Probably a manual local install. Accept it.
+            // Heuristic: Probably a manual local install. Accept it.
             return true;
 
         } else {
@@ -584,6 +590,21 @@ class PackagesDiffLogic {
             // have similar packages, we don't want to merge them together and have
             // one hide the other. This is a design error from the repository owners
             // and we want the case to be blatant so that we can get it fixed.
+
+            if (currentSource != null && newItemSource != null) {
+                try {
+                    URL url1 = new URL(currentSource.getUrl());
+                    URL url2 = new URL(newItemSource.getUrl());
+
+                    // Make an exception if both URLs have the same host name & domain name.
+                    if (url1.sameFile(url2) || url1.getHost().equals(url2.getHost())) {
+                        return true;
+                    }
+                } catch (Exception ignore) {
+                    // Ignore MalformedURLException or other exceptions
+                }
+            }
+
             return false;
         }
     }
