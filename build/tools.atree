@@ -61,6 +61,7 @@ bin/layoutopt       tools/layoutopt
 bin/traceview       tools/traceview
 bin/android         tools/android
 bin/monkeyrunner    tools/monkeyrunner
+bin/lint            tools/lint
 
 
 # sdk.git Ant templates for project build files
@@ -105,6 +106,9 @@ framework/guavalib.jar           tools/lib/guavalib.jar
 framework/jsilver.jar            tools/lib/jsilver.jar
 framework/jython.jar             tools/lib/jython.jar
 framework/mkidentity-prebuilt.jar tools/lib/mkidentity.jar
+framework/lint.jar               tools/lib/lint.jar
+framework/lint_api.jar           tools/lib/lint_api.jar
+framework/lint_checks.jar        tools/lib/lint_checks.jar
 
 # 3rd Party java libraries
 framework/groovy-all-1.7.0.jar                                tools/lib/groovy-all-1.7.0.jar

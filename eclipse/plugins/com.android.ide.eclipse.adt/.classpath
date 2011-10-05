@@ -19,6 +19,8 @@
 	<classpathentry kind="lib" path="libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
 	<classpathentry kind="lib" path="libs/common.jar" sourcepath="/common"/>
 	<classpathentry kind="lib" path="libs/rule_api.jar" sourcepath="/rule_api"/>
+	<classpathentry kind="lib" path="libs/lint_api.jar" sourcepath="/lint-api"/>
+	<classpathentry kind="lib" path="libs/lint_checks.jar" sourcepath="/lint-checks"/>
 	<classpathentry kind="lib" path="libs/assetstudio.jar" sourcepath="/assetstudio"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmuilib"/>

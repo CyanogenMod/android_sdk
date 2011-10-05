@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
@@ -57,6 +58,8 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import java.util.List;
 
 /**
  * Shared handler for both quick assist processors (Control key handler) and quick fix
@@ -159,34 +162,24 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
         AndroidXmlEditor editor = AndroidXmlEditor.getAndroidXmlEditor(sourceViewer);
         if (editor != null) {
             IFile file = editor.getInputFile();
-
+            IDocument document = sourceViewer.getDocument();
+            List<IMarker> markers = AdtUtils.findMarkersOnLine(AdtConstants.MARKER_AAPT_COMPILE,
+                    file, document, invocationContext.getOffset());
             try {
-                IMarker[] markers = file.findMarkers(AdtConstants.MARKER_AAPT_COMPILE, true,
-                        IResource.DEPTH_ZERO);
-
-                // Look for a match on the same line as the caret.
-                int offset = invocationContext.getOffset();
-                IDocument document = sourceViewer.getDocument();
-                IRegion lineInfo = document.getLineInformationOfOffset(offset);
-                int lineStart = lineInfo.getOffset();
-                int lineEnd = lineStart + lineInfo.getLength();
-
                 for (IMarker marker : markers) {
                     String message = marker.getAttribute(IMarker.MESSAGE, ""); //$NON-NLS-1$
                     if (message.contains(getTargetMarkerErrorMessage())) {
                         int start = marker.getAttribute(IMarker.CHAR_START, 0);
                         int end = marker.getAttribute(IMarker.CHAR_END, 0);
-                        if (start >= lineStart && start <= lineEnd && end > start) {
-                            int length = end - start;
-                            String resource = document.get(start, length);
-                            // Can only offer create value for non-framework value
-                            // resources
-                            if (ResourceHelper.canCreateResource(resource)) {
-                                IProject project = editor.getProject();
-                                return new ICompletionProposal[] {
-                                    new CreateResourceProposal(project, resource)
-                                };
-                            }
+                        int length = end - start;
+                        String resource = document.get(start, length);
+                        // Can only offer create value for non-framework value
+                        // resources
+                        if (ResourceHelper.canCreateResource(resource)) {
+                            IProject project = editor.getProject();
+                            return new ICompletionProposal[] {
+                                new CreateResourceProposal(project, resource)
+                            };
                         }
                     } else if (message.contains(getUnboundErrorMessage())) {
                         return new ICompletionProposal[] {
@@ -194,8 +187,6 @@ public class AaptQuickFix implements IMarkerResolutionGenerator2, IQuickAssistPr
                         };
                     }
                 }
-            } catch (CoreException e) {
-                AdtPlugin.log(e, null);
             } catch (BadLocationException e) {
                 AdtPlugin.log(e, null);
             }

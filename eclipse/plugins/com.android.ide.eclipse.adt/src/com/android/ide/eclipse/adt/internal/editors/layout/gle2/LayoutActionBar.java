@@ -28,9 +28,11 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.lint.LintEclipseContext;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -40,12 +42,15 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -59,12 +64,14 @@ import java.util.List;
 public class LayoutActionBar extends Composite {
     private GraphicalEditorPart mEditor;
     private ToolBar mLayoutToolBar;
+    private ToolBar mLintToolBar;
     private ToolBar mZoomToolBar;
     private ToolItem mZoomRealSizeButton;
     private ToolItem mZoomOutButton;
     private ToolItem mZoomResetButton;
     private ToolItem mZoomInButton;
     private ToolItem mZoomFitButton;
+    private ToolItem mLintButton;
 
     /**
      * Creates a new {@link LayoutActionBar} and adds it to the given parent.
@@ -77,13 +84,18 @@ public class LayoutActionBar extends Composite {
         super(parent, style | SWT.NO_FOCUS);
         mEditor = editor;
 
-        GridLayout layout = new GridLayout(2, false);
+        GridLayout layout = new GridLayout(3, false);
         setLayout(layout);
 
         mLayoutToolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
         mLayoutToolBar.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
         mZoomToolBar = createZoomControls();
         mZoomToolBar.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, false));
+        mLintToolBar = createLintControls();
+
+        GridData lintData = new GridData(SWT.END, SWT.BEGINNING, false, false);
+        lintData.exclude = true;
+        mLintToolBar.setLayoutData(lintData);
     }
 
     /** Updates the layout contents based on the current selection */
@@ -364,6 +376,7 @@ public class LayoutActionBar extends Composite {
 
     // ---- Zoom Controls ----
 
+    @SuppressWarnings("unused") // SWT constructors have side effects, they are not unused
     private ToolBar createZoomControls() {
         ToolBar toolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
 
@@ -430,6 +443,61 @@ public class LayoutActionBar extends Composite {
         });
 
         return toolBar;
+    }
+
+    @SuppressWarnings("unused") // SWT constructors have side effects, they are not unused
+    private ToolBar createLintControls() {
+        ToolBar toolBar = new ToolBar(this, SWT.FLAT | SWT.RIGHT | SWT.HORIZONTAL);
+
+        // Separate from adjacent toolbar
+        new ToolItem(toolBar, SWT.SEPARATOR);
+
+        ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+        mLintButton = new ToolItem(toolBar, SWT.PUSH);
+        mLintButton.setToolTipText("Show Lint Warnings for this Layout");
+        mLintButton.setImage(sharedImages.getImage(ISharedImages.IMG_OBJS_WARN_TSK));
+        mLintButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                IFile file = mEditor.getLayoutEditor().getInputFile();
+                LintEclipseContext.showErrors(getShell(), file);
+            }
+        });
+
+        return toolBar;
+    }
+
+    /**
+     * Updates the lint indicator state in the given layout editor
+     */
+    public void updateErrorIndicator() {
+        updateErrorIndicator(LintEclipseContext.hasMarkers(mEditor.getEditedFile()));
+    }
+
+    /**
+     * Sets whether the action bar should show the "lint warnings" button
+     *
+     * @param hasLintWarnings whether there are lint errors to be shown
+     */
+    void updateErrorIndicator(final boolean hasLintWarnings) {
+        Display display = getDisplay();
+        if (display.getThread() != Thread.currentThread()) {
+            display.asyncExec(new Runnable() {
+                public void run() {
+                    if (!isDisposed()) {
+                        updateErrorIndicator(hasLintWarnings);
+                    }
+                }
+            });
+            return;
+        }
+
+        GridData layoutData = (GridData) mLintToolBar.getLayoutData();
+        if (layoutData.exclude == hasLintWarnings) {
+            layoutData.exclude = !hasLintWarnings;
+            mLintToolBar.setVisible(hasLintWarnings);
+            layout();
+        }
     }
 
     /**

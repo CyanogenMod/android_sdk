@@ -123,6 +123,7 @@ inset
 instanceof
 instantiatable
 int
+inter
 interpolator
 interpolators
 iterable

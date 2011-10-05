@@ -81,8 +81,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -536,19 +534,9 @@ public class Hyperlinks {
     private static void openPath(IPath filePath, IRegion region, int offset) {
         IEditorPart sourceEditor = getEditor();
         IWorkbenchPage page = sourceEditor.getEditorSite().getPage();
-        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
-        IPath workspacePath = workspace.getLocation();
-        IFile file = null;
-        if (workspacePath.isPrefixOf(filePath)) {
-            IPath relativePath = filePath.makeRelativeTo(workspacePath);
-            IResource member = workspace.findMember(relativePath);
-            if (member instanceof IFile) {
-                file = (IFile) member;
-            }
-        } else if (filePath.isAbsolute()) {
-            file = workspace.getFileForLocation(filePath);
-        }
-        if (file != null) {
+
+        IFile file = AdtUtils.pathToIFile(filePath);
+        if (file != null && file.exists()) {
             try {
                 AdtPlugin.openFile(file, region);
                 return;

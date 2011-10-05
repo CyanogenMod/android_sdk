@@ -18,8 +18,11 @@ package com.android.ide.eclipse.adt.internal.editors;
 
 import static org.eclipse.wst.sse.ui.internal.actions.StructuredTextEditorActionConstants.ACTION_NAME_FORMAT_DOCUMENT;
 
+import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.lint.LintRunner;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -28,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
 import com.android.sdklib.IAndroidTarget;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -38,6 +42,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.BadLocationException;
@@ -65,6 +70,7 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.events.IHyperlinkListener;
 import org.eclipse.ui.forms.widgets.FormText;
+import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.WorkbenchPart;
@@ -242,6 +248,34 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     // ---- Base Class Overrides, Interfaces Implemented ----
+
+    @Override
+    public Object getAdapter(Class adapter) {
+        Object result = super.getAdapter(adapter);
+
+        if (result != null && adapter.equals(IGotoMarker.class) ) {
+            final IGotoMarker gotoMarker = (IGotoMarker) result;
+            return new IGotoMarker() {
+                public void gotoMarker(IMarker marker) {
+                    gotoMarker.gotoMarker(marker);
+                    try {
+                        // Lint markers should always jump to XML text
+                        if (marker.getType().equals(AdtConstants.MARKER_LINT)) {
+                            IEditorPart editor = AdtUtils.getActiveEditor();
+                            if (editor instanceof AndroidXmlEditor) {
+                                AndroidXmlEditor xmlEditor = (AndroidXmlEditor) editor;
+                                xmlEditor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+                            }
+                        }
+                    } catch (CoreException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                }
+            };
+        }
+
+        return result;
+    }
 
     /**
      * Creates the pages of the multi-page editor.
@@ -522,6 +556,17 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
 
         // The actual "save" operation is done by the Structured XML Editor
         getEditor(mTextPageIndex).doSave(monitor);
+
+        runLintOnSave();
+    }
+
+    protected Job runLintOnSave() {
+        // Check for errors, if enabled
+        if (AdtPrefs.getPrefs().isLintOnSave()) {
+            return LintRunner.startLint(getInputFile(), getStructuredDocument());
+        }
+
+        return null;
     }
 
     /* (non-Javadoc)

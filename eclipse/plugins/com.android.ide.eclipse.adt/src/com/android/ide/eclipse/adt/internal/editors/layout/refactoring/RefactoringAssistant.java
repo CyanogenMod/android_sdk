@@ -249,7 +249,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         }
 
         public String getAdditionalProposalInfo() {
-            return "Initiates the given refactoring operation";
+            return String.format("Initiates the \"%1$s\" refactoring", mRefactoring.getName());
         }
 
         public IContextInformation getContextInformation() {

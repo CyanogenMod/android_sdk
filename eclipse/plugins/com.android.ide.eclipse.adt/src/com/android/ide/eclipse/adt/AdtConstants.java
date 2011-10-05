@@ -243,6 +243,8 @@ public class AdtConstants {
     /** final packaging error marker, only to be used in {@link PostCompilerBuilder} */
     public final static String MARKER_PACKAGING = AdtPlugin.PLUGIN_ID + ".packagingProblem"; //$NON-NLS-1$
 
+    /** Marker for lint errors */
+    public final static String MARKER_LINT = AdtPlugin.PLUGIN_ID + ".lintProblem"; //$NON-NLS-1$
 
     /** Name for the "type" marker attribute */
     public final static String MARKER_ATTR_TYPE = "android.type"; //$NON-NLS-1$

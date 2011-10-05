@@ -1,0 +1,2 @@
+Main-Class: com.android.tools.lint.Main
+Class-Path: lint_api.jar lint_checks.jar

@@ -40,10 +40,13 @@ public class Main {
         Parameters p = checkParameters(args);
         if (!p.valid) {
             displayHelpMessage();
+            displayObsoleteMessage();
             exit();
         }
 
         analyzeFiles(p.files);
+
+        displayObsoleteMessage();
     }
 
     private static void analyzeFiles(File[] files) {
@@ -78,6 +81,11 @@ public class Main {
      */
     private static void displayHelpMessage() {
         System.out.println("usage: layoutopt <directories/files to analyze>");
+    }
+
+    /** Layoutopt is obsolete; inform user */
+    private static void displayObsoleteMessage() {
+        System.err.println("\"layoutopt\" is obsolete; use \"lint\" instead which includes layout analysis.");
     }
 
     /**

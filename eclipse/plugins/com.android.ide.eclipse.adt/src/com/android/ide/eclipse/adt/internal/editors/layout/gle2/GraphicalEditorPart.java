@@ -58,6 +58,7 @@ import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestInfo;
 import com.android.ide.eclipse.adt.internal.editors.ui.DecorComposite;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.lint.LintEclipseContext;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -340,6 +341,9 @@ public class GraphicalEditorPart extends EditorPart
         mActionBar = new LayoutActionBar(layoutBarAndCanvas, SWT.NONE, this);
         GridData detailsData = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
         mActionBar.setLayoutData(detailsData);
+        if (file != null) {
+            mActionBar.updateErrorIndicator(LintEclipseContext.hasMarkers(file));
+        }
 
         mSashError = new SashForm(layoutBarAndCanvas, SWT.VERTICAL | SWT.BORDER);
         mSashError.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -886,6 +890,8 @@ public class GraphicalEditorPart extends EditorPart
     public void activated() {
         if (!mActive) {
             mActive = true;
+
+            mActionBar.updateErrorIndicator();
 
             boolean changed = mConfigComposite.syncRenderState();
             if (changed) {

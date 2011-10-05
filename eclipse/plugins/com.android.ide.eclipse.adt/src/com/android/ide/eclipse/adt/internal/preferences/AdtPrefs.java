@@ -61,7 +61,11 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_ONE_ATTR_PER_LINE = AdtPlugin.PLUGIN_ID + ".oneAttrPerLine"; //$NON-NLS-1$
     public final static String PREFS_SPACE_BEFORE_CLOSE = AdtPlugin.PLUGIN_ID + ".spaceBeforeClose"; //$NON-NLS-1$
     public final static String PREFS_FORMAT_ON_SAVE = AdtPlugin.PLUGIN_ID + ".formatOnSave"; //$NON-NLS-1$
+    public final static String PREFS_LINT_ON_SAVE = AdtPlugin.PLUGIN_ID + ".lintOnSave"; //$NON-NLS-1$
+    public final static String PREFS_LINT_ON_EXPORT = AdtPlugin.PLUGIN_ID + ".lintOnExport"; //$NON-NLS-1$
     public final static String PREFS_ATTRIBUTE_SORT = AdtPlugin.PLUGIN_ID + ".attrSort"; //$NON-NLS-1$
+    public final static String PREFS_DISABLED_ISSUES = AdtPlugin.PLUGIN_ID + ".disabedIssues"; //$NON-NLS-1$
+    public final static String PREFS_LINT_SEVERITIES = AdtPlugin.PLUGIN_ID + ".lintSeverities"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();
@@ -88,6 +92,8 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     private boolean mOneAttributeOnFirstLine;
     private boolean mSpaceBeforeClose;
     private boolean mFormatOnSave;
+    private boolean mLintOnSave;
+    private boolean mLintOnExport;
     private AttributeSortOrder mAttributeSort;
 
     public static enum BuildVerbosity {
@@ -225,6 +231,14 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         if (property == null || PREFS_FORMAT_ON_SAVE.equals(property)) {
             mFormatOnSave = mStore.getBoolean(PREFS_FORMAT_ON_SAVE);
         }
+
+        if (property == null || PREFS_LINT_ON_SAVE.equals(property)) {
+            mLintOnSave = mStore.getBoolean(PREFS_LINT_ON_SAVE);
+        }
+
+        if (property == null || PREFS_LINT_ON_EXPORT.equals(property)) {
+            mLintOnExport = mStore.getBoolean(PREFS_LINT_ON_EXPORT);
+        }
     }
 
     /**
@@ -334,6 +348,26 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         return mFormatOnSave;
     }
 
+    public boolean isLintOnSave() {
+        return mLintOnSave;
+    }
+
+    public void setLintOnSave(boolean on) {
+        mLintOnSave = on;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        store.setValue(PREFS_LINT_ON_SAVE, on);
+    }
+
+    public boolean isLintOnExport() {
+        return mLintOnExport;
+    }
+
+    public void setLintOnExport(boolean on) {
+        mLintOnExport = on;
+        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
+        store.setValue(PREFS_LINT_ON_EXPORT, on);
+    }
+
     public boolean getBuildForceErrorOnNativeLibInJar() {
         return mBuildForceErrorOnNativeLibInJar;
     }
@@ -407,6 +441,8 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         store.setDefault(PREFS_USE_CUSTOM_XML_FORMATTER, true);
         store.setDefault(PREFS_ONE_ATTR_PER_LINE, true);
         store.setDefault(PREFS_SPACE_BEFORE_CLOSE, true);
+        store.setDefault(PREFS_LINT_ON_SAVE, true);
+        store.setDefault(PREFS_LINT_ON_EXPORT, true);
 
         // Defaults already handled; no need to write into map:
         //store.setDefault(PREFS_ATTRIBUTE_SORT, AttributeSortOrder.LOGICAL.key);

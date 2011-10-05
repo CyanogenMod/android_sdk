@@ -27,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.OutlinePage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.PropertySheetPage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
@@ -40,6 +41,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -162,6 +166,21 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
     @Override
     public boolean isSaveAsAllowed() {
         return true;
+    }
+
+    @Override
+    protected Job runLintOnSave() {
+        Job job = super.runLintOnSave();
+        if (job != null) {
+            job.addJobChangeListener(new JobChangeAdapter() {
+                @Override
+                public void done(IJobChangeEvent event) {
+                    LayoutActionBar bar = getGraphicalEditor().getLayoutActionBar();
+                    bar.updateErrorIndicator();
+                }
+            });
+        }
+        return job;
     }
 
     /**

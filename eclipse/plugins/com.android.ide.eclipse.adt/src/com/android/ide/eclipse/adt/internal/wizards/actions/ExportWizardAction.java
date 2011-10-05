@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.actions;
 
+import com.android.ide.eclipse.adt.internal.lint.LintRunner;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.export.ExportWizard;
@@ -61,6 +62,11 @@ public class ExportWizardAction implements IObjectActionDelegate {
 
                 // and finally do the action
                 if (project != null) {
+                    if (!LintRunner.runLintOnExport(
+                            mWorkbench.getActiveWorkbenchWindow().getShell(), project)) {
+                        return;
+                    }
+
                     ProjectState state = Sdk.getProjectState(project);
                     if (state.isLibrary()) {
                         MessageDialog.openError(mWorkbench.getDisplay().getActiveShell(),

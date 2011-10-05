@@ -33,6 +33,9 @@ bin/dmtracedump.exe                         strip tools/dmtracedump.exe
 rm tools/draw9patch
 sdk/draw9patch/etc/draw9patch.bat                 tools/draw9patch.bat
 
+rm tools/lint
+sdk/lint/cli/etc/lint.bat                         tools/lint.bat
+
 rm tools/emulator
 rm tools/emulator-arm
 rm tools/emulator-x86

@@ -17,10 +17,16 @@
 package com.android.ide.eclipse.adt;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -28,6 +34,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.ITextEditor;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /** Utility methods for ADT */
@@ -290,5 +300,82 @@ public class AdtUtils {
         IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
         IPath workspacePath = workspace.getLocation();
         return workspacePath.append(resource.getFullPath());
+    }
+
+    /**
+     * Converts a {@link File} to an {@link IFile}, if possible.
+     *
+     * @param file a file to be converted
+     * @return the corresponding {@link IFile}, or null
+     */
+    public static IFile fileToIFile(File file) {
+        IPath filePath = new Path(file.getPath());
+        return pathToIFile(filePath);
+    }
+
+    /**
+     * Converts a {@link IPath} to an {@link IFile}, if possible.
+     *
+     * @param path a path to be converted
+     * @return the corresponding {@link IFile}, or null
+     */
+    public static IFile pathToIFile(IPath path) {
+        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+        IPath workspacePath = workspace.getLocation();
+        if (workspacePath.isPrefixOf(path)) {
+            IPath relativePath = path.makeRelativeTo(workspacePath);
+            IResource member = workspace.findMember(relativePath);
+            if (member instanceof IFile) {
+                return (IFile) member;
+            }
+        } else if (path.isAbsolute()) {
+            return workspace.getFileForLocation(path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all markers in a file/document that fit on the same line as the given offset
+     *
+     * @param markerType the marker type
+     * @param file the file containing the markers
+     * @param document the document showing the markers
+     * @param offset the offset to be checked
+     * @return a list (possibly empty but never null) of matching markers
+     */
+    public static List<IMarker> findMarkersOnLine(String markerType,
+            IFile file, IDocument document, int offset) {
+        List<IMarker> matchingMarkers = new ArrayList<IMarker>(2);
+        try {
+            IMarker[] markers = file.findMarkers(markerType, true, IResource.DEPTH_ZERO);
+
+            // Look for a match on the same line as the caret.
+            IRegion lineInfo = document.getLineInformationOfOffset(offset);
+            int lineStart = lineInfo.getOffset();
+            int lineEnd = lineStart + lineInfo.getLength();
+            int offsetLine = document.getLineOfOffset(offset);
+
+
+            for (IMarker marker : markers) {
+                int start = marker.getAttribute(IMarker.CHAR_START, -1);
+                int end = marker.getAttribute(IMarker.CHAR_END, -1);
+                if (start >= lineStart && start <= lineEnd && end > start) {
+                    matchingMarkers.add(marker);
+                } else if (start == -1 && end == -1) {
+                    // Some markers don't set character range, they only set the line
+                    int line = marker.getAttribute(IMarker.LINE_NUMBER, -1);
+                    if (line == offsetLine + 1) {
+                        matchingMarkers.add(marker);
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        } catch (BadLocationException e) {
+            AdtPlugin.log(e, null);
+        }
+
+        return matchingMarkers;
     }
 }

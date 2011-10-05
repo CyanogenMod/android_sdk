@@ -21,6 +21,10 @@ LIBS="sdkstats androidprefs common layoutlib_api ide_common rule_api ninepatch s
 echo "make java libs ..."
 make -j3 showcommands $LIBS || die "ADT: Fail to build one of $LIBS."
 
+# Add in lint_api and lint_checks: Not build targets but are copy targets
+LIBS="$LIBS lint_api lint_checks"
+make -j3 showcommands lint || die "ADT: Fail to build one of $LIBS."
+
 echo "Copying java libs to $DEST"
 
 # Prebuilts required by sdklib & co, to be linked/copied in the ADT libs folder

@@ -49,7 +49,18 @@
         <super type="org.eclipse.core.resources.textmarker" />
         <persistent value="true" />
     </extension>
+    <extension
+        id="com.android.ide.eclipse.adt.lintProblem"
+        name="Android Lint Problem"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
     <extension point="org.eclipse.ui.ide.markerResolution">
+        <markerResolutionGenerator
+            markerType="com.android.ide.eclipse.adt.lintProblem"
+            class="com.android.ide.eclipse.adt.internal.lint.LintFixGenerator" />
         <markerResolutionGenerator
             markerType="com.android.ide.eclipse.common.aaptProblem"
             class="com.android.ide.eclipse.adt.internal.build.AaptQuickFix" />
@@ -258,6 +269,8 @@
                 path="additions">
                 <separator name="group1" />
                 <separator name="group2" />
+                <separator name="group3" />
+                <separator name="group4" />
             </menu>
             <filter
                 name="projectNature"
@@ -320,6 +333,18 @@
                 id="com.android.ide.eclipse.adt.DexDumpAction"
                 label="Display dex bytecode"
                 menubarPath="com.android.ide.eclipse.adt.AndroidTools/group3" />
+            <action
+                class="com.android.ide.eclipse.adt.internal.lint.ClearLintMarkersAction"
+                enablesFor="1"
+                id="com.android.ide.eclipse.adt.internal.lint.ClearLintMarkersAction"
+                label="Clear Lint Markers"
+                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group4" />
+            <action
+                class="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
+                enablesFor="1"
+                id="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
+                label="Run Lint: Check for Common Errors"
+                menubarPath="com.android.ide.eclipse.adt.AndroidTools/group4" />
         </objectContribution>
     </extension>
     <extension point="org.eclipse.ui.preferencePages">
@@ -348,6 +373,12 @@
             class="com.android.ide.eclipse.adt.internal.preferences.EditorsPage"
             id="com.android.ide.eclipse.adt.preferences.EditorsPage"
             name="Editors">
+        </page>
+        <page
+            category="com.android.ide.eclipse.preferences.main"
+            class="com.android.ide.eclipse.adt.internal.preferences.LintPreferencePage"
+            id="com.android.ide.eclipse.common.preferences.LintPreferencePage"
+            name="Lint Error Checking">
         </page>
     </extension>
     <extension point="org.eclipse.core.runtime.preferences">
@@ -587,11 +618,7 @@
         </sourceViewerConfiguration>
         <provisionalConfiguration
             type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
-            class="com.android.ide.eclipse.adt.internal.build.AaptQuickFix"
-            target="org.eclipse.wst.xml.XML_DEFAULT" />
-        <provisionalConfiguration
-            type="org.eclipse.jface.text.quickassist.IQuickAssistProcessor"
-            class="com.android.ide.eclipse.adt.internal.editors.layout.refactoring.RefactoringAssistant"
+            class="com.android.ide.eclipse.adt.internal.editors.formatting.XmlQuickAssistManager"
             target="org.eclipse.wst.xml.XML_DEFAULT" />
         <provisionalConfiguration
             type="characterpairmatcher"
