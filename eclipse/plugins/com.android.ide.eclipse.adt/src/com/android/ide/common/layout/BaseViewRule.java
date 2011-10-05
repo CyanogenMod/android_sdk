@@ -274,7 +274,20 @@ public class BaseViewRule implements IViewRule {
                                     } else {
                                         newValues.remove(valueId);
                                     }
-                                    values = join('|', newValues);
+
+                                    List<String> sorted = new ArrayList<String>(newValues);
+                                    Collections.sort(sorted);
+                                    values = join('|', sorted);
+
+                                    // Special case
+                                    if (valueId.equals("normal")) { //$NON-NLS-1$
+                                        // For textStyle for example, if you have "bold|italic"
+                                        // and you select the "normal" property, this should
+                                        // not behave in the normal flag way and "or" itself in;
+                                        // it should replace the other two.
+                                        // This also applies to imeOptions.
+                                        values = valueId;
+                                    }
                                 }
                                 n.setAttribute(uri, actionId, values);
                             } else if (prop.isEnum()) {
