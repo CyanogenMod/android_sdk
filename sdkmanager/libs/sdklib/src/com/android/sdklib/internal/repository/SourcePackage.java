@@ -72,8 +72,9 @@ public class SourcePackage extends Package implements IPackageVersion {
     protected SourcePackage(
             AndroidVersion platformVersion,
             int revision,
-            Properties props) {
-        this(null /*source*/, platformVersion, revision, props);
+            Properties props,
+            String localOsPath) {
+        this(null /*source*/, platformVersion, revision, props, localOsPath);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
@@ -81,7 +82,8 @@ public class SourcePackage extends Package implements IPackageVersion {
             SdkSource source,
             AndroidVersion platformVersion,
             int revision,
-            Properties props) {
+            Properties props,
+            String localOsPath) {
         super(  source,                     //source
                 props,                      //properties
                 revision,                   //revision
@@ -90,7 +92,7 @@ public class SourcePackage extends Package implements IPackageVersion {
                 null,                       //descUrl
                 Os.getCurrentOs(),          //archiveOs
                 Arch.getCurrentArch(),      //archiveArch
-                null                        //archiveOsPath
+                localOsPath                 //archiveOsPath
                 );
         mVersion = platformVersion;
     }
@@ -119,7 +121,7 @@ public class SourcePackage extends Package implements IPackageVersion {
                 version = new AndroidVersion(props);
                 // The constructor will extract the revision from the properties
                 // and it will not consider a missing revision as being fatal.
-                return new SourcePackage(version, 0 /*revision*/, props);
+                return new SourcePackage(version, 0 /*revision*/, props, srcDir.getAbsolutePath());
             } catch (AndroidVersionException e) {
                 error = String.format("Invalid file %1$s: %2$s",
                         SdkConstants.FN_SOURCE_PROP,

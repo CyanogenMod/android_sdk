@@ -38,7 +38,12 @@ public class SystemImagePackageTest extends PackageTest {
                 int revision,
                 String abi,
                 Properties props) {
-            super(platformVersion, revision, abi, props);
+            super(platformVersion,
+                    revision,
+                    abi,
+                    props,
+                    String.format("/sdk/system-images/android-%s/%s",
+                            platformVersion.getApiString(), abi));
         }
 
         @Override

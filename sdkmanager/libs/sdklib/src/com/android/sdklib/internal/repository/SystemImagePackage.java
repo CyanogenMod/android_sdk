@@ -77,8 +77,9 @@ public class SystemImagePackage extends Package
             AndroidVersion platformVersion,
             int revision,
             String abi,
-            Properties props) {
-        this(null /*source*/, platformVersion, revision, abi, props);
+            Properties props,
+            String localOsPath) {
+        this(null /*source*/, platformVersion, revision, abi, props, localOsPath);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
@@ -87,7 +88,8 @@ public class SystemImagePackage extends Package
             AndroidVersion platformVersion,
             int revision,
             String abi,
-            Properties props) {
+            Properties props,
+            String localOsPath) {
         super(  source,                     //source
                 props,                      //properties
                 revision,                   //revision
@@ -96,7 +98,7 @@ public class SystemImagePackage extends Package
                 null,                       //descUrl
                 Os.getCurrentOs(),          //archiveOs
                 Arch.getCurrentArch(),      //archiveArch
-                null                        //archiveOsPath
+                localOsPath                 //archiveOsPath
                 );
         mVersion = platformVersion;
         if (abi == null && props != null) {

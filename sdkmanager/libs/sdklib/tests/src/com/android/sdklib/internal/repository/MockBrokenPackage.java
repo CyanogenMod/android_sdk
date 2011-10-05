@@ -50,6 +50,6 @@ public class MockBrokenPackage extends BrokenPackage {
                 longDescription,
                 minApiLevel,
                 exactApiLevel,
-                null /*osPath*/);
+                "/sdk/broken/package" /*osPath*/);
     }
 }

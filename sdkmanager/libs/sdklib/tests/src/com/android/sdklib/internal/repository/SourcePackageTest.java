@@ -37,7 +37,10 @@ public class SourcePackageTest extends PackageTest {
                 AndroidVersion platformVersion,
                 int revision,
                 Properties props) {
-            super(platformVersion, revision, props);
+            super(platformVersion,
+                    revision,
+                    props,
+                    String.format("/sdk/sources/android-%s", platformVersion.getApiString()));
         }
 
         @Override

@@ -149,7 +149,8 @@ public class LocalSdkParser {
                                     target.getVersion(),
                                     0 /*revision*/,   // this will use the one from siProps if any
                                     systemImage.getAbiType(),
-                                    siProps);
+                                    siProps,
+                                    siDir.getAbsolutePath());
                             packages.add(pkg2);
                             visited.add(siDir);
                         }

@@ -48,7 +48,7 @@ public class MockEmptyPackage extends Package {
             null /*descUrl*/,
             Os.ANY /*archiveOs*/,
             Arch.ANY /*archiveArch*/,
-            null /*archiveOsPath*/
+            "/sdk/tmp/empty_pkg" /*archiveOsPath*/
             );
         mTestHandle = testHandle;
     }
@@ -69,7 +69,7 @@ public class MockEmptyPackage extends Package {
             null /*descUrl*/,
             Os.ANY /*archiveOs*/,
             Arch.ANY /*archiveArch*/,
-            null /*archiveOsPath*/
+            "/sdk/tmp/empty_pkg" /*archiveOsPath*/
             );
         mTestHandle = testHandle;
     }
@@ -91,7 +91,7 @@ public class MockEmptyPackage extends Package {
             null /*descUrl*/,
             Os.ANY /*archiveOs*/,
             Arch.ANY /*archiveArch*/,
-            null /*archiveOsPath*/
+            "/sdk/tmp/empty_pkg" /*archiveOsPath*/
             );
         mTestHandle = testHandle;
     }

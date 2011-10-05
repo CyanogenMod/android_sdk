@@ -30,7 +30,12 @@ public class MockSystemImagePackage extends SystemImagePackage {
      * By design, this package contains one and only one archive.
      */
     public MockSystemImagePackage(MockPlatformPackage basePlatform, int revision, String abi) {
-        super(basePlatform.getVersion(), revision, abi, null /*props*/);
+        super(basePlatform.getVersion(),
+                revision,
+                abi,
+                null /*props*/,
+                String.format("/sdk/system-images/android-%s/%s",
+                        basePlatform.getVersion().getApiString(), abi));
     }
 
     /**
@@ -44,6 +49,12 @@ public class MockSystemImagePackage extends SystemImagePackage {
             MockPlatformPackage basePlatform,
             int revision,
             String abi) {
-        super(source, basePlatform.getVersion(), revision, abi, null /*props*/);
+        super(source,
+                basePlatform.getVersion(),
+                revision,
+                abi,
+                null /*props*/,
+                String.format("/sdk/system-images/android-%s/%s",
+                        basePlatform.getVersion().getApiString(), abi));
     }
 }
