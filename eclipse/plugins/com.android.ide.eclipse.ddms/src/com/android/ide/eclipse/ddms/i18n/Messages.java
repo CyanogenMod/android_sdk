@@ -82,6 +82,7 @@ public class Messages extends NLS {
     public static String LogCatPreferencePage_Go_To_Problem_Error_Line;
     public static String LogCatPreferencePage_Switch_Perspective;
     public static String LogCatPreferencePage_Switch_To;
+    public static String LogCatPreferencePage_AutoMonitorLogcat;
     public static String LogCatView_Clear_Log;
     public static String LogCatView_Copy;
     public static String LogCatView_Create_Filter;

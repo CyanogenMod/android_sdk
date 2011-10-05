@@ -26,6 +26,8 @@ import com.android.ddmuilib.logcat.LogCatReceiverFactory;
 import com.android.ide.eclipse.ddms.views.LogCatView;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -33,9 +35,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * LogCatMonitor helps in monitoring the logcat output from a set of devices.
@@ -43,19 +45,22 @@ import java.util.Set;
  * if any message is deemed important.
  */
 public class LogCatMonitor {
+    public static final String AUTO_MONITOR_PREFKEY = "ddms.logcat.automonitor";
+
     private IPreferenceStore mPrefStore;
-    private Set<String> mMonitoredDevices;
+    private Map<String, DeviceData> mMonitoredDevices;
     private IDebuggerConnector[] mConnectors;
 
     public LogCatMonitor(IDebuggerConnector[] debuggerConnectors, IPreferenceStore prefStore) {
         mConnectors = debuggerConnectors;
         mPrefStore = prefStore;
 
-        mMonitoredDevices = new HashSet<String>();
+        mMonitoredDevices = new HashMap<String, DeviceData>();
 
         AndroidDebugBridge.addDeviceChangeListener(new IDeviceChangeListener() {
             public void deviceDisconnected(IDevice device) {
-                unmonitorDevice(device);
+                unmonitorDevice(device.getSerialNumber());
+                mMonitoredDevices.remove(device.getSerialNumber());
             }
 
             public void deviceConnected(IDevice device) {
@@ -64,26 +69,54 @@ public class LogCatMonitor {
             public void deviceChanged(IDevice device, int changeMask) {
             }
         });
+
+        mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent event) {
+                if (AUTO_MONITOR_PREFKEY.equals(event.getProperty())
+                        && event.getNewValue().equals(false)) {
+                    unmonitorAllDevices();
+                }
+            }
+        });
     }
 
-    private synchronized void unmonitorDevice(IDevice device) {
-        mMonitoredDevices.remove(device.getSerialNumber());
+    private void unmonitorAllDevices() {
+        for (String device : mMonitoredDevices.keySet()) {
+            unmonitorDevice(device);
+        }
+
+        mMonitoredDevices.clear();
+    }
+
+    private void unmonitorDevice(String deviceSerial) {
+        DeviceData data = mMonitoredDevices.get(deviceSerial);
+        if (data == null) {
+            return;
+        }
+
+        data.receiver.removeMessageReceivedEventListener(data.messageEventListener);
     }
 
     public void monitorDevice(final IDevice device) {
-        if (mMonitoredDevices.contains(device.getSerialNumber())) {
+        if (!mPrefStore.getBoolean(AUTO_MONITOR_PREFKEY)) {
+            // do not monitor device if auto monitoring is off
+            return;
+        }
+
+        if (mMonitoredDevices.keySet().contains(device.getSerialNumber())) {
             // the device is already monitored
             return;
         }
 
         LogCatReceiver r = LogCatReceiverFactory.INSTANCE.newReceiver(device, mPrefStore);
-        r.addMessageReceivedEventListener(new ILogCatMessageEventListener() {
+        ILogCatMessageEventListener l = new ILogCatMessageEventListener() {
             public void messageReceived(List<LogCatMessage> receivedMessages) {
                 checkMessages(receivedMessages, device);
             }
-        });
+        };
+        r.addMessageReceivedEventListener(l);
 
-        mMonitoredDevices.add(device.getSerialNumber());
+        mMonitoredDevices.put(device.getSerialNumber(), new DeviceData(r, l));
     }
 
     private void checkMessages(List<LogCatMessage> receivedMessages, IDevice device) {
@@ -162,5 +195,15 @@ public class LogCatMonitor {
                 }
             }
         });
+    }
+
+    private static class DeviceData {
+        public final LogCatReceiver receiver;
+        public final ILogCatMessageEventListener messageEventListener;
+
+        public DeviceData(LogCatReceiver r, ILogCatMessageEventListener l) {
+            receiver = r;
+            messageEventListener = l;
+        }
     }
 }

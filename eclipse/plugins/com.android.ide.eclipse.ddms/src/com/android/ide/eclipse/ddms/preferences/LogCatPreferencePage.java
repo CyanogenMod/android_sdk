@@ -30,6 +30,7 @@ import org.eclipse.ui.PlatformUI;
 import com.android.ddmuilib.logcat.LogCatMessageList;
 import com.android.ddmuilib.logcat.LogCatPanel;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.LogCatMonitor;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.LogCatView;
 
@@ -42,6 +43,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
     private BooleanFieldEditor mSwitchPerspective;
     private ComboFieldEditor mWhichPerspective;
     private IntegerFieldEditor mMaxMessages;
+    private BooleanFieldEditor mAutoMonitorLogcat;
 
     public LogCatPreferencePage() {
         super(GRID);
@@ -92,6 +94,11 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
         mWhichPerspective.setEnabled(getPreferenceStore()
                 .getBoolean(PreferenceInitializer.ATTR_SWITCH_PERSPECTIVE), getFieldEditorParent());
         addField(mWhichPerspective);
+
+        mAutoMonitorLogcat = new BooleanFieldEditor(LogCatMonitor.AUTO_MONITOR_PREFKEY,
+                Messages.LogCatPreferencePage_AutoMonitorLogcat,
+                getFieldEditorParent());
+        addField(mAutoMonitorLogcat);
     }
 
     public void init(IWorkbench workbench) {
