@@ -215,7 +215,7 @@ public class Archive implements IDescription, Comparable<Archive> {
         mLocalOsPath = localOsPath;
         mSize = 0;
         mChecksum = "";
-        mIsLocal = true;
+        mIsLocal = localOsPath != null;
     }
 
     /**

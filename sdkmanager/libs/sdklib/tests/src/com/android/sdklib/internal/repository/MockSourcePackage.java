@@ -32,7 +32,10 @@ public class MockSourcePackage extends SourcePackage {
      * By design, this package contains one and only one archive.
      */
     public MockSourcePackage(AndroidVersion version, int revision) {
-        super(version, revision, null /*props*/);
+        super(version,
+                revision,
+                null /*props*/,
+                String.format("/sdk/sources/android-%s", version.getApiString()));
     }
 
     /**
@@ -45,6 +48,10 @@ public class MockSourcePackage extends SourcePackage {
             SdkSource source,
             AndroidVersion version,
             int revision) {
-        super(source, version, revision, null /*props*/);
+        super(source,
+                version,
+                revision,
+                null /*props*/,
+                String.format("/sdk/sources/android-%s", version.getApiString()));
     }
 }

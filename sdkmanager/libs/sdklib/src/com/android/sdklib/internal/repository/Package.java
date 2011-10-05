@@ -147,6 +147,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
         }
         mSource = source;
 
+        assert archiveOsPath != null;
         mArchives = initializeArchives(props, archiveOs, archiveArch, archiveOsPath);
     }
 

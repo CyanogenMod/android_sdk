@@ -95,8 +95,11 @@ public class FileOp implements IFileOp {
         if (fileOrFolder != null) {
             if (isDirectory(fileOrFolder)) {
                 // Must delete content recursively first
-                for (File item : fileOrFolder.listFiles()) {
-                    deleteFileOrFolder(item);
+                File[] files = fileOrFolder.listFiles();
+                if (files != null) {
+                    for (File item : files) {
+                        deleteFileOrFolder(item);
+                    }
                 }
             }
 
