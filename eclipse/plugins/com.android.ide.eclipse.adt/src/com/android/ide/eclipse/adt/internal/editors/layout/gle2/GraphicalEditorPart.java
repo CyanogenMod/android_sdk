@@ -2118,7 +2118,7 @@ public class GraphicalEditorPart extends EditorPart
             }
 
             LayoutCanvas canvas = getCanvasControl();
-            canvas.updateMenuActionState(canvas.getSelectionManager().getSelections().isEmpty());
+            canvas.updateMenuActionState();
         }
     }
 

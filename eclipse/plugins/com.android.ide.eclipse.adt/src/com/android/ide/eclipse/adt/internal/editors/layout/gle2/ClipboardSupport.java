@@ -256,7 +256,7 @@ public class ClipboardSupport {
     public void pasteSelection(List<SelectionItem> selection) {
 
         SimpleXmlTransfer sxt = SimpleXmlTransfer.getInstance();
-        SimpleElement[] pasted = (SimpleElement[]) mClipboard.getContents(sxt);
+        final SimpleElement[] pasted = (SimpleElement[]) mClipboard.getContents(sxt);
 
         if (pasted == null || pasted.length == 0) {
             return;
@@ -273,15 +273,21 @@ public class ClipboardSupport {
         // using the first selected element only. If there's no selection use
         // the root as the insertion point.
         SelectionManager.sanitize(selection);
-        CanvasViewInfo target = lastRoot;
+        final CanvasViewInfo target;
         if (selection.size() > 0) {
             SelectionItem cs = selection.get(0);
             target = cs.getViewInfo();
+        } else {
+            target = lastRoot;
         }
 
-        NodeProxy targetNode = mCanvas.getNodeFactory().create(target);
-
-        mCanvas.getRulesEngine().callOnPaste(targetNode, target.getViewObject(), pasted);
+        final NodeProxy targetNode = mCanvas.getNodeFactory().create(target);
+        mCanvas.getLayoutEditor().wrapUndoEditXmlModel("Paste", new Runnable() {
+            public void run() {
+                mCanvas.getRulesEngine().callOnPaste(targetNode, target.getViewObject(), pasted);
+                targetNode.applyPendingChanges();
+            }
+        });
     }
 
     /**

@@ -82,7 +82,6 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
     private Button mProjectButton;
     private Button mSystemButton;
     private Button mNewButton;
-    private Button mNewIconButton;
     private String mCurrentResource;
     private final IProject mProject;
     private IInputValidator mInputValidator;
@@ -153,6 +152,11 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     @Override
     protected void computeResult() {
+        if (getSelectionIndex() == -1) {
+            mCurrentResource = null;
+            return;
+        }
+
         Object[] elements = getSelectedElements();
         if (elements.length == 1 && elements[0] instanceof ResourceItem) {
             ResourceItem item = (ResourceItem)elements[0];

@@ -750,7 +750,7 @@ public class SelectionManager implements ISelectionProvider {
         LayoutEditor editor = mCanvas.getLayoutEditor();
         if (editor != null) {
             // Update menu actions that depend on the selection
-            updateMenuActions();
+            mCanvas.updateMenuActionState();
 
             // Update the layout actions bar
             LayoutActionBar layoutActionBar = editor.getGraphicalEditor().getLayoutActionBar();
@@ -861,11 +861,6 @@ public class SelectionManager implements ISelectionProvider {
         if (selection != null) {
             outlinePage.setSelection(selection);
         }
-    }
-
-    private void updateMenuActions() {
-        boolean hasSelection = !mSelections.isEmpty();
-        mCanvas.updateMenuActionState(hasSelection);
     }
 
     private void redraw() {
