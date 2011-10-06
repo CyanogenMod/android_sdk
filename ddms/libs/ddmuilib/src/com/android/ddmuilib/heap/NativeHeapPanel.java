@@ -29,6 +29,7 @@ import com.android.ddmuilib.TableHelper;
 import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -57,6 +58,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Sash;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -64,9 +66,14 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -86,6 +93,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private static final String GROUPBY_IMAGE = "groupby.png";
 
     private static final String SNAPSHOT_HEAP_BUTTON_TEXT = "Snapshot Current Native Heap Usage";
+    private static final String LOAD_HEAP_DATA_BUTTON_TEXT = "Import Heap Data";
     private static final String SYMBOL_SEARCH_PATH_LABEL_TEXT = "Symbol Search Path:";
     private static final String SYMBOL_SEARCH_PATH_TEXT_MESSAGE =
             "List of colon separated paths to search for symbol debug information. See tooltip for examples.";
@@ -98,6 +106,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     private static final String PREFS_GROUP_BY_LIBRARY = "nativeheap.grouby.library";
     private static final String PREFS_SYMBOL_SEARCH_PATH = "nativeheap.search.path";
     private static final String PREFS_SASH_HEIGHT_PERCENT = "nativeheap.sash.percent";
+    private static final String PREFS_LAST_IMPORTED_HEAPPATH = "nativeheap.last.import.path";
     private IPreferenceStore mPrefStore;
 
     private List<NativeHeapSnapshot> mNativeHeapSnapshots;
@@ -108,7 +117,10 @@ public class NativeHeapPanel extends BaseHeapPanel {
     // The list is filled lazily on demand.
     private List<NativeHeapSnapshot> mDiffSnapshots;
 
+    private Map<Integer, List<NativeHeapSnapshot>> mImportedSnapshotsPerPid;
+
     private Button mSnapshotHeapButton;
+    private Button mLoadHeapDataButton;
     private Text mSymbolSearchPathText;
     private Combo mSnapshotIndexCombo;
     private Label mMemoryAllocatedText;
@@ -135,6 +147,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
         mDiffSnapshots = new ArrayList<NativeHeapSnapshot>();
+        mImportedSnapshotsPerPid = new HashMap<Integer, List<NativeHeapSnapshot>>();
     }
 
     /** {@inheritDoc} */
@@ -188,12 +201,22 @@ public class NativeHeapPanel extends BaseHeapPanel {
     public void clientSelected() {
         Client c = getCurrentClient();
 
-        mSnapshotHeapButton.setEnabled(c != null);
-
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
         mDiffSnapshots = new ArrayList<NativeHeapSnapshot>();
 
         if (c != null) {
+            mSnapshotHeapButton.setEnabled(true);
+            mLoadHeapDataButton.setEnabled(true);
+
+            List<NativeHeapSnapshot> importedSnapshots = mImportedSnapshotsPerPid.get(
+                    c.getClientData().getPid());
+            if (importedSnapshots != null) {
+                for (NativeHeapSnapshot n : importedSnapshots) {
+                    mNativeHeapSnapshots.add(n);
+                    mDiffSnapshots.add(null);
+                }
+            }
+
             List<NativeAllocationInfo> allocations = c.getClientData().getNativeAllocationList();
             allocations = shallowCloneList(allocations);
 
@@ -201,6 +224,9 @@ public class NativeHeapPanel extends BaseHeapPanel {
                 mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
                 mDiffSnapshots.add(null); // filled in lazily on demand
             }
+        } else {
+            mSnapshotHeapButton.setEnabled(false);
+            mLoadHeapDataButton.setEnabled(false);
         }
 
         updateDisplay();
@@ -339,7 +365,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         c.setLayout(new GridLayout(3, false));
         c.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        createGetHeapDataButton(c);
+        createGetHeapDataSection(c);
 
         Label l = new Label(c, SWT.SEPARATOR | SWT.VERTICAL);
         l.setLayoutData(new GridData(GridData.FILL_VERTICAL));
@@ -347,7 +373,19 @@ public class NativeHeapPanel extends BaseHeapPanel {
         createDisplaySection(c);
     }
 
-    private void createGetHeapDataButton(Composite parent) {
+    private void createGetHeapDataSection(Composite parent) {
+        Composite c = new Composite(parent, SWT.NONE);
+        c.setLayout(new GridLayout(1, false));
+
+        createTakeHeapSnapshotButton(c);
+
+        Label l = new Label(c, SWT.SEPARATOR | SWT.HORIZONTAL);
+        l.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        createLoadHeapDataButton(c);
+    }
+
+    private void createTakeHeapSnapshotButton(Composite parent) {
         mSnapshotHeapButton = new Button(parent, SWT.BORDER | SWT.PUSH);
         mSnapshotHeapButton.setText(SNAPSHOT_HEAP_BUTTON_TEXT);
         mSnapshotHeapButton.setLayoutData(new GridData());
@@ -369,6 +407,95 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         // send an async request
         c.requestNativeHeapInformation();
+    }
+
+    private void createLoadHeapDataButton(Composite parent) {
+        mLoadHeapDataButton = new Button(parent, SWT.BORDER | SWT.PUSH);
+        mLoadHeapDataButton.setText(LOAD_HEAP_DATA_BUTTON_TEXT);
+        mLoadHeapDataButton.setLayoutData(new GridData());
+
+        // disable by default, enabled only when a client is selected
+        mLoadHeapDataButton.setEnabled(false);
+
+        mLoadHeapDataButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent evt) {
+                loadHeapDataFromFile();
+            }
+        });
+    }
+
+    private void loadHeapDataFromFile() {
+        // pop up a file dialog and get the file to load
+        final String path = getHeapDumpToImport();
+        if (path == null) {
+            return;
+        }
+
+        Reader reader = null;
+        try {
+            reader = new FileReader(path);
+        } catch (FileNotFoundException e) {
+            // cannot occur since user input was via a FileDialog
+        }
+
+        Shell shell = Display.getDefault().getActiveShell();
+        ProgressMonitorDialog d = new ProgressMonitorDialog(shell);
+
+        NativeHeapDataImporter importer = new NativeHeapDataImporter(reader);
+        try {
+            d.run(true, true, importer);
+        } catch (InvocationTargetException e) {
+            // exception while parsing, display error to user and then return
+            MessageDialog.openError(shell,
+                    "Error Importing Heap Data",
+                    e.getCause().getMessage());
+            return;
+        } catch (InterruptedException e) {
+            // operation cancelled by user, simply return
+            return;
+        }
+
+        NativeHeapSnapshot snapshot = importer.getImportedSnapshot();
+
+        addToImportedSnapshots(snapshot);   // save imported snapshot for future use
+        mNativeHeapSnapshots.add(snapshot); // add to currently displayed snapshots as well
+        mDiffSnapshots.add(null);
+
+        updateDisplay();
+    }
+
+    private void addToImportedSnapshots(NativeHeapSnapshot snapshot) {
+        Client c = getCurrentClient();
+
+        if (c == null) {
+            return;
+        }
+
+        Integer pid = c.getClientData().getPid();
+        List<NativeHeapSnapshot> importedSnapshots = mImportedSnapshotsPerPid.get(pid);
+        if (importedSnapshots == null) {
+            importedSnapshots = new ArrayList<NativeHeapSnapshot>();
+        }
+
+        importedSnapshots.add(snapshot);
+        mImportedSnapshotsPerPid.put(pid, importedSnapshots);
+    }
+
+    private String getHeapDumpToImport() {
+        FileDialog fileDialog = new FileDialog(Display.getDefault().getActiveShell(),
+                SWT.OPEN);
+
+        fileDialog.setText("Import Heap Dump");
+        fileDialog.setFilterExtensions(new String[] {"*.txt"});
+        fileDialog.setFilterPath(mPrefStore.getString(PREFS_LAST_IMPORTED_HEAPPATH));
+
+        String selectedFile = fileDialog.open();
+        if (selectedFile != null) {
+            // save the path to restore in future dialog open
+            mPrefStore.setValue(PREFS_LAST_IMPORTED_HEAPPATH, new File(selectedFile).getParent());
+        }
+        return selectedFile;
     }
 
     private void createDisplaySection(Composite parent) {

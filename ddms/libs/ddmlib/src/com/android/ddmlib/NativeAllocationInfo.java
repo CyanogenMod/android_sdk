@@ -30,6 +30,13 @@ import java.util.regex.Pattern;
  * storage for resolved stack trace, this is merely for convenience.
  */
 public final class NativeAllocationInfo {
+    /* Keywords used as delimiters in the string representation of a NativeAllocationInfo */
+    public static final String END_STACKTRACE_KW = "EndStacktrace";
+    public static final String BEGIN_STACKTRACE_KW = "BeginStacktrace:";
+    public static final String TOTAL_SIZE_KW = "TotalSize:";
+    public static final String SIZE_KW = "Size:";
+    public static final String ALLOCATIONS_KW = "Allocations:";
+
     /* constants for flag bits */
     private static final int FLAG_ZYGOTE_CHILD  = (1<<31);
     private static final int FLAG_MASK          = (FLAG_ZYGOTE_CHILD);
@@ -66,7 +73,7 @@ public final class NativeAllocationInfo {
      * @param size The size of the allocations.
      * @param allocations the allocation count
      */
-    NativeAllocationInfo(int size, int allocations) {
+    public NativeAllocationInfo(int size, int allocations) {
         this.mSize = size & ~FLAG_MASK;
         this.mIsZygoteChild = ((size & FLAG_ZYGOTE_CHILD) != 0);
         this.mAllocations = allocations;
@@ -76,7 +83,7 @@ public final class NativeAllocationInfo {
      * Adds a stack call address for this allocation.
      * @param address The address to add.
      */
-    void addStackCallAddress(long address) {
+    public void addStackCallAddress(long address) {
         mStackCallAddresses.add(address);
     }
 
@@ -209,40 +216,41 @@ public final class NativeAllocationInfo {
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("Allocations: ");
+        buffer.append(ALLOCATIONS_KW);
+        buffer.append(' ');
         buffer.append(mAllocations);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        buffer.append("Size: ");
+        buffer.append(SIZE_KW);
+        buffer.append(' ');
         buffer.append(mSize);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        buffer.append("Total Size: ");
+        buffer.append(TOTAL_SIZE_KW);
+        buffer.append(' ');
         buffer.append(mSize * mAllocations);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        Iterator<Long> addrIterator = mStackCallAddresses.iterator();
+        if (mResolvedStackCall != null) {
+            buffer.append(BEGIN_STACKTRACE_KW);
+            buffer.append('\n');
+            for (NativeStackCallInfo source : mResolvedStackCall) {
+                long addr = source.getAddress();
+                if (addr == 0) {
+                    continue;
+                }
 
-        if (mResolvedStackCall == null) {
-            return buffer.toString();
-        }
-
-        Iterator<NativeStackCallInfo> sourceIterator = mResolvedStackCall.iterator();
-
-        while (sourceIterator.hasNext()) {
-            long addr = addrIterator.next();
-            NativeStackCallInfo source = sourceIterator.next();
-            if (addr == 0)
-                continue;
-
-            if (source.getLineNumber() != -1) {
-                buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s:%5$d\n", addr,
-                        source.getLibraryName(), source.getMethodName(),
-                        source.getSourceFile(), source.getLineNumber()));
-            } else {
-                buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s\n", addr,
-                        source.getLibraryName(), source.getMethodName(), source.getSourceFile()));
+                if (source.getLineNumber() != -1) {
+                    buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s:%5$d\n", addr,
+                            source.getLibraryName(), source.getMethodName(),
+                            source.getSourceFile(), source.getLineNumber()));
+                } else {
+                    buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s\n", addr,
+                            source.getLibraryName(), source.getMethodName(), source.getSourceFile()));
+                }
             }
+            buffer.append(END_STACKTRACE_KW);
+            buffer.append('\n');
         }
 
         return buffer.toString();
