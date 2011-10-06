@@ -169,8 +169,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         // the list on future updates
         allocations = shallowCloneList(allocations);
 
-        mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
-        mDiffSnapshots.add(null); // filled in lazily on demand
+        addNativeHeapSnapshot(new NativeHeapSnapshot(allocations));
         updateDisplay();
 
         // Attempt to resolve symbols in a separate thread.
@@ -179,6 +178,14 @@ public class NativeHeapPanel extends BaseHeapPanel {
                 client.getClientData().getMappedNativeLibraries()));
         t.setName("Address to Symbol Resolver");
         t.start();
+    }
+
+    private void addNativeHeapSnapshot(NativeHeapSnapshot snapshot) {
+        mNativeHeapSnapshots.add(snapshot);
+
+        // The diff snapshots are filled in lazily on demand.
+        // But the list needs to be the same size as mNativeHeapSnapshots, so we add a null.
+        mDiffSnapshots.add(null);
     }
 
     private List<NativeAllocationInfo> shallowCloneList(List<NativeAllocationInfo> allocations) {
@@ -212,8 +219,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
                     c.getClientData().getPid());
             if (importedSnapshots != null) {
                 for (NativeHeapSnapshot n : importedSnapshots) {
-                    mNativeHeapSnapshots.add(n);
-                    mDiffSnapshots.add(null);
+                    addNativeHeapSnapshot(n);
                 }
             }
 
@@ -221,8 +227,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
             allocations = shallowCloneList(allocations);
 
             if (allocations.size() > 0) {
-                mNativeHeapSnapshots.add(new NativeHeapSnapshot(allocations));
-                mDiffSnapshots.add(null); // filled in lazily on demand
+                addNativeHeapSnapshot(new NativeHeapSnapshot(allocations));
             }
         } else {
             mSnapshotHeapButton.setEnabled(false);
@@ -459,8 +464,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         NativeHeapSnapshot snapshot = importer.getImportedSnapshot();
 
         addToImportedSnapshots(snapshot);   // save imported snapshot for future use
-        mNativeHeapSnapshots.add(snapshot); // add to currently displayed snapshots as well
-        mDiffSnapshots.add(null);
+        addNativeHeapSnapshot(snapshot); // add to currently displayed snapshots as well
 
         updateDisplay();
     }
