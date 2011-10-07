@@ -681,8 +681,8 @@ public class GridModel {
     public static Pair<int[], int[]> getAxisBounds(Object view) {
         try {
             Class<?> clz = view.getClass();
-            Field horizontalAxis = clz.getDeclaredField("mHorizontalAxis"); //$NON-NLS-1$
-            Field verticalAxis = clz.getDeclaredField("mVerticalAxis"); //$NON-NLS-1$
+            Field horizontalAxis = clz.getDeclaredField("horizontalAxis"); //$NON-NLS-1$
+            Field verticalAxis = clz.getDeclaredField("verticalAxis"); //$NON-NLS-1$
             horizontalAxis.setAccessible(true);
             verticalAxis.setAccessible(true);
             Object horizontal = horizontalAxis.get(view);
