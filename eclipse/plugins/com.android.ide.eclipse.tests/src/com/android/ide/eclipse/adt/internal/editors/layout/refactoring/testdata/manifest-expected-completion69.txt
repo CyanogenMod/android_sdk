@@ -1,0 +1,26 @@
+Code completion in manifest.xml for <uses-sdk android:minSdkVersion="^11" />:
+AOSP
+14 : Android 4.0.1
+13 : Android 3.2
+12 : Android 3.1
+11 : Android 3.0
+10
+9 : Android 2.3
+8 : Android 2.2
+7
+6
+5 : Android 2.0
+4 : Android 1.6
+3 : Android 1.5
+2 : Android 1.1
+1
+@string/
+@android:
+@+id/
+@anim/
+@animator/
+@color/
+@drawable/
+@id/
+@layout/
+@style/
