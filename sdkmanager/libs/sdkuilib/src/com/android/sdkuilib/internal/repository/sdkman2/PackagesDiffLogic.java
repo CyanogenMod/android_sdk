@@ -343,10 +343,10 @@ class PackagesDiffLogic {
                 Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
                 if (newPkg != null) {
                     removePackageFromSet(unusedPackages, newPkg);
+                    cat.setUnused(false);
                     if (item.getState() == PkgState.NEW) {
                         // This item has a main package that is now installed.
                         replace(items, i, new PkgItem(newPkg, PkgState.INSTALLED));
-                        cat.setUnused(false);
                         hasChanged = true;
                     }
                 }

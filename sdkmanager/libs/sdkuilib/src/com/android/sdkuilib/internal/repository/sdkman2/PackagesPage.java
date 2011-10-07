@@ -79,7 +79,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 
 /**
@@ -413,6 +412,7 @@ public class PackagesPage extends UpdaterPage
                     mTreeViewer.setInput(null);
                     refreshViewerInput();
                     syncViewerSelection();
+                    updateButtonsState();
                     break;
                 case TOGGLE_SHOW_INSTALLED_PKG:
                     button = mCheckFilterInstalled;
@@ -712,6 +712,9 @@ public class PackagesPage extends UpdaterPage
      * is added or the list is reloaded.
      */
     private void expandInitial(Object elem) {
+        if (elem == null) {
+            return;
+        }
         if (mTreeViewer != null && !mTreeViewer.getTree().isDisposed()) {
             mTreeViewer.setExpandedState(elem, true);
             for (Object pkg :
@@ -920,7 +923,11 @@ public class PackagesPage extends UpdaterPage
     private void syncViewerSelection() {
         ITreeContentProvider provider = (ITreeContentProvider) mTreeViewer.getContentProvider();
 
-        for (Object cat : provider.getElements(mTreeViewer.getInput())) {
+        Object input = mTreeViewer.getInput();
+        if (input == null) {
+            return;
+        }
+        for (Object cat : provider.getElements(input)) {
             Object[] children = provider.getElements(cat);
             boolean allChecked = children.length > 0;
             for (Object child : children) {
@@ -961,135 +968,35 @@ public class PackagesPage extends UpdaterPage
         updateButtonsState();
     }
 
+    /**
+     * Updates the Install and Delete Package buttons.
+     */
     private void updateButtonsState() {
-        boolean canInstall = false;
-        int numPackages = 0;
+        int numPackages = getArchivesForInstall(null /*archives*/);
 
-        if (mDisplayArchives) {
-            // In detail mode, we display archives so we can install if at
-            // least one archive is selected.
-            // Note that in this mode we allow the user to install an archive
-            // even if it's not "compatible" with the current platform.
-
-            Object[] checked = mTreeViewer.getCheckedElements();
-            if (checked != null) {
-                for (Object c : checked) {
-                    if (c instanceof Archive) {
-                        Archive a = (Archive) c;
-                        if (!a.isLocal()) {
-                            canInstall = true;
-                            numPackages++;
-                        }
-                    }
-                }
-            }
-        } else {
-            // In non-detail mode, we need to check if there are any packages
-            // or pkgitems selected with at least one compatible archive to be
-            // installed.
-
-            Object[] checked = mTreeViewer.getCheckedElements();
-            if (checked != null) {
-                for (Object c : checked) {
-                    Package p = null;
-
-                    if (c instanceof Package) {
-                        p = (Package) c;
-                    } else if (c instanceof PkgItem) {
-                        p = ((PkgItem) c).getMainPackage();
-                    }
-                    if (p != null && !p.isLocal() && p.hasCompatibleArchive()) {
-                        canInstall = true;
-                        numPackages++;
-                    }
-                }
-            }
-        }
-
-        mButtonInstall.setEnabled(canInstall && !mOperationPending);
+        mButtonInstall.setEnabled((numPackages > 0) && !mOperationPending);
         mButtonInstall.setText(
-                numPackages == 0 ? "Install packages..." :
+                numPackages == 0 ? "Install packages..." :          // disabled button case
                     numPackages == 1 ? "Install 1 package..." :
                         String.format("Install %d packages...", numPackages));
 
         // We can only delete local archives
-        boolean canDelete = false;
-        numPackages = 0;
+        numPackages = getArchivesToDelete(null /*outMsg*/, null /*outArchives*/);
 
-        Object[] checked = mTreeViewer.getCheckedElements();
-        if (checked != null) {
-            for (Object c : checked) {
-                if (c instanceof PkgItem) {
-                    PkgState state = ((PkgItem) c).getState();
-                    if (state == PkgState.INSTALLED) {
-                        canDelete = true;
-                        numPackages++;
-                    }
-                }
-            }
-        }
-
-        mButtonDelete.setEnabled(canDelete && !mOperationPending);
+        mButtonDelete.setEnabled((numPackages > 0) && !mOperationPending);
         mButtonDelete.setText(
-                numPackages == 0 ? "Delete packages..." :
+                numPackages == 0 ? "Delete packages..." :           // disabled button case
                     numPackages == 1 ? "Delete 1 package..." :
                         String.format("Delete %d packages...", numPackages));
     }
 
+    /**
+     * Called when the Install Package button is selected.
+     * Collects the packages to be installed and shows the installation window.
+     */
     private void onButtonInstall() {
         ArrayList<Archive> archives = new ArrayList<Archive>();
-
-        if (mDisplayArchives) {
-            // In detail mode, we display archives so we can install only the
-            // archives that are actually selected.
-            // Note that in this mode we allow the user to install an archive
-            // even if it's not "compatible" with the current platform.
-
-            Object[] checked = mTreeViewer.getCheckedElements();
-            if (checked != null) {
-                for (Object c : checked) {
-                    if (c instanceof Archive) {
-                        Archive a = (Archive) c;
-                        if (!a.isLocal()) {
-                            archives.add((Archive) c);
-                        }
-                    }
-                }
-            }
-        } else {
-            // In non-detail mode, we install all the compatible archives
-            // found in the selected pkg items. We also automatically
-            // select update packages rather than the root package if any.
-
-            Object[] checked = mTreeViewer.getCheckedElements();
-            if (checked != null) {
-                for (Object c : checked) {
-                    Package p = null;
-                    if (c instanceof Package) {
-                        // This is an update package
-                        p = (Package) c;
-                    } else if (c instanceof PkgItem) {
-                        p = ((PkgItem) c).getMainPackage();
-
-                        PkgItem pi = (PkgItem) c;
-                        if (pi.getState() == PkgState.INSTALLED) {
-                            Package updPkg = pi.getUpdatePkg();
-                            if (updPkg != null) {
-                            // If there's one and only one update, auto-select it instead.
-                                p = updPkg;
-                            }
-                        }
-                    }
-                    if (p != null) {
-                        for (Archive a : p.getArchives()) {
-                            if (!a.isLocal() && a.isCompatible()) {
-                                archives.add(a);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        getArchivesForInstall(archives);
 
         if (mUpdaterData != null) {
             boolean needsRefresh = false;
@@ -1114,54 +1021,109 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
-    private void onButtonDelete() {
-        // Find selected local packages to be delete
+    /**
+     * Selects the archives that can be installed.
+     * This can be used with a null {@code outArchives} just to count the number of
+     * installable archives.
+     *
+     * @param outArchives An archive list where to add the archives that can be installed.
+     *   This can be null.
+     * @return The number of archives that can be installed.
+     */
+    private int getArchivesForInstall(List<Archive> outArchives) {
+        if (mTreeViewer == null ||
+                mTreeViewer.getTree() == null ||
+                mTreeViewer.getTree().isDisposed()) {
+            return 0;
+        }
         Object[] checked = mTreeViewer.getCheckedElements();
         if (checked == null) {
-            // This should not happen since the button should be disabled
-            return;
+            return 0;
         }
 
-        final String title = "Delete SDK Package";
-        String msg = "Are you sure you want to delete:";
+        int count = 0;
 
-        // A map of archives to deleted versus their internal PkgItem representation
-        final Map<Archive, PkgItem> archives = new TreeMap<Archive, PkgItem>();
+        if (mDisplayArchives) {
+            // In detail mode, we display archives so we can install only the
+            // archives that are actually selected.
+            // Note that in this mode we allow the user to install an archive
+            // even if it's not "compatible" with the current platform or is
+            // already installed.
 
-        for (Object c : checked) {
-            if (c instanceof PkgItem) {
-                PkgItem pi = (PkgItem) c;
-                PkgState state = pi.getState();
-                if (state == PkgState.INSTALLED) {
-                    Package p = pi.getMainPackage();
+            for (Object c : checked) {
+                if (c instanceof Archive) {
+                    Archive a = (Archive) c;
+                    if (a != null) {
+                        count++;
+                        if (outArchives != null) {
+                            outArchives.add((Archive) c);
+                        }
+                    }
+                }
+            }
+        } else {
+            // In non-detail mode, we install all the compatible archives
+            // found in the selected pkg items. We also automatically
+            // select update packages rather than the root package if any.
 
-                    Archive[] as = p.getArchives();
-                    if (as.length == 1 && as[0] != null && as[0].isLocal()) {
-                        Archive archive = as[0];
-                        String osPath = archive.getLocalOsPath();
+            for (Object c : checked) {
+                Package p = null;
+                if (c instanceof Package) {
+                    // This is an update package
+                    p = (Package) c;
+                } else if (c instanceof PkgItem) {
+                    p = ((PkgItem) c).getMainPackage();
 
-                        File dir = new File(osPath);
-                        if (dir.isDirectory()) {
-                            msg += "\n - " + p.getShortDescription();
-                            archives.put(archive, pi);
+                    PkgItem pi = (PkgItem) c;
+                    if (pi.getState() == PkgState.INSTALLED) {
+                        // We don't allow installing items that are already installed
+                        // unless they have a pending update.
+                        p = pi.getUpdatePkg();
+
+                    } else if (pi.getState() == PkgState.NEW) {
+                        p = pi.getMainPackage();
+                    }
+                }
+                if (p != null) {
+                    for (Archive a : p.getArchives()) {
+                        if (a != null && a.isCompatible()) {
+                            count++;
+                            if (outArchives != null) {
+                                outArchives.add(a);
+                            }
                         }
                     }
                 }
             }
         }
 
+        return count;
+    }
+
+    /**
+     * Called when the Delete Package button is selected.
+     * Collects the packages to be deleted, prompt the user for confirmation
+     * and actually performs the deletion.
+     */
+    private void onButtonDelete() {
+        final String title = "Delete SDK Package";
+        StringBuilder msg = new StringBuilder("Are you sure you want to delete:");
+
+        // A list of archives to delete
+        final ArrayList<Archive> archives = new ArrayList<Archive>();
+
+        getArchivesToDelete(msg, archives);
+
         if (!archives.isEmpty()) {
-            msg += "\n" + "This cannot be undone.";
-            if (MessageDialog.openQuestion(getShell(), title, msg)) {
+            msg.append("\n").append("This cannot be undone.");  //$NON-NLS-1$
+            if (MessageDialog.openQuestion(getShell(), title, msg.toString())) {
                 try {
                     beginOperationPending();
 
                     mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
-                            for (Entry<Archive, PkgItem> entry : archives.entrySet()) {
-                                Archive a = entry.getKey();
-
+                            for (Archive a : archives) {
                                 monitor.setDescription("Deleting '%1$s' (%2$s)",
                                         a.getParentPackage().getShortDescription(),
                                         a.getLocalOsPath());
@@ -1187,6 +1149,88 @@ public class PackagesPage extends UpdaterPage
                 }
             }
         }
+    }
+
+    /**
+     * Selects the archives that can be deleted and collect their names.
+     * This can be used with a null {@code outArchives} and a null {@code outMsg}
+     * just to count the number of archives to be deleted.
+     *
+     * @param outMsg A StringBuilder where the names of the packages to be deleted is
+     *   accumulated. This is used to confirm deletion with the user.
+     * @param outArchives An archive list where to add the archives that can be installed.
+     *   This can be null.
+     * @return The number of archives that can be deleted.
+     */
+    private int getArchivesToDelete(StringBuilder outMsg, List<Archive> outArchives) {
+        if (mTreeViewer == null ||
+                mTreeViewer.getTree() == null ||
+                mTreeViewer.getTree().isDisposed()) {
+            return 0;
+        }
+        Object[] checked = mTreeViewer.getCheckedElements();
+        if (checked == null) {
+            // This should not happen since the button should be disabled
+            return 0;
+        }
+
+        int count = 0;
+
+        if (mDisplayArchives) {
+            // In detail mode, select archives that can be deleted
+
+            for (Object c : checked) {
+                if (c instanceof Archive) {
+                    Archive a = (Archive) c;
+                    if (a != null && a.isLocal()) {
+                        count++;
+                        if (outMsg != null) {
+                            String osPath = a.getLocalOsPath();
+                            File dir = new File(osPath);
+                            Package p = a.getParentPackage();
+                            if (p != null && dir.isDirectory()) {
+                                outMsg.append("\n - ")    //$NON-NLS-1$
+                                      .append(p.getShortDescription());
+                            }
+                        }
+                        if (outArchives != null) {
+                            outArchives.add(a);
+                        }
+                    }
+                }
+            }
+        } else {
+            // In non-detail mode, select archives of selected packages that can be deleted.
+
+            for (Object c : checked) {
+                if (c instanceof PkgItem) {
+                    PkgItem pi = (PkgItem) c;
+                    PkgState state = pi.getState();
+                    if (state == PkgState.INSTALLED) {
+                        Package p = pi.getMainPackage();
+
+                        for (Archive a : p.getArchives()) {
+                            if (a != null && a.isLocal()) {
+                                count++;
+                                if (outMsg != null) {
+                                    String osPath = a.getLocalOsPath();
+                                    File dir = new File(osPath);
+                                    if (dir.isDirectory()) {
+                                        outMsg.append("\n - ")    //$NON-NLS-1$
+                                              .append(p.getShortDescription());
+                                    }
+                                }
+                                if (outArchives != null) {
+                                    outArchives.add(a);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return count;
     }
 
     // ----------------------
@@ -1519,13 +1563,16 @@ public class PackagesPage extends UpdaterPage
 
         @SuppressWarnings("unchecked")
         public Object getParent(Object element) {
-            // This operation is a tad expensive, so we do the minimum
+            // This operation is expensive, so we do the minimum
             // and don't try to cover all cases.
 
             if (element instanceof PkgItem) {
-                for (PkgCategory cat : (List<PkgCategory>) mTreeViewer.getInput()) {
-                    if (cat.getItems().contains(element)) {
-                        return cat;
+                Object input = mTreeViewer.getInput();
+                if (input != null) {
+                    for (PkgCategory cat : (List<PkgCategory>) input) {
+                        if (cat.getItems().contains(element)) {
+                            return cat;
+                        }
                     }
                 }
             }
