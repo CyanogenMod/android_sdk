@@ -92,6 +92,7 @@ public final class AaptExecTask extends BaseTask {
     private final ArrayList<NoCompress> mNoCompressList = new ArrayList<NoCompress>();
     private String mProjectLibrariesResName;
     private String mProjectLibrariesPackageName;
+    private boolean mNonConstantId;
 
     /**
      * Sets the value of the "executable" attribute.
@@ -131,6 +132,10 @@ public final class AaptExecTask extends BaseTask {
      */
     public void setNoCrunch(boolean nocrunch) {
         mUseCrunchCache = nocrunch;
+    }
+
+    public void setNonConstantId(boolean nonConstantId) {
+        mNonConstantId = nonConstantId;
     }
 
     public void setVersioncode(String versionCode) {
@@ -413,6 +418,10 @@ public final class AaptExecTask extends BaseTask {
         // No crunch flag
         if (mUseCrunchCache) {
             task.createArg().setValue("--no-crunch");
+        }
+
+        if (mNonConstantId) {
+            task.createArg().setValue("--non-constant-id");
         }
 
         // force flag
