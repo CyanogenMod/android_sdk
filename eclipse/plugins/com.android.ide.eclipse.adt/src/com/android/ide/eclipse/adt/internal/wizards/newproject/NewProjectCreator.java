@@ -319,7 +319,7 @@ public class NewProjectCreator  {
         IPath path = new Path(mValues.projectLocation.getPath());
         IPath defaultLocation = Platform.getLocation();
         if ((!mValues.useDefaultLocation || mValues.useExisting)
-                && !path.equals(defaultLocation)) {
+                && !defaultLocation.isPrefixOf(path)) {
             description.setLocation(path);
         }
 
