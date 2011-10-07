@@ -17,7 +17,9 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_COLUMN;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ROW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_SPACE;
 import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
@@ -106,7 +108,8 @@ public class GridLayoutRule extends BaseLayoutRule {
     private static final String ACTION_ADD_COL = "_addcol"; //$NON-NLS-1$
     private static final String ACTION_REMOVE_COL = "_removecol"; //$NON-NLS-1$
     private static final String ACTION_ORIENTATION = "_orientation"; //$NON-NLS-1$
-    private static final String ACTION_SHOW_GRID = "_grid"; //$NON-NLS-1$
+    private static final String ACTION_SHOW_STRUCTURE = "_structure"; //$NON-NLS-1$
+    private static final String ACTION_GRID_MODE = "_gridmode"; //$NON-NLS-1$
     private static final String ACTION_SNAP = "_snap"; //$NON-NLS-1$
     private static final String ACTION_DEBUG = "_debug"; //$NON-NLS-1$
 
@@ -116,14 +119,15 @@ public class GridLayoutRule extends BaseLayoutRule {
     private static final URL ICON_REMOVE_ROW = GridLayoutRule.class.getResource("removerow.png"); //$NON-NLS-1$
     private static final URL ICON_ADD_COL = GridLayoutRule.class.getResource("addcol.png"); //$NON-NLS-1$
     private static final URL ICON_REMOVE_COL = GridLayoutRule.class.getResource("removecol.png"); //$NON-NLS-1$
-    private static final URL ICON_SHOW_GRID = GridLayoutRule.class.getResource("showgrid.png"); //$NON-NLS-1$
+    private static final URL ICON_SHOW_STRUCT = GridLayoutRule.class.getResource("showgrid.png"); //$NON-NLS-1$
+    private static final URL ICON_GRID_MODE = GridLayoutRule.class.getResource("gridmode.png"); //$NON-NLS-1$
     private static final URL ICON_SNAP = GridLayoutRule.class.getResource("snap.png"); //$NON-NLS-1$
 
     /**
      * Whether the IDE should show diagnostics for debugging the grid layout - including
      * spacers visibly in the outline, showing row and column numbers, and so on
      */
-    public static boolean sDebugGridLayout = false;
+    public static boolean sDebugGridLayout = CAN_DEBUG;
 
     /** Whether the structure (grid model) should be displayed persistently to the user */
     public static boolean sShowStructure = false;
@@ -171,12 +175,12 @@ public class GridLayoutRule extends BaseLayoutRule {
                 parentNode.editXml("Add/Remove Row/Column", new INodeHandler() {
                     public void handle(INode n) {
                         String id = action.getId();
-                        if (id.equals(ACTION_SHOW_GRID)) {
+                        if (id.equals(ACTION_SHOW_STRUCTURE)) {
                             sShowStructure = !sShowStructure;
-                            // HACK: ToggleButton controls two flags for now - show grid and
-                            // grid mode (handling drags in a grid mode)
+                            mRulesEngine.redraw();
+                            return;
+                        } else if (id.equals(ACTION_GRID_MODE)) {
                             sGridMode = !sGridMode;
-
                             mRulesEngine.redraw();
                             return;
                         } else if (id.equals(ACTION_SNAP)) {
@@ -205,30 +209,39 @@ public class GridLayoutRule extends BaseLayoutRule {
             }
         };
 
-        // Add Row and Add Column
-        actions.add(RuleAction.createSeparator(150));
-        actions.add(RuleAction.createAction(ACTION_ADD_COL, "Add Column", actionCallback,
-                ICON_ADD_COL, 160, false /* supportsMultipleNodes */));
-        actions.add(RuleAction.createAction(ACTION_ADD_ROW, "Add Row", actionCallback,
-                ICON_ADD_ROW, 165, false));
+        actions.add(RuleAction.createSeparator(142));
 
-        // Remove Row and Remove Column (if something is selected)
-        if (children != null && children.size() > 0) {
-            // TODO: Add "Merge Columns" and "Merge Rows" ?
+        actions.add(RuleAction.createToggle(ACTION_GRID_MODE, "Grid Model Mode",
+                sGridMode, actionCallback, ICON_GRID_MODE, 145, false));
 
-            actions.add(RuleAction.createAction(ACTION_REMOVE_COL, "Remove Column",
-                    actionCallback, ICON_REMOVE_COL, 170, false));
-            actions.add(RuleAction.createAction(ACTION_REMOVE_ROW, "Remove Row",
-                    actionCallback, ICON_REMOVE_ROW, 175, false));
+        // Add and Remove Column actions only apply in Grid Mode
+        if (sGridMode) {
+            // Add Row and Add Column
+            actions.add(RuleAction.createSeparator(150));
+            actions.add(RuleAction.createAction(ACTION_ADD_COL, "Add Column", actionCallback,
+                    ICON_ADD_COL, 160, false /* supportsMultipleNodes */));
+            actions.add(RuleAction.createAction(ACTION_ADD_ROW, "Add Row", actionCallback,
+                    ICON_ADD_ROW, 165, false));
+
+            // Remove Row and Remove Column (if something is selected)
+            if (children != null && children.size() > 0) {
+                // TODO: Add "Merge Columns" and "Merge Rows" ?
+
+                actions.add(RuleAction.createAction(ACTION_REMOVE_COL, "Remove Column",
+                        actionCallback, ICON_REMOVE_COL, 170, false));
+                actions.add(RuleAction.createAction(ACTION_REMOVE_ROW, "Remove Row",
+                        actionCallback, ICON_REMOVE_ROW, 175, false));
+            }
+
+            actions.add(RuleAction.createSeparator(185));
+        } else {
+            actions.add(RuleAction.createToggle(ACTION_SHOW_STRUCTURE, "Show Structure",
+                    sShowStructure, actionCallback, ICON_SHOW_STRUCT, 190, false));
+
+            // Snap to Grid and Show Structure are only relevant in free form mode
+            actions.add(RuleAction.createToggle(ACTION_SNAP, "Snap to Grid",
+                    sSnapToGrid, actionCallback, ICON_SNAP, 200, false));
         }
-
-        actions.add(RuleAction.createSeparator(185));
-
-        actions.add(RuleAction.createToggle(ACTION_SNAP, "Snap to Grid",
-                sSnapToGrid, actionCallback, ICON_SNAP, 190, false));
-
-        actions.add(RuleAction.createToggle(ACTION_SHOW_GRID, "Show Structure",
-                sShowStructure, actionCallback, ICON_SHOW_GRID, 200, false));
 
         // Temporary: Diagnostics for GridLayout
         if (CAN_DEBUG) {
@@ -491,12 +504,13 @@ public class GridLayoutRule extends BaseLayoutRule {
         if (sShowStructure) {
             // TODO: Cache the grid
             if (view != null) {
-                GridLayoutPainter.paintStructure(view, DrawingStyle.GUIDELINE_DASHED,
-                        parentNode, graphics);
-            } else {
-                GridLayoutPainter.paintStructure(DrawingStyle.GUIDELINE_DASHED,
-                        parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
+                if (GridLayoutPainter.paintStructure(view, DrawingStyle.GUIDELINE_DASHED,
+                        parentNode, graphics)) {
+                    return;
+                }
             }
+            GridLayoutPainter.paintStructure(DrawingStyle.GUIDELINE_DASHED,
+                        parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
         } else if (sDebugGridLayout) {
             GridLayoutPainter.paintStructure(DrawingStyle.GRID,
                     parentNode, graphics, new GridModel(mRulesEngine, parentNode, view));
@@ -504,5 +518,67 @@ public class GridLayoutRule extends BaseLayoutRule {
 
         // TBD: Highlight the cells around the selection, and display easy controls
         // for for example tweaking the rowspan/colspan of a cell? (but only in grid mode)
+    }
+
+    /**
+     * Paste into a GridLayout. We have several possible behaviors (and many
+     * more than are listed here):
+     * <ol>
+     * <li> Preserve the current positions of the elements (if pasted from another
+     *      canvas, not just XML markup copied from say a web site) and apply those
+     *      into the current grid. This might mean "overwriting" (sitting on top of)
+     *      existing elements.
+     * <li> Fill available "holes" in the grid.
+     * <li> Lay them out consecutively, row by row, like text.
+     * <li> Some hybrid approach, where I attempt to preserve the <b>relative</b>
+     *      relationships (columns/wrapping, spacing between the pasted views etc)
+     *      but I append them to the bottom of the layout on one or more new rows.
+     * <li> Try to paste at the current mouse position, if known, preserving the
+     *      relative distances between the existing elements there.
+     * </ol>
+     * Attempting to preserve the current position isn't possible right now,
+     * because the clipboard data contains only the textual representation of
+     * the markup. (We'd need to stash position information from a previous
+     * layout render along with the clipboard data).
+     * <p>
+     * Currently, this implementation simply lays out the elements row by row,
+     * approach #3 above.
+     */
+    @Override
+    public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
+        DropFeedback feedback = onDropEnter(targetNode, targetView, elements);
+        if (feedback != null) {
+            Rect b = targetNode.getBounds();
+            if (!b.isValid()) {
+                return;
+            }
+
+            Map<String, Pair<String, String>> idMap = getDropIdMap(targetNode, elements,
+                    true /* remap id's */);
+
+            for (IDragElement element : elements) {
+                // Skip <Space> elements and only insert the real elements being
+                // copied
+                if (elements.length > 1 && FQCN_SPACE.equals(element.getFqcn())) {
+                    continue;
+                }
+
+                String fqcn = element.getFqcn();
+                INode newChild = targetNode.appendChild(fqcn);
+                addAttributes(newChild, element, idMap, DEFAULT_ATTR_FILTER);
+
+                // Ensure that we reset any potential row/column attributes from a different
+                // grid layout being copied from
+                newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_COLUMN, null);
+                newChild.setAttribute(ANDROID_URI, ATTR_LAYOUT_ROW, null);
+
+                // TODO: Set columnSpans to avoid making these widgets completely
+                // break the layout
+                // Alternatively, I could just lay them all out on subsequent lines
+                // with a column span of columnSpan5
+
+                addInnerElements(newChild, element, idMap);
+            }
+        }
     }
 }
