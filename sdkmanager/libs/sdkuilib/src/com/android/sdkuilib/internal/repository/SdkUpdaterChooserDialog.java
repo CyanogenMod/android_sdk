@@ -21,6 +21,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.ui.GridDialog;
 
@@ -480,7 +481,10 @@ final class SdkUpdaterChooserDialog extends GridDialog {
         }
 
         addSectionTitle("Site\n");
-        addText(pNew.getParentSource().getShortDescription());
+        SdkSource source = pNew.getParentSource();
+        if (source != null) {
+            addText(source.getShortDescription());
+        }
     }
 
     /**
