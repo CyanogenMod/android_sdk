@@ -563,6 +563,7 @@
                     manifest="AndroidManifest.xml"
                     androidjar="${android.jar}"
                     rfolder="${gen.absolute.dir}"
+                    nonConstantId="${android.library}"
                     projectLibrariesResName="project.libraries.res"
                     projectLibrariesPackageName="project.libraries.package">
                 <res path="${resource.absolute.dir}" />
