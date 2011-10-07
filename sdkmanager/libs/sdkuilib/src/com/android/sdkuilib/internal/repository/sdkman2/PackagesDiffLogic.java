@@ -89,7 +89,7 @@ class PackagesDiffLogic {
      * <li> If some platform is partially installed, selected anything new/update for it.
      * </ul>
      */
-    public void checkNewUpdateItems() {
+    public void checkNewUpdateItems(boolean selectNew, boolean selectUpdates) {
         int maxApi = 0;
         Set<Integer> installedPlatforms = new HashSet<Integer>();
         Map<Integer, List<PkgItem>> platformItems = new HashMap<Integer, List<PkgItem>>();
@@ -123,7 +123,8 @@ class PackagesDiffLogic {
                 items.add(item);
             } else {
                 // not a plaform package...
-                if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                if ((selectNew && item.getState() == PkgState.NEW) ||
+                        (selectUpdates && item.hasUpdatePkg())) {
                     item.setChecked(true);
                 }
             }
@@ -134,7 +135,8 @@ class PackagesDiffLogic {
             List<PkgItem> items = platformItems.get(api);
             if (items != null) {
                 for (PkgItem item : items) {
-                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                    if ((selectNew && item.getState() == PkgState.NEW) ||
+                            (selectUpdates && item.hasUpdatePkg())) {
                         item.setChecked(true);
                     }
                 }
@@ -146,7 +148,8 @@ class PackagesDiffLogic {
             List<PkgItem> items = platformItems.get(maxApi);
             if (items != null) {
                 for (PkgItem item : items) {
-                    if (item.getState() == PkgState.NEW || item.hasUpdatePkg()) {
+                    if ((selectNew && item.getState() == PkgState.NEW) ||
+                            (selectUpdates && item.hasUpdatePkg())) {
                         item.setChecked(true);
                     }
                 }

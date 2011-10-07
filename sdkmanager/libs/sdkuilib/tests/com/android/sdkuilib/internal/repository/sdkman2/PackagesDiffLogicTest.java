@@ -807,7 +807,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertFalse(m.isFirstLoadComplete());
     }
 
-    public void testCheckNewUpdateItems() {
+    public void testCheckNewUpdateItems_NewOnly() {
         // Populate the list with a few items and an update
         SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
@@ -835,20 +835,66 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
                 getTree(m, false /*displaySortByApi*/));
 
-        // Now request to check new and update items
-        m.checkNewUpdateItems();
+        // Now request to check new items only
+        m.checkNewUpdateItems(true, false);
 
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=3>\n" +
-                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
                 "-- < * NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
-                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
                 "-- < * NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+    public void testCheckNewUpdateItems_UpdateOnly() {
+        // Populate the list with a few items and an update
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockEmptyPackage(src1, "has update", 1),
+                new MockEmptyPackage(src1, "no update", 4)
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockEmptyPackage(src1, "has update", 2),
+                new MockEmptyPackage(src1, "new stuff", 3),
+        });
+        m.updateEnd(true /*sortByApi*/);
+        // Nothing is checked at first
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now request to check update items only
+        m.checkNewUpdateItems(false, true);
+
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=3>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
+                "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
+                "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
+                "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
@@ -878,7 +924,7 @@ public class PackagesDiffLogicTest extends TestCase {
         });
         m.updateEnd(true /*sortByApi*/);
 
-        m.checkNewUpdateItems();
+        m.checkNewUpdateItems(true, true);
 
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
@@ -930,7 +976,7 @@ public class PackagesDiffLogicTest extends TestCase {
         });
         m.updateEnd(true /*sortByApi*/);
 
-        m.checkNewUpdateItems();
+        m.checkNewUpdateItems(true, true);
 
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
