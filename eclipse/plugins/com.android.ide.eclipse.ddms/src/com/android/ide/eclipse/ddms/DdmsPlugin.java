@@ -27,10 +27,6 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
-import com.android.ddmuilib.logcat.ILogCatMessageEventListener;
-import com.android.ddmuilib.logcat.LogCatMessage;
-import com.android.ddmuilib.logcat.LogCatReceiver;
-import com.android.ddmuilib.logcat.LogCatReceiverFactory;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
@@ -62,7 +58,6 @@ import org.osgi.framework.BundleContext;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -503,8 +498,14 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                     @Override
                     public void run() {
                         // create and start the bridge
-                        AndroidDebugBridge.createBridge(sAdbLocation,
-                                false /* forceNewBridge */);
+                        try {
+                            AndroidDebugBridge.createBridge(sAdbLocation,
+                                    false /* forceNewBridge */);
+                        } catch (Throwable t) {
+                            Status status = new Status(IStatus.ERROR, PLUGIN_ID,
+                                    "Failed to create AndroidDebugBridge", t);
+                            getDefault().getLog().log(status);
+                        }
                     }
                 }.start();
             }

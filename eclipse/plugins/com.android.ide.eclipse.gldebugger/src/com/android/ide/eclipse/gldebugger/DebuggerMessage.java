@@ -1010,7 +1010,8 @@ public final class DebuggerMessage {
         return builder;
       }
 
-      protected com.android.ide.eclipse.gldebugger.DebuggerMessage.Message internalGetResult() {
+      @Override
+    protected com.android.ide.eclipse.gldebugger.DebuggerMessage.Message internalGetResult() {
         return result;
       }
 
@@ -1023,11 +1024,13 @@ public final class DebuggerMessage {
         return this;
       }
 
-      public Builder clone() {
+      @Override
+    public Builder clone() {
         return create().mergeFrom(result);
       }
 
-      public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message getDefaultInstanceForType() {
+      @Override
+    public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message getDefaultInstanceForType() {
         return com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.getDefaultInstance();
       }
 
@@ -1060,7 +1063,8 @@ public final class DebuggerMessage {
         return returnMe;
       }
 
-      public Builder mergeFrom(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message other) {
+      @Override
+    public Builder mergeFrom(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message other) {
         if (other == com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.getDefaultInstance()) return this;
         if (other.hasContextId()) {
           setContextId(other.getContextId());
@@ -1134,7 +1138,8 @@ public final class DebuggerMessage {
         return this;
       }
 
-      public Builder mergeFrom(
+      @Override
+    public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
