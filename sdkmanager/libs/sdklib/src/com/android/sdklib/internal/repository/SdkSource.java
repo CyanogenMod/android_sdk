@@ -27,6 +27,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -660,6 +661,20 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
             // Parse the old document using a non namespace aware builder
             factory.setNamespaceAware(false);
             DocumentBuilder builder = factory.newDocumentBuilder();
+
+            // We don't want the default handler which prints errors to stderr.
+            builder.setErrorHandler(new ErrorHandler() {
+                public void warning(SAXParseException e) throws SAXException {
+                    // pass
+                }
+                public void fatalError(SAXParseException e) throws SAXException {
+                    throw e;
+                }
+                public void error(SAXParseException e) throws SAXException {
+                    throw e;
+                }
+            });
+
             doc = builder.parse(xml);
 
             // Prepare a new document using a namespace aware builder
@@ -743,6 +758,19 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         Schema schema = factory.newSchema(new StreamSource(xsdStream));
 
         Validator validator = schema == null ? null : schema.newValidator();
+
+        // We don't want the default handler, which by default dumps errors to stderr.
+        validator.setErrorHandler(new ErrorHandler() {
+            public void warning(SAXParseException e) throws SAXException {
+                // pass
+            }
+            public void fatalError(SAXParseException e) throws SAXException {
+                throw e;
+            }
+            public void error(SAXParseException e) throws SAXException {
+                throw e;
+            }
+        });
 
         return validator;
     }
