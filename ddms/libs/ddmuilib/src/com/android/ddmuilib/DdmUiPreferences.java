@@ -28,9 +28,9 @@ public final class DdmUiPreferences {
     public static final int DEFAULT_THREAD_REFRESH_INTERVAL = 4;  // seconds
 
     private static int sThreadRefreshInterval = DEFAULT_THREAD_REFRESH_INTERVAL;
-    
+
     private static IPreferenceStore mStore;
-    
+
     private static String sSymbolLocation =""; //$NON-NLS-1$
     private static String sAddr2LineLocation =""; //$NON-NLS-1$
     private static String sTraceviewLocation =""; //$NON-NLS-1$
@@ -38,7 +38,7 @@ public final class DdmUiPreferences {
     public static void setStore(IPreferenceStore store) {
         mStore = store;
     }
-    
+
     public static IPreferenceStore getStore() {
         return mStore;
     }
@@ -50,8 +50,8 @@ public final class DdmUiPreferences {
     public static void setThreadRefreshInterval(int port) {
         sThreadRefreshInterval = port;
     }
-    
-    static String getSymbolDirectory() {
+
+    public static String getSymbolDirectory() {
         return sSymbolLocation;
     }
 
@@ -59,7 +59,7 @@ public final class DdmUiPreferences {
         sSymbolLocation = location;
     }
 
-    static String getAddr2Line() {
+    public static String getAddr2Line() {
         return sAddr2LineLocation;
     }
 

@@ -76,12 +76,26 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Panel to display native heap information. */
 public class NativeHeapPanel extends BaseHeapPanel {
+    private static final boolean USE_OLD_RESOLVER;
+    static {
+        String useOldResolver = System.getenv("ANDROID_DDMS_OLD_SYMRESOLVER");
+        if (useOldResolver != null && useOldResolver.equalsIgnoreCase("true")) {
+            USE_OLD_RESOLVER = true;
+        } else {
+            USE_OLD_RESOLVER = false;
+        }
+    }
+    private final int MAX_DISPLAYED_ERROR_ITEMS = 5;
+
     private static final String TOOLTIP_EXPORT_DATA = "Export Heap Data";
     private static final String TOOLTIP_ZYGOTE_ALLOCATIONS = "Show Zygote Allocations";
     private static final String TOOLTIP_DIFFS_ONLY = "Only show new allocations not present in previous snapshot";
@@ -151,7 +165,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     }
 
     /** {@inheritDoc} */
-    public void clientChanged(Client client, int changeMask) {
+    public void clientChanged(final Client client, int changeMask) {
         if (client != getCurrentClient()) {
             return;
         }
@@ -167,17 +181,121 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         // We need to clone this list since getClientData().getNativeAllocationList() clobbers
         // the list on future updates
-        allocations = shallowCloneList(allocations);
+        final List<NativeAllocationInfo> nativeAllocations = shallowCloneList(allocations);
 
-        addNativeHeapSnapshot(new NativeHeapSnapshot(allocations));
+        addNativeHeapSnapshot(new NativeHeapSnapshot(nativeAllocations));
         updateDisplay();
 
         // Attempt to resolve symbols in a separate thread.
         // The UI should be refreshed once the symbols have been resolved.
-        Thread t = new Thread(new SymbolResolverTask(allocations,
-                client.getClientData().getMappedNativeLibraries()));
-        t.setName("Address to Symbol Resolver");
-        t.start();
+        if (USE_OLD_RESOLVER) {
+            Thread t = new Thread(new SymbolResolverTask(nativeAllocations,
+                    client.getClientData().getMappedNativeLibraries()));
+            t.setName("Address to Symbol Resolver");
+            t.start();
+        } else {
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    resolveSymbols();
+                    mDetailsTreeViewer.refresh();
+                    mStackTraceTreeViewer.refresh();
+                }
+
+                public void resolveSymbols() {
+                    Shell shell = Display.getDefault().getActiveShell();
+                    ProgressMonitorDialog d = new ProgressMonitorDialog(shell);
+
+                    NativeSymbolResolverTask resolver = new NativeSymbolResolverTask(
+                            nativeAllocations,
+                            client.getClientData().getMappedNativeLibraries(),
+                            mSymbolSearchPathText.getText());
+
+                    try {
+                        d.run(true, true, resolver);
+                    } catch (InvocationTargetException e) {
+                        MessageDialog.openError(shell,
+                                "Error Resolving Symbols",
+                                e.getCause().getMessage());
+                        return;
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+
+                    MessageDialog.openInformation(shell, "Symbol Resolution Status",
+                            getResolutionStatusMessage(resolver));
+                }
+            });
+        }
+    }
+
+    private String getResolutionStatusMessage(NativeSymbolResolverTask resolver) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Symbol Resolution Complete.\n\n");
+
+        // show addresses that were not mapped
+        Set<Long> unmappedAddresses = resolver.getUnmappedAddresses();
+        if (unmappedAddresses.size() > 0) {
+            sb.append(String.format("Unmapped addresses (%d): ",
+                    unmappedAddresses.size()));
+            sb.append(getSampleForDisplay(unmappedAddresses));
+            sb.append('\n');
+        }
+
+        // show libraries that were not present on disk
+        Set<String> notFoundLibraries = resolver.getNotFoundLibraries();
+        if (notFoundLibraries.size() > 0) {
+            sb.append(String.format("Libraries not found on disk (%d): ",
+                    notFoundLibraries.size()));
+            sb.append(getSampleForDisplay(notFoundLibraries));
+            sb.append('\n');
+        }
+
+        // show addresses that were mapped but not resolved
+        Set<Long> unresolvableAddresses = resolver.getUnresolvableAddresses();
+        if (unresolvableAddresses.size() > 0) {
+            sb.append(String.format("Unresolved addresses (%d): ",
+                    unresolvableAddresses.size()));
+            sb.append(getSampleForDisplay(unresolvableAddresses));
+            sb.append('\n');
+        }
+
+        if (resolver.getAddr2LineErrorMessage() != null) {
+            sb.append("Error launching addr2line: ");
+            sb.append(resolver.getAddr2LineErrorMessage());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Get the string representation for a collection of items.
+     * If there are more items than {@link #MAX_DISPLAYED_ERROR_ITEMS}, then only the first
+     * {@link #MAX_DISPLAYED_ERROR_ITEMS} items are taken into account,
+     * and an ellipsis is added at the end.
+     */
+    private String getSampleForDisplay(Collection<?> items) {
+        StringBuilder sb = new StringBuilder();
+
+        int c = 1;
+        Iterator<?> it = items.iterator();
+        while (it.hasNext()) {
+            Object item = it.next();
+            if (item instanceof Long) {
+                sb.append(String.format("0x%x", item));
+            } else {
+                sb.append(item);
+            }
+
+            if (c == MAX_DISPLAYED_ERROR_ITEMS && it.hasNext()) {
+                sb.append(", ...");
+                break;
+            } else if (it.hasNext()) {
+                sb.append(", ");
+            }
+
+            c++;
+        }
+        return sb.toString();
     }
 
     private void addNativeHeapSnapshot(NativeHeapSnapshot snapshot) {
