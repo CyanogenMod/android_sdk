@@ -92,7 +92,7 @@ public class ResourceNameValidator implements IInputValidator {
             // Resource names must be valid Java identifiers, since they will
             // be represented as Java identifiers in the R file:
             if (!Character.isJavaIdentifierStart(newText.charAt(0))) {
-                return "The layout name must begin with a character";
+                return "The resource name must begin with a character";
             }
             for (int i = 1, n = newText.length(); i < n; i++) {
                 char c = newText.charAt(i);
@@ -102,6 +102,12 @@ public class ResourceNameValidator implements IInputValidator {
             }
 
             if (mIsFileType) {
+                char first = newText.charAt(0);
+                if (!(first >= 'a' && first <= 'z')) {
+                    return String.format(
+                            "File-based resource names must start with a lowercase letter.");
+                }
+
                 // AAPT only allows lowercase+digits+_:
                 // "%s: Invalid file name: must contain only [a-z0-9_.]","
                 for (int i = 0, n = newText.length(); i < n; i++) {
