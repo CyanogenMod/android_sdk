@@ -471,8 +471,22 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         File hprofConverter = new File(hprofConvLocation);
         File traceview = new File(traceViewLocation);
 
-        if (adb.isFile() == false || hprofConverter.isFile() == false ||
-                traceview.isFile() == false) {
+        String missing = "";
+        if (adb.isFile() == false) {
+            missing += adb.getAbsolutePath() + " ";
+        }
+        if (hprofConverter.isFile() == false) {
+            missing += hprofConverter.getAbsolutePath() + " ";
+        }
+        if (traceview.isFile() == false) {
+            missing += traceview.getAbsolutePath() + " ";
+        }
+
+        if (missing.length() > 0) {
+            String msg = String.format("DDMS files not found: %1$s", missing);
+            Log.e("DDMS", msg);
+            Status status = new Status(IStatus.ERROR, PLUGIN_ID, msg, null /*exception*/);
+            getDefault().getLog().log(status);
             return false;
         }
 
@@ -734,6 +748,9 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         String dateTag = getMessageTag(tag);
 
         stream.print(dateTag);
+        if (!dateTag.endsWith(" ")) {
+            stream.print(" ");          //$NON-NLS-1$
+        }
         stream.println(message);
     }
 
