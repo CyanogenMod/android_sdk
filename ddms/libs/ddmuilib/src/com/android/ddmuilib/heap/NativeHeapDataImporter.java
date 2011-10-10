@@ -190,9 +190,14 @@ public class NativeHeapDataImporter implements IRunnableWithProgress {
             }
 
             sb.append(token);
+
+            // We do not know the exact delimiter that was skipped over, but we know
+            // that there was atleast 1 whitespace. Add a single whitespace character
+            // to account for this.
+            sb.append(' ');
         }
 
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     private boolean isUnresolved(String method, long address) {
