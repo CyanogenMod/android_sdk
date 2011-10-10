@@ -18,7 +18,6 @@ package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.ImageLoader;
@@ -124,8 +123,6 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final int[] WEIGHTS_SHOW_FILTERS = new int[] {15, 85};
     private static final int[] WEIGHTS_LOGCAT_ONLY = new int[] {0, 100};
 
-    private static final String LOG_TAG = "LogCatPanel";
-
     private LogCatReceiver mReceiver;
     private IPreferenceStore mPrefStore;
 
@@ -223,7 +220,6 @@ public final class LogCatPanel extends SelectionDependentPanel
         if (device == null) {
             // If the device is not working properly, getCurrentDevice() could return null.
             // In such a case, we don't launch logcat, nor switch the display.
-            Log.e(LOG_TAG, "Device selected, but getCurrentDevice() == null");
             return;
         }
 
