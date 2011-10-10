@@ -399,11 +399,11 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         mPanels[PANEL_THREAD] = new ThreadPanel();
         mPanels[PANEL_HEAP] = new HeapPanel();
         if (PrefsDialog.getStore().getBoolean(PrefsDialog.SHOW_NATIVE_HEAP)) {
-            if (System.getenv("ANDROID_DDMS_NEW_HEAP_PANEL") != null) {
+            if (System.getenv("ANDROID_DDMS_OLD_HEAP_PANEL") != null) {
+                mPanels[PANEL_NATIVE_HEAP] = new NativeHeapPanel();
+            } else {
                 mPanels[PANEL_NATIVE_HEAP] =
                         new com.android.ddmuilib.heap.NativeHeapPanel(getStore());
-            } else {
-                mPanels[PANEL_NATIVE_HEAP] = new NativeHeapPanel();
             }
         } else {
             mPanels[PANEL_NATIVE_HEAP] = null;
