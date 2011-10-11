@@ -52,7 +52,7 @@ import java.util.List;
  * <tr><td></td><td></td><td></td></tr>
  * </table>
  */
-public final class AaptExecTask extends BaseTask {
+public final class AaptExecTask extends SingleDependencyTask {
 
     /**
      * Class representing a &lt;nocompress&gt; node in the main task XML.

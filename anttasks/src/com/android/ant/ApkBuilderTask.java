@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class ApkBuilderTask extends BaseTask {
+public class ApkBuilderTask extends SingleDependencyTask {
 
     private final static Pattern PATTERN_JAR_EXT = Pattern.compile("^.+\\.jar$",
             Pattern.CASE_INSENSITIVE);
