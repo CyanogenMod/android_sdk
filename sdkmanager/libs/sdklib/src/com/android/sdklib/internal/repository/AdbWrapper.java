@@ -18,14 +18,12 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.SdkConstants;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 
 /**
  * A lightweight wrapper to start & stop ADB.
+ * This is <b>specific</b> to the SDK Manager install process.
  */
 public class AdbWrapper {
 
@@ -75,15 +73,17 @@ public class AdbWrapper {
         int status = -1;
 
         try {
-            String[] command = new String[2];
-            command[0] = mAdbOsLocation;
-            command[1] = "start-server"; //$NON-NLS-1$
-            proc = Runtime.getRuntime().exec(command);
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    mAdbOsLocation,
+                    "start-server"); //$NON-NLS-1$
+            proc = processBuilder.start();
+            status = proc.waitFor();
 
-            ArrayList<String> errorOutput = new ArrayList<String>();
-            ArrayList<String> stdOutput = new ArrayList<String>();
-            status = grabProcessOutput(proc, errorOutput, stdOutput,
-                    false /* waitForReaders */);
+            // Implementation note: normally on Windows we need to capture stderr/stdout
+            // to make sure the process isn't blocked if it's output isn't read. However
+            // in this case this happens to hang when reading stdout with no proper way
+            // to properly close the streams. On the other hand the output from start
+            // server is rather short and not very interesting so we just drop it.
 
         } catch (IOException ioe) {
             displayError("Unable to run 'adb': %1$s.", ioe.getMessage()); //$NON-NLS-1$
@@ -94,11 +94,13 @@ public class AdbWrapper {
         }
 
         if (status != 0) {
-            displayError("'adb start-server' failed."); //$NON-NLS-1$
+            displayError(String.format(
+                    "Starting ADB server failed (code %d).", //$NON-NLS-1$
+                    status));
             return false;
         }
 
-        display("'adb start-server' succeeded."); //$NON-NLS-1$
+        display("Starting ADB server succeeded."); //$NON-NLS-1$
 
         return true;
     }
@@ -122,6 +124,8 @@ public class AdbWrapper {
             command[1] = "kill-server"; //$NON-NLS-1$
             proc = Runtime.getRuntime().exec(command);
             status = proc.waitFor();
+
+            // See comment in startAdb about not needing/wanting to capture stderr/stdout.
         }
         catch (IOException ioe) {
             // we'll return false;
@@ -130,96 +134,19 @@ public class AdbWrapper {
             // we'll return false;
         }
 
-        if (status != 0) {
-            displayError("'adb kill-server' failed -- run manually if necessary."); //$NON-NLS-1$
+        // adb kill-server returns:
+        // 0 if adb was running and was correctly killed.
+        // 1 if adb wasn't running and thus wasn't killed.
+        // This error case is not worth reporting.
+
+        if (status != 0 && status != 1) {
+            displayError(String.format(
+                    "Stopping ADB server failed (code %d).", //$NON-NLS-1$
+                    status));
             return false;
         }
 
-        display("'adb kill-server' succeeded."); //$NON-NLS-1$
+        display("Stopping ADB server succeeded."); //$NON-NLS-1$
         return true;
     }
-
-    /**
-     * Get the stderr/stdout outputs of a process and return when the process is done.
-     * Both <b>must</b> be read or the process will block on windows.
-     * @param process The process to get the ouput from
-     * @param errorOutput The array to store the stderr output. cannot be null.
-     * @param stdOutput The array to store the stdout output. cannot be null.
-     * @param waitforReaders if true, this will wait for the reader threads.
-     * @return the process return code.
-     * @throws InterruptedException
-     */
-    private int grabProcessOutput(final Process process, final ArrayList<String> errorOutput,
-            final ArrayList<String> stdOutput, boolean waitforReaders)
-            throws InterruptedException {
-        assert errorOutput != null;
-        assert stdOutput != null;
-        // read the lines as they come. if null is returned, it's
-        // because the process finished
-        Thread t1 = new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                // create a buffer to read the stderr output
-                InputStreamReader is = new InputStreamReader(process.getErrorStream());
-                BufferedReader errReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = errReader.readLine();
-                        if (line != null) {
-                            displayError("ADB Error: %1$s", line);
-                            errorOutput.add(line);
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        Thread t2 = new Thread("") { //$NON-NLS-1$
-            @Override
-            public void run() {
-                InputStreamReader is = new InputStreamReader(process.getInputStream());
-                BufferedReader outReader = new BufferedReader(is);
-
-                try {
-                    while (true) {
-                        String line = outReader.readLine();
-                        if (line != null) {
-                            displayError("ADB: %1$s", line);
-                            stdOutput.add(line);
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    // do nothing.
-                }
-            }
-        };
-
-        t1.start();
-        t2.start();
-
-        // it looks like on windows process#waitFor() can return
-        // before the thread have filled the arrays, so we wait for both threads and the
-        // process itself.
-        if (waitforReaders) {
-            try {
-                t1.join();
-            } catch (InterruptedException e) {
-            }
-            try {
-                t2.join();
-            } catch (InterruptedException e) {
-            }
-        }
-
-        // get the return code from the process
-        return process.waitFor();
-    }
-
 }

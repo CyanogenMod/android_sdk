@@ -68,11 +68,7 @@ public class SettingsController {
      * @see ISettingsPage#KEY_ASK_ADB_RESTART
      */
     public boolean getAskBeforeAdbRestart() {
-        String value = mProperties.getProperty(ISettingsPage.KEY_ASK_ADB_RESTART);
-        if (value == null) {
-            return true;
-        }
-        return Boolean.parseBoolean(value);
+        return Boolean.parseBoolean(mProperties.getProperty(ISettingsPage.KEY_ASK_ADB_RESTART));
     }
 
     /**
