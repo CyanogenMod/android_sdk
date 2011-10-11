@@ -148,6 +148,13 @@ public final class AaptParser {
         Pattern.compile("Resource entry (.+) already has bag item (.+)\\."); //$NON-NLS-1$
 
     /**
+     * Error message emitted when aapt skips a file because for example it's name is
+     * invalid, such as a layout file name which starts with _.
+     */
+    private static final Pattern sSkippingPattern =
+        Pattern.compile("    \\(skipping .+ .+ '(.*)'\\)"); //$NON-NLS-1$
+
+    /**
      * Suffix of error message which points to the first occurrence of a repeated resource
      * definition.
      * Example:
@@ -395,6 +402,20 @@ public final class AaptParser {
                 // check the values and attempt to mark the file.
                 if (checkAndMark(null /*location*/, null, msg, osRoot, project,
                         AdtConstants.MARKER_AAPT_PACKAGE, IMarker.SEVERITY_ERROR) == false) {
+                    return true;
+                }
+
+                // success, go to the next line
+                continue;
+            }
+
+            m = sSkippingPattern.matcher(p);
+            if (m.matches()) {
+                String location = m.group(1);
+
+                // check the values and attempt to mark the file.
+                if (checkAndMark(location, null, p.trim(), osRoot, project,
+                        AdtConstants.MARKER_AAPT_COMPILE, IMarker.SEVERITY_ERROR) == false) {
                     return true;
                 }
 
