@@ -49,7 +49,7 @@ public interface ISettingsPage {
     /**
      * Setting to ask for permission before restarting ADB.
      * Type: Boolean.
-     * Default: True.
+     * Default: False.
      */
     public static final String KEY_ASK_ADB_RESTART = "sdkman.ask.adb.restart";   //$NON-NLS-1$
     /**
