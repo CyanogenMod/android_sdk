@@ -1387,10 +1387,7 @@ public class PackagesPage extends UpdaterPage
 
                 if (element instanceof PkgItem) {
                     PkgItem pkg = (PkgItem) element;
-
-                    if (pkg.getState() == PkgState.INSTALLED) {
-                        return Integer.toString(pkg.getRevision());
-                    }
+                    return Integer.toString(pkg.getRevision());
                 }
 
             } else if (mColumn == mColumnStatus) {
