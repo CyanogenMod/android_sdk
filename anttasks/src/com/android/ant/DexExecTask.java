@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Custom task to execute dx while handling dependencies.
  */
-public class DexExecTask extends BaseTask {
+public class DexExecTask extends SingleDependencyTask {
 
     private String mExecutable;
     private String mOutput;

@@ -18,19 +18,11 @@ package com.android.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.ExecTask;
-import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.PatternSet.NameEntry;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Task to execute aidl.
@@ -44,12 +36,71 @@ import java.util.Set;
  * It also expects one or more inner elements called "source" which are identical to {@link Path}
  * elements.
  */
-public class AidlExecTask extends Task {
+public class AidlExecTask extends MultiFilesTask {
 
     private String mExecutable;
     private String mFramework;
     private String mGenFolder;
     private final ArrayList<Path> mPaths = new ArrayList<Path>();
+
+    private class AidlProcessor implements SourceProcessor {
+
+        public String getSourceFileExtension() {
+            return "aidl";
+        }
+
+        public void process(String filePath, String sourceFolder,
+                List<String> sourceFolders, Project taskProject) {
+            ExecTask task = new ExecTask();
+            task.setProject(taskProject);
+            task.setOwningTarget(getOwningTarget());
+            task.setExecutable(mExecutable);
+            task.setTaskName("aidl");
+            task.setFailonerror(true);
+
+            task.createArg().setValue("-p" + mFramework);
+            task.createArg().setValue("-o" + mGenFolder);
+            // add all the source folders as import in case an aidl file in a source folder
+            // imports a parcelable from another source folder.
+            for (String importFolder : sourceFolders) {
+                task.createArg().setValue("-I" + importFolder);
+            }
+
+            // set auto dependency file creation
+            task.createArg().setValue("-a");
+
+            task.createArg().setValue(filePath);
+
+            // execute it.
+            task.execute();
+        }
+
+        public void displayMessage(DisplayType type, int count) {
+            switch (type) {
+                case FOUND:
+                    System.out.println(String.format("Found %1$d AIDL files.", count));
+                    break;
+                case COMPILING:
+                    if (count > 0) {
+                        System.out.println(String.format("Compiling %1$d AIDL files.",
+                                count));
+                    } else {
+                        System.out.println("No AIDL files to compile.");
+                    }
+                    break;
+                case REMOVE_OUTPUT:
+                    System.out.println(String.format("Found %1$d obsolete output files to remove.",
+                            count));
+                    break;
+                case REMOVE_DEP:
+                    System.out.println(
+                            String.format("Found %1$d obsolete dependency files to remove.",
+                                    count));
+                    break;
+            }
+        }
+
+    }
 
     /**
      * Sets the value of the "executable" attribute.
@@ -85,144 +136,7 @@ public class AidlExecTask extends Task {
             throw new BuildException("AidlExecTask's 'genFolder' is required.");
         }
 
-        Project taskProject = getProject();
-
-        // build a list of all the source folders
-        ArrayList<String> sourceFolders = new ArrayList<String>();
-        for (Path p : mPaths) {
-            String[] values = p.list();
-            if (values != null) {
-                sourceFolders.addAll(Arrays.asList(values));
-            }
-        }
-
-        // gather all the aidl files from all the source folders.
-        Set<String> sourceFiles = getFileListByExtension(taskProject, sourceFolders, "**/*.aidl");
-        if (sourceFiles.size() > 0) {
-            System.out.println(String.format("Found %d aidl files.", sourceFiles.size()));
-        }
-
-        // go look for all dependency files in the gen folder.
-        Set<String> depFiles = getFileListByExtension(taskProject, mGenFolder, "**/*.d");
-
-        // parse all the dep files and keep the ones that are aidl and check if they require
-        // compilation again.
-        ArrayList<String> toCompile = new ArrayList<String>();
-        ArrayList<File> toRemove = new ArrayList<File>();
-        ArrayList<String> depsToRemove = new ArrayList<String>();
-        for (String depFile : depFiles) {
-            DependencyGraph graph = new DependencyGraph(depFile, null /*watchPaths*/);
-
-            // get the source file. it's the first item in the pre-reqs
-            File sourceFile = graph.getFirstPrereq();
-            String sourceFilePath = sourceFile.getAbsolutePath();
-
-            // The gen folder may contain other dependency files not generated by aidl.
-            // We only care if the first pre-rep is an aidl file.
-            if (sourceFilePath.toLowerCase().endsWith(".aidl")) {
-                // remove from the list of sourceFiles to mark as "processed" (but not compiled
-                // yet, that'll be done by adding it to toCompile)
-                if (sourceFiles.remove(sourceFilePath) == false) {
-                    // looks like the source file does not exist anymore!
-                    // we'll have to remove the output!
-                    Set<File> outputFiles = graph.getTargets();
-                    toRemove.addAll(outputFiles);
-
-                    // also need to remove the dep file.
-                    depsToRemove.add(depFile);
-                } else if (graph.dependenciesHaveChanged(false /*printStatus*/)) {
-                    // need to recompile!
-                    toCompile.add(sourceFilePath);
-                }
-            }
-        }
-
-        // add to the list of files to compile, whatever is left in sourceFiles. Those are
-        // new files that have never been compiled.
-        toCompile.addAll(sourceFiles);
-
-        if (toCompile.size() > 0) {
-            System.out.println(String.format("Compiling %d aidl files.", toCompile.size()));
-
-            for (String toCompilePath : toCompile) {
-                ExecTask task = new ExecTask();
-                task.setProject(taskProject);
-                task.setOwningTarget(getOwningTarget());
-                task.setExecutable(mExecutable);
-                task.setTaskName("aidl");
-                task.setFailonerror(true);
-
-                task.createArg().setValue("-p" + mFramework);
-                task.createArg().setValue("-o" + mGenFolder);
-                // add all the source folders as import in case an aidl file in a source folder
-                // imports a parcelable from another source folder.
-                for (String importFolder : sourceFolders) {
-                    task.createArg().setValue("-I" + importFolder);
-                }
-
-                // set auto dependency file creation
-                task.createArg().setValue("-a");
-
-                task.createArg().setValue(toCompilePath);
-
-                // execute it.
-                task.execute();
-            }
-        } else {
-            System.out.println(String.format("No aidl files to compile."));
-        }
-
-        if (toRemove.size() > 0) {
-            System.out.println(String.format("%d obsolete output files to remove.",
-                    toRemove.size()));
-            for (File toRemoveFile : toRemove) {
-                if (toRemoveFile.delete() == false) {
-                    System.err.println("Failed to remove " + toRemoveFile.getAbsolutePath());
-                }
-            }
-        }
-
-        // remove the dependency files that are obsolete
-        if (depsToRemove.size() > 0) {
-            System.out.println(String.format("%d obsolete dependency files to remove.",
-                    depsToRemove.size()));
-            for (String path : depsToRemove) {
-                if (new File(path).delete() == false) {
-                    System.err.println("Failed to remove " + path);
-                }
-            }
-        }
+        processFiles(new AidlProcessor(), mPaths, mGenFolder);
     }
-
-    private Set<String> getFileListByExtension(Project taskProject,
-            List<String> sourceFolders, String filter) {
-        HashSet<String> sourceFiles = new HashSet<String>();
-        for (String sourceFolder : sourceFolders) {
-            sourceFiles.addAll(getFileListByExtension(taskProject, sourceFolder, filter));
-        }
-
-        return sourceFiles;
-    }
-
-    private Set<String> getFileListByExtension(Project taskProject,
-            String sourceFolder, String filter) {
-        HashSet<String> sourceFiles = new HashSet<String>();
-
-        // create a fileset to find all the files in the folder
-        FileSet fs = new FileSet();
-        fs.setProject(taskProject);
-        fs.setDir(new File(sourceFolder));
-        NameEntry include = fs.createInclude();
-        include.setName(filter);
-
-        // loop through the results of the file set
-        Iterator<?> iter = fs.iterator();
-        while (iter.hasNext()) {
-            sourceFiles.add(iter.next().toString());
-        }
-
-        return sourceFiles;
-    }
-
 
 }

@@ -550,7 +550,7 @@
             <renderscript executable="${renderscript}"
                     framework="${android.rs}"
                     genFolder="${gen.absolute.dir}"
-                    resFolder="${resource.absolute.dir}/raw"
+                    resFolder="${out.res.absolute.dir}/raw"
                     targetApi="${target.api}">
                 <source path="${source.absolute.dir}"/>
             </renderscript>
@@ -566,6 +566,7 @@
                     nonConstantId="${android.library}"
                     projectLibrariesResName="project.libraries.res"
                     projectLibrariesPackageName="project.libraries.package">
+                <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
             </aapt>
         </do-only-if-manifest-hasCode>

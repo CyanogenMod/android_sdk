@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A base class for the ant task that contains logic for handling dependency files
+ * A base class for ant tasks that use a single dependency files to control (re)execution.
  */
-public abstract class BaseTask extends Task {
+public abstract class SingleDependencyTask extends Task {
 
     private DependencyGraph mDependencies;
     private String mPreviousBuildType;

@@ -18,16 +18,11 @@ package com.android.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.ExecTask;
-import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.PatternSet.NameEntry;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -43,7 +38,7 @@ import java.util.List;
  * It also expects one or more inner elements called "source" which are identical to {@link Path}
  * elements for where to find .rs files.
  */
-public class RenderScriptTask extends Task {
+public class RenderScriptTask extends MultiFilesTask {
 
     private String mExecutable;
     private Path mFramework;
@@ -51,6 +46,98 @@ public class RenderScriptTask extends Task {
     private String mResFolder;
     private final List<Path> mPaths = new ArrayList<Path>();
     private int mTargetApi = 0;
+
+    private class RenderScriptProcessor implements SourceProcessor {
+
+        private final String mTargetApiStr;
+
+        public RenderScriptProcessor(int targetApi) {
+            // get the target api value. Must be 11+ or llvm-rs-cc complains.
+            mTargetApiStr = Integer.toString(mTargetApi < 11 ? 11 : mTargetApi);
+        }
+
+        public String getSourceFileExtension() {
+            return "rs";
+        }
+
+        public void process(String filePath, String sourceFolder, List<String> sourceFolders,
+                Project taskProject) {
+            File exe = new File(mExecutable);
+            String execTaskName = exe.getName();
+
+            ExecTask task = new ExecTask();
+            task.setTaskName(execTaskName);
+            task.setProject(taskProject);
+            task.setOwningTarget(getOwningTarget());
+            task.setExecutable(mExecutable);
+            task.setFailonerror(true);
+
+            for (String path : mFramework.list()) {
+                File res = new File(path);
+                if (res.isDirectory()) {
+                    task.createArg().setValue("-I");
+                    task.createArg().setValue(path);
+                } else {
+                    System.out.println(String.format(
+                            "WARNING: RenderScript include directory '%s' does not exist!",
+                            res.getAbsolutePath()));
+                }
+
+            }
+
+            task.createArg().setValue("-target-api");
+            task.createArg().setValue(mTargetApiStr);
+
+            task.createArg().setValue("-d");
+            task.createArg().setValue(getDependencyFolder(filePath, sourceFolder));
+            task.createArg().setValue("-MD");
+
+            task.createArg().setValue("-p");
+            task.createArg().setValue(mGenFolder);
+            task.createArg().setValue("-o");
+            task.createArg().setValue(mResFolder);
+            task.createArg().setValue(filePath);
+
+            // execute it.
+            task.execute();
+        }
+
+        public void displayMessage(DisplayType type, int count) {
+            switch (type) {
+                case FOUND:
+                    System.out.println(String.format("Found %1$d RenderScript files.", count));
+                    break;
+                case COMPILING:
+                    if (count > 0) {
+                        System.out.println(String.format(
+                                "Compiling %1$d RenderScript files with -target-api %2$d",
+                                count, mTargetApi));
+                    } else {
+                        System.out.println("No RenderScript files to compile.");
+                    }
+                    break;
+                case REMOVE_OUTPUT:
+                    System.out.println(String.format("Found %1$d obsolete output files to remove.",
+                            count));
+                    break;
+                case REMOVE_DEP:
+                    System.out.println(
+                            String.format("Found %1$d obsolete dependency files to remove.",
+                                    count));
+                    break;
+            }
+        }
+
+        private String getDependencyFolder(String filePath, String sourceFolder) {
+            String relative = filePath.substring(sourceFolder.length());
+            if (relative.charAt(0) == '/') {
+                relative = relative.substring(1);
+            }
+
+            return new File(mGenFolder, relative).getParent();
+        }
+    }
+
 
     /**
      * Sets the value of the "executable" attribute.
@@ -107,78 +194,6 @@ public class RenderScriptTask extends Task {
             throw new BuildException("RenderScriptTask's 'targetApi' is required.");
         }
 
-        Project taskProject = getProject();
-
-        // build a list of all the source folders
-        ArrayList<String> sourceFolders = new ArrayList<String>();
-        for (Path p : mPaths) {
-            String[] values = p.list();
-            if (values != null) {
-                sourceFolders.addAll(Arrays.asList(values));
-            }
-        }
-
-        File exe = new File(mExecutable);
-        String execTaskName = exe.getName();
-
-        int count = 0;
-
-        // get the target api value. Must be 11+ or llvm-rs-cc complains.
-        String targetApiStr = Integer.toString(mTargetApi < 11 ? 11 : mTargetApi);
-
-        // now loop on all the source folders to find all the renderscript to compile
-        // and compile them
-        for (String sourceFolder : sourceFolders) {
-            // create a fileset to find all the aidl files in the current source folder
-            FileSet fs = new FileSet();
-            fs.setProject(taskProject);
-            fs.setDir(new File(sourceFolder));
-            NameEntry include = fs.createInclude();
-            include.setName("**/*.rs");
-
-            // loop through the results of the file set
-            Iterator<?> iter = fs.iterator();
-            while (iter.hasNext()) {
-                Object next = iter.next();
-
-                ExecTask task = new ExecTask();
-                task.setTaskName(execTaskName);
-                task.setProject(taskProject);
-                task.setOwningTarget(getOwningTarget());
-                task.setExecutable(mExecutable);
-                task.setFailonerror(true);
-
-                for (String path : mFramework.list()) {
-                    File res = new File(path);
-                    if (res.isDirectory()) {
-                        task.createArg().setValue("-I");
-                        task.createArg().setValue(path);
-                    }
-                }
-
-                task.createArg().setValue("-target-api");
-                task.createArg().setValue(targetApiStr);
-
-                task.createArg().setValue("-p");
-                task.createArg().setValue(mGenFolder);
-                task.createArg().setValue("-o");
-                task.createArg().setValue(mResFolder);
-                task.createArg().setValue(next.toString());
-
-                // execute it.
-                task.execute();
-
-                count++;
-            }
-        }
-
-        if (count > 0) {
-            System.out.println(String.format(
-                    "Compiled %d renderscript files (with -target-api set to %s)",
-                    count, mTargetApi));
-        } else {
-            System.out.println("No renderscript files to compile.");
-        }
-
+        processFiles(new RenderScriptProcessor(mTargetApi), mPaths, mGenFolder);
     }
 }
