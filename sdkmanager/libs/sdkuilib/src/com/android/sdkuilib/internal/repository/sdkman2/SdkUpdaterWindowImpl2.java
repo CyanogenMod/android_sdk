@@ -34,8 +34,8 @@ import com.android.sdkuilib.internal.tasks.ProgressView;
 import com.android.sdkuilib.internal.tasks.ProgressViewFactory;
 import com.android.sdkuilib.internal.widgets.ImgDisabledButton;
 import com.android.sdkuilib.internal.widgets.ToggleButton;
-import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
+import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
@@ -169,15 +169,9 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         // or a dialog trim when invoked from somewhere else.
         int style = SWT.SHELL_TRIM;
         if (mContext != SdkInvocationContext.STANDALONE) {
-            style = SWT.DIALOG_TRIM;
+            style = SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL;
         }
-        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_LINUX ||
-                mContext != SdkInvocationContext.STANDALONE) {
-            // Ideally we want the window to be app-modal, but this prevents the
-            // log window from working properly on Linux so don't use the app modal
-            // flag if this is linux and the app is standalone.
-            style += SWT.APPLICATION_MODAL;
-        }
+
         mShell = new Shell(mParentShell, style);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
