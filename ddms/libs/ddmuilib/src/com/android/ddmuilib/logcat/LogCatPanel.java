@@ -138,6 +138,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private Text mLiveFilterText;
 
     private TableViewer mViewer;
+    private boolean mShouldScrollToLatestLog = true;
 
     private String mLogFileExportFolder;
     private LogCatMessageLabelProvider mLogCatMessageLabelProvider;
@@ -724,7 +725,46 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         });
 
+        setupScrollBehavior();
         initDoubleClickListener();
+    }
+
+    /**
+     * Update setting that controls if the table should scroll to reveal the latest logcat entry.
+     * Users can impact the scrolling behavior in two ways:
+     * <ul>
+     *   <li> Using the scrollbar: If the scrollbar is moved to the bottom, then auto scroll.</li>
+     *   <li> Selecting an entry in the table: If the selected entry is not currently the last
+     *        entry in the table, then do not scroll, otherwise auto scroll.
+     * </ul>
+     */
+    private void setupScrollBehavior() {
+        mViewer.getTable().getVerticalBar().addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                ScrollBar sb = (ScrollBar) event.getSource();
+
+                // On Mac & Linux, when the scroll bar is at the bottom,
+                //        sb.getSelection + sb.getThumb = sb.getMaximum
+                // But on Windows 7, the scrollbar never touches the bottom, and as a result
+                //        sb.getSelection + sb.getThumb is slightly less than sb.getMaximum.
+                // So we assume that as long as the thumb is close to the bottom, we want to scroll.
+                mShouldScrollToLatestLog =
+                        Math.abs(sb.getSelection() + sb.getThumb() - sb.getMaximum()) < 10;
+            }
+        });
+
+        mViewer.getTable().addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                Table table = (Table) event.getSource();
+                int[] indices = table.getSelectionIndices();
+
+                mShouldScrollToLatestLog =
+                        indices.length == 1 // only 1 item selected
+                        && indices[0] == table.getItemCount() -1; // and it is the last entry
+            }
+        });
     }
 
     private static class WrappingToolTipSupport extends ColumnViewerToolTipSupport {
@@ -919,11 +959,9 @@ public final class LogCatPanel extends SelectionDependentPanel
                 mCurrentRefresher = null;
             }
 
-            // find out if we need to scroll before refreshing the table
-            boolean shouldScroll = shouldScrollToLatestLog();
             mViewer.refresh();
 
-            if (shouldScroll) {
+            if (mShouldScrollToLatestLog) {
                 scrollToLatestLog();
             }
         }
@@ -932,31 +970,6 @@ public final class LogCatPanel extends SelectionDependentPanel
     /** Scroll to the last line. */
     private void scrollToLatestLog() {
         mViewer.getTable().setTopIndex(mViewer.getTable().getItemCount() - 1);
-    }
-
-    /**
-     * Determine if the table should scroll to reveal the last entry. The scrolling
-     * behavior is as follows:
-     * <ul>
-     *   <li> Scroll if the scrollbar "thumb" is at the bottom of the scrollbar, i.e.,
-     *        the last line of the table is visible. </li>
-     *   <li> Do not scroll otherwise. This happens if the user manually moves the thumb
-     *        to scroll up the table.
-     * </ul>
-     * @return true if table should be scrolled, false otherwise.
-     */
-    private boolean shouldScrollToLatestLog() {
-        ScrollBar sb = mViewer.getTable().getVerticalBar();
-        if (sb == null) {
-            return true;
-        }
-
-        // On Mac & Linux, when the scroll bar is at the bottom,
-        //        sb.getSelection + sb.getThumb = sb.getMaximum
-        // But on Windows 7, the scrollbar never touches the bottom, and as a result
-        //        sb.getSelection + sb.getThumb is slightly less than sb.getMaximum.
-        // So we assume that as long as the thumb is close to the bottom, we want to scroll.
-        return Math.abs(sb.getSelection() + sb.getThumb() - sb.getMaximum()) < 10;
     }
 
     private List<ILogCatMessageSelectionListener> mMessageSelectionListeners;
