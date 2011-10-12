@@ -150,7 +150,20 @@ public class AvdManagerWindowImpl1 {
     }
 
     private void createShell() {
-        mShell = new Shell(mParentShell, SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
+        // The AVD Manager must use a shell trim when standalone
+        // or a dialog trim when invoked from somewhere else.
+        int style = SWT.SHELL_TRIM;
+        if (mContext != AvdInvocationContext.STANDALONE) {
+            style = SWT.DIALOG_TRIM;
+        }
+        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_LINUX ||
+                mContext != AvdInvocationContext.STANDALONE) {
+            // Ideally we want the window to be app-modal, but this prevents the
+            // log window from working properly on Linux so don't use the app modal
+            // flag if this is linux and the app is standalone.
+            style += SWT.APPLICATION_MODAL;
+        }
+        mShell = new Shell(mParentShell, style);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
                 ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);
