@@ -28,9 +28,9 @@ import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.UpdaterPage.Purpose;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman1.AvdManagerPage;
+import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 import com.android.sdkuilib.repository.SdkUpdaterWindow;
-import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
 import com.android.sdkuilib.ui.GridDataBuilder;
 import com.android.sdkuilib.ui.GridLayoutBuilder;
 import com.android.sdkuilib.ui.SwtBaseDialog;
@@ -154,15 +154,9 @@ public class AvdManagerWindowImpl1 {
         // or a dialog trim when invoked from somewhere else.
         int style = SWT.SHELL_TRIM;
         if (mContext != AvdInvocationContext.STANDALONE) {
-            style = SWT.DIALOG_TRIM;
+            style = SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL;
         }
-        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_LINUX ||
-                mContext != AvdInvocationContext.STANDALONE) {
-            // Ideally we want the window to be app-modal, but this prevents the
-            // log window from working properly on Linux so don't use the app modal
-            // flag if this is linux and the app is standalone.
-            style += SWT.APPLICATION_MODAL;
-        }
+
         mShell = new Shell(mParentShell, style);
         mShell.addDisposeListener(new DisposeListener() {
             public void widgetDisposed(DisposeEvent e) {
