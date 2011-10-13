@@ -74,10 +74,14 @@ public class Main {
 
         Log.d("ddms", "Initializing");
 
+        // Create an initial shell display with the correct app name.
+        Display.setAppName(UIThread.APP_NAME);
+        Shell shell = new Shell(Display.getDefault());
+
         // if this is the first time using ddms or adt, open up the stats service
         // opt out dialog, and request user for permissions.
         SdkStatsService stats = new SdkStatsService();
-        stats.checkUserPermissionForPing(new Shell(Display.getDefault()));
+        stats.checkUserPermissionForPing(shell);
 
         // the "ping" argument means to check in with the server and exit
         // the application name and version number must also be supplied
