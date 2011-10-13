@@ -461,6 +461,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkResourceCompletion("completionvalues1.xml", "[^false]");
     }
 
+    public void testCompletion69() throws Exception {
+        // Test minimum SDK completion
+        checkManifestCompletion("manifest.xml", "<uses-sdk android:minSdkVersion=\"^11\" />");
+    }
+
     // ---- Test *applying* code completion ----
 
 
