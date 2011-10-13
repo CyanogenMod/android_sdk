@@ -107,7 +107,7 @@ import java.util.ArrayList;
  * when {@link IDevice} / {@link Client} selection changes.
  */
 public class UIThread implements IUiSelectionListener, IClientChangeListener {
-    private static final String APP_NAME = "DDMS";
+    public static final String APP_NAME = "DDMS";
 
     /*
      * UI tab panel definitions. The constants here must match up with the array
@@ -444,7 +444,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     public void runUI(String ddmsParentLocation) {
         Display.setAppName(APP_NAME);
         mDisplay = Display.getDefault();
-        final Shell shell = new Shell(mDisplay);
+        final Shell shell = new Shell(mDisplay, SWT.SHELL_TRIM);
 
         // create the image loaders for DDMS and DDMUILIB
         mDdmUiLibLoader = ImageLoader.getDdmUiLibLoader();
