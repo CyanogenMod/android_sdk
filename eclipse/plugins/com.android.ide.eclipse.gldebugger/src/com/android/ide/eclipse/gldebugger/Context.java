@@ -105,7 +105,7 @@ class Frame {
             file.seek(filePosition);
             for (int i = 0; i < callsCount; i++) {
                 int len = file.readInt();
-                if (SampleView.targetByteOrder == ByteOrder.LITTLE_ENDIAN)
+                if (SampleView.TARGET_BYTE_ORDER == ByteOrder.LITTLE_ENDIAN)
                     len = Integer.reverseBytes(len);
                 final byte[] data = new byte[len];
                 file.read(data);
@@ -150,10 +150,10 @@ class DebugContext {
                 frame.increaseCallsCount();
             final byte[] data = msg.toByteArray();
             final ByteBuffer len = ByteBuffer.allocate(4);
-            len.order(SampleView.targetByteOrder);
+            len.order(SampleView.TARGET_BYTE_ORDER);
             len.putInt(data.length);
             try {
-                if (SampleView.targetByteOrder == ByteOrder.BIG_ENDIAN)
+                if (SampleView.TARGET_BYTE_ORDER == ByteOrder.BIG_ENDIAN)
                     file.writeInt(data.length);
                 else
                     file.writeInt(Integer.reverseBytes(data.length));

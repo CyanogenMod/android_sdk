@@ -32,7 +32,6 @@ import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -40,7 +39,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -66,67 +64,49 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.ByteOrder;
 
-/**
- * This sample class demonstrates how to plug-in a new workbench view. The view
- * shows data obtained from the model. The sample creates a dummy model on the
- * fly, but a real implementation would connect to the model available either in
- * this or another plug-in (e.g. the workspace). The view is connected to the
- * model using a content provider.
- * <p>
- * The view uses a label provider to define how model objects should be
- * presented in the view. Each view can present the same model objects using
- * different labels and icons, if needed. Alternatively, a single label provider
- * can be shared between views in order to ensure that objects of the same type
- * are presented in the same way everywhere.
- * <p>
- */
-
 public class SampleView extends ViewPart implements Runnable, SelectionListener {
-    public static final ByteOrder targetByteOrder = ByteOrder.LITTLE_ENDIAN;
+    public static final ByteOrder TARGET_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
-    boolean running = false;
-    Thread thread;
+    private boolean mRunning = false;
+    private Thread mThread;
+
     MessageQueue messageQueue;
     SparseArray<DebugContext> debugContexts = new SparseArray<DebugContext>();
-
-    /** The ID of the view as specified by the extension. */
-    public static final String ID = "glesv2debuggerclient.views.SampleView";
 
     TabFolder tabFolder;
     TabItem tabItemText, tabItemImage, tabItemBreakpointOption;
     TabItem tabItemShaderEditor, tabContextViewer;
-    ListViewer viewer; // ListViewer / TableViewer
-    Slider frameNum; // scale max cannot overlap min, so max is array size
-    TreeViewer contextViewer;
-    BreakpointOption breakpointOption;
-    ShaderEditor shaderEditor;
-    Canvas canvas;
-    Text text;
-    Action actionConnect; // connect / disconnect
 
-    Action actionAutoScroll;
-    Action actionFilter;
+    private ListViewer mViewer; // ListViewer / TableViewer
+    private Slider mFrameSlider; // scale max cannot overlap min, so max is array size
+    private TreeViewer mContextViewer;
+    private BreakpointOption mBreakpointOption;
+    private ShaderEditor mShaderEditor;
+    Canvas canvas;
+    private Text mText;
+    private Action mActionConnect; // connect / disconnect
+
+    private Action mActionAutoScroll;
+    private Action mActionFilter;
     Action actionPort;
 
-    Action actContext; // for toggling contexts
+    private Action mActionContext; // for toggling contexts
     DebugContext current = null;
 
-    Point origin = new Point(0, 0); // for smooth scrolling canvas
-    String[] filters = null;
+    private Point mOrigin = new Point(0, 0); // for smooth scrolling canvas
+    private String[] mTextFilters = null;
 
-    class ViewContentProvider extends LabelProvider implements IStructuredContentProvider,
-            ITableLabelProvider {
-        Frame frame = null;
+    private static class ViewContentProvider extends LabelProvider implements IStructuredContentProvider {
+        private Frame mFrame = null;
 
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
-            frame = (Frame) newInput;
+            mFrame = (Frame) newInput;
         }
 
         @Override
@@ -134,7 +114,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         }
 
         public Object[] getElements(Object parent) {
-            return frame.get().toArray();
+            return mFrame.get().toArray();
         }
 
         @Override
@@ -148,131 +128,65 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             MessageData msgData = (MessageData) obj;
             return msgData.getImage();
         }
-
-        public String getColumnText(Object obj, int index) {
-            MessageData msgData = (MessageData) obj;
-            if (index >= msgData.columns.length)
-                return null;
-            return msgData.columns[index];
-        }
-
-        public Image getColumnImage(Object obj, int index) {
-            if (index > -1)
-                return null;
-            MessageData msgData = (MessageData) obj;
-            return msgData.getImage();
-        }
     }
 
-    class NameSorter extends ViewerSorter {
-        @Override
-        public int compare(Viewer viewer, Object e1, Object e2) {
-            MessageData m1 = (MessageData) e1;
-            MessageData m2 = (MessageData) e2;
-            return (int) ((m1.msg.getTime() - m2.msg.getTime()) * 100);
-        }
-    }
-
-    class Filter extends ViewerFilter {
+    private class Filter extends ViewerFilter {
         @Override
         public boolean select(Viewer viewer, Object parentElement,
                 Object element) {
             MessageData msgData = (MessageData) element;
-            if (null == filters)
+            if (null == mTextFilters)
                 return true;
-            for (int i = 0; i < filters.length; i++)
-                if (msgData.text.contains(filters[i]))
+            for (int i = 0; i < mTextFilters.length; i++)
+                if (msgData.text.contains(mTextFilters[i]))
                     return true;
             return false;
         }
     }
 
-    public SampleView() {
-
-    }
-
-    public void createLeftPane(Composite parent) {
+    private void createLeftPane(Composite parent) {
         Composite composite = new Composite(parent, 0);
 
         GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 1;
         composite.setLayout(gridLayout);
+        composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        frameNum = new Slider(composite, SWT.BORDER | SWT.HORIZONTAL);
-        frameNum.setMinimum(0);
-        frameNum.setMaximum(1);
-        frameNum.setSelection(0);
-        frameNum.addSelectionListener(this);
+        mFrameSlider = new Slider(composite, SWT.BORDER | SWT.HORIZONTAL);
+        mFrameSlider.setMinimum(0);
+        mFrameSlider.setMaximum(1);
+        mFrameSlider.setSelection(0);
+        mFrameSlider.addSelectionListener(this);
 
-        GridData gridData = new GridData();
-        gridData.horizontalAlignment = SWT.FILL;
-        gridData.grabExcessHorizontalSpace = true;
-        gridData.verticalAlignment = SWT.FILL;
-        frameNum.setLayoutData(gridData);
+        GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+        mFrameSlider.setLayoutData(gridData);
 
-        // Table table = new Table(composite, SWT.H_SCROLL | SWT.V_SCROLL |
-        // SWT.MULTI
-        // | SWT.FULL_SELECTION);
-        // TableLayout layout = new TableLayout();
-        // table.setLayout(layout);
-        // table.setLinesVisible(true);
-        // table.setHeaderVisible(true);
-        // String[] headings = {
-        // "Name", "Elapsed (ms)", "Detail"
-        // };
-        // int[] weights = {
-        // 50, 16, 60
-        // };
-        // int[] widths = {
-        // 180, 90, 200
-        // };
-        // for (int i = 0; i < headings.length; i++) {
-        // layout.addColumnData(new ColumnWeightData(weights[i], widths[i],
-        // true));
-        // TableColumn nameCol = new TableColumn(table, SWT.NONE, i);
-        // nameCol.setText(headings[i]);
-        // }
-
-        // viewer = new TableViewer(table);
-        viewer = new ListViewer(composite, SWT.DEFAULT);
-        viewer.getList().setFont(new Font(viewer.getList().getDisplay(),
+        mViewer = new ListViewer(composite, SWT.DEFAULT);
+        mViewer.getList().setFont(new Font(mViewer.getList().getDisplay(),
                 "Courier", 10, SWT.BOLD));
         ViewContentProvider contentProvider = new ViewContentProvider();
-        viewer.setContentProvider(contentProvider);
-        viewer.setLabelProvider(contentProvider);
-        // viewer.setSorter(new NameSorter());
-        viewer.setFilters(new ViewerFilter[] {
+        mViewer.setContentProvider(contentProvider);
+        mViewer.setLabelProvider(contentProvider);
+        mViewer.setFilters(new ViewerFilter[] {
                 new Filter()
         });
 
-        gridData = new GridData();
-        gridData.horizontalAlignment = SWT.FILL;
-        gridData.grabExcessHorizontalSpace = true;
-        gridData.verticalAlignment = SWT.FILL;
-        gridData.grabExcessVerticalSpace = true;
-        viewer.getControl().setLayoutData(gridData);
+        gridData = new GridData(GridData.FILL_BOTH);
+        mViewer.getControl().setLayoutData(gridData);
     }
 
-    /**
-     * This is a callback that will allow us to create the viewer and initialize
-     * it.
-     */
     @Override
     public void createPartControl(Composite parent) {
         createLeftPane(parent);
 
-        // Create the help context id for the viewer's control
-        PlatformUI.getWorkbench().getHelpSystem()
-                .setHelp(viewer.getControl(), "GLESv2DebuggerClient.viewer");
-
         tabFolder = new TabFolder(parent, SWT.BORDER);
 
-        text = new Text(tabFolder, SWT.NO_BACKGROUND | SWT.READ_ONLY
+        mText = new Text(tabFolder, SWT.NO_BACKGROUND | SWT.READ_ONLY
                 | SWT.V_SCROLL | SWT.H_SCROLL);
 
         tabItemText = new TabItem(tabFolder, SWT.NONE);
         tabItemText.setText("Text");
-        tabItemText.setControl(text);
+        tabItemText.setControl(mText);
 
         canvas = new Canvas(tabFolder, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
                 | SWT.V_SCROLL | SWT.H_SCROLL);
@@ -280,24 +194,24 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         tabItemImage.setText("Image");
         tabItemImage.setControl(canvas);
 
-        breakpointOption = new BreakpointOption(this, tabFolder);
+        mBreakpointOption = new BreakpointOption(this, tabFolder);
         tabItemBreakpointOption = new TabItem(tabFolder, SWT.NONE);
         tabItemBreakpointOption.setText("Breakpoint Option");
-        tabItemBreakpointOption.setControl(breakpointOption);
+        tabItemBreakpointOption.setControl(mBreakpointOption);
 
-        shaderEditor = new ShaderEditor(this, tabFolder);
+        mShaderEditor = new ShaderEditor(this, tabFolder);
         tabItemShaderEditor = new TabItem(tabFolder, SWT.NONE);
         tabItemShaderEditor.setText("Shader Editor");
-        tabItemShaderEditor.setControl(shaderEditor);
+        tabItemShaderEditor.setControl(mShaderEditor);
 
-        contextViewer = new TreeViewer(tabFolder);
+        mContextViewer = new TreeViewer(tabFolder);
         ContextViewProvider contextViewProvider = new ContextViewProvider(this);
-        contextViewer.addSelectionChangedListener(contextViewProvider);
-        contextViewer.setContentProvider(contextViewProvider);
-        contextViewer.setLabelProvider(contextViewProvider);
+        mContextViewer.addSelectionChangedListener(contextViewProvider);
+        mContextViewer.setContentProvider(contextViewProvider);
+        mContextViewer.setLabelProvider(contextViewProvider);
         tabContextViewer = new TabItem(tabFolder, SWT.NONE);
         tabContextViewer.setText("Context Viewer");
-        tabContextViewer.setControl(contextViewer.getTree());
+        tabContextViewer.setControl(mContextViewer.getTree());
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
@@ -306,10 +220,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     return;
                 Image image = canvas.getBackgroundImage();
                 int hSelection = hBar.getSelection();
-                int destX = -hSelection - origin.x;
+                int destX = -hSelection - mOrigin.x;
                 Rectangle rect = image.getBounds();
                 canvas.scroll(destX, 0, 0, 0, rect.width, rect.height, false);
-                origin.x = -hSelection;
+                mOrigin.x = -hSelection;
             }
         });
         final ScrollBar vBar = canvas.getVerticalBar();
@@ -319,10 +233,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     return;
                 Image image = canvas.getBackgroundImage();
                 int vSelection = vBar.getSelection();
-                int destY = -vSelection - origin.y;
+                int destY = -vSelection - mOrigin.y;
                 Rectangle rect = image.getBounds();
                 canvas.scroll(0, destY, 0, 0, rect.width, rect.height, false);
-                origin.y = -vSelection;
+                mOrigin.y = -vSelection;
             }
         });
         canvas.addListener(SWT.Resize, new Listener() {
@@ -343,12 +257,12 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (hSelection >= hPage) {
                     if (hPage <= 0)
                         hSelection = 0;
-                    origin.x = -hSelection;
+                    mOrigin.x = -hSelection;
                 }
                 if (vSelection >= vPage) {
                     if (vPage <= 0)
                         vSelection = 0;
-                    origin.y = -vSelection;
+                    mOrigin.y = -vSelection;
                 }
                 canvas.redraw();
             }
@@ -359,7 +273,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     return;
                 Image image = canvas.getBackgroundImage();
                 GC gc = e.gc;
-                gc.drawImage(image, origin.x, origin.y);
+                gc.drawImage(image, mOrigin.x, mOrigin.y);
                 Rectangle rect = image.getBounds();
                 Rectangle client = canvas.getClientArea();
                 int marginWidth = client.width - rect.width;
@@ -378,7 +292,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         contributeToActionBars();
 
         messageQueue = new MessageQueue(this, new ProcessMessage[] {
-                breakpointOption, shaderEditor
+                mBreakpointOption, mShaderEditor
         });
     }
 
@@ -390,48 +304,36 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 SampleView.this.fillContextMenu(manager);
             }
         });
-        Menu menu = menuMgr.createContextMenu(viewer.getControl());
-        viewer.getControl().setMenu(menu);
-        getSite().registerContextMenu(menuMgr, viewer);
+        Menu menu = menuMgr.createContextMenu(mViewer.getControl());
+        mViewer.getControl().setMenu(menu);
+        getSite().registerContextMenu(menuMgr, mViewer);
     }
 
     private void contributeToActionBars() {
         IActionBars bars = getViewSite().getActionBars();
-        fillLocalPullDown(bars.getMenuManager());
         fillLocalToolBar(bars.getToolBarManager());
     }
 
-    private void fillLocalPullDown(IMenuManager manager) {
-        // manager.add(actionConnect);
-        // manager.add(new Separator());
-        // manager.add(actionDisconnect);
-    }
-
     private void fillContextMenu(IMenuManager manager) {
-        // manager.add(actionConnect);
-        // manager.add(actionDisconnect);
         // Other plug-ins can contribute there actions here
         manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
     }
 
     private void fillLocalToolBar(final IToolBarManager manager) {
-        actionConnect = new Action("Connect", Action.AS_PUSH_BUTTON) {
+        mActionConnect = new Action("Connect", Action.AS_PUSH_BUTTON) {
             @Override
             public void run() {
-                if (!running)
+                if (!mRunning)
                     changeContext(null); // viewer will switch to newest context
                 connectDisconnect();
             }
         };
-        manager.add(actionConnect);
+        manager.add(mActionConnect);
 
-        manager.add(new Action("Open File", Action.AS_PUSH_BUTTON)
-        {
+        manager.add(new Action("Open File", Action.AS_PUSH_BUTTON) {
             @Override
-            public void run()
-            {
-                if (!running)
-                {
+            public void run() {
+                if (!mRunning) {
                     changeContext(null); // viewer will switch to newest context
                     openFile();
                 }
@@ -439,39 +341,37 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         });
 
         final Shell shell = this.getViewSite().getShell();
-        actionAutoScroll = new Action("Auto Scroll", Action.AS_CHECK_BOX) {
+        mActionAutoScroll = new Action("Auto Scroll", Action.AS_CHECK_BOX) {
             @Override
             public void run() {
             }
         };
-        actionAutoScroll.setChecked(true);
-        manager.add(actionAutoScroll);
+        mActionAutoScroll.setChecked(true);
+        manager.add(mActionAutoScroll);
 
-        actionFilter = new Action("*", Action.AS_DROP_DOWN_MENU) {
+        mActionFilter = new Action("*", Action.AS_DROP_DOWN_MENU) {
             @Override
             public void run() {
-                org.eclipse.jface.dialogs.InputDialog dialog = new org.eclipse.jface.dialogs.InputDialog(
+                InputDialog dialog = new InputDialog(
                         shell, "Contains Filter",
                         "case sensitive substring or *",
-                        actionFilter.getText(), null);
+                        mActionFilter.getText(), null);
                 if (Window.OK == dialog.open()) {
-                    actionFilter.setText(dialog.getValue());
+                    mActionFilter.setText(dialog.getValue());
                     manager.update(true);
-                    filters = dialog.getValue().split("\\|");
-                    if (filters.length == 1 && filters[0].equals("*"))
-                        filters = null;
-                    viewer.refresh();
+                    mTextFilters = dialog.getValue().split("\\|");
+                    if (mTextFilters.length == 1 && mTextFilters[0].equals("*"))
+                        mTextFilters = null;
+                    mViewer.refresh();
                 }
 
             }
         };
-        manager.add(actionFilter);
+        manager.add(mActionFilter);
 
-        manager.add(new Action("CaptureDraw", Action.AS_DROP_DOWN_MENU)
-        {
+        manager.add(new Action("CaptureDraw", Action.AS_DROP_DOWN_MENU) {
             @Override
-            public void run()
-            {
+            public void run() {
                 int contextId = 0;
                 if (current != null)
                     contextId = current.contextId;
@@ -493,11 +393,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
 
-        manager.add(new Action("CaptureSwap", Action.AS_DROP_DOWN_MENU)
-        {
+        manager.add(new Action("CaptureSwap", Action.AS_DROP_DOWN_MENU) {
             @Override
-            public void run()
-            {
+            public void run() {
                 int contextId = 0;
                 if (current != null)
                     contextId = current.contextId;
@@ -519,11 +417,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
 
-        manager.add(new Action("SYSTEM_TIME_THREAD", Action.AS_DROP_DOWN_MENU)
-        {
+        manager.add(new Action("SYSTEM_TIME_THREAD", Action.AS_DROP_DOWN_MENU) {
             @Override
-            public void run()
-            {
+            public void run() {
                 final String[] timeModes = {
                         "SYSTEM_TIME_REALTIME", "SYSTEM_TIME_MONOTONIC", "SYSTEM_TIME_PROCESS",
                         "SYSTEM_TIME_THREAD"
@@ -543,7 +439,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
 
-        actContext = new Action("Context: 0x", Action.AS_DROP_DOWN_MENU) {
+        mActionContext = new Action("Context: 0x", Action.AS_DROP_DOWN_MENU) {
             @Override
             public void run() {
                 if (debugContexts.size() < 2)
@@ -558,10 +454,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 changeContext(debugContexts.valueAt(index));
             }
         };
-        manager.add(actContext);
+        manager.add(mActionContext);
 
-        actionPort = new Action("5039", Action.AS_DROP_DOWN_MENU)
-        {
+        actionPort = new Action("5039", Action.AS_DROP_DOWN_MENU) {
             @Override
             public void run() {
                 InputDialog dialog = new InputDialog(shell, "Port", "Debugger port",
@@ -574,31 +469,25 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         };
         manager.add(actionPort);
 
-        manager.add(new Action("CodeGen Frame", Action.AS_PUSH_BUTTON)
-        {
+        manager.add(new Action("CodeGen Frame", Action.AS_PUSH_BUTTON) {
             @Override
-            public void run()
-            {
-                if (current != null)
-                {
-                    new CodeGen().codeGenFrame((Frame) viewer.getInput());
+            public void run() {
+                if (current != null) {
+                    new CodeGen().codeGenFrame((Frame) mViewer.getInput());
                     // need to reload current frame
-                    viewer.setInput(current.getFrame(frameNum.getSelection()));
+                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
                 }
             }
         });
 
-        manager.add(new Action("CodeGen Frames", Action.AS_PUSH_BUTTON)
-        {
+        manager.add(new Action("CodeGen Frames", Action.AS_PUSH_BUTTON) {
             @Override
-            public void run()
-            {
-                if (current != null)
-                {
-                    new CodeGen().codeGenFrames(current, frameNum.getSelection() + 1,
+            public void run() {
+                if (current != null) {
+                    new CodeGen().codeGenFrames(current, mFrameSlider.getSelection() + 1,
                             getSite().getShell());
                     // need to reload current frame
-                    viewer.setInput(current.getFrame(frameNum.getSelection()));
+                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
                 }
             }
         });
@@ -620,25 +509,25 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             e.printStackTrace();
             return;
         }
-        running = true;
-        messageQueue.start(targetByteOrder, file);
-        thread = new Thread(this);
-        thread.start();
-        actionConnect.setText("Disconnect");
+        mRunning = true;
+        messageQueue.start(TARGET_BYTE_ORDER, file);
+        mThread = new Thread(this);
+        mThread.start();
+        mActionConnect.setText("Disconnect");
         getViewSite().getActionBars().getToolBarManager().update(true);
     }
 
     private void connectDisconnect() {
-        if (!running) {
-            running = true;
-            messageQueue.start(targetByteOrder, null);
-            thread = new Thread(this);
-            thread.start();
-            actionConnect.setText("Disconnect");
+        if (!mRunning) {
+            mRunning = true;
+            messageQueue.start(TARGET_BYTE_ORDER, null);
+            mThread = new Thread(this);
+            mThread.start();
+            mActionConnect.setText("Disconnect");
         } else {
-            running = false;
+            mRunning = false;
             messageQueue.stop();
-            actionConnect.setText("Connect");
+            mActionConnect.setText("Connect");
         }
         this.getSite().getShell().getDisplay().syncExec(new Runnable() {
             public void run() {
@@ -650,17 +539,17 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     void messageDataSelected(final MessageData msgData) {
         if (null == msgData)
             return;
-        if (frameNum.getSelection() == frameNum.getMaximum())
+        if (mFrameSlider.getSelection() == mFrameSlider.getMaximum())
             return; // scale max cannot overlap min, so max is array size
-        final Frame frame = current.getFrame(frameNum.getSelection());
+        final Frame frame = current.getFrame(mFrameSlider.getSelection());
         final Context context = frame.computeContext(msgData);
-        contextViewer.setInput(context);
+        mContextViewer.setInput(context);
         if (msgData.getImage() != null) {
             canvas.setBackgroundImage(msgData.getImage());
             tabFolder.setSelection(tabItemImage);
             canvas.redraw();
         } else if (null != msgData.shader) {
-            text.setText(msgData.shader);
+            mText.setText(msgData.shader);
             tabFolder.setSelection(tabItemText);
         } else if (null != msgData.attribs) {
             StringBuilder builder = new StringBuilder();
@@ -678,13 +567,13 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 }
                 builder.append('\n');
             }
-            text.setText(builder.toString());
+            mText.setText(builder.toString());
             tabFolder.setSelection(tabItemText);
         }
     }
 
     private void hookSelectionChanged() {
-        viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+        mViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 StructuredSelection selection = (StructuredSelection) event
                         .getSelection();
@@ -697,9 +586,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     }
 
     public void showError(final Exception e) {
-        viewer.getControl().getDisplay().syncExec(new Runnable() {
+        mViewer.getControl().getDisplay().syncExec(new Runnable() {
             public void run() {
-                MessageDialog.openError(viewer.getControl().getShell(),
+                MessageDialog.openError(mViewer.getControl().getShell(),
                         "GL ES 2.0 Debugger Client", e.getMessage());
             }
         });
@@ -710,14 +599,14 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
      */
     @Override
     public void setFocus() {
-        viewer.getControl().setFocus();
+        mViewer.getControl().setFocus();
     }
 
     public void run() {
         int newMessages = 0;
 
         boolean shaderEditorUpdate = false;
-        while (running) {
+        while (mRunning) {
             final Message oriMsg = messageQueue.removeCompleteMessage(0);
             if (oriMsg == null && !messageQueue.isRunning())
                 break;
@@ -726,15 +615,15 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (current != null && current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         public void run() {
-                            if (frameNum.getSelection() == current.frameCount() - 1 ||
-                                    frameNum.getSelection() == current.frameCount() - 2)
+                            if (mFrameSlider.getSelection() == current.frameCount() - 1 ||
+                                    mFrameSlider.getSelection() == current.frameCount() - 2)
                             {
-                                viewer.refresh(false);
-                                if (actionAutoScroll.isChecked())
-                                    viewer.getList().setSelection(
-                                            viewer.getList().getItemCount() - 1);
+                                mViewer.refresh(false);
+                                if (mActionAutoScroll.isChecked())
+                                    mViewer.getList().setSelection(
+                                            mViewer.getList().getItemCount() - 1);
                             }
-                            frameNum.setMaximum(current.frameCount());
+                            mFrameSlider.setMaximum(current.frameCount());
                         }
                     });
                 current.uiUpdate = false;
@@ -742,7 +631,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (shaderEditorUpdate)
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
                         public void run() {
-                            shaderEditor.updateUI();
+                            mShaderEditor.updateUI();
                         }
                     });
                 shaderEditorUpdate = false;
@@ -767,7 +656,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 changeContext(debugContext);
             newMessages++;
         }
-        if (running)
+        if (mRunning)
             connectDisconnect(); // error occurred, disconnect
     }
 
@@ -776,39 +665,36 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         getSite().getShell().getDisplay().syncExec(new Runnable() {
             public void run() {
                 current = newContext;
-                if (current != null)
-                {
-                    frameNum.setMaximum(current.frameCount());
-                    if (frameNum.getSelection() >= current.frameCount())
+                if (current != null) {
+                    mFrameSlider.setMaximum(current.frameCount());
+                    if (mFrameSlider.getSelection() >= current.frameCount())
                         if (current.frameCount() > 0)
-                            frameNum.setSelection(current.frameCount() - 1);
+                            mFrameSlider.setSelection(current.frameCount() - 1);
                         else
-                            frameNum.setSelection(0);
-                    viewer.setInput(current.getFrame(frameNum.getSelection()));
-                    actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
+                            mFrameSlider.setSelection(0);
+                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
+                    mActionContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
+                } else {
+                    mFrameSlider.setMaximum(1); // cannot overlap min
+                    mFrameSlider.setSelection(0);
+                    mViewer.setInput(null);
+                    mActionContext.setText("Context: 0x");
                 }
-                else
-                {
-                    frameNum.setMaximum(1); // cannot overlap min
-                    frameNum.setSelection(0);
-                    viewer.setInput(null);
-                    actContext.setText("Context: 0x");
-                }
-                shaderEditor.updateUI();
+                mShaderEditor.updateUI();
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
         });
     }
 
     public void widgetSelected(SelectionEvent e) {
-        if (e.widget != frameNum)
+        if (e.widget != mFrameSlider)
             assert false;
         if (current == null)
             return;
-        if (frameNum.getSelection() == current.frameCount())
+        if (mFrameSlider.getSelection() == current.frameCount())
             return; // scale maximum cannot overlap minimum
-        Frame frame = current.getFrame(frameNum.getSelection());
-        viewer.setInput(frame);
+        Frame frame = current.getFrame(mFrameSlider.getSelection());
+        mViewer.setInput(frame);
     }
 
     public void widgetDefaultSelected(SelectionEvent e) {

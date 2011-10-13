@@ -25,7 +25,7 @@ public class MessageFormatter {
     static String formatFloats(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
-        data.order(SampleView.targetByteOrder);
+        data.order(SampleView.TARGET_BYTE_ORDER);
         String ret = "{";
         for (int i = 0; i < count; i++) {
             ret += Float.intBitsToFloat(data.getInt());
@@ -38,7 +38,7 @@ public class MessageFormatter {
     static String formatInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
-        data.order(SampleView.targetByteOrder);
+        data.order(SampleView.TARGET_BYTE_ORDER);
         String ret = "{";
         for (int i = 0; i < count; i++) {
             ret += data.getInt();
@@ -51,7 +51,7 @@ public class MessageFormatter {
     static String formatUInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
-        data.order(SampleView.targetByteOrder);
+        data.order(SampleView.TARGET_BYTE_ORDER);
         String ret = "{";
         for (int i = 0; i < count; i++) {
             long bits = data.getInt() & 0xffffffff;
@@ -65,7 +65,7 @@ public class MessageFormatter {
     static String formatMatrix(int columns, int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
-        data.order(SampleView.targetByteOrder);
+        data.order(SampleView.TARGET_BYTE_ORDER);
         String ret = "{";
         for (int i = 0; i < count; i++) {
             ret += Float.intBitsToFloat(data.getInt());
