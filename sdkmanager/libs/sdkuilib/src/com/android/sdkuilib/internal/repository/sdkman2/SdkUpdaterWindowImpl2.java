@@ -236,6 +236,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         });
     }
 
+    @SuppressWarnings("unused") // MenuItem works using side effects
     private void createMenuBar() {
 
         Menu menuBar = new Menu(mShell, SWT.BAR);

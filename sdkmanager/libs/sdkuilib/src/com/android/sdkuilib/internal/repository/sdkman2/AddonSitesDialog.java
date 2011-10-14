@@ -84,6 +84,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
     /**
      * Create contents of the dialog.
      */
+    @SuppressWarnings("unused")
     @Override
     protected void createContents() {
         Shell shell = getShell();
