@@ -24,6 +24,7 @@ import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 
@@ -569,14 +570,14 @@ class PackagesDiffLogic {
             // Object identity, so definitely the same source. Accept it.
             return true;
 
+        } else if (currentSource != null && currentSource.equals(newItemSource)) {
+            // Same source. Accept it.
+            return true;
+
         } else if (currentSource != null && newItemSource != null &&
                 !currentSource.getClass().equals(newItemSource.getClass())) {
             // Both sources don't have the same type (e.g. sdk repository versus add-on repository)
             return false;
-
-        } else if (currentSource != null && currentSource.equals(newItemSource)) {
-            // Same source. Accept it.
-            return true;
 
         } else if (currentSource == null && currentItem.getState() == PkgState.INSTALLED) {
             // Accept it.
@@ -587,29 +588,39 @@ class PackagesDiffLogic {
         } else if (currentSource != null && currentSource.getUrl().startsWith("file://")) {
             // Heuristic: Probably a manual local install. Accept it.
             return true;
-
-        } else {
-            // Reject the source mismatch. The idea is that if two remote repositories
-            // have similar packages, we don't want to merge them together and have
-            // one hide the other. This is a design error from the repository owners
-            // and we want the case to be blatant so that we can get it fixed.
-
-            if (currentSource != null && newItemSource != null) {
-                try {
-                    URL url1 = new URL(currentSource.getUrl());
-                    URL url2 = new URL(newItemSource.getUrl());
-
-                    // Make an exception if both URLs have the same host name & domain name.
-                    if (url1.sameFile(url2) || url1.getHost().equals(url2.getHost())) {
-                        return true;
-                    }
-                } catch (Exception ignore) {
-                    // Ignore MalformedURLException or other exceptions
-                }
-            }
-
-            return false;
         }
+
+        // Reject the source mismatch. The idea is that if two remote repositories
+        // have similar packages, we don't want to merge them together and have
+        // one hide the other. This is a design error from the repository owners
+        // and we want the case to be blatant so that we can get it fixed.
+
+        if (currentSource != null && newItemSource != null) {
+            try {
+                String str1 = rewriteUrl(currentSource.getUrl());
+                String str2 = rewriteUrl(newItemSource.getUrl());
+
+                URL url1 = new URL(str1);
+                URL url2 = new URL(str2);
+
+                // Make an exception if both URLs have the same host name & domain name.
+                if (url1.sameFile(url2) || url1.getHost().equals(url2.getHost())) {
+                    return true;
+                }
+            } catch (Exception ignore) {
+                // Ignore MalformedURLException or other exceptions
+            }
+        }
+
+        return false;
+    }
+
+    private String rewriteUrl(String url) {
+        if (url != null && url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
+            url = url.replaceAll("repository-[0-9]+\\.xml^",    //$NON-NLS-1$
+                                 "repository.xml");             //$NON-NLS-1$
+        }
+        return url;
     }
 
     private PkgCategory findCurrentCategory(
