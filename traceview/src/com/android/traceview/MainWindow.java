@@ -178,7 +178,20 @@ public class MainWindow extends ApplicationWindow {
             } else {
                 sourceProp = new File(toolsdir, "source.properties"); //$NON-NLS-1$
             }
-            p.load(new FileInputStream(sourceProp));
+
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(sourceProp);
+                p.load(fis);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+
             String revision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (revision != null && revision.length() > 0) {
                 return revision;

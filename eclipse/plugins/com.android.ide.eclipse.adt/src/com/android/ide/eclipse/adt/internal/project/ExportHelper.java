@@ -345,9 +345,19 @@ public final class ExportHelper {
             // put the content of the file.
             byte[] buffer = new byte[1024];
             int count;
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-            while ((count = bis.read(buffer)) != -1) {
-                jar.write(buffer, 0, count);
+            BufferedInputStream bis = null;
+            try {
+                bis = new BufferedInputStream(new FileInputStream(file));
+                while ((count = bis.read(buffer)) != -1) {
+                    jar.write(buffer, 0, count);
+                }
+            } finally {
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (IOException ignore) {
+                    }
+                }
             }
             jar.closeEntry();
         }
