@@ -370,8 +370,14 @@ public class UpdaterData implements IUpdaterData {
         // there's an env var asking to do so anyway.
         if (sources.getAllSources().length == 0 ||
                 System.getenv("SDK_MIX_WITH_TEST_URLS") != null) {
+
+            String baseUrl = System.getenv("SDK_TEST_BASE_URL");                       //$NON-NLS-1$
+            if (baseUrl == null || baseUrl.length() <= 0 || !baseUrl.endsWith("/")) {   //$NON-NLS-1$
+                baseUrl = SdkRepoConstants.URL_GOOGLE_SDK_SITE;
+            }
+
             sources.add(SdkSourceCategory.ANDROID_REPO,
-                    new SdkRepoSource(SdkRepoConstants.URL_GOOGLE_SDK_SITE,
+                    new SdkRepoSource(baseUrl,
                                       SdkSourceCategory.ANDROID_REPO.getUiName()));
 
             // Load user sources
@@ -1089,11 +1095,28 @@ public class UpdaterData implements IUpdaterData {
                 } else if (u.endsWith(SdkAddonsListConstants.URL_DEFAULT_FILENAME)) {
                     url = u;
                     break;
+                } else {
+                    monitor.logError("Ignoring invalid SDK_TEST_URLS: %1$s", u);  //$NON-NLS-1$
                 }
+
             }
         }
 
         if (url != null) {
+
+            // We override SdkRepoConstants.URL_GOOGLE_SDK_SITE if this is defined
+            String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
+            if (baseUrl != null) {
+                if (baseUrl.length() > 0 && baseUrl.endsWith("/")) {        //$NON-NLS-1$
+                    if (url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
+                        url = baseUrl +
+                              url.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
+                    }
+                } else {
+                    monitor.logError("Ignoring invalid SDK_TEST_BASE_URL: %1$s", baseUrl);  //$NON-NLS-1$
+                }
+            }
+
             if (getSettingsController().getForceHttp()) {
                 url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
             }
