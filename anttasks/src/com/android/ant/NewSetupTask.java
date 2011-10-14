@@ -452,21 +452,20 @@ public class NewSetupTask extends Task {
 
         System.out.println("\n------------------\nResolving library dependencies:");
 
+        // get the list of ordered libraries.
         ArrayList<File> libraries = getProjectLibraries(antProject);
 
         if (libraries.size() > 0) {
             System.out.println("------------------\nOrdered libraries:");
 
+            // use that same order to return ordered res folders, as well as jars and output.
             for (File library : libraries) {
+                // get the root path.
                 String libRootPath = library.getAbsolutePath();
                 System.out.println(libRootPath);
 
-                // get the root path.
-                PathElement element = rootPath.createPathElement();
-                element.setPath(libRootPath);
-
                 // get the res path. Always $PROJECT/res as well as the crunch cache.
-                element = resPath.createPathElement();
+                PathElement element = resPath.createPathElement();
                 element.setPath(libRootPath + "/" + SdkConstants.FD_OUTPUT +
                         "/" + SdkConstants.FD_RES);
                 element = resPath.createPathElement();
@@ -506,6 +505,18 @@ public class NewSetupTask extends Task {
                     throw new BuildException(e);
                 }
             }
+
+            // now use the reverse order to get the full list of library project.
+            // This is used to compile all the libraries, direct or indirect dependencies,
+            // in a single pass.
+            final int count = libraries.size();
+            for (int i = count - 1 ; i >= 0 ; i--) {
+                File library = libraries.get(i);
+
+                PathElement element = rootPath.createPathElement();
+                element.setPath(library.getAbsolutePath());
+            }
+
         } else {
             System.out.println("No library dependencies.\n");
         }

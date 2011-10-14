@@ -96,7 +96,7 @@ public final class AaptExecTask extends SingleDependencyTask {
     private boolean mNonConstantId;
 
     /**
-     * Input path that ignores the same file that aapt does.
+     * Input path that ignores the same folders/files that aapt does.
      */
     private static class ResFolderInputPath extends InputPath {
         public ResFolderInputPath(File file, Set<String> extensionsToCheck) {
