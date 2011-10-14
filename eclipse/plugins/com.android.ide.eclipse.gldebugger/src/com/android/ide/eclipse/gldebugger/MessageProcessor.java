@@ -38,7 +38,7 @@ public class MessageProcessor {
      */
     public static byte[] lzfDecompressChunks(final ByteString data) {
         ByteBuffer in = data.asReadOnlyByteBuffer();
-        in.order(SampleView.targetByteOrder);
+        in.order(SampleView.TARGET_BYTE_ORDER);
         ByteBuffer out = ByteBuffer.allocate(in.getInt());
         byte[] inChunk = new byte[0];
         byte[] outChunk = new byte[0];
@@ -69,7 +69,7 @@ public class MessageProcessor {
         byte[] chunk = new byte[256 * 1024]; // chunk size is arbitrary
         final ByteBuffer out = ByteBuffer.allocate(4 + (inSize + chunk.length - 1)
                 / chunk.length * (chunk.length + 4 * 2));
-        out.order(SampleView.targetByteOrder);
+        out.order(SampleView.TARGET_BYTE_ORDER);
         out.putInt(inSize);
         for (int i = 0; i < inSize; i += chunk.length) {
             int chunkIn = chunk.length;

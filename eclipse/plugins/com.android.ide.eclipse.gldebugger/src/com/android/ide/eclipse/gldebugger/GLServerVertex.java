@@ -39,7 +39,7 @@ class GLBuffer implements Cloneable {
             GLBuffer copy = (GLBuffer) super.clone();
             if (data != null) {
                 copy.data = ByteBuffer.allocate(data.capacity());
-                copy.data.order(SampleView.targetByteOrder);
+                copy.data.order(SampleView.TARGET_BYTE_ORDER);
                 data.position(0);
                 copy.data.put(data);
             }
@@ -214,11 +214,11 @@ public class GLServerVertex implements Cloneable {
         if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ARRAY_BUFFER) {
             attribBuffer.usage = GLEnum.valueOf(msg.getArg3());
             attribBuffer.data = msg.getData().asReadOnlyByteBuffer();
-            attribBuffer.data.order(SampleView.targetByteOrder);
+            attribBuffer.data.order(SampleView.TARGET_BYTE_ORDER);
         } else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ELEMENT_ARRAY_BUFFER) {
             indexBuffer.usage = GLEnum.valueOf(msg.getArg3());
             indexBuffer.data = msg.getData().asReadOnlyByteBuffer();
-            indexBuffer.data.order(SampleView.targetByteOrder);
+            indexBuffer.data.order(SampleView.TARGET_BYTE_ORDER);
         } else
             assert false;
     }
@@ -229,7 +229,7 @@ public class GLServerVertex implements Cloneable {
         if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ARRAY_BUFFER) {
             if (attribBuffer.data.isReadOnly()) {
                 ByteBuffer buffer = ByteBuffer.allocate(attribBuffer.data.capacity());
-                buffer.order(SampleView.targetByteOrder);
+                buffer.order(SampleView.TARGET_BYTE_ORDER);
                 buffer.put(attribBuffer.data);
                 attribBuffer.data = buffer;
             }
@@ -238,7 +238,7 @@ public class GLServerVertex implements Cloneable {
         } else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ELEMENT_ARRAY_BUFFER) {
             if (indexBuffer.data.isReadOnly()) {
                 ByteBuffer buffer = ByteBuffer.allocate(indexBuffer.data.capacity());
-                buffer.order(SampleView.targetByteOrder);
+                buffer.order(SampleView.TARGET_BYTE_ORDER);
                 buffer.put(indexBuffer.data);
                 indexBuffer.data = buffer;
             }
@@ -252,7 +252,7 @@ public class GLServerVertex implements Cloneable {
     public void glDeleteBuffers(Message msg) {
         final int n = msg.getArg0();
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
-        names.order(SampleView.targetByteOrder);
+        names.order(SampleView.TARGET_BYTE_ORDER);
         for (int i = 0; i < n; i++) {
             final int name = names.getInt();
             final GLBuffer buffer = buffers.get(name);
@@ -381,7 +381,7 @@ public class GLServerVertex implements Cloneable {
         if (msg.hasData()) // server sends user pointer attribs
         {
             arrays = msg.getData().asReadOnlyByteBuffer();
-            arrays.order(SampleView.targetByteOrder);
+            arrays.order(SampleView.TARGET_BYTE_ORDER);
         }
         for (int i = 0; i < count; i++)
             fetch(maxAttrib, first + i, i, arrays, msgData.attribs);
@@ -407,7 +407,7 @@ public class GLServerVertex implements Cloneable {
         if (msg.hasData()) // server sends user pointer attribs
         {
             arrays = msg.getData().asReadOnlyByteBuffer();
-            arrays.order(SampleView.targetByteOrder);
+            arrays.order(SampleView.TARGET_BYTE_ORDER);
         }
         if (null == indexBuffer)
             index = arrays; // server also interleaves user pointer indices
@@ -440,7 +440,7 @@ public class GLServerVertex implements Cloneable {
     public void glGenBuffers(Message msg) {
         final int n = msg.getArg0();
         final ByteBuffer buffer = msg.getData().asReadOnlyByteBuffer();
-        buffer.order(SampleView.targetByteOrder);
+        buffer.order(SampleView.TARGET_BYTE_ORDER);
         for (int i = 0; i < n; i++) {
             final int name = buffer.getInt();
             final int index = buffers.indexOfKey(name);
@@ -475,7 +475,7 @@ public class GLServerVertex implements Cloneable {
     // void glVertexAttrib1fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib1fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
-        values.order(SampleView.targetByteOrder);
+        values.order(SampleView.TARGET_BYTE_ORDER);
         glVertexAttrib4f(msg.getArg0(),
                 Float.intBitsToFloat(values.getInt()),
                 0, 0, 1);
@@ -490,7 +490,7 @@ public class GLServerVertex implements Cloneable {
     // void glVertexAttrib2fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib2fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
-        values.order(SampleView.targetByteOrder);
+        values.order(SampleView.TARGET_BYTE_ORDER);
         glVertexAttrib4f(msg.getArg0(),
                 Float.intBitsToFloat(values.getInt()),
                 Float.intBitsToFloat(values.getInt()), 0, 1);
@@ -506,7 +506,7 @@ public class GLServerVertex implements Cloneable {
     // void glVertexAttrib3fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib3fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
-        values.order(SampleView.targetByteOrder);
+        values.order(SampleView.TARGET_BYTE_ORDER);
         glVertexAttrib4f(msg.getArg0(),
                 Float.intBitsToFloat(values.getInt()),
                 Float.intBitsToFloat(values.getInt()),
@@ -532,7 +532,7 @@ public class GLServerVertex implements Cloneable {
     // void glVertexAttrib4fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib4fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
-        values.order(SampleView.targetByteOrder);
+        values.order(SampleView.TARGET_BYTE_ORDER);
         glVertexAttrib4f(msg.getArg0(),
                 Float.intBitsToFloat(values.getInt()),
                 Float.intBitsToFloat(values.getInt()),

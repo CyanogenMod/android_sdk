@@ -47,7 +47,7 @@ public class MessageParserExTest {
         final String args = "{0, 1    ,2,3  }";
         parser.args = args;
         final ByteBuffer data = parser.parseFloats(4).asReadOnlyByteBuffer();
-        data.order(SampleView.targetByteOrder);
+        data.order(SampleView.TARGET_BYTE_ORDER);
         for (int i = 0; i < 4; i++)
             assertEquals(i, data.getFloat(), 0);
     }
@@ -94,7 +94,7 @@ public class MessageParserExTest {
     @Test
     public void testParseFormatterMessage() {
         final ByteBuffer srcData = ByteBuffer.allocate(4 * 2 * 4);
-        srcData.order(SampleView.targetByteOrder);
+        srcData.order(SampleView.TARGET_BYTE_ORDER);
         for (int i = 0; i < 4 * 2; i++)
             srcData.putFloat(i);
         srcData.rewind();
