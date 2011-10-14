@@ -54,7 +54,9 @@ import org.eclipse.swt.widgets.Display;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The {@link CustomViewFinder} can look up the custom views and third party views
@@ -190,8 +192,8 @@ public class CustomViewFinder {
     }
 
     private Pair<List<String>,List<String>> findViews(final boolean layoutsOnly) {
-        final List<String> customViews = new ArrayList<String>();
-        final List<String> thirdPartyViews = new ArrayList<String>();
+        final Set<String> customViews = new HashSet<String>();
+        final Set<String> thirdPartyViews = new HashSet<String>();
 
         ProjectState state = Sdk.getProjectState(mProject);
         final List<IProject> libraries = state != null
@@ -264,13 +266,17 @@ public class CustomViewFinder {
             AdtPlugin.log(e, null);
         }
 
+
+        List<String> custom = new ArrayList<String>(customViews);
+        List<String> thirdParty = new ArrayList<String>(thirdPartyViews);
+
         if (!layoutsOnly) {
             // Update our cached answers (unless we were filtered on only layouts)
-            mCustomViews = customViews;
-            mThirdPartyViews = thirdPartyViews;
+            mCustomViews = custom;
+            mThirdPartyViews = thirdParty;
         }
 
-        return Pair.of(customViews, thirdPartyViews);
+        return Pair.of(custom, thirdParty);
     }
 
     /**
