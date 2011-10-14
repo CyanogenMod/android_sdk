@@ -190,6 +190,7 @@ public class AvdManagerWindowImpl1 {
         mAvdPage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
     }
 
+    @SuppressWarnings("unused") // MenuBarWrapper works using side effects
     private void createMenuBar() {
 
         if (mContext != AvdInvocationContext.STANDALONE) {

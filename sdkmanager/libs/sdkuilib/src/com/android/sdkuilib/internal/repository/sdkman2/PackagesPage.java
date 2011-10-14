@@ -75,6 +75,8 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -176,6 +178,7 @@ public class PackagesPage extends UpdaterPage
         }
     }
 
+    @SuppressWarnings("unused")
     private void createContents(Composite parent) {
         GridLayoutBuilder.create(parent).noMargins().columns(2);
 
@@ -1513,7 +1516,23 @@ public class PackagesPage extends UpdaterPage
                 element = ((PkgItem) element).getMainPackage();
             }
             if (element instanceof IDescription) {
-                return ((IDescription) element).getLongDescription();
+                String s = ((IDescription) element).getLongDescription();
+                if (element instanceof Package) {
+                    SdkSource src = ((Package) element).getParentSource();
+                    if (src != null) {
+                        try {
+                            URL url = new URL(src.getUrl());
+                            String host = url.getHost();
+                            if (((Package) element).isLocal()) {
+                                s += String.format("\nInstalled from %1$s", host);
+                            } else {
+                                s += String.format("\nProvided by %1$s", host);
+                            }
+                        } catch (MalformedURLException ignore) {
+                        }
+                    }
+                }
+                return s;
             }
             return super.getToolTipText(element);
         }
