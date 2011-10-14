@@ -23,6 +23,7 @@ import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 
 import org.w3c.dom.Node;
@@ -139,7 +140,11 @@ public abstract class Package implements IDescription, Comparable<Package> {
         // a package comes from.
         String srcUrl = getProperty(props, PkgProps.PKG_SOURCE_URL, null);
         if (props != null && source == null && srcUrl != null) {
-            if (this instanceof AddonPackage) {
+            // Both Addon and Extra packages can come from an addon source.
+            // For Extras, we can tell by looking at the source URL.
+            if (this instanceof AddonPackage ||
+                    ((this instanceof ExtraPackage) &&
+                     srcUrl.endsWith(SdkAddonConstants.URL_DEFAULT_FILENAME))) {
                 source = new SdkAddonSource(srcUrl, null /*uiName*/);
             } else {
                 source = new SdkRepoSource(srcUrl, null /*uiName*/);
