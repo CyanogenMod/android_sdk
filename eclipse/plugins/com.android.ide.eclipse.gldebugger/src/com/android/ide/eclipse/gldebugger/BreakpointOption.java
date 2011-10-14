@@ -41,14 +41,14 @@ import java.io.IOException;
 public class BreakpointOption extends ScrolledComposite implements SelectionListener,
         ProcessMessage {
 
-    SampleView sampleView;
+    GLFramesView mGLFramesView;
     Button[] buttonsBreak = new Button[Function.values().length];
     /** cache of buttonsBreak[Function.getNumber()].getSelection */
     boolean[] breakpoints = new boolean[Function.values().length];
 
-    BreakpointOption(SampleView sampleView, Composite parent) {
+    BreakpointOption(GLFramesView view, Composite parent) {
         super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
-        this.sampleView = sampleView;
+        mGLFramesView = view;
 
         Composite composite = new Composite(this, 0);
         GridLayout layout = new GridLayout();
@@ -86,7 +86,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         builder.setProp(Prop.ExpectResponse);
         builder.setArg0(function.getNumber());
         builder.setArg1(enabled ? 1 : 0);
-        sampleView.messageQueue.addCommand(builder.build());
+        mGLFramesView.messageQueue.addCommand(builder.build());
         breakpoints[function.getNumber()] = enabled;
     }
 
@@ -94,8 +94,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         Button btn = (Button) e.widget;
         Group group = (Group) btn.getParent();
         int contextId = 0;
-        if (sampleView.current != null)
-            contextId = sampleView.current.contextId;
+        if (mGLFramesView.current != null)
+            contextId = mGLFramesView.current.contextId;
         setBreakpoint(contextId, Function.valueOf(group.getText()), btn.getSelection());
     }
 
@@ -116,7 +116,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         builder.setContextId(contextId);
         builder.setType(Type.Response);
         builder.setExpectResponse(true);
-        final Shell shell = sampleView.getViewSite().getShell();
+        final Shell shell = mGLFramesView.getViewSite().getShell();
         final boolean send[] = new boolean[1];
         shell.getDisplay().syncExec(new Runnable() {
             public void run() {

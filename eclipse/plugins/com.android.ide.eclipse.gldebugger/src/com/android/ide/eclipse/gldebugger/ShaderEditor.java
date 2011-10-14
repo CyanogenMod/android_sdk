@@ -48,7 +48,7 @@ import java.util.ArrayList;
 
 public class ShaderEditor extends Composite implements SelectionListener, ExtendedModifyListener,
         ProcessMessage {
-    SampleView sampleView;
+    GLFramesView mGLFramesView;
 
     ToolBar toolbar;
     ToolItem uploadShader, restoreShader, currentPrograms;
@@ -59,9 +59,9 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
 
     ArrayList<GLShader> shadersToUpload = new ArrayList<GLShader>();
 
-    ShaderEditor(SampleView sampleView, Composite parent) {
+    ShaderEditor(GLFramesView view, Composite parent) {
         super(parent, 0);
-        this.sampleView = sampleView;
+        mGLFramesView = view;
 
         GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 1;
@@ -104,8 +104,8 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     public void updateUI() {
         list.removeAll();
         String progs = "Current Programs: ";
-        for (int j = 0; j < sampleView.debugContexts.size(); j++) {
-            final Context context = sampleView.debugContexts.valueAt(j).currentContext;
+        for (int j = 0; j < mGLFramesView.debugContexts.size(); j++) {
+            final Context context = mGLFramesView.debugContexts.valueAt(j).currentContext;
 
             if (context.serverShader.current != null) {
                 progs += context.serverShader.current.name + "(0x";
@@ -183,7 +183,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                         return;
                 }
             } catch (IOException e) {
-                sampleView.showError(e);
+                mGLFramesView.showError(e);
             }
 
         // add the initial command, which when read by server will set
@@ -202,7 +202,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
             Message.Builder builder = getBuilder(contextId);
             MessageParserEx.instance.parse(builder,
                     String.format("glShaderSource(%d,1,\"%s\",0)", current.name, current.source));
-            sampleView.messageQueue.addCommand(builder.build());
+            mGLFramesView.messageQueue.addCommand(builder.build());
         }
     }
 
@@ -269,7 +269,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
             final String title = String.format("Shader %d in 0x%s failed to compile",
                     shader.name, Integer.toHexString(shader.context.context.contextId));
             final String message = rcv.getData().toStringUtf8();
-            sampleView.getSite().getShell().getDisplay().syncExec(new Runnable() {
+            mGLFramesView.getSite().getShell().getDisplay().syncExec(new Runnable() {
                 public void run()
                 {
                     MessageDialog.openWarning(getShell(), title, message);
@@ -290,7 +290,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 final String title = String.format("Program %d in 0x%s failed to link",
                         program.name, Integer.toHexString(program.context.context.contextId));
                 final String message = rcv.getData().toStringUtf8();
-                sampleView.getSite().getShell().getDisplay().syncExec(new Runnable() {
+                mGLFramesView.getSite().getShell().getDisplay().syncExec(new Runnable() {
                     public void run()
                     {
                         MessageDialog.openWarning(getShell(), title, message);
@@ -341,7 +341,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         String[] details = list.getSelection()[0].split("\\s+");
         final int contextId = Integer.parseInt(details[0], 16);
         int name = Integer.parseInt(details[2]);
-        current = sampleView.debugContexts.get(contextId).currentContext.serverShader.shaders
+        current = mGLFramesView.debugContexts.get(contextId).currentContext.serverShader.shaders
                 .get(name);
         styledText.setText(current.source);
     }

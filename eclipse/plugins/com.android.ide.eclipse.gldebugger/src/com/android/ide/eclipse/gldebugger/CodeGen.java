@@ -316,7 +316,7 @@ public class CodeGen implements IRunnableWithProgress {
 
     private void codeGenGenNames(final Message msg) {
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
-        names.order(SampleView.TARGET_BYTE_ORDER);
+        names.order(GLFramesView.TARGET_BYTE_ORDER);
         SparseIntArray namesArray = null;
         for (int i = 0; i < msg.getArg0(); i++) {
             String id = "";
@@ -354,7 +354,7 @@ public class CodeGen implements IRunnableWithProgress {
 
     private void codeGenDeleteNames(final Message msg) {
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
-        names.order(SampleView.TARGET_BYTE_ORDER);
+        names.order(GLFramesView.TARGET_BYTE_ORDER);
         SparseIntArray namesArray = null;
         for (int i = 0; i < msg.getArg0(); i++) {
             String id = null;
@@ -505,18 +505,18 @@ public class CodeGen implements IRunnableWithProgress {
             // need to load user pointer indices and/or attributes
             final byte[] element = new byte[attribDataStride];
             final ByteBuffer data = msgData.msg.getData().asReadOnlyByteBuffer();
-            data.order(SampleView.TARGET_BYTE_ORDER);
+            data.order(GLFramesView.TARGET_BYTE_ORDER);
             final ByteBuffer indexData = ByteBuffer.allocate(count * GLServerVertex.typeSize(type));
-            indexData.order(SampleView.TARGET_BYTE_ORDER);
+            indexData.order(GLFramesView.TARGET_BYTE_ORDER);
             final ByteBuffer attribData = ByteBuffer.allocate(count * attribDataStride);
-            attribData.order(SampleView.TARGET_BYTE_ORDER);
+            attribData.order(GLFramesView.TARGET_BYTE_ORDER);
             int maxIndex = -1;
             ByteBuffer indexSrc = data;
             if (v.indexBuffer != null) {
                 indexSrc = v.indexBuffer.data;
                 indexSrc.position(msgData.msg.getArg3());
             }
-            indexSrc.order(SampleView.TARGET_BYTE_ORDER);
+            indexSrc.order(GLFramesView.TARGET_BYTE_ORDER);
             for (int i = 0; i < count; i++) {
                 int index = -1;
                 if (type == GLEnum.GL_UNSIGNED_BYTE) {
@@ -606,7 +606,7 @@ public class CodeGen implements IRunnableWithProgress {
         final int count = msgData.attribs[0].length / 4;
         final GLEnum mode = GLEnum.valueOf(msgData.msg.getArg0());
         final ByteBuffer attribData = ByteBuffer.allocate(maxAttrib * count * 16);
-        attribData.order(SampleView.TARGET_BYTE_ORDER);
+        attribData.order(GLFramesView.TARGET_BYTE_ORDER);
         for (int i = 0; i < count; i++)
             for (int j = 0; j < maxAttrib; j++)
                 for (int k = 0; k < 4; k++)

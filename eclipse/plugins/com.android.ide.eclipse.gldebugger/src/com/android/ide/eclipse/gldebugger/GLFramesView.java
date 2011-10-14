@@ -43,7 +43,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -61,7 +60,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
@@ -74,7 +72,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.ByteOrder;
 
-public class SampleView extends ViewPart implements Runnable {
+public class GLFramesView extends ViewPart implements Runnable {
     public static final ByteOrder TARGET_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
     private boolean mRunning = false;
@@ -346,7 +344,7 @@ public class SampleView extends ViewPart implements Runnable {
         menuMgr.setRemoveAllWhenShown(true);
         menuMgr.addMenuListener(new IMenuListener() {
             public void menuAboutToShow(IMenuManager manager) {
-                SampleView.this.fillContextMenu(manager);
+                GLFramesView.this.fillContextMenu(manager);
             }
         });
         Menu menu = menuMgr.createContextMenu(mViewer.getControl());

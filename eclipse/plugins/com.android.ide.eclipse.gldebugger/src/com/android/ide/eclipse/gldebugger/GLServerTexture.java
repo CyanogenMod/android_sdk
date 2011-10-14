@@ -156,7 +156,7 @@ public class GLServerTexture implements Cloneable {
                 }
             case glDeleteTextures: {
                 final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
-                names.order(SampleView.TARGET_BYTE_ORDER);
+                names.order(GLFramesView.TARGET_BYTE_ORDER);
                 for (int i = 0; i < msg.getArg0(); i++) {
                     final int name = names.getInt();
                     if (tex2D != null && tex2D.name == name)

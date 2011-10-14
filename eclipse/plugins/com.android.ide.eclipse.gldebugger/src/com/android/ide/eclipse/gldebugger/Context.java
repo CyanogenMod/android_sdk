@@ -105,7 +105,7 @@ class Frame {
             file.seek(filePosition);
             for (int i = 0; i < callsCount; i++) {
                 int len = file.readInt();
-                if (SampleView.TARGET_BYTE_ORDER == ByteOrder.LITTLE_ENDIAN)
+                if (GLFramesView.TARGET_BYTE_ORDER == ByteOrder.LITTLE_ENDIAN)
                     len = Integer.reverseBytes(len);
                 final byte[] data = new byte[len];
                 file.read(data);
@@ -150,10 +150,10 @@ class DebugContext {
                 frame.increaseCallsCount();
             final byte[] data = msg.toByteArray();
             final ByteBuffer len = ByteBuffer.allocate(4);
-            len.order(SampleView.TARGET_BYTE_ORDER);
+            len.order(GLFramesView.TARGET_BYTE_ORDER);
             len.putInt(data.length);
             try {
-                if (SampleView.TARGET_BYTE_ORDER == ByteOrder.BIG_ENDIAN)
+                if (GLFramesView.TARGET_BYTE_ORDER == ByteOrder.BIG_ENDIAN)
                     file.writeInt(data.length);
                 else
                     file.writeInt(Integer.reverseBytes(data.length));
@@ -320,9 +320,9 @@ public class Context implements Cloneable {
 class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         ISelectionChangedListener {
     Context context;
-    final SampleView sampleView;
+    final GLFramesView sampleView;
 
-    ContextViewProvider(final SampleView sampleView) {
+    ContextViewProvider(final GLFramesView sampleView) {
         this.sampleView = sampleView;
     }
 

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gldebugger.MessageFormatter;
 import com.android.ide.eclipse.gldebugger.MessageParserEx;
-import com.android.ide.eclipse.gldebugger.SampleView;
+import com.android.ide.eclipse.gldebugger.GLFramesView;
 import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
 import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function;
 import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type;
@@ -47,7 +47,7 @@ public class MessageParserExTest {
         final String args = "{0, 1    ,2,3  }";
         parser.args = args;
         final ByteBuffer data = parser.parseFloats(4).asReadOnlyByteBuffer();
-        data.order(SampleView.TARGET_BYTE_ORDER);
+        data.order(GLFramesView.TARGET_BYTE_ORDER);
         for (int i = 0; i < 4; i++)
             assertEquals(i, data.getFloat(), 0);
     }
@@ -94,7 +94,7 @@ public class MessageParserExTest {
     @Test
     public void testParseFormatterMessage() {
         final ByteBuffer srcData = ByteBuffer.allocate(4 * 2 * 4);
-        srcData.order(SampleView.TARGET_BYTE_ORDER);
+        srcData.order(GLFramesView.TARGET_BYTE_ORDER);
         for (int i = 0; i < 4 * 2; i++)
             srcData.putFloat(i);
         srcData.rewind();

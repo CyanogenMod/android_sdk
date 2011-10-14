@@ -44,9 +44,9 @@ public class MessageQueue implements Runnable {
     private final ProcessMessage[] processes;
     private ArrayList<Message> complete = new ArrayList<Message>(); // synchronized
     private ArrayList<Message> commands = new ArrayList<Message>(); // synchronized
-    private SampleView sampleView;
+    private GLFramesView sampleView;
 
-    public MessageQueue(SampleView sampleView, final ProcessMessage[] processes) {
+    public MessageQueue(GLFramesView sampleView, final ProcessMessage[] processes) {
         this.sampleView = sampleView;
         this.processes = processes;
     }
