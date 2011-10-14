@@ -26,7 +26,7 @@ public class SdkAddonsListConstants {
 
     /** The URL where to find the official addons list fle. */
     public static final String URL_ADDON_LIST =
-        "https://dl-ssl.google.com/android/repository/addons_list.xml";     //$NON-NLS-1$
+        SdkRepoConstants.URL_GOOGLE_SDK_SITE + "addons_list.xml";     //$NON-NLS-1$
 
     /** The canonical URL filename for addons-list XML files. */
     public static final String URL_DEFAULT_FILENAME = "addons_list.xml";    //$NON-NLS-1$
