@@ -41,6 +41,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
@@ -54,11 +55,14 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Slider;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
@@ -70,7 +74,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.ByteOrder;
 
-public class SampleView extends ViewPart implements Runnable, SelectionListener {
+public class SampleView extends ViewPart implements Runnable {
     public static final ByteOrder TARGET_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
     private boolean mRunning = false;
@@ -84,7 +88,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     TabItem tabItemShaderEditor, tabContextViewer;
 
     private ListViewer mViewer; // ListViewer / TableViewer
-    private Slider mFrameSlider; // scale max cannot overlap min, so max is array size
+    private Scale mFrameScale; // scale max cannot overlap min, so max is array size
+    private Spinner mFrameNumberspinner;
     private TreeViewer mContextViewer;
     private BreakpointOption mBreakpointOption;
     private ShaderEditor mShaderEditor;
@@ -148,18 +153,48 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         Composite composite = new Composite(parent, 0);
 
         GridLayout gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
+        gridLayout.numColumns = 3;
         composite.setLayout(gridLayout);
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        mFrameSlider = new Slider(composite, SWT.BORDER | SWT.HORIZONTAL);
-        mFrameSlider.setMinimum(0);
-        mFrameSlider.setMaximum(1);
-        mFrameSlider.setSelection(0);
-        mFrameSlider.addSelectionListener(this);
+        // Frame: -------|slider|--------- [ Spinner ]
+        Label l = new Label(composite, SWT.NONE);
+        l.setText("Frame:");
+
+        mFrameScale = new Scale(composite, SWT.BORDER | SWT.HORIZONTAL);
+        mFrameScale.setMinimum(0);
+        mFrameScale.setMaximum(1);
+        mFrameScale.setSelection(0);
+        mFrameScale.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (current == null) {
+                    return;
+                }
+                int selectedFrame = mFrameScale.getSelection();
+                mFrameNumberspinner.setSelection(selectedFrame);
+                selectFrame(selectedFrame);
+            }
+        });
 
         GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-        mFrameSlider.setLayoutData(gridData);
+        mFrameScale.setLayoutData(gridData);
+
+        mFrameNumberspinner = new Spinner(composite, SWT.BORDER);
+        mFrameNumberspinner.setMinimum(0);
+        mFrameNumberspinner.setMaximum(1);
+        mFrameNumberspinner.setSelection(0);
+        mFrameNumberspinner.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (current == null) {
+                    return;
+                }
+                int selectedFrame = mFrameNumberspinner.getSelection();
+                mFrameScale.setSelection(selectedFrame);
+                selectFrame(selectedFrame);
+            }
+        });
 
         mViewer = new ListViewer(composite, SWT.DEFAULT);
         mViewer.getList().setFont(new Font(mViewer.getList().getDisplay(),
@@ -172,7 +207,17 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         });
 
         gridData = new GridData(GridData.FILL_BOTH);
+        gridData.horizontalSpan = 3;
         mViewer.getControl().setLayoutData(gridData);
+    }
+
+    private void selectFrame(int frameNumber) {
+        if (frameNumber == current.frameCount()) {
+            return; // scale maximum cannot overlap minimum
+        }
+
+        Frame frame = current.getFrame(frameNumber);
+        mViewer.setInput(frame);
     }
 
     @Override
@@ -475,7 +520,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (current != null) {
                     new CodeGen().codeGenFrame((Frame) mViewer.getInput());
                     // need to reload current frame
-                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
+                    mViewer.setInput(current.getFrame(mFrameScale.getSelection()));
                 }
             }
         });
@@ -484,10 +529,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             @Override
             public void run() {
                 if (current != null) {
-                    new CodeGen().codeGenFrames(current, mFrameSlider.getSelection() + 1,
+                    new CodeGen().codeGenFrames(current, mFrameScale.getSelection() + 1,
                             getSite().getShell());
                     // need to reload current frame
-                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
+                    mViewer.setInput(current.getFrame(mFrameScale.getSelection()));
                 }
             }
         });
@@ -539,9 +584,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     void messageDataSelected(final MessageData msgData) {
         if (null == msgData)
             return;
-        if (mFrameSlider.getSelection() == mFrameSlider.getMaximum())
+        if (mFrameScale.getSelection() == mFrameScale.getMaximum())
             return; // scale max cannot overlap min, so max is array size
-        final Frame frame = current.getFrame(mFrameSlider.getSelection());
+        final Frame frame = current.getFrame(mFrameScale.getSelection());
         final Context context = frame.computeContext(msgData);
         mContextViewer.setInput(context);
         if (msgData.getImage() != null) {
@@ -615,15 +660,15 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (current != null && current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         public void run() {
-                            if (mFrameSlider.getSelection() == current.frameCount() - 1 ||
-                                    mFrameSlider.getSelection() == current.frameCount() - 2)
+                            if (mFrameScale.getSelection() == current.frameCount() - 1 ||
+                                    mFrameScale.getSelection() == current.frameCount() - 2)
                             {
                                 mViewer.refresh(false);
                                 if (mActionAutoScroll.isChecked())
                                     mViewer.getList().setSelection(
                                             mViewer.getList().getItemCount() - 1);
                             }
-                            mFrameSlider.setMaximum(current.frameCount());
+                            setMaxFrameCount(current.frameCount());
                         }
                     });
                 current.uiUpdate = false;
@@ -660,23 +705,35 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             connectDisconnect(); // error occurred, disconnect
     }
 
+    private void setMaxFrameCount(int frameCount) {
+        mFrameScale.setMaximum(frameCount);
+        mFrameNumberspinner.setMaximum(frameCount);
+    }
+
+    private void setSelectedFrame(int frameNumber) {
+        mFrameScale.setSelection(frameNumber);
+        mFrameNumberspinner.setSelection(frameNumber);
+    }
+
     /** can be called from non-UI thread */
     void changeContext(final DebugContext newContext) {
         getSite().getShell().getDisplay().syncExec(new Runnable() {
             public void run() {
                 current = newContext;
                 if (current != null) {
-                    mFrameSlider.setMaximum(current.frameCount());
-                    if (mFrameSlider.getSelection() >= current.frameCount())
-                        if (current.frameCount() > 0)
-                            mFrameSlider.setSelection(current.frameCount() - 1);
-                        else
-                            mFrameSlider.setSelection(0);
-                    mViewer.setInput(current.getFrame(mFrameSlider.getSelection()));
+                    setMaxFrameCount(current.frameCount());
+
+                    int frame = Math.min(mFrameScale.getSelection(), current.frameCount() - 1);
+                    if (frame < 0) {
+                        frame = 0;
+                    }
+                    setSelectedFrame(frame);
+                    mViewer.setInput(current.getFrame(frame));
                     mActionContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
                 } else {
-                    mFrameSlider.setMaximum(1); // cannot overlap min
-                    mFrameSlider.setSelection(0);
+                    setMaxFrameCount(1);
+                    setSelectedFrame(0);
+
                     mViewer.setInput(null);
                     mActionContext.setText("Context: 0x");
                 }
@@ -684,20 +741,5 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
         });
-    }
-
-    public void widgetSelected(SelectionEvent e) {
-        if (e.widget != mFrameSlider)
-            assert false;
-        if (current == null)
-            return;
-        if (mFrameSlider.getSelection() == current.frameCount())
-            return; // scale maximum cannot overlap minimum
-        Frame frame = current.getFrame(mFrameSlider.getSelection());
-        mViewer.setInput(frame);
-    }
-
-    public void widgetDefaultSelected(SelectionEvent e) {
-        widgetSelected(e);
     }
 }
