@@ -35,6 +35,8 @@ import java.util.Set;
  */
 public class DependencyGraph {
 
+    private final static boolean DEBUG = false;
+
     private static enum DependencyStatus {
         NONE, NEW_FILE, UPDATED_FILE, MISSING_FILE, ERROR;
     }
@@ -189,6 +191,9 @@ public class DependencyGraph {
         mPrereqs = new HashSet<File>(prereqs.length);
         for (String path : prereqs) {
             if (path.length() > 0) {
+                if (DEBUG) {
+                    System.out.println("PREREQ: " + path);
+                }
                 File f = new File(path);
                 if (mFirstPrereq == null) {
                     mFirstPrereq = f;
@@ -290,12 +295,19 @@ public class DependencyGraph {
         // files to go through manually
         if (mPrereqs.remove(file) == false) {
             // turns out this is a new file!
+
+            if (DEBUG) {
+                System.out.println("NEW FILE: " + file.getAbsolutePath());
+            }
             return DependencyStatus.NEW_FILE;
         } else {
             // check the time stamp on this file if it's a file we care about based what the
             // input folder decides.
             if (inputFolder.checksForModification(file)) {
                 if (file.lastModified() > oldestTarget) {
+                    if (DEBUG) {
+                        System.out.println("UPDATED FILE: " + file.getAbsolutePath());
+                    }
                     return DependencyStatus.UPDATED_FILE;
                 }
             }
@@ -319,6 +331,9 @@ public class DependencyGraph {
         // Loop through our prereq files and make sure they still exist
         for (File prereq : mPrereqs) {
             if (prereq.exists() == false) {
+                if (DEBUG) {
+                    System.out.println("MISSING FILE: " + prereq.getAbsolutePath());
+                }
                 return DependencyStatus.MISSING_FILE;
             }
 
@@ -336,6 +351,10 @@ public class DependencyGraph {
                             // check if we need to check this type of file, and if yes, check it.
                             if (input.checksForModification(prereq)) {
                                 if (prereq.lastModified() > oldestTarget) {
+                                    if (DEBUG) {
+                                        System.out.println(
+                                                "UPDATED FILE: " + prereq.getAbsolutePath());
+                                    }
                                     return DependencyStatus.UPDATED_FILE;
                                 }
                             }
@@ -345,6 +364,10 @@ public class DependencyGraph {
                         if (prereq.equals(inputFile)) {
                             if (input.checksForModification(prereq)) {
                                 if (prereq.lastModified() > oldestTarget) {
+                                    if (DEBUG) {
+                                        System.out.println(
+                                                "UPDATED FILE: " + prereq.getAbsolutePath());
+                                    }
                                     return DependencyStatus.UPDATED_FILE;
                                 }
                             }
@@ -354,6 +377,9 @@ public class DependencyGraph {
             } else {
                 // no input? we consider all files.
                 if (prereq.lastModified() > oldestTarget) {
+                    if (DEBUG) {
+                        System.out.println("UPDATED FILE: " + prereq.getAbsolutePath());
+                    }
                     return DependencyStatus.UPDATED_FILE;
                 }
             }

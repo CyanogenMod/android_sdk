@@ -129,7 +129,8 @@ public class DexExecTask extends SingleDependencyTask {
         String depFile = mOutput + ".d";
 
         // get InputPath with no extension restrictions
-        List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/);
+        List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/,
+                null /*factory*/);
 
         if (initDependencies(depFile, inputPaths) && dependenciesHaveChanged() == false) {
             System.out.println(

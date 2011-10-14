@@ -72,23 +72,33 @@ public class InputPath {
      * @return true if the file or folder are ignored.
      */
     public boolean ignores(File file) {
-        return false;
+        // always ignore hidden files/folders.
+        return file.getName().startsWith(".") == false;
     }
 
     /**
      *  Gets the extension (if present) on a file by looking at the filename
-     *  @param file the file to get the extension of
+     *  @param file the file to get the extension from
      *  @return the extension if present, or the empty string if the filename doesn't have
      *          and extension.
      */
    protected static String getExtension(File file) {
-       String filename = file.getName();
-       int index = filename.lastIndexOf('.');
+       return getExtension(file.getName());
+   }
+
+   /**
+    *  Gets the extension (if present) on a file by looking at the filename
+    *  @param fileName the filename to get the extension from
+    *  @return the extension if present, or the empty string if the filename doesn't have
+    *          and extension.
+    */
+   protected static String getExtension(String fileName) {
+       int index = fileName.lastIndexOf('.');
        if (index == -1) {
            return "";
        }
        // Don't include the leading '.' in the extension
-       return filename.substring(index + 1);
+       return fileName.substring(index + 1);
    }
 
 }

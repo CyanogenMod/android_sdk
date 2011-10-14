@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Task to execute aapt.
@@ -93,6 +94,46 @@ public final class AaptExecTask extends SingleDependencyTask {
     private String mProjectLibrariesResName;
     private String mProjectLibrariesPackageName;
     private boolean mNonConstantId;
+
+    /**
+     * Input path that ignores the same file that aapt does.
+     */
+    private static class ResFolderInputPath extends InputPath {
+        public ResFolderInputPath(File file, Set<String> extensionsToCheck) {
+            super(file, extensionsToCheck);
+        }
+
+        @Override
+        public boolean ignores(File file) {
+            String name = file.getName();
+            char firstChar = name.charAt(0);
+
+            if (firstChar == '.' || (firstChar == '_' && file.isDirectory()) ||
+                    name.charAt(name.length()-1) == '~') {
+                return true;
+            }
+
+            if ("CVS".equals(name) ||
+                    "thumbs.db".equalsIgnoreCase(name) ||
+                    "picasa.ini".equalsIgnoreCase(name)) {
+                return true;
+            }
+
+            String ext = getExtension(name);
+            if ("scc".equalsIgnoreCase(ext)) {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    private final static InputPathFactory sPathFactory = new InputPathFactory() {
+
+        public InputPath createPath(File file, Set<String> extensionsToCheck) {
+            return new ResFolderInputPath(file, extensionsToCheck);
+        }
+    };
 
     /**
      * Sets the value of the "executable" attribute.
@@ -351,7 +392,8 @@ public final class AaptExecTask extends SingleDependencyTask {
         if (generateRClass) {
             // in this case we only want to run aapt if an XML file was touched, or if any
             // file is added/removed
-            List<InputPath> inputPaths = getInputPaths(paths, Collections.singleton("xml"));
+            List<InputPath> inputPaths = getInputPaths(paths, Collections.singleton("xml"),
+                    sPathFactory);
 
             // let's not forget the manifest as an input path (with no extension restrictions).
             if (mManifest != null) {
@@ -369,7 +411,8 @@ public final class AaptExecTask extends SingleDependencyTask {
         } else {
             // in this case we want to run aapt if any file was updated/removed/added in any of the
             // input paths
-            List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/);
+            List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/,
+                    sPathFactory);
 
             // let's not forget the manifest as an input path.
             if (mManifest != null) {
