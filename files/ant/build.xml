@@ -365,6 +365,11 @@
     <!-- ******************** Build Targets ******************** -->
     <!-- ******************************************************* -->
 
+    <!-- target to disable building dependencies -->
+    <target name="only">
+        <property name="dont.build.deps" value="true" />
+    </target>
+
     <!-- this target simply force running -setup making
          the project info be read. To be used as
              ant all clean
@@ -466,15 +471,19 @@
         <!-- compile the libraries if any -->
         <if>
             <condition>
-                <isreference refid="project.libraries" />
+                <and>
+                    <isreference refid="project.libraries" />
+                    <not><isset property="dont.build.deps" /></not>
+                </and>
             </condition>
             <then>
                 <echo>Building Libraries</echo>
-                <subant
+                <subant failonerror="true"
                         buildpathref="project.libraries"
-                        antfile="build.xml"
-                        target="${build.target}"
-                        failonerror="true"/>
+                        antfile="build.xml">
+                    <target name="only" />
+                    <target name="${build.target}" />
+                </subant>
                 <echo></echo>
                 <echo>############################################</echo>
                 <echo>**** Back to project ${ant.project.name} ****</echo>
@@ -1263,8 +1272,14 @@
         <echo>              (tested projects and libraries)at the same time</echo>
         <echo>              using: 'ant all clean'</echo>
         <echo>   debug:     Builds the application and signs it with a debug key.</echo>
+        <echo>              The 'only' target can be used to only build the</echo>
+        <echo>              current project and ignore the libraries using:</echo>
+        <echo>              'ant only debug'</echo>
         <echo>   release:   Builds the application. The generated apk file must be</echo>
         <echo>              signed before it is published.</echo>
+        <echo>              The 'only' target can be used to only build the</echo>
+        <echo>              current project and ignore the libraries using:</echo>
+        <echo>              'ant only release'</echo>
         <echo>   instrument:Builds an instrumented package and signs it with a</echo>
         <echo>              debug key.</echo>
         <echo>   test:      Runs the tests. Project must be a test project and</echo>
