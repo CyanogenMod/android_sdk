@@ -233,7 +233,9 @@ public class ApkBuilderTask extends BaseTask {
             inputPaths.add(resourceInputPath);
 
             // dex file
-            inputPaths.add(new InputPath(dexFile));
+            if (dexFile != null) {
+                inputPaths.add(new InputPath(dexFile));
+            }
 
             // zip input files
             List<File> zipFiles = new ArrayList<File>();
