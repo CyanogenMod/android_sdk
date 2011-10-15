@@ -24,7 +24,7 @@
     -->
 
     <!-- ******************************************************* -->
-    <!-- *************** Overrideable Properties *************** -->
+    <!-- **************** Overridable Properties *************** -->
     <!-- ******************************************************* -->
 
     <!-- You can override these values in your build.xml or build.properties.

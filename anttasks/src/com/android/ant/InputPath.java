@@ -34,6 +34,9 @@ public class InputPath {
     }
 
     public InputPath(File file, Set<String> extensionsToCheck) {
+        if (file == null) {
+            throw new RuntimeException("File in InputPath(File) can't be null");
+        }
         mFile = file;
         mTouchedExtensions = extensionsToCheck;
     }
