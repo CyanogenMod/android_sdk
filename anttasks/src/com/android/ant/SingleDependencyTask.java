@@ -17,7 +17,6 @@
 package com.android.ant;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,21 +28,21 @@ import java.util.Set;
 /**
  * A base class for ant tasks that use a single dependency files to control (re)execution.
  */
-public abstract class SingleDependencyTask extends Task {
+public abstract class SingleDependencyTask extends BuildTypedTask {
 
     private DependencyGraph mDependencies;
-    private String mPreviousBuildType;
-    private String mBuildType;
-
-    public void setPreviousBuildType(String previousBuildType) {
-        mPreviousBuildType = previousBuildType;
-    }
-
-    public void setBuildType(String buildType) {
-        mBuildType = buildType;
-    }
 
     protected abstract String getExecTaskName();
+
+    protected interface InputPathFactory {
+        InputPath createPath(File file, Set<String> extensionsToCheck);
+    }
+
+    private final static InputPathFactory sDefaultFactory = new InputPathFactory() {
+        public InputPath createPath(File file, Set<String> extensionsToCheck) {
+            return new InputPath(file, extensionsToCheck);
+        }
+    };
 
     /**
      * Creates a list of {@link InputPath} from a list of {@link File} and an optional list of
@@ -55,11 +54,15 @@ public abstract class SingleDependencyTask extends Task {
      * @return a list of {@link InputPath}
      */
     protected static List<InputPath> getInputPaths(List<File> paths,
-            Set<String> extensionsToCheck) {
+            Set<String> extensionsToCheck, InputPathFactory factory) {
         List<InputPath> result = new ArrayList<InputPath>(paths.size());
 
+        if (factory == null ) {
+            factory = sDefaultFactory;
+        }
+
         for (File f : paths) {
-            result.add(new InputPath(f, extensionsToCheck));
+            result.add(factory.createPath(f, extensionsToCheck));
         }
 
         return result;
@@ -73,7 +76,7 @@ public abstract class SingleDependencyTask extends Task {
      * @return true if the dependency graph was successfully initialized
      */
     protected boolean initDependencies(String dependencyFile, List<InputPath> inputPaths) {
-        if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
+        if (hasBuildTypeChanged()) {
             // we don't care about deps, we need to execute the task no matter what.
             return true;
         }
@@ -93,15 +96,19 @@ public abstract class SingleDependencyTask extends Task {
      *         have changed since the last run
      */
     protected boolean dependenciesHaveChanged() {
-        if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
-            String execName = getExecTaskName();
-            if (execName == null) {
-                System.out.println(
-                        "Current build type is different than previous build: forced task run.");
-            } else {
-                System.out.println(
-                        "Current build type is different than previous build: forced " +
-                        execName + " run.");
+        if (hasBuildTypeChanged()) {
+            // if this is not a new build, display that build type change is forcing running
+            // the task.
+            if (isNewBuild() == false) {
+                String execName = getExecTaskName();
+                if (execName == null) {
+                    System.out.println(
+                            "Current build type is different than previous build: forced task run.");
+                } else {
+                    System.out.println(
+                            "Current build type is different than previous build: forced " +
+                            execName + " run.");
+                }
             }
             return true;
         }

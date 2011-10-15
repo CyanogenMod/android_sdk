@@ -7,7 +7,7 @@
         regular projects, library projects, or test projects.
 
         At the beginning of the file is a list of properties that can be overridden
-        by adding them to your build.properties (properties are immutable, so their
+        by adding them to your ant.properties (properties are immutable, so their
         first definition sticks and is never changed).
 
         Follows:
@@ -23,7 +23,9 @@
         - help target
     -->
 
-    <!-- ********** Overrideable Properties ********** -->
+    <!-- ******************************************************* -->
+    <!-- *************** Overrideable Properties *************** -->
+    <!-- ******************************************************* -->
 
     <!-- You can override these values in your build.xml or build.properties.
          Overriding any other properties may result in broken build. -->
@@ -52,7 +54,9 @@
     <!-- Verbosity -->
     <property name="verbose" value="false" />
 
-    <!-- ********** Custom Tasks ********** -->
+    <!-- ******************************************************* -->
+    <!-- ********************* Custom Tasks ******************** -->
+    <!-- ******************************************************* -->
 
     <!-- jar file from where the tasks are loaded -->
     <path id="android.antlibs">
@@ -74,6 +78,10 @@
 
     <taskdef name="renderscript"
             classname="com.android.ant.RenderScriptTask"
+            classpathref="android.antlibs" />
+
+    <taskdef name="buildconfig"
+            classname="com.android.ant.BuildConfigTask"
             classpathref="android.antlibs" />
 
     <taskdef name="dex"
@@ -106,7 +114,9 @@
     <!-- End of emma configuration -->
 
 
-    <!-- ********** Other Properties ********** -->
+    <!-- ******************************************************* -->
+    <!-- ******************* Other Properties ****************** -->
+    <!-- ******************************************************* -->
     <!-- overriding these properties may break the build
          unless the whole file is updated -->
 
@@ -174,7 +184,9 @@
     <!-- properties for packaging -->
     <property name="build.packaging.nocrunch" value="true" />
 
-    <!-- ********** Macros ********** -->
+    <!-- ******************************************************* -->
+    <!-- ************************ Macros *********************** -->
+    <!-- ******************************************************* -->
 
     <!-- macro to do a task on if project.is.library is false.
          elseText attribute is displayed otherwise -->
@@ -244,9 +256,7 @@
             <dex executable="${dx}"
                     output="${intermediate.dex.file}"
                     nolocals="@{nolocals}"
-                    verbose="${verbose}"
-                    previousBuildType="${build.last.target}"
-                    buildType="${build.target}">
+                    verbose="${verbose}">
                 <path path="${out.dex.input.absolute.dir}"/>
                 <path refid="out.dex.jar.input.ref" />
                 <external-libs />
@@ -351,7 +361,9 @@
         </sequential>
     </macrodef>
 
-    <!-- ********** Build Targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- ******************** Build Targets ******************** -->
+    <!-- ******************************************************* -->
 
     <!-- this target simply force running -setup making
          the project info be read. To be used as
@@ -444,13 +456,12 @@
 
         <!-- read the previous build mode -->
         <property file="${out.build.prop.file}" />
-        <!-- if empty the prop won't be set, so set it to the current target
-             to provide a default value equal to the current build -->
-        <property name="build.last.target" value="${build.target}" />
-        <!-- also set the default value for whether the build is instrumented -->
-        <property name="build.last.is.instrumented" value="${build.is.instrumented}" />
-        <property name="build.last.is.packaging.debug" value="${build.is.packaging.debug}" />
-        <property name="build.last.is.signing.debug" value="${build.is.signing.debug}" />
+        <!-- if empty the props won't be set, meaning it's a new build.
+             To force a build, set the prop to empty values. -->
+        <property name="build.last.target" value="" />
+        <property name="build.last.is.instrumented" value="" />
+        <property name="build.last.is.packaging.debug" value="" />
+        <property name="build.last.is.signing.debug" value="" />
 
         <!-- compile the libraries if any -->
         <if>
@@ -502,20 +513,39 @@
             <path refid="project.libraries.jars" />
         </path>
 
-        <!-- special case for instrumented: if the previous build was
-             instrumented but not this one, clear out the compiled code -->
+        <!-- If the "debug" build type changed, clear out the compiled code.
+             This is to make sure the new BuildConfig.DEBUG value is picked up
+             as javac can't deal with this type of change in its dependency computation. -->
         <if>
             <condition>
                 <and>
-                    <istrue value="${build.last.is.instrumented}" />
-                    <isfalse value="${build.is.instrumented}" />
+                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
+                    <not><equals
+                            arg1="${build.is.packaging.debug}"
+                            arg2="${build.last.is.packaging.debug}" /></not>
                 </and>
             </condition>
             <then>
-                <echo>Switching from instrumented to non-instrumented build.</echo>
-                <echo>Deleting previous compilation output:</echo>
+                <echo>Switching between debug and non debug build: Deleting previous compilation output...</echo>
                 <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
             </then>
+            <else>
+                <!-- Else, we may still need to clean the code, for another reason.
+                     special case for instrumented: if the previous build was
+                     instrumented but not this one, clear out the compiled code -->
+                <if>
+                    <condition>
+                        <and>
+                            <istrue value="${build.last.is.instrumented}" />
+                            <isfalse value="${build.is.instrumented}" />
+                        </and>
+                    </condition>
+                    <then>
+                        <echo>Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
+                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
+                    </then>
+                </if>
+            </else>
         </if>
 
         <echo>Creating output directories if needed...</echo>
@@ -569,6 +599,17 @@
                 <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
             </aapt>
+
+            <echo>----------</echo>
+            <echo>Handling BuildConfig class...</echo>
+            <xpath input="AndroidManifest.xml" expression="/manifest/@package"
+                    output="manifest.package" />
+            <buildconfig
+                    genFolder="${gen.absolute.dir}"
+                    package="${manifest.package}"
+                    buildType="${build.is.packaging.debug}"
+                    previousBuildType="${build.last.is.packaging.debug}"/>
+
         </do-only-if-manifest-hasCode>
     </target>
 
@@ -593,7 +634,7 @@
             </condition>
             <javac encoding="${java.encoding}"
                     source="${java.source}" target="${java.target}"
-                    debug="true" extdirs=""
+                    debug="true" extdirs="" includeantruntime="false"
                     destdir="${out.classes.absolute.dir}"
                     bootclasspathref="android.target.classpath"
                     verbose="${verbose}"
@@ -817,7 +858,9 @@
                 message="Cannot run two different modes at the same time. If you are running more than one debug/release/instrument type targets, call them from different Ant calls." />
     </target>
 
-    <!-- ********** Debug specific targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- **************** Debug specific targets *************** -->
+    <!-- ******************************************************* -->
 
     <target name="-set-debug-files" depends="-set-mode-check">
 
@@ -863,7 +906,9 @@
     </target>
 
 
-    <!-- ********** Release specific targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- *************** Release specific targets ************** -->
+    <!-- ******************************************************* -->
 
     <!-- called through target 'release'. Only executed if the keystore and
          key alias are known but not their password. -->
@@ -974,7 +1019,9 @@
         <record-build-info />
     </target>
 
-    <!-- ********** Instrumented specific targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- ************ Instrumented specific targets ************ -->
+    <!-- ******************************************************* -->
 
     <!-- These targets are specific for the project under test when it
          gets compiled by the test projects in a way that will make it
@@ -1001,7 +1048,9 @@
         <record-build-info />
     </target>
 
-    <!-- ********** Test project specific targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- ************ Test project specific targets ************ -->
+    <!-- ******************************************************* -->
 
     <!-- enable code coverage -->
     <target name="emma">
@@ -1089,7 +1138,9 @@
     </target>
 
 
-    <!-- ********** Install/uninstall specific targets ********** -->
+    <!-- ******************************************************* -->
+    <!-- ********** Install/uninstall specific targets ********* -->
+    <!-- ******************************************************* -->
 
     <target name="install"
                 description="Installs the newly build package. Must be used in conjunction with a build target
@@ -1107,7 +1158,7 @@
                             <resourceexists>
                                 <file file="${out.final.file}"/>
                             </resourceexists>
-                            </condition>
+                        </condition>
                         <then>
                             <echo>Installing ${out.final.file} onto default emulator or device...</echo>
                             <exec executable="${adb}" failonerror="true">
@@ -1197,6 +1248,10 @@
 
     </target>
 
+
+    <!-- ******************************************************* -->
+    <!-- ************************* Help ************************ -->
+    <!-- ******************************************************* -->
 
     <target name="help">
         <!-- displays starts at col 13
