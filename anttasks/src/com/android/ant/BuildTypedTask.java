@@ -41,7 +41,7 @@ public abstract class BuildTypedTask extends Task {
     }
 
     /**
-     * Returns if it is a new build. If the built type is not input
+     * Returns if it is a new build. If the build type is not input
      * from the XML, this always returns true.
      * A build type is defined by having an empty previousBuildType.
      */
