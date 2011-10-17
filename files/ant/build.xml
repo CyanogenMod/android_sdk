@@ -366,7 +366,7 @@
     <!-- ******************************************************* -->
 
     <!-- target to disable building dependencies -->
-    <target name="only">
+    <target name="nodeps">
         <property name="dont.build.deps" value="true" />
     </target>
 
@@ -481,7 +481,7 @@
                 <subant failonerror="true"
                         buildpathref="project.libraries"
                         antfile="build.xml">
-                    <target name="only" />
+                    <target name="nodeps" />
                     <target name="${build.target}" />
                 </subant>
                 <echo></echo>
@@ -1272,14 +1272,14 @@
         <echo>              (tested projects and libraries)at the same time</echo>
         <echo>              using: 'ant all clean'</echo>
         <echo>   debug:     Builds the application and signs it with a debug key.</echo>
-        <echo>              The 'only' target can be used to only build the</echo>
+        <echo>              The 'nodeps' target can be used to only build the</echo>
         <echo>              current project and ignore the libraries using:</echo>
-        <echo>              'ant only debug'</echo>
+        <echo>              'ant nodeps debug'</echo>
         <echo>   release:   Builds the application. The generated apk file must be</echo>
         <echo>              signed before it is published.</echo>
-        <echo>              The 'only' target can be used to only build the</echo>
+        <echo>              The 'nodeps' target can be used to only build the</echo>
         <echo>              current project and ignore the libraries using:</echo>
-        <echo>              'ant only release'</echo>
+        <echo>              'ant nodeps release'</echo>
         <echo>   instrument:Builds an instrumented package and signs it with a</echo>
         <echo>              debug key.</echo>
         <echo>   test:      Runs the tests. Project must be a test project and</echo>
