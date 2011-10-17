@@ -174,7 +174,7 @@ public class GridLayoutPainter {
             if (columnMatch.type == SegmentType.RIGHT) {
                 offsetX -= dragBounds.w;
             } else if (columnMatch.type == SegmentType.CENTER_HORIZONTAL) {
-                offsetX -= dragBounds.centerX();
+                offsetX -= dragBounds.w / 2;
             }
 
             // Draw guidelines for matches
@@ -251,6 +251,7 @@ public class GridLayoutPainter {
             GridModel grid = data.getGrid();
 
             gc.useStyle(DrawingStyle.GUIDELINE);
+            // Paint grid
             for (int row = 1; row < grid.actualRowCount; row++) {
                 int y = grid.getRowY(row);
                 gc.drawLine(b.x, y - radius, b.x2(), y - radius);
@@ -301,14 +302,18 @@ public class GridLayoutPainter {
     }
 
     /**
-     * Paints the structure (the row and column boundaries) of the given GridLayout
+     * Paints the structure (the row and column boundaries) of the given
+     * GridLayout
      *
-     * @param view the instance of the GridLayout whose structure should be painted
+     * @param view the instance of the GridLayout whose structure should be
+     *            painted
      * @param style the drawing style to use for the cell boundaries
      * @param layout the layout element
      * @param gc the graphics context
+     * @return true if the structure was successfully inferred from the view and
+     *         painted
      */
-    public static void paintStructure(Object view, DrawingStyle style, INode layout,
+    public static boolean paintStructure(Object view, DrawingStyle style, INode layout,
             IGraphics gc) {
         Pair<int[],int[]> cellBounds = GridModel.getAxisBounds(view);
         if (cellBounds != null) {
@@ -324,6 +329,10 @@ public class GridLayoutPainter {
                 int x = xs[column] + b.x;
                 gc.drawLine(x, b.y, x, b.y2());
             }
+
+            return true;
+        } else {
+            return false;
         }
     }
 }

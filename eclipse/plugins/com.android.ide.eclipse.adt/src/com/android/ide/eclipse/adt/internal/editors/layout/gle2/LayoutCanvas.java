@@ -1151,6 +1151,7 @@ public class LayoutCanvas extends Canvas {
         mDeleteAction.setEnabled(hasSelection);
         // Select All should *always* be selectable, regardless of whether anything
         // is currently selected.
+        mSelectAllAction.setEnabled(true);
 
         // The paste operation is only available if we can paste our custom type.
         // We do not currently support pasting random text (e.g. XML). Maybe later.

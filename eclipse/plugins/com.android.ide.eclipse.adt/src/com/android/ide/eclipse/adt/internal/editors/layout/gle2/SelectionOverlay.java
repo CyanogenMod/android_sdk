@@ -187,6 +187,11 @@ public class SelectionOverlay extends Overlay {
     /** Called by the canvas when a view is being selected. */
     private void paintSelection(IGraphics gc, GC swtGc, SelectionItem item,
             boolean isMultipleSelection) {
+        CanvasViewInfo view = item.getViewInfo();
+        if (view.isHidden()) {
+            return;
+        }
+
         NodeProxy selectedNode = item.getNode();
         Rect r = selectedNode.getBounds();
         if (!r.isValid()) {
@@ -211,7 +216,6 @@ public class SelectionOverlay extends Overlay {
         gc.drawRect(x1, y1, x2, y2);
 
         // Paint sibling rectangles, if applicable
-        CanvasViewInfo view = item.getViewInfo();
         List<CanvasViewInfo> siblings = view.getNodeSiblings();
         if (siblings != null) {
             for (CanvasViewInfo sibling : siblings) {

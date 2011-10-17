@@ -704,7 +704,11 @@ class GridLayoutConverter {
                 } else {
                     column = index;
                 }
-                assert column >= view.mCol;
+
+                if (column < view.mCol) {
+                    column = view.mCol;
+                }
+
                 view.mColSpan = column - view.mCol + 1;
             }
         }
@@ -756,7 +760,11 @@ class GridLayoutConverter {
                 } else {
                     row = index;
                 }
-                assert row >= view.mRow;
+
+                if (row < view.mRow) {
+                    row = view.mRow;
+                }
+
                 view.mRowSpan = row - view.mRow + 1;
             }
         }
@@ -945,7 +953,8 @@ class GridLayoutConverter {
 
             ElementDescriptor descriptor = child.getUiViewNode().getDescriptor();
             String name = descriptor.getXmlLocalName();
-            if (name.equals(LINEAR_LAYOUT) || name.equals(RELATIVE_LAYOUT)) {
+            if (name.equals(LINEAR_LAYOUT) || name.equals(RELATIVE_LAYOUT)
+                    || name.equals(TABLE_LAYOUT) || name.equals(TABLE_ROW)) {
                 // Don't delete layouts that provide a background image or gradient
                 if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
                     AdtPlugin.log(IStatus.WARNING,
