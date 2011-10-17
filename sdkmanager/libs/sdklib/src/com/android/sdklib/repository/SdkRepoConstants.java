@@ -30,7 +30,8 @@ public class SdkRepoConstants extends RepoConstants {
      *  Valid version numbers are between 1 and this number, included. */
     public static final int NS_LATEST_VERSION = 5;
 
-    /** The URL of the official Google sdk-repository site. */
+    /** The URL of the official Google sdk-repository site.
+     *  The URL ends with a /, allowing easy concatenation. */
     public static final String URL_GOOGLE_SDK_SITE =
         "https://dl-ssl.google.com/android/repository/";                        //$NON-NLS-1$
 
