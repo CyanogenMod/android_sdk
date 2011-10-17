@@ -208,6 +208,26 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
+     * Test parsing output when a status code cannot be parsed
+     */
+    public void testParse_invalidCode() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "android.util.AndroidException: INSTRUMENTATION_FAILED: foo/foo");
+        addLine(output, "INSTRUMENTATION_STATUS: id=ActivityManagerService");
+        addLine(output, "INSTRUMENTATION_STATUS: Error=Unable to find instrumentation target package: foo");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: -1at com.android.commands.am.Am.runInstrument(Am.java:532)");
+        addLine(output, "");
+        addLine(output, "        at com.android.commands.am.Am.run(Am.java:111)");
+        addLineBreak(output);
+
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed((String)EasyMock.anyObject());
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
      * Test parsing output for a test run failure, where an instrumentation component failed to
      * load.
      * <p/>

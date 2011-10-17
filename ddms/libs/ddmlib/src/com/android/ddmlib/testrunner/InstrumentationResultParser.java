@@ -327,7 +327,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                     try {
                         testInfo.mNumTests = Integer.parseInt(statusValue);
                     } catch (NumberFormatException e) {
-                        Log.e(LOG_TAG, "Unexpected integer number of tests, received "
+                        Log.w(LOG_TAG, "Unexpected integer number of tests, received "
                                 + statusValue);
                     }
                 } else if (mCurrentKey.equals(StatusKeys.ERROR)) {
@@ -404,7 +404,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         try {
             testInfo.mCode = Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            Log.e(LOG_TAG, "Expected integer status code, received: " + value);
+            Log.w(LOG_TAG, "Expected integer status code, received: " + value);
+            testInfo.mCode = StatusCodes.ERROR;
         }
         if (testInfo.mCode != StatusCodes.IN_PROGRESS) {
             // this means we're done with current test result bundle
