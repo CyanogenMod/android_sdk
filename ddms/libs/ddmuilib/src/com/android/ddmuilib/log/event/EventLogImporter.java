@@ -47,6 +47,19 @@ public class EventLogImporter {
             readTags(tagReader);
             readLog(eventReader);
         } catch (IOException e) {
+        } finally {
+            if (tagReader != null) {
+                try {
+                    tagReader.close();
+                } catch (IOException ignore) {
+                }
+            }
+            if (eventReader != null) {
+                try {
+                    eventReader.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
     }
 

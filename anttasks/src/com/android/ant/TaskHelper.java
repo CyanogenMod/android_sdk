@@ -59,7 +59,20 @@ final class TaskHelper {
             // tools folder must exist, or this custom task wouldn't run!
             File toolsFolder= new File(sdkFile, SdkConstants.FD_TOOLS);
             File sourceProp = new File(toolsFolder, SdkConstants.FN_SOURCE_PROP);
-            p.load(new FileInputStream(sourceProp));
+
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(sourceProp);
+                p.load(fis);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+
             String value = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (value != null) {
                 return Integer.parseInt(value);

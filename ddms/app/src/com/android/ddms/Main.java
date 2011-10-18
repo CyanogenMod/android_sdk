@@ -144,7 +144,19 @@ public class Main {
             } else {
                 sourceProp = new File("source.properties"); //$NON-NLS-1$
             }
-            p.load(new FileInputStream(sourceProp));
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(sourceProp);
+                p.load(fis);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+
             sRevision = p.getProperty("Pkg.Revision"); //$NON-NLS-1$
             if (sRevision != null && sRevision.length() > 0) {
                 stats.ping("ddms", sRevision);  //$NON-NLS-1$

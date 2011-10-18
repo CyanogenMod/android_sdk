@@ -24,14 +24,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class BugReportImporter {
-    
+
     private final static String TAG_HEADER = "------ EVENT LOG TAGS ------";
     private final static String LOG_HEADER = "------ EVENT LOG ------";
     private final static String HEADER_TAG = "------";
-    
+
     private String[] mTags;
     private String[] mLog;
-    
+
     public BugReportImporter(String filePath) throws FileNotFoundException {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(filePath)));
@@ -45,20 +45,27 @@ public class BugReportImporter {
                 }
             }
         } catch (IOException e) {
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
     }
-    
+
     public String[] getTags() {
         return mTags;
     }
-    
+
     public String[] getLog() {
         return mLog;
     }
 
     private void readTags(BufferedReader reader) throws IOException {
         String line;
-        
+
         ArrayList<String> content = new ArrayList<String>();
         while ((line = reader.readLine()) != null) {
             if (LOG_HEADER.equals(line)) {
@@ -82,8 +89,8 @@ public class BugReportImporter {
                 break;
             }
         }
-        
+
         mLog = content.toArray(new String[content.size()]);
     }
-    
+
 }

@@ -111,7 +111,19 @@ public class AboutPage extends UpdaterPage {
             } else {
                 sourceProp = new File(toolsdir, SdkConstants.FN_SOURCE_PROP);
             }
-            p.load(new FileInputStream(sourceProp));
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(sourceProp);
+                p.load(fis);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+
             String revision = p.getProperty(PkgProps.PKG_REVISION);
             if (revision != null) {
                 return revision;
