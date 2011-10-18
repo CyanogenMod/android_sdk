@@ -167,7 +167,7 @@ public class Lint {
             mToolContext.report(
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL, null), //$NON-NLS-1$
+                    Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL), //$NON-NLS-1$
                     null /*range*/,
                     "Lint canceled by user");
         }

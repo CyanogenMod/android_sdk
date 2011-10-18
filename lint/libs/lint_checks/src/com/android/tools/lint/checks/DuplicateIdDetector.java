@@ -55,7 +55,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             "a single layout (including the case where two separate layouts are fused " +
             "together with an include tag) the ids should be unique such that the" +
             "Activity#findViewById() method can work predictably.",
-            CATEGORY_LAYOUT, 7, Severity.WARNING, null);
+            CATEGORY_LAYOUT, 7, Severity.WARNING);
 
     /** Constructs a duplicate id check */
     public DuplicateIdDetector() {

@@ -41,7 +41,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
             // TODO: OFFER MORE HELP!
             "A LinearLayout which contains an ImageView and a TextView can be more efficiently " +
             "handled as a compound drawable",
-            CATEGORY_PERFORMANCE, 6, Severity.WARNING, null);
+            CATEGORY_PERFORMANCE, 6, Severity.WARNING);
 
     /** Constructs a new {@link UseCompoundDrawableDetector} */
     public UseCompoundDrawableDetector() {

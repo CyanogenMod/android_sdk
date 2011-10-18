@@ -44,6 +44,7 @@ import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -134,19 +135,30 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             IDocument document = sourceViewer.getDocument();
             List<IMarker> markers = AdtUtils.findMarkersOnLine(AdtConstants.MARKER_LINT,
                     file, document, invocationContext.getOffset());
+            List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
             if (markers.size() > 0) {
                 for (IMarker marker : markers) {
                     String id = marker.getAttribute(LintRunner.MARKER_CHECKID_PROPERTY,
                             ""); //$NON-NLS-1$
-                    return new ICompletionProposal[] {
-                            new MoreInfoProposal(id, marker.getAttribute(IMarker.MESSAGE, null)),
-                            new SuppressProposal(id, true /* all */),
-                            // Not yet implemented
-                            //new SuppressProposal(id, false),
-                            new ClearMarkersProposal(file, false /* all */),
-                            new ClearMarkersProposal(file, true /* all */),
-                    };
+                    // TODO: Allow for more than one fix?
+                    ICompletionProposal fix = LintFix.getFix(id, marker);
+                    if (fix != null) {
+                        proposals.add(fix);
+                    }
+
+                    String message = marker.getAttribute(IMarker.MESSAGE, null);
+                    proposals.add(new MoreInfoProposal(id, message));
+
+                    proposals.add(new SuppressProposal(id, true /* all */));
+                    // Not yet implemented
+                    //proposals.add(new SuppressProposal(id, false));
+
+                    proposals.add(new ClearMarkersProposal(file, false /* all */));
+                    proposals.add(new ClearMarkersProposal(file, true /* all */));
                 }
+            }
+            if (proposals.size() > 0) {
+                return proposals.toArray(new ICompletionProposal[proposals.size()]);
             }
         }
 

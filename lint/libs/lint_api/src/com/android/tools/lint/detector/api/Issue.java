@@ -37,11 +37,12 @@ public final class Issue implements Comparable<Issue> {
     private final String mCategory;
     private final int mPriority;
     private final Severity mSeverity;
-    private final String mMoreInfoUrl;
+    private String mMoreInfoUrl;
+    private boolean mEnabledByDefault = true;
 
     // Use factory methods
     private Issue(String id, String description, String explanation, String category, int priority,
-            Severity severity, String moreInfoUrl) {
+            Severity severity) {
         super();
         mId = id;
         mDescription = description;
@@ -49,7 +50,6 @@ public final class Issue implements Comparable<Issue> {
         mCategory = category;
         mPriority = priority;
         mSeverity = severity;
-        mMoreInfoUrl = moreInfoUrl;
     }
 
     /**
@@ -63,13 +63,11 @@ public final class Issue implements Comparable<Issue> {
      * @param priority the priority, a number from 1 to 10 with 10 being most
      *            important/severe
      * @param severity the default severity of the issue
-     * @param moreInfo an (optional) URL string to a resource which provides more
-     *            information
      * @return a new {@link Issue}
      */
     public static Issue create(String id, String description, String explanation, String category,
-            int priority, Severity severity, String moreInfo) {
-        return new Issue(id, description, explanation, category, priority, severity, moreInfo);
+            int priority, Severity severity) {
+        return new Issue(id, description, explanation, category, priority, severity);
     }
 
     /**
@@ -143,6 +141,16 @@ public final class Issue implements Comparable<Issue> {
     }
 
     /**
+     * Returns whether this issue should be enabled by default, unless the user
+     * has explicitly disabled it.
+     *
+     * @return true if this issue should be enabled by default
+     */
+    public boolean isEnabledByDefault() {
+        return mEnabledByDefault;
+    }
+
+    /**
      * Sorts the detectors alphabetically by id. This is intended to make it
      * convenient to store settings for detectors in a fixed order. It is not
      * intended as the order to be shown to the user; for that, a tool embedding
@@ -153,5 +161,27 @@ public final class Issue implements Comparable<Issue> {
      */
     public int compareTo(Issue other) {
         return getId().compareTo(other.getId());
+    }
+
+    /**
+     * Sets a more info URL string
+     *
+     * @param moreInfoUrl url string
+     * @return this, for constructor chaining
+     */
+    public Issue setMoreInfo(String moreInfoUrl) {
+        mMoreInfoUrl = moreInfoUrl;
+        return this;
+    }
+
+    /**
+     * Sets whether this issue is enabled by default.
+     *
+     * @param enabledByDefault whether the issue should be enabled by default
+     * @return this, for constructor chaining
+     */
+    public Issue setEnabledByDefault(boolean enabledByDefault) {
+        mEnabledByDefault = enabledByDefault;
+        return this;
     }
 }

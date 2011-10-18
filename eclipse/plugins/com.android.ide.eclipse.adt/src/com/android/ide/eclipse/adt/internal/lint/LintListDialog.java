@@ -20,6 +20,7 @@ import static com.android.ide.eclipse.adt.internal.lint.LintEclipseContext.MARKE
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
@@ -33,6 +34,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.text.IRegion;
@@ -66,7 +68,9 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 
+@SuppressWarnings("restriction") // WST DOM access
 class LintListDialog extends TitleAreaDialog implements SelectionListener,
         IResourceChangeListener {
     private static final String PROJECT_LOGO_LARGE = "icons/android-64.png"; //$NON-NLS-1$
@@ -101,7 +105,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener,
         container.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         container.setLayout(new GridLayout(2, false));
-        mTableViewer = new TableViewer(container, SWT.BORDER | SWT.FULL_SELECTION);
+        mTableViewer = new TableViewer(container, SWT.BORDER | SWT.MULTI);
         mTable = mTableViewer.getTable();
         mTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 5));
 
@@ -176,8 +180,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener,
 
         if (mTable.getItemCount() > 0) {
             mTable.select(0);
-            IMarker marker = (IMarker) mTable.getItem(0).getData();
-            selectMarker(marker);
+            updateSelectionState();
         }
 
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
@@ -207,6 +210,11 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener,
     }
 
     private void selectMarker(IMarker marker) {
+        if (marker == null) {
+            mDetailsText.setText(""); //$NON-NLS-1$
+            return;
+        }
+
         String id = getId(marker);
         DetectorRegistry registry = LintEclipseContext.getRegistry();
         Issue issue = registry.getIssue(id);
@@ -257,27 +265,75 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener,
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mTable) {
-            TableItem item = (TableItem) e.item;
-            IMarker marker = (IMarker) item.getData();
-            selectMarker(marker);
+            // Enable/disable buttons
+            updateSelectionState();
         } else if (source == mShowButton) {
             int index = mTable.getSelectionIndex();
             if (index != -1) {
                 IMarker marker = (IMarker) mTable.getItem(index).getData();
                 showMarker(marker);
             }
+        } else if (source == mFixButton) {
+            int[] indices = mTable.getSelectionIndices();
+            for (int index : indices) {
+                TableItem tableItem = mTable.getItem(index);
+                IMarker marker = (IMarker) tableItem.getData();
+                LintFix fix = LintFix.getFix(getId(marker), marker);
+                IEditorPart editor = AdtUtils.getActiveEditor();
+                if (editor instanceof AndroidXmlEditor) {
+                    @SuppressWarnings("restriction")
+                    IStructuredDocument doc = ((AndroidXmlEditor) editor).getStructuredDocument();
+                    fix.apply(doc);
+                    if (fix.needsFocus()) {
+                        close();
+                    }
+                } else {
+                    AdtPlugin.log(IStatus.ERROR, "Did not find associated editor to apply fix");
+                }
+            }
         } else if (source == mIgnoreTypeButton) {
-            int index = mTable.getSelectionIndex();
-            if (index != -1) {
-                IMarker marker = (IMarker) mTable.getItem(index).getData();
+            int[] indices = mTable.getSelectionIndices();
+            for (int index : indices) {
+                TableItem tableItem = mTable.getItem(index);
+                IMarker marker = (IMarker) tableItem.getData();
                 String id = getId(marker);
                 if (id != null) {
-                    mTableViewer.setInput(null);
-                    mTableViewer.refresh();
                     LintFixGenerator.suppressDetector(id);
                 }
             }
+            mTableViewer.setInput(null);
+            mTableViewer.refresh();
         }
+    }
+
+    private void updateSelectionState() {
+        TableItem[] selection = mTable.getSelection();
+
+        if (selection.length == 1) {
+            selectMarker((IMarker) selection[0].getData());
+        } else {
+            selectMarker(null);
+        }
+
+        boolean canFix = selection.length > 0;
+        for (TableItem item : selection) {
+            IMarker marker = (IMarker) item.getData();
+            if (!LintFix.hasFix(getId(marker))) {
+                canFix = false;
+                break;
+            }
+
+            // Some fixes cannot be run in bulk
+            if (selection.length > 1) {
+                LintFix fix = LintFix.getFix(getId(marker), marker);
+                if (!fix.isBulkCapable()) {
+                    canFix = false;
+                    break;
+                }
+            }
+        }
+
+        mFixButton.setEnabled(canFix);
     }
 
     public void widgetDefaultSelected(SelectionEvent e) {
@@ -308,6 +364,9 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener,
                     }
                     display.asyncExec(new Runnable() {
                         public void run() {
+                            if (mTable.isDisposed()) {
+                                return;
+                            }
                             mTableViewer.setInput(null);
                             IMarker[] markers = LintEclipseContext.getMarkers(mFile);
                             if (markers.length == 0) {

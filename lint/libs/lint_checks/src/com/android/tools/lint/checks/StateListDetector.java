@@ -42,7 +42,7 @@ public class StateListDetector extends ResourceXmlDetector {
             "In a selector, only the last child in the state list should omit a " +
             "state qualifier. If not, all subsequent items in the list will be ignored " +
             "since the given item will match all.",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING, null);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING);
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {

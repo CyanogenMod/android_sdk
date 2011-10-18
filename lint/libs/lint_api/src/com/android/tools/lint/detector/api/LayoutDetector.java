@@ -34,6 +34,7 @@ public abstract class LayoutDetector extends ResourceXmlDetector {
     protected static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
     protected static final String GALLERY = "Gallery";                    //$NON-NLS-1$
     protected static final String GRID_VIEW = "GridView";                 //$NON-NLS-1$
+    protected static final String EDIT_TEXT = "EditText";                 //$NON-NLS-1$
     protected static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     protected static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
     protected static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
@@ -43,6 +44,12 @@ public abstract class LayoutDetector extends ResourceXmlDetector {
 
     // Attributes
     protected static final String ATTR_ID = "id";                         //$NON-NLS-1$
+    protected static final String ATTR_TEXT = "text";                     //$NON-NLS-1$
+    protected static final String ATTR_LABEL = "label";                   //$NON-NLS-1$
+    protected static final String ATTR_HINT = "hint";                     //$NON-NLS-1$
+    protected static final String ATTR_PROMPT = "prompt";                 //$NON-NLS-1$
+    protected static final String ATTR_INPUT_TYPE = "inputType";          //$NON-NLS-1$
+    protected static final String ATTR_INPUT_METHOD = "inputMethod";      //$NON-NLS-1$
     protected static final String ATTR_LAYOUT_GRAVITY = "layout_gravity"; //$NON-NLS-1$
     protected static final String ATTR_LAYOUT_WIDTH = "layout_width";     //$NON-NLS-1$
     protected static final String ATTR_LAYOUT_HEIGHT = "layout_height";   //$NON-NLS-1$
@@ -56,6 +63,14 @@ public abstract class LayoutDetector extends ResourceXmlDetector {
     protected static final String ATTR_BACKGROUND = "background";         //$NON-NLS-1$
     protected static final String ATTR_ORIENTATION = "orientation";       //$NON-NLS-1$
     protected static final String ATTR_LAYOUT = "layout";                 //$NON-NLS-1$
+    protected static final String ATTR_LAYOUT_ROW = "layout_row";         //$NON-NLS-1$
+    protected static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";//$NON-NLS-1$
+    protected static final String ATTR_LAYOUT_COLUMN = "layout_column";   //$NON-NLS-1$
+    protected static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
+    protected static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
+    protected static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan"; //$NON-NLS-1$
+    protected static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
+
 
     // Attribute values
     protected static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$

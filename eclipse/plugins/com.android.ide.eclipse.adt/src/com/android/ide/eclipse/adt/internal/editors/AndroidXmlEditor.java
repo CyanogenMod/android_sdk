@@ -1293,6 +1293,32 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     /**
+     * Invokes content assist in this editor at the given offset
+     *
+     * @param offset the offset to invoke content assist at, or -1 to leave
+     *            caret alone
+     */
+    public void invokeContentAssist(int offset) {
+        ISourceViewer textViewer = getStructuredSourceViewer();
+        if (textViewer instanceof StructuredTextViewer) {
+            StructuredTextViewer structuredTextViewer = (StructuredTextViewer) textViewer;
+            int operation = ISourceViewer.CONTENTASSIST_PROPOSALS;
+            boolean allowed = structuredTextViewer.canDoOperation(operation);
+            if (allowed) {
+                if (offset != -1) {
+                    StyledText textWidget = textViewer.getTextWidget();
+                    // Clamp text range to valid offsets.
+                    IDocument document = textViewer.getDocument();
+                    int documentLength = document.getLength();
+                    offset = Math.max(0, Math.min(offset, documentLength));
+                    textWidget.setSelection(offset, offset);
+                }
+                structuredTextViewer.doOperation(operation);
+            }
+        }
+    }
+
+    /**
      * Formats the XML region corresponding to the given node.
      *
      * @param node The node to be formatted.

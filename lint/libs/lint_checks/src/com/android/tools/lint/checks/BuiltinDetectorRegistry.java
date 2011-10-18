@@ -41,6 +41,13 @@ public class BuiltinDetectorRegistry extends com.android.tools.lint.api.Detector
         detectors.add(new UseCompoundDrawableDetector());
         detectors.add(new UselessViewDetector());
         detectors.add(new TooManyViewsDetector());
+        detectors.add(new GridLayoutDetector());
+        detectors.add(new TranslationDetector());
+        detectors.add(new HardcodedValuesDetector());
+        detectors.add(new ProguardDetector());
+        detectors.add(new PxUsageDetector());
+        detectors.add(new TextFieldDetector());
+
 
         // TODO: Populate dynamically somehow?
 

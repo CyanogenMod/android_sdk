@@ -220,7 +220,7 @@ public class UnwrapRefactoring extends VisualRefactoring {
     }
 
     @Override
-    VisualRefactoringWizard createWizard() {
+    public VisualRefactoringWizard createWizard() {
         return new UnwrapWizard(this, mEditor);
     }
 

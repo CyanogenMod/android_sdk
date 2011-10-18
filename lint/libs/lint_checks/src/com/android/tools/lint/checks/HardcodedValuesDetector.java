@@ -24,29 +24,33 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Check which looks at the children of ScrollViews and ensures that they fill/match
  * the parent width instead of setting wrap_content.
  */
-public class ScrollViewChildDetector extends LayoutDetector {
+public class HardcodedValuesDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
-            "ScrollViewSize", //$NON-NLS-1$
-            "Checks that ScrollViews use wrap_content in scrolling dimension",
-            // TODO add a better explanation here!
-            "ScrollView children must set their layout_width or layout_height attributes " +
-            "to wrap_content rather than fill_parent or match_parent in the scrolling " +
-            "dimension",
+            "HardcodedText", //$NON-NLS-1$
+            "Looks for hardcoded text attributes which should be converted to resource lookup",
+            "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
+            "\n" +
+            "* When creating configuration variations (for example for landscape or portrait)" +
+            "you have to repeat the actual text (and keep it up to date when making changes)\n" +
+            "\n" +
+            "* The application cannot be translated to other languages by just adding new " +
+            "translations for existing string resources.",
+
             CATEGORY_LAYOUT, 7, Severity.WARNING);
 
-    /** Constructs a new {@link ScrollViewChildDetector} */
-    public ScrollViewChildDetector() {
+    // TODO: Add additional issues here, such as hardcoded colors, hardcoded sizes, etc
+
+    /** Constructs a new {@link HardcodedValuesDetector} */
+    public HardcodedValuesDetector() {
     }
 
     @Override
@@ -65,27 +69,28 @@ public class ScrollViewChildDetector extends LayoutDetector {
     }
 
     @Override
-    public Collection<String> getApplicableElements() {
+    public Collection<String> getApplicableAttributes() {
         return Arrays.asList(new String[] {
-                SCROLL_VIEW,
-                HORIZONTAL_SCROLL_VIEW
+                ATTR_TEXT,
+                ATTR_CONTENT_DESCRIPTION,
+                ATTR_HINT,
+                ATTR_LABEL,
+                ATTR_PROMPT
         });
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
-        List<Element> children = getChildren(element);
-        boolean isHorizontal = HORIZONTAL_SCROLL_VIEW.equals(element.getTagName());
-        String attributeName = isHorizontal ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
-        for (Element child : children) {
-            Attr sizeNode = child.getAttributeNodeNS(ANDROID_URI, attributeName);
-            String value = sizeNode != null ? sizeNode.getValue() : null;
-            if (VALUE_FILL_PARENT.equals(value) || VALUE_MATCH_PARENT.equals(value)) {
-                String msg = String.format("This %1$s should use android:%2$s=\"wrap_content\"",
-                        child.getTagName(), attributeName);
-                context.toolContext.report(ISSUE, context.getLocation(sizeNode),
-                        msg);
+    public void visitAttribute(Context context, Attr attribute) {
+        String value = attribute.getValue();
+        if (value.length() > 0 && (value.charAt(0) != '@' && value.charAt(0) != '?')) {
+            // Make sure this is really one of the android: attributes
+            if (!ANDROID_URI.equals(attribute.getNamespaceURI())) {
+                return;
             }
+
+            context.toolContext.report(ISSUE, context.getLocation(attribute),
+                    String.format("[I18N] Hardcoded string \"%1$s\", should use @string resource",
+                            value));
         }
     }
 }

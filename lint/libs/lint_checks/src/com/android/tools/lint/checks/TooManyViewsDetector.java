@@ -41,7 +41,7 @@ public class TooManyViewsDetector extends LayoutDetector {
             "reducing the number of views in this layout.\n\n" +
             "The maximum view count defaults to 80 but can be configured with the " +
             "environment variable ANDROID_LINT_MAX_VIEW_COUNT.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING, null);
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING);
 
     /** Issue of having too deep hierarchies in layouts */
     public static final Issue TOO_DEEP = Issue.create(
@@ -51,7 +51,7 @@ public class TooManyViewsDetector extends LayoutDetector {
             "Consider using a flatter layout (such as RelativeLayout or GridLayout)." +
             "The default maximum depth is 10 but can be configured with the environment " +
             "variable ANDROID_LINT_MAX_DEPTH.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING, null);
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING);
 
     private static final int MAX_VIEW_COUNT;
     private static final int MAX_DEPTH;

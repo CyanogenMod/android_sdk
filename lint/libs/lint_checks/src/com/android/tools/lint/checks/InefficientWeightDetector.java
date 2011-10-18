@@ -43,7 +43,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             "efficient to assign a width/height of 0dp to it since it will absorb all " +
             "the remaining space anyway. With a declared width/height of 0dp it " +
             "does not have to measure its own size first.",
-            CATEGORY_LAYOUT, 5, Severity.WARNING, null);
+            CATEGORY_LAYOUT, 5, Severity.WARNING);
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {

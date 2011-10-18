@@ -214,40 +214,43 @@ public class Main implements ToolContext {
 
         int startLength = mOutput.length();
 
-        File file = location.getFile();
-        if (file != null) {
-            String path = file.getPath();
-            if (path.startsWith(mCommonPrefix)) {
-                int chop = mCommonPrefix.length();
-                if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
-                    chop++;
+        if (location != null) {
+            File file = location.getFile();
+            if (file != null) {
+                String path = file.getPath();
+                if (path.startsWith(mCommonPrefix)) {
+                    int chop = mCommonPrefix.length();
+                    if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
+                        chop++;
+                    }
+                    path = path.substring(chop);
                 }
-                path = path.substring(chop);
-            }
-            mOutput.append(path);
-            mOutput.append(':');
-        }
-
-        Position startPosition = location.getStart();
-        if (startPosition != null) {
-            int line = startPosition.getLine();
-            if (line >= 0) {
-                // line is 0-based, should display 1-based
-                mOutput.append(Integer.toString(line + 1));
+                mOutput.append(path);
                 mOutput.append(':');
             }
+
+            Position startPosition = location.getStart();
+            if (startPosition != null) {
+                int line = startPosition.getLine();
+                if (line >= 0) {
+                    // line is 0-based, should display 1-based
+                    mOutput.append(Integer.toString(line + 1));
+                    mOutput.append(':');
+                }
+            }
+
+            // Column is not particularly useful here
+            //int column = location.getColumn();
+            //if (column > 0) {
+            //    mOutput.append(Integer.toString(column));
+            //    mOutput.append(':');
+            //}
+
+            if (startLength < mOutput.length()) {
+                mOutput.append(' ');
+            }
         }
 
-        // Column is not particularly useful here
-        //int column = location.getColumn();
-        //if (column > 0) {
-        //    mOutput.append(Integer.toString(column));
-        //    mOutput.append(':');
-        //}
-
-        if (startLength < mOutput.length()) {
-            mOutput.append(' ');
-        }
         mOutput.append(severity.getDescription());
         mOutput.append(':');
         mOutput.append(' ');

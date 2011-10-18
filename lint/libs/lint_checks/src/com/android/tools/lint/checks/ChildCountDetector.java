@@ -40,7 +40,7 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that ScrollViews have exactly one child widget",
             "ScrollViews can only have one child widget. If you want more children, wrap them " +
             "in a container layout.",
-            CATEGORY_LAYOUT, 8, Severity.WARNING, null);
+            CATEGORY_LAYOUT, 8, Severity.WARNING);
 
     /** The main issue discovered by this detector */
     public static final Issue ADAPTERVIEW_ISSUE = Issue.create(
@@ -48,8 +48,8 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that AdapterViews do not define their children in XML",
             "AdapterViews such as ListViews must be configured with data from Java code, " +
             "such as a ListAdapter.",
-            CATEGORY_LAYOUT, 8, Severity.WARNING,
-            "http://developer.android.com/reference/android/widget/AdapterView.html"); //$NON-NLS-1$
+            CATEGORY_LAYOUT, 8, Severity.WARNING).setMoreInfo(
+                "http://developer.android.com/reference/android/widget/AdapterView.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link ChildCountDetector} */
     public ChildCountDetector() {

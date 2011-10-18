@@ -120,7 +120,7 @@ class XmlVisitor {
                 context.toolContext.report(
                         // Must provide an issue since API guarantees that the issue parameter
                         // is valid
-                        Issue.create("dummy", "", "", "", 0, Severity.ERROR, null), //$NON-NLS-1$
+                        Issue.create("dummy", "", "", "", 0, Severity.ERROR), //$NON-NLS-1$
                         new Location(file, null, null),
                         "Skipped file because it contains parsing errors");
                 return;

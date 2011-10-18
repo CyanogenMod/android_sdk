@@ -60,9 +60,11 @@ public class LayoutConstants {
     public static final String GESTURE_OVERLAY_VIEW = "GestureOverlayView";//$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
 
+    public static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
     public static final String ATTR_TEXT = "text";                      //$NON-NLS-1$
     public static final String ATTR_HINT = "hint";                      //$NON-NLS-1$
     public static final String ATTR_ID = "id";                          //$NON-NLS-1$
+    public static final String ATTR_INPUT_TYPE = "inputType";           //$NON-NLS-1$
     public static final String ATTR_STYLE = "style";                    //$NON-NLS-1$
     public static final String ATTR_HANDLE = "handle";                  //$NON-NLS-1$
     public static final String ATTR_CONTENT = "content";                //$NON-NLS-1$
@@ -109,10 +111,8 @@ public class LayoutConstants {
     // GridLayout layout params
     public static final String ATTR_LAYOUT_ROW = "layout_row";                      //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";             //$NON-NLS-1$
-    //public static final String ATTR_LAYOUT_ROW_WEIGHT = "layout_rowWeight";         //$NON-NLS-1$
     public static final String ATTR_LAYOUT_COLUMN = "layout_column";                //$NON-NLS-1$
     public static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan";       //$NON-NLS-1$
-    //public static final String ATTR_LAYOUT_COLUMN_WEIGHT = "layout_columnWeight";   //$NON-NLS-1$
 
     public static final String ATTR_LAYOUT_Y = "layout_y";                      //$NON-NLS-1$
     public static final String ATTR_LAYOUT_X = "layout_x";                      //$NON-NLS-1$
