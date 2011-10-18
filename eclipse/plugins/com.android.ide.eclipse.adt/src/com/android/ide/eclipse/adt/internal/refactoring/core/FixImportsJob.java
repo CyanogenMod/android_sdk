@@ -16,12 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.refactoring.core;
 
-import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -81,7 +80,9 @@ public class FixImportsJob extends WorkspaceJob {
         if (javaProject == null || !javaProject.isOpen()) {
             return Status.CANCEL_STATUS;
         }
-        ProjectHelper.build(project, monitor);
+
+        project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+
         IMarker[] markers = project.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
         for (int i = 0; i < markers.length; i++) {
             IMarker marker = markers[i];

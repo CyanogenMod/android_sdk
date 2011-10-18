@@ -36,6 +36,7 @@ import com.android.sdklib.xml.AndroidManifest;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -80,8 +81,10 @@ public final class ExportHelper {
 
         // the export, takes the output of the precompiler & Java builders so it's
         // important to call build in case the auto-build option of the workspace is disabled.
-        // Also enable post compilation and dependency building
-        ProjectHelper.build(project, monitor, true, true);
+        // Also enable dependency building to make sure everything is up to date.
+        // However do not package the APK since we're going to do it manually here, using a
+        // different output location.
+        ProjectHelper.compileInReleaseMode(project, monitor);
 
         // if either key or certificate is null, ensure the other is null.
         if (key == null) {
@@ -254,6 +257,11 @@ public final class ExportHelper {
         } catch (Exception e) {
             throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
                     "Failed to export application", e));
+        } finally {
+            // move back to a debug build.
+            // By using a normal build, we'll simply rebuild the debug version, and let the
+            // builder decide whether to build the full package or not.
+            ProjectHelper.buildWithDeps(project, IncrementalProjectBuilder.FULL_BUILD, monitor);
         }
     }
 

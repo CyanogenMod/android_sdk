@@ -19,11 +19,13 @@ package com.android.ide.eclipse.adt.internal.project;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.builders.PostCompilerBuilder;
+import com.android.ide.eclipse.adt.internal.build.builders.PreCompilerBuilder;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.ManifestData;
 import com.android.util.Pair;
 
+import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -47,6 +49,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.JavaRuntime;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -658,6 +661,15 @@ public final class ProjectHelper {
         return defaultValue;
     }
 
+    public static Boolean loadBooleanProperty(IResource resource, String propertyName) {
+        String value = loadStringProperty(resource, propertyName);
+        if (value != null) {
+            return Boolean.valueOf(value);
+        }
+
+        return null;
+    }
+
     /**
      * Saves the path of a resource into the persistent storage of a resource.
      * @param resource The resource into which the resource path is saved.
@@ -827,64 +839,127 @@ public final class ProjectHelper {
     }
 
     /**
-     * Build project incrementally. If fullBuild is not set, then the packaging steps in
-     * the post compiler are skipped. (Though resource deltas are still processed).
+     * Does a full release build of the application, including the libraries. Do not build the
+     * package.
      *
      * @param project The project to be built.
      * @param monitor A eclipse runtime progress monitor to be updated by the builders.
-     * @param fullBuild Set whether to
-     * run the packaging (dexing and building apk) steps of the
-     *                  post compiler.
-     * @param buildDeps Set whether to run builders on the dependencies of the project
      * @throws CoreException
      */
-    public static void build(IProject project, IProgressMonitor monitor,
-                             boolean fullBuild, boolean buildDeps)
-                            throws CoreException {
+    @SuppressWarnings("unchecked")
+    public static void compileInReleaseMode(IProject project, IProgressMonitor monitor)
+            throws CoreException {
         // Get list of projects that we depend on
         List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
-        if (buildDeps) {
-            try {
-                androidProjectList = getAndroidProjectDependencies(
-                                        BaseProjectHelper.getJavaProject(project));
-            } catch (JavaModelException e) {
-                AdtPlugin.printErrorToConsole(project, e);
+        try {
+            androidProjectList = getAndroidProjectDependencies(
+                    BaseProjectHelper.getJavaProject(project));
+
+        } catch (JavaModelException e) {
+            AdtPlugin.printErrorToConsole(project, e);
+        }
+
+        // Recursively build dependencies
+        for (IJavaProject dependency : androidProjectList) {
+            IProject libProject = dependency.getProject();
+            compileInReleaseMode(libProject, monitor);
+
+            // force refresh of the dependency.
+            libProject.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+        }
+
+        // do a full build on all the builders to guarantee that the builders are called.
+        // (Eclipse does an optimization where builders are not called if there aren't any
+        // deltas).
+
+        ICommand[] commands = project.getDescription().getBuildSpec();
+        for (ICommand command : commands) {
+            String name = command.getBuilderName();
+            if (PreCompilerBuilder.ID.equals(name)) {
+                Map newArgs = new HashMap();
+                newArgs.put(PreCompilerBuilder.RELEASE_REQUESTED, "");
+                if (command.getArguments() != null) {
+                    newArgs.putAll(command.getArguments());
+                }
+
+                project.build(IncrementalProjectBuilder.FULL_BUILD,
+                        PreCompilerBuilder.ID, newArgs, monitor);
+            } else if (PostCompilerBuilder.ID.equals(name)) {
+                // skip...
+            } else {
+                project.build(IncrementalProjectBuilder.FULL_BUILD, name,
+                        command.getArguments(), monitor);
             }
-            // Recursively build dependencies
-            for (IJavaProject dependency : androidProjectList) {
-                build(dependency.getProject(), monitor, fullBuild, true);
-            }
+        }
+    }
+
+    /**
+     * Force building the project and all its dependencies.
+     *
+     * @param project the project to build
+     * @param kind the build kind
+     * @param monitor
+     * @throws CoreException
+     */
+    public static void buildWithDeps(IProject project, int kind, IProgressMonitor monitor)
+            throws CoreException {
+        // Get list of projects that we depend on
+        List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
+        try {
+            androidProjectList = getAndroidProjectDependencies(
+                    BaseProjectHelper.getJavaProject(project));
+
+        } catch (JavaModelException e) {
+            AdtPlugin.printErrorToConsole(project, e);
+        }
+
+        // Recursively build dependencies
+        for (IJavaProject dependency : androidProjectList) {
+            buildWithDeps(dependency.getProject(), kind, monitor);
+        }
+
+        project.build(kind, monitor);
+    }
+
+
+    /**
+     * Build project incrementally, including making the final packaging even if it is disabled
+     * by default.
+     *
+     * @param project The project to be built.
+     * @param monitor A eclipse runtime progress monitor to be updated by the builders.
+     * @throws CoreException
+     */
+    public static void doFullIncrementalDebugBuild(IProject project, IProgressMonitor monitor)
+            throws CoreException {
+        // Get list of projects that we depend on
+        List<IJavaProject> androidProjectList = new ArrayList<IJavaProject>();
+        try {
+            androidProjectList = getAndroidProjectDependencies(
+                                    BaseProjectHelper.getJavaProject(project));
+        } catch (JavaModelException e) {
+            AdtPlugin.printErrorToConsole(project, e);
+        }
+        // Recursively build dependencies
+        for (IJavaProject dependency : androidProjectList) {
+            doFullIncrementalDebugBuild(dependency.getProject(), monitor);
         }
 
         // Do an incremental build to pick up all the deltas
         project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
 
         // If the preferences indicate not to use post compiler optimization
-        // then the incremental build will have done everything necessary
-        if (fullBuild && AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
+        // then the incremental build will have done everything necessary, otherwise,
+        // we have to run the final builder manually (if requested).
+        if (AdtPrefs.getPrefs().getBuildSkipPostCompileOnFileSave()) {
             // Create the map to pass to the PostC builder
             Map<String, String> args = new TreeMap<String, String>();
             args.put(PostCompilerBuilder.POST_C_REQUESTED, ""); //$NON-NLS-1$
-            // Get Post Compiler for this project
+
+            // call the post compiler manually, forcing FULL_BUILD otherwise Eclipse won't
+            // call the builder since the delta is empty.
             project.build(IncrementalProjectBuilder.FULL_BUILD,
                           PostCompilerBuilder.ID, args, monitor);
         }
-    }
-
-    /**
-     * Build the project incrementally. Post compilation step will not occur.
-     * Projects that this project depends on will not be built.
-     * This is equivalent to calling
-     * <code>build(project, monitor, false, false)</code>
-     *
-     * @param project The project to be built.
-     * @param monitor A eclipse runtime progress monitor to be updated by the builders.
-     * @throws CoreException
-     * @see #build(IProject, IProgressMonitor, boolean)
-     */
-    public static void build(IProject project, IProgressMonitor monitor)
-                             throws CoreException {
-        // Disable full building by default
-        build(project, monitor, false, false);
     }
 }
