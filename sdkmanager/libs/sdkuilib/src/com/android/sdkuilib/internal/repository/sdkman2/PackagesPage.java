@@ -16,6 +16,7 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
@@ -306,7 +307,7 @@ public class PackagesPage extends UpdaterPage
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
                 boolean selectNew = e.text == null || e.text.equals(strLinkNew);
-                onSelectNewUpdates(selectNew, !selectNew);
+                onSelectNewUpdates(selectNew, !selectNew, false/*selectTop*/);
             }
         });
 
@@ -629,7 +630,10 @@ public class PackagesPage extends UpdaterPage
                                 // automatically select all new and update packages.
                                 Object[] checked = mTreeViewer.getCheckedElements();
                                 if (checked == null || checked.length == 0) {
-                                    onSelectNewUpdates(true, true);
+                                    onSelectNewUpdates(
+                                            false, //selectNew
+                                            true,  //selectUpdates,
+                                            true); //selectTop
                                 }
                             }
                         }
@@ -879,11 +883,16 @@ public class PackagesPage extends UpdaterPage
     }
 
     /**
-     * Checks all PkgItems that are either new or have updates.
+     * Checks all PkgItems that are either new or have updates or select top platform
+     * for initial run.
      */
-    private void onSelectNewUpdates(boolean selectNew, boolean selectUpdates) {
+    private void onSelectNewUpdates(boolean selectNew, boolean selectUpdates, boolean selectTop) {
         // This does not update the tree itself, syncViewerSelection does it below.
-        mDiffLogic.checkNewUpdateItems(selectNew, selectUpdates);
+        mDiffLogic.checkNewUpdateItems(
+                selectNew,
+                selectUpdates,
+                selectTop,
+                SdkConstants.CURRENT_PLATFORM);
         syncViewerSelection();
         updateButtonsState();
     }
