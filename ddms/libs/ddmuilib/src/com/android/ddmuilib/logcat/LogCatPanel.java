@@ -714,19 +714,38 @@ public final class LogCatPanel extends SelectionDependentPanel
         });
     }
 
-    private void refreshLogCatTable() {
-        Display.getDefault().asyncExec(new Runnable() {
-            public void run() {
-                if (mViewer.getTable().isDisposed()) {
-                    return;
-                }
-                mViewer.refresh();
+    /** Task currently submitted to {@link Display#asyncExec} to be run in UI thread. */
+    private LogCatTableRefresherTask mCurrentRefresher;
 
-                if (shouldScrollToLatestLog()) {
-                    scrollToLatestLog();
-                }
+    /**
+     * Refresh the logcat table asynchronously from the UI thread.
+     * This method adds a new async refresh only if there are no pending refreshes for the table.
+     * Doing so eliminates redundant refresh threads from being queued up to be run on the
+     * display thread.
+     */
+    private void refreshLogCatTable() {
+        synchronized (this) {
+            if (mCurrentRefresher == null) {
+                mCurrentRefresher = new LogCatTableRefresherTask();
+                Display.getDefault().asyncExec(mCurrentRefresher);
             }
-        });
+        }
+    }
+
+    private class LogCatTableRefresherTask implements Runnable {
+        public void run() {
+            if (mViewer.getTable().isDisposed()) {
+                return;
+            }
+            synchronized (LogCatPanel.this) {
+                mCurrentRefresher = null;
+            }
+            mViewer.refresh();
+
+            if (shouldScrollToLatestLog()) {
+                scrollToLatestLog();
+            }
+        }
     }
 
     /** Scroll to the last line. */
