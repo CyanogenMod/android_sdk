@@ -26,7 +26,7 @@ import java.io.InputStream;
 public class RepoConstants {
 
     /** An extra package. */
-    public static final String NODE_EXTRA           = "extra";                //$NON-NLS-1$
+    public static final String NODE_EXTRA         = "extra";                    //$NON-NLS-1$
 
     /** The license definition. */
     public static final String NODE_LICENSE       = "license";                  //$NON-NLS-1$
@@ -78,6 +78,9 @@ public class RepoConstants {
 
     /** The path segment, a string, for extra packages. */
     public static final String NODE_PATH      = "path";                         //$NON-NLS-1$
+
+    /** The old_path segments, a string, for extra packages. */
+    public static final String NODE_OLD_PATHS = "old_paths";                    //$NON-NLS-1$
 
     /** The archives container, for all packages. */
     public static final String NODE_ARCHIVES = "archives";                      //$NON-NLS-1$

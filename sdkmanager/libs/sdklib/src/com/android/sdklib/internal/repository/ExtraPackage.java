@@ -41,6 +41,7 @@ public class ExtraPackage extends MinToolsPackage
     implements IMinApiLevelDependency {
 
     static final String PROP_PATH          = "Extra.Path";         //$NON-NLS-1$
+    static final String PROP_OLD_PATHS     = "Extra.OldPaths";     //$NON-NLS-1$
     static final String PROP_VENDOR        = "Extra.Vendor";       //$NON-NLS-1$
     static final String PROP_MIN_API_LEVEL = "Extra.MinApiLevel";  //$NON-NLS-1$
     static final String PROP_PROJECT_FILES = "Extra.ProjectFiles"; //$NON-NLS-1$
@@ -60,6 +61,12 @@ public class ExtraPackage extends MinToolsPackage
      * rules as {@link #mVendor}.
      */
     private final String mPath;
+
+    /**
+     * The optional old_paths, if any. If present, this is a list of old "path" values that
+     * we'd like to migrate to the current "path" name for this extra.
+     */
+    private final String mOldPaths;
 
     /**
      * The minimal API level required by this extra package, if > 0,
@@ -94,6 +101,8 @@ public class ExtraPackage extends MinToolsPackage
 
         mProjectFiles = parseProjectFiles(
                 XmlParserUtils.getFirstChild(packageNode, RepoConstants.NODE_PROJECT_FILES));
+
+        mOldPaths = XmlParserUtils.getXmlString(packageNode, RepoConstants.NODE_OLD_PATHS);
     }
 
     private String[] parseProjectFiles(Node projectFilesNode) {
@@ -193,6 +202,8 @@ public class ExtraPackage extends MinToolsPackage
         // The path argument comes before whatever could be in the properties
         mPath   = path != null ? path : getProperty(props, PROP_PATH, path);
 
+        mOldPaths = getProperty(props, PROP_OLD_PATHS, null);
+
         mMinApiLevel = Integer.parseInt(
             getProperty(props, PROP_MIN_API_LEVEL, Integer.toString(MIN_API_LEVEL_NOT_SPECIFIED)));
 
@@ -236,6 +247,10 @@ public class ExtraPackage extends MinToolsPackage
             }
             props.setProperty(PROP_PROJECT_FILES, sb.toString());
         }
+
+        if (mOldPaths != null && mOldPaths.length() > 0) {
+            props.setProperty(PROP_OLD_PATHS, mOldPaths);
+        }
     }
 
     /**
@@ -262,6 +277,24 @@ public class ExtraPackage extends MinToolsPackage
      */
     public String[] getProjectFiles() {
         return mProjectFiles;
+    }
+
+    /**
+     * Returns the old_paths, a list of obsolete path names for the extra package.
+     * <p/>
+     * These can be used by the installer to migrate an extra package using one of the
+     * old paths into the new path.
+     * <p/>
+     * These can also be used to recognize "old" renamed packages as the same as
+     * the current one.
+     *
+     * @return A list of old paths. Can be empty but not null.
+     */
+    public String[] getOldPaths() {
+        if (mOldPaths == null || mOldPaths.length() == 0) {
+            return new String[0];
+        }
+        return mOldPaths.split(";");  //$NON-NLS-1$
     }
 
     /**
@@ -499,33 +532,61 @@ public class ExtraPackage extends MinToolsPackage
         if (pkg instanceof ExtraPackage) {
             ExtraPackage ep = (ExtraPackage) pkg;
 
-            // To be backward compatible, we need to support the old vendor-path form
-            // in either the current or the remote package.
-            //
-            // The vendor test below needs to account for an old installed package
-            // (e.g. with an install path of vendor-name) that has then beeen updated
-            // in-place and thus when reloaded contains the vendor name in both the
-            // path and the vendor attributes.
-            if (ep.mPath != null && mPath != null && mVendor != null) {
-                if (ep.mPath.equals(mVendor + "-" + mPath) &&  //$NON-NLS-1$
-                        (ep.mVendor == null || ep.mVendor.length() == 0
-                                || ep.mVendor.equals(mVendor))) {
-                    return true;
-                }
-            }
-            if (mPath != null && ep.mPath != null && ep.mVendor != null) {
-                if (mPath.equals(ep.mVendor + "-" + ep.mPath) &&  //$NON-NLS-1$
-                        (mVendor == null || mVendor.length() == 0 || mVendor.equals(ep.mVendor))) {
+            String[] epOldPaths = ep.getOldPaths();
+            int lenEpOldPaths = epOldPaths.length;
+            for (int indexEp = -1; indexEp < lenEpOldPaths; indexEp++) {
+                if (sameVendorAndPath(
+                        mVendor,    mPath,
+                        ep.mVendor, indexEp   < 0 ? ep.mPath : epOldPaths[indexEp])) {
                     return true;
                 }
             }
 
-
-            if (!mPath.equals(ep.mPath)) {
-                return false;
+            String[] thisOldPaths = getOldPaths();
+            int lenThisOldPaths = thisOldPaths.length;
+            for (int indexThis = -1; indexThis < lenThisOldPaths; indexThis++) {
+                if (sameVendorAndPath(
+                        mVendor,    indexThis < 0 ? mPath    : thisOldPaths[indexThis],
+                        ep.mVendor, ep.mPath)) {
+                    return true;
+                }
             }
-            if ((mVendor == null && ep.mVendor == null) ||
-                (mVendor != null && mVendor.equals(ep.mVendor))) {
+        }
+
+        return false;
+    }
+
+    private static boolean sameVendorAndPath(
+            String thisVendor, String thisPath,
+            String otherVendor, String otherPath) {
+        // To be backward compatible, we need to support the old vendor-path form
+        // in either the current or the remote package.
+        //
+        // The vendor test below needs to account for an old installed package
+        // (e.g. with an install path of vendor-name) that has then been updated
+        // in-place and thus when reloaded contains the vendor name in both the
+        // path and the vendor attributes.
+        if (otherPath != null && thisPath != null && thisVendor != null) {
+            if (otherPath.equals(thisVendor + '-' + thisPath) &&
+                    (otherVendor == null ||
+                     otherVendor.length() == 0 ||
+                     otherVendor.equals(thisVendor))) {
+                return true;
+            }
+        }
+        if (thisPath != null && otherPath != null && otherVendor != null) {
+            if (thisPath.equals(otherVendor + '-' + otherPath) &&
+                    (thisVendor == null ||
+                     thisVendor.length() == 0 ||
+                     thisVendor.equals(otherVendor))) {
+                return true;
+            }
+        }
+
+
+        if (thisPath != null && thisPath.equals(otherPath)) {
+            if ((thisVendor == null && otherVendor == null) ||
+                (thisVendor != null && thisVendor.equals(otherVendor))) {
                 return true;
             }
         }

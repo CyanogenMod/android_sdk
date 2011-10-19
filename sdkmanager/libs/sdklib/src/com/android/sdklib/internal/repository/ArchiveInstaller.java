@@ -45,18 +45,24 @@ public class ArchiveInstaller {
     public static final int NUM_MONITOR_INC = 100;
 
     /**
-     * Install this {@link ArchiveInstaller}s.
-     * The archive will be skipped if it is incompatible.
+     * Install this {@link ArchiveReplacement}s.
+     * A "replacement" is composed of the actual new archive to install
+     * (c.f. {@link ArchiveReplacement#getNewArchive()} and an <em>optional</em>
+     * archive being replaced (c.f. {@link ArchiveReplacement#getReplaced()}.
+     * In the case of a new install, the later should be null.
+     * <p/>
+     * The new archive to install will be skipped if it is incompatible.
      *
      * @return True if the archive was installed, false otherwise.
      */
-    public boolean install(Archive archive,
+    public boolean install(ArchiveReplacement archiveInfo,
             String osSdkRoot,
             boolean forceHttp,
             SdkManager sdkManager,
             ITaskMonitor monitor) {
 
-        Package pkg = archive.getParentPackage();
+        Archive newArchive = archiveInfo.getNewArchive();
+        Package pkg = newArchive.getParentPackage();
 
         File archiveFile = null;
         String name = pkg.getShortDescription();
@@ -68,25 +74,25 @@ public class ArchiveInstaller {
             return false;
         }
 
-        if (archive.isLocal()) {
+        if (newArchive.isLocal()) {
             // This should never happen.
             monitor.log("Skipping already installed archive: %1$s for %2$s",
                     name,
-                    archive.getOsDescription());
+                    newArchive.getOsDescription());
             return false;
         }
 
-        if (!archive.isCompatible()) {
+        if (!newArchive.isCompatible()) {
             monitor.log("Skipping incompatible archive: %1$s for %2$s",
                     name,
-                    archive.getOsDescription());
+                    newArchive.getOsDescription());
             return false;
         }
 
-        archiveFile = downloadFile(archive, osSdkRoot, monitor, forceHttp);
+        archiveFile = downloadFile(newArchive, osSdkRoot, monitor, forceHttp);
         if (archiveFile != null) {
             // Unarchive calls the pre/postInstallHook methods.
-            if (unarchive(archive, osSdkRoot, archiveFile, sdkManager, monitor)) {
+            if (unarchive(archiveInfo, osSdkRoot, archiveFile, sdkManager, monitor)) {
                 monitor.log("Installed %1$s", name);
                 // Delete the temp archive if it exists, only on success
                 OsHelper.deleteFileOrFolder(archiveFile);
@@ -382,13 +388,14 @@ public class ArchiveInstaller {
     /**
      * Install the given archive in the given folder.
      */
-    private boolean unarchive(Archive archive,
+    private boolean unarchive(ArchiveReplacement archiveInfo,
             String osSdkRoot,
             File archiveFile,
             SdkManager sdkManager,
             ITaskMonitor monitor) {
         boolean success = false;
-        Package pkg = archive.getParentPackage();
+        Archive newArchive = archiveInfo.getNewArchive();
+        Package pkg = newArchive.getParentPackage();
         String pkgName = pkg.getShortDescription();
         monitor.setDescription("Installing %1$s", pkgName);
         monitor.log("Installing %1$s", pkgName);
@@ -436,7 +443,7 @@ public class ArchiveInstaller {
                 return false;
             }
 
-            if (!pkg.preInstallHook(archive, monitor, osSdkRoot, destFolder)) {
+            if (!pkg.preInstallHook(newArchive, monitor, osSdkRoot, destFolder)) {
                 monitor.log("Skipping archive: %1$s", pkgName);
                 return false;
             }
@@ -493,18 +500,34 @@ public class ArchiveInstaller {
                 return false;
             }
 
-            if (!unzipFolder(archiveFile, archive.getSize(), destFolder, pkgName, monitor)) {
+            if (!unzipFolder(archiveFile, newArchive.getSize(), destFolder, pkgName, monitor)) {
                 return false;
             }
 
-            if (!generateSourceProperties(archive, destFolder)) {
+            if (!generateSourceProperties(newArchive, destFolder)) {
                 monitor.logError("Failed to generate source.properties in directory %1$s",
                         destFolder.getPath());
                 return false;
             }
 
+            // In case of success, if we were replacing an archive
+            // and the older one had a different path, remove it now.
+            Archive oldArchive = archiveInfo.getReplaced();
+            if (oldArchive != null && oldArchive.isLocal()) {
+                String oldPath = oldArchive.getLocalOsPath();
+                File oldFolder = oldPath == null ? null : new File(oldPath);
+                if (oldFolder == null && oldArchive.getParentPackage() != null) {
+                    oldFolder = oldArchive.getParentPackage().getInstallFolder(
+                            osSdkRoot, sdkManager);
+                }
+                if (oldFolder != null && oldFolder.exists() && !oldFolder.equals(destFolder)) {
+                    monitor.logVerbose("Removing old archive at %1$s", oldFolder.getAbsolutePath());
+                    OsHelper.deleteFileOrFolder(oldFolder);
+                }
+            }
+
             success = true;
-            pkg.postInstallHook(archive, monitor, destFolder);
+            pkg.postInstallHook(newArchive, monitor, destFolder);
             return true;
 
         } finally {
@@ -516,7 +539,7 @@ public class ArchiveInstaller {
 
                 // We also call the postInstallHool with a null directory to give a chance
                 // to the archive to cleanup after preInstallHook.
-                pkg.postInstallHook(archive, monitor, null /*installDir*/);
+                pkg.postInstallHook(newArchive, monitor, null /*installDir*/);
             }
 
             // Cleanup if the unzip folder is still set.

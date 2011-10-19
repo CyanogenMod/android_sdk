@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository;
 
+import com.android.annotations.Nullable;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -110,29 +112,48 @@ public class SdkRepositoryTest extends TestCase {
 
     // --- Helpers ------------
 
-    /** Helper method that returns a validator for our Repository XSD */
-    private Validator getRepoValidator(int version, CaptureErrorHandler handler)
+    /**
+     * Helper method that returns a validator for our Repository XSD
+     *
+     * @param version The versoion number, in range {@code 1..NS_LATEST_VERSION}
+     * @param handler A {@link CaptureErrorHandler}. If null the default will be used,
+     *   which will most likely print errors to stderr.
+     */
+    private Validator getRepoValidator(int version, @Nullable CaptureErrorHandler handler)
             throws SAXException {
+        Validator validator = null;
         InputStream xsdStream = SdkRepoConstants.getXsdStream(version);
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(new StreamSource(xsdStream));
-        Validator validator = schema.newValidator();
-        if (handler != null) {
-            validator.setErrorHandler(handler);
+        if (xsdStream != null) {
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(new StreamSource(xsdStream));
+            validator = schema.newValidator();
+
+            if (handler != null) {
+                validator.setErrorHandler(handler);
+            }
         }
 
         return validator;
     }
 
-    /** Helper method that returns a validator for our Addon XSD */
-    private Validator getAddonValidator(int version, CaptureErrorHandler handler)
+    /**
+     * Helper method that returns a validator for our Addon XSD
+     *
+     * @param version The versoion number, in range {@code 1..NS_LATEST_VERSION}
+     * @param handler A {@link CaptureErrorHandler}. If null the default will be used,
+     *   which will most likely print errors to stderr.
+     */
+    private Validator getAddonValidator(int version, @Nullable CaptureErrorHandler handler)
             throws SAXException {
+        Validator validator = null;
         InputStream xsdStream = SdkAddonConstants.getXsdStream(version);
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(new StreamSource(xsdStream));
-        Validator validator = schema.newValidator();
-        if (handler != null) {
-            validator.setErrorHandler(handler);
+        if (xsdStream != null) {
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(new StreamSource(xsdStream));
+            validator = schema.newValidator();
+            if (handler != null) {
+                validator.setErrorHandler(handler);
+            }
         }
 
         return validator;
@@ -148,6 +169,22 @@ public class SdkRepositoryTest extends TestCase {
     }
 
     // --- Tests ------------
+
+    /** Validates that NS_LATEST_VERSION points to the max avaialble XSD schema. */
+    public void testRepoLatestVersionNumber() throws Exception {
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+
+        // There should be a schema matching NS_LATEST_VERSION
+        assertNotNull(getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION, handler));
+
+        // There should NOT be a schema with NS_LATEST_VERSION+1
+        assertNull(
+                String.format(
+                        "There's a REPO XSD at version %d but SdkRepoConstants.NS_LATEST_VERSION is still set to %d.",
+                        SdkRepoConstants.NS_LATEST_VERSION + 1,
+                        SdkRepoConstants.NS_LATEST_VERSION),
+                getRepoValidator(SdkRepoConstants.NS_LATEST_VERSION + 1, handler));
+    }
 
     /** Validate a valid sample using namespace version 1 using an InputStream */
     public void testValidateLocalRepositoryFile1() throws Exception {
@@ -195,6 +232,24 @@ public class SdkRepositoryTest extends TestCase {
         Validator validator = getRepoValidator(4, handler);
         validator.validate(source);
         handler.verify();
+    }
+
+    // ---
+
+    /** Validates that NS_LATEST_VERSION points to the max avaialble XSD schema. */
+    public void testAddonLatestVersionNumber() throws Exception {
+        CaptureErrorHandler handler = new CaptureErrorHandler();
+
+        // There should be a schema matching NS_LATEST_VERSION
+        assertNotNull(getRepoValidator(SdkAddonConstants.NS_LATEST_VERSION, handler));
+
+        // There should NOT be a schema with NS_LATEST_VERSION+1
+        assertNull(
+                String.format(
+                        "There's an ADDON XSD at version %d but SdkAddonConstants.NS_LATEST_VERSION is still set to %d.",
+                        SdkAddonConstants.NS_LATEST_VERSION + 1,
+                        SdkAddonConstants.NS_LATEST_VERSION),
+                getAddonValidator(SdkAddonConstants.NS_LATEST_VERSION + 1, handler));
     }
 
     /** Validate a valid sample using namespace version 1 using an InputStream */
