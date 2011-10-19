@@ -16,6 +16,9 @@
 
 package com.android.sdklib;
 
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
+
 import java.util.Properties;
 
 /**
@@ -39,8 +42,10 @@ import java.util.Properties;
  */
 public final class AndroidVersion implements Comparable<AndroidVersion> {
 
-    private static final String PROP_API_LEVEL = "AndroidVersion.ApiLevel";  //$NON-NLS-1$
-    private static final String PROP_CODENAME = "AndroidVersion.CodeName";   //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_API_LEVEL = "AndroidVersion.ApiLevel";  //$NON-NLS-1$
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    public static final String PROP_CODENAME = "AndroidVersion.CodeName";   //$NON-NLS-1$
 
     private final int mApiLevel;
     private final String mCodename;

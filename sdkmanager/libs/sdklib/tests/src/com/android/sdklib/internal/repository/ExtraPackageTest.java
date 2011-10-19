@@ -27,16 +27,6 @@ public class ExtraPackageTest extends MinToolsPackageTest {
 
     private static final char PS = File.pathSeparatorChar;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     private ExtraPackage createExtraPackage(Properties props) {
         ExtraPackage p = (ExtraPackage) ExtraPackage.create(
                 null, //source

@@ -587,11 +587,14 @@ public class SdkRepoSourceTest extends TestCase {
             assertTrue(p.getArchives().length >= 1);
         }
 
-        // Check the layoutlib of the platform packages.
+        // Check the layoutlib & included-abi of the platform packages.
         ArrayList<Pair<Integer, Integer>> layoutlibVers = new ArrayList<Pair<Integer,Integer>>();
+        ArrayList<String> includedAbi = new ArrayList<String>();
         for (Package p : pkgs) {
             if (p instanceof PlatformPackage) {
                 layoutlibVers.add(((PlatformPackage) p).getLayoutlibVersion());
+                String abi = ((PlatformPackage) p).getIncludedAbi();
+                includedAbi.add(abi == null ? "(null)" : abi);
             }
         }
         assertEquals(
@@ -599,6 +602,11 @@ public class SdkRepoSourceTest extends TestCase {
                  "Pair [first=5, second=31415], " +     // platform API 2
                  "Pair [first=5, second=0]]",           // platform API 1
                 Arrays.toString(layoutlibVers.toArray()));
+        assertEquals(
+                "[(null), " +                           // platform API 5 preview
+                 "x86, " +                              // platform API 2
+                 "armeabi]",                            // platform API 1
+                Arrays.toString(includedAbi.toArray()));
 
         // Check the extra packages path, vendor, install folder, project-files, old-paths
 

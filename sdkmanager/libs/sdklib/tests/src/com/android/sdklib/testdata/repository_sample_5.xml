@@ -55,6 +55,7 @@
             <sdk:api>5</sdk:api>
             <sdk:revision>0</sdk:revision>
         </sdk:layoutlib>
+        <sdk:included-abi>armeabi</sdk:included-abi>
     </sdk:platform>
 
     <sdk:doc>
@@ -110,6 +111,7 @@
             <sdk:api>5</sdk:api>
             <sdk:revision>31415</sdk:revision>
         </sdk:layoutlib>
+        <sdk:included-abi>x86</sdk:included-abi>
     </sdk:platform>
 
    <sdk:platform>

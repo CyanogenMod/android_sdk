@@ -126,7 +126,7 @@
                  When the field is present, it means the platform already embeds one
                  system image. A platform can also have any number of external
                  &lt;system-image&gt; associated with it.  -->
-            <xsd:element name="abi-included"  type="sdk:abiType" minOccurs="0" />
+            <xsd:element name="included-abi"  type="sdk:abiType" minOccurs="0" />
 
             <!-- An optional element indicating the package is obsolete.
                  The string content is however currently not defined and ignored. -->
