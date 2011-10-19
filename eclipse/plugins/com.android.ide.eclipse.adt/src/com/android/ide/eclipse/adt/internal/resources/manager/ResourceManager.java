@@ -612,7 +612,12 @@ public final class ResourceManager {
             if (state.isLibrary()) {
                 // For library projects also mark the dependent projects as needing full aapt
                 for (ProjectState parent : state.getFullParentProjects()) {
-                    parent.getProject().setPersistentProperty(NEED_AAPT, needsAapt);
+                    IProject parentProject = parent.getProject();
+                    // Mark the project, but only if it's open. Resource#setPersistentProperty
+                    // only works on open projects.
+                    if (parentProject.isOpen()) {
+                        parentProject.setPersistentProperty(NEED_AAPT, needsAapt);
+                    }
                 }
             }
         } catch (CoreException e) {
