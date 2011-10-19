@@ -130,8 +130,7 @@ public class AidlExecTask extends Task {
 
                     // also need to remove the dep file.
                     depsToRemove.add(depFile);
-                } else if (graph.dependenciesHaveChanged(null /*extensionsToCheck*/,
-                        false /*printStatus*/)) {
+                } else if (graph.dependenciesHaveChanged(false /*printStatus*/)) {
                     // need to recompile!
                     toCompile.add(sourceFilePath);
                 }

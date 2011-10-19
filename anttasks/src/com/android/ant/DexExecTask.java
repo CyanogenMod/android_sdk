@@ -16,6 +16,8 @@
 
 package com.android.ant;
 
+import com.android.ant.DependencyGraph.InputPath;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.apache.tools.ant.types.FileSet;
@@ -106,11 +108,11 @@ public class DexExecTask extends BaseTask {
     public void execute() throws BuildException {
 
         // get all input paths
-        List<File> inputPaths = new ArrayList<File>();
+        List<File> paths = new ArrayList<File>();
         if (mPathInputs != null) {
             for (Path pathList : mPathInputs) {
                 for (String path : pathList.list()) {
-                    inputPaths.add(new File(path));
+                    paths.add(new File(path));
                 }
             }
         }
@@ -120,13 +122,16 @@ public class DexExecTask extends BaseTask {
                 Iterator<?> iter = fs.iterator();
                 while (iter.hasNext()) {
                     FileResource fr = (FileResource) iter.next();
-                    inputPaths.add(fr.getFile());
+                    paths.add(fr.getFile());
                 }
             }
         }
 
         // figure out the path to the dependency file.
         String depFile = mOutput + ".d";
+
+        // get InputPath with no extension restrictions
+        List<InputPath> inputPaths = getInputPaths(paths, null /*extensionsToCheck*/);
 
         if (initDependencies(depFile, inputPaths) && dependenciesHaveChanged() == false) {
             System.out.println(
@@ -158,7 +163,7 @@ public class DexExecTask extends BaseTask {
         task.createArg().setValue(mOutput);
 
 
-        for (File f :inputPaths) {
+        for (File f :paths) {
             task.createArg().setValue(f.getAbsolutePath());
         }
 
@@ -166,7 +171,7 @@ public class DexExecTask extends BaseTask {
         task.execute();
 
         // generate the dependency file.
-        generateDependencyFile(depFile, inputPaths, mOutput);
+        generateDependencyFile(depFile, paths, mOutput);
     }
 
     @Override

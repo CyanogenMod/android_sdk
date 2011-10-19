@@ -16,13 +16,15 @@
 
 package com.android.ant;
 
+import com.android.ant.DependencyGraph.InputPath;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -45,20 +47,24 @@ public abstract class BaseTask extends Task {
 
     protected abstract String getExecTaskName();
 
-    private Set<String> mRestrictTouchedExtensionsTo;
-
     /**
-     * Sets the value of the "restricttouchedextensionsto" attribute.
-     * @param touchedExtensions the extensions to check to see if they have been modified.
-     *        values should be separated by a colon (:). If left blank or not set, all extensions
-     *        will be checked.
+     * Creates a list of {@link InputPath} from a list of {@link File} and an optional list of
+     * extensions. All the {@link InputPath} will share the same extension restrictions.
+     * @param paths the list of path
+     * @param extensionsToCheck A set of extensions. Only files with an extension in this set will
+     *             be considered for a modification check. All deleted/created files will still be
+     *             checked. If this is null, all files will be checked for modification date
+     * @return a list of {@link InputPath}
      */
-    public void setRestrictTouchedExtensionsTo(String restrictTouchedExtensionsTo) {
-        mRestrictTouchedExtensionsTo = new HashSet<String>();
-        String[] extensions = restrictTouchedExtensionsTo.split(":");
-        for (String s : extensions) {
-            mRestrictTouchedExtensionsTo.add(s);
+    protected static List<InputPath> getInputPaths(List<File> paths,
+            Set<String> extensionsToCheck) {
+        List<InputPath> result = new ArrayList<InputPath>(paths.size());
+
+        for (File f : paths) {
+            result.add(new InputPath(f, extensionsToCheck));
         }
+
+        return result;
     }
 
     /**
@@ -68,7 +74,7 @@ public abstract class BaseTask extends Task {
      * @param the new input paths for this new compilation.
      * @return true if the dependency graph was successfully initialized
      */
-    protected boolean initDependencies(String dependencyFile, List<File> inputPaths) {
+    protected boolean initDependencies(String dependencyFile, List<InputPath> inputPaths) {
         if (mBuildType != null && mBuildType.equals(mPreviousBuildType) == false) {
             // we don't care about deps, we need to execute the task no matter what.
             return true;
@@ -103,8 +109,7 @@ public abstract class BaseTask extends Task {
         }
 
         assert mDependencies != null : "Dependencies have not been initialized";
-        return mDependencies.dependenciesHaveChanged(mRestrictTouchedExtensionsTo,
-                true /*printStatus*/);
+        return mDependencies.dependenciesHaveChanged(true /*printStatus*/);
     }
 
     protected void generateDependencyFile(String depFilePath,
