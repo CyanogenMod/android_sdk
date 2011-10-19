@@ -275,7 +275,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         gd.horizontalAlignment = SWT.LEFT;
         l.setLayoutData(gd);
 
-        ToolBar t = new ToolBar(parent, SWT.FLAT | SWT.BORDER);
+        ToolBar t = new ToolBar(parent, SWT.FLAT);
         gd = new GridData();
         gd.horizontalAlignment = SWT.RIGHT;
         t.setLayoutData(gd);
