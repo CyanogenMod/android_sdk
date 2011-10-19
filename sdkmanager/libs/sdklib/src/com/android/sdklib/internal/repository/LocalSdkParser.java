@@ -83,7 +83,7 @@ public class LocalSdkParser {
         ArrayList<Package> packages = new ArrayList<Package>();
         HashSet<File> visited = new HashSet<File>();
 
-        monitor.setProgressMax(8);
+        monitor.setProgressMax(9);
 
         File dir = new File(osSdkRoot, SdkConstants.FD_DOCS);
         Package pkg = scanDoc(dir, monitor);
@@ -310,7 +310,7 @@ public class LocalSdkParser {
                 Map<String, String> props = infos.getFirst();
                 String error = infos.getSecond();
                 try {
-                    Package pkg = AddonPackage.create(dir.getAbsolutePath(), props, error);
+                    Package pkg = AddonPackage.createBroken(dir.getAbsolutePath(), props, error);
                     packages.add(pkg);
                     visited.add(dir);
                 } catch (Exception e) {
