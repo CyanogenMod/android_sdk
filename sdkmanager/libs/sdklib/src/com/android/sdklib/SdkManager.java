@@ -531,7 +531,8 @@ public class SdkManager {
      *
      * @param sdkOsPath The path to the SDK.
      * @param root Root of the platform target being loaded.
-     * @param apiCodename
+     * @param apiNumber API level of platform being loaded
+     * @param apiCodename Optional codename of platform being loaded
      * @return an array of ISystemImage containing all the system images for the target.
      *              The list can be empty.
     */
@@ -543,29 +544,47 @@ public class SdkManager {
         Set<ISystemImage> found = new TreeSet<ISystemImage>();
         Set<String> abiFound = new HashSet<String>();
 
-        // First look in the SDK/system-image folder
+        // First look in the SDK/system-image/platform-n/abi folders.
+        // We require/enforce the system image to have a valid properties file.
+        // The actual directory names are irrelevant.
+        // If we find multiple occurrences of the same platform/abi, the first one read wins.
 
         AndroidVersion version = new AndroidVersion(apiNumber, apiCodename);
-        File siFolder = SystemImage.getCanonicalFolder(sdkOsPath, version, null /*abiType*/);
-        File[] files = siFolder.listFiles();
 
-        if (files != null) {
-            // Look for sub-directories
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    String abi = file.getName();
-                    found.add(new SystemImage(
-                            file,
-                            LocationType.IN_SYSTEM_IMAGE,
-                            abi));
-                    abiFound.add(abi);
+        File[] firstLevelFiles = new File(sdkOsPath, SdkConstants.FD_SYSTEM_IMAGES).listFiles();
+        if (firstLevelFiles != null) {
+            for (File firstLevel : firstLevelFiles) {
+                File[] secondLevelFiles = firstLevel.listFiles();
+                if (secondLevelFiles != null) {
+                    for (File secondLevel : secondLevelFiles) {
+                        try {
+                            File propFile = new File(secondLevel, SdkConstants.FN_SOURCE_PROP);
+                            Properties props = new Properties();
+                            props.load(new FileInputStream(propFile));
+
+                            AndroidVersion propsVersion = new AndroidVersion(props);
+                            if (!propsVersion.equals(version)) {
+                                continue;
+                            }
+
+                            String abi = props.getProperty(PkgProps.SYS_IMG_ABI);
+                            if (abi != null && !abiFound.contains(abi)) {
+                                found.add(new SystemImage(
+                                        secondLevel,
+                                        LocationType.IN_SYSTEM_IMAGE,
+                                        abi));
+                                abiFound.add(abi);
+                            }
+                        } catch (Exception ignore) {
+                        }
+                    }
                 }
             }
         }
 
         // Then look in either the platform/images/abi or the legacy folder
         root = new File(root, SdkConstants.OS_IMAGES_FOLDER);
-        files = root.listFiles();
+        File[] files = root.listFiles();
         boolean useLegacy = true;
         boolean hasImgFiles = false;
 
