@@ -87,7 +87,13 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
             for (IContentAssistProcessor p : others) {
                 // Builtin Eclipse WTP code completion assistant? If so,
                 // wrap it with our own filter which hides some unwanted completions.
-                if (p instanceof XMLContentAssistProcessor) {
+                if (p instanceof XMLContentAssistProcessor
+                        // On Eclipse 3.7, XMLContentAssistProcessor is no longer used,
+                        // and instead org.eclipse.wst.xml.ui.internal.contentassist.
+                        // XMLStructuredContentAssistProcessor is used - which isn't available
+                        // at compile time in 3.5.
+                        || p.getClass().getSimpleName().equals(
+                            "XMLStructuredContentAssistProcessor")) { //$NON-NLS-1$
                     processors.add(new FilteringContentAssistProcessor(p));
                 } else {
                     processors.add(p);
