@@ -47,6 +47,12 @@ sdk/emulator/snapshot/snapshots.img  tools/lib/emulator/snapshots.img
 usr/share/pc-bios/bios.bin           tools/lib/pc-bios/bios.bin
 usr/share/pc-bios/vgabios-cirrus.bin tools/lib/pc-bios/vgabios-cirrus.bin
 
+# OpenGLES emulation libraries
+lib/libOpenglRender${DLL_EXTENSION}       tools/lib/libOpenglRender${DLL_EXTENSION}
+lib/libGLES_CM_translator${DLL_EXTENSION} tools/lib/libGLES_CM_translator${DLL_EXTENSION}
+lib/libGLES_V2_translator${DLL_EXTENSION} tools/lib/libGLES_V2_translator${DLL_EXTENSION}
+lib/libEGL_translator${DLL_EXTENSION}     tools/lib/libEGL_translator${DLL_EXTENSION}
+
 # Java-Based SDK Tools
 bin/ddms            tools/ddms
 bin/hierarchyviewer tools/hierarchyviewer
