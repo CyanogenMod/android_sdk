@@ -360,21 +360,22 @@ public class PreCompilerBuilder extends BaseBuilder {
                 }
             }
 
+            int minSdkValue = -1;
+
             if (minSdkVersion != null) {
-                int minSdkValue = -1;
                 try {
                     minSdkValue = Integer.parseInt(minSdkVersion);
                 } catch (NumberFormatException e) {
                     // it's ok, it means minSdkVersion contains a (hopefully) valid codename.
                 }
 
-                AndroidVersion projectVersion = projectTarget.getVersion();
+                AndroidVersion targetVersion = projectTarget.getVersion();
 
                 // remove earlier marker from the manifest
                 removeMarkersFromResource(manifestFile, AdtConstants.MARKER_ADT);
 
                 if (minSdkValue != -1) {
-                    String codename = projectVersion.getCodename();
+                    String codename = targetVersion.getCodename();
                     if (codename != null) {
                         // integer minSdk when the target is a preview => fatal error
                         String msg = String.format(
@@ -384,21 +385,21 @@ public class PreCompilerBuilder extends BaseBuilder {
                         BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
-                    } else if (minSdkValue < projectVersion.getApiLevel()) {
+                    } else if (minSdkValue < targetVersion.getApiLevel()) {
                         // integer minSdk is not high enough for the target => warning
                         String msg = String.format(
                                 "Attribute %1$s (%2$d) is lower than the project target API level (%3$d)",
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
-                                minSdkValue, projectVersion.getApiLevel());
+                                minSdkValue, targetVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
                         BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_WARNING);
-                    } else if (minSdkValue > projectVersion.getApiLevel()) {
+                    } else if (minSdkValue > targetVersion.getApiLevel()) {
                         // integer minSdk is too high for the target => warning
                         String msg = String.format(
                                 "Attribute %1$s (%2$d) is higher than the project target API level (%3$d)",
                                 AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION,
-                                minSdkValue, projectVersion.getApiLevel());
+                                minSdkValue, targetVersion.getApiLevel());
                         AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project, msg);
                         BaseProjectHelper.markResource(manifestFile, AdtConstants.MARKER_ADT,
                                 msg, IMarker.SEVERITY_WARNING);
@@ -406,7 +407,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                 } else {
                     // looks like the min sdk is a codename, check it matches the codename
                     // of the platform
-                    String codename = projectVersion.getCodename();
+                    String codename = targetVersion.getCodename();
                     if (codename == null) {
                         // platform is not a preview => fatal error
                         String msg = String.format(
@@ -426,6 +427,11 @@ public class PreCompilerBuilder extends BaseBuilder {
                                 msg, IMarker.SEVERITY_ERROR);
                         return result;
                     }
+
+                    // if we get there, the minSdkVersion is a codename matching the target
+                    // platform codename. In this case we set minSdkValue to the previous API
+                    // level, as it's used by source processors.
+                    minSdkValue = targetVersion.getApiLevel();
                 }
             } else if (projectTarget.getVersion().isPreview()) {
                 // else the minSdkVersion is not set but we are using a preview target.
@@ -494,7 +500,7 @@ public class PreCompilerBuilder extends BaseBuilder {
             for (SourceProcessor processor : mProcessors) {
                 try {
                     processorStatus |= processor.compileFiles(this,
-                            project, projectTarget, sourceFolderPathList, monitor);
+                            project, projectTarget, minSdkValue, sourceFolderPathList, monitor);
                 } catch (Throwable t) {
                     AdtPlugin.log(t, "Failed to run one of the source processor");
                 }

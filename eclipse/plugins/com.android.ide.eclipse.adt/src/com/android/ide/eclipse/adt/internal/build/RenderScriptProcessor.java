@@ -133,8 +133,9 @@ public class RenderScriptProcessor extends SourceProcessor {
 
     @Override
     protected void doCompileFiles(List<IFile> sources, BaseBuilder builder,
-            IProject project, IAndroidTarget projectTarget, List<IPath> sourceFolders,
-            List<IFile> notCompiledOut, IProgressMonitor monitor) throws CoreException {
+            IProject project, IAndroidTarget projectTarget, int minSdkVersion,
+            List<IPath> sourceFolders, List<IFile> notCompiledOut, IProgressMonitor monitor)
+            throws CoreException {
 
         String sdkOsPath = Sdk.getCurrent().getSdkLocation();
 
@@ -146,7 +147,7 @@ public class RenderScriptProcessor extends SourceProcessor {
         int depIndex;
 
         // create the command line
-        String[] command = new String[13];
+        String[] command = new String[15];
         int index = 0;
         command[index++] = quote(sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER
                 + SdkConstants.FN_RENDERSCRIPT);
@@ -158,6 +159,9 @@ public class RenderScriptProcessor extends SourceProcessor {
         command[index++] = quote(genFolder.getLocation().toOSString());
         command[index++] = "-o";   //$NON-NLS-1$
         command[index++] = quote(rawFolder.getLocation().toOSString());
+
+        command[index++] = "-target-api";   //$NON-NLS-1$
+        command[index++] = Integer.toString(minSdkVersion);
 
         command[index++] = "-d";   //$NON-NLS-1$
         command[depIndex = index++] = null;

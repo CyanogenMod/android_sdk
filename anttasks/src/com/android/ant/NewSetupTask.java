@@ -82,6 +82,7 @@ public class NewSetupTask extends Task {
     private String mProjectLibrariesPackageOut;
     private String mProjectLibrariesJarsOut;
     private String mProjectLibrariesLibsOut;
+    private String mTargetApiOut;
 
     public void setProjectTypeOut(String projectTypeOut) {
         mProjectTypeOut = projectTypeOut;
@@ -127,6 +128,10 @@ public class NewSetupTask extends Task {
         mProjectLibrariesLibsOut = projectLibrariesLibsOut;
     }
 
+    public void setTargetApiOut(String targetApiOut) {
+        mTargetApiOut = targetApiOut;
+    }
+
     @Override
     public void execute() throws BuildException {
         if (mProjectTypeOut == null) {
@@ -161,6 +166,9 @@ public class NewSetupTask extends Task {
         }
         if (mProjectLibrariesLibsOut == null) {
             throw new BuildException("Missing attribute projectLibrariesLibsOut");
+        }
+        if (mTargetApiOut == null) {
+            throw new BuildException("Missing attribute targetApiOut");
         }
 
 
@@ -377,6 +385,12 @@ public class NewSetupTask extends Task {
                             "For '%1$s' SDK Preview, attribute minSdkVersion in AndroidManifest.xml must be '%1$s'",
                             codeName));
                 }
+
+                // set the API level to the previous API level (which is actually the value in
+                // androidVersion.)
+                antProject.setProperty(mTargetApiOut,
+                        Integer.toString(androidVersion.getApiLevel()));
+
             } else if (value.length() > 0) {
                 // for normal platform, we'll only display warnings if the value is lower or higher
                 // than the target api level.
@@ -390,6 +404,9 @@ public class NewSetupTask extends Task {
                             "Attribute %1$s in AndroidManifest.xml must be an Integer!",
                             AndroidManifest.ATTRIBUTE_MIN_SDK_VERSION));
                 }
+
+                // set the target api to the value
+                antProject.setProperty(mTargetApiOut, value);
 
                 int projectApiLevel = androidVersion.getApiLevel();
                 if (minSdkValue < projectApiLevel) {
@@ -407,6 +424,9 @@ public class NewSetupTask extends Task {
                 // no minSdkVersion? display a warning
                 System.out.println(
                         "WARNING: No minSdkVersion value set. Application will install on all Android versions.");
+
+                // set the target api to 1
+                antProject.setProperty(mTargetApiOut, "1");
             }
 
         } catch (XPathExpressionException e) {
