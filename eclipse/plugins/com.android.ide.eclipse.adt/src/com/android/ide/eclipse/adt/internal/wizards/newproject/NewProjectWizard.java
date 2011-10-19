@@ -26,6 +26,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidNature;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
+import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage.IMainInfo;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCreationPage.TestInfo;
@@ -79,8 +80,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * A "New Android Project" Wizard.
@@ -922,6 +923,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             for (String key : stringNames) {
                 // get the value from the key
                 String value = strings.get(key);
+
+                // Escape values if necessary
+                value = ExtractStringRefactoring.escapeString(value);
 
                 // place them in the template
                 String stringDef = stringTemplate.replace(PARAM_STRING_NAME, key);

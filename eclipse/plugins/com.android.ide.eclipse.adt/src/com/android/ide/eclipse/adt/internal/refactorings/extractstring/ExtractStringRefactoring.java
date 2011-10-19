@@ -1459,8 +1459,10 @@ public class ExtractStringRefactoring extends Refactoring {
      * <li>{@code <, >, &} have to be replaced by their predefined xml entity.
      * <li>{@code \n, \t} have to be replaced by a backslash and the appropriate character.
      * </ul>
+     * @param s the string to be escaped
+     * @return the escaped string as it would appear in the XML text in a values file
      */
-    static String escapeString(String s) {
+    public static String escapeString(String s) {
         int n = s.length();
         if (n == 0) {
             return "";

@@ -60,6 +60,42 @@ public class AdtUtils {
     }
 
     /**
+     * Creates a Java class name out of the given string, if possible. For
+     * example, "My Project" becomes "MyProject", "hello" becomes "Hello",
+     * "Java's" becomes "Java", and so on.
+     *
+     * @param string the string to be massaged into a Java class
+     * @return the string as a Java class, or null if a class name could not be
+     *         extracted
+     */
+    public static String extractClassName(String string) {
+        StringBuilder sb = new StringBuilder(string.length());
+        int n = string.length();
+
+        int i = 0;
+        for (; i < n; i++) {
+            char c = Character.toUpperCase(string.charAt(i));
+            if (Character.isJavaIdentifierStart(c)) {
+                sb.append(c);
+                i++;
+                break;
+            }
+        }
+        if (sb.length() > 0) {
+            for (; i < n; i++) {
+                char c = string.charAt(i);
+                if (Character.isJavaIdentifierPart(c)) {
+                    sb.append(c);
+                }
+            }
+
+            return sb.toString();
+        }
+
+        return null;
+    }
+
+    /**
      * Strips off the last file extension from the given filename, e.g.
      * "foo.backup.diff" will be turned into "foo.backup".
      * <p>
