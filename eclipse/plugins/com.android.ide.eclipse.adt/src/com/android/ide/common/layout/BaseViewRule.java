@@ -969,12 +969,8 @@ public class BaseViewRule implements IViewRule {
      * @return a source attribute to use for sample images, never null
      */
     protected final String getSampleImageSrc() {
-        // For now, we point to the sample icon which is written into new Android projects
-        // created in ADT. We could alternatively look into the project resources folder
-        // and try to pick something else, or even return some builtin image resource
-        // in the @android namespace.
-
-        return "@drawable/icon"; //$NON-NLS-1$
+        // Builtin graphics available since v1:
+        return "@android:drawable/btn_star"; //$NON-NLS-1$
     }
 
     public void onCreate(INode node, INode parent, InsertType insertType) {
