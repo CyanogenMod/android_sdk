@@ -768,6 +768,13 @@ public class ConfigurationComposite extends Composite {
                     // target as the render target.
                     return projectTarget;
                 }
+
+                if (projectTarget.getVersion().isPreview()
+                        && projectTarget.hasRenderingLibrary()) {
+                    // If the project target is a preview version, then just use it
+                    return projectTarget;
+                }
+
                 minProjectApi = projectTarget.getVersion().getApiLevel();
             }
 
