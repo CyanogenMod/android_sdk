@@ -1163,7 +1163,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
-        // Now, start again, but this time the new package used the old_path attribute
+        // Now, start again, but this time the new package uses the old-path attribute
         Properties props = new Properties();
         props.setProperty(ExtraPackage.PROP_OLD_PATHS, "old_path1;oldpath2");
         m.clear();
