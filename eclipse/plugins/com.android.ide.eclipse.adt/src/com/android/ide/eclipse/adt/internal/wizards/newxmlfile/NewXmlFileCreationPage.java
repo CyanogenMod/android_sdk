@@ -17,18 +17,23 @@
 
 package com.android.ide.eclipse.adt.internal.wizards.newxmlfile;
 
+import static com.android.AndroidConstants.RES_QUALIFIER_SEP;
 import static com.android.ide.common.layout.LayoutConstants.HORIZONTAL_SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.SCROLL_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtConstants.WS_SEP_CHAR;
+import static com.android.ide.eclipse.adt.internal.wizards.newxmlfile.ChooseConfigurationPage.RES_FOLDER_ABS;
 
-import com.android.AndroidConstants;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
@@ -41,9 +46,6 @@ import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.TargetChangeListener;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.ConfigurationState;
-import com.android.ide.eclipse.adt.internal.ui.ConfigurationSelector.SelectorMode;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -56,23 +58,26 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -83,12 +88,13 @@ import org.eclipse.ui.part.FileEditorInput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 /**
- * This is the single page of the {@link NewXmlFileWizard} which provides the ability to create
+ * This is the first page of the {@link NewXmlFileWizard} which provides the ability to create
  * skeleton XML resources files for Android projects.
  * <p/>
- * This page is used to select the project, the resource folder, resource type and file name.
+ * This page is used to select the project, resource type and file name.
  */
 class NewXmlFileCreationPage extends WizardPage {
 
@@ -100,6 +106,8 @@ class NewXmlFileCreationPage extends WizardPage {
         if (visible && mFileNameTextField != null) {
             mFileNameTextField.setFocus();
         }
+
+        validatePage();
     }
 
     /**
@@ -110,7 +118,6 @@ class NewXmlFileCreationPage extends WizardPage {
         private final ResourceFolderType mResFolderType;
         private final String mTooltip;
         private final Object mRootSeed;
-        private Button mWidget;
         private ArrayList<String> mRoots = new ArrayList<String>();
         private final String mXmlns;
         private final String mDefaultAttrs;
@@ -161,16 +168,6 @@ class NewXmlFileCreationPage extends WizardPage {
          */
         ResourceFolderType getResFolderType() {
             return mResFolderType;
-        }
-
-        /** Sets the radio button associate with the resource type. Can be null. */
-        void setWidget(Button widget) {
-            mWidget = widget;
-        }
-
-        /** Returns the radio button associate with the resource type. Can be null. */
-        Button getWidget() {
-            return mWidget;
         }
 
         /**
@@ -351,17 +348,17 @@ class NewXmlFileCreationPage extends WizardPage {
                 null,                                                       // default attributes
                 1                                                           // target API level
                 ),
-        new TypeInfo("Animator",                                            // UI name
-                "An XML file that describes an animator.",                  // tooltip
+        new TypeInfo("Property Animation",                                  // UI name
+                "An XML file that describes a property animation",          // tooltip
                 ResourceFolderType.ANIMATOR,                                // folder type
                 AndroidTargetData.DESCRIPTOR_ANIMATOR,                      // root seed
                 "set", //$NON-NLS-1$                                        // default root
                 SdkConstants.NS_RESOURCES,                                  // xmlns
                 null,                                                       // default attributes
-                11                                                           // target API level
+                11                                                          // target API level
                 ),
-        new TypeInfo("Animation",                                           // UI name
-                "An XML file that describes an animation.",                 // tooltip
+        new TypeInfo("Tween Animation",                                     // UI name
+                "An XML file that describes a tween animation.",            // tooltip
                 ResourceFolderType.ANIM,                                    // folder type
                 AndroidTargetData.DESCRIPTOR_ANIM,                          // root seed
                 "set", //$NON-NLS-1$                                        // default root
@@ -396,44 +393,40 @@ class NewXmlFileCreationPage extends WizardPage {
                 null,                                                       // default attributes
                 1                                                           // target API level
                 ),
+        // Still missing: Interpolator, Raw and Mipmap. Raw should probably never be in
+        // this menu since it's not often used for creating XML files.
     };
 
-    /** Number of columns in the grid layout */
-    final static int NUM_COL = 4;
-
-    /** Absolute destination folder root, e.g. "/res/" */
-    private static final String RES_FOLDER_ABS = AdtConstants.WS_RESOURCES + AdtConstants.WS_SEP;
-    /** Relative destination folder root, e.g. "res/" */
-    private static final String RES_FOLDER_REL = SdkConstants.FD_RESOURCES + AdtConstants.WS_SEP;
-
-    private IProject mProject;
+    private NewXmlFileWizard.Values mValues;
     private ProjectButton mProjectButton;
     private Text mFileNameTextField;
-    private Text mWsFolderPathTextField;
-    private Combo mRootElementCombo;
+    private Combo mTypeCombo;
     private IStructuredSelection mInitialSelection;
-    private ConfigurationSelector mConfigSelector;
-    private FolderConfiguration mTempConfig = new FolderConfiguration();
-    private boolean mInternalWsFolderPathUpdate;
+    private ResourceFolderType mInitialFolderType;
     private boolean mInternalTypeUpdate;
-    private boolean mInternalConfigSelectorUpdate;
     private TargetChangeListener mSdkTargetChangeListener;
-    private TypeInfo mCurrentTypeInfo;
+    private Table mRootTable;
+    private TableViewer mRootTableViewer;
 
     // --- UI creation ---
 
     /**
      * Constructs a new {@link NewXmlFileCreationPage}.
      * <p/>
-     * Called by {@link NewXmlFileWizard#createMainPage()}.
+     * Called by {@link NewXmlFileWizard#createMainPage}.
      */
-    protected NewXmlFileCreationPage(String pageName) {
+    protected NewXmlFileCreationPage(String pageName, NewXmlFileWizard.Values values) {
         super(pageName);
+        mValues = values;
         setPageComplete(false);
     }
 
     public void setInitialSelection(IStructuredSelection initialSelection) {
         mInitialSelection = initialSelection;
+    }
+
+    public void setInitialFolderType(ResourceFolderType initialType) {
+        mInitialFolderType = initialType;
     }
 
     /**
@@ -443,46 +436,135 @@ class NewXmlFileCreationPage extends WizardPage {
      *
      * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
      */
+    @SuppressWarnings("unused") // SWT constructors have side effects, they aren't unused
     public void createControl(Composite parent) {
+        // This UI is maintained with WindowBuilder.
+
         Composite composite = new Composite(parent, SWT.NULL);
-        composite.setFont(parent.getFont());
-
-        initializeDialogUnits(parent);
-
-        composite.setLayout(new GridLayout(NUM_COL, false /*makeColumnsEqualWidth*/));
+        composite.setLayout(new GridLayout(2, false /*makeColumnsEqualWidth*/));
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        createProjectGroup(composite);
-        createTypeGroup(composite);
-        createRootGroup(composite);
+        // label before type radios
+        Label typeLabel = new Label(composite, SWT.NONE);
+        typeLabel.setText("Resource Type:");
 
-        // Show description the first time
-        setErrorMessage(null);
-        setMessage(null);
+        mTypeCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
+        mTypeCombo.setToolTipText("What type of resource would you like to create?");
+        mTypeCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        if (mInitialFolderType != null) {
+            mTypeCombo.setEnabled(false);
+        }
+        mTypeCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                TypeInfo type = getSelectedType();
+                if (type != null) {
+                    onSelectType(type);
+                }
+            }
+        });
+
+        // separator
+        Label separator = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
+        GridData gd2 = new GridData(GridData.GRAB_HORIZONTAL);
+        gd2.horizontalAlignment = SWT.FILL;
+        gd2.horizontalSpan = 2;
+        separator.setLayoutData(gd2);
+
+        // Project: [button]
+        String tooltip = "The Android Project where the new resource file will be created.";
+        Label projectLabel = new Label(composite, SWT.NONE);
+        projectLabel.setText("Project:");
+        projectLabel.setToolTipText(tooltip);
+
+        mProjectButton = new ProjectButton(composite, mValues.project);
+        mProjectButton.setToolTipText(tooltip);
+        mProjectButton.setAlignment(SWT.LEFT);
+        mProjectButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mProjectButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                IProject project = mProjectButton.getSelectedProject();
+                if (project != mValues.project) {
+                    changeProject(project);
+                }
+            };
+        });
+
+        // Filename: [text]
+        Label fileLabel = new Label(composite, SWT.NONE);
+        fileLabel.setText("File:");
+        fileLabel.setToolTipText("The name of the resource file to create.");
+
+        mFileNameTextField = new Text(composite, SWT.BORDER);
+        mFileNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mFileNameTextField.setToolTipText(tooltip);
+        mFileNameTextField.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                mValues.name = mFileNameTextField.getText();
+                validatePage();
+            }
+        });
+
+        // separator
+        Label rootSeparator = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
+        GridData gd = new GridData(GridData.GRAB_HORIZONTAL);
+        gd.horizontalAlignment = SWT.FILL;
+        gd.horizontalSpan = 2;
+        rootSeparator.setLayoutData(gd);
+
+        // Root Element:
+        // [TableViewer]
+        Label rootLabel = new Label(composite, SWT.NONE);
+        rootLabel.setText("Root Element:");
+        new Label(composite, SWT.NONE);
+
+        mRootTableViewer = new TableViewer(composite, SWT.BORDER | SWT.FULL_SELECTION);
+        mRootTable = mRootTableViewer.getTable();
+        GridData tableGridData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+        tableGridData.heightHint = 200;
+        mRootTable.setLayoutData(tableGridData);
+
         setControl(composite);
 
         // Update state the first time
+        setErrorMessage(null);
+        setMessage(null);
+
         initializeFromSelection(mInitialSelection);
+        updateAvailableTypes();
+        initializeFromFixedType();
         initializeRootValues();
-        enableTypesBasedOnApi();
-        if (mCurrentTypeInfo != null) {
-            updateRootCombo(mCurrentTypeInfo);
-        }
         installTargetChangeListener();
+
+        initialSelectType();
         validatePage();
+    }
+
+    private void initialSelectType() {
+        TypeInfo[] types = (TypeInfo[]) mTypeCombo.getData();
+        int typeIndex = getTypeComboIndex(mValues.type);
+        if (typeIndex == -1) {
+            typeIndex = 0;
+        } else {
+            assert mValues.type == types[typeIndex];
+        }
+        mTypeCombo.select(typeIndex);
+        onSelectType(types[typeIndex]);
+        updateRootCombo(types[typeIndex]);
     }
 
     private void installTargetChangeListener() {
         mSdkTargetChangeListener = new TargetChangeListener() {
             @Override
             public IProject getProject() {
-                return mProject;
+                return mValues.project;
             }
 
             @Override
             public void reload() {
-                if (mProject != null) {
-                    changeProject(mProject);
+                if (mValues.project != null) {
+                    changeProject(mValues.project);
                 }
             }
         };
@@ -502,302 +584,17 @@ class NewXmlFileCreationPage extends WizardPage {
     }
 
     /**
-     * Returns the target project or null.
-     */
-    public IProject getProject() {
-        return mProject;
-    }
-
-    /**
-     * Returns the destination filename or an empty string.
-     *
-     * @return the filename, never null.
-     */
-    public String getFileName() {
-        String fileName;
-        if (mFileNameTextField == null) {
-            fileName = ""; //$NON-NLS-1$
-        } else {
-            fileName = mFileNameTextField.getText().trim();
-            if (fileName.length() > 0 && fileName.indexOf('.') == -1) {
-                fileName = fileName + AdtConstants.DOT_XML;
-            }
-        }
-
-        return fileName;
-    }
-
-    /**
-     * Returns the destination folder path relative to the project or an empty string.
-     */
-    public String getWsFolderPath() {
-        return mWsFolderPathTextField == null ? "" : mWsFolderPathTextField.getText(); //$NON-NLS-1$
-    }
-
-
-    /**
-     * Returns an {@link IFile} on the destination file.
-     * <p/>
-     * Uses {@link #getProject()}, {@link #getWsFolderPath()} and {@link #getFileName()}.
-     * <p/>
-     * Returns null if the project, filename or folder are invalid and the destination file
-     * cannot be determined.
-     * <p/>
-     * The {@link IFile} is a resource. There might or might not be an actual real file.
-     */
-    public IFile getDestinationFile() {
-        IProject project = getProject();
-        String wsFolderPath = getWsFolderPath();
-        String fileName = getFileName();
-        if (project != null && wsFolderPath.length() > 0 && fileName.length() > 0) {
-            IPath dest = new Path(wsFolderPath).append(fileName);
-            IFile file = project.getFile(dest);
-            return file;
-        }
-        return null;
-    }
-
-    /**
-     * Returns the {@link TypeInfo} for the currently selected type radio button.
-     * Returns null if no radio button is selected.
-     *
-     * @return A {@link TypeInfo} or null.
-     */
-    public TypeInfo getSelectedType() {
-        TypeInfo type = null;
-        for (TypeInfo ti : sTypes) {
-            if (ti.getWidget().getSelection()) {
-                type = ti;
-                break;
-            }
-        }
-        return type;
-    }
-
-    /**
      * Returns the selected root element string, if any.
      *
      * @return The selected root element string or null.
      */
     public String getRootElement() {
-        int index = mRootElementCombo.getSelectionIndex();
+        int index = mRootTable.getSelectionIndex();
         if (index >= 0) {
-            return mRootElementCombo.getItem(index);
+            Object[] roots = (Object[]) mRootTableViewer.getInput();
+            return roots[index].toString();
         }
         return null;
-    }
-
-    // --- UI creation ---
-
-    /**
-     * Helper method to create a new GridData with an horizontal span.
-     *
-     * @param horizSpan The number of cells for the horizontal span.
-     * @return A new GridData with the horizontal span.
-     */
-    private GridData newGridData(int horizSpan) {
-        GridData gd = new GridData();
-        gd.horizontalSpan = horizSpan;
-        return gd;
-    }
-
-    /**
-     * Helper method to create a new GridData with an horizontal span and a style.
-     *
-     * @param horizSpan The number of cells for the horizontal span.
-     * @param style The style, e.g. {@link GridData#FILL_HORIZONTAL}
-     * @return A new GridData with the horizontal span and the style.
-     */
-    private GridData newGridData(int horizSpan, int style) {
-        GridData gd = new GridData(style);
-        gd.horizontalSpan = horizSpan;
-        return gd;
-    }
-
-    /**
-     * Helper method that creates an empty cell in the parent composite.
-     *
-     * @param parent The parent composite.
-     */
-    private void emptyCell(Composite parent) {
-        new Label(parent, SWT.NONE);
-    }
-
-    /**
-     * Pads the parent with empty cells to match the number of columns of the parent grid.
-     *
-     * @param parent A grid layout with NUM_COL columns
-     * @param col The current number of columns used.
-     * @return 0, the new number of columns used, for convenience.
-     */
-    private int padWithEmptyCells(Composite parent, int col) {
-        for (; col < NUM_COL; ++col) {
-            emptyCell(parent);
-        }
-        col = 0;
-        return col;
-    }
-
-    /**
-     * Creates the project & filename fields.
-     * <p/>
-     * The parent must be a GridLayout with NUM_COL columns.
-     */
-    private void createProjectGroup(Composite parent) {
-        int col = 0;
-
-        // project name
-        String tooltip = "The Android Project where the new resource file will be created.";
-        Label label = new Label(parent, SWT.NONE);
-        label.setText("Project");
-        label.setToolTipText(tooltip);
-        ++col;
-
-        mProjectButton = new ProjectButton(parent, mProject);
-        mProjectButton.setToolTipText(tooltip);
-        mProjectButton.setAlignment(SWT.LEFT);
-        mProjectButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mProjectButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                IProject project = mProjectButton.getSelectedProject();
-                if (project != mProject) {
-                    changeProject(project);
-                }
-            };
-        });
-        ++col;
-
-        col = padWithEmptyCells(parent, col);
-
-        // file name
-        tooltip = "The name of the resource file to create.";
-        label = new Label(parent, SWT.NONE);
-        label.setText("File");
-        label.setToolTipText(tooltip);
-        ++col;
-
-        mFileNameTextField = new Text(parent, SWT.BORDER);
-        mFileNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mFileNameTextField.setToolTipText(tooltip);
-        mFileNameTextField.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                validatePage();
-            }
-        });
-        ++col;
-
-        padWithEmptyCells(parent, col);
-    }
-
-    /**
-     * Creates the type field, {@link ConfigurationSelector} and the folder field.
-     * <p/>
-     * The parent must be a GridLayout with NUM_COL columns.
-     */
-    private void createTypeGroup(Composite parent) {
-        // separator
-        Label label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
-        label.setLayoutData(newGridData(NUM_COL, GridData.GRAB_HORIZONTAL));
-
-        // label before type radios
-        label = new Label(parent, SWT.NONE);
-        label.setText("What type of resource would you like to create?");
-        label.setLayoutData(newGridData(NUM_COL));
-
-        // display the types on three columns of radio buttons.
-        emptyCell(parent);
-        Composite grid = new Composite(parent, SWT.NONE);
-        padWithEmptyCells(parent, 2);
-
-        grid.setLayout(new GridLayout(NUM_COL, true /*makeColumnsEqualWidth*/));
-
-        SelectionListener radioListener = new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                // single-click. Only do something if activated.
-                if (e.getSource() instanceof Button) {
-                    onRadioTypeUpdated((Button) e.getSource());
-                }
-            }
-        };
-
-        int n = sTypes.length;
-        int num_lines = (n + (NUM_COL - 1)) / NUM_COL;
-        for (int line = 0, k = 0; line < num_lines; line++) {
-            for (int i = 0; i < NUM_COL; i++, k++) {
-                if (k < n) {
-                    TypeInfo type = sTypes[k];
-                    Button radio = new Button(grid, SWT.RADIO);
-                    type.setWidget(radio);
-                    radio.setSelection(false);
-                    radio.setText(type.getUiName());
-                    radio.setToolTipText(type.getTooltip());
-                    radio.addSelectionListener(radioListener);
-                } else {
-                    emptyCell(grid);
-                }
-            }
-        }
-
-        // label before configuration selector
-        label = new Label(parent, SWT.NONE);
-        label.setText("What type of resource configuration would you like?");
-        label.setLayoutData(newGridData(NUM_COL));
-
-        // configuration selector
-        emptyCell(parent);
-        mConfigSelector = new ConfigurationSelector(parent, SelectorMode.DEFAULT);
-        GridData gd = newGridData(2, GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL);
-        gd.widthHint = ConfigurationSelector.WIDTH_HINT;
-        gd.heightHint = ConfigurationSelector.HEIGHT_HINT;
-        mConfigSelector.setLayoutData(gd);
-        mConfigSelector.setOnChangeListener(new onConfigSelectorUpdated());
-        emptyCell(parent);
-
-        // folder name
-        String tooltip = "The folder where the file will be generated, relative to the project.";
-        label = new Label(parent, SWT.NONE);
-        label.setText("Folder");
-        label.setToolTipText(tooltip);
-
-        mWsFolderPathTextField = new Text(parent, SWT.BORDER);
-        mWsFolderPathTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mWsFolderPathTextField.setToolTipText(tooltip);
-        mWsFolderPathTextField.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                onWsFolderPathUpdated();
-            }
-        });
-    }
-
-    /**
-     * Creates the root element combo.
-     * <p/>
-     * The parent must be a GridLayout with NUM_COL columns.
-     */
-    private void createRootGroup(Composite parent) {
-        // separator
-        Label label = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
-        label.setLayoutData(newGridData(NUM_COL, GridData.GRAB_HORIZONTAL));
-
-        // label before the root combo
-        String tooltip = "The root element to create in the XML file.";
-        label = new Label(parent, SWT.NONE);
-        label.setText("Select the root element for the XML file:");
-        label.setLayoutData(newGridData(NUM_COL));
-        label.setToolTipText(tooltip);
-
-        // root combo
-        emptyCell(parent);
-
-        mRootElementCombo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
-        mRootElementCombo.setEnabled(false);
-        mRootElementCombo.select(0);
-        mRootElementCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        mRootElementCombo.setToolTipText(tooltip);
-
-        padWithEmptyCells(parent, 2);
     }
 
     /**
@@ -816,9 +613,9 @@ class NewXmlFileCreationPage extends WizardPage {
      *
      * @param selection The selection when the wizard was initiated.
      */
-    private void initializeFromSelection(IStructuredSelection selection) {
+    private boolean initializeFromSelection(IStructuredSelection selection) {
         if (selection == null) {
-            return;
+            return false;
         }
 
         // Find the best match in the element list. In case there are multiple selected elements
@@ -851,7 +648,9 @@ class NewXmlFileCreationPage extends WizardPage {
                 if (res.getType() == IResource.FOLDER) {
                     wsFolderPath = res.getProjectRelativePath();
                 } else if (res.getType() == IResource.FILE) {
-                    fileName = res.getName();
+                    if (AdtUtils.endsWithIgnoreCase(res.getName(), DOT_XML)) {
+                        fileName = res.getName();
+                    }
                     wsFolderPath = res.getParent().getProjectRelativePath();
                 }
 
@@ -896,7 +695,10 @@ class NewXmlFileCreationPage extends WizardPage {
                         if (input instanceof FileEditorInput) {
                             FileEditorInput fileInput = (FileEditorInput) input;
                             targetScore = 1;
-                            targetProject = fileInput.getFile().getProject();
+                            IFile file = fileInput.getFile();
+                            targetProject = file.getProject();
+                            IPath path = file.getParent().getProjectRelativePath();
+                            targetWsFolderPath = path != null ? path.toString() : null;
                         }
                     }
                 }
@@ -922,10 +724,72 @@ class NewXmlFileCreationPage extends WizardPage {
 
         // Now set the UI accordingly
         if (targetScore > 0) {
-            mProject = targetProject;
+            mValues.project = targetProject;
+            mValues.folderPath = targetWsFolderPath;
             mProjectButton.setSelectedProject(targetProject);
             mFileNameTextField.setText(targetFileName != null ? targetFileName : ""); //$NON-NLS-1$
-            mWsFolderPathTextField.setText(targetWsFolderPath != null ? targetWsFolderPath : ""); //$NON-NLS-1$
+
+            // If the current selection context corresponds to a specific file type,
+            // select it.
+            if (targetWsFolderPath != null) {
+                int pos = targetWsFolderPath.lastIndexOf(WS_SEP_CHAR);
+                if (pos >= 0) {
+                    targetWsFolderPath = targetWsFolderPath.substring(pos + 1);
+                }
+                String[] folderSegments = targetWsFolderPath.split(RES_QUALIFIER_SEP);
+                if (folderSegments.length > 0) {
+                    String folderName = folderSegments[0];
+                    selectTypeFromFolder(folderName);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void initializeFromFixedType() {
+        if (mInitialFolderType != null) {
+            for (TypeInfo type : sTypes) {
+                if (type.getResFolderType() == mInitialFolderType) {
+                    mValues.type = type;
+                    updateFolderPath(type);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Given a folder name, such as "drawable", select the corresponding type in
+     * the dropdown.
+     */
+    void selectTypeFromFolder(String folderName) {
+        List<TypeInfo> matches = new ArrayList<TypeInfo>();
+        boolean selected = false;
+
+        TypeInfo selectedType = getSelectedType();
+        for (TypeInfo type : sTypes) {
+            if (type.getResFolderName().equals(folderName)) {
+                matches.add(type);
+                selected |= type == selectedType;
+            }
+        }
+
+        if (matches.size() == 1) {
+            // If there's only one match, select it if it's not already selected
+            if (!selected) {
+                selectType(matches.get(0));
+            }
+        } else if (matches.size() > 1) {
+            // There are multiple type candidates for this folder. This can happen
+            // for /res/xml for example. Check to see if one of them is currently
+            // selected. If yes, leave the selection unchanged. If not, deselect all type.
+            if (!selected) {
+                selectType(null);
+            }
+        } else {
+            // Nothing valid was selected.
+            selectType(null);
         }
     }
 
@@ -933,6 +797,7 @@ class NewXmlFileCreationPage extends WizardPage {
      * Initialize the root values of the type infos based on the current framework values.
      */
     private void initializeRootValues() {
+        IProject project = mValues.project;
         for (TypeInfo type : sTypes) {
             // Clear all the roots for this type
             ArrayList<String> roots = type.getRoots();
@@ -951,7 +816,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 for (String value : (String[]) rootSeed) {
                     roots.add(value);
                 }
-            } else if (rootSeed instanceof Integer && mProject != null) {
+            } else if (rootSeed instanceof Integer && project != null) {
                 // The seed is a descriptor reference defined in AndroidTargetData.DESCRIPTOR_*
                 // In this case add all the children element descriptors defined, recursively,
                 // and avoid infinite recursion by keeping track of what has already been added.
@@ -963,7 +828,7 @@ class NewXmlFileCreationPage extends WizardPage {
                 IAndroidTarget target = null;
                 AndroidTargetData data = null;
 
-                target = Sdk.getCurrent().getTarget(mProject);
+                target = Sdk.getCurrent().getTarget(project);
                 if (target == null) {
                     // A project should have a target. The target can be missing if the project
                     // is an old project for which a target hasn't been affected or if the
@@ -971,7 +836,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
                     AdtPlugin.log(IStatus.INFO,
                             "NewXmlFile wizard: no platform target for project %s",  //$NON-NLS-1$
-                            mProject.getName());
+                            project.getName());
                     continue;
                 } else {
                     data = Sdk.getCurrent().getTargetData(target);
@@ -985,7 +850,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
                         AdtPlugin.log(IStatus.INFO,
                               "NewXmlFile wizard: no data for target %s, project %s",  //$NON-NLS-1$
-                              target.getName(), mProject.getName());
+                              target.getName(), project.getName());
                         continue;
                     }
                 }
@@ -1035,141 +900,91 @@ class NewXmlFileCreationPage extends WizardPage {
      * when targets are loaded in the background.
      */
     private void changeProject(IProject newProject) {
-        mProject = newProject;
+        mValues.project = newProject;
 
         // enable types based on new API level
-        enableTypesBasedOnApi();
+        updateAvailableTypes();
 
         // update the folder name based on API level
-        resetFolderPath(false /*validate*/);
+        updateFolderPath(mValues.type);
 
         // update the Type with the new descriptors.
         initializeRootValues();
 
         // update the combo
-        updateRootCombo(getSelectedType());
+        updateRootCombo(mValues.type);
 
         validatePage();
     }
 
-    /**
-     * Callback called when the Folder text field is changed, either programmatically
-     * or by the user.
-     */
-    private void onWsFolderPathUpdated() {
-        if (mInternalWsFolderPathUpdate) {
-            return;
-        }
-
-        String wsFolderPath = mWsFolderPathTextField.getText();
-
-        // This is a custom path, we need to sanitize it.
-        // First it should start with "/res/". Then we need to make sure there are no
-        // relative paths, things like "../" or "./" or even "//".
-        wsFolderPath = wsFolderPath.replaceAll("/+\\.\\./+|/+\\./+|//+|\\\\+|^/+", "/");  //$NON-NLS-1$ //$NON-NLS-2$
-        wsFolderPath = wsFolderPath.replaceAll("^\\.\\./+|^\\./+", "");                   //$NON-NLS-1$ //$NON-NLS-2$
-        wsFolderPath = wsFolderPath.replaceAll("/+\\.\\.$|/+\\.$|/+$", "");               //$NON-NLS-1$ //$NON-NLS-2$
-
-        ArrayList<TypeInfo> matches = new ArrayList<TypeInfo>();
-
-        // We get "res/foo" from selections relative to the project when we want a "/res/foo" path.
-        if (wsFolderPath.startsWith(RES_FOLDER_REL)) {
-            wsFolderPath = RES_FOLDER_ABS + wsFolderPath.substring(RES_FOLDER_REL.length());
-
-            mInternalWsFolderPathUpdate = true;
-            mWsFolderPathTextField.setText(wsFolderPath);
-            mInternalWsFolderPathUpdate = false;
-        }
-
-        if (wsFolderPath.startsWith(RES_FOLDER_ABS)) {
-            wsFolderPath = wsFolderPath.substring(RES_FOLDER_ABS.length());
-
-            int pos = wsFolderPath.indexOf(AdtConstants.WS_SEP_CHAR);
-            if (pos >= 0) {
-                wsFolderPath = wsFolderPath.substring(0, pos);
-            }
-
-            String[] folderSegments = wsFolderPath.split(AndroidConstants.RES_QUALIFIER_SEP);
-
-            if (folderSegments.length > 0) {
-                String folderName = folderSegments[0];
-
-                // update config selector
-                mInternalConfigSelectorUpdate = true;
-                mConfigSelector.setConfiguration(folderSegments);
-                mInternalConfigSelectorUpdate = false;
-
-                boolean selected = false;
-                for (TypeInfo type : sTypes) {
-                    if (type.getResFolderName().equals(folderName)) {
-                        matches.add(type);
-                        selected |= type.getWidget().getSelection();
-                    }
-                }
-
-                if (matches.size() == 1) {
-                    // If there's only one match, select it if it's not already selected
-                    if (!selected) {
-                        selectType(matches.get(0));
-                    }
-                } else if (matches.size() > 1) {
-                    // There are multiple type candidates for this folder. This can happen
-                    // for /res/xml for example. Check to see if one of them is currently
-                    // selected. If yes, leave the selection unchanged. If not, deselect all type.
-                    if (!selected) {
-                        selectType(null);
-                    }
-                } else {
-                    // Nothing valid was selected.
-                    selectType(null);
-                }
-            }
-        }
-
-        validatePage();
-    }
-
-    /**
-     * Callback called when one of the type radio button is changed.
-     *
-     * @param typeWidget The type radio button that changed.
-     */
-    private void onRadioTypeUpdated(Button typeWidget) {
+    private void onSelectType(TypeInfo type) {
         // Do nothing if this is an internal modification or if the widget has been
         // deselected.
-        if (mInternalTypeUpdate || !typeWidget.getSelection()) {
+        if (mInternalTypeUpdate) {
             return;
         }
 
-        // Find type info that has just been enabled.
-        TypeInfo type = null;
-        for (TypeInfo ti : sTypes) {
-            if (ti.getWidget() == typeWidget) {
-                type = ti;
-                break;
-            }
-        }
+        mValues.type = type;
 
         if (type == null) {
             return;
         }
 
         // update the combo
-
         updateRootCombo(type);
 
         // update the folder path
+        updateFolderPath(type);
 
-        String wsFolderPath = mWsFolderPathTextField.getText();
+        validatePage();
+    }
+
+    /** Updates the selected type in the type dropdown control */
+    private void setSelectedType(TypeInfo type) {
+        TypeInfo[] types = (TypeInfo[]) mTypeCombo.getData();
+        if (types != null) {
+            for (int i = 0, n = types.length; i < n; i++) {
+                if (types[i] == type) {
+                    mTypeCombo.select(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    /** Returns the selected type in the type dropdown control */
+    private TypeInfo getSelectedType() {
+        int index = mTypeCombo.getSelectionIndex();
+        if (index != -1) {
+            TypeInfo[] types = (TypeInfo[]) mTypeCombo.getData();
+            return types[index];
+        }
+
+        return null;
+    }
+
+    /** Returns the selected index in the type dropdown control */
+    private int getTypeComboIndex(TypeInfo type) {
+        TypeInfo[] types = (TypeInfo[]) mTypeCombo.getData();
+        for (int i = 0, n = types.length; i < n; i++) {
+            if (type == types[i]) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /** Updates the folder path to reflect the given type */
+    private void updateFolderPath(TypeInfo type) {
+        String wsFolderPath = mValues.folderPath;
         String newPath = null;
-
-        mConfigSelector.getConfiguration(mTempConfig);
-        ResourceQualifier qual = mTempConfig.getInvalidQualifier();
+        FolderConfiguration config = mValues.configuration;
+        ResourceQualifier qual = config.getInvalidQualifier();
         if (qual == null) {
             // The configuration is valid. Reformat the folder path using the canonical
             // value from the configuration.
-
-            newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
+            newPath = RES_FOLDER_ABS + config.getFolderName(type.getResFolderType());
         } else {
             // The configuration is invalid. We still update the path but this time
             // do it manually on the string.
@@ -1178,17 +993,13 @@ class NewXmlFileCreationPage extends WizardPage {
                         "^(" + RES_FOLDER_ABS +")[^-]*(.*)",         //$NON-NLS-1$ //$NON-NLS-2$
                         "\\1" + type.getResFolderName() + "\\2");    //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                newPath = RES_FOLDER_ABS + mTempConfig.getFolderName(type.getResFolderType());
+                newPath = RES_FOLDER_ABS + config.getFolderName(type.getResFolderType());
             }
         }
 
         if (newPath != null && !newPath.equals(wsFolderPath)) {
-            mInternalWsFolderPathUpdate = true;
-            mWsFolderPathTextField.setText(newPath);
-            mInternalWsFolderPathUpdate = false;
+            mValues.folderPath = newPath;
         }
-
-        validatePage();
     }
 
     /**
@@ -1196,104 +1007,79 @@ class NewXmlFileCreationPage extends WizardPage {
      * on the currently selected type radio button. Also disables the combo is there's
      * only one choice. Always select the first root element for the given type.
      *
-     * @param type The currently selected {@link TypeInfo}. Cannot be null.
+     * @param type The currently selected {@link TypeInfo}, or null
      */
     private void updateRootCombo(TypeInfo type) {
-        // reset all the values in the combo
-        mRootElementCombo.removeAll();
+        IBaseLabelProvider labelProvider = new ColumnLabelProvider() {
+            @Override
+            public Image getImage(Object element) {
+                return IconFactory.getInstance().getIcon(element.toString());
+            }
+        };
+        mRootTableViewer.setContentProvider(new ArrayContentProvider());
+        mRootTableViewer.setLabelProvider(labelProvider);
 
         if (type != null) {
             // get the list of roots. The list can be empty but not null.
             ArrayList<String> roots = type.getRoots();
+            mRootTableViewer.setInput(roots.toArray());
 
-            // enable the combo if there's more than one choice
-            mRootElementCombo.setEnabled(roots != null && roots.size() > 1);
-
-            if (roots != null) {
-                for (String root : roots) {
-                    mRootElementCombo.add(root);
-                }
-
-                int index = 0; // default is to select the first one
-                String defaultRoot = type.getDefaultRoot(getProject());
-                if (defaultRoot != null) {
-                    index = roots.indexOf(defaultRoot);
-                }
-                mRootElementCombo.select(index < 0 ? 0 : index);
+            int index = 0; // default is to select the first one
+            String defaultRoot = type.getDefaultRoot(mValues.project);
+            if (defaultRoot != null) {
+                index = roots.indexOf(defaultRoot);
             }
+            mRootTable.select(index < 0 ? 0 : index);
+            mRootTable.showSelection();
         }
     }
 
     /**
-     * Callback called when the configuration has changed in the {@link ConfigurationSelector}.
-     */
-    private class onConfigSelectorUpdated implements Runnable {
-        public void run() {
-            if (mInternalConfigSelectorUpdate) {
-                return;
-            }
-
-            resetFolderPath(true /*validate*/);
-        }
-    }
-
-    /**
-     * Helper method to select on of the type radio buttons.
+     * Helper method to select the current type in the type dropdown
      *
      * @param type The TypeInfo matching the radio button to selected or null to deselect them all.
      */
     private void selectType(TypeInfo type) {
-        if (type == null || !type.getWidget().getSelection()) {
-            mInternalTypeUpdate = true;
-            mCurrentTypeInfo = type;
-            for (TypeInfo type2 : sTypes) {
-                type2.getWidget().setSelection(type2 == type);
+        mInternalTypeUpdate = true;
+        mValues.type = type;
+        if (type == null) {
+            if (mTypeCombo.getSelectionIndex() != -1) {
+                mTypeCombo.deselect(mTypeCombo.getSelectionIndex());
             }
-            updateRootCombo(type);
-            mInternalTypeUpdate = false;
+        } else {
+            setSelectedType(type);
         }
+        updateRootCombo(type);
+        mInternalTypeUpdate = false;
     }
 
     /**
-     * Helper method to enable the type radio buttons depending on the current API level.
+     * Add the available types in the type combobox, based on whether they are available
+     * for the current SDK.
      * <p/>
-     * A type radio button is enabled either if:
+     * A type is available either if:
      * - if mProject is null, API level 1 is considered valid
      * - if mProject is !null, the project->target->API must be >= to the type's API level.
      */
-    private void enableTypesBasedOnApi() {
-
-        IAndroidTarget target = mProject != null ? Sdk.getCurrent().getTarget(mProject) : null;
+    private void updateAvailableTypes() {
+        IProject project = mValues.project;
+        IAndroidTarget target = project != null ? Sdk.getCurrent().getTarget(project) : null;
         int currentApiLevel = 1;
         if (target != null) {
             currentApiLevel = target.getVersion().getApiLevel();
         }
 
-        for (TypeInfo type : sTypes) {
-            type.getWidget().setEnabled(type.getTargetApiLevel() <= currentApiLevel);
-        }
-    }
-
-    /**
-     * Reset the current Folder path based on the UI selection
-     * @param validate if true, force a call to {@link #validatePage()}.
-     */
-    private void resetFolderPath(boolean validate) {
-        TypeInfo type = getSelectedType();
-
-        if (type != null) {
-            mConfigSelector.getConfiguration(mTempConfig);
-            StringBuffer sb = new StringBuffer(RES_FOLDER_ABS);
-            sb.append(mTempConfig.getFolderName(type.getResFolderType()));
-
-            mInternalWsFolderPathUpdate = true;
-            mWsFolderPathTextField.setText(sb.toString());
-            mInternalWsFolderPathUpdate = false;
-
-            if (validate) {
-                validatePage();
+        List<String> items = new ArrayList<String>(sTypes.length);
+        List<TypeInfo> types = new ArrayList<TypeInfo>(sTypes.length);
+        for (int i = 0, n = sTypes.length; i < n; i++) {
+            TypeInfo type = sTypes[i];
+            if (type.getTargetApiLevel() <= currentApiLevel) {
+                items.add(type.getUiName());
+                types.add(type);
             }
         }
+        mTypeCombo.setItems(items.toArray(new String[items.size()]));
+        mTypeCombo.setData(types.toArray(new TypeInfo[types.size()]));
     }
 
     /**
@@ -1305,14 +1091,13 @@ class NewXmlFileCreationPage extends WizardPage {
         String warning = null;
 
         // -- validate project
-        if (getProject() == null) {
+        if (mValues.project == null) {
             error = "Please select an Android project.";
         }
 
         // -- validate type
+        TypeInfo type = mValues.type;
         if (error == null) {
-            TypeInfo type = getSelectedType();
-
             if (type == null) {
                 error = "One of the types must be selected (e.g. layout, values, etc.)";
             }
@@ -1320,52 +1105,30 @@ class NewXmlFileCreationPage extends WizardPage {
 
         // -- validate filename
         if (error == null) {
-            String fileName = getFileName();
-            ResourceFolderType folderType = getSelectedType().getResFolderType();
+            String fileName = mValues.getFileName();
+            assert type != null;
+            ResourceFolderType folderType = type.getResFolderType();
             error = ResourceNameValidator.create(true, folderType).isValid(fileName);
         }
 
         // -- validate type API level
         if (error == null) {
-            IAndroidTarget target = Sdk.getCurrent().getTarget(mProject);
+            IAndroidTarget target = Sdk.getCurrent().getTarget(mValues.project);
             int currentApiLevel = 1;
             if (target != null) {
                 currentApiLevel = target.getVersion().getApiLevel();
             }
 
-            TypeInfo type = getSelectedType();
-
+            assert type != null;
             if (type.getTargetApiLevel() > currentApiLevel) {
                 error = "The API level of the selected type (e.g. AppWidget, etc.) is not " +
                         "compatible with the API level of the project.";
             }
         }
 
-        // -- validate folder configuration
-        if (error == null) {
-            ConfigurationState state = mConfigSelector.getState();
-            if (state == ConfigurationState.INVALID_CONFIG) {
-                ResourceQualifier qual = mConfigSelector.getInvalidQualifier();
-                if (qual != null) {
-                    error = String.format("The qualifier '%1$s' is invalid in the folder configuration.",
-                            qual.getName());
-                }
-            } else if (state == ConfigurationState.REGION_WITHOUT_LANGUAGE) {
-                error = "The Region qualifier requires the Language qualifier.";
-            }
-        }
-
-        // -- validate generated path
-        if (error == null) {
-            String wsFolderPath = getWsFolderPath();
-            if (!wsFolderPath.startsWith(RES_FOLDER_ABS)) {
-                error = String.format("Target folder must start with %1$s.", RES_FOLDER_ABS);
-            }
-        }
-
         // -- validate destination file doesn't exist
         if (error == null) {
-            IFile file = getDestinationFile();
+            IFile file = mValues.getDestinationFile();
             if (file != null && file.exists()) {
                 warning = "The destination file already exists";
             }
