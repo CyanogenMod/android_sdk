@@ -20,7 +20,10 @@ import static com.android.ide.common.layout.LayoutConstants.ANDROID_WIDGET_PREFI
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_BASELINE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT_OF;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GESTURE_OVERLAY_VIEW;
 import static com.android.ide.common.layout.LayoutConstants.FQCN_GRID_LAYOUT;
@@ -32,6 +35,7 @@ import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.TABLE_ROW;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.annotations.VisibleForTesting;
@@ -40,6 +44,7 @@ import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.ViewHierarchy;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
@@ -62,6 +67,7 @@ import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -246,6 +252,7 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
         String oldType = getOldType();
         String newType = mTypeFqcn;
+
         if (newType.equals(FQCN_RELATIVE_LAYOUT)) {
             if (oldType.equals(FQCN_LINEAR_LAYOUT) && !mFlatten) {
                 // Hand-coded conversion specifically tailored for linear to relative, provided
@@ -253,22 +260,25 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 // TODO: use the RelativeLayoutConversionHelper for this; it does a better job
                 // analyzing gravities etc.
                 convertLinearToRelative(rootEdit);
-                removeUndefinedLayoutAttrs(rootEdit, layout);
+                removeUndefinedAttrs(rootEdit, layout);
+                addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, null);
             } else {
                 // Generic conversion to relative - can also flatten the hierarchy
-                convertAnyToRelative(rootEdit);
+                convertAnyToRelative(rootEdit, oldType, newType);
                 // This already handles removing undefined layout attributes -- right?
                 //removeUndefinedLayoutAttrs(rootEdit, layout);
             }
         } else if (newType.equals(FQCN_GRID_LAYOUT)) {
             convertAnyToGridLayout(rootEdit);
-            removeUndefinedLayoutAttrs(rootEdit, layout);
+            removeUndefinedAttrs(rootEdit, layout);
         } else if (oldType.equals(FQCN_RELATIVE_LAYOUT) && newType.equals(FQCN_LINEAR_LAYOUT)) {
             convertRelativeToLinear(rootEdit);
-            removeUndefinedLayoutAttrs(rootEdit, layout);
+            removeUndefinedAttrs(rootEdit, layout);
+            addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, null);
         } else if (oldType.equals(FQCN_LINEAR_LAYOUT) && newType.equals(FQCN_TABLE_LAYOUT)) {
             convertLinearToTable(rootEdit);
-            removeUndefinedLayoutAttrs(rootEdit, layout);
+            removeUndefinedAttrs(rootEdit, layout);
+            addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, null);
         } else {
             convertGeneric(rootEdit, oldType, newType, layout);
         }
@@ -282,6 +292,29 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         change.setEdit(rootEdit);
 
         return changes;
+    }
+
+    /** Checks whether we need to add any missing attributes on the elements */
+    private void addMissingWrapContentAttributes(MultiTextEdit rootEdit, Element layout,
+            String oldType, String newType, Set<Element> skip) {
+        if (oldType.equals(FQCN_GRID_LAYOUT) && !newType.equals(FQCN_GRID_LAYOUT)) {
+            String namespace = getAndroidNamespacePrefix();
+
+            for (Element child : DomUtilities.getChildren(layout)) {
+                if (skip != null && skip.contains(child)) {
+                    continue;
+                }
+
+                if (!child.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH)) {
+                    setAttribute(rootEdit, child, ANDROID_URI,
+                            namespace, ATTR_LAYOUT_WIDTH, VALUE_WRAP_CONTENT);
+                }
+                if (!child.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT)) {
+                    setAttribute(rootEdit, child, ANDROID_URI,
+                            namespace, ATTR_LAYOUT_HEIGHT, VALUE_WRAP_CONTENT);
+                }
+            }
+        }
     }
 
     /** Hand coded conversion from a LinearLayout to a TableLayout */
@@ -330,8 +363,6 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         // Horizontal is the default, so if no value is specified it is horizontal.
         boolean isVertical = VALUE_VERTICAL.equals(layout.getAttributeNS(ANDROID_URI,
                 ATTR_ORIENTATION));
-
-        removeOrientationAttribute(rootEdit, layout);
 
         String attributePrefix = getAndroidNamespacePrefix();
 
@@ -432,11 +463,16 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
 
         // For now we simply go with the default behavior, which is to just strip the
         // layout attributes that aren't supported.
-        removeUndefinedLayoutAttrs(rootEdit, layout);
+        removeUndefinedAttrs(rootEdit, layout);
+        addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, null);
     }
 
-    /** Removes all the unused attributes after a conversion */
-    private void removeUndefinedLayoutAttrs(MultiTextEdit rootEdit, Element layout) {
+    /**
+     * Removes all the unavailable attributes after a conversion, both on the
+     * layout element itself as well as the layout attributes of any of the
+     * children
+     */
+    private void removeUndefinedAttrs(MultiTextEdit rootEdit, Element layout) {
         ViewElementDescriptor descriptor = getElementDescriptor(mTypeFqcn);
         if (descriptor == null) {
             return;
@@ -464,10 +500,33 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
                 }
             }
         }
+
+        // Also remove the unavailable attributes (not layout attributes) on the
+        // converted element
+        defined = new HashSet<String>();
+        AttributeDescriptor[] attributes = descriptor.getAttributes();
+        for (AttributeDescriptor attribute : attributes) {
+            defined.add(attribute.getXmlLocalName());
+        }
+
+        // Remove undefined attributes on the layout element itself
+        NamedNodeMap attributeMap = layout.getAttributes();
+        for (int i = 0, n = attributeMap.getLength(); i < n; i++) {
+            Node attributeNode = attributeMap.item(i);
+
+            String name = attributeNode.getLocalName();
+            if (!name.startsWith(ATTR_LAYOUT_PREFIX)
+                    && ANDROID_URI.equals(attributeNode.getNamespaceURI())) {
+                if (!defined.contains(name)) {
+                    // Remove it
+                    removeAttribute(rootEdit, layout, ANDROID_URI, name);
+                }
+            }
+        }
     }
 
     /** Hand coded conversion from any layout to a RelativeLayout */
-    private void convertAnyToRelative(MultiTextEdit rootEdit) {
+    private void convertAnyToRelative(MultiTextEdit rootEdit, String oldType, String newType) {
         // To perform a conversion from any other layout type, including nested conversion,
         Element layout = getPrimaryElement();
         CanvasViewInfo rootView = mRootView;
@@ -480,6 +539,12 @@ public class ChangeLayoutRefactoring extends VisualRefactoring {
         RelativeLayoutConversionHelper helper =
             new RelativeLayoutConversionHelper(this, layout, mFlatten, rootEdit, rootView);
         helper.convertToRelative();
+        List<Element> deletedElements = helper.getDeletedElements();
+        Set<Element> deleted = null;
+        if (deletedElements != null && deletedElements.size() > 0) {
+            deleted = new HashSet<Element>(deletedElements);
+        }
+        addMissingWrapContentAttributes(rootEdit, layout, oldType, newType, deleted);
     }
 
     /** Hand coded conversion from any layout to a GridLayout */
