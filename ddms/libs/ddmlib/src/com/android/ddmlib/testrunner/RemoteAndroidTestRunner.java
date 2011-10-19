@@ -36,10 +36,11 @@ import java.util.Map.Entry;
 public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
 
     private final String mPackageName;
-    private final  String mRunnerName;
+    private final String mRunnerName;
     private IDevice mRemoteDevice;
     // default to no timeout
     private int mMaxTimeToOutputResponse = 0;
+    private String mRunName = null;
 
     /** map of name-value instrumentation argument pairs */
     private Map<String, String> mArgMap;
@@ -214,6 +215,13 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    public void setRunName(String runName) {
+        mRunName = runName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void run(ITestRunListener... listeners)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
@@ -230,8 +238,8 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
             getArgsCommand(), getRunnerPath());
         Log.i(LOG_TAG, String.format("Running %1$s on %2$s", runCaseCommandStr,
                 mRemoteDevice.getSerialNumber()));
-        // TODO: allow run name to be configurable
-        mParser = new InstrumentationResultParser(mPackageName, listeners);
+        String runName = mRunName == null ? mPackageName : mRunName;
+        mParser = new InstrumentationResultParser(runName, listeners);
 
         try {
             mRemoteDevice.executeShellCommand(runCaseCommandStr, mParser, mMaxTimeToOutputResponse);
