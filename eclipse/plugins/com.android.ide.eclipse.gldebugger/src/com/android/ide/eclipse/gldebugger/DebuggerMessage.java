@@ -15,16 +15,16 @@ public final class DebuggerMessage {
       initFields();
     }
     private Message(boolean noInit) {}
-    
+
     private static final Message defaultInstance;
     public static Message getDefaultInstance() {
       return defaultInstance;
     }
-    
+
     public Message getDefaultInstanceForType() {
       return defaultInstance;
     }
-    
+
     public enum Function
         implements com.google.protobuf.Internal.EnumLite {
       glActiveTexture(0, 0),
@@ -219,10 +219,10 @@ public final class DebuggerMessage {
       SKIP(189, 189),
       SETPROP(190, 190),
       ;
-      
-      
+
+
       public final int getNumber() { return value; }
-      
+
       public static Function valueOf(int value) {
         switch (value) {
           case 0: return glActiveTexture;
@@ -419,7 +419,7 @@ public final class DebuggerMessage {
           default: return null;
         }
       }
-      
+
       public static com.google.protobuf.Internal.EnumLiteMap<Function>
           internalGetValueMap() {
         return internalValueMap;
@@ -431,17 +431,17 @@ public final class DebuggerMessage {
                 return Function.valueOf(number)
       ;        }
             };
-      
+
       private final int index;
       private final int value;
       private Function(int index, int value) {
         this.index = index;
         this.value = value;
       }
-      
+
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.Function)
     }
-    
+
     public enum Type
         implements com.google.protobuf.Internal.EnumLite {
       BeforeCall(0, 0),
@@ -450,10 +450,10 @@ public final class DebuggerMessage {
       Response(3, 3),
       CompleteCall(4, 4),
       ;
-      
-      
+
+
       public final int getNumber() { return value; }
-      
+
       public static Type valueOf(int value) {
         switch (value) {
           case 0: return BeforeCall;
@@ -464,7 +464,7 @@ public final class DebuggerMessage {
           default: return null;
         }
       }
-      
+
       public static com.google.protobuf.Internal.EnumLiteMap<Type>
           internalGetValueMap() {
         return internalValueMap;
@@ -476,26 +476,26 @@ public final class DebuggerMessage {
                 return Type.valueOf(number)
       ;        }
             };
-      
+
       private final int index;
       private final int value;
       private Type(int index, int value) {
         this.index = index;
         this.value = value;
       }
-      
+
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.Type)
     }
-    
+
     public enum DataType
         implements com.google.protobuf.Internal.EnumLite {
       ReferencedImage(0, 0),
       NonreferencedImage(1, 1),
       ;
-      
-      
+
+
       public final int getNumber() { return value; }
-      
+
       public static DataType valueOf(int value) {
         switch (value) {
           case 0: return ReferencedImage;
@@ -503,7 +503,7 @@ public final class DebuggerMessage {
           default: return null;
         }
       }
-      
+
       public static com.google.protobuf.Internal.EnumLiteMap<DataType>
           internalGetValueMap() {
         return internalValueMap;
@@ -515,17 +515,17 @@ public final class DebuggerMessage {
                 return DataType.valueOf(number)
       ;        }
             };
-      
+
       private final int index;
       private final int value;
       private DataType(int index, int value) {
         this.index = index;
         this.value = value;
       }
-      
+
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.DataType)
     }
-    
+
     public enum Prop
         implements com.google.protobuf.Internal.EnumLite {
       CaptureDraw(0, 0),
@@ -534,10 +534,10 @@ public final class DebuggerMessage {
       CaptureSwap(3, 3),
       GLConstant(4, 4),
       ;
-      
-      
+
+
       public final int getNumber() { return value; }
-      
+
       public static Prop valueOf(int value) {
         switch (value) {
           case 0: return CaptureDraw;
@@ -548,7 +548,7 @@ public final class DebuggerMessage {
           default: return null;
         }
       }
-      
+
       public static com.google.protobuf.Internal.EnumLiteMap<Prop>
           internalGetValueMap() {
         return internalValueMap;
@@ -560,178 +560,178 @@ public final class DebuggerMessage {
                 return Prop.valueOf(number)
       ;        }
             };
-      
+
       private final int index;
       private final int value;
       private Prop(int index, int value) {
         this.index = index;
         this.value = value;
       }
-      
+
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.Prop)
     }
-    
+
     // required int32 context_id = 1;
     public static final int CONTEXT_ID_FIELD_NUMBER = 1;
     private boolean hasContextId;
     private int contextId_ = 0;
     public boolean hasContextId() { return hasContextId; }
     public int getContextId() { return contextId_; }
-    
+
     // required .com.android.glesv2debugger.Message.Function function = 2 [default = NEG];
     public static final int FUNCTION_FIELD_NUMBER = 2;
     private boolean hasFunction;
     private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function function_;
     public boolean hasFunction() { return hasFunction; }
     public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function getFunction() { return function_; }
-    
+
     // required .com.android.glesv2debugger.Message.Type type = 3;
     public static final int TYPE_FIELD_NUMBER = 3;
     private boolean hasType;
     private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type type_;
     public boolean hasType() { return hasType; }
     public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type getType() { return type_; }
-    
+
     // required bool expect_response = 4;
     public static final int EXPECT_RESPONSE_FIELD_NUMBER = 4;
     private boolean hasExpectResponse;
     private boolean expectResponse_ = false;
     public boolean hasExpectResponse() { return hasExpectResponse; }
     public boolean getExpectResponse() { return expectResponse_; }
-    
+
     // optional int32 ret = 5;
     public static final int RET_FIELD_NUMBER = 5;
     private boolean hasRet;
     private int ret_ = 0;
     public boolean hasRet() { return hasRet; }
     public int getRet() { return ret_; }
-    
+
     // optional int32 arg0 = 6;
     public static final int ARG0_FIELD_NUMBER = 6;
     private boolean hasArg0;
     private int arg0_ = 0;
     public boolean hasArg0() { return hasArg0; }
     public int getArg0() { return arg0_; }
-    
+
     // optional int32 arg1 = 7;
     public static final int ARG1_FIELD_NUMBER = 7;
     private boolean hasArg1;
     private int arg1_ = 0;
     public boolean hasArg1() { return hasArg1; }
     public int getArg1() { return arg1_; }
-    
+
     // optional int32 arg2 = 8;
     public static final int ARG2_FIELD_NUMBER = 8;
     private boolean hasArg2;
     private int arg2_ = 0;
     public boolean hasArg2() { return hasArg2; }
     public int getArg2() { return arg2_; }
-    
+
     // optional int32 arg3 = 9;
     public static final int ARG3_FIELD_NUMBER = 9;
     private boolean hasArg3;
     private int arg3_ = 0;
     public boolean hasArg3() { return hasArg3; }
     public int getArg3() { return arg3_; }
-    
+
     // optional int32 arg4 = 16;
     public static final int ARG4_FIELD_NUMBER = 16;
     private boolean hasArg4;
     private int arg4_ = 0;
     public boolean hasArg4() { return hasArg4; }
     public int getArg4() { return arg4_; }
-    
+
     // optional int32 arg5 = 17;
     public static final int ARG5_FIELD_NUMBER = 17;
     private boolean hasArg5;
     private int arg5_ = 0;
     public boolean hasArg5() { return hasArg5; }
     public int getArg5() { return arg5_; }
-    
+
     // optional int32 arg6 = 18;
     public static final int ARG6_FIELD_NUMBER = 18;
     private boolean hasArg6;
     private int arg6_ = 0;
     public boolean hasArg6() { return hasArg6; }
     public int getArg6() { return arg6_; }
-    
+
     // optional int32 arg7 = 19;
     public static final int ARG7_FIELD_NUMBER = 19;
     private boolean hasArg7;
     private int arg7_ = 0;
     public boolean hasArg7() { return hasArg7; }
     public int getArg7() { return arg7_; }
-    
+
     // optional int32 arg8 = 20;
     public static final int ARG8_FIELD_NUMBER = 20;
     private boolean hasArg8;
     private int arg8_ = 0;
     public boolean hasArg8() { return hasArg8; }
     public int getArg8() { return arg8_; }
-    
+
     // optional bytes data = 10;
     public static final int DATA_FIELD_NUMBER = 10;
     private boolean hasData;
     private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
     public boolean hasData() { return hasData; }
     public com.google.protobuf.ByteString getData() { return data_; }
-    
+
     // optional .com.android.glesv2debugger.Message.DataType data_type = 23;
     public static final int DATA_TYPE_FIELD_NUMBER = 23;
     private boolean hasDataType;
     private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.DataType dataType_;
     public boolean hasDataType() { return hasDataType; }
     public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.DataType getDataType() { return dataType_; }
-    
+
     // optional int32 pixel_format = 24;
     public static final int PIXEL_FORMAT_FIELD_NUMBER = 24;
     private boolean hasPixelFormat;
     private int pixelFormat_ = 0;
     public boolean hasPixelFormat() { return hasPixelFormat; }
     public int getPixelFormat() { return pixelFormat_; }
-    
+
     // optional int32 pixel_type = 25;
     public static final int PIXEL_TYPE_FIELD_NUMBER = 25;
     private boolean hasPixelType;
     private int pixelType_ = 0;
     public boolean hasPixelType() { return hasPixelType; }
     public int getPixelType() { return pixelType_; }
-    
+
     // optional int32 image_width = 26;
     public static final int IMAGE_WIDTH_FIELD_NUMBER = 26;
     private boolean hasImageWidth;
     private int imageWidth_ = 0;
     public boolean hasImageWidth() { return hasImageWidth; }
     public int getImageWidth() { return imageWidth_; }
-    
+
     // optional int32 image_height = 27;
     public static final int IMAGE_HEIGHT_FIELD_NUMBER = 27;
     private boolean hasImageHeight;
     private int imageHeight_ = 0;
     public boolean hasImageHeight() { return hasImageHeight; }
     public int getImageHeight() { return imageHeight_; }
-    
+
     // optional float time = 11;
     public static final int TIME_FIELD_NUMBER = 11;
     private boolean hasTime;
     private float time_ = 0F;
     public boolean hasTime() { return hasTime; }
     public float getTime() { return time_; }
-    
+
     // optional .com.android.glesv2debugger.Message.Prop prop = 21;
     public static final int PROP_FIELD_NUMBER = 21;
     private boolean hasProp;
     private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Prop prop_;
     public boolean hasProp() { return hasProp; }
     public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Prop getProp() { return prop_; }
-    
+
     // optional float clock = 22;
     public static final int CLOCK_FIELD_NUMBER = 22;
     private boolean hasClock;
     private float clock_ = 0F;
     public boolean hasClock() { return hasClock; }
     public float getClock() { return clock_; }
-    
+
     private void initFields() {
       function_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function.NEG;
       type_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type.BeforeCall;
@@ -745,7 +745,7 @@ public final class DebuggerMessage {
       if (!hasExpectResponse) return false;
       return true;
     }
-    
+
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -819,12 +819,12 @@ public final class DebuggerMessage {
         output.writeInt32(27, getImageHeight());
       }
     }
-    
+
     private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
-    
+
       size = 0;
       if (hasContextId()) {
         size += com.google.protobuf.CodedOutputStream
@@ -921,7 +921,7 @@ public final class DebuggerMessage {
       memoizedSerializedSize = size;
       return size;
     }
-    
+
     public static com.android.ide.eclipse.gldebugger.DebuggerMessage.Message parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -988,32 +988,32 @@ public final class DebuggerMessage {
       return newBuilder().mergeFrom(input, extensionRegistry)
                .buildParsed();
     }
-    
+
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
-    
+
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageLite.Builder<
           com.android.ide.eclipse.gldebugger.DebuggerMessage.Message, Builder> {
       private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message result;
-      
+
       // Construct using com.android.glesv2debugger.DebuggerMessage.Message.newBuilder()
       private Builder() {}
-      
+
       private static Builder create() {
         Builder builder = new Builder();
         builder.result = new com.android.ide.eclipse.gldebugger.DebuggerMessage.Message();
         return builder;
       }
-      
+
       protected com.android.ide.eclipse.gldebugger.DebuggerMessage.Message internalGetResult() {
         return result;
       }
-      
+
       public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
@@ -1022,15 +1022,15 @@ public final class DebuggerMessage {
         result = new com.android.ide.eclipse.gldebugger.DebuggerMessage.Message();
         return this;
       }
-      
+
       public Builder clone() {
         return create().mergeFrom(result);
       }
-      
+
       public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message getDefaultInstanceForType() {
         return com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.getDefaultInstance();
       }
-      
+
       public boolean isInitialized() {
         return result.isInitialized();
       }
@@ -1040,7 +1040,7 @@ public final class DebuggerMessage {
         }
         return buildPartial();
       }
-      
+
       private com.android.ide.eclipse.gldebugger.DebuggerMessage.Message buildParsed()
           throws com.google.protobuf.InvalidProtocolBufferException {
         if (!isInitialized()) {
@@ -1049,7 +1049,7 @@ public final class DebuggerMessage {
         }
         return buildPartial();
       }
-      
+
       public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
@@ -1059,7 +1059,7 @@ public final class DebuggerMessage {
         result = null;
         return returnMe;
       }
-      
+
       public Builder mergeFrom(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message other) {
         if (other == com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.getDefaultInstance()) return this;
         if (other.hasContextId()) {
@@ -1133,7 +1133,7 @@ public final class DebuggerMessage {
         }
         return this;
       }
-      
+
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1260,8 +1260,8 @@ public final class DebuggerMessage {
           }
         }
       }
-      
-      
+
+
       // required int32 context_id = 1;
       public boolean hasContextId() {
         return result.hasContextId();
@@ -1279,7 +1279,7 @@ public final class DebuggerMessage {
         result.contextId_ = 0;
         return this;
       }
-      
+
       // required .com.android.glesv2debugger.Message.Function function = 2 [default = NEG];
       public boolean hasFunction() {
         return result.hasFunction();
@@ -1300,7 +1300,7 @@ public final class DebuggerMessage {
         result.function_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function.NEG;
         return this;
       }
-      
+
       // required .com.android.glesv2debugger.Message.Type type = 3;
       public boolean hasType() {
         return result.hasType();
@@ -1321,7 +1321,7 @@ public final class DebuggerMessage {
         result.type_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type.BeforeCall;
         return this;
       }
-      
+
       // required bool expect_response = 4;
       public boolean hasExpectResponse() {
         return result.hasExpectResponse();
@@ -1339,7 +1339,7 @@ public final class DebuggerMessage {
         result.expectResponse_ = false;
         return this;
       }
-      
+
       // optional int32 ret = 5;
       public boolean hasRet() {
         return result.hasRet();
@@ -1357,7 +1357,7 @@ public final class DebuggerMessage {
         result.ret_ = 0;
         return this;
       }
-      
+
       // optional int32 arg0 = 6;
       public boolean hasArg0() {
         return result.hasArg0();
@@ -1375,7 +1375,7 @@ public final class DebuggerMessage {
         result.arg0_ = 0;
         return this;
       }
-      
+
       // optional int32 arg1 = 7;
       public boolean hasArg1() {
         return result.hasArg1();
@@ -1393,7 +1393,7 @@ public final class DebuggerMessage {
         result.arg1_ = 0;
         return this;
       }
-      
+
       // optional int32 arg2 = 8;
       public boolean hasArg2() {
         return result.hasArg2();
@@ -1411,7 +1411,7 @@ public final class DebuggerMessage {
         result.arg2_ = 0;
         return this;
       }
-      
+
       // optional int32 arg3 = 9;
       public boolean hasArg3() {
         return result.hasArg3();
@@ -1429,7 +1429,7 @@ public final class DebuggerMessage {
         result.arg3_ = 0;
         return this;
       }
-      
+
       // optional int32 arg4 = 16;
       public boolean hasArg4() {
         return result.hasArg4();
@@ -1447,7 +1447,7 @@ public final class DebuggerMessage {
         result.arg4_ = 0;
         return this;
       }
-      
+
       // optional int32 arg5 = 17;
       public boolean hasArg5() {
         return result.hasArg5();
@@ -1465,7 +1465,7 @@ public final class DebuggerMessage {
         result.arg5_ = 0;
         return this;
       }
-      
+
       // optional int32 arg6 = 18;
       public boolean hasArg6() {
         return result.hasArg6();
@@ -1483,7 +1483,7 @@ public final class DebuggerMessage {
         result.arg6_ = 0;
         return this;
       }
-      
+
       // optional int32 arg7 = 19;
       public boolean hasArg7() {
         return result.hasArg7();
@@ -1501,7 +1501,7 @@ public final class DebuggerMessage {
         result.arg7_ = 0;
         return this;
       }
-      
+
       // optional int32 arg8 = 20;
       public boolean hasArg8() {
         return result.hasArg8();
@@ -1519,7 +1519,7 @@ public final class DebuggerMessage {
         result.arg8_ = 0;
         return this;
       }
-      
+
       // optional bytes data = 10;
       public boolean hasData() {
         return result.hasData();
@@ -1540,7 +1540,7 @@ public final class DebuggerMessage {
         result.data_ = getDefaultInstance().getData();
         return this;
       }
-      
+
       // optional .com.android.glesv2debugger.Message.DataType data_type = 23;
       public boolean hasDataType() {
         return result.hasDataType();
@@ -1561,7 +1561,7 @@ public final class DebuggerMessage {
         result.dataType_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.DataType.ReferencedImage;
         return this;
       }
-      
+
       // optional int32 pixel_format = 24;
       public boolean hasPixelFormat() {
         return result.hasPixelFormat();
@@ -1579,7 +1579,7 @@ public final class DebuggerMessage {
         result.pixelFormat_ = 0;
         return this;
       }
-      
+
       // optional int32 pixel_type = 25;
       public boolean hasPixelType() {
         return result.hasPixelType();
@@ -1597,7 +1597,7 @@ public final class DebuggerMessage {
         result.pixelType_ = 0;
         return this;
       }
-      
+
       // optional int32 image_width = 26;
       public boolean hasImageWidth() {
         return result.hasImageWidth();
@@ -1615,7 +1615,7 @@ public final class DebuggerMessage {
         result.imageWidth_ = 0;
         return this;
       }
-      
+
       // optional int32 image_height = 27;
       public boolean hasImageHeight() {
         return result.hasImageHeight();
@@ -1633,7 +1633,7 @@ public final class DebuggerMessage {
         result.imageHeight_ = 0;
         return this;
       }
-      
+
       // optional float time = 11;
       public boolean hasTime() {
         return result.hasTime();
@@ -1651,7 +1651,7 @@ public final class DebuggerMessage {
         result.time_ = 0F;
         return this;
       }
-      
+
       // optional .com.android.glesv2debugger.Message.Prop prop = 21;
       public boolean hasProp() {
         return result.hasProp();
@@ -1672,7 +1672,7 @@ public final class DebuggerMessage {
         result.prop_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Prop.CaptureDraw;
         return this;
       }
-      
+
       // optional float clock = 22;
       public boolean hasClock() {
         return result.hasClock();
@@ -1690,24 +1690,24 @@ public final class DebuggerMessage {
         result.clock_ = 0F;
         return this;
       }
-      
+
       // @@protoc_insertion_point(builder_scope:com.android.glesv2debugger.Message)
     }
-    
+
     static {
       defaultInstance = new Message(true);
       com.android.ide.eclipse.gldebugger.DebuggerMessage.internalForceInit();
       defaultInstance.initFields();
     }
-    
+
     // @@protoc_insertion_point(class_scope:com.android.glesv2debugger.Message)
   }
-  
-  
+
+
   static {
   }
-  
+
   public static void internalForceInit() {}
-  
+
   // @@protoc_insertion_point(outer_class_scope)
 }
