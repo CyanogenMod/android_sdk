@@ -32,12 +32,9 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 /**
@@ -204,24 +201,45 @@ public class ProjectChooserHelper {
     }
 
     /**
-     * A selector button for showing the currently selected project and for
+     * A selector combo for showing the currently selected project and for
      * changing the selection
      */
-    public static class ProjectButton extends Button implements SelectionListener {
+    public static class ProjectCombo extends Combo implements SelectionListener {
         /** Currently chosen project, or null when no project has been initialized or selected */
         private IProject mProject;
+        private IJavaProject[] mAvailableProjects;
 
         /**
-         * Creates a new project selector button
+         * Creates a new project selector combo
          *
-         * @param parent parent composite to add the button to
+         * @param helper associated {@link ProjectChooserHelper} for looking up
+         *            projects
+         * @param parent parent composite to add the combo to
          * @param initialProject the initial project to select, or null (which
          *            will show a "Please Choose Project..." label instead.)
          */
-        public ProjectButton(Composite parent, IProject initialProject) {
-            super(parent, SWT.BORDER | SWT.FLAT);
+        public ProjectCombo(ProjectChooserHelper helper, Composite parent,
+                IProject initialProject) {
+            super(parent, SWT.BORDER | SWT.FLAT | SWT.READ_ONLY);
             mProject = initialProject;
-            setProjectLabel(initialProject);
+
+            mAvailableProjects = helper.getAndroidProjects(null);
+            String[] items = new String[mAvailableProjects.length + 1];
+            items[0] = "--- Choose Project ---";
+
+            ILabelProvider labelProvider = new JavaElementLabelProvider(
+                    JavaElementLabelProvider.SHOW_DEFAULT);
+            int selectionIndex = 0;
+            for (int i = 0, n = mAvailableProjects.length; i < n; i++) {
+                IProject project = mAvailableProjects[i].getProject();
+                items[i + 1] = labelProvider.getText(project);
+                if (project == initialProject) {
+                    selectionIndex = i + 1;
+                }
+            }
+            setItems(items);
+            select(selectionIndex);
+
             addSelectionListener(this);
         }
 
@@ -242,25 +260,6 @@ public class ProjectChooserHelper {
          */
         public void setSelectedProject(IProject project) {
             mProject = project;
-            setProjectLabel(project);
-        }
-
-        /** Updates the selection with the given project */
-        private void setProjectLabel(IProject project) {
-            ILabelProvider labelProvider = new JavaElementLabelProvider(
-                    JavaElementLabelProvider.SHOW_DEFAULT);
-            if (project == null) {
-                setText("Choose Project...");
-                ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
-                Image errorImage = sharedImages.getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
-                setImage(errorImage);
-            } else {
-                setText(labelProvider.getText(project));
-                Image projectImage = labelProvider.getImage(project);
-                if (projectImage != null) {
-                    setImage(projectImage);
-                }
-            }
         }
 
         /**
@@ -268,13 +267,14 @@ public class ProjectChooserHelper {
          * dialog for selecting a new project.
          */
         public void widgetSelected(SelectionEvent e) {
-            ProjectChooserHelper helper =
-                    new ProjectChooserHelper(getShell(), null /* filter */);
-            IJavaProject p = helper.chooseJavaProject(getText(),
-                    "Please select the target project");
-            if (p != null) {
-                mProject = p.getProject();
-                setProjectLabel(mProject);
+            int selectionIndex = getSelectionIndex();
+            if (selectionIndex > 0 && mAvailableProjects != null
+                    && selectionIndex <= mAvailableProjects.length) {
+                // selection index 0 is "Choose Project", all other projects are offset
+                // by 1 from the selection index
+                mProject = mAvailableProjects[selectionIndex - 1].getProject();
+            } else {
+                mProject = null;
             }
         }
 

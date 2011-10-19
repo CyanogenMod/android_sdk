@@ -41,7 +41,8 @@ import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescrip
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
-import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectButton;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -398,7 +399,7 @@ class NewXmlFileCreationPage extends WizardPage {
     };
 
     private NewXmlFileWizard.Values mValues;
-    private ProjectButton mProjectButton;
+    private ProjectCombo mProjectButton;
     private Text mFileNameTextField;
     private Combo mTypeCombo;
     private IStructuredSelection mInitialSelection;
@@ -477,9 +478,11 @@ class NewXmlFileCreationPage extends WizardPage {
         projectLabel.setText("Project:");
         projectLabel.setToolTipText(tooltip);
 
-        mProjectButton = new ProjectButton(composite, mValues.project);
+        ProjectChooserHelper helper =
+                new ProjectChooserHelper(getShell(), null /* filter */);
+
+        mProjectButton = new ProjectCombo(helper, composite, mValues.project);
         mProjectButton.setToolTipText(tooltip);
-        mProjectButton.setAlignment(SWT.LEFT);
         mProjectButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mProjectButton.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -904,6 +907,7 @@ class NewXmlFileCreationPage extends WizardPage {
 
         // enable types based on new API level
         updateAvailableTypes();
+        initialSelectType();
 
         // update the folder name based on API level
         updateFolderPath(mValues.type);
@@ -1090,11 +1094,6 @@ class NewXmlFileCreationPage extends WizardPage {
         String error = null;
         String warning = null;
 
-        // -- validate project
-        if (mValues.project == null) {
-            error = "Please select an Android project.";
-        }
-
         // -- validate type
         TypeInfo type = mValues.type;
         if (error == null) {
@@ -1103,12 +1102,9 @@ class NewXmlFileCreationPage extends WizardPage {
             }
         }
 
-        // -- validate filename
-        if (error == null) {
-            String fileName = mValues.getFileName();
-            assert type != null;
-            ResourceFolderType folderType = type.getResFolderType();
-            error = ResourceNameValidator.create(true, folderType).isValid(fileName);
+        // -- validate project
+        if (mValues.project == null) {
+            error = "Please select an Android project.";
         }
 
         // -- validate type API level
@@ -1124,6 +1120,14 @@ class NewXmlFileCreationPage extends WizardPage {
                 error = "The API level of the selected type (e.g. AppWidget, etc.) is not " +
                         "compatible with the API level of the project.";
             }
+        }
+
+        // -- validate filename
+        if (error == null) {
+            String fileName = mValues.getFileName();
+            assert type != null;
+            ResourceFolderType folderType = type.getResFolderType();
+            error = ResourceNameValidator.create(true, folderType).isValid(fileName);
         }
 
         // -- validate destination file doesn't exist
