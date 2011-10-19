@@ -17,6 +17,10 @@
 package com.android.ide.eclipse.adt;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -239,5 +243,17 @@ public class AdtUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Returns an absolute path to the given resource
+     *
+     * @param resource the resource to look up a path for
+     * @return an absolute file system path to the resource
+     */
+    public static IPath getAbsolutePath(IResource resource) {
+        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+        IPath workspacePath = workspace.getLocation();
+        return workspacePath.append(resource.getFullPath());
     }
 }

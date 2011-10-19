@@ -127,6 +127,18 @@
         <wizard
             canFinishEarly="false"
             category="com.android.ide.eclipse.wizards.category"
+            class="com.android.ide.eclipse.adt.internal.wizards.newproject.NewSampleProjectWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="icons/new_adt_project.png"
+            id="com.android.ide.eclipse.adt.project.NewSampleProjectWizard"
+            name="Android Sample Project"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective"
+            project="true">
+        </wizard>
+        <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
             class="com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             hasPages="true"

@@ -27,9 +27,9 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
-import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreationPage;
-import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizard;
-import com.android.ide.eclipse.adt.internal.wizards.newproject.NewTestProjectCreationPage;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectCreator;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState;
+import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.ide.eclipse.tests.SdkTestCase;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -39,17 +39,12 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.wizard.IWizardContainer;
-import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkingSet;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
@@ -228,16 +223,24 @@ public class AdtProjectTest extends SdkTestCase {
         }
         assertNotNull(target);
 
-        final StubProjectWizard newProjCreator = new StubProjectWizard(
-                name, target);
-        newProjCreator.init(null, null);
-        // need to run finish on ui thread since it invokes a perspective switch
-        Display.getDefault().syncExec(new Runnable() {
-            public void run() {
-                newProjCreator.performFinish();
-            }
-        });
 
+        IRunnableContext context = new IRunnableContext() {
+            public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable)
+                    throws InvocationTargetException, InterruptedException {
+                runnable.run(new NullProgressMonitor());
+            }
+        };
+        NewProjectWizardState state = new NewProjectWizardState(Mode.ANY);
+        state.projectName = name;
+        state.target = target;
+        state.packageName = TEST_PROJECT_PACKAGE;
+        state.activityName = name;
+        state.applicationName = name;
+        state.createActivity = false;
+        state.useDefaultLocation = true;
+
+        NewProjectCreator creator = new NewProjectCreator(state, context);
+        creator.createAndroidProjects();
         return validateProjectExists(name);
     }
 
@@ -651,157 +654,6 @@ public class AdtProjectTest extends SdkTestCase {
             }
 
             return null;
-        }
-    }
-
-    /**
-     * Stub class for project creation wizard.
-     * <p/>
-     * Created so project creation logic can be run without UI creation/manipulation.
-     */
-    public class StubProjectWizard extends NewProjectWizard {
-
-        private final String mProjectName;
-        private final IAndroidTarget mTarget;
-
-        public StubProjectWizard(String projectName, IAndroidTarget target) {
-            this.mProjectName = projectName;
-            this.mTarget = target;
-        }
-
-        /**
-         * Override parent to return stub page
-         */
-        @Override
-        protected NewProjectCreationPage createMainPage() {
-            return new StubProjectCreationPage(mProjectName, mTarget);
-        }
-
-        /**
-         * Override parent to return null page
-         */
-        @Override
-        protected NewTestProjectCreationPage createTestPage() {
-            return null;
-        }
-
-        /**
-         * Overrides parent to return dummy wizard container
-         */
-        @Override
-        public IWizardContainer getContainer() {
-            return new IWizardContainer() {
-
-                public IWizardPage getCurrentPage() {
-                    return null;
-                }
-
-                public Shell getShell() {
-                    return null;
-                }
-
-                public void showPage(IWizardPage page) {
-                    // pass
-                }
-
-                public void updateButtons() {
-                    // pass
-                }
-
-                public void updateMessage() {
-                    // pass
-                }
-
-                public void updateTitleBar() {
-                    // pass
-                }
-
-                public void updateWindowTitle() {
-                    // pass
-                }
-
-                /**
-                 * Executes runnable on current thread
-                 */
-                public void run(boolean fork, boolean cancelable,
-                        IRunnableWithProgress runnable)
-                        throws InvocationTargetException, InterruptedException {
-                    runnable.run(new NullProgressMonitor());
-                }
-
-            };
-        }
-    }
-
-    /**
-     * Stub class for project creation page.
-     * <p/>
-     * Returns canned responses for creating a sample project.
-     */
-    public class StubProjectCreationPage extends NewProjectCreationPage {
-
-        private final String mProjectName;
-        private final IAndroidTarget mTarget;
-
-        public StubProjectCreationPage(String projectName, IAndroidTarget target) {
-            super();
-            this.mProjectName = projectName;
-            this.mTarget = target;
-            setTestInfo(null);
-        }
-
-        @Override
-        public IMainInfo getMainInfo() {
-            return new IMainInfo() {
-                public String getProjectName() {
-                    return mProjectName;
-                }
-
-                public String getPackageName() {
-                    return TEST_PROJECT_PACKAGE;
-                }
-
-                public String getActivityName() {
-                    return mProjectName;
-                }
-
-                public String getApplicationName() {
-                    return mProjectName;
-                }
-
-                public boolean isNewProject() {
-                    return true;
-                }
-
-                public String getSourceFolder() {
-                    return "src";
-                }
-
-                public IPath getLocationPath() {
-                    // Default location
-                    return null;//new Path(mLocation);
-                }
-
-                public String getMinSdkVersion() {
-                    return null;
-                }
-
-                public IAndroidTarget getSdkTarget() {
-                    return mTarget;
-                }
-
-                public boolean isCreateActivity() {
-                    return false;
-                }
-
-                public boolean useDefaultLocation() {
-                    return true;
-                }
-
-                public IWorkingSet[] getSelectedWorkingSets() {
-                    return new IWorkingSet[0];
-                }
-            };
         }
     }
 
