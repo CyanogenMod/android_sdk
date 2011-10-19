@@ -1551,7 +1551,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 }
                 if (type == ResourceFolderType.XML) {
                     IEditorDescriptor ed = IDE.getDefaultEditor(file);
-                    if (ed == null || ed.getId() != XmlEditor.ID) {
+                    if (ed == null || !ed.getId().equals(XmlEditor.ID)) {
                         QualifiedName qname = new QualifiedName(
                                 AdtPlugin.PLUGIN_ID,
                                 UNKNOWN_EDITOR);

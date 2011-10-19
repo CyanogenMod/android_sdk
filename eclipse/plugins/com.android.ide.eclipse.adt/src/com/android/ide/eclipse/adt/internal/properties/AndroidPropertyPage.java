@@ -181,7 +181,7 @@ public class AndroidPropertyPage extends PropertyPage {
             mPropertiesWorkingCopy = state.getProperties().makeWorkingCopy();
 
             // get the target
-            IAndroidTarget target = state.getTarget();;
+            IAndroidTarget target = state.getTarget();
             if (target != null) {
                 mSelector.setSelection(target);
             }

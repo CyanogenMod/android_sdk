@@ -1374,7 +1374,7 @@ public class GridModel {
                         id = id.substring(0, cellWidth - 2);
                     }
                     if (sb.length() > 0) {
-                        sb.append(","); //$NON-NLS-1$
+                        sb.append(',');
                     }
                     sb.append(id);
                 }

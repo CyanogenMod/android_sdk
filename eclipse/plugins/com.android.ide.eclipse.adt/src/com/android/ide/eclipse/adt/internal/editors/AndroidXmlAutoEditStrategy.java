@@ -243,7 +243,7 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                                         if (next != null && next.getType() == XML_TAG_NAME) {
                                             String nextType = next.getRegions().get(0).getType();
                                             if (nextType == XML_END_TAG_OPEN) {
-                                                onClosingTagLine = true;;
+                                                onClosingTagLine = true;
                                             }
                                         }
                                     }
