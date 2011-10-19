@@ -84,9 +84,11 @@ rm tools/zipalign
 bin/zipalign.exe                            strip tools/zipalign.exe
 
 
-# Copy the SDK Manager (aka sdklauncher) to the root of the SDK as well
-# as in SDK/tools/lib (so that tools updates can update the root one too)
+# Copy the AVD & SDK Manager (aka avd/sdklauncher) to the root of the SDK as
+# well as in SDK/tools/lib (so that tools updates can update the root one too)
+bin/avdlauncher.exe              "AVD Manager.exe"
 bin/sdklauncher.exe              "SDK Manager.exe"
+/bin/avdlauncher.exe              "tools/lib/AVD Manager.exe"
 /bin/sdklauncher.exe              "tools/lib/SDK Manager.exe"
 
 # Supporting bat files
