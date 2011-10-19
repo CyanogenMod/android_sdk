@@ -192,6 +192,8 @@ public final class SdkConstants {
     public final static String FD_PLATFORMS = "platforms";
     /** Name of the SDK addons folder. */
     public final static String FD_ADDONS = "add-ons";
+    /** Name of the SDK system-images folder. */
+    public final static String FD_SYSTEM_IMAGES = "system-images";
     /** Name of the SDK tools folder. */
     public final static String FD_TOOLS = "tools";
     /** Name of the SDK platform tools folder. */

@@ -27,6 +27,8 @@ import junit.framework.TestCase;
 
 public class PackageTest extends TestCase {
 
+    protected static final String LOCAL_ARCHIVE_PATH = "/local/archive/path";
+
     /** Local class used to test the abstract Package class */
     protected static class MockPackage extends Package {
         public MockPackage(
@@ -83,7 +85,7 @@ public class PackageTest extends TestCase {
                 null, //descUrl
                 Os.ANY, //archiveOs
                 Arch.ANY, //archiveArch
-                "/local/archive/path" //archiveOsPath
+                LOCAL_ARCHIVE_PATH //archiveOsPath
                 );
 
         testCreatedPackage(p);
@@ -101,7 +103,7 @@ public class PackageTest extends TestCase {
                 null, //descUrl
                 Os.ANY, //archiveOs
                 Arch.ANY, //archiveArch
-                "/local/archive/path" //archiveOsPath
+                LOCAL_ARCHIVE_PATH //archiveOsPath
                 );
 
         Properties props2 = new Properties();
@@ -154,7 +156,7 @@ public class PackageTest extends TestCase {
         assertNotNull(a);
         assertEquals(Os.ANY, a.getOs());
         assertEquals(Arch.ANY, a.getArch());
-        assertEquals("/local/archive/path", a.getLocalOsPath());
+        assertEquals(LOCAL_ARCHIVE_PATH, a.getLocalOsPath());
     }
 
 }
