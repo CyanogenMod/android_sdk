@@ -81,22 +81,12 @@ class PackagesDiffLogic {
 
     /**
      * Mark all new and update PkgItems as checked.
-     * <p/>
-     * Try to be smart and check whether any platform is installed.
-     * The heuristic is:
-     * <ul>
-     * <li> For extras with no platform dependency, or for tools & platform-tools,
-     *          just select new and updates.
-     * <li> For anything that depends on a platform:
-     * <li> Always select the top platform and all its packages.
-     * <li> If some platform is partially installed, selected anything new/update for it.
-     * </ul>
      *
      * @param selectNew If true, select all new packages
      * @param selectUpdates If true, select all update packages
-     * @param selectTop If true, select the top platform. If the top platform has noting installed,
+     * @param selectTop If true, select the top platform. If the top platform has nothing installed,
      *   select all items in it; if it is partially installed, at least select the platform and
-     *   at system images if none of the system images are installed.
+     *   system images if none of the system images are installed.
      * @param currentPlatform The {@link SdkConstants#currentPlatform()} value.
      */
     public void checkNewUpdateItems(
