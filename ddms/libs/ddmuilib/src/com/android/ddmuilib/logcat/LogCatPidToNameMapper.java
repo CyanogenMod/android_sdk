@@ -40,7 +40,8 @@ public class LogCatPidToNameMapper {
     private IDevice mDevice;
     private Map<String, String> mPidToName;
 
-    public LogCatPidToNameMapper() {
+    public LogCatPidToNameMapper(IDevice device) {
+        mDevice = device;
         mClientChangeListener = constructClientChangeListener();
         AndroidDebugBridge.addClientChangeListener(mClientChangeListener);
 
@@ -48,6 +49,8 @@ public class LogCatPidToNameMapper {
         AndroidDebugBridge.addDeviceChangeListener(mDeviceChangeListener);
 
         mPidToName = new HashMap<String, String>();
+
+        updateClientList(device);
     }
 
     private IClientChangeListener constructClientChangeListener() {
@@ -65,7 +68,7 @@ public class LogCatPidToNameMapper {
         String name = cd.getClientDescription();
         if (name != null) {
             int pid = cd.getPid();
-            if (mPidToName != null && mPidToName.containsKey(pid)) {
+            if (mPidToName != null) {
                 mPidToName.put(Integer.toString(pid), name);
             }
         }
@@ -81,13 +84,13 @@ public class LogCatPidToNameMapper {
 
             public void deviceChanged(IDevice device, int changeMask) {
                 if (changeMask == IDevice.CHANGE_CLIENT_LIST) {
-                    clientListChanged(device);
+                    updateClientList(device);
                 }
             }
         };
     }
 
-    private void clientListChanged(IDevice device) {
+    private void updateClientList(IDevice device) {
         if (mDevice == null) {
             return;
         }
@@ -112,14 +115,6 @@ public class LogCatPidToNameMapper {
 
             mPidToName.put(Integer.toString(pid), name);
         }
-    }
-
-    /** Specify the device that we want to monitor. */
-    public void setDevice(IDevice device) {
-        mDevice = device;
-
-        /* initialize the list of known pid's */
-        clientListChanged(device);
     }
 
     /**

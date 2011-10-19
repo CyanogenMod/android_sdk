@@ -42,15 +42,24 @@ public final class LogCatReceiver {
     private IPreferenceStore mPrefStore;
 
     /**
-     * Construct a LogCat message receiver.
+     * Construct a LogCat message receiver for provided device. This will launch a
+     * logcat command on the device, and monitor the output of that command in
+     * a separate thread. All logcat messages are then stored in a circular
+     * buffer, which can be retrieved using {@link LogCatReceiver#getMessages()}.
+     * @param device device to monitor for logcat messages
      * @param prefStore
      */
-    public LogCatReceiver(IPreferenceStore prefStore) {
+    public LogCatReceiver(IDevice device, IPreferenceStore prefStore) {
+        mCurrentDevice = device;
         mPrefStore = prefStore;
 
         mLogCatMessageListeners = new ArrayList<ILogCatMessageEventListener>();
         mLogCatMessageParser = new LogCatMessageParser();
-        mPidToNameMapper = new LogCatPidToNameMapper();
+        mPidToNameMapper = new LogCatPidToNameMapper(mCurrentDevice);
+
+        mLogMessages = new LogCatMessageList(getFifoSize());
+
+        startReceiverThread();
     }
 
     /**
@@ -65,36 +74,6 @@ public final class LogCatReceiver {
 
         mLogMessages = null;
         mCurrentDevice = null;
-    }
-
-    /**
-     * Start monitoring a device for logcat messages. This will launch a
-     * logcat command on the device, and monitor the output of that command in
-     * a separate thread. All logcat messages are then stored in a circular
-     * buffer, which can be retrieved using {@link LogCatReceiver#getMessages()}.
-     * @param device device to monitor for logcat messages
-     */
-    public void start(IDevice device) {
-        if (device == null) {
-            return;
-        }
-
-        if (mCurrentDevice == device) {
-            return;
-        }
-
-        /* stop currently active listeners before starting a new one. */
-        if (mCurrentDevice != null) {
-            stop();
-        }
-
-        mCurrentDevice = device;
-        mLogMessages = new LogCatMessageList(getFifoSize());
-
-        mLogCatMessageParser.resetState();
-        startReceiverThread();
-
-        mPidToNameMapper.setDevice(mCurrentDevice);
     }
 
     private int getFifoSize() {
@@ -196,6 +175,10 @@ public final class LogCatReceiver {
      */
     public void addMessageReceivedEventListener(ILogCatMessageEventListener l) {
         mLogCatMessageListeners.add(l);
+    }
+
+    public void removeMessageReceivedEventListener(ILogCatMessageEventListener l) {
+        mLogCatMessageListeners.remove(l);
     }
 
     private void sendMessageReceivedEvent(List<LogCatMessage> messages) {
