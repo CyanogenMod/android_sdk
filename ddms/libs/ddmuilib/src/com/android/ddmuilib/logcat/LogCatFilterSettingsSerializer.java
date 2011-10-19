@@ -56,6 +56,11 @@ public final class LogCatFilterSettingsSerializer {
         StringBuffer sb = new StringBuffer();
 
         for (LogCatFilter f : filters) {
+            if (f.isTransient()) {
+                // do not persist transient filters
+                continue;
+            }
+
             sb.append(KW_NAME); sb.append(KW_DELIM); sb.append(quoteString(f.getName()));
                                                                         sb.append(ATTR_DELIM);
             sb.append(KW_TAG);  sb.append(KW_DELIM); sb.append(quoteString(f.getTag()));

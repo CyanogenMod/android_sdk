@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.ddms.views;
 
+import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.logcat.ILogCatMessageSelectionListener;
 import com.android.ddmuilib.logcat.LogCatMessage;
 import com.android.ddmuilib.logcat.LogCatPanel;
@@ -245,5 +246,9 @@ public class LogCatView extends SelectionDependentViewPart {
             Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
             DdmsPlugin.getDefault().getLog().log(s);
         }
+    }
+
+    public void selectTransientAppFilter(String appName) {
+        mLogCatPanel.selectTransientAppFilter(appName);
     }
 }

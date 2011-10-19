@@ -47,4 +47,22 @@ public class LogCatFilterSettingsSerializerTest extends TestCase {
         assertEquals(fs.getAppName(), dfs.getAppName());
         assertEquals(fs.getLogLevel(), dfs.getLogLevel());
     }
+
+    /* test that transient filters are not persisted */
+    public void testTransientFilters() {
+        LogCatFilter fs = new LogCatFilter(
+                "TestFilter",               //$NON-NLS-1$
+                "Tag'.*Regex",              //$NON-NLS-1$
+                "regexForTextField..''",    //$NON-NLS-1$
+                "123",                      //$NON-NLS-1$
+                "TestAppName.*",            //$NON-NLS-1$
+                LogLevel.ERROR);
+        fs.setTransient();
+
+        LogCatFilterSettingsSerializer serializer = new LogCatFilterSettingsSerializer();
+        String s = serializer.encodeToPreferenceString(Arrays.asList(fs));
+        List<LogCatFilter> decodedFiltersList = serializer.decodeFromPreferenceString(s);
+
+        assertEquals(0, decodedFiltersList.size());
+    }
 }
