@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Panel with native heap information.
@@ -270,14 +271,14 @@ public final class NativeHeapPanel extends BaseHeapPanel {
 
                 NativeAllocationInfo info = iter.next();
                 if (info.isStackCallResolved() == false) {
-                    final Long[] list = info.getStackCallAddresses();
-                    final int size = list.length;
+                    final List<Long> list = info.getStackCallAddresses();
+                    final int size = list.size();
 
                     ArrayList<NativeStackCallInfo> resolvedStackCall =
                         new ArrayList<NativeStackCallInfo>();
 
                     for (int i = 0; i < size; i++) {
-                        long addr = list[i];
+                        long addr = list.get(i);
 
                         // first check if the addr has already been converted.
                         NativeStackCallInfo source = mSourceCache.get(addr);
@@ -325,8 +326,10 @@ public final class NativeHeapPanel extends BaseHeapPanel {
                 }
             }
 
-            return new NativeStackCallInfo(library != null ? library.getLibraryName() : null,
-                    Long.toHexString(addr), "");
+            return new NativeStackCallInfo(addr,
+                    library != null ? library.getLibraryName() : null,
+                    Long.toHexString(addr),
+                    "");
         }
 
         private NativeLibraryMapInfo getLibraryFor(long addr) {
@@ -1120,20 +1123,20 @@ public final class NativeHeapPanel extends BaseHeapPanel {
 
         try {
             // populate the detail Table with the back trace
-            Long[] addresses = mi.getStackCallAddresses();
-            NativeStackCallInfo[] resolvedStackCall = mi.getResolvedStackCall();
+            List<Long> addresses = mi.getStackCallAddresses();
+            List<NativeStackCallInfo> resolvedStackCall = mi.getResolvedStackCall();
 
             if (resolvedStackCall == null) {
                 return;
             }
 
-            for (int i = 0 ; i < resolvedStackCall.length ; i++) {
-                if (addresses[i] == null || addresses[i].longValue() == 0) {
+            for (int i = 0 ; i < resolvedStackCall.size(); i++) {
+                if (addresses.get(i) == null || addresses.get(i).longValue() == 0) {
                     continue;
                 }
 
-                long addr = addresses[i].longValue();
-                NativeStackCallInfo source = resolvedStackCall[i];
+                long addr = addresses.get(i).longValue();
+                NativeStackCallInfo source = resolvedStackCall.get(i);
 
                 TableItem item = new TableItem(mDetailTable, SWT.NONE);
                 item.setText(0, String.format("%08x", addr)); //$NON-NLS-1$

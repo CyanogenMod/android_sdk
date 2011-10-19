@@ -173,6 +173,11 @@ final class HandleNativeHeap extends ChunkHandler {
             for (int j = 0 ; j < backtraceSize ; j++) {
                 long addr = (buffer.getInt()) & 0x00000000ffffffffL;
 
+                if (addr == 0x0) {
+                    // skip past null addresses
+                    continue;
+                }
+
                 info.addStackCallAddress(addr);;
             }
 
