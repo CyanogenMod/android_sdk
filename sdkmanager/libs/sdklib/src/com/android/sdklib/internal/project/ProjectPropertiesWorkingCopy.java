@@ -91,15 +91,18 @@ public class ProjectPropertiesWorkingCopy extends ProjectProperties {
      * <p/>
      * Typical usage:
      * <ul>
-     * <li>Create a ProjectProperties with {@link PropertyType#BUILD}
-     * <li>Merge in values using {@link PropertyType#DEFAULT}
+     * <li>Create a ProjectProperties with {@code PropertyType#BUILD}
+     * <li>Merge in values using {@code PropertyType#DEFAULT}
      * <li>The result is that this contains all the properties from default plus those
      *     overridden by the build.properties file.
      * </ul>
      *
      * @param type One the possible {@link PropertyType}s.
      * @return this object, for chaining.
+     *
+     * @deprecated FIXME this method is not referenced anywhere.
      */
+    @Deprecated
     public synchronized ProjectPropertiesWorkingCopy merge(PropertyType type) {
         if (mProjectFolder.exists() && mType != type) {
             IAbstractFile propFile = mProjectFolder.getFile(type.getFilename());
