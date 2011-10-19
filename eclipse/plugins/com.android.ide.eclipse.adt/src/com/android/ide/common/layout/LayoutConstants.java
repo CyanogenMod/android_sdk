@@ -188,6 +188,9 @@ public class LayoutConstants {
     /** The fully qualified class name of a RelativeLayout view */
     public static final String FQCN_RELATIVE_LAYOUT = "android.widget.RelativeLayout"; //$NON-NLS-1$
 
+    /** The fully qualified class name of a RelativeLayout view */
+    public static final String FQCN_GRID_LAYOUT = "android.widget.GridLayout"; //$NON-NLS-1$
+
     /** The fully qualified class name of a FrameLayout view */
     public static final String FQCN_FRAME_LAYOUT = "android.widget.FrameLayout"; //$NON-NLS-1$
 
