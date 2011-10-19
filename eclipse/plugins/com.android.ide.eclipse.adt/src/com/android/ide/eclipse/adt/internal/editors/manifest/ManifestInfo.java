@@ -376,7 +376,8 @@ public class ManifestInfo {
                     IType declaringType = method.getDeclaringType();
                     String fqcn = declaringType.getFullyQualifiedName();
                     if (activity.get() == null
-                            || declaringType.getSuperclassName().endsWith("Activity") //$NON-NLS-1$
+                            || (declaringType.getSuperclassName() != null &&
+                                    declaringType.getSuperclassName().endsWith("Activity")) //$NON-NLS-1$
                             || method.getElementName().equals("onCreate")) { //$NON-NLS-1$
                         activity.set(fqcn);
                     }
