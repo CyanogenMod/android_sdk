@@ -21,6 +21,9 @@ import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -159,4 +162,28 @@ public class PackageTest extends TestCase {
         assertEquals(LOCAL_ARCHIVE_PATH, a.getLocalOsPath());
     }
 
+    // ----
+
+    public void testCompareTo() throws Exception {
+        ArrayList<Package> list = new ArrayList<Package>();
+        MockPlatformPackage p1;
+
+        list.add(p1 = new MockPlatformPackage(1, 2));
+        list.add(new MockAddonPackage(p1, 3));
+        list.add(new MockSystemImagePackage(p1, 4, "x86"));
+        list.add(new MockBrokenPackage(BrokenPackage.MIN_API_LEVEL_NOT_SPECIFIED, 1));
+        list.add(new MockExtraPackage("vendor", "path", 5, 6));
+        list.add(new MockToolPackage(7, 8));
+
+        Collections.sort(list);
+
+        assertEquals(
+                "[Android SDK Tools, revision 7, " +
+                 "SDK Platform Android android-1, API 1, revision 2, " +
+                 "Intel x86 Atom System Image, Android API 1, revision 4, " +
+                 "addon by vendor 1, Android API 1, revision 3, " +
+                 "Broken package for API 1, " +
+                 "Vendor Path package, revision 5]",
+                Arrays.toString(list.toArray()));
+    }
 }

@@ -17,7 +17,6 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 
@@ -32,8 +31,12 @@ public class SystemImagePackageTest extends PackageTest {
      * create archives for any OS and any architecture.
      */
     private static class SysImgPackageFakeArchive extends SystemImagePackage {
-        protected SysImgPackageFakeArchive(IAndroidTarget target, Properties props) {
-            super(target, props);
+        protected SysImgPackageFakeArchive(
+                AndroidVersion platformVersion,
+                int revision,
+                String abi,
+                Properties props) {
+            super(platformVersion, revision, abi, props);
         }
 
         @Override
@@ -50,9 +53,10 @@ public class SystemImagePackageTest extends PackageTest {
 
     private SystemImagePackage createSystemImagePackage(Properties props) {
         SystemImagePackage p = new SysImgPackageFakeArchive(
-                new MockPlatformTarget(5 /*apiLevel*/, 1 /*revision*/),
+                new AndroidVersion(5 /*apiLevel*/, null /*codename*/),
+                1 /*revision*/,
+                null /*abi*/,
                 props);
-
         return p;
     }
 

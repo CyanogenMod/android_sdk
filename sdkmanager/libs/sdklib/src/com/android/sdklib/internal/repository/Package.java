@@ -638,8 +638,10 @@ public abstract class Package implements IDescription, Comparable<Package> {
             sb.append(3);
         } else if (this instanceof SamplePackage) {
             sb.append(4);
-        } else if (this instanceof AddonPackage) {
+        } else if (this instanceof SystemImagePackage) {
             sb.append(5);
+        } else if (this instanceof AddonPackage) {
+            sb.append(6);
         } else {
             // extras and everything else
             sb.append(9);

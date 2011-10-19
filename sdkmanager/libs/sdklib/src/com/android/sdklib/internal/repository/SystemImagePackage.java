@@ -74,37 +74,52 @@ public class SystemImagePackage extends Package
     }
 
     /**
+     * TODO OBSOLETE DOC
      * Creates and returns a new system image package based on an actual {@link IAndroidTarget}
      * (which {@link IAndroidTarget#isPlatform()} is true) from the {@link SdkManager}.
      * This is used to list local SDK folders in which case there is one archive which
      * URL is the actual target location.
      * <p/>
      * By design, this creates a package with one and only one archive.
+     * @deprecated TODO CHANGE AS ACTUALLY NEEDED
      */
-    static Package create(IAndroidTarget target, Properties props) {
-        return new SystemImagePackage(target, props);
+    @Deprecated
+    static Package create(AndroidVersion platformVersion, int revision, String abi, Properties props) {
+        return new SystemImagePackage(platformVersion, revision, abi, props);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected SystemImagePackage(IAndroidTarget target, Properties props) {
-        this(null /*source*/, target, props);
+    protected SystemImagePackage(
+            AndroidVersion platformVersion,
+            int revision,
+            String abi,
+            Properties props) {
+        this(null /*source*/, platformVersion, revision, abi, props);
     }
 
     @VisibleForTesting(visibility=Visibility.PRIVATE)
-    protected SystemImagePackage(SdkSource source, IAndroidTarget target, Properties props) {
+    protected SystemImagePackage(
+            SdkSource source,
+            AndroidVersion platformVersion,
+            int revision,
+            String abi,
+            Properties props) {
         super(  source,                     //source
                 props,                      //properties
-                target.getRevision(),       //revision
+                revision,                   //revision
                 null,                       //license
-                target.getDescription(),    //description
+                null,                       //description
                 null,                       //descUrl
                 Os.getCurrentOs(),          //archiveOs
                 Arch.getCurrentArch(),      //archiveArch
-                target.getLocation()        //archiveOsPath
+                null                        //archiveOsPath
                 );
-
-        mVersion = target.getVersion();
-        mAbi = props.getProperty(PROP_ABI);
+        mVersion = platformVersion;
+        if (abi == null && props != null) {
+            abi = props.getProperty(PROP_ABI);
+        }
+        assert abi != null : "To use this SystemImagePackage constructor you must pass an ABI as a parameter or as a PROP_ABI property";
+        mAbi = abi;
     }
 
     /**
@@ -124,6 +139,15 @@ public class SystemImagePackage extends Package
         return mAbi;
     }
 
+    /** Returns a display-friendly name for the ABI of the system-image. */
+    public String getAbiDisplayName() {
+        String abi = mAbi
+                        .replace("armeabi", "ARM EABI")         //$NON-NLS-1$  //$NON-NLS-2$
+                        .replace("x86",     "Intel x86 Atom")   //$NON-NLS-1$  //$NON-NLS-2$
+                        .replace("-", " ");                     //$NON-NLS-1$  //$NON-NLS-2$
+        return abi;
+    }
+
     /**
      * Returns the version of the platform dependency of this package.
      * <p/>
@@ -140,8 +164,8 @@ public class SystemImagePackage extends Package
      */
     @Override
     public String getListDescription() {
-        return String.format("%1$s System Image%3$s",
-                getAbi(),
+        return String.format("%1$s System Image%2$s",
+                getAbiDisplayName(),
                 isObsolete() ? " (Obsolete)" : "");
     }
 
@@ -151,7 +175,7 @@ public class SystemImagePackage extends Package
     @Override
     public String getShortDescription() {
         return String.format("%1$s System Image, Android API %2$s, revision %3$s%4$s",
-                getAbi(),
+                getAbiDisplayName(),
                 mVersion.getApiString(),
                 getRevision(),
                 isObsolete() ? " (Obsolete)" : "");
