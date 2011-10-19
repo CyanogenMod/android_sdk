@@ -240,23 +240,21 @@ class GridLayoutConverter {
     /** Converts 0dip values in layout_width and layout_height to wrap_content instead */
     private void convert0dipToWrapContent(Element child) {
         // Must convert layout_height="0dip" to layout_height="wrap_content".
+        // (And since wrap_content is the default, what we really do is remove
+        // the attribute completely.)
         // 0dip is a special trick used in linear layouts in the presence of
         // weights where 0dip ensures that the height of the view is not taken
         // into account when distributing the weights. However, when converted
         // to RelativeLayout this will instead cause the view to actually be assigned
         // 0 height.
-        String height = child.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
+        Attr height = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
         // 0dip, 0dp, 0px, etc
-        if (height != null && height.startsWith("0")) { //$NON-NLS-1$
-            mRefactoring.setAttribute(mRootEdit, child, ANDROID_URI,
-                    mRefactoring.getAndroidNamespacePrefix(), ATTR_LAYOUT_HEIGHT,
-                    VALUE_WRAP_CONTENT);
+        if (height != null && height.getValue().startsWith("0")) { //$NON-NLS-1$
+            mRefactoring.removeAttribute(mRootEdit, height);
         }
-        String width = child.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
-        if (width != null && width.startsWith("0")) { //$NON-NLS-1$
-            mRefactoring.setAttribute(mRootEdit, child, ANDROID_URI,
-                    mRefactoring.getAndroidNamespacePrefix(), ATTR_LAYOUT_WIDTH,
-                    VALUE_WRAP_CONTENT);
+        Attr width = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
+        if (width != null && width.getValue().startsWith("0")) { //$NON-NLS-1$
+            mRefactoring.removeAttribute(mRootEdit, width);
         }
     }
 

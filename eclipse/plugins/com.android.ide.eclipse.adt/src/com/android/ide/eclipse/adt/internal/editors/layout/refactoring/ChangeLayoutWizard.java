@@ -26,6 +26,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IProject;
@@ -172,6 +173,18 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
                     (ChangeLayoutRefactoring) getRefactoring();
                 refactoring.setType(type);
                 refactoring.setFlatten(mFlatten.getSelection());
+
+                ViewElementDescriptor descriptor = mClassNames.get(selectionIndex).getSecond();
+                if (descriptor instanceof PaletteMetadataDescriptor) {
+                    PaletteMetadataDescriptor paletteDescriptor =
+                        (PaletteMetadataDescriptor) descriptor;
+                    String initializedAttributes = paletteDescriptor.getInitializedAttributes();
+                    if (initializedAttributes != null && initializedAttributes.length() > 0) {
+                        refactoring.setInitializedAttributes(initializedAttributes);
+                    }
+                } else {
+                    refactoring.setInitializedAttributes(null);
+                }
             }
 
             setPageComplete(ok);
