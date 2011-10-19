@@ -14,15 +14,17 @@
  ** limitations under the License.
  */
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import com.android.glesv2debugger.DebuggerMessage.Message;
-import com.android.glesv2debugger.DebuggerMessage.Message.Function;
-import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+import com.android.ide.eclipse.gldebugger.MessageQueue;
+import com.android.ide.eclipse.gldebugger.ProcessMessage;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +50,7 @@ public class MessageQueueTest {
 
     /**
      * Test method for
-     * {@link com.android.glesv2debugger.MessageQueue#defaultProcessMessage(com.android.glesv2debugger.DebuggerMessage.Message, boolean, boolean)}
+     * {@link com.android.ide.eclipse.gldebugger.MessageQueue#defaultProcessMessage(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message, boolean, boolean)}
      * .
      * 
      * @throws IOException

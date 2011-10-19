@@ -14,7 +14,7 @@
  ** limitations under the License.
  */
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: GLESv2DebuggerClient
 Bundle-SymbolicName: GLESv2DebuggerClient; singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: com.android.glesv2debugger.Activator
+Bundle-Activator: com.android.ide.eclipse.gldebugger.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.junit

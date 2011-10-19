@@ -16,9 +16,9 @@
 
 // skeleton from stdout of generate_MessageParser_java.py
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
-import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
 
 public class MessageParserEx extends MessageParser {
 

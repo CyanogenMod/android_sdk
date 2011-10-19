@@ -14,11 +14,11 @@
  ** limitations under the License.
  */
 
-package com.android.glesv2debugger;
+package com.android.ide.eclipse.gldebugger;
 
-import com.android.glesv2debugger.DebuggerMessage.Message;
-import com.android.glesv2debugger.DebuggerMessage.Message.Function;
-import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Function;
+import com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Type;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
