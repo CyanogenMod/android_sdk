@@ -51,4 +51,7 @@ public class BrokenPackageTest extends TestCase {
         assertEquals(13, m.getExactApiLevel());
     }
 
+    public void testInstallId() {
+        assertEquals("", m.installId());
+    }
 }

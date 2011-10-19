@@ -45,6 +45,7 @@ import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
 import com.android.sdkuilib.internal.repository.sdkman1.LocalSdkAdapter;
@@ -68,6 +69,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Data shared between {@link SdkUpdaterWindowImpl1} and its pages.
@@ -759,8 +761,9 @@ public class UpdaterData implements IUpdaterData {
      * {@link UpdaterData#updateOrInstallAll_NoGUI}.
      *
      * @param includeObsoletes True to also list obsolete packages.
+     * @param extendedOutput True to display more details on each package.
      */
-    public void listRemotePackages_NoGUI(boolean includeObsoletes) {
+    public void listRemotePackages_NoGUI(boolean includeObsoletes, boolean extendedOutput) {
 
         List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeObsoletes);
 
@@ -772,9 +775,19 @@ public class UpdaterData implements IUpdaterData {
             if (a != null) {
                 Package p = a.getParentPackage();
                 if (p != null) {
-                    mSdkLog.printf("%1$ 4d- %2$s\n",
-                            index,
-                            p.getShortDescription());
+                    if (extendedOutput) {
+                        mSdkLog.printf("----------\n");
+                        mSdkLog.printf("id: %1$d or \"%2$s\"\n", index, p.installId());
+                        mSdkLog.printf("     Type: %1$s\n",
+                                p.getClass().getSimpleName().replaceAll("Package", "")); //$NON-NLS-1$ //$NON-NLS-2$
+                        String desc = LineUtil.reformatLine("     Desc: %s\n",
+                                p.getLongDescription());
+                        mSdkLog.printf("%s", desc); //$NON-NLS-1$
+                    } else {
+                        mSdkLog.printf("%1$ 4d- %2$s\n",
+                                index,
+                                p.getShortDescription());
+                    }
                     index++;
                 }
             }
@@ -786,8 +799,9 @@ public class UpdaterData implements IUpdaterData {
      * This version is intended to run without a GUI and
      * only outputs to the current {@link ISdkLog}.
      *
-     * @param pkgFilter A list of {@link SdkRepoConstants#NODES} to limit the type of packages
-     *   we can update. A null or empty list means to update everything possible.
+     * @param pkgFilter A list of {@link SdkRepoConstants#NODES} or {@link Package#installId()}
+     *   or package indexes to limit the packages we can update or install.
+     *   A null or empty list means to update everything possible.
      * @param includeObsoletes True to also list and install obsolete packages.
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
@@ -810,16 +824,36 @@ public class UpdaterData implements IUpdaterData {
             mapFilterToPackageClass(pkgMap, SdkRepoConstants.NODES);
             mapFilterToPackageClass(pkgMap, SdkAddonConstants.NODES);
 
+            // Prepare a map install-id => package instance
+            HashMap<String, Package> installIdMap = new HashMap<String, Package>();
+            for (ArchiveInfo ai : archives) {
+                Archive a = ai.getNewArchive();
+                if (a != null) {
+                    Package p = a.getParentPackage();
+                    if (p != null) {
+                        String id = p.installId();
+                        if (id != null && id.length() > 0 && !installIdMap.containsKey(id)) {
+                            installIdMap.put(id, p);
+                        }
+                    }
+                }
+            }
+
             // Now intersect this with the pkgFilter requested by the user, in order to
             // only keep the classes that the user wants to install.
-            // We also create a set with the package indices requested by the user.
+            // We also create a set with the package indices requested by the user
+            // and a set of install-ids requested by the user.
 
             HashSet<Class<? extends Package>> userFilteredClasses =
                 new HashSet<Class<? extends Package>>();
             SparseIntArray userFilteredIndices = new SparseIntArray();
+            Set<String> userFilteredInstallIds = new HashSet<String>();
 
             for (String type : pkgFilter) {
-                if (type.replaceAll("[0-9]+", "").length() == 0) { //$NON-NLS-1$ //$NON-NLS-2$
+                if (installIdMap.containsKey(type)) {
+                    userFilteredInstallIds.add(type);
+
+                } else if (type.replaceAll("[0-9]+", "").length() == 0) {//$NON-NLS-1$ //$NON-NLS-2$
                     // An all-digit number is a package index requested by the user.
                     int index = Integer.parseInt(type);
                     userFilteredIndices.put(index, index);
@@ -833,12 +867,14 @@ public class UpdaterData implements IUpdaterData {
                 }
             }
 
-            // we don't need the map anymore
+            // we don't need the maps anymore
             pkgMap = null;
+            installIdMap = null;
 
             // Now filter the remote archives list to keep:
             // - any package which class matches userFilteredClasses
             // - any package index which matches userFilteredIndices
+            // - any package install id which matches userFilteredInstallIds
 
             int index = 1;
             for (Iterator<ArchiveInfo> it = archives.iterator(); it.hasNext(); ) {
@@ -848,7 +884,8 @@ public class UpdaterData implements IUpdaterData {
                 if (a != null) {
                     Package p = a.getParentPackage();
                     if (p != null) {
-                        if (userFilteredClasses.contains(p.getClass()) ||
+                        if (userFilteredInstallIds.contains(p.installId()) ||
+                                userFilteredClasses.contains(p.getClass()) ||
                                 userFilteredIndices.get(index) > 0) {
                             keep = true;
                         }
@@ -863,8 +900,8 @@ public class UpdaterData implements IUpdaterData {
             }
 
             if (archives.size() == 0) {
-                mSdkLog.printf("The package filter removed all packages. There is nothing to install.\n" +
-                        "Please consider trying updating again without a package filter.\n");
+                mSdkLog.printf(LineUtil.reflowLine(
+                        "Warning: The package filter removed all packages. There is nothing to install.\nPlease consider trying to update again without a package filter.\n"));
                 return null;
             }
         }
@@ -881,7 +918,7 @@ public class UpdaterData implements IUpdaterData {
                         }
                     }
                 }
-                mSdkLog.printf("\nDry mode is on so nothing will actually be installed.\n");
+                mSdkLog.printf("\nDry mode is on so nothing is actually being installed.\n");
             } else {
                 return installArchives(archives);
             }

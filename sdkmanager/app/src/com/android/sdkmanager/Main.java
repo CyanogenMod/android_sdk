@@ -35,6 +35,8 @@ import com.android.sdklib.internal.project.ProjectCreator;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.repository.PlatformToolPackage;
+import com.android.sdklib.internal.repository.ToolPackage;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.xml.AndroidXPathFactory;
@@ -232,13 +234,7 @@ public class Main {
                 displayAvdList();
 
             } else if (SdkCommandLine.OBJECT_SDK.equals(directObject)) {
-                // We don't support a specific GUI for this.
-                // If the user forces a gui mode to see this list, simply launch the regular GUI.
-                if (!mSdkCommandLine.getFlagNoUI(verb)) {
-                    showSdkManagerWindow(false /*autoUpdate*/);
-                } else {
-                    displayRemoteSdkListNoUI();
-                }
+                displayRemoteSdkListNoUI();
 
             } else {
                 displayTargetList();
@@ -367,12 +363,13 @@ public class Main {
         boolean force = mSdkCommandLine.getFlagForce();
         boolean useHttp = mSdkCommandLine.getFlagNoHttps();
         boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        boolean extended = mSdkCommandLine.getFlagExtended();
         String proxyHost = mSdkCommandLine.getParamProxyHost();
         String proxyPort = mSdkCommandLine.getParamProxyPort();
 
         SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
                 force, useHttp, proxyHost, proxyPort);
-        upd.listRemotePackages(obsolete);
+        upd.listRemotePackages(obsolete, extended);
     }
 
     /**
@@ -427,6 +424,16 @@ public class Main {
                 }
                 t = t.trim();
                 if (t.length() <= 0) {
+                    continue;
+                }
+
+                if (t.indexOf('-') > 0 ||
+                        t.equals(ToolPackage.INSTALL_ID) ||
+                        t.equals(PlatformToolPackage.INSTALL_ID)) {
+                    // Heuristic: if the filter name contains a dash, it is probably
+                    // a variable package install id. Since we haven't loaded the remote
+                    // repositories we can't validate it yet, so just accept it.
+                    pkgFilter.add(t);
                     continue;
                 }
 

@@ -315,6 +315,17 @@ public class AddonPackage extends Package
     }
 
     /**
+     * Returns a string identifier to install this package from the command line.
+     * For add-ons, we use "addon-vendor-name-N" where N is the base platform API.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    public String installId() {
+        return encodeAddonName();
+    }
+
+    /**
      * Returns a description of this package that is suitable for a list display.
      * <p/>
      * {@inheritDoc}
@@ -392,11 +403,7 @@ public class AddonPackage extends Package
         }
 
         // Compute a folder directory using the addon declared name and vendor strings.
-        String name = String.format("addon_%s_%s_%s",     //$NON-NLS-1$
-                                    getName(), getVendor(), mVersion.getApiString());
-        name = name.toLowerCase();
-        name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
-        name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+        String name = encodeAddonName();
 
         for (int i = 0; i < 100; i++) {
             String name2 = i == 0 ? name : String.format("%s-%d", name, i); //$NON-NLS-1$
@@ -408,6 +415,15 @@ public class AddonPackage extends Package
 
         // We shouldn't really get here. I mean, seriously, we tried hard enough.
         return null;
+    }
+
+    private String encodeAddonName() {
+        String name = String.format("addon-%s-%s-%s",     //$NON-NLS-1$
+                                    getName(), getVendor(), mVersion.getApiString());
+        name = name.toLowerCase();
+        name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
+        name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
+        return name;
     }
 
     @Override
