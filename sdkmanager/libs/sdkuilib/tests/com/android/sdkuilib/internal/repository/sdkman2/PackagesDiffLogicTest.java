@@ -73,7 +73,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_AddSamePackage() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         m.updateStart();
         // First insert local packages
@@ -103,7 +103,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_AddOtherPackage() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         m.updateStart();
         // First insert local packages
@@ -134,7 +134,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_Update1() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         // Typical case: user has a locally installed package in revision 1
         // The display list after sort should show that installed package.
@@ -165,7 +165,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_Reload() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         // First load reveals a package local package and its update
         m.updateStart();
@@ -208,7 +208,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_InstallPackage() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         // First load reveals a new package
         m.updateStart();
@@ -264,7 +264,7 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_DeletePackage() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         // We have an installed package
         m.updateStart();
@@ -302,8 +302,8 @@ public class PackagesDiffLogicTest extends TestCase {
     }
 
     public void testSortByApi_NoRemoteSources() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
-        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
 
         // We have a couple installed packages
         m.updateStart();
@@ -327,18 +327,18 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, true /*displaySortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 5>\n" +
                 "-- <INSTALLED, pkg:Carrier Custom Rom package, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
     public void testSortByApi_CompleteUpdate() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
-        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
 
         // Resulting categories are sorted by Tools, descending platform API and finally Extras.
         // Addons are sorted by name within their API.
@@ -492,7 +492,7 @@ public class PackagesDiffLogicTest extends TestCase {
         // Since we're sorting by source, items are grouped under their source
         // even if installed. The 'local' source is only for installed items for
         // which we don't know the source.
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         m.updateStart();
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[] {
@@ -503,7 +503,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'unknown source' rev=3>\n" +
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'known source' rev=2>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -516,7 +516,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'unknown source' rev=3>\n" +
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'new' rev=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'known source' rev=2>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -526,7 +526,7 @@ public class PackagesDiffLogicTest extends TestCase {
 
         // Typical case: user has a locally installed package in revision 1
         // The display list after sort should show that instaled package.
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1),
@@ -534,7 +534,7 @@ public class PackagesDiffLogicTest extends TestCase {
 
         assertEquals(
                 "PkgCategorySource <source=Local Packages (no.source), #items=0>\n" +
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -549,7 +549,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=4>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
@@ -557,7 +557,7 @@ public class PackagesDiffLogicTest extends TestCase {
     public void testSortBySource_Reload() {
 
         // First load reveals a package local package and its update
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1),
@@ -568,7 +568,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -585,7 +585,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
@@ -593,7 +593,7 @@ public class PackagesDiffLogicTest extends TestCase {
     public void testSortBySource_InstallPackage() {
 
         // First load reveals a new package
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         // no local package
         assertFalse(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[0]));
@@ -603,7 +603,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -619,7 +619,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -634,13 +634,13 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
     public void testSortBySource_DeletePackage() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
 
         // Start with an installed package and its matching remote package
         m.updateStart();
@@ -653,7 +653,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1>\n",
                 getTree(m, false /*displaySortByApi*/));
 
@@ -667,14 +667,14 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type1' rev=1>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
     public void testSortBySource_CompleteUpdate() {
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
-        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
 
         // First update has the typical tools and a couple extras
         m.updateStart();
@@ -693,7 +693,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=4>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=4>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
@@ -733,7 +733,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=7>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=7>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
@@ -741,7 +741,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=3>\n" +
                 "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n",
@@ -781,7 +781,7 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=7>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=7>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
@@ -789,7 +789,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=3>\n" +
                 "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n",
@@ -807,7 +807,7 @@ public class PackagesDiffLogicTest extends TestCase {
 
     public void testCheckNewUpdateItems() {
         // Populate the list with a few items and an update
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockEmptyPackage(src1, "has update", 1),
@@ -827,7 +827,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
@@ -844,7 +844,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
                 "-- < * INSTALLED, pkg:MockEmptyPackage 'has update' rev=1, updated by:MockEmptyPackage 'has update' rev=2>\n" +
                 "-- < * NEW, pkg:MockEmptyPackage 'new stuff' rev=3>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'no update' rev=4>\n",
@@ -855,8 +855,8 @@ public class PackagesDiffLogicTest extends TestCase {
         // Populate the list with typical items: tools, platforms tools, extras, 2 platforms.
         // With nothing installed, this should pick the tools, extras and the top platform.
 
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
-        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
 
         m.updateStart();
         MockPlatformPackage p1;
@@ -893,13 +893,13 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=5>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=5>\n" +
                 "-- < * NEW, pkg:Android SDK Tools, revision 10>\n" +
                 "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
                 "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=3>\n" +
                 "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
@@ -945,13 +945,13 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=5>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=5>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 10>\n" +
                 "-- < * NEW, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- < * NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
                 "-- < * NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- < * NEW, pkg:Android USB Driver package, revision 5>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=3>\n" +
                 "-- < * NEW, pkg:addon B by vendor 2, Android API 2, revision 7>\n" +
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "-- < * NEW, pkg:Carrier Custom Rom package, revision 1>\n",
@@ -960,7 +960,7 @@ public class PackagesDiffLogicTest extends TestCase {
 
     public void testCheckUncheckAllItems() {
         // Populate the list with a couple items and an update
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockEmptyPackage(src1, "type1", 1)
@@ -991,7 +991,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1006,7 +1006,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1023,7 +1023,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- < * INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
                 "-- < * NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1038,7 +1038,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:MockEmptyPackage 'type1' rev=1, updated by:MockEmptyPackage 'type1' rev=2>\n" +
                 "-- <NEW, pkg:MockEmptyPackage 'type3' rev=3>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1053,7 +1053,7 @@ public class PackagesDiffLogicTest extends TestCase {
         // package as an "upgrade" nor as a downgrade.
 
         // Populate the list with local revisions 5 and lower remote revisions 3
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url", "repo1");
         m.updateStart();
         m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockToolPackage(        src1, 5, 5),
@@ -1073,7 +1073,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 5>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 5>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1084,9 +1084,9 @@ public class PackagesDiffLogicTest extends TestCase {
         // same kind of packages. We don't want to merge them together or treat
         // them as upgrades to each other.
 
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
-        SdkSource src2 = new SdkRepoSource("http://repo.com/url2", "repo2");
-        SdkSource src3 = new SdkRepoSource("http://repo.com/url3", "repo3");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
+        SdkSource src3 = new SdkRepoSource("http://example.com/url3", "repo3");
         MockPlatformPackage p1 = null;
 
         m.updateStart();
@@ -1119,14 +1119,14 @@ public class PackagesDiffLogicTest extends TestCase {
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=3>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
-                "PkgCategorySource <source=repo2 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=2>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 6>\n" +
-                "PkgCategorySource <source=repo3 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo3 (example.com), #items=2>\n" +
                 "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
                 "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1141,7 +1141,7 @@ public class PackagesDiffLogicTest extends TestCase {
         // Since the new package does not provide an old_paths attribute, the
         // new package is not treated as an update.
 
-        SdkSource src1 = new SdkRepoSource("http://repo.com/url1", "repo1");
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
         m.updateStart();
         m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockExtraPackage(src1, "vendor1", "old_path1", 1, 1),
@@ -1158,7 +1158,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=2>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=2>\n" +
                 "-- <NEW, pkg:Vendor1 New Path2 package, revision 2>\n" +
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1>\n",
                 getTree(m, false /*displaySortByApi*/));
@@ -1183,7 +1183,7 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
-                "PkgCategorySource <source=repo1 (repo.com), #items=1>\n" +
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
