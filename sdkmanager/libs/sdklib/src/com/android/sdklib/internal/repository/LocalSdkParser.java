@@ -18,8 +18,10 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
+import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.util.Pair;
@@ -69,7 +71,7 @@ public class LocalSdkParser {
      * Store the packages internally. You can use {@link #getPackages()} to retrieve them
      * at any time later.
      *
-     * @param osSdkRoot The path to the SDK folder.
+     * @param osSdkRoot The path to the SDK folder, typically {@code sdkManager.getLocation()}.
      * @param sdkManager An existing SDK manager to list current platforms and addons.
      * @param monitor A monitor to track progress. Cannot be null.
      * @return The packages found. Can be retrieved later using {@link #getPackages()}.
@@ -136,6 +138,24 @@ public class LocalSdkParser {
                 } else {
                     pkg = AddonPackage.create(target, props);
                 }
+
+                for (ISystemImage systemImage : target.getSystemImages()) {
+                    if (systemImage.getLocationType() == LocationType.IN_SYSTEM_IMAGE) {
+                        File siDir = systemImage.getLocation();
+                        if (siDir.isDirectory()) {
+                            Properties siProps = parseProperties(
+                                    new File(siDir, SdkConstants.FN_SOURCE_PROP));
+                            Package pkg2 = new SystemImagePackage(
+                                    target.getVersion(),
+                                    0 /*revision*/,   // this will use the one from siProps if any
+                                    systemImage.getAbiType(),
+                                    siProps);
+                            packages.add(pkg2);
+                            visited.add(siDir);
+                        }
+                    }
+                }
+
             } catch (Exception e) {
                 monitor.error(e, null);
             }
@@ -147,6 +167,8 @@ public class LocalSdkParser {
         }
         monitor.incProgress(1);
 
+        scanMissingSystemImages(sdkManager, visited, packages, monitor);
+        monitor.incProgress(1);
         scanMissingAddons(sdkManager, visited, packages, monitor);
         monitor.incProgress(1);
         scanMissingSamples(osSdkRoot, visited, packages, monitor);
@@ -275,12 +297,12 @@ public class LocalSdkParser {
             ISdkLog log) {
         File addons = new File(new File(sdkManager.getLocation()), SdkConstants.FD_ADDONS);
 
-        if (!addons.isDirectory()) {
-            // It makes listFiles() return null so let's avoid it.
+        File[] files = addons.listFiles();
+        if (files == null) {
             return;
         }
 
-        for (File dir : addons.listFiles()) {
+        for (File dir : files) {
             if (dir.isDirectory() && !visited.contains(dir)) {
                 Pair<Map<String, String>, String> infos =
                     SdkManager.parseAddonProperties(dir, sdkManager.getTargets(), log);
@@ -293,6 +315,54 @@ public class LocalSdkParser {
                     visited.add(dir);
                 } catch (Exception e) {
                     log.error(e, null);
+                }
+            }
+        }
+    }
+
+    /**
+     * The sdk manager only lists valid system image via its addons or platform targets.
+     * However here we also want to find "broken" system images, that is system images
+     * that are located in the sdk/system-images folder but somehow not loaded properly.
+     */
+    private void scanMissingSystemImages(SdkManager sdkManager,
+            HashSet<File> visited,
+            ArrayList<Package> packages,
+            ISdkLog log) {
+        File siRoot = new File(sdkManager.getLocation(), SdkConstants.FD_SYSTEM_IMAGES);
+
+        File[] files = siRoot.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        // The system-images folder contains a list of platform folders.
+        for (File platformDir : files) {
+            if (platformDir.isDirectory() && !visited.contains(platformDir)) {
+                visited.add(platformDir);
+
+                // In the platform directory, we expect a list of abi folders
+                File[] platformFiles = platformDir.listFiles();
+                if (platformFiles != null) {
+                    for (File abiDir : platformFiles) {
+                        if (abiDir.isDirectory() && !visited.contains(abiDir)) {
+                            visited.add(abiDir);
+
+                            // Ignore empty directories
+                            File[] abiFiles = abiDir.listFiles();
+                            if (abiFiles != null && abiFiles.length > 0) {
+                                Properties props =
+                                    parseProperties(new File(abiDir, SdkConstants.FN_SOURCE_PROP));
+
+                                try {
+                                    Package pkg = SystemImagePackage.createBroken(abiDir, props);
+                                    packages.add(pkg);
+                                } catch (Exception e) {
+                                    log.error(e, null);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

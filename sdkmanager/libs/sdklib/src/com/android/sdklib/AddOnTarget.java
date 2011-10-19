@@ -67,7 +67,7 @@ final class AddOnTarget implements IAndroidTarget {
     private final String mLocation;
     private final PlatformTarget mBasePlatform;
     private final String mName;
-    private String[] mAbis;
+    private final ISystemImage[] mSystemImages;
     private final String mVendor;
     private final int mRevision;
     private final String mDescription;
@@ -78,7 +78,6 @@ final class AddOnTarget implements IAndroidTarget {
     private String mDefaultSkin;
     private IOptionalLibrary[] mLibraries;
     private int mVendorId = NO_USB_ID;
-    private boolean mAbiCompatibilityMode;
 
     /**
      * Creates a new add-on
@@ -87,16 +86,23 @@ final class AddOnTarget implements IAndroidTarget {
      * @param vendor the vendor name of the add-on
      * @param revision the revision of the add-on
      * @param description the add-on description
-     * @param abis list of supported abis
+     * @param systemImages list of supported system images. Can be null or empty.
      * @param libMap A map containing the optional libraries. The map key is the fully-qualified
      * library name. The value is a 2 string array with the .jar filename, and the description.
      * @param hasRenderingLibrary whether the addon has a custom layoutlib.jar
      * @param hasRenderingResources whether the add has custom framework resources.
      * @param basePlatform the platform the add-on is extending.
      */
-    AddOnTarget(String location, String name, String vendor, int revision, String description,
-            String[] abis, Map<String, String[]> libMap,
-            boolean hasRenderingLibrary, boolean hasRenderingResources,
+    AddOnTarget(
+            String location,
+            String name,
+            String vendor,
+            int revision,
+            String description,
+            ISystemImage[] systemImages,
+            Map<String, String[]> libMap,
+            boolean hasRenderingLibrary,
+            boolean hasRenderingResources,
             PlatformTarget basePlatform) {
         if (location.endsWith(File.separator) == false) {
             location = location + File.separator;
@@ -111,13 +117,10 @@ final class AddOnTarget implements IAndroidTarget {
         mHasRenderingResources = hasRenderingResources;
         mBasePlatform = basePlatform;
 
-        //set compatibility mode
-        if (abis.length > 0) {
-            mAbis = abis;
-        } else {
-            mAbiCompatibilityMode = true;
-            mAbis = new String[] { SdkConstants.ABI_ARMEABI };
-        }
+        // If the add-on does not have any system-image of its own, the list here
+        // is empty and it's up to the callers to query the parent platform.
+        mSystemImages = systemImages == null ? new ISystemImage[0] : systemImages;
+        Arrays.sort(mSystemImages);
 
         // handle the optional libraries.
         if (libMap != null) {
@@ -141,23 +144,17 @@ final class AddOnTarget implements IAndroidTarget {
         return mName;
     }
 
-    /**
-    * Return the full path for images
-    * @param abiType type of the abi
-    * @return complete path where the image files are located
-    */
-    public String getImagePath(String abiType) {
-
-        if (mAbiCompatibilityMode) {
-        // Use legacy directory structure if only arm
-            return mLocation + SdkConstants.OS_IMAGES_FOLDER;
-        } else {
-            return mLocation + SdkConstants.OS_IMAGES_FOLDER + abiType + File.separator;
-          }
+    public ISystemImage getSystemImage(String abiType) {
+        for (ISystemImage sysImg : mSystemImages) {
+            if (sysImg.getAbiType().equals(abiType)) {
+                return sysImg;
+            }
+        }
+        return null;
     }
 
-    public String[] getAbiList() {
-        return mAbis;
+    public ISystemImage[] getSystemImages() {
+        return mSystemImages;
     }
 
     public String getVendor() {
@@ -385,6 +382,23 @@ final class AddOnTarget implements IAndroidTarget {
         }
 
         return versionDiff;
+    }
+
+    /**
+     * Returns a string representation suitable for debugging.
+     * The representation is not intended for display to the user.
+     *
+     * The representation is also purposely compact. It does not describe _all_ the properties
+     * of the target, only a few key ones.
+     *
+     * @see #getDescription()
+     */
+    @Override
+    public String toString() {
+        return String.format("AddonTarget %1$s rev %2$d (based on %3$s)",     //$NON-NLS-1$
+                getVersion(),
+                getRevision(),
+                getParent().toString());
     }
 
     // ---- local methods.

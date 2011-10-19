@@ -80,6 +80,7 @@ public class MainTest extends SdkManagerTestCase {
                 + ", P     Name: " + this.getName() + "\n"
                 + ", P     Path: " + mAvdFolder + "\n"
                 + ", P   Target: Android 0.0 (API level 0)\n"
+                + ", P      ABI: armeabi\n"
                 + ", P     Skin: HVGA\n"
                 + "]",
                 getLog().toString());
@@ -109,6 +110,7 @@ public class MainTest extends SdkManagerTestCase {
                 + ", P     Name: " + this.getName() + "\n"
                 + ", P     Path: " + mAvdFolder + "\n"
                 + ", P   Target: Android 0.0 (API level 0)\n"
+                + ", P      ABI: armeabi\n"
                 + ", P     Skin: HVGA\n"
                 + ", P Snapshot: true\n"
                 + "]",

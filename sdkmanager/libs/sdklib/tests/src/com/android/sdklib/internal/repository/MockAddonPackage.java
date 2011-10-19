@@ -18,7 +18,11 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
+import com.android.sdklib.SystemImage;
+import com.android.sdklib.ISystemImage.LocationType;
+import com.android.sdklib.io.FileOp;
 
 import java.util.Map;
 
@@ -68,6 +72,7 @@ public class MockAddonPackage extends AddonPackage {
         private final IAndroidTarget mParentTarget;
         private final int mRevision;
         private final String mName;
+        private ISystemImage[] mSystemImages;
 
         public MockAddonTarget(String name, IAndroidTarget parentTarget, int revision) {
             mName = name;
@@ -95,16 +100,26 @@ public class MockAddonPackage extends AddonPackage {
             return getName();
         }
 
-        public String[] getAbiList() {
-            return new String[] { SdkConstants.ABI_ARMEABI };
+        public ISystemImage[] getSystemImages() {
+            if (mSystemImages == null) {
+                SystemImage si = new SystemImage(
+                        FileOp.append(getLocation(), SdkConstants.OS_IMAGES_FOLDER),
+                        LocationType.IN_PLATFORM_LEGACY,
+                        SdkConstants.ABI_ARMEABI);
+                mSystemImages = new SystemImage[] { si };
+            }
+            return mSystemImages;
         }
 
-        public String getImagePath(String abiType) {
-            return SdkConstants.OS_IMAGES_FOLDER;
+        public ISystemImage getSystemImage(String abiType) {
+            if (SdkConstants.ABI_ARMEABI.equals(abiType)) {
+                return getSystemImages()[0];
+            }
+            return null;
         }
 
         public String getLocation() {
-            return "";
+            return "/sdk/add-ons/addon-" + mName;
         }
 
         public IOptionalLibrary[] getOptionalLibraries() {
@@ -116,7 +131,7 @@ public class MockAddonPackage extends AddonPackage {
         }
 
         public String getPath(int pathId) {
-            return null;
+            throw new UnsupportedOperationException("Implement this as needed for tests");
         }
 
         public String[] getPlatformLibraries() {

@@ -61,6 +61,31 @@ public class FileOp implements IFileOp {
     }
 
     /**
+     * Appends the given {@code segments} to the {@code base} file.
+     *
+     * @param base A base file, non-null.
+     * @param segments Individual folder or filename segments to append to the base file.
+     * @return A new file representing the concatenation of the base path with all the segments.
+     */
+    public static File append(File base, String...segments) {
+        for (String segment : segments) {
+            base = new File(base, segment);
+        }
+        return base;
+    }
+
+    /**
+     * Appends the given {@code segments} to the {@code base} file.
+     *
+     * @param base A base file path, non-empty and non-null.
+     * @param segments Individual folder or filename segments to append to the base path.
+     * @return A new file representing the concatenation of the base path with all the segments.
+     */
+    public static File append(String base, String...segments) {
+        return append(new File(base), segments);
+    }
+
+    /**
      * Helper to delete a file or a directory.
      * For a directory, recursively deletes all of its content.
      * Files that cannot be deleted right away are marked for deletion on exit.

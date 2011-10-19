@@ -20,6 +20,7 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
+import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo;
@@ -709,8 +710,9 @@ final class AvdCreationDialog extends GridDialog {
         }
 
         // select the abi type
-        if (target != null && target.getAbiList().length > 0) {
-            mAbiTypeCombo.setEnabled(target.getAbiList().length > 1);
+        ISystemImage[] systemImages = getSystemImages(target);
+        if (target != null && systemImages.length > 0) {
+            mAbiTypeCombo.setEnabled(systemImages.length > 1);
             String abiType = AvdInfo.getPrettyAbiType(mEditAvdInfo.getAbiType());
             int n = mAbiTypeCombo.getItemCount();
             for (int i = 0; i < n; i++) {
@@ -954,9 +956,10 @@ final class AvdCreationDialog extends GridDialog {
        if (index >= 0) {
            String targetName = mTargetCombo.getItem(index);
            IAndroidTarget target = mCurrentTargets.get(targetName);
-           String[] arches = target.getAbiList();
 
-           mAbiTypeCombo.setEnabled(arches.length > 1);
+           ISystemImage[] systemImages = getSystemImages(target);
+
+           mAbiTypeCombo.setEnabled(systemImages.length > 1);
 
            // If user explicitly selected an ABI before, preserve that option
            // If user did not explicitly select before (only one option before)
@@ -969,8 +972,8 @@ final class AvdCreationDialog extends GridDialog {
            mAbiTypeCombo.removeAll();
 
            int i;
-           for ( i = 0; i < arches.length ; i++ ) {
-               String prettyAbiType = AvdInfo.getPrettyAbiType(arches[i]);
+           for ( i = 0; i < systemImages.length ; i++ ) {
+               String prettyAbiType = AvdInfo.getPrettyAbiType(systemImages[i].getAbiType());
                mAbiTypeCombo.add(prettyAbiType);
                if (!found) {
                    found = prettyAbiType.equals(selected);
@@ -980,7 +983,7 @@ final class AvdCreationDialog extends GridDialog {
                }
            }
 
-           if (arches.length == 1) {
+           if (systemImages.length == 1) {
                mAbiTypeCombo.select(0);
            }
        }
@@ -1015,8 +1018,9 @@ final class AvdCreationDialog extends GridDialog {
             int index = mTargetCombo.getSelectionIndex();
             String targetName = mTargetCombo.getItem(index);
             IAndroidTarget target = mCurrentTargets.get(targetName);
-            if (target.getAbiList().length > 1 && mAbiTypeCombo.getSelectionIndex() < 0) {
-               error = "An abi type must be selected in order to create an AVD.";
+            ISystemImage[] systemImages = getSystemImages(target);
+            if (systemImages.length > 1 && mAbiTypeCombo.getSelectionIndex() < 0) {
+               error = "An ABI type must be selected in order to create an AVD.";
             }
         }
 
@@ -1253,7 +1257,8 @@ final class AvdCreationDialog extends GridDialog {
 
         // get the abi type
         mAbiType = SdkConstants.ABI_ARMEABI;
-        if (target.getAbiList().length > 0) {
+        ISystemImage[] systemImages = getSystemImages(target);
+        if (systemImages.length > 0) {
             int abiIndex = mAbiTypeCombo.getSelectionIndex();
             if (abiIndex >= 0) {
                 String prettyname = mAbiTypeCombo.getItem(abiIndex);
@@ -1347,6 +1352,32 @@ final class AvdCreationDialog extends GridDialog {
             ((MessageBoxLog) log).displayResult(success);
         }
         return success;
+    }
+
+    /**
+     * Returns the list of system images of a target.
+     * <p/>
+     * If target is null, returns an empty list.
+     * If target is an add-on with no system images, return the list from its parent platform.
+     *
+     * @param target An IAndroidTarget. Can be null.
+     * @return A non-null ISystemImage array. Can be empty.
+     */
+    private ISystemImage[] getSystemImages(IAndroidTarget target) {
+        if (target != null) {
+            ISystemImage[] images = target.getSystemImages();
+
+            if ((images == null || images.length == 0) && !target.isPlatform()) {
+                // If an add-on does not provide any system images, use the ones from the parent.
+                images = target.getParent().getSystemImages();
+            }
+
+            if (images != null) {
+                return images;
+            }
+        }
+
+        return new ISystemImage[0];
     }
 
     // End of hiding from SWT Designer
