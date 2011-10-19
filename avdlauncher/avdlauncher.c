@@ -15,7 +15,7 @@
  */
 
 /*
- * The "SDK Manager" is for Windows only.
+ * The "AVD Manager" is for Windows only.
  * This simple .exe will sit at the root of the Windows SDK
  * and currently simply executes tools\android.bat.
  * Eventually it should simply replace the batch file.
@@ -62,7 +62,7 @@ void display_error(LPSTR description) {
 
         s2 = (LPSTR) malloc(strlen(description) + strlen(s) + 5);
         sprintf(s2, "%s\r\n%s", description, s);
-        MessageBox(NULL, s2, "Android SDK Manager - Error", MB_OK);
+        MessageBox(NULL, s2, "Android AVD Manager - Error", MB_OK);
         free(s2);
         LocalFree(s);
     }
@@ -165,7 +165,7 @@ void read_temp_file(LPSTR temp_filename) {
                 *s2 = 0;
             }
 
-            MessageBox(NULL, s1, "Android SDK Manager - Output", MB_OK);
+            MessageBox(NULL, s1, "Android AVD Manager - Output", MB_OK);
         }
 
     }
@@ -178,7 +178,7 @@ void read_temp_file(LPSTR temp_filename) {
 }
 
 
-int sdk_launcher() {
+int avd_launcher() {
     int                   result = 0;
     STARTUPINFO           startup;
     PROCESS_INFORMATION   pinfo;
@@ -220,7 +220,7 @@ int sdk_launcher() {
 
         ret = CreateProcess(
                 NULL,                                       /* program path */
-                "tools\\android.bat sdk",                   /* command-line */
+                "tools\\android.bat avd",                   /* command-line */
                 NULL,                  /* process handle is not inheritable */
                 NULL,                   /* thread handle is not inheritable */
                 TRUE,                          /* yes, inherit some handles */
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
     _enable_dprintf = argc > 1 && strcmp(argv[1], "-v") == 0;
     dprintf("Verbose debug mode.\n");
 
-    return sdk_launcher();
+    return avd_launcher();
 }
 
 #endif /* _WIN32 */
