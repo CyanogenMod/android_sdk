@@ -16,8 +16,10 @@
 
 package com.android.sdkuilib.internal.repository.sdkman2;
 
+import com.android.sdklib.internal.repository.BrokenPackage;
 import com.android.sdklib.internal.repository.ExtraPackage;
 import com.android.sdklib.internal.repository.MockAddonPackage;
+import com.android.sdklib.internal.repository.MockBrokenPackage;
 import com.android.sdklib.internal.repository.MockEmptyPackage;
 import com.android.sdklib.internal.repository.MockExtraPackage;
 import com.android.sdklib.internal.repository.MockPlatformPackage;
@@ -1185,6 +1187,100 @@ public class PackagesDiffLogicTest extends TestCase {
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
                 "-- <INSTALLED, pkg:Vendor1 Old Path1 package, revision 1, updated by:Vendor1 New Path2 package, revision 2>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
+
+
+    public void testBrokenAddon() {
+
+        SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
+
+        MockPlatformPackage p1 = null;
+        MockAddonPackage a1 = null;
+
+        // User has a platform + addon locally installed
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+                a1 = new MockAddonPackage(src2, "addon A", p1, 4),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1 /*locals*/, new Package[] {
+                p1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2 /*locals*/, new Package[] {
+                a1
+        });
+        m.updateEnd(true /*sortByApi*/);
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 4>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 4>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now user deletes the platform on disk and reload.
+        // The local package parser will only find a broken addon.
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockBrokenPackage(BrokenPackage.MIN_API_LEVEL_NOT_SPECIFIED, 1),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1 /*locals*/, new Package[] {
+                new MockPlatformPackage(src1, 1, 2, 3)
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2 /*locals*/, new Package[] {
+                new MockAddonPackage(src2, "addon A", p1, 4)
+        });
+        m.updateEnd(true /*sortByApi*/);
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 4>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=1>\n" +
+                "-- <INSTALLED, pkg:Broken package for API 1>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
+                "-- <NEW, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=1>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 4>\n" +
+                "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                "-- <INSTALLED, pkg:Broken package for API 1>\n",
+                getTree(m, false /*displaySortByApi*/));
+
+        // Now user restores the missing platform on disk.
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+                a1 = new MockAddonPackage(src2, "addon A", p1, 4),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1 /*locals*/, new Package[] {
+                p1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2 /*locals*/, new Package[] {
+                a1
+        });
+        m.updateEnd(true /*sortByApi*/);
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=0>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 4>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=repo1 (example.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategorySource <source=repo2 (example.com), #items=1>\n" +
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 4>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
