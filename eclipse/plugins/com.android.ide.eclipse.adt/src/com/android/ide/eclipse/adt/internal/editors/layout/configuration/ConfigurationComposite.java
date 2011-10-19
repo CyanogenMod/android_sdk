@@ -57,7 +57,7 @@ import com.android.resources.ScreenSize;
 import com.android.resources.UiMode;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.internal.repository.PlatformPackage;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.util.Pair;
 
@@ -795,7 +795,7 @@ public class ConfigurationComposite extends Composite {
                 // Look up the layout lib API level. This property is new so it will only
                 // be defined for version 6 or higher, which means non-null is adequate
                 // to see if this target is eligible:
-                String property = target.getProperty(PlatformPackage.PROP_LAYOUTLIB_API);
+                String property = target.getProperty(PkgProps.LAYOUTLIB_API);
                 // In addition, Android 3.0 with API level 11 had version 5.0 which is adequate:
                 if (property != null || apiLevel >= 11) {
                     if (apiLevel < bestApiLevel) {
