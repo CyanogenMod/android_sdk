@@ -1447,28 +1447,71 @@ public class ExtractStringRefactoring extends Refactoring {
      * Escape a string value to be placed in a string resource file such that it complies with
      * the escaping rules described here:
      *   http://developer.android.com/guide/topics/resources/string-resource.html
+     * More examples of the escaping rules can be found here:
+     *   http://androidcookbook.com/Recipe.seam?recipeId=2219&recipeFrom=ViewTOC
      * This method assumes that the String is not escaped already.
+     *
+     * Rules:
+     * <ul>
+     * <li>Double quotes are needed if string starts or ends with at least one space.
+     * <li>{@code @, ?} at beginning of string have to be escaped with a backslash.
+     * <li>{@code ', ", \} have to be escaped with a backslash.
+     * <li>{@code <, >, &} have to be replaced by their predefined xml entity.
+     * <li>{@code \n, \t} have to be replaced by a backslash and the appropriate character.
+     * </ul>
      */
-    private static String escapeString(String s) {
-        if ((s.indexOf('"') != -1)) {
-            // Must escape each quote or apostrophe.
-            // (We cannot escape the string by surrounding it with apostrophes so we don't
-            // need to distinguish between containsQuotes and contains both.)
-            StringBuilder sb = new StringBuilder(s.length() + 2);
-            for (int i = 0, n = s.length(); i < n; i++) {
-                char c = s.charAt(i);
-                if (c == '\'' || c == '"') {
-                    sb.append('\\');
-                }
-                sb.append(c);
-            }
-            return sb.toString();
-        } else if ((s.indexOf('\'') != -1)) {
-            // Surround string with quotes
-            return '"' + s + '"';
-        } else {
-            return s;
+    static String escapeString(String s) {
+        int n = s.length();
+        if (n == 0) {
+            return "";
         }
+
+        StringBuilder sb = new StringBuilder(s.length() * 2);
+        boolean hasSpace = s.charAt(0) == ' ' || s.charAt(n - 1) == ' ';
+
+        if (hasSpace) {
+            sb.append('"');
+        } else if (s.charAt(0) == '@' || s.charAt(0) == '?') {
+            sb.append('\\');
+        }
+
+        for (int i = 0; i < n; ++i) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\'':
+                    if (!hasSpace) {
+                        sb.append('\\');
+                    }
+                    sb.append(c);
+                    break;
+                case '"':
+                case '\\':
+                    sb.append('\\');
+                    sb.append(c);
+                    break;
+                case '<':
+                    sb.append("&lt;"); //$NON-NLS-1$
+                    break;
+                case '&':
+                    sb.append("&amp;"); //$NON-NLS-1$
+                    break;
+                case '\n':
+                    sb.append("\\n"); //$NON-NLS-1$
+                    break;
+                case '\t':
+                    sb.append("\\t"); //$NON-NLS-1$
+                    break;
+                default:
+                    sb.append(c);
+                    break;
+            }
+        }
+
+        if (hasSpace) {
+            sb.append('"');
+        }
+
+        return sb.toString();
     }
 
     /**
