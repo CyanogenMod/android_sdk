@@ -128,6 +128,20 @@ public class LogCatFilterTest extends TestCase {
         assertEquals(true, search("app:dal.*k", msg)); //$NON-NLS-1$
     }
 
+    public void testCaseSensitivity() {
+        LogCatMessage msg = new LogCatMessage(LogLevel.VERBOSE,
+                "", "", "", "",
+                "Sample message");
+
+        // if regex has an upper case character, it should be
+        // treated as a case sensitive search
+        assertEquals(false, search("Message", msg));
+
+        // if regex is all lower case, then it should be a
+        // case insensitive search
+        assertEquals(true, search("sample", msg));
+    }
+
     /**
      * Helper method: search if the query string matches the message.
      * @param query words to search for

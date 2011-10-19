@@ -93,7 +93,7 @@ public final class LogCatFilter {
 
         if (mAppName.length() != 0) {
             try {
-                mAppNamePattern = Pattern.compile(mAppName);
+                mAppNamePattern = Pattern.compile(mAppName, getPatternCompileFlags(mAppName));
                 mCheckAppName = true;
             } catch (PatternSyntaxException e) {
                 Log.e("LogCatFilter", "Ignoring invalid app name regex.");
@@ -104,7 +104,7 @@ public final class LogCatFilter {
 
         if (mTag.length() != 0) {
             try {
-                mTagPattern = Pattern.compile(mTag);
+                mTagPattern = Pattern.compile(mTag, getPatternCompileFlags(mTag));
                 mCheckTag = true;
             } catch (PatternSyntaxException e) {
                 Log.e("LogCatFilter", "Ignoring invalid tag regex.");
@@ -115,7 +115,7 @@ public final class LogCatFilter {
 
         if (mText.length() != 0) {
             try {
-                mTextPattern = Pattern.compile(mText);
+                mTextPattern = Pattern.compile(mText, getPatternCompileFlags(mText));
                 mCheckText = true;
             } catch (PatternSyntaxException e) {
                 Log.e("LogCatFilter", "Ignoring invalid text regex.");
@@ -123,6 +123,22 @@ public final class LogCatFilter {
                 mCheckText = false;
             }
         }
+    }
+
+    /**
+     * Obtain the flags to pass to {@link Pattern#compile(String, int)}. This method
+     * tries to figure out whether case sensitive matching should be used. It is based on
+     * the following heuristic: if the regex has an upper case character, then the match
+     * will be case sensitive. Otherwise it will be case insensitive.
+     */
+    private int getPatternCompileFlags(String regex) {
+        for (char c : regex.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                return 0;
+            }
+        }
+
+        return Pattern.CASE_INSENSITIVE;
     }
 
     /**
