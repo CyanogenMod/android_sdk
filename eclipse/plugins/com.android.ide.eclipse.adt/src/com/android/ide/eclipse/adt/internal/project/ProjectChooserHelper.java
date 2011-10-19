@@ -235,6 +235,16 @@ public class ProjectChooserHelper {
             return mProject;
         }
 
+        /**
+         * Sets the project selected by this chooser
+         *
+         * @param project the selected project
+         */
+        public void setSelectedProject(IProject project) {
+            mProject = project;
+            setProjectLabel(project);
+        }
+
         /** Updates the selection with the given project */
         private void setProjectLabel(IProject project) {
             ILabelProvider labelProvider = new JavaElementLabelProvider(
