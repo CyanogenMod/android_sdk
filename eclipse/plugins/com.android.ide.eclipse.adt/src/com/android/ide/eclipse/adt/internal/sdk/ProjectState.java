@@ -28,8 +28,11 @@ import org.eclipse.core.runtime.Status;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
@@ -544,6 +547,30 @@ public final class ProjectState {
 
     public List<ProjectState> getParentProjects() {
         return Collections.unmodifiableList(mParentProjects);
+    }
+
+    /**
+     * Computes the transitive closure of projects referencing this project as a
+     * library project
+     *
+     * @return a collection (in any order) of project states for projects that
+     *         directly or indirectly include this project state's project as a
+     *         library project
+     */
+    public Collection<ProjectState> getFullParentProjects() {
+        Set<ProjectState> result = new HashSet<ProjectState>();
+        addParentProjects(result, this);
+        return result;
+    }
+
+    /** Adds all parent projects of the given project, transitively, into the given parent set */
+    private static void addParentProjects(Set<ProjectState> parents, ProjectState state) {
+        for (ProjectState s : state.mParentProjects) {
+            if (!parents.contains(s)) {
+                parents.add(s);
+                addParentProjects(parents, s);
+            }
+        }
     }
 
     /**

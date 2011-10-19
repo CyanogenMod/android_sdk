@@ -20,12 +20,12 @@ import com.android.ide.common.resources.FrameworkResources;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.ScanningContext;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IRawDeltaListener;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -46,11 +46,14 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.QualifiedName;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
  * The ResourceManager tracks resources for all opened projects.
@@ -79,7 +82,7 @@ public final class ResourceManager {
      * <p/><b>All accesses must be inside a synchronized(mMap) block</b>, and do as a little as
      * possible and <b>not call out to other classes</b>.
      */
-    private final HashMap<IProject, ProjectResources> mMap =
+    private final Map<IProject, ProjectResources> mMap =
         new HashMap<IProject, ProjectResources>();
 
     /**
@@ -112,7 +115,6 @@ public final class ResourceManager {
      * @param monitor The global project monitor
      */
     public static void setup(GlobalProjectMonitor monitor) {
-        monitor.addResourceEventListener(sThis.mResourceEventListener);
         monitor.addProjectListener(sThis.mProjectListener);
         monitor.addRawDeltaListener(sThis.mRawDeltaListener);
 
@@ -159,24 +161,23 @@ public final class ResourceManager {
 
     /**
      * Update the resource repository with a delta
+     *
      * @param delta the resource changed delta to process.
+     * @param context a context object with state for the current update, such
+     *            as a place to stash errors encountered
      */
-    public void processDelta(IResourceDelta delta) {
+    public void processDelta(IResourceDelta delta, IdeScanningContext context) {
         // Skip over deltas that don't fit our mask
         int mask = IResourceDelta.ADDED | IResourceDelta.REMOVED | IResourceDelta.CHANGED;
         int kind = delta.getKind();
         if ( (mask & kind) == 0) {
             return;
         }
-        // If our delta was handed to us from the PreCompiler then it's a single delta
-        // with lots of children. GlobalProjectMonitor will hand us a delta for each
-        // item in the tree of modifications so we only need to recurse into delta
-        // children if we're autobuilding.
-        if (ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding()) {
-            IResourceDelta[] children = delta.getAffectedChildren();
-            for (IResourceDelta child : children)  {
-                processDelta(child);
-            }
+
+        // Process children recursively
+        IResourceDelta[] children = delta.getAffectedChildren();
+        for (IResourceDelta child : children)  {
+            processDelta(child, context);
         }
 
         // Process this delta
@@ -184,55 +185,21 @@ public final class ResourceManager {
         int type = r.getType();
 
         if (type == IResource.FILE) {
-            updateFile((IFile)r, delta.getMarkerDeltas(), kind);
+            context.startScanning(r);
+            updateFile((IFile)r, delta.getMarkerDeltas(), kind, context);
+            context.finishScanning(r);
         } else if (type == IResource.FOLDER) {
-            updateFolder((IFolder)r, kind);
+            updateFolder((IFolder)r, kind, context);
         } // We only care about files and folders.
           // Project deltas are handled by our project listener
     }
-
-    /**
-     * Private implementation of a resource event listener that registers with
-     * GlobalProjectMonitor.
-     *
-     */
-    private class ResourceEventListener implements IResourceEventListener {
-        private final List<IProject> mChangedProjects = new ArrayList<IProject>();
-
-        public void resourceChangeEventEnd() {
-            for (IProject project : mChangedProjects) {
-                ProjectResources resources;
-                synchronized (mMap) {
-                    resources = mMap.get(project);
-                }
-            }
-
-            mChangedProjects.clear();
-        }
-
-        public void resourceChangeEventStart() {
-            // pass
-        }
-
-        void addProject(IProject project) {
-            if (mChangedProjects.contains(project) == false) {
-                mChangedProjects.add(project);
-            }
-        }
-    }
-
-    /**
-     * Delegate listener for resource changes. This is called before and after any calls to the
-     * project and file listeners (for a given resource change event).
-     */
-    private final ResourceEventListener mResourceEventListener = new ResourceEventListener();
 
     /**
      * Update a resource folder that we know about
      * @param folder the folder that was updated
      * @param kind the delta type (added/removed/updated)
      */
-    private void updateFolder(IFolder folder, int kind) {
+    private void updateFolder(IFolder folder, int kind, IdeScanningContext context) {
         ProjectResources resources;
 
         final IProject project = folder.getProject();
@@ -245,8 +212,6 @@ public final class ResourceManager {
             // can't get the project nature? return!
             return;
         }
-
-        mResourceEventListener.addProject(project);
 
         switch (kind) {
             case IResourceDelta.ADDED:
@@ -296,8 +261,10 @@ public final class ResourceManager {
                     ResourceFolderType type = ResourceFolderType.getFolderType(
                             folder.getName());
 
+                    context.startScanning(folder);
                     ResourceFolder removedFolder = resources.removeFolder(type,
-                            new IFolderWrapper(folder));
+                            new IFolderWrapper(folder), context);
+                    context.finishScanning(folder);
                     if (removedFolder != null) {
                         notifyListenerOnFolderChange(project, removedFolder, kind);
                     }
@@ -307,17 +274,19 @@ public final class ResourceManager {
     }
 
     /**
-     * Called when a delta indicates that a file has changed.
-     * Depending on the file being changed, and the type of change
-     * (ADDED, REMOVED, CHANGED), the file change is processed to update the resource
-     * manager data.
+     * Called when a delta indicates that a file has changed. Depending on the
+     * file being changed, and the type of change (ADDED, REMOVED, CHANGED), the
+     * file change is processed to update the resource manager data.
      *
      * @param file The file that changed.
      * @param markerDeltas The marker deltas for the file.
      * @param kind The change kind. This is equivalent to
-     * {@link IResourceDelta#accept(IResourceDeltaVisitor)}
+     *            {@link IResourceDelta#accept(IResourceDeltaVisitor)}
+     * @param context a context object with state for the current update, such
+     *            as a place to stash errors encountered
      */
-    private void updateFile(IFile file, IMarkerDelta[] markerDeltas, int kind) {
+    private void updateFile(IFile file, IMarkerDelta[] markerDeltas, int kind,
+            ScanningContext context) {
         final IProject project = file.getProject();
 
         try {
@@ -356,7 +325,7 @@ public final class ResourceManager {
                     if (folder != null) {
                         ResourceFile resFile = folder.processFile(
                                 new IFileWrapper(file),
-                                ResourceHelper.getResourceDeltaKind(kind));
+                                ResourceHelper.getResourceDeltaKind(kind), context);
                         notifyListenerOnFileChange(project, resFile, kind);
                     }
                 }
@@ -400,12 +369,38 @@ public final class ResourceManager {
      * accessed through the {@link ResourceManager#visitDelta(IResourceDelta delta)} method.
      */
     private final IRawDeltaListener mRawDeltaListener = new IRawDeltaListener() {
-        public void visitDelta(IResourceDelta delta) {
-            // If we're autobuilding, then PreCompilerBuilder will pass us deltas
-            if (ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding()) {
+        public void visitDelta(IResourceDelta workspaceDelta) {
+            // If we're auto-building, then PreCompilerBuilder will pass us deltas and
+            // they will be processed as part of the build.
+            if (isAutoBuilding()) {
                 return;
             }
-            processDelta(delta);
+
+            // When *not* auto building, we need to process the deltas immediately on save,
+            // even if the user is not building yet, such that for example resource ids
+            // are updated in the resource repositories so rendering etc. can work for
+            // those new ids.
+
+            IResourceDelta[] projectDeltas = workspaceDelta.getAffectedChildren();
+            for (IResourceDelta delta : projectDeltas) {
+                if (delta.getResource() instanceof IProject) {
+                    IProject project = (IProject) delta.getResource();
+                    IdeScanningContext context =
+                            new IdeScanningContext(getProjectResources(project), project);
+
+                    processDelta(delta, context);
+
+                    Collection<IProject> projects = context.getAaptRequestedProjects();
+                    if (projects != null) {
+                        for (IProject p : projects) {
+                            markAaptRequested(p);
+                        }
+                    }
+                } else {
+                    AdtPlugin.log(IStatus.WARNING, "Unexpected delta type: %1$s",
+                            delta.getResource().toString());
+                }
+            }
         }
     };
 
@@ -466,50 +461,6 @@ public final class ResourceManager {
     }
 
     /**
-     * Checks the ResourceRepositories associated with the given project and its dependencies
-     * and returns whether or not a resource regeneration is needed for that project
-     * @param project the project to check
-     * @return true if the project or any of its dependencies says it has new or deleted resources
-     */
-    public boolean projectNeedsIdGeneration(IProject project) {
-        // Get a list of repositories to check through
-        List<ProjectResources> repositories = getAllProjectResourcesAssociatedWith(project);
-        for (ProjectResources repository : repositories) {
-            if (repository.needsIdRefresh()) {
-                return true;
-            }
-        }
-        // If we've gotten to here, all repositories are in sync, return false
-        return false;
-    }
-
-    /**
-     * Get all the resource repositories representing this project and any included libraries
-     * @param project the project to get along with its dependencies
-     * @return a list of all ProjectResources ordered lowest to highest priority that need to be
-     *         included in this project.
-     */
-    private List<ProjectResources> getAllProjectResourcesAssociatedWith(IProject project) {
-        List<ProjectResources> toRet = new ArrayList<ProjectResources>();
-        // if the project contains libraries, we need to add the libraries resources here
-        if (project != null) {
-            ProjectState state = Sdk.getProjectState(project);
-            if (state != null) {
-                List<IProject> libraries = state.getFullLibraryProjects();
-                for (IProject library : libraries) {
-                    ProjectResources libRes = mMap.get(library);
-                    if (libRes != null) {
-                        toRet.add(libRes);
-                    }
-                }
-            }
-        }
-        // Add the queried current project last
-        toRet.add(mMap.get(project));
-        return toRet;
-    }
-
-    /**
      * Initial project parsing to gather resource info.
      * @param project
      */
@@ -534,6 +485,7 @@ public final class ResourceManager {
                     mMap.put(project, projectResources);
                 }
             }
+            IdeScanningContext context = new IdeScanningContext(projectResources, project);
 
             if (resourceFolder != null && resourceFolder.exists()) {
                 try {
@@ -553,9 +505,13 @@ public final class ResourceManager {
                                     if (fileRes.getType() == IResource.FILE) {
                                         IFile file = (IFile)fileRes;
 
+                                        context.startScanning(file);
+
                                         resFolder.processFile(new IFileWrapper(file),
                                                 ResourceHelper.getResourceDeltaKind(
-                                                        IResourceDelta.ADDED));
+                                                        IResourceDelta.ADDED), context);
+
+                                        context.finishScanning(file);
                                     }
                                 }
                             }
@@ -624,5 +580,80 @@ public final class ResourceManager {
         }
 
         return Integer.toString(kind);
+    }
+
+    /**
+     * Returns true if the Project > Build Automatically option is turned on
+     * (default).
+     *
+     * @return true if the Project > Build Automatically option is turned on
+     *         (default).
+     */
+    public static boolean isAutoBuilding() {
+        return ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding();
+    }
+
+    /** Qualified name for the per-project persistent property "needs aapt" */
+    private final static QualifiedName NEED_AAPT = new QualifiedName(AdtPlugin.PLUGIN_ID,
+            "aapt");//$NON-NLS-1$
+
+    /**
+     * Mark the given project, and any projects which depend on it as a library
+     * project, as needing a full aapt build the next time the project is built.
+     *
+     * @param project the project to mark as needing aapt
+     */
+    public static void markAaptRequested(IProject project) {
+        try {
+            String needsAapt = Boolean.TRUE.toString();
+            project.setPersistentProperty(NEED_AAPT, needsAapt);
+
+            ProjectState state = Sdk.getProjectState(project);
+            if (state.isLibrary()) {
+                // For library projects also mark the dependent projects as needing full aapt
+                for (ProjectState parent : state.getFullParentProjects()) {
+                    parent.getProject().setPersistentProperty(NEED_AAPT, needsAapt);
+                }
+            }
+        } catch (CoreException e) {
+            AdtPlugin.log(e,  null);
+        }
+    }
+
+    /**
+     * Clear the "needs aapt" flag set by {@link #markAaptRequested(IProject)}.
+     * This is usually called when a project is built. Note that this will only
+     * clean the build flag on the given project, not on any downstream projects
+     * that depend on this project as a library project.
+     *
+     * @param project the project to clear from the needs aapt list
+     */
+    public static void clearAaptRequest(IProject project) {
+        try {
+            project.setPersistentProperty(NEED_AAPT, null);
+            // Note that even if this project is a library project, we -don't- clear
+            // the aapt flags on the dependent projects since they may still depend
+            // on other dirty projects. When they are built, they will issue their
+            // own clear flag requests.
+        } catch (CoreException e) {
+            AdtPlugin.log(e,  null);
+        }
+    }
+
+    /**
+     * Returns whether the given project needs a full aapt build.
+     *
+     * @param project the project to check
+     * @return true if the project needs a full aapt run
+     */
+    public static boolean isAaptRequested(IProject project) {
+        try {
+            String b = project.getPersistentProperty(NEED_AAPT);
+            return b != null && Boolean.valueOf(b);
+        } catch (CoreException e) {
+            AdtPlugin.log(e,  null);
+        }
+
+        return false;
     }
 }

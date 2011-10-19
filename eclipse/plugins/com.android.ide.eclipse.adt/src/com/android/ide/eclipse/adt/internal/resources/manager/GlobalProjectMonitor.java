@@ -132,7 +132,6 @@ public final class GlobalProjectMonitor {
 
     /**
      * Interface for a listener that gets passed the raw delta without processing.
-     *
      */
     public interface IRawDeltaListener {
         public void visitDelta(IResourceDelta delta);
@@ -195,10 +194,6 @@ public final class GlobalProjectMonitor {
     private final class DeltaVisitor implements IResourceDeltaVisitor {
 
         public boolean visit(IResourceDelta delta) {
-            // notify the raw delta listeners
-            for (IRawDeltaListener listener : mRawDeltaListeners) {
-                listener.visitDelta(delta);
-            }
             // Find the other resource listeners to notify
             IResource r = delta.getResource();
             int type = r.getType();
@@ -479,6 +474,11 @@ public final class GlobalProjectMonitor {
             } else {
                 // this a regular resource change. We get the delta and go through it with a visitor.
                 IResourceDelta delta = event.getDelta();
+
+                // notify the raw delta listeners
+                for (IRawDeltaListener listener : mRawDeltaListeners) {
+                    listener.visitDelta(delta);
+                }
 
                 DeltaVisitor visitor = new DeltaVisitor();
                 try {

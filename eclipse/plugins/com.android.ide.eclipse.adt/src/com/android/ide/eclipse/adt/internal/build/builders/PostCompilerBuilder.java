@@ -23,10 +23,10 @@ import com.android.ide.eclipse.adt.internal.build.AaptExecException;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AaptResultException;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
@@ -377,7 +377,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             }
 
             // store the build status in the persistent storage
-            saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , mConvertToDex);
+            saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex);
             saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
             saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
             saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
@@ -415,6 +415,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                     writeLibraryPackage(jarIFile, project, javaOutputFolder,
                             referencedJavaProjects);
+                    saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
                 }
 
                 return allRefProjects;
@@ -859,7 +860,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 }
             }
 
-            saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , mConvertToDex);
+            saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex);
         } catch (Exception e) {
             AdtPlugin.log(e, "Failed to write jar file %s", jarIFile.getLocation().toOSString());
         } finally {
@@ -892,7 +893,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
         // load the build status. We pass true as the default value to
         // force a recompile in case the property was not found
-        mConvertToDex = loadProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX , true);
+        mConvertToDex = loadProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, true);
         mUpdateCrunchCache = loadProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, true);
         mPackageResources = loadProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, true);
         mBuildFinalPackage = loadProjectBooleanProperty(PROPERTY_BUILD_APK, true);

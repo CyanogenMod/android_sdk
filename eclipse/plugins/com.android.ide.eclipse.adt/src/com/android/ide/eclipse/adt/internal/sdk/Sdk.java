@@ -40,8 +40,8 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;
@@ -66,8 +66,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -1063,6 +1063,9 @@ public final class Sdk  {
         }
 
         public void resourceChangeEventEnd() {
+            if (mModifiedProjects.size() == 0) {
+                return;
+            }
 
             // first make sure all the parents are updated
             updateParentProjects();
