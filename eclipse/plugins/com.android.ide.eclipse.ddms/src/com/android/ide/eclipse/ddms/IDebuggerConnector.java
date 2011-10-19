@@ -21,6 +21,13 @@ package com.android.ide.eclipse.ddms;
  * on a connected device.
  */
 public interface IDebuggerConnector {
+    /**
+     * Is this application from a project present in the workspace?
+     * @param appName name of the application. This is typically the application's package, but
+     * can be different if the component was setup to run in its own process.
+     * @return true if there is a project in the workspace containing the given app.
+     */
+    boolean isWorkspaceApp(String appName);
 
     /**
      * Connects a debugger to a VM identified by its appName.

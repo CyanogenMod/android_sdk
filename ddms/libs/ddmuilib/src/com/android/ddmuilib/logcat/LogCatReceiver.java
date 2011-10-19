@@ -22,8 +22,9 @@ import com.android.ddmlib.MultiLineReceiver;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A class to monitor a device for logcat messages. It stores the received
@@ -36,7 +37,7 @@ public final class LogCatReceiver {
     private LogCatMessageList mLogMessages;
     private IDevice mCurrentDevice;
     private LogCatOutputReceiver mCurrentLogCatOutputReceiver;
-    private List<ILogCatMessageEventListener> mLogCatMessageListeners;
+    private Set<ILogCatMessageEventListener> mLogCatMessageListeners;
     private LogCatMessageParser mLogCatMessageParser;
     private LogCatPidToNameMapper mPidToNameMapper;
     private IPreferenceStore mPrefStore;
@@ -53,7 +54,7 @@ public final class LogCatReceiver {
         mCurrentDevice = device;
         mPrefStore = prefStore;
 
-        mLogCatMessageListeners = new ArrayList<ILogCatMessageEventListener>();
+        mLogCatMessageListeners = new HashSet<ILogCatMessageEventListener>();
         mLogCatMessageParser = new LogCatMessageParser();
         mPidToNameMapper = new LogCatPidToNameMapper(mCurrentDevice);
 

@@ -26,7 +26,6 @@ import org.eclipse.core.resources.IProject;
  * Implementation of the com.android.ide.ddms.debuggerConnector extension point.
  */
 public class DebuggerConnector implements IDebuggerConnector {
-
     public boolean connectDebugger(String appName, int appPort, int selectedPort) {
         // search for an android project matching the process name
         IProject project = ProjectHelper.findAndroidProjectByAppName(appName);
@@ -36,5 +35,10 @@ public class DebuggerConnector implements IDebuggerConnector {
         }
 
         return false;
+    }
+
+    /** {@inheritDoc} */
+    public boolean isWorkspaceApp(String appName) {
+        return ProjectHelper.findAndroidProjectByAppName(appName) != null;
     }
 }
