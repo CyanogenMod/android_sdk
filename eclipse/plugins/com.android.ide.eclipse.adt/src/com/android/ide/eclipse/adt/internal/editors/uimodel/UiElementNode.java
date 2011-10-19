@@ -1084,7 +1084,11 @@ public class UiElementNode implements IPropertySource {
 
         getEditor().scheduleNodeReformat(this, false);
 
+        // Notify per-node listeners
         invokeUiUpdateListeners(UiUpdateState.CREATED);
+        // Notify global listeners
+        fireNodeCreated(this, getUiSiblingIndex());
+
         return mXmlNode;
     }
 
@@ -1098,6 +1102,8 @@ public class UiElementNode implements IPropertySource {
         if (mXmlNode == null) {
             return null;
         }
+
+        int previousIndex = getUiSiblingIndex();
 
         // First clear the internals of the node and *then* actually deletes the XML
         // node (because doing so will generate an update even and this node may be
@@ -1120,6 +1126,8 @@ public class UiElementNode implements IPropertySource {
         }
 
         invokeUiUpdateListeners(UiUpdateState.DELETED);
+        fireNodeDeleted(this, previousIndex);
+
         return oldXmlNode;
     }
 
@@ -2102,5 +2110,96 @@ public class UiElementNode implements IPropertySource {
         }
 
         return null;
+    }
+
+    // ---- Global node create/delete Listeners ----
+
+    /** List of listeners to be notified of newly created nodes, or null */
+    private static List<NodeCreationListener> sListeners;
+
+    /** Notify listeners that a new node has been created */
+    private void fireNodeCreated(UiElementNode newChild, int index) {
+        // Nothing to do if there aren't any listeners. We don't need to worry about
+        // the case where one thread is firing node changes while another is adding a listener
+        // (in that case it's still okay for this node firing not to be heard) so perform
+        // the check outside of synchronization.
+        if (sListeners == null) {
+            return;
+        }
+        synchronized (UiElementNode.class) {
+            if (sListeners != null) {
+                UiElementNode parent = newChild.getUiParent();
+                for (NodeCreationListener listener : sListeners) {
+                    listener.nodeCreated(parent, newChild, index);
+                }
+            }
+        }
+    }
+
+    /** Notify listeners that a new node has been deleted */
+    private void fireNodeDeleted(UiElementNode oldChild, int index) {
+        if (sListeners == null) {
+            return;
+        }
+        synchronized (UiElementNode.class) {
+            if (sListeners != null) {
+                UiElementNode parent = oldChild.getUiParent();
+                for (NodeCreationListener listener : sListeners) {
+                    listener.nodeDeleted(parent, oldChild, index);
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds a {@link NodeCreationListener} to be notified when new nodes are created
+     *
+     * @param listener the listener to be notified
+     */
+    public static void addNodeCreationListener(NodeCreationListener listener) {
+        synchronized (UiElementNode.class) {
+            if (sListeners == null) {
+                sListeners = new ArrayList<NodeCreationListener>(1);
+            }
+            sListeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a {@link NodeCreationListener} from the set of listeners such that it is
+     * no longer notified when nodes are created.
+     *
+     * @param listener the listener to be removed from the notification list
+     */
+    public static void removeNodeCreationListener(NodeCreationListener listener) {
+        synchronized (UiElementNode.class) {
+            sListeners.remove(listener);
+            if (sListeners.size() == 0) {
+                sListeners = null;
+            }
+        }
+    }
+
+    /** Interface implemented by listeners to be notified of newly created nodes */
+    public interface NodeCreationListener {
+        /**
+         * Called when a new child node is created and added to the given parent
+         *
+         * @param parent the parent of the created node
+         * @param child the newly node
+         * @param index the index among the siblings of the child <b>after</b>
+         *            insertion
+         */
+        void nodeCreated(UiElementNode parent, UiElementNode child, int index);
+
+        /**
+         * Called when a child node is removed from the given parent
+         *
+         * @param parent the parent of the removed node
+         * @param child the removed node
+         * @param previousIndex the index among the siblings of the child
+         *            <b>before</b> removal
+         */
+        void nodeDeleted(UiElementNode parent, UiElementNode child, int previousIndex);
     }
 }
