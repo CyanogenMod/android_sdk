@@ -18,7 +18,7 @@ package com.android.sdklib.internal.repository;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
-import com.android.sdklib.io.OsHelper;
+import com.android.sdklib.io.FileOp;
 
 import java.io.File;
 import java.security.MessageDigest;
@@ -381,7 +381,7 @@ public class Archive implements IDescription, Comparable<Archive> {
      */
     public void deleteLocal() {
         if (isLocal()) {
-            OsHelper.deleteFileOrFolder(new File(getLocalOsPath()));
+            new FileOp().deleteFileOrFolder(new File(getLocalOsPath()));
         }
     }
 
