@@ -382,8 +382,8 @@ public class NewSetupTask extends Task {
                 String codeName = androidVersion.getCodename();
                 if (codeName.equals(value) == false) {
                     throw new BuildException(String.format(
-                            "For '%1$s' SDK Preview, attribute minSdkVersion in AndroidManifest.xml must be '%1$s'",
-                            codeName));
+                            "For '%1$s' SDK Preview, attribute minSdkVersion in AndroidManifest.xml must be '%1$s' (current: %2$s)",
+                            codeName, value));
                 }
 
                 // set the API level to the previous API level (which is actually the value in
