@@ -169,7 +169,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         // or a dialog trim when invoked from somewhere else.
         int style = SWT.SHELL_TRIM;
         if (mContext != SdkInvocationContext.STANDALONE) {
-            style = SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL;
+            style |= SWT.APPLICATION_MODAL;
         }
 
         mShell = new Shell(mParentShell, style);
