@@ -122,7 +122,7 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
 
     public static final int PANEL_HEAP = 2;
 
-    public static final int PANEL_NATIVE_HEAP = 3;
+    private static final int PANEL_NATIVE_HEAP = 3;
 
     private static final int PANEL_ALLOCATIONS = 4;
 
@@ -134,7 +134,8 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
     private static TablePanel[] mPanels = new TablePanel[PANEL_COUNT];
 
     private static final String[] mPanelNames = new String[] {
-            "Info", "Threads", "VM Heap", "Native Heap", "Allocation Tracker", "Sysinfo"
+            "Info", "Threads", "VM Heap", "Native Heap",
+            "Allocation Tracker", "Sysinfo"
     };
 
     private static final String[] mPanelTips = new String[] {
@@ -398,7 +399,12 @@ public class UIThread implements IUiSelectionListener, IClientChangeListener {
         mPanels[PANEL_THREAD] = new ThreadPanel();
         mPanels[PANEL_HEAP] = new HeapPanel();
         if (PrefsDialog.getStore().getBoolean(PrefsDialog.SHOW_NATIVE_HEAP)) {
-            mPanels[PANEL_NATIVE_HEAP] = new NativeHeapPanel();
+            if (System.getenv("ANDROID_DDMS_NEW_HEAP_PANEL") != null) {
+                mPanels[PANEL_NATIVE_HEAP] =
+                        new com.android.ddmuilib.heap.NativeHeapPanel(getStore());
+            } else {
+                mPanels[PANEL_NATIVE_HEAP] = new NativeHeapPanel();
+            }
         } else {
             mPanels[PANEL_NATIVE_HEAP] = null;
         }
