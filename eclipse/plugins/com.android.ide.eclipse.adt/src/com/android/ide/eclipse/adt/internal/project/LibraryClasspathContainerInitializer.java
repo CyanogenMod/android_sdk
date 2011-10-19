@@ -24,6 +24,8 @@ import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -68,6 +70,26 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
         } catch (JavaModelException e) {
             return false;
         }
+    }
+
+    /**
+     * Updates the {@link IJavaProject} objects with new library.
+     * @param androidProjects the projects to update.
+     * @return <code>true</code> if success, <code>false</code> otherwise.
+     */
+    public static boolean updateProject(List<ProjectState> projects) {
+        List<IJavaProject> javaProjectList = new ArrayList<IJavaProject>(projects.size());
+        for (ProjectState p : projects) {
+            IJavaProject javaProject = JavaCore.create(p.getProject());
+            if (javaProject != null) {
+                javaProjectList.add(javaProject);
+            }
+        }
+
+        IJavaProject[] javaProjects = javaProjectList.toArray(
+                new IJavaProject[javaProjectList.size()]);
+
+        return updateProjects(javaProjects);
     }
 
     @Override
@@ -132,6 +154,8 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
 
         List<IClasspathEntry> entries = new ArrayList<IClasspathEntry>();
 
+        IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+
         List<IProject> libProjects = state.getFullLibraryProjects();
         for (IProject libProject : libProjects) {
             // get the project output
@@ -141,10 +165,22 @@ public class LibraryClasspathContainerInitializer extends ClasspathContainerInit
                 IFile jarIFile = outputFolder.getFile(libProject.getName().toLowerCase() +
                         AdtConstants.DOT_JAR);
 
+                // get the source folder for the library project
+                List<IPath> srcs = BaseProjectHelper.getSourceClasspaths(libProject);
+                // find the first non-derived source folder.
+                IPath sourceFolder = null;
+                for (IPath src : srcs) {
+                    IFolder srcFolder = workspaceRoot.getFolder(src);
+                    if (srcFolder.isDerived() == false) {
+                        sourceFolder = src;
+                        break;
+                    }
+                }
+
                 IClasspathEntry entry = JavaCore.newLibraryEntry(
                         jarIFile.getLocation(),
-                        libProject.getLocation(), // source attachment path
-                        null);                    // default source attachment root path.
+                        sourceFolder, // source attachment path
+                        null);        // default source attachment root path.
 
                 entries.add(entry);
             }

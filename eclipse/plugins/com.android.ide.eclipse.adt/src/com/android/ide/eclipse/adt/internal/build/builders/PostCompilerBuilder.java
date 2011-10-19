@@ -31,6 +31,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -294,6 +295,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // get the android output folder
             IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
+            IFolder resOutputFolder = androidOutputFolder.getFolder(SdkConstants.FD_RES);
 
             // now we need to get the classpath list
             List<IPath> sourceList = BaseProjectHelper.getSourceClasspaths(javaProject);
@@ -410,15 +412,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                 }
 
-                if (mConvertToDex) { // in this case this means some class files changed and
-                                     // we need to update the jar file.
-                    IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
-
-                    writeLibraryPackage(jarIFile, project, javaOutputFolder,
-                            referencedJavaProjects);
-                    saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
-                }
-
                 // also update the crunch cache if needed.
                 if (mUpdateCrunchCache) {
                     BuildHelper helper = new BuildHelper(project,
@@ -426,6 +419,27 @@ public class PostCompilerBuilder extends BaseBuilder {
                             true /*debugMode*/,
                             AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
                     updateCrunchCache(project, helper);
+
+                    // refresh recursively bin/res folder
+                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+                }
+
+                if (mConvertToDex) { // in this case this means some class files changed and
+                                     // we need to update the jar file.
+                    IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
+
+                    writeLibraryPackage(jarIFile, project, javaOutputFolder,
+                            referencedJavaProjects);
+                    saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
+
+                    // refresh the bin folder content with no recursion to update the library
+                    // jar file.
+                    androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
+
+                    // Also update the projects. The only way to force recompile them is to
+                    // reset the library container.
+                    List<ProjectState> parentProjects = projectState.getParentProjects();
+                    LibraryClasspathContainerInitializer.updateProject(parentProjects);
                 }
 
                 return allRefProjects;
@@ -549,6 +563,9 @@ public class PostCompilerBuilder extends BaseBuilder {
                     if (updateCrunchCache(project, helper) == false) {
                         return allRefProjects;
                     }
+
+                    // refresh recursively bin/res folder
+                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                 }
 
                 // Check if we need to package the resources.
@@ -690,7 +707,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // we are done.
 
-                // get the resource to bin
+                // refresh the bin folder content with no recursion.
                 androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
 
                 // build has been done. reset the state of the builder

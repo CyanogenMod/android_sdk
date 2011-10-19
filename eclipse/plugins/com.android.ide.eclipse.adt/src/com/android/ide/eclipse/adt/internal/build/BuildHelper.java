@@ -214,27 +214,30 @@ public class BuildHelper {
             assetsFolder = null;
         }
 
-        IPath cacheLocation = cacheFolder.getLocation();
+        // list of res folder (main project + maybe libraries)
+        ArrayList<String> osResPaths = new ArrayList<String>();
+
         IPath resLocation = resFolder.getLocation();
         IPath manifestLocation = manifestFile.getLocation();
 
         if (resLocation != null && manifestLocation != null) {
-            // list of res folder (main project + maybe libraries)
-            ArrayList<String> osResPaths = new ArrayList<String>();
-            osResPaths.add(cacheLocation.toOSString()); // PNG crunch cache
-            osResPaths.add(resLocation.toOSString()); //main project
 
-            // libraries?
+            // png cache folder first.
+            addFolderToList(osResPaths, cacheFolder);
+
+            // regular res folder next.
+            osResPaths.add(resLocation.toOSString());
+
+            // then libraries
             if (libProjects != null) {
                 for (IProject lib : libProjects) {
+                    // png cache folder first
                     IFolder libCacheFolder = lib.getFolder(AdtConstants.WS_CRUNCHCACHE);
-                    if (libCacheFolder.exists()) {
-                        osResPaths.add(libCacheFolder.getLocation().toOSString());
-                    }
+                    addFolderToList(osResPaths, libCacheFolder);
+
+                    // regular res folder next.
                     IFolder libResFolder = lib.getFolder(AdtConstants.WS_RESOURCES);
-                    if (libResFolder.exists()) {
-                        osResPaths.add(libResFolder.getLocation().toOSString());
-                    }
+                    addFolderToList(osResPaths, libResFolder);
                 }
             }
 
@@ -256,6 +259,19 @@ public class BuildHelper {
             String msg = "BENCHMARK ADT: Ending Initial Package (.ap_). \nTime Elapsed: " //$NON-NLS-1$
                             + ((System.nanoTime() - startPackageTime)/MILLION) + "ms";    //$NON-NLS-1$
             AdtPlugin.printBuildToConsole(BuildVerbosity.ALWAYS, mProject, msg);
+        }
+    }
+
+    /**
+     * Adds os path of a folder to a list only if the folder actually exists.
+     * @param pathList
+     * @param folder
+     */
+    private void addFolderToList(List<String> pathList, IFolder folder) {
+        // use a File instead of the IFolder API to ignore workspace refresh issue.
+        File testFile = new File(folder.getLocation().toOSString());
+        if (testFile.isDirectory()) {
+            pathList.add(testFile.getAbsolutePath());
         }
     }
 
