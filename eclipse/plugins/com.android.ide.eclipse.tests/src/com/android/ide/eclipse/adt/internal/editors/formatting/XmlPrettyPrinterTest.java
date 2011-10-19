@@ -329,14 +329,30 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
                 "\n" +
                 "    <item\n" +
-                "        android:color=\"#ffff0000\"\n" +
-                "        android:state_pressed=\"true\"></item> <!-- pressed -->\n" +
+                "        android:state_pressed=\"true\"\n" +
+                "        android:color=\"#ffff0000\"></item> <!-- pressed -->\n" +
                 "\n" +
                 "    <item\n" +
-                "        android:color=\"#ff0000ff\"\n" +
-                "        android:state_focused=\"true\"></item> <!-- focused -->\n" +
+                "        android:state_focused=\"true\"\n" +
+                "        android:color=\"#ff0000ff\"></item> <!-- focused -->\n" +
                 "\n" +
                 "    <item android:color=\"#ff000000\"></item> <!-- default -->\n" +
+                "\n" +
+                "</selector>");
+    }
+
+    public void testFormatColorList() throws Exception {
+        checkFormat(
+                XmlFormatStyle.RESOURCE,
+                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                "<item android:state_activated=\"true\" android:color=\"#FFFFFF\"/>\n" +
+                "<item android:color=\"#777777\" /> <!-- not selected -->\n" +
+                "</selector>",
+
+                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                "\n" +
+                "    <item android:state_activated=\"true\" android:color=\"#FFFFFF\"/>\n" +
+                "    <item android:color=\"#777777\"/> <!-- not selected -->\n" +
                 "\n" +
                 "</selector>");
     }

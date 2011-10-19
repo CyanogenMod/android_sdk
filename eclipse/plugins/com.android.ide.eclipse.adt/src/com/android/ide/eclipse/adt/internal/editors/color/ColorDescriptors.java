@@ -37,9 +37,12 @@ public class ColorDescriptors implements IDescriptorProvider {
     private static final String SDK_URL =
         "http://d.android.com/guide/topics/resources/color-list-resource.html"; //$NON-NLS-1$
 
+    public static final String SELECTOR_TAG = "selector";               //$NON-NLS-1$
+    public static final String ATTR_COLOR = "color";                    //$NON-NLS-1$
+
     /** The root element descriptor */
     private ElementDescriptor mDescriptor = new ElementDescriptor(
-            "selector", "Selector",
+            SELECTOR_TAG, "Selector",
             "Required. This must be the root element. Contains one or more <item> elements.",
             SDK_URL,
             new AttributeDescriptor[] { new XmlnsAttributeDescriptor(ANDROID_NS_NAME,
@@ -71,7 +74,7 @@ public class ColorDescriptors implements IDescriptorProvider {
                  + "its attributes. Must be a child of a <selector> element.",
             SDK_URL,
             new ReferenceAttributeDescriptor(
-                    ResourceType.COLOR, "color", "color", //$NON-NLS-1$ //$NON-NLS-2$
+                    ResourceType.COLOR, ATTR_COLOR, ATTR_COLOR,
                     SdkConstants.NS_RESOURCES,
                     "Hexadeximal color. Required. The color is specified with an RGB value and "
                         + "optional alpha channel.\n"
