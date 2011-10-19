@@ -16,6 +16,7 @@
 
 package com.android.sdklib.internal.repository;
 
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.RepoConstants;
 import com.android.util.Pair;
 
@@ -64,10 +65,10 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
      */
     public LayoutlibVersionMixin(Properties props) {
         int layoutlibApi = Integer.parseInt(
-            Package.getProperty(props, PROP_LAYOUTLIB_API,
+            Package.getProperty(props, PkgProps.LAYOUTLIB_API,
                                 Integer.toString(LAYOUTLIB_API_NOT_SPECIFIED)));
         int layoutlibRev = Integer.parseInt(
-                Package.getProperty(props, PROP_LAYOUTLIB_REV,
+                Package.getProperty(props, PkgProps.LAYOUTLIB_REV,
                                     Integer.toString(LAYOUTLIB_REV_NOT_SPECIFIED)));
         mLayoutlibVersion = Pair.of(layoutlibApi, layoutlibRev);
     }
@@ -77,8 +78,8 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
      */
     void saveProperties(Properties props) {
         if (mLayoutlibVersion.getFirst().intValue() != LAYOUTLIB_API_NOT_SPECIFIED) {
-            props.setProperty(PROP_LAYOUTLIB_API, mLayoutlibVersion.getFirst().toString());
-            props.setProperty(PROP_LAYOUTLIB_REV, mLayoutlibVersion.getSecond().toString());
+            props.setProperty(PkgProps.LAYOUTLIB_API, mLayoutlibVersion.getFirst().toString());
+            props.setProperty(PkgProps.LAYOUTLIB_REV, mLayoutlibVersion.getSecond().toString());
         }
     }
 

@@ -17,6 +17,7 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.PkgProps;
 
 import java.util.Properties;
 
@@ -65,7 +66,7 @@ public class MockPlatformPackage extends PlatformPackage {
 
     private static Properties createProps(int min_tools_rev) {
         Properties props = new Properties();
-        props.setProperty(PlatformPackage.PROP_MIN_TOOLS_REV, Integer.toString((min_tools_rev)));
+        props.setProperty(PkgProps.MIN_TOOLS_REV, Integer.toString((min_tools_rev)));
         return props;
     }
 

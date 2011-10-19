@@ -24,6 +24,7 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
 
@@ -37,9 +38,6 @@ import java.util.Properties;
  * Represents a platform XML node in an SDK repository.
  */
 public class PlatformPackage extends MinToolsPackage implements IPackageVersion, ILayoutlibVersion {
-
-    public static final String PROP_VERSION       = "Platform.Version";         //$NON-NLS-1$
-    public static final String PROP_INCLUDED_ABI  = "Platform.Included.Abi";    //$NON-NLS-1$
 
     /** The package version, for platform, add-on and doc packages. */
     private final AndroidVersion mVersion;
@@ -114,7 +112,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
         mVersion = target.getVersion();
         mVersionName  = target.getVersionName();
         mLayoutlibVersion = new LayoutlibVersionMixin(props);
-        mIncludedAbi = props == null ? null : props.getProperty(PROP_INCLUDED_ABI);
+        mIncludedAbi = props == null ? null : props.getProperty(PkgProps.PLATFORM_INCLUDED_ABI);
     }
 
     /**
@@ -129,11 +127,11 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
         mLayoutlibVersion.saveProperties(props);
 
         if (mVersionName != null) {
-            props.setProperty(PROP_VERSION, mVersionName);
+            props.setProperty(PkgProps.PLATFORM_VERSION, mVersionName);
         }
 
         if (mIncludedAbi != null) {
-            props.setProperty(PROP_INCLUDED_ABI, mIncludedAbi);
+            props.setProperty(PkgProps.PLATFORM_INCLUDED_ABI, mIncludedAbi);
         }
 
     }

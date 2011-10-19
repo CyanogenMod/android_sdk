@@ -24,6 +24,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.internal.project.ProjectProperties;
+import com.android.sdklib.repository.PkgProps;
 import com.android.util.Pair;
 
 import java.io.File;
@@ -270,11 +271,7 @@ public class SdkManager {
      * version defined.
      *
      * @return The greatest {@link LayoutlibVersion} or null if none is found.
-     * @deprecated This helper method is provisional. I am marking it as deprecated for
-     *   lack of a better tag (e.g. "@future"?). It's deprecated in the sense that
-     *   we're not using it yet and should NOT be considered a stable API yet.
-     *   We'll probably need to revisit it when the want to actually use it.
-     *   If it's convenient as-is then this deprecation message shall be removed.
+     * @deprecated This does NOT solve the right problem and will be changed in Tools R15.
      */
     @Deprecated
     public LayoutlibVersion getMaxLayoutlibVersion() {
@@ -408,14 +405,14 @@ public class SdkManager {
 
                 if (sourceProp != null) {
                     try {
-                        revision = Integer.parseInt(sourceProp.get("Pkg.Revision"));   //$NON-NLS-1$
+                        revision = Integer.parseInt(sourceProp.get(PkgProps.PKG_REVISION));
                     } catch (NumberFormatException e) {
                         // do nothing, we'll keep the default value of 1.
                     }
 
                     try {
-                        String propApi = sourceProp.get("Layoutlib.Api");           //$NON-NLS-1$
-                        String propRev = sourceProp.get("Layoutlib.Revision");      //$NON-NLS-1$
+                        String propApi = sourceProp.get(PkgProps.LAYOUTLIB_API);
+                        String propRev = sourceProp.get(PkgProps.LAYOUTLIB_REV);
                         int llApi = propApi == null ? LayoutlibVersion.NOT_SPECIFIED :
                                                       Integer.parseInt(propApi);
                         int llRev = propRev == null ? LayoutlibVersion.NOT_SPECIFIED :

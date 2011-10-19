@@ -19,6 +19,7 @@ package com.android.sdklib.internal.repository;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
+import com.android.sdklib.repository.PkgProps;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -130,14 +131,14 @@ public class PackageTest extends TestCase {
         Properties props = new Properties();
 
         // Package properties
-        props.setProperty(ExtraPackage.PROP_REVISION, "42");
-        props.setProperty(ExtraPackage.PROP_LICENSE, "The License");
-        props.setProperty(ExtraPackage.PROP_DESC, "Some description.");
-        props.setProperty(ExtraPackage.PROP_DESC_URL, "http://description/url");
-        props.setProperty(ExtraPackage.PROP_RELEASE_NOTE, "Release Note");
-        props.setProperty(ExtraPackage.PROP_RELEASE_URL, "http://release/note");
-        props.setProperty(ExtraPackage.PROP_SOURCE_URL, "http://source/url");
-        props.setProperty(ExtraPackage.PROP_OBSOLETE, "true");
+        props.setProperty(PkgProps.PKG_REVISION, "42");
+        props.setProperty(PkgProps.PKG_LICENSE, "The License");
+        props.setProperty(PkgProps.PKG_DESC, "Some description.");
+        props.setProperty(PkgProps.PKG_DESC_URL, "http://description/url");
+        props.setProperty(PkgProps.PKG_RELEASE_NOTE, "Release Note");
+        props.setProperty(PkgProps.PKG_RELEASE_URL, "http://release/note");
+        props.setProperty(PkgProps.PKG_SOURCE_URL, "http://source/url");
+        props.setProperty(PkgProps.PKG_OBSOLETE, "true");
         return props;
     }
 
