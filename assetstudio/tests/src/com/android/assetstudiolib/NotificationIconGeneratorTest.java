@@ -23,12 +23,18 @@ import java.io.IOException;
 @SuppressWarnings("javadoc")
 public class NotificationIconGeneratorTest extends GeneratorTest {
     private void checkGraphic(String baseName,
-            GraphicGenerator.Shape shape) throws IOException {
+            GraphicGenerator.Shape shape, int minSdk, String folderName,
+            int expectedCount) throws IOException {
         NotificationOptions options = new NotificationOptions();
         options.shape = shape;
+        options.minSdk = minSdk;
 
         NotificationIconGenerator generator = new NotificationIconGenerator();
-        checkGraphic(12, "notification", baseName, generator, options);
+        checkGraphic(expectedCount, folderName, baseName, generator, options);
+    }
+
+    private void checkGraphic(String baseName, GraphicGenerator.Shape shape) throws IOException {
+        checkGraphic(baseName, shape, 1, "notification", 12);
     }
 
     public void testNotification1() throws Exception {
@@ -37,5 +43,14 @@ public class NotificationIconGeneratorTest extends GeneratorTest {
 
     public void testNotification2() throws Exception {
         checkGraphic("ic_stat_square", GraphicGenerator.Shape.SQUARE);
+    }
+
+    public void testNotification3() throws Exception {
+        checkGraphic("ic_stat_circle", GraphicGenerator.Shape.CIRCLE, 9 /* minSdk*/,
+                "notification-v9+", 8 /*fileCount*/);
+    }
+
+    public void testNotification4() throws Exception {
+        checkGraphic("ic_stat_circle", GraphicGenerator.Shape.CIRCLE, 11, "notification-v11+", 4);
     }
 }

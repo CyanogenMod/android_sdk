@@ -20,12 +20,19 @@ import java.io.IOException;
 
 @SuppressWarnings("javadoc")
 public class TabIconGeneratorTest extends GeneratorTest {
-    private void checkGraphic(String baseName) throws IOException {
+    private void checkGraphic(String folderName, String baseName, int minSdk,
+            int expectedFileCount) throws IOException {
         TabIconGenerator generator = new TabIconGenerator();
-        checkGraphic(16, "tabs", baseName, generator, new TabIconGenerator.TabOptions());
+        TabIconGenerator.TabOptions options = new TabIconGenerator.TabOptions();
+        options.minSdk = minSdk;
+        checkGraphic(expectedFileCount, folderName, baseName, generator, options);
     }
 
     public void testTabs1() throws Exception {
-        checkGraphic("ic_tab_1");
+        checkGraphic("tabs", "ic_tab_1", 1 /* minSdk */, 16 /* expectedFileCount */);
+    }
+
+    public void testTabs2() throws Exception {
+        checkGraphic("tabs-v5+", "ic_tab_1", 5, 8);
     }
 }
