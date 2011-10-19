@@ -888,13 +888,15 @@ public class PackagesPage extends UpdaterPage
         if (mDisplayArchives) {
             // In detail mode, we display archives so we can install if at
             // least one archive is selected.
+            // Note that in this mode we allow the user to install an archive
+            // even if it's not "compatible" with the current platform.
 
             Object[] checked = mTreeViewer.getCheckedElements();
             if (checked != null) {
                 for (Object c : checked) {
                     if (c instanceof Archive) {
                         Archive a = (Archive) c;
-                        if (!a.isLocal() && a.isCompatible()) {
+                        if (!a.isLocal()) {
                             canInstall = true;
                             numPackages++;
                         }
@@ -960,13 +962,15 @@ public class PackagesPage extends UpdaterPage
         if (mDisplayArchives) {
             // In detail mode, we display archives so we can install only the
             // archives that are actually selected.
+            // Note that in this mode we allow the user to install an archive
+            // even if it's not "compatible" with the current platform.
 
             Object[] checked = mTreeViewer.getCheckedElements();
             if (checked != null) {
                 for (Object c : checked) {
                     if (c instanceof Archive) {
                         Archive a = (Archive) c;
-                        if (!a.isLocal() && a.isCompatible()) {
+                        if (!a.isLocal()) {
                             archives.add((Archive) c);
                         }
                     }
