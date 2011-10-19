@@ -330,11 +330,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
         }
 
         private NativeLibraryMapInfo getLibraryFor(long addr) {
-            Iterator<NativeLibraryMapInfo> it = mClientData.getNativeLibraryMapInfo();
-
-            while (it.hasNext()) {
-                NativeLibraryMapInfo info = it.next();
-
+            for (NativeLibraryMapInfo info : mClientData.getMappedNativeLibraries()) {
                 if (info.isWithinLibrary(addr)) {
                     return info;
                 }

@@ -597,12 +597,10 @@ public class ClientData {
     }
 
     /**
-     * Returns an {@link Iterator} on {@link NativeLibraryMapInfo} objects.
-     * <p/>
-     * The caller must synchronize on the {@link ClientData} object while iterating.
+     * Returns the list of native libraries mapped in memory for this client.
      */
-    public synchronized Iterator<NativeLibraryMapInfo> getNativeLibraryMapInfo() {
-        return mNativeLibMapInfo.iterator();
+    public synchronized List<NativeLibraryMapInfo> getMappedNativeLibraries() {
+        return Collections.unmodifiableList(mNativeLibMapInfo);
     }
 
     synchronized void setAllocationStatus(AllocationTrackingStatus status) {
