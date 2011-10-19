@@ -1,4 +1,20 @@
 #!/bin/bash
+#
+# Copyright (C) 2009 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 
 # This file is run by development/tools/build/windows_sdk.mk right
 # after development.git/tools/build/patch_windows_sdk.sh.
@@ -19,41 +35,9 @@ TEMP_SDK_DIR=$1
 WIN_OUT_DIR=$2
 TOPDIR=${TOPDIR:-$3}
 
-# Remove obsolete stuff from tools
-TOOLS=$TEMP_SDK_DIR/tools
-LIB=$TEMP_SDK_DIR/tools/lib
-rm $V $TOOLS/{android,apkbuilder,ddms,draw9patch}
-rm $V $TOOLS/{emulator,emulator-arm,emulator-x86}
-rm $V $TOOLS/lib/{libOpenglRender.so,libGLES_CM_translator.so,libGLES_V2_translator.so,libEGL_translator.so}
-rm $V $TOOLS/{hierarchyviewer,layoutopt,mksdcard,traceview,monkeyrunner}
-rm $V $TOOLS/proguard/bin/*.sh
-
-# Copy all the new stuff in tools
-# Note: keep this line here, just to remind us this is already done by the
-# script in development.git/tools/build/patch_windows_sdk.sh. This will
-# be obsolete when we switch to an .atree format.
-# -- cp $V $WIN_OUT_DIR/host/windows-x86/bin/*.{exe,dll} $TOOLS/
-
-cp $V $WIN_OUT_DIR/host/windows-x86/lib/lib*.dll $LIB
-
-# Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
-# and move it also in SDK/tools/lib (so that tools updates can update the root one too)
-cp $TOOLS/sdklauncher.exe $TEMP_SDK_DIR/"SDK Manager.exe"
-mv $TOOLS/sdklauncher.exe $LIB/"SDK Manager.exe"
-
-# Copy the emulator NOTICE in the tools dir
-cp $V ${TOPDIR}external/qemu/NOTICE $TOOLS/emulator_NOTICE.txt
-
-# Update a bunch of bat files
-cp $V ${TOPDIR}sdk/files/post_tools_install.bat                 $LIB/
-cp $V ${TOPDIR}sdk/files/find_java.bat                          $LIB/
-cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat                $TOOLS/
-cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                        $TOOLS/
-cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat                  $TOOLS/
-cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
-cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
-cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
-cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
-cp $V ${TOPDIR}sdk/monkeyrunner/etc/monkeyrunner.bat            $TOOLS/
-cp $V ${TOPDIR}sdk/files/proguard/bin/*.bat                     $TOOLS/proguard/bin/
+# Invoke atree to copy the files
+atree -f ${TOPDIR}sdk/build/tools.windows.atree \
+      -I $WIN_OUT_DIR/host/windows-x86 \
+      -I ${TOPDIR:-.} \
+      -o $TEMP_SDK_DIR
 
