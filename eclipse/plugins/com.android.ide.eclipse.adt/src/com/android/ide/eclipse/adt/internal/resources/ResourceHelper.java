@@ -287,16 +287,30 @@ public class ResourceHelper {
                 return false;
             }
 
-            // We can create all value types
-            if (isValueBasedResourceType(type)) {
-                return true;
-            }
+            return canCreateResourceType(type);
+        }
 
-            // We can create -some- file-based types - those supported by the New XML wizard:
-            for (ResourceFolderType folderType : FolderTypeRelationship.getRelatedFolders(type)) {
-                if (NewXmlFileWizard.canCreateXmlFile(folderType)) {
-                    return true;
-                }
+        return false;
+    }
+
+    /**
+     * Returns true if this class can create resources of the given resource
+     * type
+     *
+     * @param type the type of resource to be created
+     * @return true if the {@link #createResource} method can create resources
+     *         of this type (provided the name parameter is also valid)
+     */
+    public static boolean canCreateResourceType(ResourceType type) {
+        // We can create all value types
+        if (isValueBasedResourceType(type)) {
+            return true;
+        }
+
+        // We can create -some- file-based types - those supported by the New XML wizard:
+        for (ResourceFolderType folderType : FolderTypeRelationship.getRelatedFolders(type)) {
+            if (NewXmlFileWizard.canCreateXmlFile(folderType)) {
+                return true;
             }
         }
 

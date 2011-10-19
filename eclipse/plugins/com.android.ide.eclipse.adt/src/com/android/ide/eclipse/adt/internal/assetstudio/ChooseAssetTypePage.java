@@ -16,12 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.assetstudio;
 
-import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
+import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectButton;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -36,20 +35,23 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+/** Page for choosing the type of asset to create, as well as the target project */
 public class ChooseAssetTypePage extends WizardPage implements SelectionListener, ModifyListener {
-    private Text mProjectText;
-    private Button mBrowseButton;
-    private ProjectChooserHelper mProjectChooserHelper;
+    private ProjectButton mProjectButton;
+    private Button mClipboardButton;
     private IProject mProject;
     private Text mNameText;
+    private AssetType mType = AssetType.LAUNCHER;
+    private boolean mNameModified;
+    private Label mResourceName;
 
     /**
      * Create the wizard.
      */
     public ChooseAssetTypePage() {
         super("chooseAssetTypePage");
-        setTitle("Choose Asset Set Type");
-        setDescription("Select the type of asset set to create:");
+        setTitle("Choose Icon Set Type");
+        setDescription("Select the type of icon set to create:");
     }
 
     /**
@@ -57,39 +59,20 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
      *
      * @param parent the parent composite
      */
-    @SuppressWarnings("unused")
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
 
         setControl(container);
         container.setLayout(new GridLayout(3, false));
 
-        Button launcherIcons = new Button(container, SWT.RADIO);
-        launcherIcons.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        launcherIcons.setSelection(true);
-        launcherIcons.setText("Launcher Icons");
-
-        Button menuIcons = new Button(container, SWT.RADIO);
-        menuIcons.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        menuIcons.setEnabled(false);
-        menuIcons.setText("Menu Icons");
-
-        Button actionBarIcons = new Button(container, SWT.RADIO);
-        actionBarIcons.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        actionBarIcons.setEnabled(false);
-        actionBarIcons.setText("Action Bar Icons (Android 3.0+)");
-
-        Button tabIcons = new Button(container, SWT.RADIO);
-        tabIcons.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        tabIcons.setEnabled(false);
-        tabIcons.setText("Tab Icons");
-
-        Button notificationIcons = new Button(container, SWT.RADIO);
-        notificationIcons.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-        notificationIcons.setEnabled(false);
-        notificationIcons.setText("Notification Icons");
-
-        mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(), null /*filter*/);
+        for (AssetType type : AssetType.values()) {
+            Button button = new Button(container, SWT.RADIO);
+            button.setData(type);
+            button.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+            button.setSelection(type == mType);
+            button.setText(type.getDisplayName());
+            button.addSelectionListener(this);
+        }
 
         Label separator = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
         GridData gdSeparator = new GridData(SWT.FILL, SWT.CENTER, false, false, 3, 1);
@@ -100,34 +83,62 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         projectLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         projectLabel.setText("Project:");
 
-        mProjectText = new Text(container, SWT.BORDER);
-        mProjectText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        if (mProject != null) {
-            mProjectText.setText(mProject.getName());
-        }
-        mProjectText.addModifyListener(this);
-
-        mBrowseButton = new Button(container, SWT.FLAT);
-        mBrowseButton.setText("Browse...");
-        mBrowseButton.setToolTipText("Allows you to select the Android project to modify.");
+        mProjectButton = new ProjectButton(container, mProject);
+        mProjectButton.setAlignment(SWT.LEFT);
+        mProjectButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        mProjectButton.addSelectionListener(this);
 
         Label assetLabel = new Label(container, SWT.NONE);
         assetLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-        assetLabel.setText("Asset Name:");
+        assetLabel.setText("Icon Name:");
 
         mNameText = new Text(container, SWT.BORDER);
-        mNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        mNameText.setText("ic_launcher");
+        mNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
         mNameText.addModifyListener(this);
-        new Label(container, SWT.NONE);
-        mBrowseButton.addSelectionListener(this);
 
+        Label resourceLabel = new Label(container, SWT.NONE);
+        resourceLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        resourceLabel.setText("Resource:");
+
+        mResourceName = new Label(container, SWT.NONE);
+        mResourceName.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+
+        mClipboardButton = new Button(container, SWT.FLAT);
+        mClipboardButton.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
+        mClipboardButton.setText("Copy Name to Clipboard");
+
+        mClipboardButton.addSelectionListener(this);
+
+        updateAssetType();
         validatePage();
         parent.getDisplay().asyncExec(new Runnable() {
             public void run() {
                 mNameText.setFocus();
             }
         });
+    }
+
+    private void updateAssetType() {
+        if (!mNameModified) {
+            // Default name suggestion, possibly as a suffix, e.g. "ic_menu_<name>"
+            String replace = "name";
+            String suggestedName = String.format(getAssetType().getDefaultNameFormat(), replace);
+            mNameText.setText(suggestedName);
+            updateResourceLabel();
+            mNameModified = false;
+            int start = suggestedName.indexOf(replace);
+            if (start != -1) {
+                mNameText.setSelection(start, start + replace.length());
+            } else {
+                mNameText.selectAll();
+            }
+        } else {
+            mNameText.selectAll();
+        }
+    }
+
+    private void updateResourceLabel() {
+        mResourceName.setText("@drawable/" + getOutputName()); //$NON-NLS-1$
     }
 
     void setProject(IProject project) {
@@ -144,14 +155,17 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
     }
 
     public void widgetSelected(SelectionEvent e) {
-        if (e.getSource() == mBrowseButton) {
-            IJavaProject p = mProjectChooserHelper.chooseJavaProject(mProjectText.getText(),
-                    "Please select the target project");
-            if (p != null) {
-                changeProject(p.getProject());
-                mProjectText.setText(mProject.getName());
+        Object source = e.getSource();
+        if (source == mProjectButton) {
+            mProject = mProjectButton.getSelectedProject();
+            validatePage();
+        } else if (source instanceof Button) {
+            // User selected a different asset type to be created
+            Object data = ((Button) source).getData();
+            if (data instanceof AssetType) {
+                mType = (AssetType) data;
+                updateAssetType();
             }
-
         }
     }
 
@@ -159,27 +173,12 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
     }
 
     public void modifyText(ModifyEvent e) {
-        String project = mProjectText.getText();
-
-        // Is this a valid project?
-        IJavaProject[] projects = mProjectChooserHelper.getAndroidProjects(null /*javaModel*/);
-        IProject found = null;
-        for (IJavaProject p : projects) {
-            if (p.getProject().getName().equals(project)) {
-                found = p.getProject();
-                break;
-            }
+        Object source = e.getSource();
+        if (source == mNameText) {
+            mNameModified = true;
+            updateResourceLabel();
         }
 
-        if (found != mProject) {
-            changeProject(found);
-        }
-
-        validatePage();
-    }
-
-    private void changeProject(IProject newProject) {
-        mProject = newProject;
         validatePage();
     }
 
@@ -187,28 +186,29 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         return mNameText.getText().trim();
     }
 
+    AssetType getAssetType() {
+        return mType;
+    }
+
     private void validatePage() {
         String error = null;
-        //String warning = null;
 
         if (getProject() == null) {
             error = "Please select an Android project.";
-        }
-
-        String outputName = getOutputName();
-        if (outputName == null || outputName.length() == 0) {
-            error = "Please enter a name";
         } else {
-            ResourceNameValidator validator =
-                    ResourceNameValidator.create(true, ResourceFolderType.DRAWABLE);
-            error = validator.isValid(outputName);
+            String outputName = getOutputName();
+            if (outputName == null || outputName.length() == 0) {
+                error = "Please enter a name";
+            } else {
+                ResourceNameValidator validator =
+                        ResourceNameValidator.create(true, ResourceFolderType.DRAWABLE);
+                error = validator.isValid(outputName);
+            }
         }
 
         setPageComplete(error == null);
         if (error != null) {
             setMessage(error, IMessageProvider.ERROR);
-        //} else if (warning != null) {
-        //    setMessage(warning, IMessageProvider.WARNING);
         } else {
             setErrorMessage(null);
             setMessage(null);

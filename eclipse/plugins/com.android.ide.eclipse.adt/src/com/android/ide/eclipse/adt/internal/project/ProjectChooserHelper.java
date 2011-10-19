@@ -29,7 +29,15 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.ui.JavaElementLabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 /**
@@ -193,5 +201,79 @@ public class ProjectChooserHelper {
             }
         }
         return iproject;
+    }
+
+    /**
+     * A selector button for showing the currently selected project and for
+     * changing the selection
+     */
+    public static class ProjectButton extends Button implements SelectionListener {
+        /** Currently chosen project, or null when no project has been initialized or selected */
+        private IProject mProject;
+
+        /**
+         * Creates a new project selector button
+         *
+         * @param parent parent composite to add the button to
+         * @param initialProject the initial project to select, or null (which
+         *            will show a "Please Choose Project..." label instead.)
+         */
+        public ProjectButton(Composite parent, IProject initialProject) {
+            super(parent, SWT.BORDER | SWT.FLAT);
+            mProject = initialProject;
+            setProjectLabel(initialProject);
+            addSelectionListener(this);
+        }
+
+        /**
+         * Returns the project selected by this chooser (or the initial project
+         * passed to the constructor if the user did not change it)
+         *
+         * @return the selected project
+         */
+        public IProject getSelectedProject() {
+            return mProject;
+        }
+
+        /** Updates the selection with the given project */
+        private void setProjectLabel(IProject project) {
+            ILabelProvider labelProvider = new JavaElementLabelProvider(
+                    JavaElementLabelProvider.SHOW_DEFAULT);
+            if (project == null) {
+                setText("Choose Project...");
+                ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+                Image errorImage = sharedImages.getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
+                setImage(errorImage);
+            } else {
+                setText(labelProvider.getText(project));
+                Image projectImage = labelProvider.getImage(project);
+                if (projectImage != null) {
+                    setImage(projectImage);
+                }
+            }
+        }
+
+        /**
+         * Click handler for the button: Open the {@link ProjectChooserHelper}
+         * dialog for selecting a new project.
+         */
+        public void widgetSelected(SelectionEvent e) {
+            ProjectChooserHelper helper =
+                    new ProjectChooserHelper(getShell(), null /* filter */);
+            IJavaProject p = helper.chooseJavaProject(getText(),
+                    "Please select the target project");
+            if (p != null) {
+                mProject = p.getProject();
+                setProjectLabel(mProject);
+            }
+        }
+
+        public void widgetDefaultSelected(SelectionEvent e) {
+        }
+
+        @Override
+        protected void checkSubclass() {
+            // Disable the check that prevents subclassing of SWT components
+        }
     }
 }

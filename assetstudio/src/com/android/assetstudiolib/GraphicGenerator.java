@@ -26,9 +26,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -38,15 +42,165 @@ import javax.imageio.ImageIO;
 /**
  * The base Generator class.
  */
-public class GraphicGenerator {
+public abstract class GraphicGenerator {
     /**
      * Options used for all generators.
      */
     public static class Options {
+        /** Source image to use as a basis for the icon */
+        public BufferedImage sourceImage;
+        /** The density to generate the icon with */
+        public Density density = Density.XHIGH;
     }
 
-    public static float getScaleFactor(Density density) {
-        return density.getDpiValue() / (float) Density.DEFAULT_DENSITY;
+    /** Shapes that can be used for icon backgrounds */
+    public static enum Shape {
+        /** Circular background */
+        CIRCLE("circle"),
+        /** Square background */
+        SQUARE("square");
+
+        /** Id, used in filenames to identify associated stencils */
+        public final String id;
+
+        Shape(String id) {
+            this.id = id;
+        }
+    }
+
+    /** Foreground effects styles */
+    public static enum Style {
+        /** No effects */
+        SIMPLE("fore1"),
+        /** "Fancy" effects */
+        FANCY("fore2"),
+        /** A glossy look */
+        GLOSSY("fore3");
+
+        /** Id, used in filenames to identify associated stencils */
+        public final String id;
+
+        Style(String id) {
+            this.id = id;
+        }
+    }
+
+    /**
+     * Generate a single icon using the given options
+     *
+     * @param context render context to use for looking up resources etc
+     * @param options options controlling the appearance of the icon
+     * @return a {@link BufferedImage} with the generated icon
+     */
+    public abstract BufferedImage generate(GraphicGeneratorContext context, Options options);
+
+    /**
+     * Computes the target filename (relative to the Android project folder)
+     * where an icon rendered with the given options should be stored. This is
+     * also used as the map keys in the result map used by
+     * {@link #generate(String, Map, GraphicGeneratorContext, Options, String)}.
+     *
+     * @param options the options object used by the generator for the current
+     *            image
+     * @param name the base name to use when creating the path
+     * @return a path relative to the res/ folder where the image should be
+     *         stored (will always use / as a path separator, not \ on Windows)
+     */
+    protected String getIconPath(Options options, String name) {
+        return getIconFolder(options) + '/' + getIconName(options, name);
+    }
+
+    /**
+     * Gets name of the file itself. It is sometimes modified by options, for
+     * example in unselected tabs we change foo.png to foo-unselected.png
+     */
+    protected String getIconName(Options options, String name) {
+        return name + ".png"; //$NON-NLS-1$
+    }
+
+    /**
+     * Gets name of the folder to contain the resource. It usually includes the
+     * density, but is also sometimes modified by options. For example, in some
+     * notification icons we add in -v9 or -v11.
+     */
+    protected String getIconFolder(Options options) {
+        return "res/drawable-" + options.density.getResourceValue(); //$NON-NLS-1$
+    }
+
+    /**
+     * Generates a full set of icons into the given map. The values in the map
+     * will be the generated images, and each value is keyed by the
+     * corresponding relative path of the image, which is determined by the
+     * {@link #getIconPath(Options, String)} method.
+     *
+     * @param category the current category to place images into (if null the
+     *            density name will be used)
+     * @param categoryMap the map to put images into, should not be null. The
+     *            map is a map from a category name, to a map from file path to
+     *            image.
+     * @param context a generator context which for example can load resources
+     * @param options options to apply to this generator
+     * @param name the base name of the icons to generate
+     */
+    public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
+            GraphicGeneratorContext context, Options options, String name) {
+        Density[] densityValues = Density.values();
+        // Sort density values into ascending order
+        Arrays.sort(densityValues, new Comparator<Density>() {
+            public int compare(Density d1, Density d2) {
+                return d1.getDpiValue() - d2.getDpiValue();
+            }
+        });
+
+        for (Density density : densityValues) {
+            if (!density.isValidValueForDevice()) {
+                continue;
+            }
+            if (density == Density.TV) {
+                // Not yet supported -- missing stencil image
+                continue;
+            }
+            options.density = density;
+            BufferedImage image = generate(context, options);
+            if (image != null) {
+                String mapCategory = category;
+                if (mapCategory == null) {
+                    mapCategory = options.density.getResourceValue();
+                }
+                Map<String, BufferedImage> imageMap = categoryMap.get(mapCategory);
+                if (imageMap == null) {
+                    imageMap = new LinkedHashMap<String, BufferedImage>();
+                    categoryMap.put(mapCategory, imageMap);
+                }
+                imageMap.put(getIconPath(options, name), image);
+            }
+        }
+    }
+
+    /**
+     * Returns the scale factor to apply for a given HDPI density to compute the
+     * absolute pixel count to use to draw an icon of the given target density
+     *
+     * @param density the density
+     * @return a factor to multiple hdpi distances with to compute the target density
+     */
+    public static float getHdpiScaleFactor(Density density) {
+        // We used to do this:
+        //return density.getDpiValue() / (float) Density.DEFAULT_DENSITY;
+        // However, the HTML5 version of the AssetStudio would end up with different
+        // sizes for the assets, because it uses this table:
+        //    studio.util.getMultBaseHdpi = function(density) {
+        //        switch (density) {
+        //          case 'xhdpi': return 1.333333;
+        //          case  'hdpi': return 1.0;
+        //          case  'mdpi': return 0.666667;
+        //          case  'ldpi': return 0.5;
+        //        }
+        //        return 1.0;
+        //      };
+        // This corresponds to dividing the dpi value not by Density.MEDIUM but
+        // Density.HIGH:
+        return density.getDpiValue() / (float) Density.HIGH.getDpiValue();
     }
 
     /**

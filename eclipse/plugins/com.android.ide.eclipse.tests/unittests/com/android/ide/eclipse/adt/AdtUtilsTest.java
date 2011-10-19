@@ -17,6 +17,7 @@ package com.android.ide.eclipse.adt;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class AdtUtilsTest extends TestCase {
     public void testEndsWithIgnoreCase() {
         assertTrue(AdtUtils.endsWithIgnoreCase("foo", "foo"));
@@ -34,6 +35,22 @@ public class AdtUtilsTest extends TestCase {
         assertEquals("foo", AdtUtils.stripWhitespace("foo"));
         assertEquals("foobar", AdtUtils.stripWhitespace("foo bar"));
         assertEquals("foobar", AdtUtils.stripWhitespace("  foo bar  \n\t"));
+    }
+
+    public void testStripAllExtensions() {
+        assertEquals("", AdtUtils.stripAllExtensions(""));
+        assertEquals("foobar", AdtUtils.stripAllExtensions("foobar"));
+        assertEquals("foobar", AdtUtils.stripAllExtensions("foobar.png"));
+        assertEquals("foobar", AdtUtils.stripAllExtensions("foobar.9.png"));
+        assertEquals(".profile", AdtUtils.stripAllExtensions(".profile"));
+    }
+
+    public void testStripLastExtension() {
+        assertEquals("", AdtUtils.stripLastExtension(""));
+        assertEquals("foobar", AdtUtils.stripLastExtension("foobar"));
+        assertEquals("foobar", AdtUtils.stripLastExtension("foobar.png"));
+        assertEquals("foobar.9", AdtUtils.stripLastExtension("foobar.9.png"));
+        assertEquals(".profile", AdtUtils.stripLastExtension(".profile"));
     }
 
     public void testCapitalize() {

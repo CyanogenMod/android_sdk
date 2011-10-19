@@ -20,6 +20,8 @@ package com.android.ide.eclipse.adt.internal.ui;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.assetstudio.OpenCreateAssetSetWizardAction;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.ide.eclipse.adt.internal.resources.ResourceHelper;
@@ -29,10 +31,12 @@ import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -57,6 +61,7 @@ import org.eclipse.ui.dialogs.SelectionStatusDialog;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,6 +82,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
     private Button mProjectButton;
     private Button mSystemButton;
     private Button mNewButton;
+    private Button mNewIconButton;
     private String mCurrentResource;
     private final IProject mProject;
     private IInputValidator mInputValidator;
@@ -191,7 +197,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 super.widgetSelected(e);
                 if (mProjectButton.getSelection()) {
                     setupResourceList();
-                    mNewButton.setEnabled(true);
+                    updateNewButton(false /*isSystem*/);
                     updatePreview();
                 }
             }
@@ -204,7 +210,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 super.widgetSelected(e);
                 if (mSystemButton.getSelection()) {
                     setupResourceList();
-                    mNewButton.setEnabled(false);
+                    updateNewButton(true /*isSystem*/);
                     updatePreview();
                 }
             }
@@ -219,10 +225,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         mNewButton = new Button(top, SWT.NONE);
 
         String title = String.format("New %1$s...", mResourceType.getDisplayName());
+        if (mResourceType == ResourceType.DRAWABLE) {
+            title = "Create New Icon...";
+        }
         mNewButton.setText(title);
-
-        // We only support adding new values right now
-        mNewButton.setEnabled(ResourceHelper.isValueBasedResourceType(mResourceType));
 
         mNewButton.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -230,16 +236,56 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                 super.widgetSelected(e);
 
                 if (mResourceType == ResourceType.STRING) {
-                    createNewString();
-                } else {
-                    assert ResourceHelper.isValueBasedResourceType(mResourceType);
-                    String newName = createNewValue(mResourceType);
-                    if (newName != null) {
+                    // Special case: Use Extract String refactoring wizard UI
+                    String newName = createNewString();
+                    selectAddedItem(newName);
+                } else if (mResourceType == ResourceType.DRAWABLE) {
+                    // Special case: Use the "Create Icon Set" wizard
+                    OpenCreateAssetSetWizardAction action =
+                            new OpenCreateAssetSetWizardAction(mProject);
+                    action.run();
+                    List<IResource> files = action.getCreatedFiles();
+                    if (files != null && files.size() > 0) {
+                        String newName = AdtUtils.stripAllExtensions(files.get(0).getName());
                         // Recompute the "current resource" to select the new id
                         ResourceItem[] items = setupResourceList();
                         selectItemName(newName, items);
                     }
+                } else {
+                    if (ResourceHelper.isValueBasedResourceType(mResourceType)) {
+                        String newName = createNewValue(mResourceType);
+                        selectAddedItem(newName);
+                    } else {
+                        String newName = createNewFile(mResourceType);
+                        selectAddedItem(newName);
+                    }
                 }
+            }
+
+            private void selectAddedItem(String newName) {
+                // Recompute the "current resource" to select the new id
+                ResourceItem[] items = setupResourceList();
+
+                // Ensure that the name is in the list. There's a delay after
+                // an item is added (until the builder runs and processes the delta)
+                // so if it's not in the list, add it
+                boolean found = false;
+                for (ResourceItem item : items) {
+                    if (newName.equals(item.getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    ResourceItem[] newItems = new ResourceItem[items.length + 1];
+                    System.arraycopy(items, 0, newItems, 0, items.length);
+                    newItems[items.length] = new ResourceItem(newName);
+                    items = newItems;
+                    Arrays.sort(items);
+                    setListElements(items);
+                }
+
+                selectItemName(newName, items);
             }
         });
     }
@@ -273,6 +319,38 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         }
     }
 
+    private String createNewFile(ResourceType type) {
+        // Show a name/value dialog entering the key name and the value
+        Shell shell = AdtPlugin.getDisplay().getActiveShell();
+        if (shell == null) {
+            return null;
+        }
+
+        ResourceNameValidator validator = ResourceNameValidator.create(true /*allowXmlExtension*/,
+                mProject, mResourceType);
+        InputDialog d = new InputDialog(
+                AdtPlugin.getDisplay().getActiveShell(),
+                "Enter name",  // title
+                "Enter name",
+                "", //$NON-NLS-1$
+                validator);
+        if (d.open() == Window.OK) {
+            String name = d.getValue().trim();
+            if (name.length() == 0) {
+                return null;
+            }
+
+            Pair<IFile, IRegion> resource = ResourceHelper.createResource(mProject, type, name,
+                    null);
+            if (resource != null) {
+                return name;
+            }
+        }
+
+        return null;
+    }
+
+
     private String createNewValue(ResourceType type) {
         // Show a name/value dialog entering the key name and the value
         Shell shell = AdtPlugin.getDisplay().getActiveShell();
@@ -298,7 +376,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         return null;
     }
 
-    private void createNewString() {
+    private String createNewString() {
         ExtractStringRefactoring ref = new ExtractStringRefactoring(
                 mProject, true /*enforceNew*/);
         RefactoringWizard wizard = new ExtractStringWizard(ref, mProject);
@@ -307,16 +385,13 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             IWorkbench w = PlatformUI.getWorkbench();
             if (op.run(w.getDisplay().getActiveShell(), wizard.getDefaultPageTitle()) ==
                     IDialogConstants.OK_ID) {
-
-                // Recompute the "current resource" to select the new id
-                ResourceItem[] items = setupResourceList();
-
-                // select it if possible
-                selectItemName(ref.getXmlStringId(), items);
+                return ref.getXmlStringId();
             }
         } catch (InterruptedException ex) {
             // Interrupted. Pass.
         }
+
+        return null;
     }
 
     /**
@@ -389,7 +464,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         // Update the repository selection
         mProjectButton.setSelection(!isSystem);
         mSystemButton.setSelection(isSystem);
-        mNewButton.setEnabled(!isSystem);
+        updateNewButton(isSystem);
 
         // Update the list
         ResourceItem[] items = setupResourceList();
@@ -398,6 +473,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         if (itemName != null) {
             selectItemName(itemName, items);
         }
+    }
+
+    private void updateNewButton(boolean isSystem) {
+        mNewButton.setEnabled(!isSystem && ResourceHelper.canCreateResourceType(mResourceType));
     }
 
     /** Dialog asking for a Name/Value pair */
