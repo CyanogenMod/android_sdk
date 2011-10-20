@@ -65,6 +65,8 @@ public class NewProjectWizardState {
 
     /** The location to store projects into */
     public File projectLocation = new File(Platform.getLocation().toOSString());
+    /** True if the project location name has been manually edited by the user */
+    public boolean projectLocationModifiedByUser;
 
     /** The name of the project */
     public String projectName = ""; //$NON-NLS-1$
