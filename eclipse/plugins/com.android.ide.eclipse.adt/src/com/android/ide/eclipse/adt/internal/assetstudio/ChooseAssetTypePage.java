@@ -45,7 +45,13 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
     private Button mClipboardButton;
     private IProject mProject;
     private Text mNameText;
-    private AssetType mType = AssetType.LAUNCHER;
+    /**
+     * The type of asset being created. This field is static such that when you
+     * bring up the wizard repeatedly (for example to create multiple
+     * notification icons) you don't have to keep selecting the same type over
+     * and over.
+     */
+    private static AssetType sType = AssetType.LAUNCHER;
     private boolean mNameModified;
     private Label mResourceName;
 
@@ -73,7 +79,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
             Button button = new Button(container, SWT.RADIO);
             button.setData(type);
             button.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-            button.setSelection(type == mType);
+            button.setSelection(type == sType);
             button.setText(type.getDisplayName());
             button.addSelectionListener(this);
         }
@@ -175,7 +181,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
             // User selected a different asset type to be created
             Object data = ((Button) source).getData();
             if (data instanceof AssetType) {
-                mType = (AssetType) data;
+                sType = (AssetType) data;
                 updateAssetType();
             }
         }
@@ -199,7 +205,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
     }
 
     AssetType getAssetType() {
-        return mType;
+        return sType;
     }
 
     private void validatePage() {
