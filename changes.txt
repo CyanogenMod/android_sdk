@@ -1,5 +1,15 @@
 Change log for Android SDK Tools.
 
+Revision 16:
+* New "lint" tool which scans Android project trees for potential
+  problems such as missing translations, duplicate ids between layouts
+  that include each other, using px instead of dp units, hardcoded
+  strings, missing contentDescriptions, obsolete Proguard
+  configuration files, etc. For a full list of available issues run
+  "lint --show" (and see eclipse/changes.txt for further details).
+* layoutopt was removed; its functionality is replaced by the new lint
+  tool
+
 Revision 14:
 
 - Build performance improvements:

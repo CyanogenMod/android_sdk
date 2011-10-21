@@ -57,7 +57,6 @@ lib/libEGL_translator${DLL_EXTENSION}     strip tools/lib/libEGL_translator${DLL
 bin/ddms            tools/ddms
 bin/hierarchyviewer tools/hierarchyviewer
 bin/draw9patch      tools/draw9patch
-bin/layoutopt       tools/layoutopt
 bin/traceview       tools/traceview
 bin/android         tools/android
 bin/monkeyrunner    tools/monkeyrunner
@@ -94,7 +93,6 @@ framework/ddmuilib.jar           tools/lib/ddmuilib.jar
 framework/hierarchyviewer2.jar   tools/lib/hierarchyviewer2.jar
 framework/hierarchyviewerlib.jar tools/lib/hierarchyviewerlib.jar
 framework/draw9patch.jar         tools/lib/draw9patch.jar
-framework/layoutopt.jar          tools/lib/layoutopt.jar
 framework/uix.jar                tools/lib/uix.jar
 framework/traceview.jar          tools/lib/traceview.jar
 framework/anttasks.jar           tools/lib/anttasks.jar
@@ -111,7 +109,6 @@ framework/lint_api.jar           tools/lib/lint_api.jar
 framework/lint_checks.jar        tools/lib/lint_checks.jar
 
 # 3rd Party java libraries
-framework/groovy-all-1.7.0.jar                                tools/lib/groovy-all-1.7.0.jar
 framework/commons-compress-1.0.jar                            tools/lib/commons-compress-1.0.jar
 framework/httpclient-4.1.1.jar                                tools/lib/httpclient-4.1.1.jar
 framework/httpcore-4.1.jar                                    tools/lib/httpcore-4.1.jar

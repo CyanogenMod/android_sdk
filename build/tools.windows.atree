@@ -63,9 +63,6 @@ sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat  tools/hierarchyviewer.bat
 rm tools/hprof-conv
 bin/hprof-conv.exe                          strip tools/hprof-conv.exe
 
-rm tools/layoutopt
-sdk/layoutopt/app/etc/layoutopt.bat               tools/layoutopt.bat
-
 rm tools/mksdcard
 bin/mksdcard.exe                            strip tools/mksdcard.exe
 

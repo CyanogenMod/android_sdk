@@ -1,4 +1,16 @@
-14.0.0 (In development)
+16.0.0:
+* New "lint" feature which scans the Android projects for potential
+  problems such as missing translations, duplicate ids between layouts
+  that include each other, using px instead of dp units, hardcoded
+  strings, missing contentDescriptions, obsolete Proguard
+  configuration files, etc. Lint can be run on the command line, but
+  it is also integrated into the Problems view in Eclipse, and there
+  are also quickfixes available for many of the reported errors.
+
+15.0.0
+Critical bug fixes only.
+
+14.0.0
 - Build system:
   - (TODO: More info) Improved library projects
   - Improved incremental builds
