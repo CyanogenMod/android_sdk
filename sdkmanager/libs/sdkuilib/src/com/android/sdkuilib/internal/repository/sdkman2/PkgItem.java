@@ -19,8 +19,8 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.IPackageVersion;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.SdkSource;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 
 /**
  * A {@link PkgItem} represents one main {@link Package} combined with its state
@@ -257,5 +257,4 @@ public class PkgItem implements Comparable<PkgItem> {
         sb.append('>');
         return sb.toString();
     }
-
 }

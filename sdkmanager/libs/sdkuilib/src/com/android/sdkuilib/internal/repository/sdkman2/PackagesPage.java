@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.repository.sdkman2;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.Archive;
+import com.android.sdklib.internal.repository.ArchiveInstaller;
 import com.android.sdklib.internal.repository.IDescription;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
@@ -97,6 +98,7 @@ public class PackagesPage extends UpdaterPage
     static final String ICON_SORT_BY_SOURCE = "source_icon16.png";      //$NON-NLS-1$
     static final String ICON_SORT_BY_API    = "platform_pkg_16.png";    //$NON-NLS-1$
     static final String ICON_PKG_NEW        = "pkg_new_16.png";         //$NON-NLS-1$
+    static final String ICON_PKG_INCOMPAT   = "pkg_incompat_16.png";    //$NON-NLS-1$
     static final String ICON_PKG_UPDATE     = "pkg_update_16.png";      //$NON-NLS-1$
     static final String ICON_PKG_INSTALLED  = "pkg_installed_16.png";   //$NON-NLS-1$
 
@@ -1061,17 +1063,21 @@ public class PackagesPage extends UpdaterPage
 
         int count = 0;
 
+        // Give us a way to force install of incompatible archives.
+        boolean checkIsCompatible =
+            System.getenv(ArchiveInstaller.ENV_VAR_IGNORE_COMPAT) == null;
+
         if (mDisplayArchives) {
             // In detail mode, we display archives so we can install only the
             // archives that are actually selected.
-            // Note that in this mode we allow the user to install an archive
-            // even if it's not "compatible" with the current platform or is
-            // already installed.
 
             for (Object c : checked) {
                 if (c instanceof Archive) {
                     Archive a = (Archive) c;
                     if (a != null) {
+                        if (checkIsCompatible && !a.isCompatible()) {
+                            continue;
+                        }
                         count++;
                         if (outArchives != null) {
                             outArchives.add((Archive) c);
@@ -1104,7 +1110,10 @@ public class PackagesPage extends UpdaterPage
                 }
                 if (p != null) {
                     for (Archive a : p.getArchives()) {
-                        if (a != null && a.isCompatible()) {
+                        if (a != null) {
+                            if (checkIsCompatible && !a.isCompatible()) {
+                                continue;
+                            }
                             count++;
                             if (outArchives != null) {
                                 outArchives.add(a);
@@ -1418,7 +1427,13 @@ public class PackagesPage extends UpdaterPage
                         return "Installed";
 
                     case NEW:
-                        return "Not installed";
+                        Package p = pkg.getMainPackage();
+                        if (p != null && p.hasCompatibleArchive()) {
+                            return "Not installed";
+                        } else {
+                            return String.format("Not compatible with %1$s",
+                                    SdkConstants.currentPlatformName());
+                        }
                     }
                     return pkg.getState().toString();
 
@@ -1499,7 +1514,12 @@ public class PackagesPage extends UpdaterPage
                             return imgFactory.getImageByName(ICON_PKG_INSTALLED);
                         }
                     case NEW:
-                        return imgFactory.getImageByName(ICON_PKG_NEW);
+                        Package p = pi.getMainPackage();
+                        if (p != null && p.hasCompatibleArchive()) {
+                            return imgFactory.getImageByName(ICON_PKG_NEW);
+                        } else {
+                            return imgFactory.getImageByName(ICON_PKG_INCOMPAT);
+                        }
                     }
                 }
             }

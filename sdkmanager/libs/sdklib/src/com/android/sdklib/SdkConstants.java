@@ -453,4 +453,22 @@ public final class SdkConstants {
 
         return PLATFORM_UNKNOWN;
     }
+
+    /**
+     * Returns current platform's UI name
+     *
+     * @return one of "Windows", "Mac OS X", "Linux" or "other".
+     */
+    public static String currentPlatformName() {
+        String os = System.getProperty("os.name");          //$NON-NLS-1$
+        if (os.startsWith("Mac OS")) {                      //$NON-NLS-1$
+            return "Mac OS X";                              //$NON-NLS-1$
+        } else if (os.startsWith("Windows")) {              //$NON-NLS-1$
+            return "Windows";                               //$NON-NLS-1$
+        } else if (os.startsWith("Linux")) {                //$NON-NLS-1$
+            return "Linux";                                 //$NON-NLS-1$
+        }
+
+        return "Other";
+    }
 }
