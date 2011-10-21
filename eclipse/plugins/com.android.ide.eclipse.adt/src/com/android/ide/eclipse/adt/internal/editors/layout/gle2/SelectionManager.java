@@ -23,7 +23,9 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.sdklib.SdkConstants;
 import com.android.util.Pair;
 
@@ -582,6 +584,7 @@ public class SelectionManager implements ISelectionProvider {
         redraw();
     }
 
+    /** Clears the selection */
     public void selectNone() {
         mSelections.clear();
         mAltSelection = null;
@@ -813,12 +816,54 @@ public class SelectionManager implements ISelectionProvider {
      * attempt to select was successful.
      *
      * @param nodes The collection of nodes to be selected
+     * @param indices A list of indices within the parent for each node, or null
      * @return True if and only if all nodes were successfully selected
      */
-    public boolean selectDropped(Collection<INode> nodes) {
+    public boolean selectDropped(List<INode> nodes, List<Integer> indices) {
+        assert indices == null || nodes.size() == indices.size();
+
+        ViewHierarchy viewHierarchy = mCanvas.getViewHierarchy();
+
+        // Look up a list of view infos which correspond to the nodes.
         final Collection<CanvasViewInfo> newChildren = new ArrayList<CanvasViewInfo>();
-        for (INode node : nodes) {
-            CanvasViewInfo viewInfo = mCanvas.getViewHierarchy().findViewInfoFor(node);
+        for (int i = 0, n = nodes.size(); i < n; i++) {
+            INode node = nodes.get(i);
+
+            CanvasViewInfo viewInfo = viewHierarchy.findViewInfoFor(node);
+
+            // There are two scenarios where looking up a view info fails.
+            // The first one is that the node was just added and the render has not yet
+            // happened, so the ViewHierarchy has no record of the node. In this case
+            // there is nothing we can do, and the method will return false (which the
+            // caller will use to schedule a second attempt later).
+            // The second scenario is where the nodes *change identity*. This isn't
+            // common, but when a drop handler makes a lot of changes to its children,
+            // for example when dropping into a GridLayout where attributes are adjusted
+            // on nearly all the other children to update row or column attributes
+            // etc, then in some cases Eclipse's DOM model changes the identities of
+            // the nodes when applying all the edits, so the new Node we created (as
+            // well as possibly other nodes) are no longer the children we observe
+            // after the edit, and there are new copies there instead. In this case
+            // the UiViewModel also fails to map the nodes. To work around this,
+            // we track the *indices* (within the parent) during a drop, such that we
+            // know which children (according to their positions) the given nodes
+            // are supposed to map to, and then we use these view infos instead.
+            if (viewInfo == null && node instanceof NodeProxy && indices != null) {
+                INode parent = node.getParent();
+                CanvasViewInfo parentViewInfo = viewHierarchy.findViewInfoFor(parent);
+                if (parentViewInfo != null) {
+                    UiViewElementNode parentUiNode = parentViewInfo.getUiViewNode();
+                    if (parentUiNode != null) {
+                        List<UiElementNode> children = parentUiNode.getUiChildren();
+                        int index = indices.get(i);
+                        if (index >= 0 && index < children.size()) {
+                            UiElementNode replacedNode = children.get(index);
+                            viewInfo = viewHierarchy.findViewInfoFor(replacedNode);
+                        }
+                    }
+                }
+            }
+
             if (viewInfo != null) {
                 if (nodes.size() > 1 && viewInfo.isHidden()) {
                     // Skip spacers - unless you're dropping just one
@@ -844,7 +889,7 @@ public class SelectionManager implements ISelectionProvider {
     public void setOutlineSelection(final List<INode> nodes) {
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
-                selectDropped(nodes);
+                selectDropped(nodes, null /* indices */);
                 syncOutlineSelection();
             }
         });

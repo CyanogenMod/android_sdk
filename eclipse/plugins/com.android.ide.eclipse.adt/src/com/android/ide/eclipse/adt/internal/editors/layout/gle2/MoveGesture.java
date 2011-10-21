@@ -21,8 +21,12 @@ import com.android.ide.common.api.InsertType;
 import com.android.ide.common.api.Point;
 import com.android.ide.common.api.Rect;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
+import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode.NodeCreationListener;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreePath;
@@ -36,9 +40,7 @@ import org.eclipse.swt.widgets.Display;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The Move gesture provides the operation for moving widgets around in the canvas.
@@ -340,46 +342,90 @@ public class MoveGesture extends DropGesture {
             return;
         }
 
-        final LayoutPoint canvasPoint = getDropLocation(event).toLayout();
-
-        // Record children of the target right before the drop (such that we can
-        // find out after the drop which exact children were inserted)
-        Set<INode> children = new HashSet<INode>();
-        for (INode node : mTargetNode.getChildren()) {
-            children.add(node);
-        }
-
         updateDropFeedback(mFeedback, event);
 
         final SimpleElement[] elementsFinal = elements;
+        final LayoutPoint canvasPoint = getDropLocation(event).toLayout();
         String label = computeUndoLabel(mTargetNode, elements, event.detail);
-        mCanvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
-            public void run() {
-                InsertType insertType = getInsertType(event, mTargetNode);
-                mCanvas.getRulesEngine().callOnDropped(mTargetNode,
-                        elementsFinal,
-                        mFeedback,
-                        new Point(canvasPoint.x, canvasPoint.y),
-                        insertType);
-                mTargetNode.applyPendingChanges();
-                // Clean up drag if applicable
-                if (event.detail == DND.DROP_MOVE) {
-                    GlobalCanvasDragInfo.getInstance().removeSource();
+
+        // Create node listener which (during the drop) listens for node additions
+        // and stores the list of added node such that they can be selected afterwards.
+        final List<UiElementNode> added = new ArrayList<UiElementNode>();
+        // List of "index within parent" for each node
+        final List<Integer> indices = new ArrayList<Integer>();
+        NodeCreationListener listener = new NodeCreationListener() {
+            public void nodeCreated(UiElementNode parent, UiElementNode child, int index) {
+                if (parent == mTargetNode.getNode()) {
+                    added.add(child);
+
+                    // Adjust existing indices
+                    for (int i = 0, n = indices.size(); i < n; i++) {
+                        int idx = indices.get(i);
+                        if (idx >= index) {
+                            indices.set(i, idx + 1);
+                        }
+                    }
+
+                    indices.add(index);
                 }
             }
-        });
 
-        // Now find out which nodes were added, and look up their corresponding
-        // CanvasViewInfos
-        final List<INode> added = new ArrayList<INode>();
-        for (INode node : mTargetNode.getChildren()) {
-            if (!children.contains(node)) {
-                added.add(node);
+            public void nodeDeleted(UiElementNode parent, UiElementNode child, int previousIndex) {
+                if (parent == mTargetNode.getNode()) {
+                    // Adjust existing indices
+                    for (int i = 0, n = indices.size(); i < n; i++) {
+                        int idx = indices.get(i);
+                        if (idx >= previousIndex) {
+                            indices.set(i, idx - 1);
+                        }
+                    }
+
+                    // Make sure we aren't removing the same nodes that are being added
+                    assert !added.contains(child);
+                }
+            }
+        };
+
+        try {
+            UiElementNode.addNodeCreationListener(listener);
+            mCanvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+                public void run() {
+                    InsertType insertType = getInsertType(event, mTargetNode);
+                    mCanvas.getRulesEngine().callOnDropped(mTargetNode,
+                            elementsFinal,
+                            mFeedback,
+                            new Point(canvasPoint.x, canvasPoint.y),
+                            insertType);
+                    mTargetNode.applyPendingChanges();
+                    // Clean up drag if applicable
+                    if (event.detail == DND.DROP_MOVE) {
+                        GlobalCanvasDragInfo.getInstance().removeSource();
+                    }
+                }
+            });
+        } finally {
+            UiElementNode.removeNodeCreationListener(listener);
+        }
+
+        final List<INode> nodes = new ArrayList<INode>();
+        NodeFactory nodeFactory = mCanvas.getNodeFactory();
+        for (UiElementNode uiNode : added) {
+            if (uiNode instanceof UiViewElementNode) {
+                NodeProxy node = nodeFactory.create((UiViewElementNode) uiNode);
+                if (node != null) {
+                    nodes.add(node);
+                }
             }
         }
-        // Select the newly dropped nodes
+
+        // Select the newly dropped nodes:
+        // Find out which nodes were added, and look up their corresponding
+        // CanvasViewInfos.
         final SelectionManager selectionManager = mCanvas.getSelectionManager();
-        if (!selectionManager.selectDropped(added)) {
+        // Don't use the indices to search for corresponding nodes yet, since a
+        // render may not have happened yet and we'd rather use an up to date
+        // view hierarchy than indices to look up the right view infos.
+        if (!selectionManager.selectDropped(nodes, null /* indices */)) {
             // In some scenarios we can't find the actual view infos yet; this
             // seems to happen when you drag from one canvas to another (see the
             // related comment next to the setFocus() call below). In that case
@@ -387,7 +433,7 @@ public class MoveGesture extends DropGesture {
             // date.
             Display.getDefault().asyncExec(new Runnable() {
                 public void run() {
-                    selectionManager.selectDropped(added);
+                    selectionManager.selectDropped(nodes, indices);
                 }
             });
         }
