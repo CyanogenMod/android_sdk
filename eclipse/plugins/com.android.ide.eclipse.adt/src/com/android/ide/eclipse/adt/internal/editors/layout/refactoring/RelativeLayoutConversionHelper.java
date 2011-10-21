@@ -15,6 +15,15 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_BOTTOM;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_HORIZ;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_VERT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_HORIZ;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_FILL_VERT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_LEFT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_TOP;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BASELINE_ALIGNED;
@@ -32,7 +41,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_ALIGN_WI
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_BELOW;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_HORIZONTAL;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_CENTER_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_GRAVITY;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_LEFT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_MARGIN_TOP;
@@ -42,16 +50,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_TO_RIGHT
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_BOTTOM;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_CENTER;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_CENTER_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_CENTER_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_HORIZONTAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_FILL_VERTICAL;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_LEFT;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_RIGHT;
-import static com.android.ide.common.layout.LayoutConstants.GRAVITY_VALUE_TOP;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.LINEAR_LAYOUT;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
@@ -62,6 +60,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
+import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
@@ -332,71 +331,6 @@ class RelativeLayoutConversionHelper {
                 // for framelayout, tables, etc.
             }
         }
-    }
-
-    public static final int GRAVITY_LEFT = 1 << 0;
-    public static final int GRAVITY_RIGHT = 1<< 1;
-    public static final int GRAVITY_CENTER_HORIZ = 1 << 2;
-    public static final int GRAVITY_FILL_HORIZ = 1 << 3;
-    public static final int GRAVITY_CENTER_VERT = 1 << 4;
-    public static final int GRAVITY_FILL_VERT = 1 << 5;
-    public static final int GRAVITY_TOP = 1 << 6;
-    public static final int GRAVITY_BOTTOM = 1 << 7;
-    public static final int GRAVITY_HORIZ_MASK = GRAVITY_CENTER_HORIZ | GRAVITY_FILL_HORIZ
-            | GRAVITY_LEFT | GRAVITY_RIGHT;
-    public static final int GRAVITY_VERT_MASK = GRAVITY_CENTER_VERT | GRAVITY_FILL_VERT
-            | GRAVITY_TOP | GRAVITY_BOTTOM;
-
-    /**
-     * Returns the gravity of the given element
-     *
-     * @param element the element to look up the gravity for
-     * @return a bit mask corresponding to the selected gravities
-     */
-    public static int getGravity(Element element) {
-        String gravityString = element.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY);
-        return getGravity(gravityString, GRAVITY_LEFT | GRAVITY_TOP);
-    }
-
-    /**
-     * Returns the gravity bitmask for the given gravity string description
-     *
-     * @param gravityString the gravity string description
-     * @param defaultMask the default/initial bitmask to start with
-     * @return a bitmask corresponding to the gravity description
-     */
-    public static int getGravity(String gravityString, int defaultMask) {
-        int gravity = defaultMask;
-        if (gravityString != null && gravityString.length() > 0) {
-            String[] anchors = gravityString.split("\\|"); //$NON-NLS-1$
-            for (String anchor : anchors) {
-                if (GRAVITY_VALUE_CENTER.equals(anchor)) {
-                    gravity = GRAVITY_CENTER_HORIZ | GRAVITY_CENTER_VERT;
-                } else if (GRAVITY_VALUE_FILL.equals(anchor)) {
-                        gravity = GRAVITY_FILL_HORIZ | GRAVITY_FILL_VERT;
-                } else if (GRAVITY_VALUE_CENTER_VERTICAL.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_HORIZ_MASK) | GRAVITY_CENTER_VERT;
-                } else if (GRAVITY_VALUE_CENTER_HORIZONTAL.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_CENTER_HORIZ;
-                } else if (GRAVITY_VALUE_FILL_VERTICAL.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_HORIZ_MASK) | GRAVITY_FILL_VERT;
-                } else if (GRAVITY_VALUE_FILL_HORIZONTAL.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_FILL_HORIZ;
-                } else if (GRAVITY_VALUE_TOP.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_HORIZ_MASK) | GRAVITY_TOP;
-                } else if (GRAVITY_VALUE_BOTTOM.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_HORIZ_MASK) | GRAVITY_BOTTOM;
-                } else if (GRAVITY_VALUE_LEFT.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_LEFT;
-                } else if (GRAVITY_VALUE_RIGHT.equals(anchor)) {
-                    gravity = (gravity & GRAVITY_VERT_MASK) | GRAVITY_RIGHT;
-                } else {
-                    // "clip" not supported
-                }
-            }
-        }
-
-        return gravity;
     }
 
     /**
@@ -1379,7 +1313,7 @@ class RelativeLayoutConversionHelper {
         public View(CanvasViewInfo view, Element element) {
             mInfo = view;
             mElement = element;
-            mGravity = RelativeLayoutConversionHelper.getGravity(element);
+            mGravity = GravityHelper.getGravity(element);
         }
 
         public int getHeight() {

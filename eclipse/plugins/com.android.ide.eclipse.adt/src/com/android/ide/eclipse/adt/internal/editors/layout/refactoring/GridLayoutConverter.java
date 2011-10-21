@@ -15,6 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_HORIZ_MASK;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_VERT_MASK;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_BACKGROUND;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
@@ -52,6 +54,7 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 
 import com.android.ide.common.api.IViewMetadata.FillPreference;
 import com.android.ide.common.layout.BaseLayoutRule;
+import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
@@ -100,6 +103,7 @@ import java.util.Set;
  *   with dimensions based on existing distances.
  * </ul>
  */
+@SuppressWarnings("restriction") // DOM model access
 class GridLayoutConverter {
     private final MultiTextEdit mRootEdit;
     private final boolean mFlatten;
@@ -175,13 +179,13 @@ class GridLayoutConverter {
                 continue;
             }
 
-            int gravity = RelativeLayoutConversionHelper.getGravity(view.mGravity, 0);
-            if ((gravity & RelativeLayoutConversionHelper.GRAVITY_HORIZ_MASK) == 0) {
+            int gravity = GravityHelper.getGravity(view.mGravity, 0);
+            if ((gravity & GRAVITY_HORIZ_MASK) == 0) {
                 columnFixed.put(view.mCol, true);
             } else if (!columnFixed.containsKey(view.mCol)) {
                 columnFixed.put(view.mCol, false);
             }
-            if ((gravity & RelativeLayoutConversionHelper.GRAVITY_VERT_MASK) == 0) {
+            if ((gravity & GRAVITY_VERT_MASK) == 0) {
                 rowFixed.put(view.mRow, true);
             } else if (!rowFixed.containsKey(view.mRow)) {
                 rowFixed.put(view.mRow, false);

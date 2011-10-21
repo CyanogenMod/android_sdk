@@ -80,6 +80,7 @@ public class GridDropHandler {
      */
     public void computeMatches(DropFeedback feedback, Point p) {
         mRowMatch = mColumnMatch = null;
+        feedback.tooltip = null;
 
         Rect bounds = mGrid.layout.getBounds();
         int x1 = p.x;
@@ -113,7 +114,7 @@ public class GridDropHandler {
             addCenterColumnMatch(bounds, x1, y1, x2, y2, columnMatches, max);
 
             // Row matches:
-            int row = mGrid.getClosestRow(y1);
+            int row = (mGrid.getViewCount() == 0) ? 0 : mGrid.getClosestRow(y1);
             int rowY = mGrid.getRowY(row);
             addTopMatch(y1, rowMatches, max, row, rowY);
             addBaselineMatch(feedback.dragBaseline, y1, rowMatches, max, row, rowY);
@@ -138,13 +139,13 @@ public class GridDropHandler {
             }
 
 
-            if (columnMatches.size() == 0) {
+            if (columnMatches.size() == 0 && x1 >= bounds.x) {
                 // Split the current cell since we have no matches
                 // TODO: Decide whether it should be gravity left or right...
                 columnMatches.add(new GridMatch(SegmentType.LEFT, 0, x1, mGrid.getColumn(x1),
                         true /* createCell */, UNDEFINED));
             }
-            if (rowMatches.size() == 0) {
+            if (rowMatches.size() == 0 && y1 >= bounds.y) {
                 rowMatches.add(new GridMatch(SegmentType.TOP, 0, y1, mGrid.getRow(y1),
                         true /* createCell */, UNDEFINED));
             }
@@ -165,16 +166,9 @@ public class GridDropHandler {
                 mRowMatch = rowMatches.get(0);
                 rowDescription = mRowMatch.getDisplayName(mGrid.layout);
             }
-            if (columnDescription != null) {
-                if (rowDescription != null) {
-                    feedback.tooltip = columnDescription + '\n' + rowDescription;
-                } else {
-                    feedback.tooltip = columnDescription;
-                }
-            } else if (rowDescription != null) {
-                feedback.tooltip = rowDescription;
-            } else {
-                feedback.tooltip = null;
+
+            if (columnDescription != null && rowDescription != null) {
+                feedback.tooltip = columnDescription + '\n' + rowDescription;
             }
 
             feedback.invalidTarget = mColumnMatch == null || mRowMatch == null;
@@ -214,7 +208,7 @@ public class GridDropHandler {
      * Adds a match to align the left edge with some other edge.
      */
     private void addLeftSideMatch(int x1, List<GridMatch> columnMatches, int max) {
-        int column = mGrid.getClosestColumn(x1);
+        int column = (mGrid.getViewCount() == 0) ? 0 : mGrid.getClosestColumn(x1);
         int columnX = mGrid.getColumnX(column);
         int distance = abs(columnX - x1);
         if (distance <= max) {
@@ -229,11 +223,14 @@ public class GridDropHandler {
     private void addRightSideMatch(int x2, List<GridMatch> columnMatches, int max) {
         // TODO: Only match the right hand side if the drag bounds fit fully within the
         // cell! Ditto for match below.
-        int columnRight = mGrid.getClosestColumn(x2);
+        int columnRight = (mGrid.getViewCount() == 0) ? 0 : mGrid.getClosestColumn(x2);
         int rightDistance = mGrid.getColumnDistance(columnRight, x2);
         if (rightDistance < max) {
-            columnMatches.add(new GridMatch(SegmentType.RIGHT, rightDistance,
-                    mGrid.getColumnX(columnRight), columnRight, false, UNDEFINED));
+            int columnX = mGrid.getColumnX(columnRight);
+            if (columnX > mGrid.layout.getBounds().x) {
+                columnMatches.add(new GridMatch(SegmentType.RIGHT, rightDistance, columnX,
+                        columnRight, false, UNDEFINED));
+            }
         }
     }
 
@@ -270,12 +267,14 @@ public class GridDropHandler {
      * Adds a match to align the bottom edge with some other edge.
      */
     private void addBottomMatch(int y2, List<GridMatch> rowMatches, int max) {
-        int rowBottom = mGrid.getClosestRow(y2);
+        int rowBottom = (mGrid.getViewCount() == 0) ? 0 : mGrid.getClosestRow(y2);
         int distance = mGrid.getRowDistance(rowBottom, y2);
         if (distance < max) {
             int rowY = mGrid.getRowY(rowBottom);
-            rowMatches.add(new GridMatch(SegmentType.BOTTOM, distance, rowY,
-                    rowBottom, false, UNDEFINED));
+            if (rowY > mGrid.layout.getBounds().y) {
+                rowMatches.add(new GridMatch(SegmentType.BOTTOM, distance, rowY,
+                        rowBottom, false, UNDEFINED));
+            }
         }
     }
 
@@ -493,10 +492,10 @@ public class GridDropHandler {
             //sr1.setAttribute(ANDROID_URI, ATTR_LAYOUT_ROW_WEIGHT, VALUE_1);
             //sc1.setAttribute(ANDROID_URI, ATTR_LAYOUT_GRAVITY, VALUE_FILL_HORIZONTAL);
             //sr1.setAttribute(ANDROID_URI, ATTR_LAYOUT_GRAVITY, VALUE_FILL_VERTICAL);
-
-            mGrid.loadFromXml();
-            column = mGrid.getColumn(columnX);
-            row = mGrid.getRow(rowY);
+            //
+            //mGrid.loadFromXml();
+            //column = mGrid.getColumn(columnX);
+            //row = mGrid.getRow(rowY);
         }
 
         int startX, endX;

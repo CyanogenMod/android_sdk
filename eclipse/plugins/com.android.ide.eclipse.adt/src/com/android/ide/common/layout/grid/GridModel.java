@@ -15,6 +15,10 @@
  */
 package com.android.ide.common.layout.grid;
 
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_BOTTOM;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_HORIZ;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_CENTER_VERT;
+import static com.android.ide.common.layout.GravityHelper.GRAVITY_RIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_COLUMN_COUNT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
@@ -43,6 +47,7 @@ import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.Margins;
 import com.android.ide.common.api.Rect;
+import com.android.ide.common.layout.GravityHelper;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.util.Pair;
 
@@ -622,11 +627,13 @@ public class GridModel {
         }
 
         // The bounds should be in ascending order now
-        for (int i = 1; i < actualRowCount; i++) {
-            assert mTop[i + 1] >= mTop[i];
-        }
-        for (int i = 0; i < actualColumnCount; i++) {
-            assert mLeft[i + 1] >= mLeft[i];
+        if (GridLayoutRule.sDebugGridLayout) {
+            for (int i = 1; i < actualRowCount; i++) {
+                assert mTop[i + 1] >= mTop[i];
+            }
+            for (int i = 0; i < actualColumnCount; i++) {
+                assert mLeft[i + 1] >= mLeft[i];
+            }
         }
     }
 
@@ -661,10 +668,12 @@ public class GridModel {
                         y2 -= insets.bottom;
                     }
                 }
-                if (mMaxRight[targetColumn] < x2) {
+                if (mMaxRight[targetColumn] < x2
+                        && ((view.gravity & (GRAVITY_CENTER_HORIZ | GRAVITY_RIGHT)) == 0)) {
                     mMaxRight[targetColumn] = x2;
                 }
-                if (mMaxBottom[targetRow] < y2) {
+                if (mMaxBottom[targetRow] < y2
+                        && ((view.gravity & (GRAVITY_CENTER_VERT | GRAVITY_BOTTOM)) == 0)) {
                     mMaxBottom[targetRow] = y2;
                 }
             }
@@ -1602,8 +1611,7 @@ public class GridModel {
         public int column;
         public int rowSpan;
         public int columnSpan;
-        //public final float rowWeight;
-        //public final float columnWeight;
+        public int gravity;
 
         ViewData(INode n, int index) {
             node = n;
@@ -1613,31 +1621,8 @@ public class GridModel {
             columnSpan = getInt(n, ATTR_LAYOUT_COLUMN_SPAN, 1);
             row = getInt(n, ATTR_LAYOUT_ROW, UNDEFINED);
             rowSpan = getInt(n, ATTR_LAYOUT_ROW_SPAN, 1);
-
-            // Weights are in flux
-            //
-            //String width = n.getStringAttr(ANDROID_URI, ATTR_LAYOUT_WIDTH);
-            //float colDefaultWeight;
-            //if (VALUE_MATCH_PARENT.equals(width) || VALUE_FILL_PARENT.equals(width)) {
-            //    colDefaultWeight = 1.0f;
-            //} else {
-            //    colDefaultWeight = 0.0f;
-            //}
-            //String height = n.getStringAttr(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
-            //float rowDefaultWeight;
-            //if (VALUE_MATCH_PARENT.equals(height) || VALUE_FILL_PARENT.equals(height)) {
-            //    rowDefaultWeight = 1.0f;
-            //} else {
-            //    rowDefaultWeight = 0.0f;
-            //}
-            //
-            //columnWeight = getFloat(n, ATTR_LAYOUT_COLUMN_WEIGHT, colDefaultWeight);
-            //rowWeight = getFloat(n, ATTR_LAYOUT_ROW_WEIGHT, rowDefaultWeight);
-
-            // Interval hSpan = new Interval(column, column + columnSpan);
-            // this.columnGroup = new Group(hSpan, getColumnAlignment(gravity, width));
-            // Interval vSpan = new Interval(row, row + rowSpan);
-            // this.rowGroup = new Group(vSpan, getRowAlignment(gravity, height));
+            gravity = GravityHelper.getGravity(n.getStringAttr(ANDROID_URI, ATTR_LAYOUT_GRAVITY),
+                    0);
         }
 
         /** Applies the column and row fields into the XML model */
@@ -1783,6 +1768,7 @@ public class GridModel {
             for (ViewData spacer : rowSpacers.values()) {
                 layout.removeChild(spacer.node);
             }
+            layout.setAttribute(ANDROID_URI, ATTR_COLUMN_COUNT, Integer.toString(2));
             return;
         }
 
@@ -2058,5 +2044,14 @@ public class GridModel {
         }
 
         return defaultValue;
+    }
+
+    /**
+     * Returns the number of children views in the GridLayout
+     *
+     * @return the number of children views in the GridLayout
+     */
+    public int getViewCount() {
+        return mChildViews.size();
     }
 }
