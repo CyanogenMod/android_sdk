@@ -201,9 +201,18 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
 
         if (source == mProjectNameText) {
             onProjectFieldModified();
-            updateLocationPathField(null);
-        } else if (source == mLocationText && !mValues.useDefaultLocation) {
-            mValues.projectLocation = new File(mLocationText.getText().trim());
+            if (!mValues.useDefaultLocation && !mValues.projectLocationModifiedByUser) {
+                updateLocationPathField(null);
+            }
+        } else if (source == mLocationText) {
+            mValues.projectLocationModifiedByUser = true;
+            if (!mValues.useDefaultLocation) {
+                File f = new File(mLocationText.getText().trim());
+                if (f.exists() && f.isDirectory() && !f.equals(mValues.projectLocation)) {
+                    mValues.projectLocation = f;
+                    updateLocationPathField(mValues.projectLocation.getPath());
+                }
+            }
         }
 
         validatePage();
@@ -249,6 +258,14 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
             if (!mValues.activityNameModifiedByUser) {
                 mValues.createActivity = false;
             }
+            try {
+                mIgnore = true;
+                mValues.useDefaultLocation = false;
+                mUseDefaultCheckBox.setSelection(mValues.useDefaultLocation);
+            } finally {
+                mIgnore = false;
+            }
+
             updateLocationState();
         } else if (source == mCreateSampleRadioButton && mCreateSampleRadioButton.getSelection()) {
             mValues.useExisting = true;
@@ -397,6 +414,14 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         if (mValues.useExisting && mValues.projectLocation != null
                 && mValues.projectLocation.exists() && mValues.mode != Mode.SAMPLE) {
             mValues.extractFromAndroidManifest(new Path(mValues.projectLocation.getPath()));
+            if (!mValues.projectNameModifiedByUser && mValues.projectName != null) {
+                try {
+                    mIgnore = true;
+                    mProjectNameText.setText(mValues.projectName);
+                } finally {
+                    mIgnore = false;
+                }
+            }
         }
     }
 
