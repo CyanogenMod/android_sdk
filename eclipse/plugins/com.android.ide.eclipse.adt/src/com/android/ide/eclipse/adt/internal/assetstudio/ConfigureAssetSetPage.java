@@ -202,7 +202,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mImageRadio.setText("Image");
 
         mClipartRadio = new Button(foregroundComposite, SWT.FLAT | SWT.TOGGLE);
-        //mClipartRadio.setEnabled(false);
+        mClipartRadio.setEnabled(false);
         mClipartRadio.setText("Clipart");
         mClipartRadio.addSelectionListener(this);
 
