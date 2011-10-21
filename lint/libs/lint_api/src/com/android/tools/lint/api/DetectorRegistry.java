@@ -21,13 +21,16 @@ import com.android.tools.lint.detector.api.Issue;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** Registry which provides a list of checks to be performed on an Android project */
 public abstract class DetectorRegistry {
     private static List<Issue> sIssues;
+    private static Map<String, Issue> sIdToIssue;
 
     /**
      * Returns the list of detectors to be run.
@@ -55,13 +58,8 @@ public abstract class DetectorRegistry {
      * @return the corresponding issue, or null
      */
     public Issue getIssue(String id) {
-        for (Issue issue : getIssues()) {
-            if (issue.getId().equals(id)) {
-                return issue;
-            }
-        }
-
-        return null;
+        getIssues(); // Ensure initialized
+        return sIdToIssue.get(id);
     }
 
     /**
@@ -73,10 +71,13 @@ public abstract class DetectorRegistry {
     @SuppressWarnings("all") // Turn off warnings for the intentional assertion side effect below
     public List<Issue> getIssues() {
         if (sIssues == null) {
+            sIdToIssue = new HashMap<String, Issue>();
+
             List<Issue> issues = new ArrayList<Issue>();
             for (Detector detector : getDetectors()) {
                 for (Issue issue : detector.getIssues()) {
                     issues.add(issue);
+                    sIdToIssue.put(issue.getId(), issue);
                 }
             }
 

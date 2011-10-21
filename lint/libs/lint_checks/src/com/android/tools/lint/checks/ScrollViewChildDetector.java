@@ -43,7 +43,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
             "ScrollView children must set their layout_width or layout_height attributes " +
             "to wrap_content rather than fill_parent or match_parent in the scrolling " +
             "dimension",
-            CATEGORY_LAYOUT, 7, Severity.WARNING);
+            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link ScrollViewChildDetector} */
     public ScrollViewChildDetector() {
@@ -57,11 +57,6 @@ public class ScrollViewChildDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -83,8 +78,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
             if (VALUE_FILL_PARENT.equals(value) || VALUE_MATCH_PARENT.equals(value)) {
                 String msg = String.format("This %1$s should use android:%2$s=\"wrap_content\"",
                         child.getTagName(), attributeName);
-                context.toolContext.report(ISSUE, context.getLocation(sizeNode),
-                        msg);
+                context.toolContext.report(context, ISSUE, context.getLocation(sizeNode), msg);
             }
         }
     }

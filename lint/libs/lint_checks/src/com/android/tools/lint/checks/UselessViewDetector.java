@@ -43,7 +43,7 @@ public class UselessViewDetector extends LayoutDetector {
             "a root layout, and does not have a background, can be removed and have " +
             "its children moved directly into the parent for a flatter and more " +
             "efficient layout hierarchy.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING);
+            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Issue of including a leaf that isn't shown */
     public static final Issue USELESS_LEAF = Issue.create(
@@ -51,7 +51,7 @@ public class UselessViewDetector extends LayoutDetector {
             "Checks whether a leaf layout can be removed.",
             "A layout that has no children or no background can often be removed (since it " +
             "is invisible) for a flatter and more efficient layout hierarchy.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING);
+            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link UselessViewDetector} */
     public UselessViewDetector() {
@@ -65,11 +65,6 @@ public class UselessViewDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     private static final List<String> CONTAINERS = new ArrayList<String>(20);
@@ -171,7 +166,7 @@ public class UselessViewDetector extends LayoutDetector {
                 format = "This %1$s layout or its %2$s parent is useless";
             }
             String message = String.format(format, tag, parentTag);
-            context.toolContext.report(USELESS_PARENT, location, message);
+            context.toolContext.report(context, USELESS_PARENT, location, message);
         }
     }
 
@@ -197,6 +192,6 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String message = String.format(
                 "This %1$s view is useless (no children, no background, no id)", tag);
-        context.toolContext.report(USELESS_LEAF, location, message);
+        context.toolContext.report(context, USELESS_LEAF, location, message);
     }
 }

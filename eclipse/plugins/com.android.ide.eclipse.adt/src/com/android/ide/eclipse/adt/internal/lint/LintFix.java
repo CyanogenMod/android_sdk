@@ -47,7 +47,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IInputValidator;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Region;
@@ -59,6 +58,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -109,6 +109,19 @@ abstract class LintFix implements ICompletionProposal {
         return false;
     }
 
+    /**
+     * Returns true if this fix can be cancelled once it's invoked. This is the case
+     * for fixes which shows a confirmation dialog (such as the Extract String etc).
+     * This will be used to determine whether the marker can be deleted immediately
+     * (for non-cancelable fixes) or if it should be left alone and detected fix
+     * on the next save.
+     *
+     * @return true if the
+     */
+    public boolean isCancelable() {
+        return true;
+    }
+
     // ---- Implements ICompletionProposal ----
 
     public String getDisplayString() {
@@ -118,7 +131,7 @@ abstract class LintFix implements ICompletionProposal {
     public String getAdditionalProposalInfo() {
         Issue issue = new BuiltinDetectorRegistry().getIssue(mId);
         if (issue != null) {
-            return issue.getExplanation();
+            return issue.getExplanation().replace("\n", "<br>"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         return null;
@@ -210,7 +223,9 @@ abstract class LintFix implements ICompletionProposal {
                     model.releaseFromEdit();
                 }
 
-                deleteMarker();
+                if (!isCancelable()) {
+                    deleteMarker();
+                }
             }
         }
     }
@@ -227,6 +242,11 @@ abstract class LintFix implements ICompletionProposal {
 
         protected String getProposal() {
             return "TODO";
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
         }
 
         @Override
@@ -296,6 +316,11 @@ abstract class LintFix implements ICompletionProposal {
         public String getDisplayString() {
             return "Add content description attribute";
         }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
     }
 
     private static final class SetInputTypeFix extends SetPropertyFix {
@@ -318,6 +343,12 @@ abstract class LintFix implements ICompletionProposal {
             return "Set input type";
         }
 
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
+
         @Override
         public void apply(IDocument document) {
             super.apply(document);
@@ -336,6 +367,11 @@ abstract class LintFix implements ICompletionProposal {
 
         @Override
         public boolean needsFocus() {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelable() {
             return false;
         }
 
@@ -376,6 +412,11 @@ abstract class LintFix implements ICompletionProposal {
 
         @Override
         public boolean needsFocus() {
+            return isCancelable();
+        }
+
+        @Override
+        public boolean isCancelable() {
             return mId.equals(mId.equals(UselessViewDetector.USELESS_PARENT.getId()));
         }
 
@@ -442,6 +483,11 @@ abstract class LintFix implements ICompletionProposal {
         }
 
         @Override
+        public boolean isCancelable() {
+            return true;
+        }
+
+        @Override
         protected void apply(IDocument document, IStructuredModel model, Node node, int start,
                 int end) {
             // Invoke refactoring
@@ -490,20 +536,20 @@ abstract class LintFix implements ICompletionProposal {
         }
 
         @Override
+        public boolean isCancelable() {
+            return true;
+        }
+
+        @Override
         protected void apply(IDocument document, IStructuredModel model, Node node, int start,
                 int end) {
-            InputDialog d = new InputDialog(
-                    AdtPlugin.getDisplay().getActiveShell(),
-                    "Choose density",
-                    "What is the screen density the current px value works with? (e.g. 160, 240, ...)",
-                    "", //$NON-NLS-1$
-                    this);
-            if (d.open() == Window.OK) {
-                String dpiString = d.getValue();
+            Shell shell = AdtPlugin.getDisplay().getActiveShell();
+            InputDensityDialog densityDialog = new InputDensityDialog(shell);
+            if (densityDialog.open() == Window.OK) {
+                int dpi = densityDialog.getDensity();
                 Element element = (Element) node;
-                int dpi = Integer.parseInt(dpiString); // Already validated, won't throw exception
-                NamedNodeMap attributes = element.getAttributes();
                 Pattern pattern = Pattern.compile("(\\d+)px"); //$NON-NLS-1$
+                NamedNodeMap attributes = element.getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {
                     Attr attribute = (Attr) attributes.item(i);
                     String value = attribute.getValue();
@@ -553,6 +599,4 @@ abstract class LintFix implements ICompletionProposal {
             return null;
         }
     }
-
-
 }

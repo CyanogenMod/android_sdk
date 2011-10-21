@@ -48,14 +48,22 @@ public class DuplicateIdDetector extends LayoutDetector {
     private Map<File, List<String>> mIncludes;
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
+    public static final Issue WITHIN_LAYOUT = Issue.create(
             "DuplicateIds", //$NON-NLS-1$
-            "Checks for duplicate ids within a single layout or within an include hierarchy",
-            "It's okay for two independent layouts to use the same ids. However, within " +
-            "a single layout (including the case where two separate layouts are fused " +
-            "together with an include tag) the ids should be unique such that the" +
-            "Activity#findViewById() method can work predictably.",
-            CATEGORY_LAYOUT, 7, Severity.WARNING);
+            "Checks for duplicate ids within a single layout",
+            "Within a layout, id's should be unique since otherwise findViewById() can " +
+            "return an unexpected view.",
+            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
+
+    /** The main issue discovered by this detector */
+    public static final Issue CROSS_LAYOUT = Issue.create(
+            "DuplicateIncludedIds", //$NON-NLS-1$
+            "Checks for duplicate ids across layouts that are combined with include tags",
+            "It's okay for two independent layouts to use the same ids. However, if " +
+            "layouts are combined with include tags, then the id's need to be unique " +
+            "within any chain of included layouts, or Activity#findViewById() can " +
+            "return an unexpected view.",
+            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.RESOURCES);
 
     /** Constructs a duplicate id check */
     public DuplicateIdDetector() {
@@ -64,7 +72,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     @Override
     public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
+        return new Issue[] { WITHIN_LAYOUT, CROSS_LAYOUT };
     }
 
     @Override
@@ -75,13 +83,6 @@ public class DuplicateIdDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        // TODO: Split this detector in half, since single-layout duplicates can be checked
-        // quickly.
-        return Scope.RESOURCES;
     }
 
     @Override
@@ -146,6 +147,11 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     private void checkForIncludeDuplicates(Context context) {
+        if (!context.toolContext.isEnabled(CROSS_LAYOUT)
+                || !Scope.RESOURCES.within(context.scope)) {
+            return;
+        }
+
         // Consider this scenario:
         //     first/foo.xml: include @layout/second
         //     first-land/foo.xml: define @+id/foo
@@ -295,30 +301,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                                 chain.add(from);
                                 findOrigin(chain, from, id, new HashSet<String>(),
                                         resourceToLayouts, resourceToIds);
-                                String msg = null;
-                                if (chain.size() > 2) { // < 2: it's a directly include & obvious
-                                    StringBuilder sb = new StringBuilder();
-                                    for (String layout : chain) {
-                                        if (sb.length() > 0) {
-                                            sb.append(" => ");
-                                        }
-                                        sb.append(layout);
-                                    }
-                                    msg = String.format(
-                                            "Duplicate id %1$s, already defined in layout %2$s which is included in this layout (%3$s)",
-                                            id, includer, sb.toString());
-                                } else {
-                                    msg = String.format(
-                                            "Duplicate id %1$s, already defined in layout %2$s which is included in this layout",
-                                            id, includer);
-                                }
-
-                                Location location = new Location(first, null, null);
-                                if (second != null) {
-                                    // Also record the secondary location
-                                    location.setSecondary(new Location(second, null, null));
-                                }
-                                context.toolContext.report(ISSUE, location, msg);
+                                reportError(context, id, first, second, includer, chain);
                             } else {
                                 merged.add(id);
                             }
@@ -331,6 +314,35 @@ public class DuplicateIdDetector extends LayoutDetector {
         }
 
         return merged;
+    }
+
+
+    private void reportError(Context context, String id, File first, File second, String includer,
+            List<String> chain) {
+        String msg = null;
+        if (chain.size() > 2) { // < 2: it's a directly include & obvious
+            StringBuilder sb = new StringBuilder();
+            for (String layout : chain) {
+                if (sb.length() > 0) {
+                    sb.append(" => ");
+                }
+                sb.append(layout);
+            }
+            msg = String.format(
+                "Duplicate id %1$s, already defined in layout %2$s which is included in this layout (%3$s)",
+                id, includer, sb.toString());
+        } else {
+            msg = String.format(
+                "Duplicate id %1$s, already defined in layout %2$s which is included in this layout",
+                id, includer);
+        }
+
+        Location location = new Location(first, null, null);
+        if (second != null) {
+            // Also record the secondary location
+            location.setSecondary(new Location(second, null, null));
+        }
+        context.toolContext.report(context, CROSS_LAYOUT, location, msg);
     }
 
     /**
@@ -378,7 +390,7 @@ public class DuplicateIdDetector extends LayoutDetector {
         assert attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         if (mIds.contains(id)) {
-            context.toolContext.report(ISSUE, context.getLocation(attribute),
+            context.toolContext.report(context, WITHIN_LAYOUT, context.getLocation(attribute),
                     String.format("Duplicate id %1$s, already defined earlier in this layout",
                             id));
         } else if (id.startsWith("@+id/")) { //$NON-NLS-1$

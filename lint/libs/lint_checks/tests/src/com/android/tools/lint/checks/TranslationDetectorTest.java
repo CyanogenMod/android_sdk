@@ -28,15 +28,34 @@ public class TranslationDetectorTest extends AbstractCheckTest {
     }
 
     public void testTranslation() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = false;
         assertEquals(
             // Sample files from the Home app
-            "values-es-rUS: Error: Language es-rUS is missing translations for the " +
-                "names menu_settings\n" +
-            "values-nl-rNL: Error: Language nl-rNL is missing translations for the names " +
-                "menu_settings, menu_wallpaper, show_all_apps\n" +
-            "values-de-rDE: Error: Language de-rDE is missing translations for the names " +
-                "menu_settings\n" +
-            "values-cs: Error: Language cs is missing translations for the names menu_settings",
+            "values-cs: Error: Locale cs is missing translations for: menu_settings\n" +
+            "values-de-rDE: Error: Locale de-rDE is missing translations for: menu_settings\n" +
+            "values-de-rDE: Warning: Locale de-rDE is translating names not found in default locale: continue_skip_label\n" +
+            "values-es: Error: Locale es is missing translations for: menu_settings\n" +
+            "values-es-rUS: Error: Locale es-rUS is missing translations for: menu_settings\n" +
+            "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
+
+            lint("values/strings.xml",
+                 "values-cs/strings.xml",
+                 "values-de-rDE/strings.xml",
+                 "values-es/strings.xml",
+                 "values-es-rUS/strings.xml",
+                 "values-land/strings.xml",
+                 "values-nl-rNL/strings.xml"));
+    }
+
+    public void testTranslationWithCompleteRegions() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = true;
+        assertEquals(
+            // Sample files from the Home app
+            "values-cs: Error: Locale cs is missing translations for: menu_settings\n" +
+            "values-de-rDE: Error: Locale de-rDE is missing translations for: menu_settings\n" +
+            "values-de-rDE: Warning: Locale de-rDE is translating names not found in default locale: continue_skip_label\n" +
+            "values-es-rUS: Error: Locale es-rUS is missing translations for: home_title, menu_settings, menu_wallpaper, show_all_apps... (1 more)\n" +
+            "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
 
             lint("values/strings.xml",
                  "values-cs/strings.xml",

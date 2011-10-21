@@ -41,7 +41,7 @@ public class ProguardDetector extends Detector {
             "-keepclasseswithmembers, since the old flags also implies " +
             "\"allow shrinking\" which means symbols only referred to from XML and " +
             "not Java (such as possibly CustomViews) can get deleted.",
-            CATEGORY_CORRECTNESS, 5, Severity.ERROR).setMoreInfo(
+            CATEGORY_CORRECTNESS, 5, Severity.ERROR, Scope.SINGLE_FILE).setMoreInfo(
             "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$
 
     @Override
@@ -58,7 +58,7 @@ public class ProguardDetector extends Detector {
                     "-keepclasseswithmembernames class * {\n" + //$NON-NLS-1$
                     "    public <init>(android.");              //$NON-NLS-1$
             if (index != -1) {
-                context.toolContext.report(ISSUE, context.getLocation(context),
+                context.toolContext.report(context, ISSUE, context.getLocation(context),
                     "Obsolete proguard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames");
             }
         }
@@ -72,10 +72,5 @@ public class ProguardDetector extends Detector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 }

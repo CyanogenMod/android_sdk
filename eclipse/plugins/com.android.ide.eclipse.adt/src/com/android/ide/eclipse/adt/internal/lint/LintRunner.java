@@ -20,9 +20,11 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.tools.lint.api.DetectorRegistry;
 import com.android.tools.lint.api.Lint;
+import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -151,14 +153,25 @@ public class LintRunner {
         protected IStatus run(IProgressMonitor monitor) {
             try {
                 monitor.beginTask("Looking for errors", IProgressMonitor.UNKNOWN);
-                LintEclipseContext.clearMarkers(mResource);
-
                 DetectorRegistry registry = LintEclipseContext.getRegistry();
-                LintEclipseContext toolContext = new LintEclipseContext(registry, mResource,
-                        mDocument);
                 File file = AdtUtils.getAbsolutePath(mResource).toFile();
                 Scope scope = (mResource instanceof IProject) ? Scope.PROJECT :
                         (mResource instanceof IFolder) ? Scope.RESOURCES : Scope.SINGLE_FILE;
+                if (scope == Scope.SINGLE_FILE) {
+                    IMarker[] markers = LintEclipseContext.getMarkers(mResource);
+                    for (IMarker marker : markers) {
+                        String id = marker.getAttribute(MARKER_CHECKID_PROPERTY, ""); //$NON-NLS-1$
+                        Issue issue = registry.getIssue(id);
+                        if (issue == null || issue.getScope() == Scope.SINGLE_FILE) {
+                            marker.delete();
+                        }
+                    }
+                } else {
+                    LintEclipseContext.clearMarkers(mResource);
+                }
+
+                LintEclipseContext toolContext = new LintEclipseContext(registry, mResource,
+                        mDocument);
                 mLint = new Lint(registry, toolContext, scope);
                 mLint.analyze(Collections.singletonList(file));
                 mFatal = toolContext.isFatal();

@@ -45,7 +45,7 @@ public class TextFieldDetector extends LayoutDetector {
             "If you really want to keep the text field generic, you can suppress this warning " +
             "by setting inputType=\"text\".",
 
-            CATEGORY_USABILITY, 5, Severity.WARNING);
+            CATEGORY_USABILITY, 5, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link TextFieldDetector} */
     public TextFieldDetector() {
@@ -59,11 +59,6 @@ public class TextFieldDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -81,7 +76,7 @@ public class TextFieldDetector extends LayoutDetector {
                 return;
             }
 
-            context.toolContext.report(ISSUE, context.getLocation(element),
+            context.toolContext.report(context, ISSUE, context.getLocation(element),
                     "This text field does not specify an inputType or a hint");
         }
     }

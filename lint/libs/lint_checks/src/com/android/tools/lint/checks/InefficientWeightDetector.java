@@ -43,7 +43,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             "efficient to assign a width/height of 0dp to it since it will absorb all " +
             "the remaining space anyway. With a declared width/height of 0dp it " +
             "does not have to measure its own size first.",
-            CATEGORY_LAYOUT, 5, Severity.WARNING);
+            CATEGORY_LAYOUT, 5, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {
@@ -57,11 +57,6 @@ public class InefficientWeightDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -98,9 +93,8 @@ public class InefficientWeightDetector extends LayoutDetector {
                 String msg = String.format(
                         "Use a %1$s of 0dip instead of %2$s for better performance",
                         dimension, size);
-                context.toolContext.report(ISSUE,
-                        context.getLocation(sizeNode != null ? sizeNode : weightChild),
-                        msg);
+                context.toolContext.report(context, ISSUE,
+                        context.getLocation(sizeNode != null ? sizeNode : weightChild), msg);
 
             }
         }

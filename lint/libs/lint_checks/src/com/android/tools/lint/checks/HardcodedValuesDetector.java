@@ -45,7 +45,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
             "* The application cannot be translated to other languages by just adding new " +
             "translations for existing string resources.",
 
-            CATEGORY_LAYOUT, 7, Severity.WARNING);
+            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
 
     // TODO: Add additional issues here, such as hardcoded colors, hardcoded sizes, etc
 
@@ -61,11 +61,6 @@ public class HardcodedValuesDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -88,7 +83,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 return;
             }
 
-            context.toolContext.report(ISSUE, context.getLocation(attribute),
+            context.toolContext.report(context, ISSUE, context.getLocation(attribute),
                     String.format("[I18N] Hardcoded string \"%1$s\", should use @string resource",
                             value));
         }

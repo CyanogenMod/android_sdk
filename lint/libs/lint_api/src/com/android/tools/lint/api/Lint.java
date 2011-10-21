@@ -71,7 +71,14 @@ public class Lint {
         // Filter out disabled checks
         List<Detector> checks = new ArrayList<Detector>(availableChecks.size());
         for (Detector detector : availableChecks) {
-            if (!detector.getScope().within(mScope)) {
+            boolean hasValidScope = true;
+            for (Issue issue : detector.getIssues()) {
+                if (issue.getScope().within(mScope)) {
+                    hasValidScope = true;
+                    break;
+                }
+            }
+            if (!hasValidScope) {
                 continue;
             }
             // A detector is enabled if at least one of its issues is enabled
@@ -90,12 +97,11 @@ public class Lint {
             if (check instanceof ResourceXmlDetector) {
                 xmlChecks.add((ResourceXmlDetector) check);
             } else {
-                // TODO:
                 other.add(check);
             }
         }
 
-        Context projectContext = new Context(mToolContext, null);
+        Context projectContext = new Context(mToolContext, null, mScope);
         for (Detector check : checks) {
             check.beforeCheckProject(projectContext);
             if (mCanceled) {
@@ -132,13 +138,13 @@ public class Lint {
                     if (type != null) {
                         XmlVisitor visitor = getVisitor(xmlChecks, type);
                         if (visitor != null) {
-                            Context context = new Context(mToolContext, file);
+                            Context context = new Context(mToolContext, file, mScope);
                             visitor.visitFile(context, file);
                         }
                     }
                 } else {
                     if (other.size() > 0) {
-                        Context context = new Context(mToolContext, file);
+                        Context context = new Context(mToolContext, file, mScope);
                         context.location = new Location(file, null, null);
                         for (Detector detector : other) {
                             if (detector.appliesTo(context, file)) {
@@ -165,9 +171,10 @@ public class Lint {
 
         if (mCanceled) {
             mToolContext.report(
+                    projectContext,
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL), //$NON-NLS-1$
+                    Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL, Scope.SINGLE_FILE), //$NON-NLS-1$
                     null /*range*/,
                     "Lint canceled by user");
         }
@@ -243,7 +250,7 @@ public class Lint {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File xmlFile : xmlFiles) {
                     if (ResourceXmlDetector.isXmlFile(xmlFile)) {
-                        Context context = new Context(mToolContext, xmlFile);
+                        Context context = new Context(mToolContext, xmlFile, mScope);
                         visitor.visitFile(context, xmlFile);
                         if (mCanceled) {
                             return;

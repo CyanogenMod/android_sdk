@@ -34,7 +34,7 @@ import java.io.File;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
-public abstract class Detector /*implements Comparable<Detector>*/ {
+public abstract class Detector {
     /**
      * Returns a list of issues detected by this detector.
      *
@@ -42,22 +42,13 @@ public abstract class Detector /*implements Comparable<Detector>*/ {
      */
     public abstract Issue[] getIssues();
 
-//    /**
-//     * Returns the id of this detector. These should not change over time since
-//     * they are used to persist the names of disabled detectors etc. It is
-//     * typically a single camel-cased word.
-//     *
-//     * @return the associated fixed id
-//     */
-//    public abstract String getId();
-
     /**
      * Runs the detector
      * @param context the context describing the work to be done
      */
     public abstract void run(Context context);
 
-
+    /** Returns true if this detector applies to the given file */
     public abstract boolean appliesTo(Context context, File file);
 
     /** Analysis is about to begin, perform any setup steps. */
@@ -88,13 +79,6 @@ public abstract class Detector /*implements Comparable<Detector>*/ {
      * @return the expected speed of this detector
      */
     public abstract Speed getSpeed();
-
-    /**
-     * Returns the scope of this detector
-     *
-     * @return the scope of this detector
-     */
-    public abstract Scope getScope();
 
     protected static final String CATEGORY_CORRECTNESS = "Correctness";
     protected static final String CATEGORY_PERFORMANCE = "Performance";

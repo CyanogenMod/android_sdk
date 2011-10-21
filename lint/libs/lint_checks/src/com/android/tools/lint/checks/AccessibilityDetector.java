@@ -44,7 +44,7 @@ public class AccessibilityDetector extends LayoutDetector {
             "contentDescription attribute to specify a textual description of " +
             "the widget such that screen readers and other accessibility tools " +
             "can adequately describe the user interface.",
-            CATEGORY_A11Y, 5, Severity.WARNING);
+            CATEGORY_A11Y, 5, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new accessibility check */
     public AccessibilityDetector() {
@@ -61,11 +61,6 @@ public class AccessibilityDetector extends LayoutDetector {
     }
 
     @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
-    }
-
-    @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(new String[] {
                 "ImageButton", //$NON-NLS-1$
@@ -76,12 +71,12 @@ public class AccessibilityDetector extends LayoutDetector {
     @Override
     public void visitElement(Context context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
-            context.toolContext.report(ISSUE, context.getLocation(context),
+            context.toolContext.report(context, ISSUE, context.getLocation(context),
                     "[Accessibility] Missing contentDescription attribute on image");
         } else {
             String attribute = element.getAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
-                context.toolContext.report(ISSUE, context.getLocation(context),
+                context.toolContext.report(context, ISSUE, context.getLocation(context),
                         "[Accessibility] Empty contentDescription attribute on image");
             }
         }

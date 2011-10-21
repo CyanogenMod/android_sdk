@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
+import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
 import org.w3c.dom.Attr;
@@ -118,9 +119,11 @@ class XmlVisitor {
             context.document = mParser.parse(context);
             if (context.document == null) {
                 context.toolContext.report(
+                        context,
                         // Must provide an issue since API guarantees that the issue parameter
                         // is valid
-                        Issue.create("dummy", "", "", "", 0, Severity.ERROR), //$NON-NLS-1$
+                        Issue.create("dummy", "", "", "", 0, Severity.ERROR, //$NON-NLS-1$
+                                Scope.SINGLE_FILE),
                         new Location(file, null, null),
                         "Skipped file because it contains parsing errors");
                 return;

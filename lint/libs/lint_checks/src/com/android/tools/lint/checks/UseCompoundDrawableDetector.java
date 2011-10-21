@@ -41,7 +41,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
             // TODO: OFFER MORE HELP!
             "A LinearLayout which contains an ImageView and a TextView can be more efficiently " +
             "handled as a compound drawable",
-            CATEGORY_PERFORMANCE, 6, Severity.WARNING);
+            CATEGORY_PERFORMANCE, 6, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link UseCompoundDrawableDetector} */
     public UseCompoundDrawableDetector() {
@@ -55,11 +55,6 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -82,7 +77,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                 ((second.getTagName().equals(IMAGE_VIEW) &&
                         first.getTagName().equals(TEXT_VIEW) &&
                         !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
-                context.toolContext.report(ISSUE, context.getLocation(element),
+                context.toolContext.report(context, ISSUE, context.getLocation(element),
                         "This tag and its children can be replaced by one <TextView/> and " +
                                 "a compound drawable");
             }
