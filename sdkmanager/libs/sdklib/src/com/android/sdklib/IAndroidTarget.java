@@ -74,14 +74,18 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     @Deprecated
     public final static int DX                  = 22;
     /** OS Path to the target's version of the dx.jar file.<br>
-     * This is deprecated as dx.jar is now in the platform tools and not in the platform.. */
+     * This is deprecated as dx.jar is now in the platform tools and not in the platform. */
     @Deprecated
     public final static int DX_JAR              = 23;
     /** OS Path to the "ant" folder which contains the ant build rules (ver 2 and above) */
     public final static int ANT                 = 24;
-    /** OS Path to the Renderscript include folder. */
+    /** OS Path to the Renderscript include folder.
+      * This is deprecated as this is now in the platform tools and not in the platform. */
+    @Deprecated
     public final static int ANDROID_RS          = 25;
-    /** OS Path to the Renderscript(clang) include folder. */
+    /** OS Path to the Renderscript(clang) include folder.
+      * This is deprecated as this is now in the platform tools and not in the platform. */
+    @Deprecated
     public final static int ANDROID_RS_CLANG    = 26;
 
     /**
