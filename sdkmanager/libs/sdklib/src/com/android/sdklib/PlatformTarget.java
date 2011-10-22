@@ -94,8 +94,6 @@ final class PlatformTarget implements IAndroidTarget {
         mPaths.put(ANDROID_JAR, mRootFolderOsPath + SdkConstants.FN_FRAMEWORK_LIBRARY);
         mPaths.put(SOURCES, mRootFolderOsPath + SdkConstants.FD_ANDROID_SOURCES);
         mPaths.put(ANDROID_AIDL, mRootFolderOsPath + SdkConstants.FN_FRAMEWORK_AIDL);
-        mPaths.put(ANDROID_RS, mRootFolderOsPath + SdkConstants.OS_FRAMEWORK_RS);
-        mPaths.put(ANDROID_RS_CLANG, mRootFolderOsPath + SdkConstants.OS_FRAMEWORK_RS_CLANG);
         mPaths.put(SAMPLES, mRootFolderOsPath + SdkConstants.OS_PLATFORM_SAMPLES_FOLDER);
         mPaths.put(SKINS, mRootFolderOsPath + SdkConstants.OS_SKINS_FOLDER);
         mPaths.put(TEMPLATES, mRootFolderOsPath + SdkConstants.OS_PLATFORM_TEMPLATES_FOLDER);
@@ -128,6 +126,10 @@ final class PlatformTarget implements IAndroidTarget {
                 SdkConstants.FN_DX);
         mPaths.put(DX_JAR, sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_LIB_FOLDER +
                 SdkConstants.FN_DX_JAR);
+        mPaths.put(ANDROID_RS, sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER +
+                SdkConstants.OS_FRAMEWORK_RS);
+        mPaths.put(ANDROID_RS_CLANG, sdkOsPath + SdkConstants.OS_SDK_PLATFORM_TOOLS_FOLDER +
+                SdkConstants.OS_FRAMEWORK_RS_CLANG);
     }
 
     /**
