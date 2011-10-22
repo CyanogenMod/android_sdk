@@ -535,6 +535,10 @@ public class ProjectCreator {
             while (true) {
                 String propName = ProjectProperties.PROPERTY_LIB_REF + Integer.toString(index);
                 assert props != null;
+                if (props == null) {
+                    // This should not happen yet SDK bug 20535 says it can, not sure how.
+                    break;
+                }
                 String ref = props.getProperty(propName);
                 if (ref == null) {
                     break;
