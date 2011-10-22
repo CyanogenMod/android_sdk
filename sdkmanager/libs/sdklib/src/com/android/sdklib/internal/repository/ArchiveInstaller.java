@@ -46,6 +46,8 @@ import java.util.Set;
  */
 public class ArchiveInstaller {
 
+    public static final String ENV_VAR_IGNORE_COMPAT = "ANDROID_SDK_IGNORE_COMPAT";
+
     public static final int NUM_MONITOR_INC = 100;
 
     /** The current {@link FileOp} to use. Never null. */
@@ -110,7 +112,10 @@ public class ArchiveInstaller {
             return false;
         }
 
-        if (!newArchive.isCompatible()) {
+        // In detail mode, give us a way to force install of incompatible archives.
+        boolean checkIsCompatible = System.getenv(ENV_VAR_IGNORE_COMPAT) == null;
+
+        if (checkIsCompatible && !newArchive.isCompatible()) {
             monitor.log("Skipping incompatible archive: %1$s for %2$s",
                     name,
                     newArchive.getOsDescription());
