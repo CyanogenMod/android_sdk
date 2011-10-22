@@ -882,10 +882,8 @@ public class AvdManager {
 
         ISystemImage systemImage = target.getSystemImage(abiType);
         if (systemImage == null) {
-            throw new IllegalArgumentException(String.format(
-                    "ABI Type %s is unknown for target %s",
-                    abiType,
-                    target.getDescription()));
+            // ABI Type is unknown for target
+            return null;
         }
 
         File folder = systemImage.getLocation();
@@ -1629,7 +1627,6 @@ public class AvdManager {
                 properties.put(property, imagePath);
                 property = AVD_INI_IMAGES_2;
             }
-
 
             // If the target is an add-on we need to add the Platform image as a backup.
             IAndroidTarget parent = target.getParent();
