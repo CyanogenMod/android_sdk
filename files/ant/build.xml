@@ -325,7 +325,7 @@
                 <arg value="coverage" />
                 <arg value="@{emma.enabled}" />
                 <extra-instrument-args />
-                <arg value="${tested.manifest.package}/${test.runner}" />
+                <arg value="${manifest.package}/${test.runner}" />
             </exec>
         </sequential>
     </macrodef>
@@ -1079,18 +1079,6 @@
         </if>
     </target>
 
-    <!-- Installs the tested project. This make sure to install the proper package based on
-         the value of emma.enabled -->
-    <target name="-install-tested-project" depends="-test-project-check, -setup">
-        <!-- figure out which tested package to install based on emma.enabled -->
-        <condition property="tested.project.install.target" value="installi" else="installd">
-            <isset property="emma.enabled" />
-        </condition>
-        <subant target="${tested.project.install.target}" failonerror="true">
-            <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
-        </subant>
-    </target>
-
     <target name="test" depends="-test-project-check"
                 description="Runs tests from the package defined in test.package property">
 
@@ -1101,6 +1089,8 @@
         <!-- Application package of the tested project extracted from its manifest file -->
         <xpath input="${tested.project.absolute.dir}/AndroidManifest.xml"
                 expression="/manifest/@package" output="tested.manifest.package" />
+        <xpath input="AndroidManifest.xml"
+                expression="/manifest/@package" output="manifest.package" />
 
         <property name="emma.dump.file"
                 value="/data/data/${tested.manifest.package}/coverage.ec" />
@@ -1176,9 +1166,28 @@
                                 <arg value="-r" />
                                 <arg path="${out.final.file}" />
                             </exec>
+
+                            <!-- now install the tested project if applicable -->
+                            <!-- can't use project.is.test since the setup target might not have run -->
+                            <if>
+                                <condition>
+                                    <isset property="tested.project.dir" />
+                                </condition>
+                                <then>
+                                    <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
+
+                                    <!-- figure out which tested package to install based on emma.enabled -->
+                                    <condition property="tested.project.install.target" value="installi" else="installd">
+                                        <isset property="emma.enabled" />
+                                    </condition>
+                                    <subant target="${tested.project.install.target}" failonerror="true">
+                                        <fileset dir="${tested.project.absolute.dir}" includes="build.xml" />
+                                    </subant>
+                                </then>
+                            </if>
                         </then>
                         <else>
-                            <fail message="File {out.final.file} does not exist." />
+                            <fail message="File ${out.final.file} does not exist." />
                         </else>
                     </if>
                 </then>
@@ -1211,7 +1220,7 @@
             description="Installs (only) the release package." />
     <target name="installi" depends="-set-instrumented-mode, install"
             description="Installs (only) the instrumented package." />
-    <target name="installt" depends="-install-tested-project, installd"
+    <target name="installt" depends="-test-project-check, installd"
             description="Installs (only) the test and tested packages." />
 
 
@@ -1234,7 +1243,12 @@
             </else>
         </if>
 
-        <if condition="${project.is.test}">
+        <!-- Now uninstall the tested project, if applicable -->
+        <!-- can't use project.is.test since the setup target might not have run -->
+        <if>
+            <condition>
+                <isset property="tested.project.dir" />
+            </condition>
             <then>
                 <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
 
