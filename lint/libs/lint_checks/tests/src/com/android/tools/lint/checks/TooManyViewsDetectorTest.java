@@ -29,13 +29,13 @@ public class TooManyViewsDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "too_many.xml:403: Warning: too_many.xml has more than 80 views, bad for " +
                         "performance",
-                lint("layout/too_many.xml"));
+                lint("res/layout/too_many.xml"));
     }
 
     public void testTooDeep() throws Exception {
         assertEquals(
                 "too_deep.xml:49: Warning: too_deep.xml has more than 10 levels, bad for " +
                         "performance",
-                lint("layout/too_deep.xml"));
+                lint("res/layout/too_deep.xml"));
     }
 }

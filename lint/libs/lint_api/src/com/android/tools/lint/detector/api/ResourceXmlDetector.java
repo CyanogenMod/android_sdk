@@ -37,7 +37,7 @@ import java.util.List;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
-public abstract class ResourceXmlDetector extends Detector {
+public abstract class ResourceXmlDetector extends Detector implements Detector.XmlScanner {
     private static final String XML_SUFFIX = ".xml"; //$NON-NLS-1$
 
     /**

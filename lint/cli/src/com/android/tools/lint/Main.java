@@ -28,7 +28,10 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +49,7 @@ import java.util.Set;
  * <li>Offer suppressing violations
  * </ul>
  */
-public class Main implements ToolContext {
+public class Main extends ToolContext {
     private static final int MAX_LINE_WIDTH = 70;
     private static final String ARG_ENABLE     = "--enable";       //$NON-NLS-1$
     private static final String ARG_SUPPRESS   = "--suppress";     //$NON-NLS-1$
@@ -320,6 +323,7 @@ public class Main implements ToolContext {
         return a.substring(0, aIndex);
     }
 
+    @Override
     public void log(Throwable exception, String format, Object... args) {
         System.err.println(String.format(format, args));
         if (exception != null) {
@@ -327,10 +331,12 @@ public class Main implements ToolContext {
         }
     }
 
+    @Override
     public IDomParser getParser() {
         return new PositionXmlParser();
     }
 
+    @Override
     public boolean isEnabled(Issue issue) {
         if (mEnabled != null) {
             return mEnabled.contains(issue.getId());
@@ -340,7 +346,9 @@ public class Main implements ToolContext {
         return !mSuppress.contains(issue.getId());
     }
 
-    public void report(Context context, Issue issue, Location location, String message) {
+    @Override
+    public void report(Context context, Issue issue, Location location, String message,
+            Object data) {
         if (!isEnabled(issue)) {
             return;
         }
@@ -455,13 +463,44 @@ public class Main implements ToolContext {
         return contents.substring(index, end != -1 ? end : contents.length());
     }
 
+    @Override
     public boolean isSuppressed(Context context, Issue issue, Location range, String message,
-            Severity severity) {
+            Severity severity, Object data) {
         // Not yet supported
         return false;
     }
 
+    @Override
     public Severity getSeverity(Issue issue) {
         return issue.getDefaultSeverity();
+    }
+
+    @Override
+    public String readFile(File file) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            StringBuilder sb = new StringBuilder((int) file.length());
+            while (true) {
+                int c = reader.read();
+                if (c == -1) {
+                    return sb.toString();
+                } else {
+                    sb.append((char)c);
+                }
+            }
+        } catch (IOException e) {
+            // pass -- ignore files we can't read
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                log(e, null);
+            }
+        }
+
+        return ""; //$NON-NLS-1$
     }
 }

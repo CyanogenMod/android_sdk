@@ -34,17 +34,17 @@ public class TranslationDetectorTest extends AbstractCheckTest {
             "values-cs: Error: Locale cs is missing translations for: menu_settings\n" +
             "values-de-rDE: Error: Locale de-rDE is missing translations for: menu_settings\n" +
             "values-de-rDE: Warning: Locale de-rDE is translating names not found in default locale: continue_skip_label\n" +
-            "values-es: Error: Locale es is missing translations for: menu_settings\n" +
             "values-es-rUS: Error: Locale es-rUS is missing translations for: menu_settings\n" +
+            "values-es: Error: Locale es is missing translations for: menu_settings\n" +
             "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
 
-            lint("values/strings.xml",
-                 "values-cs/strings.xml",
-                 "values-de-rDE/strings.xml",
-                 "values-es/strings.xml",
-                 "values-es-rUS/strings.xml",
-                 "values-land/strings.xml",
-                 "values-nl-rNL/strings.xml"));
+            lint("res/values/strings.xml",
+                 "res/values-cs/strings.xml",
+                 "res/values-de-rDE/strings.xml",
+                 "res/values-es/strings.xml",
+                 "res/values-es-rUS/strings.xml",
+                 "res/values-land/strings.xml",
+                 "res/values-nl-rNL/strings.xml"));
     }
 
     public void testTranslationWithCompleteRegions() throws Exception {
@@ -57,12 +57,12 @@ public class TranslationDetectorTest extends AbstractCheckTest {
             "values-es-rUS: Error: Locale es-rUS is missing translations for: home_title, menu_settings, menu_wallpaper, show_all_apps... (1 more)\n" +
             "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
 
-            lint("values/strings.xml",
-                 "values-cs/strings.xml",
-                 "values-de-rDE/strings.xml",
-                 "values-es-rUS/strings.xml",
-                 "values-land/strings.xml",
-                 "values-nl-rNL/strings.xml"));
+            lint("res/values/strings.xml",
+                 "res/values-cs/strings.xml",
+                 "res/values-de-rDE/strings.xml",
+                 "res/values-es-rUS/strings.xml",
+                 "res/values-land/strings.xml",
+                 "res/values-nl-rNL/strings.xml"));
     }
 
     public void testPrintList() throws Exception {

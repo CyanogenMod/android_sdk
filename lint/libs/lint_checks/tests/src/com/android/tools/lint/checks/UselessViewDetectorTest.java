@@ -29,7 +29,7 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "useless.xml:12: Warning: This LinearLayout layout or its FrameLayout parent " +
                         "is useless",
-                lint("layout/useless.xml"));
+                lint("res/layout/useless.xml"));
     }
 
     // TODO: Test the other case as well

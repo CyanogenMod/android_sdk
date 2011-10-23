@@ -94,7 +94,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         "Use a %1$s of 0dip instead of %2$s for better performance",
                         dimension, size);
                 context.toolContext.report(context, ISSUE,
-                        context.getLocation(sizeNode != null ? sizeNode : weightChild), msg);
+                        context.getLocation(sizeNode != null ? sizeNode : weightChild), msg, null);
 
             }
         }

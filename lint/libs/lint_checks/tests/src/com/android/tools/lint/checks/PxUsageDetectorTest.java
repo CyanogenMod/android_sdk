@@ -28,6 +28,6 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
     public void testProguard() throws Exception {
         assertEquals(
             "now_playing_after.xml:44: Warning: Avoid using \"px\" as units; use \"dp\" instead",
-            lint("layout/now_playing_after.xml"));
+            lint("res/layout/now_playing_after.xml"));
     }
 }

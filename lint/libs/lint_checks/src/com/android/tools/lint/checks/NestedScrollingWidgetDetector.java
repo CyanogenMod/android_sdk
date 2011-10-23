@@ -116,7 +116,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
                             "horizontally scrolling widget (%2$s)";
                 }
                 String msg = String.format(format, parent.getTagName(), element.getTagName());
-                context.toolContext.report(context, ISSUE, context.getLocation(element), msg);
+                context.toolContext.report(context, ISSUE, context.getLocation(element), msg, null);
             }
         }
     }

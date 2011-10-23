@@ -166,7 +166,7 @@ public class UselessViewDetector extends LayoutDetector {
                 format = "This %1$s layout or its %2$s parent is useless";
             }
             String message = String.format(format, tag, parentTag);
-            context.toolContext.report(context, USELESS_PARENT, location, message);
+            context.toolContext.report(context, USELESS_PARENT, location, message, null);
         }
     }
 
@@ -192,6 +192,6 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String message = String.format(
                 "This %1$s view is useless (no children, no background, no id)", tag);
-        context.toolContext.report(context, USELESS_LEAF, location, message);
+        context.toolContext.report(context, USELESS_LEAF, location, message, null);
     }
 }

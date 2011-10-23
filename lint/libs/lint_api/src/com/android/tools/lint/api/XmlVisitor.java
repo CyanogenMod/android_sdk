@@ -125,7 +125,7 @@ class XmlVisitor {
                         Issue.create("dummy", "", "", "", 0, Severity.ERROR, //$NON-NLS-1$
                                 Scope.SINGLE_FILE),
                         new Location(file, null, null),
-                        "Skipped file because it contains parsing errors");
+                        "Skipped file because it contains parsing errors", null);
                 return;
             }
             if (context.document.getDocumentElement() == null) {

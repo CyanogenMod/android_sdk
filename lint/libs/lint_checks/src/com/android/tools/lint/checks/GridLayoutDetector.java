@@ -90,7 +90,7 @@ public class GridLayoutDetector extends LayoutDetector {
                         Attr node = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_COLUMN);
                         context.toolContext.report(context, ISSUE, context.getLocation(node),
                                 String.format("Column attribute (%1$d) exceeds declared grid column count (%2$d)",
-                                        column, declaredColumnCount));
+                                        column, declaredColumnCount), null);
                     }
                 }
                 if (declaredRowCount != -1) {
@@ -99,7 +99,7 @@ public class GridLayoutDetector extends LayoutDetector {
                         Attr node = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_ROW);
                         context.toolContext.report(context, ISSUE, context.getLocation(node),
                                 String.format("Row attribute (%1$d) exceeds declared grid row count (%2$d)",
-                                        row, declaredRowCount));
+                                        row, declaredRowCount), null);
                     }
                 }
             }

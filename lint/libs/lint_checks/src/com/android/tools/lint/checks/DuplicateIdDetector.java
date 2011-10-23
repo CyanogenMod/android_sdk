@@ -342,7 +342,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             // Also record the secondary location
             location.setSecondary(new Location(second, null, null));
         }
-        context.toolContext.report(context, CROSS_LAYOUT, location, msg);
+        context.toolContext.report(context, CROSS_LAYOUT, location, msg, null);
     }
 
     /**
@@ -392,7 +392,7 @@ public class DuplicateIdDetector extends LayoutDetector {
         if (mIds.contains(id)) {
             context.toolContext.report(context, WITHIN_LAYOUT, context.getLocation(attribute),
                     String.format("Duplicate id %1$s, already defined earlier in this layout",
-                            id));
+                            id), null);
         } else if (id.startsWith("@+id/")) { //$NON-NLS-1$
             mIds.add(id);
         }

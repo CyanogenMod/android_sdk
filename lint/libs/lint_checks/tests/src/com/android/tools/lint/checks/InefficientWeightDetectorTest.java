@@ -31,6 +31,6 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
                         "match_parent for better performance\n" +
                 "inefficient_weight.xml:26: Warning: Use a layout_height of 0dip instead of " +
                         "wrap_content for better performance",
-                lint("layout/inefficient_weight.xml"));
+                lint("res/layout/inefficient_weight.xml"));
     }
 }
