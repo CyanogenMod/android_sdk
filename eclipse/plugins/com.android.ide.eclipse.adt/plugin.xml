@@ -344,6 +344,7 @@
                 enablesFor="1"
                 id="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
                 label="Run Lint: Check for Common Errors"
+                icon="icons/lintrun.png"
                 menubarPath="com.android.ide.eclipse.adt.AndroidTools/group4" />
         </objectContribution>
     </extension>
@@ -581,6 +582,13 @@
             icon="icons/draw9patch-16.png"
             id="com.android.ide.eclipse.editors.resources.explorer.ResourceExplorerView"
             name="Resource Explorer">
+        </view>
+        <view
+              class="com.android.ide.eclipse.adt.internal.lint.LintViewPart"
+              category="com.android.ide.eclipse.ddms.views.category"
+              id="com.android.ide.eclipse.adt.internal.lint.LintViewPart"
+              icon="icons/lintview.png"
+              name="Lint Warnings">
         </view>
     </extension>
     <extension point="org.eclipse.wst.sse.ui.editorConfiguration">

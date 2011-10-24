@@ -35,14 +35,18 @@ import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.wst.sse.core.StructuredModelManager;
@@ -334,6 +338,37 @@ public class LintEclipseContext implements ToolContext, IDomParser {
     }
 
     /**
+     * Removes all markers of the given id from the given resource.
+     *
+     * @param resource the resource to remove markers from (file or project, or
+     *            null for all open projects)
+     * @param id the id for the issue whose markers should be deleted
+     */
+    public static void removeMarkers(IResource resource, String id) {
+        if (resource == null) {
+            IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects(null);
+            for (IJavaProject project : androidProjects) {
+                IProject p = project.getProject();
+                if (p != null) {
+                    // Recurse, but with a different parameter so it will not continue recursing
+                    removeMarkers(p, id);
+                }
+            }
+            return;
+        }
+        IMarker[] markers = getMarkers(resource);
+        for (IMarker marker : markers) {
+            if (id.equals(getId(marker))) {
+                try {
+                    marker.delete();
+                } catch (CoreException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
+        }
+    }
+
+    /**
      * Returns whether the given resource has one or more lint markers
      *
      * @param resource the resource to be checked, typically a source file
@@ -451,6 +486,74 @@ public class LintEclipseContext implements ToolContext, IDomParser {
      */
     public boolean isFatal() {
         return mFatal;
+    }
+
+    /**
+     * Describe the issue for the given marker
+     *
+     * @param marker the marker to look up
+     * @return a full description of the corresponding issue, never null
+     */
+    public static String describe(IMarker marker) {
+        DetectorRegistry registry = getRegistry();
+        Issue issue = registry.getIssue(getId(marker));
+        String summary = issue.getDescription();
+        String explanation = issue.getExplanation();
+
+        StringBuilder sb = new StringBuilder(summary.length() + explanation.length() + 20);
+        try {
+            sb.append((String) marker.getAttribute(IMarker.MESSAGE));
+            sb.append('\n').append('\n');
+        } catch (CoreException e) {
+        }
+        sb.append("Issue: ");
+        sb.append(summary);
+        sb.append('\n').append('\n');
+        sb.append(explanation);
+
+        if (issue.getMoreInfo() != null) {
+            sb.append('\n').append('\n');
+            sb.append(issue.getMoreInfo());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns the id for the given marker
+     *
+     * @param marker the marker to look up
+     * @return the corresponding issue id, or null
+     */
+    public static String getId(IMarker marker) {
+        try {
+            return (String) marker.getAttribute(MARKER_CHECKID_PROPERTY);
+        } catch (CoreException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Shows the given marker in the editor
+     *
+     * @param marker the marker to be shown
+     */
+    public static void showMarker(IMarker marker) {
+        IRegion region = null;
+        try {
+            int start = marker.getAttribute(IMarker.CHAR_START, -1);
+            int end = marker.getAttribute(IMarker.CHAR_END, -1);
+            if (start >= 0 && end >= 0) {
+                region = new org.eclipse.jface.text.Region(start, end - start);
+            }
+
+            IResource resource = marker.getResource();
+            if (resource instanceof IFile) {
+                AdtPlugin.openFile((IFile) resource, region, true /* showEditorTab */);
+            }
+        } catch (PartInitException ex) {
+            AdtPlugin.log(ex, null);
+        }
     }
 
     /**

@@ -37,7 +37,6 @@ import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolution2;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
@@ -168,9 +167,10 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
     /**
      * Suppress the given detector, and rerun the checks on the file
      *
-     * @param id the id of the detector to be suppressed
+     * @param id the id of the detector to be suppressed, or null
+     * @param updateMarkers if true, update all markers
      */
-    public static void suppressDetector(String id) {
+    public static void suppressDetector(String id, boolean updateMarkers, IResource resource) {
         // Excluded checks
         IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
         String value = store.getString(AdtPrefs.PREFS_DISABLED_ISSUES);
@@ -182,12 +182,8 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         }
         store.setValue(AdtPrefs.PREFS_DISABLED_ISSUES, value);
 
-        // Rerun analysis on the current file to remove this and related markers.
-        // TODO: if mGlobal, rerun on whole project?
-        IEditorPart activeEditor = AdtUtils.getActiveEditor();
-        if (activeEditor instanceof AndroidXmlEditor) {
-            AndroidXmlEditor editor = (AndroidXmlEditor) activeEditor;
-            LintRunner.startLint(editor.getInputFile(), editor.getStructuredDocument());
+        if (updateMarkers) {
+            LintEclipseContext.removeMarkers(resource, id);
         }
     }
 
@@ -202,7 +198,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         }
 
         private void perform() {
-            suppressDetector(mId);
+            suppressDetector(mId, true, null);
         }
 
         public String getDisplayString() {

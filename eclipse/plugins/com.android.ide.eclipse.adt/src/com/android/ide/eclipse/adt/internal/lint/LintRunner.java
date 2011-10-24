@@ -112,12 +112,16 @@ public class LintRunner {
         return true;
     }
 
+    /** Returns the current lint jobs, if any (never returns null but array may be empty) */
+    static Job[] getCurrentJobs() {
+        IJobManager jobManager = Job.getJobManager();
+        return jobManager.find(CheckFileJob.FAMILY_RUN_LINT);
+    }
+
     /** Cancels the current lint jobs, if any */
     static void cancelCurrentJobs() {
         // Cancel any current running jobs first
-        IJobManager jobManager = Job.getJobManager();
-        Job[] jobs = jobManager.find(CheckFileJob.FAMILY_RUN_LINT);
-        for (Job job : jobs) {
+        for (Job job : getCurrentJobs()) {
             job.cancel();
         }
     }

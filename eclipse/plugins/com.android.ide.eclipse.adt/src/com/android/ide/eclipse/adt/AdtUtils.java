@@ -314,6 +314,17 @@ public class AdtUtils {
     }
 
     /**
+     * Converts a {@link File} to an {@link IResource}, if possible.
+     *
+     * @param file a file to be converted
+     * @return the corresponding {@link IResource}, or null
+     */
+    public static IResource fileToResource(File file) {
+        IPath filePath = new Path(file.getPath());
+        return pathToResource(filePath);
+    }
+
+    /**
      * Converts a {@link IPath} to an {@link IFile}, if possible.
      *
      * @param path a path to be converted
@@ -328,6 +339,25 @@ public class AdtUtils {
             if (member instanceof IFile) {
                 return (IFile) member;
             }
+        } else if (path.isAbsolute()) {
+            return workspace.getFileForLocation(path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts a {@link IPath} to an {@link IResource}, if possible.
+     *
+     * @param path a path to be converted
+     * @return the corresponding {@link IResource}, or null
+     */
+    public static IResource pathToResource(IPath path) {
+        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+        IPath workspacePath = workspace.getLocation();
+        if (workspacePath.isPrefixOf(path)) {
+            IPath relativePath = path.makeRelativeTo(workspacePath);
+            return  workspace.findMember(relativePath);
         } else if (path.isAbsolute()) {
             return workspace.getFileForLocation(path);
         }
