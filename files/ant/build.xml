@@ -367,7 +367,7 @@
 
     <!-- target to disable building dependencies -->
     <target name="nodeps">
-        <property name="dont.build.deps" value="true" />
+        <property name="dont.do.deps" value="true" />
     </target>
 
     <!-- this target simply force running -setup making
@@ -473,7 +473,7 @@
             <condition>
                 <and>
                     <isreference refid="project.libraries" />
-                    <not><isset property="dont.build.deps" /></not>
+                    <not><isset property="dont.do.deps" /></not>
                 </and>
             </condition>
             <then>
@@ -1171,7 +1171,12 @@
                             <!-- can't use project.is.test since the setup target might not have run -->
                             <if>
                                 <condition>
-                                    <isset property="tested.project.dir" />
+                                    <and>
+                                        <isset property="tested.project.dir" />
+                                        <not>
+                                            <isset property="dont.do.deps" />
+                                        </not>
+                                    </and>
                                 </condition>
                                 <then>
                                     <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
@@ -1247,7 +1252,12 @@
         <!-- can't use project.is.test since the setup target might not have run -->
         <if>
             <condition>
-                <isset property="tested.project.dir" />
+                <and>
+                    <isset property="tested.project.dir" />
+                    <not>
+                        <isset property="dont.do.deps" />
+                    </not>
+                </and>
             </condition>
             <then>
                 <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
@@ -1310,8 +1320,10 @@
         <echo>   installd:  Installs (only) the debug package.</echo>
         <echo>   installr:  Installs (only) the release package.</echo>
         <echo>   installi:  Installs (only) the instrumented package.</echo>
-        <echo>   installt:  Installs (only) the test and tested packages.</echo>
+        <echo>   installt:  Installs (only) the test and tested packages (unless</echo>
+        <echo>              nodeps is used as well.</echo>
         <echo>   uninstall: Uninstalls the application from a running emulator or</echo>
-        <echo>              device.</echo>
+        <echo>              device. Also uninstall tested package if applicable</echo>
+        <echo>              unless 'nodeps' is used as well.</echo>
     </target>
 </project>
