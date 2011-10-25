@@ -24,12 +24,12 @@ import java.io.InputStream;
  */
 public class SdkAddonsListConstants {
 
+    /** The canonical URL filename for addons-list XML files. */
+    public static final String URL_DEFAULT_FILENAME = "addons_list-1.xml";    //$NON-NLS-1$
+
     /** The URL where to find the official addons list fle. */
     public static final String URL_ADDON_LIST =
-        SdkRepoConstants.URL_GOOGLE_SDK_SITE + "addons_list.xml";     //$NON-NLS-1$
-
-    /** The canonical URL filename for addons-list XML files. */
-    public static final String URL_DEFAULT_FILENAME = "addons_list.xml";    //$NON-NLS-1$
+        SdkRepoConstants.URL_GOOGLE_SDK_SITE + URL_DEFAULT_FILENAME;
 
     /** The base of our sdk-addons-list XML namespace. */
     private static final String NS_BASE =
