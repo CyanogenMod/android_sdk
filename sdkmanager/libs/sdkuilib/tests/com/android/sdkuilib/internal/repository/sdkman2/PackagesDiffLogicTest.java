@@ -1258,7 +1258,6 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, false /*displaySortByApi*/));
     }
 
-
     public void testBrokenAddon() {
 
         SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
@@ -1352,6 +1351,52 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, false /*displaySortByApi*/));
     }
 
+    public void testToolsUpdate() {
+        //
+
+        SdkSource src1 = new SdkRepoSource("http://1.example.com/url1", "repo1");
+        SdkSource src2 = new SdkRepoSource("http://2.example.com/url2", "repo2");
+        MockPlatformPackage p1;
+
+        m.updateStart();
+        m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
+                new MockToolPackage(3, 3),    // tool package has no source defined
+                new MockPlatformToolPackage(src1, 3),
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),    // API 1
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
+                new MockToolPackage(src1, 4, 4),
+                new MockPlatformToolPackage(src1, 4),
+        });
+        m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
+                new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon B", p1, 6),
+        });
+        m.updateEnd(true /*sortByApi*/);
+
+        // The remote packages in rev 3 are hidden by the local packages in rev 5
+        assertEquals(
+                "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" + // ERROR: missing update 4
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 4>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=3>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 6>\n" +
+                "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
+                getTree(m, true /*displaySortByApi*/));
+        assertEquals(
+                "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" + // ERROR: missing update 4
+                "PkgCategorySource <source=repo1 (1.example.com), #items=3>\n" +
+                "-- <NEW, pkg:Android SDK Tools, revision 4>\n" +
+                "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 4>\n" +
+                "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
+                "PkgCategorySource <source=repo2 (2.example.com), #items=2>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 6>\n",
+                getTree(m, false /*displaySortByApi*/));
+    }
     // ----
 
     /**
