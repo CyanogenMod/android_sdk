@@ -324,65 +324,22 @@ public class UpdaterData implements IUpdaterData {
     public void setupDefaultSources() {
         SdkSources sources = getSources();
 
-        // SDK_TEST_URLS is a semicolon-separated list of URLs that can be used to
-        // seed the SDK Updater list for full repos and addon repositories. This is
-        // only meant as a debugging and QA testing tool and not for user usage.
-        //
-        // To be used, the URLs must either end with the / or end with the canonical
-        // filename expected for either a full repo or an add-on repo. This lets QA
-        // use URLs ending with / to cover all cases.
-        String testUrls = System.getenv("SDK_TEST_URLS");
-        if (testUrls != null) {
-            String[] urls = testUrls.split(";");
-            for (String url : urls) {
-                if (url != null) {
-                    url = url.trim();
-                    if (url.endsWith("/")
-                            || url.endsWith(SdkRepoConstants.URL_DEFAULT_FILENAME)
-                            || url.endsWith(SdkRepoConstants.URL_DEFAULT_FILENAME2)) {
-                        String fullUrl = url;
-                        if (fullUrl.endsWith("/")) {
-                            fullUrl += SdkRepoConstants.URL_DEFAULT_FILENAME2;
-                        }
+        // Load the conventional sources.
+        // For testing, the env var can be set to replace the default root download URL.
+        // It must end with a / and its the location where the updater will look for
+        // the repository.xml, addons_list.xml and such files.
 
-                        SdkSource s = new SdkRepoSource(fullUrl, null/*uiName*/);
-                        if (!sources.hasSourceUrl(s)) {
-                            sources.add(SdkSourceCategory.GETENV_REPOS, s);
-                        }
-                    }
-
-                    if (url.endsWith("/") || url.endsWith(SdkAddonConstants.URL_DEFAULT_FILENAME)) {
-                        String fullUrl = url;
-                        if (fullUrl.endsWith("/")) {
-                            fullUrl += SdkAddonConstants.URL_DEFAULT_FILENAME;
-                        }
-
-                        SdkSource s = new SdkAddonSource(fullUrl, null/*uiName*/);
-                        if (!sources.hasSourceUrl(s)) {
-                            sources.add(SdkSourceCategory.GETENV_ADDONS, s);
-                        }
-                    }
-                }
-            }
+        String baseUrl = System.getenv("SDK_TEST_BASE_URL");                        //$NON-NLS-1$
+        if (baseUrl == null || baseUrl.length() <= 0 || !baseUrl.endsWith("/")) {   //$NON-NLS-1$
+            baseUrl = SdkRepoConstants.URL_GOOGLE_SDK_SITE;
         }
 
-        // Load the conventional sources if we didn't load anything or if
-        // there's an env var asking to do so anyway.
-        if (sources.getAllSources().length == 0 ||
-                System.getenv("SDK_MIX_WITH_TEST_URLS") != null) {
+        sources.add(SdkSourceCategory.ANDROID_REPO,
+                new SdkRepoSource(baseUrl,
+                                  SdkSourceCategory.ANDROID_REPO.getUiName()));
 
-            String baseUrl = System.getenv("SDK_TEST_BASE_URL");                       //$NON-NLS-1$
-            if (baseUrl == null || baseUrl.length() <= 0 || !baseUrl.endsWith("/")) {   //$NON-NLS-1$
-                baseUrl = SdkRepoConstants.URL_GOOGLE_SDK_SITE;
-            }
-
-            sources.add(SdkSourceCategory.ANDROID_REPO,
-                    new SdkRepoSource(baseUrl,
-                                      SdkSourceCategory.ANDROID_REPO.getUiName()));
-
-            // Load user sources
-            sources.loadUserAddons(getSdkLog());
-        }
+        // Load user sources
+        sources.loadUserAddons(getSdkLog());
     }
 
     /**
@@ -1067,72 +1024,35 @@ public class UpdaterData implements IUpdaterData {
     private void loadRemoteAddonsListInTask(ITaskMonitor monitor) {
         mStateFetchRemoteAddonsList = -1;
 
-        // SDK_TEST_URLS is a semicolon-separated list of URLs that can be used to
-        // seed the SDK Updater list. This is only meant as a debugging and QA testing
-        // tool and not for user usage.
-        //
-        // To be used, the URLs must either end with the / or end with the canonical
-        // filename expected for an addon list. This lets QA use URLs ending with /
-        // to cover all cases.
-        //
-        // Since SDK_TEST_URLS can contain many such URLs, we take the first one that
-        // matches our criteria.
-        String url = System.getenv("SDK_TEST_URLS");    //$NON-NLS-1$
+        String url = SdkAddonsListConstants.URL_ADDON_LIST;
 
-        if (url == null) {
-            // No override, use the canonical URL.
-            url = SdkAddonsListConstants.URL_ADDON_LIST;
-        } else {
-            String[] urls = url.split(";");             //$NON-NLS-1$
-            url = null;
-            for (String u : urls) {
-                u = u.trim();
-                // This is an URL that comes from the env var. We expect it to either
-                // end with a / or the canonical name, otherwise we don't use it.
-                if (u.endsWith("/")) {                  //$NON-NLS-1$
-                    url = u + SdkAddonsListConstants.URL_DEFAULT_FILENAME;
-                    break;
-                } else if (u.endsWith(SdkAddonsListConstants.URL_DEFAULT_FILENAME)) {
-                    url = u;
-                    break;
-                } else {
-                    monitor.logError("Ignoring invalid SDK_TEST_URLS: %1$s", u);  //$NON-NLS-1$
+        // We override SdkRepoConstants.URL_GOOGLE_SDK_SITE if this is defined
+        String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
+        if (baseUrl != null) {
+            if (baseUrl.length() > 0 && baseUrl.endsWith("/")) {        //$NON-NLS-1$
+                if (url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
+                    url = baseUrl + url.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
                 }
-
+            } else {
+                monitor.logError("Ignoring invalid SDK_TEST_BASE_URL: %1$s", baseUrl);  //$NON-NLS-1$
             }
         }
 
-        if (url != null) {
+        if (getSettingsController().getForceHttp()) {
+            url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
-            // We override SdkRepoConstants.URL_GOOGLE_SDK_SITE if this is defined
-            String baseUrl = System.getenv("SDK_TEST_BASE_URL");            //$NON-NLS-1$
-            if (baseUrl != null) {
-                if (baseUrl.length() > 0 && baseUrl.endsWith("/")) {        //$NON-NLS-1$
-                    if (url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
-                        url = baseUrl +
-                              url.substring(SdkRepoConstants.URL_GOOGLE_SDK_SITE.length());
-                    }
-                } else {
-                    monitor.logError("Ignoring invalid SDK_TEST_BASE_URL: %1$s", baseUrl);  //$NON-NLS-1$
-                }
+        AddonsListFetcher fetcher = new AddonsListFetcher();
+        Site[] sites = fetcher.fetch(monitor, url);
+        if (sites != null) {
+            mSources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
+
+            for (Site s : sites) {
+                mSources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
+                             new SdkAddonSource(s.getUrl(), s.getUiName()));
             }
 
-            if (getSettingsController().getForceHttp()) {
-                url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
-            }
-
-            AddonsListFetcher fetcher = new AddonsListFetcher();
-            Site[] sites = fetcher.fetch(monitor, url);
-            if (sites != null) {
-                mSources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
-
-                for (Site s : sites) {
-                    mSources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
-                                 new SdkAddonSource(s.getUrl(), s.getUiName()));
-                }
-
-                mStateFetchRemoteAddonsList = 1;
-            }
+            mStateFetchRemoteAddonsList = 1;
         }
 
         monitor.setDescription("Fetched Add-ons List successfully");
