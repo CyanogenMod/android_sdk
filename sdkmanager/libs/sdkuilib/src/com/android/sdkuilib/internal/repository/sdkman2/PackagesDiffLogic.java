@@ -581,7 +581,20 @@ class PackagesDiffLogic {
             for (int i = 0; i < items.size(); i++) {
                 PkgItem item = items.get(i);
 
-                if (!isSourceCompatible(item, source)) {
+                // Does the source provide this kind of package?
+                // FIXME. This is a crude workaround for bug 5508174; the
+                // diff logic has a larger issue, this is merely a quick fix.
+                // The downside is that if a remote source stops offering a given
+                // package type (e.g. a specific addon), it will still show up as
+                // available until the sdk manager is restarted.
+                boolean foundSame = false;
+                for (Package pkg : packages) {
+                    if (pkg.sameItemAs(item.getMainPackage())) {
+                        foundSame = true;
+                        break;
+                    }
+                }
+                if (!foundSame) {
                     continue;
                 }
 
@@ -637,8 +650,18 @@ class PackagesDiffLogic {
         return hasChanged;
     }
 
-    private boolean isSourceCompatible(PkgItem currentItem, SdkSource newItemSource) {
+    private boolean isSourceCompatible(PkgItem currentItem, Package newPackage) {
+        assert currentItem != null;
+        assert newPackage  != null;
+
+        // Don't compare source of packages which are not the same (their revision # can differ)
+        Package currentPkg = currentItem.getMainPackage();
+        if (!currentPkg.sameItemAs(newPackage)) {
+            return false;
+        }
+
         SdkSource currentSource = currentItem.getSource();
+        SdkSource newItemSource = newPackage.getParentSource();
 
         // Only process items matching the current source.
         if (currentSource == newItemSource) {
@@ -804,7 +827,7 @@ class PackagesDiffLogic {
             // First check if the new package could be an update
             // to an existing package
             for (PkgItem item : cat.getItems()) {
-                if (!isSourceCompatible(item, newPackage.getParentSource())) {
+                if (!isSourceCompatible(item, newPackage)) {
                     continue;
                 }
 

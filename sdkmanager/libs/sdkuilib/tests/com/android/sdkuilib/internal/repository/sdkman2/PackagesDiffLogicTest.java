@@ -1143,14 +1143,14 @@ public class PackagesDiffLogicTest extends TestCase {
 
     public void testSourceDups() {
         // This tests an edge case were 2 remote repositories are giving the
-        // same kind of packages. We don't want to merge them together or treat
-        // them as upgrades to each other, unless they have the same hostname.
+        // same kind of packages. In rev 14, we didn't want to merge them together
+        // unless they had the same hostname. In rev 15, we now treat them the same.
 
         // repo1, 2 and 3 have the same hostname so redundancy is ok
         SdkSource src1 = new SdkRepoSource("http://example.com/url1", "repo1");
         SdkSource src2 = new SdkRepoSource("http://example.com/url2", "repo2");
         SdkSource src3 = new SdkRepoSource("http://example.com/url3", "repo3");
-        // repo4 has a different hostname so its packages won't hide the ones from the other repos
+        // repo4 has a different hostname but as of rev 15, the packages will be merged together.
         SdkSource src4 = new SdkRepoSource("http://4.example.com/url4", "repo4");
         MockPlatformPackage p1 = null;
 
@@ -1174,31 +1174,31 @@ public class PackagesDiffLogicTest extends TestCase {
         });
         m.updateEnd(true /*sortByApi*/);
 
-        // The remote packages in rev 3 are hidden by the local packages in rev 5
+        // The remote packages in rev 3 are hidden by the local packages in rev 5.
+        // When sorting by API, the user can tell where the packages come from by looking
+        // at the UI tooltip on the packages.
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
-                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=5>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
-                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" + // from src2+3
-                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" + // from scr4
-                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n" + // from src2+3
-                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n" + // from src4
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" + // from src2+3+4
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n" + // from src3+4
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=0>\n",
                 getTree(m, true /*displaySortByApi*/));
+        // When sorting by source, the src4 packages are not listed at all since
+        // they are exactly the same as the ones from src2 or src3.
+        // FIXME: in this sort mode, we should still list them explicitly.
         assertEquals(
                 "PkgCategorySource <source=repo1 (example.com), #items=3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "PkgCategorySource <source=repo2 (example.com), #items=1>\n" +
-                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
+                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" + // from src2+3+4
                 "PkgCategorySource <source=repo3 (example.com), #items=1>\n" +
-                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n" +
-                "PkgCategorySource <source=repo4 (4.example.com), #items=2>\n" +
-                "-- <NEW, pkg:addon A by vendor 1, Android API 1, revision 5>\n" +
-                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n",
+                "-- <NEW, pkg:addon B by vendor 1, Android API 1, revision 7>\n",  // from src3+4
                 getTree(m, false /*displaySortByApi*/));
     }
 
@@ -1377,7 +1377,7 @@ public class PackagesDiffLogicTest extends TestCase {
         // The remote packages in rev 3 are hidden by the local packages in rev 5
         assertEquals(
                 "PkgCategoryApi <API=TOOLS, label=Tools, #items=2>\n" +
-                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" + // ERROR: missing update 4
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 4>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 4>\n" +
                 "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
@@ -1387,6 +1387,10 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
+                // FIXME: tools rev 3 is installed in one source, and there's a rev 4 update
+                // it a different source. We should still mark the rev 3 here as having an update.
+                // We typically don't want to hide the fact the update comes from a different
+                // source but here it's OK since the local package has no source defined.
                 "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" + // ERROR: missing update 4
                 "PkgCategorySource <source=repo1 (1.example.com), #items=3>\n" +
                 "-- <NEW, pkg:Android SDK Tools, revision 4>\n" +
