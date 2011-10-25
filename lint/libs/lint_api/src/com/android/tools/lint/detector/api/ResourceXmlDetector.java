@@ -40,13 +40,6 @@ import java.util.List;
 public abstract class ResourceXmlDetector extends Detector implements Detector.XmlScanner {
     private static final String XML_SUFFIX = ".xml"; //$NON-NLS-1$
 
-    /**
-     * Special marker collection returned by {@link #getApplicableElements()} or
-     * {@link #getApplicableAttributes()} to indicate that the check should be
-     * invoked on all elements or all attributes
-     */
-    public static final List<String> ALL = new ArrayList<String>(0);
-
     protected final static String ANDROID_URI =
             "http://schemas.android.com/apk/res/android";                   //$NON-NLS-1$
 
@@ -125,7 +118,7 @@ public abstract class ResourceXmlDetector extends Detector implements Detector.X
      * null, then the {@link #visitDocument} method will be called instead.
      *
      * @return a collection of elements, or null, or the special
-     *         {@link ResourceXmlDetector#ALL} marker to indicate that every single
+     *         {@link XmlScanner#ALL} marker to indicate that every single
      *         element should be analyzed.
      */
     public Collection<String> getApplicableElements() {
@@ -141,7 +134,7 @@ public abstract class ResourceXmlDetector extends Detector implements Detector.X
      * null, then the {@link #visitDocument} method will be called instead.
      *
      * @return a collection of attributes, or null, or the special
-     *         {@link ResourceXmlDetector#ALL} marker to indicate that every single
+     *         {@link XmlScanner#ALL} marker to indicate that every single
      *         attribute should be analyzed.
      */
     public Collection<String> getApplicableAttributes() {

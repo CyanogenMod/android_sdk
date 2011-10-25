@@ -93,7 +93,7 @@ abstract class AbstractCheckTest extends TestCase {
         return mOutput.toString();
     }
 
-    /** Run lint on the given files whne constructed as a separate project */
+    /** Run lint on the given files when constructed as a separate project */
     protected String lintProject(String... relativePaths) throws Exception {
         assertFalse("getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
@@ -134,7 +134,7 @@ abstract class AbstractCheckTest extends TestCase {
     }
 
     protected File getTargetDir() {
-        return getTempDir();
+        return new File(getTempDir(), getClass().getSimpleName());
     }
 
     private File makeTestFile(String name, String relative,
@@ -146,6 +146,9 @@ abstract class AbstractCheckTest extends TestCase {
                 boolean mkdir = dir.mkdirs();
                 assertTrue(dir.getPath(), mkdir);
             }
+        } else if (!dir.exists()) {
+            boolean mkdir = dir.mkdirs();
+            assertTrue(dir.getPath(), mkdir);
         }
         File tempFile = new File(dir, name);
         if (tempFile.exists()) {
@@ -160,6 +163,19 @@ abstract class AbstractCheckTest extends TestCase {
     }
 
     private File getTestfile(String relativePath) throws IOException {
+        // Support replacing filenames and paths with a => syntax, e.g.
+        //   dir/file.txt=>dir2/dir3/file2.java
+        // will read dir/file.txt from the test data and write it into the target
+        // directory as dir2/dir3/file2.java
+
+        String targetPath = relativePath;
+        int replaceIndex = relativePath.indexOf("=>"); //$NON-NLS-1$
+        if (replaceIndex != -1) {
+            // foo=>bar
+            targetPath = relativePath.substring(replaceIndex + "=>".length());
+            relativePath = relativePath.substring(0, replaceIndex);
+        }
+
         String path = "data" + File.separator + relativePath; //$NON-NLS-1$
         InputStream stream =
             AbstractCheckTest.class.getResourceAsStream(path);
@@ -168,18 +184,12 @@ abstract class AbstractCheckTest extends TestCase {
         String xml = readFile(reader);
         assertNotNull(xml);
         assertTrue(xml.length() > 0);
-        int index = relativePath.lastIndexOf('/');
+        int index = targetPath.lastIndexOf('/');
         String relative = null;
-        String name = relativePath;
+        String name = targetPath;
         if (index != -1) {
-            name = relativePath.substring(index + 1);
-            relative = relativePath.substring(0, index);
-        }
-
-        // Test files are renamed from .java so they don't trip up compilation of
-        // the tests. Name them back here.
-        if (name.endsWith(".java.txt")) {
-            name = name.substring(0, name.length() - ".txt".length());
+            name = targetPath.substring(index + 1);
+            relative = targetPath.substring(0, index);
         }
 
         return makeTestFile(name, relative, xml);

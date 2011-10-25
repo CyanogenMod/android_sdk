@@ -325,7 +325,9 @@ public class Main extends ToolContext {
 
     @Override
     public void log(Throwable exception, String format, Object... args) {
-        System.err.println(String.format(format, args));
+        if (format != null) {
+            System.err.println(String.format(format, args));
+        }
         if (exception != null) {
             exception.printStackTrace();
         }

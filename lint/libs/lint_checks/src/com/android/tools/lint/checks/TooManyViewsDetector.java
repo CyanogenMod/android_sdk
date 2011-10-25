@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -110,7 +109,7 @@ public class TooManyViewsDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return ResourceXmlDetector.ALL;
+        return ALL;
     }
 
     @Override

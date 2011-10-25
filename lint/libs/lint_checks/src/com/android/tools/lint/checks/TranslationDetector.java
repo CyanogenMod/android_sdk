@@ -45,14 +45,14 @@ import java.util.regex.Pattern;
 /**
  * Checks for incomplete translations - e.g. keys that are only present in some
  * locales but not all.
- * <p>
- * TODO: Check that {@code <string-array>} declarations all have the same number of elements!
  */
 public class TranslationDetector extends ResourceXmlDetector {
-    private static final String TAG_STRING = "string";              //$NON-NLS-1$
-    private static final String TAG_STRING_ARRAY = "string-array";  //$NON-NLS-1$
-    private static final String ATTR_NAME = "name";                 //$NON-NLS-1$
-    private static final String ATTR_TRANSLATABLE = "translatable"; //$NON-NLS-1$
+    protected static final String TAG_STRING = "string";              //$NON-NLS-1$
+    protected static final String ATTR_NAME = "name";                 //$NON-NLS-1$
+    protected static final String ATTR_TRANSLATABLE = "translatable"; //$NON-NLS-1$
+    protected static final String TAG_ARRAY = "array";                //$NON-NLS-1$
+    protected static final String TAG_STRING_ARRAY = "string-array";  //$NON-NLS-1$
+    protected static final String TAG_INTEGER_ARRAY = "integer-array";//$NON-NLS-1$
 
     @VisibleForTesting
     static boolean COMPLETE_REGIONS =

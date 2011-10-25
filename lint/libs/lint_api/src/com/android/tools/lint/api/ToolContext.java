@@ -21,7 +21,18 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
 import java.io.File;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Information about the tool embedding the lint analyzer. IDEs and other tools
@@ -116,4 +127,70 @@ public abstract class ToolContext {
      *         I/O error)
      */
     public abstract String readFile(File file);
+
+    /**
+     * Returns the list of source folders for Java source files
+     *
+     * @param projectDir the directory containing the Android project
+     * @return a list of source folders to search for .java files
+     */
+    public List<File> getJavaSourceFolders(File projectDir) {
+        return getEclipseClasspath(projectDir, "src", "src", "gen"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    /**
+     * Returns the list of output folders for class files
+     * @param projectDir the directory containing the Android project
+     * @return a list of output folders to search for .class files
+     */
+    public List<File> getJavaClassFolder(File projectDir) {
+        return getEclipseClasspath(projectDir, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    /**
+     * Considers the given directory as an Eclipse project and returns either
+     * its source or its output folders depending on the {@code attribute} parameter.
+     */
+    private List<File> getEclipseClasspath(File projectDir, String attribute,
+            String... fallbackPaths) {
+        List<File> folders = new ArrayList<File>();
+        File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
+        if (classpathFile.exists()) {
+            String classpathXml = readFile(classpathFile);
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            InputSource is = new InputSource(new StringReader(classpathXml));
+            factory.setNamespaceAware(false);
+            factory.setValidating(false);
+            try {
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document document = builder.parse(is);
+                NodeList tags = document.getElementsByTagName("classpathentry"); //$NON-NLS-1$
+                for (int i = 0, n = tags.getLength(); i < n; i++) {
+                    Element element = (Element) tags.item(i);
+                    String kind = element.getAttribute("kind"); //$NON-NLS-1$
+                    if (kind.equals(attribute)) {
+                        String path = element.getAttribute("path"); //$NON-NLS-1$
+                        File sourceFolder = new File(projectDir, path);
+                        if (sourceFolder.exists()) {
+                            folders.add(sourceFolder);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log(null, null);
+            }
+        }
+
+        // Fallback?
+        if (folders.size() == 0) {
+            for (String fallbackPath : fallbackPaths) {
+                File folder = new File(projectDir, fallbackPath);
+                if (folder.exists()) {
+                    folders.add(folder);
+                }
+            }
+        }
+
+        return folders;
+    }
 }

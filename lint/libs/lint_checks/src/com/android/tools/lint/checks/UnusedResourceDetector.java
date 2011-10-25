@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.ManifestOrderDetector.ANDROID_MANIFEST_XML;
+
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -272,7 +274,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     private void addManifestReferences(Context context) {
-        File manifestFile = new File(context.projectDir, "AndroidManifest.xml"); //$NON-NLS-1$
+        File manifestFile = new File(context.projectDir, ANDROID_MANIFEST_XML);
         if (manifestFile.exists()) {
             Context ctx = new Context(context.toolContext, context.projectDir, manifestFile,
                     context.scope);

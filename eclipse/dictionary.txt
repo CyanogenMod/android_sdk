@@ -147,6 +147,7 @@ luminance
 mac
 macs
 malformed
+markup
 marquee
 metadata
 min
@@ -259,6 +260,7 @@ tooltips
 traceview
 translucency
 trig
+txt
 typo
 ui
 uncomment
@@ -291,4 +293,3 @@ xmlns
 ydpi
 zip
 zipalign
-markup

@@ -376,6 +376,9 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             type = "layout"; //$NON-NLS-1$
         } else if (attribute.equals("drawable")) { //$NON-NLS-1$
             type = "drawable"; //$NON-NLS-1$
+        } else if (attribute.equals("entries")) { //$NON-NLS-1$
+            // Spinner
+            type = "array";    //$NON-NLS-1$
         }
 
         if (type != null) {

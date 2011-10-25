@@ -17,6 +17,8 @@
 package com.android.tools.lint.api;
 
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -53,58 +55,63 @@ import java.util.RandomAccess;
  * such that they can do pre- and post-processing.
  */
 class XmlVisitor {
-    private final Map<String, List<ResourceXmlDetector>> mElementToCheck =
-            new HashMap<String, List<ResourceXmlDetector>>();
-    private final Map<String, List<ResourceXmlDetector>> mAttributeToCheck =
-            new HashMap<String, List<ResourceXmlDetector>>();
-    private final List<ResourceXmlDetector> mDocumentDetectors =
-            new ArrayList<ResourceXmlDetector>();
-    private final List<ResourceXmlDetector> mAllElementDetectors =
-            new ArrayList<ResourceXmlDetector>();
-    private final List<ResourceXmlDetector> mAllAttributeDetectors =
-            new ArrayList<ResourceXmlDetector>();
-    private final List<ResourceXmlDetector> mAllDetectors;
+    private final Map<String, List<Detector.XmlScanner>> mElementToCheck =
+            new HashMap<String, List<Detector.XmlScanner>>();
+    private final Map<String, List<Detector.XmlScanner>> mAttributeToCheck =
+            new HashMap<String, List<Detector.XmlScanner>>();
+    private final List<Detector.XmlScanner> mDocumentDetectors =
+            new ArrayList<Detector.XmlScanner>();
+    private final List<Detector.XmlScanner> mAllElementDetectors =
+            new ArrayList<Detector.XmlScanner>();
+    private final List<Detector.XmlScanner> mAllAttributeDetectors =
+            new ArrayList<Detector.XmlScanner>();
+    private final List<? extends Detector> mAllDetectors;
     private final IDomParser mParser;
 
-    XmlVisitor(IDomParser parser, List<ResourceXmlDetector> detectors) {
+    // Really want this:
+    //<T extends List<Detector> & Detector.XmlScanner> XmlVisitor(IDomParser parser,
+    //    T xmlDetectors) {
+    // but it makes client code tricky and ugly.
+    XmlVisitor(IDomParser parser, List<? extends Detector> xmlDetectors) {
         mParser = parser;
-        mAllDetectors = detectors;
+        mAllDetectors = xmlDetectors;
 
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
-        for (ResourceXmlDetector detector : detectors) {
-            Collection<String> attributes = detector.getApplicableAttributes();
-            if (attributes == ResourceXmlDetector.ALL) {
-                mAllAttributeDetectors.add(detector);
+        for (Detector detector : xmlDetectors) {
+            Detector.XmlScanner xmlDetector = (XmlScanner) detector;
+            Collection<String> attributes = xmlDetector.getApplicableAttributes();
+            if (attributes == XmlScanner.ALL) {
+                mAllAttributeDetectors.add(xmlDetector);
             }  else if (attributes != null) {
                 for (String attribute : attributes) {
-                    List<ResourceXmlDetector> list = mAttributeToCheck.get(attribute);
+                    List<Detector.XmlScanner> list = mAttributeToCheck.get(attribute);
                     if (list == null) {
-                        list = new ArrayList<ResourceXmlDetector>();
+                        list = new ArrayList<Detector.XmlScanner>();
                         mAttributeToCheck.put(attribute, list);
                     }
-                    list.add(detector);
+                    list.add(xmlDetector);
                 }
             }
-            Collection<String> elements = detector.getApplicableElements();
-            if (elements == ResourceXmlDetector.ALL) {
-                mAllElementDetectors.add(detector);
+            Collection<String> elements = xmlDetector.getApplicableElements();
+            if (elements == XmlScanner.ALL) {
+                mAllElementDetectors.add(xmlDetector);
             } else if (elements != null) {
                 for (String element : elements) {
-                    List<ResourceXmlDetector> list = mElementToCheck.get(element);
+                    List<Detector.XmlScanner> list = mElementToCheck.get(element);
                     if (list == null) {
-                        list = new ArrayList<ResourceXmlDetector>();
+                        list = new ArrayList<Detector.XmlScanner>();
                         mElementToCheck.put(element, list);
                     }
-                    list.add(detector);
+                    list.add(xmlDetector);
                 }
             }
 
             if ((attributes == null || (attributes.size() == 0
-                    && attributes != ResourceXmlDetector.ALL))
+                    && attributes != XmlScanner.ALL))
                   && (elements == null || (elements.size() == 0
-                  && elements != ResourceXmlDetector.ALL))) {
-                mDocumentDetectors.add(detector);
+                  && elements != XmlScanner.ALL))) {
+                mDocumentDetectors.add(xmlDetector);
             }
         }
     }
@@ -134,11 +141,11 @@ class XmlVisitor {
             }
         }
 
-        for (ResourceXmlDetector check : mAllDetectors) {
+        for (Detector check : mAllDetectors) {
             check.beforeCheckFile(context);
         }
 
-        for (ResourceXmlDetector check : mDocumentDetectors) {
+        for (Detector.XmlScanner check : mDocumentDetectors) {
             check.visitDocument(context, context.document);
         }
 
@@ -147,7 +154,7 @@ class XmlVisitor {
             visitElement(context, context.document.getDocumentElement());
         }
 
-        for (ResourceXmlDetector check : mAllDetectors) {
+        for (Detector check : mAllDetectors) {
             check.afterCheckFile(context);
         }
     }
@@ -155,17 +162,17 @@ class XmlVisitor {
     private void visitElement(Context context, Element element) {
         context.element = element;
 
-        List<ResourceXmlDetector> elementChecks = mElementToCheck.get(element.getTagName());
+        List<Detector.XmlScanner> elementChecks = mElementToCheck.get(element.getTagName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;
             for (int i = 0, n = elementChecks.size(); i < n; i++) {
-                ResourceXmlDetector check = elementChecks.get(i);
+                Detector.XmlScanner check = elementChecks.get(i);
                 check.visitElement(context, element);
             }
         }
         if (mAllElementDetectors.size() > 0) {
             for (int i = 0, n = mAllElementDetectors.size(); i < n; i++) {
-                ResourceXmlDetector check = mAllElementDetectors.get(i);
+                Detector.XmlScanner check = mAllElementDetectors.get(i);
                 check.visitElement(context, element);
             }
         }
@@ -174,16 +181,16 @@ class XmlVisitor {
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attribute = (Attr) attributes.item(i);
-                List<ResourceXmlDetector> list = mAttributeToCheck.get(attribute.getLocalName());
+                List<Detector.XmlScanner> list = mAttributeToCheck.get(attribute.getLocalName());
                 if (list != null) {
                     for (int j = 0, max = list.size(); j < max; j++) {
-                        ResourceXmlDetector check = list.get(j);
+                        Detector.XmlScanner check = list.get(j);
                         check.visitAttribute(context, attribute);
                     }
                 }
                 if (mAllAttributeDetectors.size() > 0) {
                     for (int j = 0, max = mAllAttributeDetectors.size(); j < max; j++) {
-                        ResourceXmlDetector check = mAllAttributeDetectors.get(j);
+                        Detector.XmlScanner check = mAllAttributeDetectors.get(j);
                         check.visitAttribute(context, attribute);
                     }
                 }
@@ -202,13 +209,13 @@ class XmlVisitor {
         // Post hooks
         if (elementChecks != null) {
             for (int i = 0, n = elementChecks.size(); i < n; i++) {
-                ResourceXmlDetector check = elementChecks.get(i);
+                Detector.XmlScanner check = elementChecks.get(i);
                 check.visitElementAfter(context, element);
             }
         }
         if (mAllElementDetectors.size() > 0) {
             for (int i = 0, n = mAllElementDetectors.size(); i < n; i++) {
-                ResourceXmlDetector check = mAllElementDetectors.get(i);
+                Detector.XmlScanner check = mAllElementDetectors.get(i);
                 check.visitElementAfter(context, element);
             }
         }

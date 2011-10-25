@@ -16,13 +16,12 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.resources.ResourceFolderType;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,18 +54,6 @@ public abstract class Detector {
 
     /** Specialized interface for detectors that scan XML files */
     public interface XmlScanner {
-        /**
-         * Returns whether this detector applies to the given folder type. This
-         * allows the detectors to be pruned from iteration, so for example when we
-         * are analyzing a string value file we don't need to look up detectors
-         * related to layout.
-         *
-         * @param folderType the folder type to be visited
-         * @return true if this detector can apply to resources in folders of the
-         *         given type
-         */
-        boolean appliesTo(ResourceFolderType folderType);
-
         /**
          * Visit the given document. The detector is responsible for its own iteration
          * through the document.
@@ -105,7 +92,7 @@ public abstract class Detector {
          * null, then the {@link #visitDocument} method will be called instead.
          *
          * @return a collection of elements, or null, or the special
-         *         {@link ResourceXmlDetector#ALL} marker to indicate that every single
+         *         {@link XmlScanner#ALL} marker to indicate that every single
          *         element should be analyzed.
          */
         Collection<String> getApplicableElements();
@@ -119,10 +106,61 @@ public abstract class Detector {
          * null, then the {@link #visitDocument} method will be called instead.
          *
          * @return a collection of attributes, or null, or the special
-         *         {@link ResourceXmlDetector#ALL} marker to indicate that every single
+         *         {@link XmlScanner#ALL} marker to indicate that every single
          *         attribute should be analyzed.
          */
         Collection<String> getApplicableAttributes();
+
+        /**
+         * Special marker collection returned by {@link #getApplicableElements()} or
+         * {@link #getApplicableAttributes()} to indicate that the check should be
+         * invoked on all elements or all attributes
+         */
+        public static final List<String> ALL = new ArrayList<String>(0);
+    }
+
+    /** Concrete implementation of a detector that is a {@link Detector.XmlScanner} */
+    public static abstract class XmlDetectorAdapter extends Detector
+            implements Detector.XmlScanner {
+
+        @Override
+        public void run(Context context) {
+        }
+
+        @Override
+        public boolean appliesTo(Context context, File file) {
+            return false;
+        }
+
+        public void visitDocument(Context context, Document document) {
+            // This method must be overridden if your detector does
+            // not return something from getApplicableElements or
+            // getApplicableATtributes
+            assert false;
+        }
+
+        public void visitElement(Context context, Element element) {
+            // This method must be overridden if your detector returns
+            // tag names from getApplicableElements
+            assert false;
+        }
+
+        public void visitElementAfter(Context context, Element element) {
+        }
+
+        public void visitAttribute(Context context, Attr attribute) {
+            // This method must be overridden if your detector returns
+            // attribute names from getApplicableAttributes
+            assert false;
+        }
+
+        public Collection<String> getApplicableElements() {
+            return null;
+        }
+
+        public Collection<String> getApplicableAttributes() {
+            return null;
+        }
     }
 
     /**

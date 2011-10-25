@@ -17,18 +17,11 @@ package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
 
-import java.io.File;
-
 @SuppressWarnings("javadoc")
 public class UnusedResourceDetectorTest  extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new UnusedResourceDetector();
-    }
-
-    @Override
-    protected File getTargetDir() {
-        return new File(super.getTargetDir(), "unused");
     }
 
     public void testUnused() throws Exception {
@@ -45,8 +38,9 @@ public class UnusedResourceDetectorTest  extends AbstractCheckTest {
            "accessibility.xml:6: Warning: The resource R.id.android_logo2 appears to be unused",
 
             lintProject(
-                "src/my/pkg/Test.java.txt",
-                "gen/my/pkg/R.java.txt",
+                // Rename .txt files to .java
+                "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
+                "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",
                 "AndroidManifest.xml",
                 "res/layout/accessibility.xml"));
     }

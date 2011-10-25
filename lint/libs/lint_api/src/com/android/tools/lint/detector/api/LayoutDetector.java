@@ -38,6 +38,7 @@ public abstract class LayoutDetector extends ResourceXmlDetector {
     protected static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     protected static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
     protected static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
+    protected static final String IMAGE_BUTTON = "ImageButton";           //$NON-NLS-1$
     protected static final String INCLUDE = "include";                    //$NON-NLS-1$
     protected static final String MERGE = "merge";                        //$NON-NLS-1$
     protected static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$

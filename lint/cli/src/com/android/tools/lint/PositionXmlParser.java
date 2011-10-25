@@ -64,7 +64,8 @@ public class PositionXmlParser implements IDomParser {
         } catch (TransformerConfigurationException e) {
             context.toolContext.log(e, null);
         } catch (TransformerException e) {
-            context.toolContext.log(e, null);
+            context.toolContext.log(null, String.format("Failed parsing %1$s: %2$s",
+                    context.file.getName(), e.getCause().getLocalizedMessage()));
         }
 
         return null;

@@ -25,19 +25,10 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.File;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /** Analyzes Android projects and files */
 public class Lint {
@@ -46,6 +37,12 @@ public class Lint {
     private volatile boolean mCanceled;
     private DetectorRegistry mRegistry;
     private Scope mScope;
+
+    private List<ResourceXmlDetector> mResourceChecks = new ArrayList<ResourceXmlDetector>();
+    private List<Detector> mXmlChecks = new ArrayList<Detector>();
+    private List<Detector> mClassChecks = new ArrayList<Detector>();
+    private List<Detector> mJavaChecks = new ArrayList<Detector>();
+    private List<Detector> mOtherChecks = new ArrayList<Detector>();
 
     /**
      * Creates a new {@link Lint}
@@ -100,23 +97,27 @@ public class Lint {
         }
 
         // Process XML files in a single pass
-        List<ResourceXmlDetector> xmlChecks = new ArrayList<ResourceXmlDetector>(checks.size());
-        List<Detector> classChecks = new ArrayList<Detector>();
-        List<Detector> javaChecks = new ArrayList<Detector>();
-        List<Detector> other = new ArrayList<Detector>(checks.size());
         for (Detector check : checks) {
+            boolean matched = false;
             if (check instanceof ResourceXmlDetector) {
-                xmlChecks.add((ResourceXmlDetector) check);
-                // Detectors can be both java detectors and xml detectors
-                if (check instanceof Detector.JavaScanner) {
-                    javaChecks.add(check);
-                }
-            } else if (check instanceof Detector.ClassScanner) {
-                classChecks.add(check);
-            } else if (check instanceof Detector.JavaScanner) {
-                javaChecks.add(check);
-            } else {
-                other.add(check);
+                matched = true;
+                mResourceChecks.add((ResourceXmlDetector) check);
+                // Note the else-if here: we don't add resource xml detectors
+                // as plain xml scanners since they are handled specially
+            } else if (check instanceof Detector.XmlScanner) {
+                mXmlChecks.add(check);
+                matched = true;
+            }
+            if (check instanceof Detector.ClassScanner) {
+                mClassChecks.add(check);
+                matched = true;
+            }
+            if (check instanceof Detector.JavaScanner) {
+                mJavaChecks.add(check);
+                matched = true;
+            }
+            if (!matched) {
+                mOtherChecks.add(check);
             }
         }
 
@@ -139,15 +140,15 @@ public class Lint {
                 ResourceFolderType type = ResourceFolderType.getFolderType(file.getName());
                 if (type != null && new File(file.getParentFile(), RES_FOLDER_NAME).exists()) {
                     // Yes.
-                    checkResourceFolder(projectDir, file, type, xmlChecks);
+                    checkResourceFolder(projectDir, file, type);
                 } else if (file.getName().equals(RES_FOLDER_NAME)) { // Is it the "res" folder?
                     // Yes
-                    checkResFolder(projectDir, file, xmlChecks);
+                    checkResFolder(projectDir, file);
                 } else {
                     // It must be a project
                     File res = new File(file, RES_FOLDER_NAME);
                     if (res.exists()) {
-                        checkProject(projectDir, xmlChecks, classChecks, javaChecks, other);
+                        checkProject(projectDir);
                     } else {
                         mToolContext.log(null, "Unexpected folder %1$s; should be project, " +
                                 "\"res\" folder or resource folder", file.getPath());
@@ -160,17 +161,21 @@ public class Lint {
                     String folderName = file.getParentFile().getName();
                     ResourceFolderType type = ResourceFolderType.getFolderType(folderName);
                     if (type != null) {
-                        XmlVisitor visitor = getVisitor(xmlChecks, type);
+                        XmlVisitor visitor = getVisitor(type);
                         if (visitor != null) {
                             Context context = new Context(mToolContext, projectDir, file, mScope);
                             visitor.visitFile(context, file);
                         }
+                    } else if (mXmlChecks.size() > 0) {
+                        XmlVisitor v = new XmlVisitor(mToolContext.getParser(), mXmlChecks);
+                        Context context = new Context(mToolContext, projectDir, file, mScope);
+                        v.visitFile(context, file);
                     }
                 } else {
-                    if (other.size() > 0) {
+                    if (mOtherChecks.size() > 0) {
                         Context context = new Context(mToolContext, projectDir, file, mScope);
                         context.location = new Location(file, null, null);
-                        for (Detector detector : other) {
+                        for (Detector detector : mOtherChecks) {
                             if (detector.appliesTo(context, file)) {
                                 detector.beforeCheckFile(context);
                                 detector.run(context);
@@ -204,27 +209,24 @@ public class Lint {
         }
     }
 
-    private void checkProject(File projectDir, List<ResourceXmlDetector> xmlChecks,
-            List<Detector> classChecks, List<Detector> javaChecks, List<Detector> otherChecks) {
+    private void checkProject(File projectDir) {
         File res = new File(projectDir, RES_FOLDER_NAME);
         if (res.exists()) {
-            checkResFolder(projectDir, res, xmlChecks);
+            checkResFolder(projectDir, res);
         }
 
-        if (classChecks.size() > 0 || javaChecks.size() > 0) {
-            List<File> sourceFolders = new ArrayList<File>();
-            List<File> binFolders = new ArrayList<File>();
-            addClassPaths(projectDir, sourceFolders, binFolders);
-
-            if (classChecks.size() > 0) {
-                checkClasses(projectDir, classChecks, binFolders);
+        if (mClassChecks.size() > 0 || mJavaChecks.size() > 0) {
+            if (mClassChecks.size() > 0) {
+                List<File> binFolders = mToolContext.getJavaClassFolder(projectDir);
+                checkClasses(projectDir, binFolders);
             }
-            if (javaChecks.size() > 0) {
-                checkJava(projectDir, javaChecks, sourceFolders);
+            if (mJavaChecks.size() > 0) {
+                List<File> sourceFolders = mToolContext.getJavaSourceFolders(projectDir);
+                checkJava(projectDir, sourceFolders);
             }
         }
 
-        if (otherChecks.size() > 0) {
+        if (mOtherChecks.size() > 0 || mXmlChecks.size() > 0) {
             // Run other checks on top level files in the project only -- proguard.cfg,
             // AndroidManifest.xml, build.xml, etc.
             File[] list = projectDir.listFiles();
@@ -233,12 +235,20 @@ public class Lint {
                     if (file.isFile()) {
                         Context context = new Context(mToolContext, projectDir, file, mScope);
                         context.location = new Location(file, null, null);
-                        for (Detector detector : otherChecks) {
-                            if (detector.appliesTo(context, file)) {
-                                detector.beforeCheckFile(context);
-                                detector.run(context);
-                                detector.afterCheckFile(context);
+                        if (mOtherChecks.size() > 0) {
+                            for (Detector detector : mOtherChecks) {
+                                if (detector.appliesTo(context, file)) {
+                                    detector.beforeCheckFile(context);
+                                    detector.run(context);
+                                    detector.afterCheckFile(context);
+                                }
                             }
+                        }
+
+                        if (ResourceXmlDetector.isXmlFile(file) && mXmlChecks.size() > 0) {
+                            XmlVisitor v = new XmlVisitor(mToolContext.getParser(), mXmlChecks);
+                            v.visitFile(context, file);
+                            // TBD: Run plain xml checks on other folders too, such as res/xml ?
                         }
                     }
                 }
@@ -246,9 +256,9 @@ public class Lint {
         }
     }
 
-    private void checkClasses(File projectDir, List<Detector> classChecks, List<File> binFolders) {
+    private void checkClasses(File projectDir, List<File> binFolders) {
         Context context = new Context(mToolContext, projectDir, projectDir, mScope);
-        for (Detector detector : classChecks) {
+        for (Detector detector : mClassChecks) {
             ((Detector.ClassScanner) detector).checkJavaClasses(context);
 
             if (mCanceled) {
@@ -257,10 +267,10 @@ public class Lint {
         }
     }
 
-    private void checkJava(File projectDir, List<Detector> javaChecks, List<File> sourceFolders) {
+    private void checkJava(File projectDir, List<File> sourceFolders) {
         Context context = new Context(mToolContext, projectDir, projectDir, mScope);
 
-        for (Detector detector : javaChecks) {
+        for (Detector detector : mJavaChecks) {
             ((Detector.JavaScanner) detector).checkJavaSources(context, sourceFolders);
 
             if (mCanceled) {
@@ -269,66 +279,18 @@ public class Lint {
         }
     }
 
-    private void addClassPaths(File projectDir,
-            List<File> sourceFolders, List<File> binFolders) {
-        File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
-        if (classpathFile.exists()) {
-            String classpathXml = mToolContext.readFile(classpathFile);
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            InputSource is = new InputSource(new StringReader(classpathXml));
-            factory.setNamespaceAware(false);
-            factory.setValidating(false);
-            try {
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document document = builder.parse(is);
-                NodeList tags = document.getElementsByTagName("classpathentry"); //$NON-NLS-1$
-                for (int i = 0, n = tags.getLength(); i < n; i++) {
-                    Element element = (Element) tags.item(i);
-                    String kind = element.getAttribute("kind"); //$NON-NLS-1$
-                    if (kind.equals("src")) { //$NON-NLS-1$
-                        String path = element.getAttribute("path"); //$NON-NLS-1$
-                        File sourceFolder = new File(projectDir, path);
-                        if (sourceFolder.exists()) {
-                            sourceFolders.add(sourceFolder);
-                        }
-                    } else if (kind.equals("output")) { //$NON-NLS-1$
-                        String path = element.getAttribute("path"); //$NON-NLS-1$
-                        File binFolder = new File(projectDir, path);
-                        if (binFolder.exists()) {
-                            binFolders.add(binFolder);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                mToolContext.log(null, null);
-            }
-        }
-
-        // Fallback?
-        if (sourceFolders.size() == 0) {
-            File srcFolder = new File(projectDir, "src"); //$NON-NLS-1$
-            if (srcFolder.exists()) {
-                sourceFolders.add(srcFolder);
-            }
-            File genFolder = new File(projectDir, "gen"); //$NON-NLS-1$
-            if (genFolder.exists()) {
-                sourceFolders.add(genFolder);
-            }
-        }
-    }
-
     private ResourceFolderType mCurrentFolderType;
     private List<ResourceXmlDetector> mCurrentXmlDetectors;
     private XmlVisitor mCurrentVisitor;
 
-    private XmlVisitor getVisitor(List<ResourceXmlDetector> checks, ResourceFolderType type) {
+    private XmlVisitor getVisitor(ResourceFolderType type) {
         if (type != mCurrentFolderType) {
             mCurrentFolderType = type;
 
             // Determine which XML resource detectors apply to the given folder type
             List<ResourceXmlDetector> applicableChecks =
-                    new ArrayList<ResourceXmlDetector>(checks.size());
-            for (ResourceXmlDetector check : checks) {
+                    new ArrayList<ResourceXmlDetector>(mResourceChecks.size());
+            for (ResourceXmlDetector check : mResourceChecks) {
                 if (check.appliesTo(type)) {
                     applicableChecks.add(check);
                 }
@@ -350,7 +312,7 @@ public class Lint {
         return mCurrentVisitor;
     }
 
-    private void checkResFolder(File projectDir, File res, List<ResourceXmlDetector> xmlChecks) {
+    private void checkResFolder(File projectDir, File res) {
         assert res.isDirectory();
         File[] resourceDirs = res.listFiles();
         if (resourceDirs == null) {
@@ -369,7 +331,7 @@ public class Lint {
 
             type = ResourceFolderType.getFolderType(dir.getName());
             if (type != null) {
-                checkResourceFolder(projectDir, dir, type, xmlChecks);
+                checkResourceFolder(projectDir, dir, type);
             }
 
             if (mCanceled) {
@@ -378,12 +340,11 @@ public class Lint {
         }
     }
 
-    private void checkResourceFolder(File projectDir, File dir, ResourceFolderType type,
-            List<ResourceXmlDetector> xmlChecks) {
+    private void checkResourceFolder(File projectDir, File dir, ResourceFolderType type) {
         // Process the resource folder
         File[] xmlFiles = dir.listFiles();
         if (xmlFiles != null && xmlFiles.length > 0) {
-            XmlVisitor visitor = getVisitor(xmlChecks, type);
+            XmlVisitor visitor = getVisitor(type);
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File xmlFile : xmlFiles) {
                     if (ResourceXmlDetector.isXmlFile(xmlFile)) {

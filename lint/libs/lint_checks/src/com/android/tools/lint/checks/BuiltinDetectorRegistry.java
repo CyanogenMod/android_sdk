@@ -48,7 +48,8 @@ public class BuiltinDetectorRegistry extends com.android.tools.lint.api.Detector
         detectors.add(new PxUsageDetector());
         detectors.add(new TextFieldDetector());
         detectors.add(new UnusedResourceDetector());
-
+        detectors.add(new ArraySizeDetector());
+        detectors.add(new ManifestOrderDetector());
 
         // TODO: Populate dynamically somehow?
 
