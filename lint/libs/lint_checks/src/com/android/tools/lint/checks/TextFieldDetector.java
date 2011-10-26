@@ -77,7 +77,7 @@ public class TextFieldDetector extends LayoutDetector {
             }
 
             context.toolContext.report(context, ISSUE, context.getLocation(element),
-                    "This text field does not specify an inputType or a hint");
+                    "This text field does not specify an inputType or a hint", null);
         }
     }
 }

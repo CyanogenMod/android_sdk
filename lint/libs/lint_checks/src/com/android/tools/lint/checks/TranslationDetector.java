@@ -302,7 +302,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         Location location = getLocation(language, parentFolderToLanguage);
                         context.toolContext.report(context, MISSING, location,
                             String.format("Locale %1$s is missing translations for: %2$s",
-                                language, formatList(sorted, 4)));
+                                language, formatList(sorted, 4)), null);
                     }
                 }
 
@@ -314,7 +314,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         Location location = getLocation(language, parentFolderToLanguage);
                         context.toolContext.report(context, EXTRA, location, String.format(
                               "Locale %1$s is translating names not found in default locale: %2$s",
-                              language, formatList(sorted, 4)));
+                              language, formatList(sorted, 4)), null);
                     }
                 }
             }
@@ -362,7 +362,7 @@ public class TranslationDetector extends ResourceXmlDetector {
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
             context.toolContext.report(context, MISSING, context.getLocation(element),
-                    "Missing name attribute in <string> declaration");
+                    "Missing name attribute in <string> declaration", null);
         } else {
             String name = attribute.getValue();
 

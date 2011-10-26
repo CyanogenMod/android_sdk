@@ -87,7 +87,7 @@ public class StateListDetector extends ResourceXmlDetector {
                 if (!hasState) {
                     context.toolContext.report(context, ISSUE, context.getLocation(child),
                         String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
-                                i));
+                                i), null);
                 }
             }
         }

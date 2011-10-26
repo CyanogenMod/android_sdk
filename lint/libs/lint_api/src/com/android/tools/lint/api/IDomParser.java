@@ -17,6 +17,7 @@
 package com.android.tools.lint.api;
 
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 
 import org.w3c.dom.Attr;
@@ -62,4 +63,13 @@ public interface IDomParser {
      * @return the position of the end of the node
      */
     public Position getEndPosition(Context context, Node node);
+
+    /**
+     * Returns a {@link Location} for the given DOM node
+     *
+     * @param context information about the file being parsed
+     * @param node the node to create a location for
+     * @return a location for the given node
+     */
+    public Location getLocation(Context context, Node node);
 }

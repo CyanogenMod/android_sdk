@@ -23,12 +23,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Context passed to the detectors during an analysis run. It provides
@@ -43,6 +41,7 @@ import java.util.Map;
  * to adjust your code for the next tools release.</b>
  */
 public class Context {
+    public final File projectDir;
     public final File file;
     public final ToolContext toolContext;
     public final Scope scope;
@@ -51,10 +50,18 @@ public class Context {
     public Element element;
     public IDomParser parser;
     private String contents;
+
+    /**
+     * Slow-running detectors should check this flag via
+     * {@link AtomicBoolean#get()} and abort if canceled
+     */
+    public final AtomicBoolean canceled = new AtomicBoolean();
+
     private Map<String, Object> properties;
 
-    public Context(ToolContext toolContext, File file, Scope scope) {
+    public Context(ToolContext toolContext, File projectDir, File file, Scope scope) {
         this.toolContext = toolContext;
+        this.projectDir = projectDir;
         this.file = file;
         this.scope = scope;
     }
@@ -79,32 +86,7 @@ public class Context {
     // TODO: This should be delegated to the tool context!
     public String getContents() {
         if (contents == null) {
-            contents = ""; //$NON-NLS-1$
-
-            BufferedReader reader = null;
-            try {
-                reader = new BufferedReader(new FileReader(file));
-                StringBuilder sb = new StringBuilder((int) file.length());
-                while (true) {
-                    int c = reader.read();
-                    if (c == -1) {
-                        contents = sb.toString();
-                        break;
-                    } else {
-                        sb.append((char)c);
-                    }
-                }
-            } catch (IOException e) {
-                // pass -- ignore files we can't read
-            } finally {
-                try {
-                    if (reader != null) {
-                        reader.close();
-                    }
-                } catch (IOException e) {
-                    toolContext.log(e, null);
-                }
-            }
+            contents = toolContext.readFile(file);
         }
 
         return contents;

@@ -64,7 +64,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
                 && !hasPadding(root)) {
             context.toolContext.report(context, ISSUE, context.getLocation(root),
-                    "This <FrameLayout> can be replaced with a <merge> tag");
+                    "This <FrameLayout> can be replaced with a <merge> tag", null);
         }
     }
 }

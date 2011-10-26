@@ -34,7 +34,11 @@ import java.util.List;
 
 class InputDensityDialog extends Dialog {
     private Combo mCombo;
-    private int mDpi = Density.DEFAULT_DENSITY;
+    /**
+     * Density value being chosen - static to keep most recently chosen value
+     * across repeated invocations
+     */
+    private static int sDpi = Density.DEFAULT_DENSITY;
 
     InputDensityDialog(Shell parentShell) {
         super(parentShell);
@@ -60,7 +64,7 @@ class InputDensityDialog extends Dialog {
             if (density == Density.NODPI) {
                 continue;
             }
-            if (density.getDpiValue() == mDpi) {
+            if (density.getDpiValue() == sDpi) {
                 initialIndex = index;
             }
             s.add(getLabel(density));
@@ -94,7 +98,7 @@ class InputDensityDialog extends Dialog {
 
         for (Density density : Density.values()) {
             if (description.equals(getLabel(density))) {
-                mDpi = density.getDpiValue();
+                sDpi = density.getDpiValue();
                 break;
             }
         }
@@ -109,6 +113,6 @@ class InputDensityDialog extends Dialog {
     }
 
     int getDensity() {
-        return mDpi;
+        return sDpi;
     }
 }

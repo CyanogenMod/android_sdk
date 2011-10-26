@@ -27,6 +27,7 @@ import com.android.tools.lint.api.IDomParser;
 import com.android.tools.lint.api.ToolContext;
 import com.android.tools.lint.checks.BuiltinDetectorRegistry;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
@@ -58,6 +59,9 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,7 +75,7 @@ import java.util.Set;
  * Eclipse implementation for running lint on workspace files and projects.
  */
 @SuppressWarnings("restriction") // DOM model
-public class LintEclipseContext implements ToolContext, IDomParser {
+public class LintEclipseContext extends ToolContext implements IDomParser {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
     private static final String DOCUMENT_PROPERTY = "document"; //$NON-NLS-1$
     private final DetectorRegistry mRegistry;
@@ -97,8 +101,9 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         mDocument = document;
     }
 
-    // ----- Implements ToolContext -----
+    // ----- Extends ToolContext -----
 
+    @Override
     public void log(Throwable exception, String format, Object... args) {
         if (exception == null) {
             AdtPlugin.log(IStatus.WARNING, format, args);
@@ -107,10 +112,12 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         }
     }
 
+    @Override
     public IDomParser getParser() {
         return this;
     }
 
+    @Override
     public boolean isEnabled(Issue issue) {
         IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
         String idList = store.getString(AdtPrefs.PREFS_DISABLED_ISSUES);
@@ -134,6 +141,7 @@ public class LintEclipseContext implements ToolContext, IDomParser {
     }
 
     // ----- Implements IDomParser -----
+
     public Document parse(Context context) {
         // Map File to IFile
         IFile file = AdtUtils.fileToIFile(context.file);
@@ -201,6 +209,7 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         return null;
     }
 
+    @Override
     public Severity getSeverity(Issue issue) {
         if (mSeverities == null) {
             mSeverities = new HashMap<Issue, Severity>();
@@ -266,7 +275,9 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         }
     }
 
-    public void report(Context context, Issue issue, Location location, String message) {
+    @Override
+    public void report(Context context, Issue issue, Location location, String message,
+            Object data) {
         if (!isEnabled(issue)) {
             return;
         }
@@ -284,7 +295,14 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         } else {
             Position startPosition = location.getStart();
             if (startPosition == null) {
-                marker = BaseProjectHelper.markResource(mResource, MARKER_LINT,
+                IResource resource = null;
+                if (location.getFile() != null) {
+                    resource = AdtUtils.fileToResource(location.getFile());
+                }
+                if (resource == null) {
+                    resource = mResource;
+                }
+                marker = BaseProjectHelper.markResource(resource, MARKER_LINT,
                         message, 0, severity);
             } else {
                 Position endPosition = location.getEnd();
@@ -314,12 +332,6 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         if (s == Severity.ERROR) {
             mFatal = true;
         }
-    }
-
-    public boolean isSuppressed(Context context, Issue issue, Location range, String message,
-            Severity severity) {
-        // Not yet supported
-        return false;
     }
 
     /** Clears any lint markers from the given resource (project, folder or file) */
@@ -567,6 +579,68 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         dialog.open();
     }
 
+    @Override
+    public String readFile(File f) {
+        // Map File to IFile
+        IFile file = AdtUtils.fileToIFile(f);
+        if (file == null || !file.exists()) {
+            String path = f.getPath();
+            AdtPlugin.log(IStatus.ERROR, "Can't find file %1$s in workspace", path);
+            return null;
+        }
+
+        IStructuredModel model = null;
+        try {
+            IModelManager modelManager = StructuredModelManager.getModelManager();
+            model = modelManager.getModelForRead(file);
+            return model.getStructuredDocument().get();
+        } catch (IOException e) {
+            AdtPlugin.log(e, "Cannot read XML file");
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        } finally {
+            if (model != null) {
+                // TODO: This may be too early...
+                model.releaseFromRead();
+            }
+        }
+
+        return readPlainFile(f);
+    }
+
+    private String readPlainFile(File f) {
+        // TODO: Connect to document and read live contents
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(f));
+            StringBuilder sb = new StringBuilder((int) f.length());
+            while (true) {
+                int c = reader.read();
+                if (c == -1) {
+                    return sb.toString();
+                } else {
+                    sb.append((char)c);
+                }
+            }
+        } catch (IOException e) {
+            // pass -- ignore files we can't read
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                log(e, null);
+            }
+        }
+
+        return ""; //$NON-NLS-1$
+    }
+
+    public Location getLocation(Context context, Node node) {
+        return new LazyLocation(context.file, (IndexedRegion) node);
+    }
+
     /**
      * Returns the registry of detectors to use from within Eclipse. This method
      * should be used rather than calling
@@ -576,7 +650,32 @@ public class LintEclipseContext implements ToolContext, IDomParser {
      * @return the detector registry to use to access detectors and issues
      */
     public static DetectorRegistry getRegistry() {
-        return new BuiltinDetectorRegistry();
+        return new EclipseDetectorRegistry();
+    }
+
+    /**
+     * Custom Eclipse registry which replaces some builtin checks with
+     * Eclipse-optimized versions
+     */
+    private static class EclipseDetectorRegistry extends BuiltinDetectorRegistry {
+        private static final List<Detector> sDetectors;
+        static {
+            List<Detector> detectors = new ArrayList<Detector>(20);
+            for (Detector detector : new BuiltinDetectorRegistry().getDetectors()) {
+                // Replace the generic UnusedResourceDetector with an Eclipse optimized one
+                // which uses the Java AST
+                if (detector instanceof com.android.tools.lint.checks.UnusedResourceDetector) {
+                    detectors.add(new UnusedResourceDetector());
+                } else {
+                    detectors.add(detector);
+                }
+            }
+            sDetectors = Collections.unmodifiableList(detectors);
+        }
+        @Override
+        public List<? extends Detector> getDetectors() {
+            return sDetectors;
+        }
     }
 
     private static class OffsetPosition extends Position {
@@ -630,6 +729,35 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         @Override
         public int getColumn() {
             return mColumn;
+        }
+    }
+
+    private static class LazyLocation extends Location {
+        private final IndexedRegion mRegion;
+        private Position mStart;
+        private Position mEnd;
+
+        public LazyLocation(File file, IndexedRegion region) {
+            super(file, null /*start*/, null /*end*/);
+            mRegion = region;
+        }
+
+        @Override
+        public Position getStart() {
+            if (mStart == null) {
+                mStart = new OffsetPosition(-1, -1, mRegion.getStartOffset());
+            }
+
+            return mStart;
+        }
+
+        @Override
+        public Position getEnd() {
+            if (mEnd == null) {
+                mEnd = new OffsetPosition(-1, -1, mRegion.getEndOffset());
+            }
+
+            return mEnd;
         }
     }
 }

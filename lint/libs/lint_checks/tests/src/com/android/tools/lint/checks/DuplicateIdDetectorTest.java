@@ -29,19 +29,19 @@ public class DuplicateIdDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "duplicate.xml:6: Warning: Duplicate id @+id/android_logo, already defined " +
                         "earlier in this layout",
-                lint("layout/duplicate.xml"));
+                lint("res/layout/duplicate.xml"));
     }
 
     public void testDuplicateChains() throws Exception {
         assertEquals(
-                "layout2.xml: Warning: Duplicate id @+id/button1, already defined in layout " +
-                        "layout4.xml which is included in this layout\n" +
-                "layout1.xml: Warning: Duplicate id @+id/button1, already defined in layout " +
+            "layout1.xml: Warning: Duplicate id @+id/button1, already defined in layout " +
                     "layout2 which is included in this layout (layout1 => layout3 => layout2)\n" +
-                "layout1.xml: Warning: Duplicate id @+id/button2, already defined in layout " +
-                    "layout2 which is included in this layout (layout1 => layout4 => layout2)",
-                lint("layout/layout1.xml", "layout/layout2.xml",
-                        "layout/layout3.xml", "layout/layout4.xml"));
+            "layout1.xml: Warning: Duplicate id @+id/button2, already defined in layout " +
+                "layout2 which is included in this layout (layout1 => layout4 => layout2)\n" +
+            "layout2.xml: Warning: Duplicate id @+id/button1, already defined in layout " +
+                "layout4.xml which is included in this layout",
+                lint("res/layout/layout1.xml", "res/layout/layout2.xml",
+                        "res/layout/layout3.xml", "res/layout/layout4.xml"));
     }
 
 }

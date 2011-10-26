@@ -29,6 +29,6 @@ public class ChildCountDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "has_children.xml:8: Warning: A list/grid should have no children declared " +
                         "in XML",
-                lint("layout/has_children.xml"));
+                lint("res/layout/has_children.xml"));
     }
 }

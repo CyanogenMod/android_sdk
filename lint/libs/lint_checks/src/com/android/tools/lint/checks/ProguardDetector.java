@@ -59,7 +59,7 @@ public class ProguardDetector extends Detector {
                     "    public <init>(android.");              //$NON-NLS-1$
             if (index != -1) {
                 context.toolContext.report(context, ISSUE, context.getLocation(context),
-                    "Obsolete proguard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames");
+                    "Obsolete proguard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames", null);
             }
         }
     }

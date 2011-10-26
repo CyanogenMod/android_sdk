@@ -77,7 +77,7 @@ public class PxUsageDetector extends LayoutDetector {
                 return;
             }
             context.toolContext.report(context, ISSUE, context.getLocation(attribute),
-                    "Avoid using \"px\" as units; use \"dp\" instead");
+                    "Avoid using \"px\" as units; use \"dp\" instead", null);
         }
     }
 }

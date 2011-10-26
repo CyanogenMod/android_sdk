@@ -72,12 +72,12 @@ public class AccessibilityDetector extends LayoutDetector {
     public void visitElement(Context context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
             context.toolContext.report(context, ISSUE, context.getLocation(context),
-                    "[Accessibility] Missing contentDescription attribute on image");
+                    "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
             String attribute = element.getAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
                 context.toolContext.report(context, ISSUE, context.getLocation(context),
-                        "[Accessibility] Empty contentDescription attribute on image");
+                        "[Accessibility] Empty contentDescription attribute on image", null);
             }
         }
     }

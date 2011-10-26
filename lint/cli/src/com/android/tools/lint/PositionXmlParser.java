@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.api.IDomParser;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 
 import org.w3c.dom.Attr;
@@ -120,6 +121,10 @@ public class PositionXmlParser implements IDomParser {
     public Position getEndPosition(Context context, Node node) {
         // TODO: Currently unused
         return null;
+    }
+
+    public Location getLocation(Context context, Node node) {
+        return new Location(context.file, getStartPosition(context, node), null);
     }
 
     private static class OffsetPosition extends Position {

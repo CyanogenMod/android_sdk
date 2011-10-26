@@ -79,7 +79,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                         !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
                 context.toolContext.report(context, ISSUE, context.getLocation(element),
                         "This tag and its children can be replaced by one <TextView/> and " +
-                                "a compound drawable");
+                                "a compound drawable", null);
             }
         }
     }

@@ -31,6 +31,6 @@ public class HardcodedValuesDetectorTest  extends AbstractCheckTest {
                 "should use @string resource\n" +
             "accessibility.xml:7: Warning: [I18N] Hardcoded string \"Button\", " +
                 "should use @string resource",
-            lint("layout/accessibility.xml"));
+            lint("res/layout/accessibility.xml"));
     }
 }

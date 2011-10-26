@@ -29,6 +29,6 @@ public class NestedScrollingWidgetDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "scrolling.xml:16: Warning: The vertically scrolling ScrollView should not " +
                         "contain another vertically scrolling widget (ListView)",
-                lint("layout/scrolling.xml"));
+                lint("res/layout/scrolling.xml"));
     }
 }
