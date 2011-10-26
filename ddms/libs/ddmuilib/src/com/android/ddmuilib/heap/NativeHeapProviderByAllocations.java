@@ -16,6 +16,8 @@
 
 package com.android.ddmuilib.heap;
 
+import com.android.ddmlib.NativeAllocationInfo;
+
 import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -24,21 +26,24 @@ import java.util.List;
 
 /**
  * Content Provider for the native heap tree viewer in {@link NativeHeapPanel}.
- * It expects a list of {@link NativeAllocationInfo} objects as input.
+ * It expects a {@link NativeHeapSnapshot} as input, and provides the list of allocations
+ * in the heap dump as content to the UI.
  */
-public final class NativeHeapContentProvider implements ILazyTreeContentProvider {
+public final class NativeHeapProviderByAllocations implements ILazyTreeContentProvider {
     private TreeViewer mViewer;
-    private List<?> mCurrentAllocations;
+    private boolean mDisplayZygoteMemory;
+    private NativeHeapSnapshot mNativeHeapDump;
 
-    public NativeHeapContentProvider(TreeViewer viewer) {
+    public NativeHeapProviderByAllocations(TreeViewer viewer, boolean displayZygotes) {
         mViewer = viewer;
+        mDisplayZygoteMemory = displayZygotes;
     }
 
     public void dispose() {
     }
 
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-        mCurrentAllocations = (List <?>) newInput;
+        mNativeHeapDump = (NativeHeapSnapshot) newInput;
     }
 
     public Object getParent(Object arg0) {
@@ -48,8 +53,8 @@ public final class NativeHeapContentProvider implements ILazyTreeContentProvider
     public void updateChildCount(Object element, int currentChildCount) {
         int childCount = 0;
 
-        if (element == mCurrentAllocations) { // root element
-            childCount = mCurrentAllocations.size();
+        if (element == mNativeHeapDump) { // root element
+            childCount = getAllocations().size();
         }
 
         mViewer.setChildCount(element, childCount);
@@ -58,11 +63,23 @@ public final class NativeHeapContentProvider implements ILazyTreeContentProvider
     public void updateElement(Object parent, int index) {
         Object item = null;
 
-        if (parent == mCurrentAllocations) { // root element
-            item = mCurrentAllocations.get(index);
+        if (parent == mNativeHeapDump) { // root element
+            item = getAllocations().get(index);
         }
 
         mViewer.replace(parent, index, item);
         mViewer.setChildCount(item, 0);
+    }
+
+    public void displayZygoteMemory(boolean en) {
+        mDisplayZygoteMemory = en;
+    }
+
+    private List<NativeAllocationInfo> getAllocations() {
+        if (mDisplayZygoteMemory) {
+            return mNativeHeapDump.getAllocations();
+        } else {
+            return mNativeHeapDump.getNonZygoteAllocations();
+        }
     }
 }

@@ -79,6 +79,15 @@ public class HardwareProperties {
         private String mAbstract;
         private String mDescription;
 
+        public HardwareProperty() {
+            // initialize strings to sane defaults, as not all properties will be set from
+            // the ini file
+            mName = "";
+            mDefault = "";
+            mAbstract = "";
+            mDescription = "";
+        }
+
         public String getName() {
             return mName;
         }

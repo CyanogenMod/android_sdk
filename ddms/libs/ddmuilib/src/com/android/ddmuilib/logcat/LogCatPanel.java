@@ -17,6 +17,7 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.DdmConstants;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.ITableFocusListener;
 import com.android.ddmuilib.ImageLoader;
@@ -215,6 +216,13 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     @Override
     public void deviceSelected() {
+        IDevice device = getCurrentDevice();
+        if (device == null) {
+            // If the device is not working properly, getCurrentDevice() could return null.
+            // In such a case, we don't launch logcat, nor switch the display.
+            return;
+        }
+
         if (mReceiver != null) {
             // Don't need to listen to new logcat messages from previous device anymore.
             mReceiver.removeMessageReceivedEventListener(this);
@@ -225,7 +233,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         }
 
-        mReceiver = LogCatReceiverFactory.INSTANCE.newReceiver(getCurrentDevice(), mPrefStore);
+        mReceiver = LogCatReceiverFactory.INSTANCE.newReceiver(device, mPrefStore);
         mReceiver.addMessageReceivedEventListener(this);
         mViewer.setInput(mReceiver.getMessages());
 

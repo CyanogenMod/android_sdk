@@ -1072,6 +1072,7 @@ public class LayoutCanvas extends Canvas {
             @Override
             public void run() {
                 mClipboardSupport.cutSelectionToClipboard(mSelectionManager.getSnapshot());
+                updateMenuActionState();
             }
         };
 
@@ -1081,6 +1082,7 @@ public class LayoutCanvas extends Canvas {
             @Override
             public void run() {
                 mClipboardSupport.copySelectionToClipboard(mSelectionManager.getSnapshot());
+                updateMenuActionState();
             }
         };
 
@@ -1090,6 +1092,7 @@ public class LayoutCanvas extends Canvas {
             @Override
             public void run() {
                 mClipboardSupport.pasteSelection(mSelectionManager.getSnapshot());
+                updateMenuActionState();
             }
         };
 
@@ -1134,15 +1137,20 @@ public class LayoutCanvas extends Canvas {
 
     /**
      * Updates menu actions that depends on the selection.
-     *
-     * @param hasSelection True iff we have a non-empty selection
      */
-    /* package */ void updateMenuActionState(boolean hasSelection) {
+    void updateMenuActionState() {
+        List<SelectionItem> selections = getSelectionManager().getSelections();
+        boolean hasSelection = !selections.isEmpty();
+        if (hasSelection && selections.size() == 1 && selections.get(0).isRoot()) {
+            hasSelection = false;
+        }
+
         StyledText errorLabel = mLayoutEditor.getGraphicalEditor().getErrorLabel();
         mCutAction.setEnabled(hasSelection);
         mCopyAction.setEnabled(hasSelection || errorLabel.getSelectionCount() > 0);
         mDeleteAction.setEnabled(hasSelection);
-        mSelectAllAction.setEnabled(hasSelection || errorLabel.isFocusControl());
+        // Select All should *always* be selectable, regardless of whether anything
+        // is currently selected.
 
         // The paste operation is only available if we can paste our custom type.
         // We do not currently support pasting random text (e.g. XML). Maybe later.
@@ -1156,6 +1164,8 @@ public class LayoutCanvas extends Canvas {
      * @param bars the action bar for this canvas
      */
     public void updateGlobalActions(IActionBars bars) {
+        updateMenuActionState();
+
         bars.setGlobalActionHandler(ActionFactory.CUT.getId(), mCutAction);
         bars.setGlobalActionHandler(ActionFactory.COPY.getId(), mCopyAction);
         bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), mPasteAction);

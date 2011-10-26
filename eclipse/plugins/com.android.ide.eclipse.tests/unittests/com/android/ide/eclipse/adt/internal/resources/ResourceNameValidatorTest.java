@@ -23,6 +23,7 @@ import java.util.Collections;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("javadoc")
 public class ResourceNameValidatorTest extends TestCase {
     public void testValidator() throws Exception {
         // Valid
@@ -47,5 +48,13 @@ public class ResourceNameValidatorTest extends TestCase {
                 .isValid("Foo123_$") != null);
         assertTrue(ResourceNameValidator.create(true, ResourceFolderType.LAYOUT)
                 .isValid("foo123_") == null);
+
+        // Can't start with _ in file-based resource names, is okay for value based resources
+        assertTrue(ResourceNameValidator.create(true, ResourceFolderType.VALUES)
+                .isValid("_foo") == null);
+        assertTrue(ResourceNameValidator.create(true, ResourceFolderType.LAYOUT)
+                .isValid("_foo") != null);
+        assertTrue(ResourceNameValidator.create(true, ResourceFolderType.DRAWABLE)
+                .isValid("_foo") != null);
     }
 }

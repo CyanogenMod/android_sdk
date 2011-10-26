@@ -293,14 +293,20 @@ public class PackagesPage extends UpdaterPage
         mCheckFilterObsolete.setSelection(false);
 
         Link linkSelectNew = new Link(mGroupOptions, SWT.NONE);
-        linkSelectNew.setText("<a>Select New/Updates</a>");
+        // Note for i18n: we need to identify which link is used, and this is done by using the
+        // text itself so for translation purposes we want to keep the <a> link strings separate.
+        final String strLinkNew = "New";
+        final String strLinkUpdates = "Updates";
+        linkSelectNew.setText(
+                String.format("Select <a>%1$s</a> or <a>%2$s</a>", strLinkNew, strLinkUpdates));
         linkSelectNew.setToolTipText("Selects all items that are either new or updates.");
         GridDataBuilder.create(linkSelectNew).hFill().hGrab();
         linkSelectNew.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
-                onSelectNewUpdates();
+                boolean selectNew = e.text == null || e.text.equals(strLinkNew);
+                onSelectNewUpdates(selectNew, !selectNew);
             }
         });
 
@@ -623,7 +629,7 @@ public class PackagesPage extends UpdaterPage
                                 // automatically select all new and update packages.
                                 Object[] checked = mTreeViewer.getCheckedElements();
                                 if (checked == null || checked.length == 0) {
-                                    onSelectNewUpdates();
+                                    onSelectNewUpdates(true, true);
                                 }
                             }
                         }
@@ -875,9 +881,9 @@ public class PackagesPage extends UpdaterPage
     /**
      * Checks all PkgItems that are either new or have updates.
      */
-    private void onSelectNewUpdates() {
+    private void onSelectNewUpdates(boolean selectNew, boolean selectUpdates) {
         // This does not update the tree itself, syncViewerSelection does it below.
-        mDiffLogic.checkNewUpdateItems();
+        mDiffLogic.checkNewUpdateItems(selectNew, selectUpdates);
         syncViewerSelection();
         updateButtonsState();
     }

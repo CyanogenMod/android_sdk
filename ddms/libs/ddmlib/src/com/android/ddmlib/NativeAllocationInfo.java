@@ -17,8 +17,11 @@
 package com.android.ddmlib;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Stores native allocation information.
@@ -27,33 +30,31 @@ import java.util.List;
  * storage for resolved stack trace, this is merely for convenience.
  */
 public final class NativeAllocationInfo {
+    /* Keywords used as delimiters in the string representation of a NativeAllocationInfo */
+    public static final String END_STACKTRACE_KW = "EndStacktrace";
+    public static final String BEGIN_STACKTRACE_KW = "BeginStacktrace:";
+    public static final String TOTAL_SIZE_KW = "TotalSize:";
+    public static final String SIZE_KW = "Size:";
+    public static final String ALLOCATIONS_KW = "Allocations:";
+
     /* constants for flag bits */
     private static final int FLAG_ZYGOTE_CHILD  = (1<<31);
     private static final int FLAG_MASK          = (FLAG_ZYGOTE_CHILD);
 
-    /**
-     * list of alloc functions that are filtered out when attempting to display
-     * a relevant method responsible for an allocation
-     */
-    private static ArrayList<String> sAllocFunctionFilter;
-    static {
-        sAllocFunctionFilter = new ArrayList<String>();
-        sAllocFunctionFilter.add("malloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("calloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("realloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("get_backtrace"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("get_hash"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("??"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("internal_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("operator new"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("leak_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("chk_free"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("chk_memalign"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("Malloc"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("leak_memalign"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("strcmp"); //$NON-NLS-1$
-        sAllocFunctionFilter.add("dlrealloc"); //$NON-NLS-1$
-    }
+    /** Libraries whose methods will be assumed to be not part of the user code. */
+    private static final List<String> FILTERED_LIBRARIES = Arrays.asList(new String[] {
+            "libc.so",
+            "libc_malloc_debug_leak.so",
+    });
+
+    /** Method names that should be assumed to be not part of the user code. */
+    private static final List<Pattern> FILTERED_METHOD_NAME_PATTERNS = Arrays.asList(new Pattern[] {
+            Pattern.compile("malloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("calloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("realloc", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("operator new", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("memalign", Pattern.CASE_INSENSITIVE),
+    });
 
     private final int mSize;
 
@@ -72,7 +73,7 @@ public final class NativeAllocationInfo {
      * @param size The size of the allocations.
      * @param allocations the allocation count
      */
-    NativeAllocationInfo(int size, int allocations) {
+    public NativeAllocationInfo(int size, int allocations) {
         this.mSize = size & ~FLAG_MASK;
         this.mIsZygoteChild = ((size & FLAG_ZYGOTE_CHILD) != 0);
         this.mAllocations = allocations;
@@ -82,7 +83,7 @@ public final class NativeAllocationInfo {
      * Adds a stack call address for this allocation.
      * @param address The address to add.
      */
-    void addStackCallAddress(long address) {
+    public void addStackCallAddress(long address) {
         mStackCallAddresses.add(address);
     }
 
@@ -189,6 +190,25 @@ public final class NativeAllocationInfo {
         return false;
     }
 
+
+    @Override
+    public int hashCode() {
+        // Follow Effective Java's recipe re hash codes.
+        // Includes all the fields looked at by equals().
+
+        int result = 17;    // arbitrary starting point
+
+        result = 31 * result + mSize;
+        result = 31 * result + mAllocations;
+        result = 31 * result + mStackCallAddresses.size();
+
+        for (long addr : mStackCallAddresses) {
+            result = 31 * result + (int) (addr ^ (addr >>> 32));
+        }
+
+        return result;
+    }
+
     /**
      * Returns a string representation of the object.
      * @see java.lang.Object#toString()
@@ -196,40 +216,41 @@ public final class NativeAllocationInfo {
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("Allocations: ");
+        buffer.append(ALLOCATIONS_KW);
+        buffer.append(' ');
         buffer.append(mAllocations);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        buffer.append("Size: ");
+        buffer.append(SIZE_KW);
+        buffer.append(' ');
         buffer.append(mSize);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        buffer.append("Total Size: ");
+        buffer.append(TOTAL_SIZE_KW);
+        buffer.append(' ');
         buffer.append(mSize * mAllocations);
-        buffer.append("\n"); //$NON-NLS-1$
+        buffer.append('\n');
 
-        Iterator<Long> addrIterator = mStackCallAddresses.iterator();
+        if (mResolvedStackCall != null) {
+            buffer.append(BEGIN_STACKTRACE_KW);
+            buffer.append('\n');
+            for (NativeStackCallInfo source : mResolvedStackCall) {
+                long addr = source.getAddress();
+                if (addr == 0) {
+                    continue;
+                }
 
-        if (mResolvedStackCall == null) {
-            return buffer.toString();
-        }
-
-        Iterator<NativeStackCallInfo> sourceIterator = mResolvedStackCall.iterator();
-
-        while (sourceIterator.hasNext()) {
-            long addr = addrIterator.next();
-            NativeStackCallInfo source = sourceIterator.next();
-            if (addr == 0)
-                continue;
-
-            if (source.getLineNumber() != -1) {
-                buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s:%5$d\n", addr,
-                        source.getLibraryName(), source.getMethodName(),
-                        source.getSourceFile(), source.getLineNumber()));
-            } else {
-                buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s\n", addr,
-                        source.getLibraryName(), source.getMethodName(), source.getSourceFile()));
+                if (source.getLineNumber() != -1) {
+                    buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s:%5$d\n", addr,
+                            source.getLibraryName(), source.getMethodName(),
+                            source.getSourceFile(), source.getLineNumber()));
+                } else {
+                    buffer.append(String.format("\t%1$08x\t%2$s --- %3$s --- %4$s\n", addr,
+                            source.getLibraryName(), source.getMethodName(), source.getSourceFile()));
+                }
             }
+            buffer.append(END_STACKTRACE_KW);
+            buffer.append('\n');
         }
 
         return buffer.toString();
@@ -247,21 +268,14 @@ public final class NativeAllocationInfo {
      */
     public synchronized NativeStackCallInfo getRelevantStackCallInfo() {
         if (mIsStackCallResolved && mResolvedStackCall != null) {
-            Iterator<NativeStackCallInfo> sourceIterator = mResolvedStackCall.iterator();
-            Iterator<Long> addrIterator = mStackCallAddresses.iterator();
-
-            while (sourceIterator.hasNext() && addrIterator.hasNext()) {
-                long addr = addrIterator.next();
-                NativeStackCallInfo info = sourceIterator.next();
-                if (addr != 0 && info != null) {
-                    if (isRelevant(info.getMethodName(), addr)) {
-                        return info;
-                    }
+            for (NativeStackCallInfo info : mResolvedStackCall) {
+                if (isRelevantLibrary(info.getLibraryName())
+                        && isRelevantMethod(info.getMethodName())) {
+                    return info;
                 }
             }
 
-            // couldnt find a relevant one, so we'll return the first one if it
-            // exists.
+            // couldnt find a relevant one, so we'll return the first one if it exists.
             if (mResolvedStackCall.size() > 0)
                 return mResolvedStackCall.get(0);
         }
@@ -269,19 +283,24 @@ public final class NativeAllocationInfo {
         return null;
     }
 
-    /**
-     * Returns true if the method name is relevant.
-     * @param methodName the method name to test.
-     * @param addr the original address. This is used because sometimes the name of the method is
-     * the address itself which is not relevant
-     */
-    private boolean isRelevant(String methodName, long addr) {
-        for (String filter : sAllocFunctionFilter) {
-            if (methodName.contains(filter)) {
+    private boolean isRelevantLibrary(String libPath) {
+        for (String l : FILTERED_LIBRARIES) {
+            if (libPath.endsWith(l)) {
                 return false;
             }
         }
 
-        return methodName.equals(Long.toString(addr, 16)) == false;
+        return true;
+    }
+
+    private boolean isRelevantMethod(String methodName) {
+        for (Pattern p : FILTERED_METHOD_NAME_PATTERNS) {
+            Matcher m = p.matcher(methodName);
+            if (m.find()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

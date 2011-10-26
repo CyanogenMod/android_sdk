@@ -168,7 +168,7 @@ public final class PrefsDialog {
         // some static values
         String out = System.getenv("ANDROID_PRODUCT_OUT"); //$NON-NLS-1$
         DdmUiPreferences.setSymbolsLocation(out + File.separator + "symbols"); //$NON-NLS-1$
-        DdmUiPreferences.setAddr2LineLocation("arm-eabi-addr2line"); //$NON-NLS-1$
+        DdmUiPreferences.setAddr2LineLocation("arm-linux-androideabi-addr2line"); //$NON-NLS-1$
 
         String traceview = System.getProperty("com.android.ddms.bindir");  //$NON-NLS-1$
         if (traceview != null && traceview.length() != 0) {

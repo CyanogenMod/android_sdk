@@ -27,39 +27,84 @@ import org.eclipse.swt.graphics.Image;
  * A Label Provider for the Native Heap TreeViewer in {@link NativeHeapPanel}.
  */
 public class NativeHeapLabelProvider extends LabelProvider implements ITableLabelProvider {
+    private long mTotalSize;
+
     public Image getColumnImage(Object arg0, int arg1) {
         return null;
     }
 
     public String getColumnText(Object element, int index) {
-        if (!(element instanceof NativeAllocationInfo)) {
-            return null;
+        if (element instanceof NativeAllocationInfo) {
+            return getColumnTextForNativeAllocation((NativeAllocationInfo) element, index);
         }
 
-        NativeAllocationInfo info = (NativeAllocationInfo) element;
+        if (element instanceof NativeLibraryAllocationInfo) {
+            return getColumnTextForNativeLibrary((NativeLibraryAllocationInfo) element, index);
+        }
+
+        return null;
+    }
+
+    private String getColumnTextForNativeAllocation(NativeAllocationInfo info, int index) {
         NativeStackCallInfo stackInfo = info.getRelevantStackCallInfo();
 
         switch (index) {
             case 0:
-                return Integer.toString(info.getSize() * info.getAllocationCount());
-            case 1:
-                return Integer.toString(info.getAllocationCount());
-            case 2:
-                return Integer.toString(info.getSize());
-            case 3:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getLibraryName();
+            case 1:
+                return Integer.toString(info.getSize() * info.getAllocationCount());
+            case 2:
+                return getPercentageString(info.getSize() * info.getAllocationCount(), mTotalSize);
+            case 3:
+                String prefix = "";
+                if (!info.isZygoteChild()) {
+                    prefix = "Z ";
+                }
+                return prefix + Integer.toString(info.getAllocationCount());
             case 4:
+                return Integer.toString(info.getSize());
+            case 5:
                 return stackInfo == null ? stackResolutionStatus(info) : stackInfo.getMethodName();
             default:
                 return null;
         }
     }
 
+    private String getColumnTextForNativeLibrary(NativeLibraryAllocationInfo info, int index) {
+        switch (index) {
+            case 0:
+                return info.getLibraryName();
+            case 1:
+                return Long.toString(info.getTotalSize());
+            case 2:
+                return getPercentageString(info.getTotalSize(), mTotalSize);
+            default:
+                return null;
+        }
+    }
+
+    private String getPercentageString(long size, long total) {
+        if (total == 0) {
+            return "";
+        }
+
+        return String.format("%.1f%%", (float)(size * 100)/(float)total);
+    }
+
     private String stackResolutionStatus(NativeAllocationInfo info) {
         if (info.isStackCallResolved()) {
             return "?"; // resolved and unknown
         } else {
-            return "";  // still resolving..
+            return "Resolving...";  // still resolving...
         }
+    }
+
+    /**
+     * Set the total size of the heap dump for use in percentage calculations.
+     * This value should be set whenever the input to the tree changes so that the percentages
+     * are computed correctly.
+     */
+    public void setTotalSize(long totalSize) {
+        mTotalSize = totalSize;
     }
 }
