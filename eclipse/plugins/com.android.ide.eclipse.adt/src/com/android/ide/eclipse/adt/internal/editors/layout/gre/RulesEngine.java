@@ -597,7 +597,13 @@ public class RulesEngine {
             UiViewElementNode parentUiNode = parentNode.getNode();
             IViewRule parentRule = loadRule(parentUiNode);
             if (parentRule != null) {
-                parentRule.onRemovingChildren(children, parentNode);
+                try {
+                    parentRule.onRemovingChildren(children, parentNode);
+                } catch (Exception e) {
+                    AdtPlugin.log(e, "%s.onDispose() failed: %s",
+                            parentRule.getClass().getSimpleName(),
+                            e.toString());
+                }
             }
         }
     }
