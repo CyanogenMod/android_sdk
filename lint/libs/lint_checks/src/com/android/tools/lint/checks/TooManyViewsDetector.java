@@ -41,7 +41,7 @@ public class TooManyViewsDetector extends LayoutDetector {
             "reducing the number of views in this layout.\n\n" +
             "The maximum view count defaults to 80 but can be configured with the " +
             "environment variable ANDROID_LINT_MAX_VIEW_COUNT.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING);
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Issue of having too deep hierarchies in layouts */
     public static final Issue TOO_DEEP = Issue.create(
@@ -51,7 +51,7 @@ public class TooManyViewsDetector extends LayoutDetector {
             "Consider using a flatter layout (such as RelativeLayout or GridLayout)." +
             "The default maximum depth is 10 but can be configured with the environment " +
             "variable ANDROID_LINT_MAX_DEPTH.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING);
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING, Scope.SINGLE_FILE);
 
     private static final int MAX_VIEW_COUNT;
     private static final int MAX_DEPTH;
@@ -103,11 +103,6 @@ public class TooManyViewsDetector extends LayoutDetector {
     }
 
     @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
-    }
-
-    @Override
     public void beforeCheckFile(Context context) {
         mViewCount = mDepth = 0;
         mWarnedAboutDepth = false;
@@ -131,12 +126,12 @@ public class TooManyViewsDetector extends LayoutDetector {
             mWarnedAboutDepth = true;
             String msg = String.format("%1$s has more than %2$d levels, bad for performance",
                     context.file.getName(), MAX_DEPTH);
-            context.toolContext.report(TOO_DEEP, context.getLocation(element), msg);
+            context.toolContext.report(context, TOO_DEEP, context.getLocation(element), msg);
         }
         if (mViewCount == MAX_VIEW_COUNT) {
             String msg = String.format("%1$s has more than %2$d views, bad for performance",
                     context.file.getName(), MAX_VIEW_COUNT);
-            context.toolContext.report(TOO_MANY, context.getLocation(element), msg);
+            context.toolContext.report(context, TOO_MANY, context.getLocation(element), msg);
         }
     }
 

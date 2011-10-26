@@ -46,7 +46,7 @@ public class PxUsageDetector extends LayoutDetector {
             "in your application code to work with bitmaps that are not pre-scaled for the " +
             "current screen density, you might need to scale the pixel values that you use in " +
             "your code to match the un-scaled bitmap source.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING).setMoreInfo(
+            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html#screen-independence"); //$NON-NLS-1$
 
     /** Constructs a new {@link PxUsageDetector} */
@@ -64,11 +64,6 @@ public class PxUsageDetector extends LayoutDetector {
     }
 
     @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
-    }
-
-    @Override
     public Collection<String> getApplicableAttributes() {
         return ALL;
     }
@@ -81,7 +76,7 @@ public class PxUsageDetector extends LayoutDetector {
                 // 0px is fine. 0px is 0dp regardless of density...
                 return;
             }
-            context.toolContext.report(ISSUE, context.getLocation(attribute),
+            context.toolContext.report(context, ISSUE, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead");
         }
     }

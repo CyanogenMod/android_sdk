@@ -39,10 +39,11 @@ public final class Issue implements Comparable<Issue> {
     private final Severity mSeverity;
     private String mMoreInfoUrl;
     private boolean mEnabledByDefault = true;
+    private final Scope mScope;
 
     // Use factory methods
     private Issue(String id, String description, String explanation, String category, int priority,
-            Severity severity) {
+            Severity severity, Scope scope) {
         super();
         mId = id;
         mDescription = description;
@@ -50,6 +51,7 @@ public final class Issue implements Comparable<Issue> {
         mCategory = category;
         mPriority = priority;
         mSeverity = severity;
+        mScope = scope;
     }
 
     /**
@@ -63,11 +65,12 @@ public final class Issue implements Comparable<Issue> {
      * @param priority the priority, a number from 1 to 10 with 10 being most
      *            important/severe
      * @param severity the default severity of the issue
+     * @param scope the scope of files required to analyze this issue
      * @return a new {@link Issue}
      */
     public static Issue create(String id, String description, String explanation, String category,
-            int priority, Severity severity) {
-        return new Issue(id, description, explanation, category, priority, severity);
+            int priority, Severity severity, Scope scope) {
+        return new Issue(id, description, explanation, category, priority, severity, scope);
     }
 
     /**
@@ -148,6 +151,16 @@ public final class Issue implements Comparable<Issue> {
      */
     public boolean isEnabledByDefault() {
         return mEnabledByDefault;
+    }
+
+    /**
+     * Returns the scope required to analyze the code to detect this issue.
+     * This is determined by the detectors which reports the issue.
+     *
+     * @return the required scope
+     */
+    public Scope getScope() {
+        return mScope;
     }
 
     /**

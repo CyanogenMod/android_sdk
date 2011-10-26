@@ -40,7 +40,7 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that ScrollViews have exactly one child widget",
             "ScrollViews can only have one child widget. If you want more children, wrap them " +
             "in a container layout.",
-            CATEGORY_LAYOUT, 8, Severity.WARNING);
+            CATEGORY_LAYOUT, 8, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** The main issue discovered by this detector */
     public static final Issue ADAPTERVIEW_ISSUE = Issue.create(
@@ -48,7 +48,7 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that AdapterViews do not define their children in XML",
             "AdapterViews such as ListViews must be configured with data from Java code, " +
             "such as a ListAdapter.",
-            CATEGORY_LAYOUT, 8, Severity.WARNING).setMoreInfo(
+            CATEGORY_LAYOUT, 8, Severity.WARNING, Scope.SINGLE_FILE).setMoreInfo(
                 "http://developer.android.com/reference/android/widget/AdapterView.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link ChildCountDetector} */
@@ -63,11 +63,6 @@ public class ChildCountDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -87,13 +82,14 @@ public class ChildCountDetector extends LayoutDetector {
         String tagName = element.getTagName();
         if (tagName.equals(SCROLL_VIEW) || tagName.equals(HORIZONTAL_SCROLL_VIEW)) {
             if (childCount > 1) {
-                context.toolContext.report(SCROLLVIEW_ISSUE, context.getLocation(element),
-                        "A scroll view can have only one child");
+                context.toolContext.report(context, SCROLLVIEW_ISSUE,
+                        context.getLocation(element), "A scroll view can have only one child");
             }
         } else {
             // Adapter view
             if (childCount > 0) {
-                context.toolContext.report(ADAPTERVIEW_ISSUE, context.getLocation(element),
+                context.toolContext.report(context, ADAPTERVIEW_ISSUE,
+                        context.getLocation(element),
                         "A list/grid should have no children declared in XML");
             }
         }

@@ -45,6 +45,7 @@ import java.util.Map;
 public class Context {
     public final File file;
     public final ToolContext toolContext;
+    public final Scope scope;
     public Document document;
     public Location location;
     public Element element;
@@ -52,10 +53,10 @@ public class Context {
     private String contents;
     private Map<String, Object> properties;
 
-    public Context(ToolContext toolContext, File file) {
-        super();
+    public Context(ToolContext toolContext, File file, Scope scope) {
         this.toolContext = toolContext;
         this.file = file;
+        this.scope = scope;
     }
 
     public Location getLocation(Node node) {
@@ -75,6 +76,7 @@ public class Context {
         return location;
     }
 
+    // TODO: This should be delegated to the tool context!
     public String getContents() {
         if (contents == null) {
             contents = ""; //$NON-NLS-1$

@@ -8,4 +8,5 @@
     <!-- no translation found for menu_settings (1769059051084007158) -->
     <skip />
     <string name="wallpaper_instructions">"Tippen Sie auf Bild, um Porträt-Bildschirmhintergrund einzustellen"</string>
+    <string name="continue_skip_label">"Weiter"</string>
 </resources>

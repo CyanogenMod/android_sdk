@@ -38,7 +38,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
             "If a <FrameLayout> is the root of a layout and does not provide background " +
             "or padding etc, it can be replaced with a <merge> tag which is slightly " +
             "more efficient.",
-            CATEGORY_LAYOUT, 4, Severity.WARNING);
+            CATEGORY_LAYOUT, 4, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {
@@ -55,11 +55,6 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
-    }
-
-    @Override
     public void visitDocument(Context context, Document document) {
         Element root = document.getDocumentElement();
         if (root.getTagName().equals(FRAME_LAYOUT) &&
@@ -68,8 +63,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
                 && !hasPadding(root)) {
-            context.toolContext.report(ISSUE,
-                    context.getLocation(root),
+            context.toolContext.report(context, ISSUE, context.getLocation(root),
                     "This <FrameLayout> can be replaced with a <merge> tag");
         }
     }

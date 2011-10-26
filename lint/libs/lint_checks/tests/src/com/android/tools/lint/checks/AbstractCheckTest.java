@@ -21,6 +21,7 @@ import com.android.tools.lint.api.DetectorRegistry;
 import com.android.tools.lint.api.IDomParser;
 import com.android.tools.lint.api.Lint;
 import com.android.tools.lint.api.ToolContext;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -74,7 +75,7 @@ abstract class AbstractCheckTest extends TestCase implements ToolContext {
         return mOutput.toString();
     }
 
-    public void report(Issue issue, Location location, String message) {
+    public void report(Context context, Issue issue, Location location, String message) {
         if (mOutput.length() > 0) {
             mOutput.append('\n');
         }
@@ -199,7 +200,8 @@ abstract class AbstractCheckTest extends TestCase implements ToolContext {
         return false;
     }
 
-    public boolean isSuppressed(Issue issue, Location range, String message, Severity severity) {
+    public boolean isSuppressed(Context context, Issue issue, Location range, String message, 
+            Severity severity) {
         return false;
     }
 

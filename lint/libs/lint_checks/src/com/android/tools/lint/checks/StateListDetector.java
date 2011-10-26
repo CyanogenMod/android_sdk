@@ -42,7 +42,7 @@ public class StateListDetector extends ResourceXmlDetector {
             "In a selector, only the last child in the state list should omit a " +
             "state qualifier. If not, all subsequent items in the list will be ignored " +
             "since the given item will match all.",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {
@@ -61,11 +61,6 @@ public class StateListDetector extends ResourceXmlDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -90,9 +85,9 @@ public class StateListDetector extends ResourceXmlDetector {
                     }
                 }
                 if (!hasState) {
-                    context.toolContext.report(ISSUE, context.getLocation(child),
-                            String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
-                                    i));
+                    context.toolContext.report(context, ISSUE, context.getLocation(child),
+                        String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
+                                i));
                 }
             }
         }

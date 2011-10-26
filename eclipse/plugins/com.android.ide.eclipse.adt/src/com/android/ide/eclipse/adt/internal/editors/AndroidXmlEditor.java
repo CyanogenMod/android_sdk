@@ -557,10 +557,10 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         // The actual "save" operation is done by the Structured XML Editor
         getEditor(mTextPageIndex).doSave(monitor);
 
-        runLintOnSave();
+        runLint();
     }
 
-    protected Job runLintOnSave() {
+    protected Job runLint() {
         // Check for errors, if enabled
         if (AdtPrefs.getPrefs().isLintOnSave()) {
             return LintRunner.startLint(getInputFile(), getStructuredDocument());
@@ -891,6 +891,18 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     }
 
     /**
+     * Perform any editor-specific hooks after applying an edit. When edits are
+     * nested, the hooks will only run after the final top level edit has been
+     * performed.
+     * <p>
+     * Note that the edit hooks are performed outside of the edit lock so
+     * the hooks should not perform edits on the model without acquiring
+     * a lock first.
+     */
+    protected void runEditHooks() {
+    }
+
+    /**
      * Executor which performs the given action under an edit lock (and optionally as a
      * single undo event).
      *
@@ -998,6 +1010,8 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                             mIsEditXmlModelPending);
                     mIsEditXmlModelPending = 0;
                 }
+
+                runEditHooks();
             }
         }
     }

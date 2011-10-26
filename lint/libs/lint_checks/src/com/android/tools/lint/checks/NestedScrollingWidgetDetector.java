@@ -43,7 +43,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             // TODO: Better description!
             "A scrolling widget such as a ScrollView should not contain any nested " +
             "scrolling widgets since this has various usability issues",
-            CATEGORY_LAYOUT, 7, Severity.WARNING);
+            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
 
     /** Constructs a new {@link NestedScrollingWidgetDetector} */
     public NestedScrollingWidgetDetector() {
@@ -63,11 +63,6 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
     @Override
     public Speed getSpeed() {
         return Speed.FAST;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.SINGLE_FILE;
     }
 
     @Override
@@ -121,8 +116,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
                             "horizontally scrolling widget (%2$s)";
                 }
                 String msg = String.format(format, parent.getTagName(), element.getTagName());
-                context.toolContext.report(ISSUE, context.getLocation(element),
-                        msg);
+                context.toolContext.report(context, ISSUE, context.getLocation(element), msg);
             }
         }
     }

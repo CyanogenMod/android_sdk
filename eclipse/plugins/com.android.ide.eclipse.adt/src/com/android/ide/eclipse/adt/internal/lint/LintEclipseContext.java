@@ -262,7 +262,7 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         }
     }
 
-    public void report(Issue issue, Location location, String message) {
+    public void report(Context context, Issue issue, Location location, String message) {
         if (!isEnabled(issue)) {
             return;
         }
@@ -312,7 +312,8 @@ public class LintEclipseContext implements ToolContext, IDomParser {
         }
     }
 
-    public boolean isSuppressed(Issue issue, Location range, String message, Severity severity) {
+    public boolean isSuppressed(Context context, Issue issue, Location range, String message,
+            Severity severity) {
         // Not yet supported
         return false;
     }
@@ -382,7 +383,7 @@ public class LintEclipseContext implements ToolContext, IDomParser {
                     provider.connect(file);
                     doc = provider.getDocument(file);
                     if (doc != null) {
-                        return trimTrailingSpace(doc, startOffset, endOffset);
+                        return adjustOffsets(doc, startOffset, endOffset);
                     }
                 } catch (Exception e) {
                     AdtPlugin.log(e, "Can't find range information for %1$s", file.getName());
@@ -390,15 +391,24 @@ public class LintEclipseContext implements ToolContext, IDomParser {
                     provider.disconnect(file);
                 }
             } else {
-                return trimTrailingSpace(doc, startOffset, endOffset);
+                return adjustOffsets(doc, startOffset, endOffset);
             }
         }
 
         return Pair.of(startOffset, startOffset);
     }
 
-    /** Trim off any trailing space on the given offset range in the given document */
-    private static Pair<Integer, Integer> trimTrailingSpace(IDocument doc, int startOffset,
+    /**
+     * Trim off any trailing space on the given offset range in the given
+     * document, and don't span multiple lines on ranges since it makes (for
+     * example) the XML editor just glow with yellow underlines for all the
+     * attributes etc. Highlighting just the element beginning gets the point
+     * across. It also makes it more obvious where there are warnings on both
+     * the overall element and on individual attributes since without this the
+     * warnings on attributes would just overlap with the whole-element
+     * highlighting.
+     */
+    private static Pair<Integer, Integer> adjustOffsets(IDocument doc, int startOffset,
             int endOffset) {
         if (doc != null) {
             while (endOffset > startOffset && endOffset < doc.getLength()) {
@@ -412,6 +422,22 @@ public class LintEclipseContext implements ToolContext, IDomParser {
                     // Pass - we've already validated offset range above
                     break;
                 }
+            }
+
+            // Also don't span lines
+            int lineEnd = startOffset;
+            while (lineEnd < endOffset) {
+                try {
+                    char c = doc.getChar(lineEnd);
+                    if (c == '\n' || c == '\r') {
+                        endOffset = lineEnd;
+                        break;
+                    }
+                } catch (BadLocationException e) {
+                    // Pass - we've already validated offset range above
+                    break;
+                }
+                lineEnd++;
             }
         }
 

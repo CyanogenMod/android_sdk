@@ -169,8 +169,8 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
     }
 
     @Override
-    protected Job runLintOnSave() {
-        Job job = super.runLintOnSave();
+    protected Job runLint() {
+        Job job = super.runLint();
         if (job != null) {
             job.addJobChangeListener(new JobChangeAdapter() {
                 @Override
@@ -181,6 +181,11 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
             });
         }
         return job;
+    }
+
+    @Override
+    protected void runEditHooks() {
+        runLint();
     }
 
     /**

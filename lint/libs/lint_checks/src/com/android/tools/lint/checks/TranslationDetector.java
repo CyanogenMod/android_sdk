@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -53,13 +54,35 @@ public class TranslationDetector extends ResourceXmlDetector {
     private static final String ATTR_NAME = "name";                 //$NON-NLS-1$
     private static final String ATTR_TRANSLATABLE = "translatable"; //$NON-NLS-1$
 
-    /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "IncompleteTranslation", //$NON-NLS-1$
+    @VisibleForTesting
+    static boolean COMPLETE_REGIONS =
+            System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null; //$NON-NLS-1$
+
+    private static final Pattern lANGUAGE_PATTERN = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
+    private static final Pattern REGION_PATTERN = Pattern.compile("^r([A-Z]{2})$"); //$NON-NLS-1$
+
+    /** Are all translations complete? */
+    public static final Issue MISSING = Issue.create(
+            "MissingTranslation", //$NON-NLS-1$
             "Checks for incomplete translations where not all strings are translated",
             "If an application has more than one locale, then all the strings declared in " +
-            "one language should also be translated in all other languages.",
-            CATEGORY_CORRECTNESS, 8, Severity.ERROR);
+            "one language should also be translated in all other languages.\n" +
+            "\n" +
+            "By default this detector allows regions of a language to just provide a " +
+            "subset of the strings and fall back to the standard language strings. " +
+            "You can require all regions to provide a full translation by setting the " +
+            "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
+            CATEGORY_CORRECTNESS, 8, Severity.ERROR, Scope.RESOURCES);
+
+    /** Are there extra translations that are "unused" (appear only in specific languages) ? */
+    public static final Issue EXTRA = Issue.create(
+            "ExtraTranslation", //$NON-NLS-1$
+            "Checks for translations that appear to be unused (no default language string)",
+            "If a string appears in a specific language translation file, but there is " +
+            "no corresponding string in the default locale, then this string is probably " +
+            "unused. (It's technically possible that your application is only intended to " +
+            "run in a specific locale, but it's still a good idea to provide a fallback.)",
+            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.RESOURCES);
 
     private Set<String> mNames;
     private Map<File, Set<String>> mFileToNames;
@@ -75,17 +98,12 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     @Override
     public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
+        return new Issue[] { MISSING, EXTRA };
     }
 
     @Override
     public Speed getSpeed() {
         return Speed.NORMAL;
-    }
-
-    @Override
-    public Scope getScope() {
-        return Scope.RESOURCES;
     }
 
     @Override
@@ -141,8 +159,11 @@ public class TranslationDetector extends ResourceXmlDetector {
             return;
         }
 
-        Pattern languagePattern = Pattern.compile("^[a-z]{2}$"); //$NON-NLS-1$
-        Pattern regionPattern = Pattern.compile("^r([A-Z]{2})$"); //$NON-NLS-1$
+        boolean reportMissing = context.toolContext.isEnabled(MISSING);
+        boolean reportExtra = context.toolContext.isEnabled(EXTRA);
+
+        // res/strings.xml etc
+        String defaultLanguage = "Default";
 
         Map<File, String> parentFolderToLanguage = new HashMap<File, String>();
         for (File parent : parentFolders) {
@@ -164,21 +185,20 @@ public class TranslationDetector extends ResourceXmlDetector {
             for (String segment : segments) {
                 // Language
                 if (language == null && segment.length() == 2
-                        && languagePattern.matcher(segment).matches()) {
+                        && lANGUAGE_PATTERN.matcher(segment).matches()) {
                     language = segment;
                 }
 
                 // Add in region
                 if (language != null && segment.length() == 3
-                        && regionPattern.matcher(segment).matches()) {
+                        && REGION_PATTERN.matcher(segment).matches()) {
                     language = language + '-' + segment;
                     break;
                 }
             }
 
             if (language == null) {
-                // res/strings.xml etc
-                language = "Default";
+                language = defaultLanguage;
             }
 
             parentFolderToLanguage.put(parent, language);
@@ -210,33 +230,107 @@ public class TranslationDetector extends ResourceXmlDetector {
             allStrings.addAll(fileStrings);
         }
 
-        // See if all languages define the same number of strings as the union
-        // of all the strings; if they do, there is no problem.
+        Set<String> defaultStrings = languageToStrings.get(defaultLanguage);
+        if (defaultStrings == null) {
+            defaultStrings = new HashSet<String>();
+        }
+
+        // Fast check to see if there's no problem: if the default locale set is the
+        // same as the all set (meaning there are no extra strings in the other languages)
+        // then we can quickly determine if everything is okay by just making sure that
+        // each language defines everything. If that's the case they will all have the same
+        // string count.
         int stringCount = allStrings.size();
-        for (Map.Entry<String, Set<String>> entry : languageToStrings.entrySet()) {
-            Set<String> strings = entry.getValue();
-            if (stringCount != strings.size()) {
-                String language = entry.getKey();
-
-                // Found a discrepancy in the count for different languages.
-                // Produce a full report.
-                Set<String> difference = difference(allStrings, strings);
-                List<String> sorted = new ArrayList<String>(difference);
-                Collections.sort(sorted);
-
-                Location location = null;
-                for (Entry<File, String> e : parentFolderToLanguage.entrySet()) {
-                    if (e.getValue().equals(language)) {
-                        // Use the location of the parent folder for this language
-                        location = new Location(e.getKey(), null, null);
-                        break;
-                    }
+        if (stringCount == defaultStrings.size()) {
+            boolean haveError = false;
+            for (Map.Entry<String, Set<String>> entry : languageToStrings.entrySet()) {
+                Set<String> strings = entry.getValue();
+                if (stringCount != strings.size()) {
+                    haveError = true;
+                    break;
                 }
-                context.toolContext.report(ISSUE, location,
-                    String.format("Language %1$s is missing translations for the names %2$s",
-                        language, formatList(sorted, 4)));
+            }
+            if (!haveError) {
+                return;
             }
         }
+
+        // Do we need to resolve fallback strings for regions that only define a subset
+        // of the strings in the language and fall back on the main language for the rest?
+        if (!COMPLETE_REGIONS) {
+            for (String l : languageToStrings.keySet()) {
+                if (l.indexOf('-') != -1) {
+                    // Yes, we have regions. Merge all base language string names into each region.
+                    for (Map.Entry<String, Set<String>> entry : languageToStrings.entrySet()) {
+                        Set<String> strings = entry.getValue();
+                        if (stringCount != strings.size()) {
+                            String languageRegion = entry.getKey();
+                            int regionIndex = languageRegion.indexOf('-');
+                            if (regionIndex != -1) {
+                                String language = languageRegion.substring(0, regionIndex);
+                                Set<String> fallback = languageToStrings.get(language);
+                                if (fallback != null) {
+                                    strings.addAll(fallback);
+                                }
+                            }
+                        }
+                    }
+                    // We only need to do this once; when we see the first region we know
+                    // we need to do it; once merged we can bail
+                    break;
+                }
+            }
+        }
+
+        List<String> languages = new ArrayList<String>(languageToStrings.keySet());
+        Collections.sort(languages);
+        for (String language : languages) {
+            Set<String> strings = languageToStrings.get(language);
+            if (defaultLanguage.equals(language)) {
+                continue;
+            }
+
+            // if strings.size() == stringCount, then this language is defining everything,
+            // both all the default language strings and the union of all extra strings
+            // defined in other languages, so there's no problem.
+            if (stringCount != strings.size()) {
+                if (reportMissing) {
+                    Set<String> difference = difference(defaultStrings, strings);
+                    if (difference.size() > 0) {
+                        List<String> sorted = new ArrayList<String>(difference);
+                        Collections.sort(sorted);
+                        Location location = getLocation(language, parentFolderToLanguage);
+                        context.toolContext.report(context, MISSING, location,
+                            String.format("Locale %1$s is missing translations for: %2$s",
+                                language, formatList(sorted, 4)));
+                    }
+                }
+
+                if (reportExtra) {
+                    Set<String> difference = difference(strings, defaultStrings);
+                    if (difference.size() > 0) {
+                        List<String> sorted = new ArrayList<String>(difference);
+                        Collections.sort(sorted);
+                        Location location = getLocation(language, parentFolderToLanguage);
+                        context.toolContext.report(context, EXTRA, location, String.format(
+                              "Locale %1$s is translating names not found in default locale: %2$s",
+                              language, formatList(sorted, 4)));
+                    }
+                }
+            }
+        }
+    }
+
+    private Location getLocation(String language, Map<File, String> parentFolderToLanguage) {
+        Location location = null;
+        for (Entry<File, String> e : parentFolderToLanguage.entrySet()) {
+            if (e.getValue().equals(language)) {
+                // Use the location of the parent folder for this language
+                location = new Location(e.getKey(), null, null);
+                break;
+            }
+        }
+        return location;
     }
 
     private static Set<String> difference(Set<String> a, Set<String> b) {
@@ -267,7 +361,7 @@ public class TranslationDetector extends ResourceXmlDetector {
     public void visitElement(Context context, Element element) {
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.toolContext.report(ISSUE, context.getLocation(element),
+            context.toolContext.report(context, MISSING, context.getLocation(element),
                     "Missing name attribute in <string> declaration");
         } else {
             String name = attribute.getValue();

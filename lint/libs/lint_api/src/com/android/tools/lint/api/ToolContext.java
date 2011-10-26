@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.api;
 
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
@@ -29,12 +30,12 @@ import com.android.tools.lint.detector.api.Severity;
 public interface ToolContext {
     /**
      * Report the given issue.
-     *
+     * @param context the context used by the detector when the issue was found
      * @param issue the issue that was found
      * @param location the location of the issue
      * @param message the associated user message
      */
-    public void report(Issue issue, Location location, String message);
+    public void report(Context context, Issue issue, Location location, String message);
 
     /**
      * Checks whether this issue should be ignored because the user has already
@@ -42,13 +43,16 @@ public interface ToolContext {
      * suppressed/ignored, not a whole detector being disabled via something
      * like {@link #isEnabled(Issue)}.
      *
+     * @param context the context used by the detector when the issue was found
      * @param issue the issue that was found
      * @param location the location of the issue
      * @param message the associated user message
      * @param severity the severity of the issue
+     *
      * @return true if this issue should be suppressed
      */
-    public boolean isSuppressed(Issue issue, Location location, String message, Severity severity);
+    public boolean isSuppressed(Context context, Issue issue, Location location, String message,
+            Severity severity);
 
 
     /**
