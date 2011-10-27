@@ -93,7 +93,6 @@ framework/ddmuilib.jar           tools/lib/ddmuilib.jar
 framework/hierarchyviewer2.jar   tools/lib/hierarchyviewer2.jar
 framework/hierarchyviewerlib.jar tools/lib/hierarchyviewerlib.jar
 framework/draw9patch.jar         tools/lib/draw9patch.jar
-framework/uix.jar                tools/lib/uix.jar
 framework/traceview.jar          tools/lib/traceview.jar
 framework/anttasks.jar           tools/lib/anttasks.jar
 framework/sdklib.jar             tools/lib/sdklib.jar
