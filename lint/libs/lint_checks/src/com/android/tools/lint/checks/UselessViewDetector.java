@@ -149,25 +149,34 @@ public class UselessViewDetector extends LayoutDetector {
             return;
         }
 
+        // - A parent can be removed if it doesn't have a background
+        // - A parent can be removed if has a background *and* the child does not have a
+        //   background (in which case, just move the background over to the child, remove
+        //   the parent)
+        // - If both child and parent have a background, the parent cannot be removed (a
+        //   background can be translucent, have transparent padding, etc.)
         boolean nodeHasBackground = element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND);
         boolean parentHasBackground = parent.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND);
-        // TODO: The logic on this has background stuff is a bit unclear to me; this is
-        // a literal translation of the Groovy code in layoutopt
-        // TODO: Get clarification on what the criteria are.
-        if (nodeHasBackground || parentHasBackground ||
-                (!nodeHasBackground && !parentHasBackground)) {
-            boolean hasId = element.hasAttributeNS(ANDROID_URI, ATTR_ID);
-            Location location = context.getLocation(element);
-            String tag = element.getTagName();
-            String format;
-            if (hasId) {
-                format = "This %1$s layout or its %2$s parent is possibly useless";
-            } else {
-                format = "This %1$s layout or its %2$s parent is useless";
-            }
-            String message = String.format(format, tag, parentTag);
-            context.toolContext.report(context, USELESS_PARENT, location, message, null);
+        if (nodeHasBackground && parentHasBackground) {
+            // Can't remove because both define a background, and they might both be
+            // visible (e.g. through transparency or padding).
+            return;
         }
+
+        boolean hasId = element.hasAttributeNS(ANDROID_URI, ATTR_ID);
+        Location location = context.getLocation(element);
+        String tag = element.getTagName();
+        String format;
+        if (hasId) {
+            format = "This %1$s layout or its %2$s parent is possibly useless";
+        } else {
+            format = "This %1$s layout or its %2$s parent is useless";
+        }
+        if (nodeHasBackground || parentHasBackground) {
+            format += "; transfer the background attribute to the other view";
+        }
+        String message = String.format(format, tag, parentTag);
+        context.toolContext.report(context, USELESS_PARENT, location, message, null);
     }
 
     // This is the old UselessView check from layoutopt

@@ -402,7 +402,6 @@ public class DomUtilities {
      * @return the escaped value
      */
     public static String toXmlAttributeValue(String attrValue) {
-        // Must escape ', < and "
         for (int i = 0, n = attrValue.length(); i < n; i++) {
             char c = attrValue.charAt(i);
             if (c == '"' || c == '\'' || c == '<' || c == '&') {

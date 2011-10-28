@@ -118,16 +118,31 @@ class HtmlReporter extends Reporter {
                 currentList.add(warning);
             }
 
-            mWriter.write(String.format("Check performed at %1$s.", new Date().toString()));
-            mWriter.write("<br/>"); //$NON-NLS-1$
-            mWriter.write(String.format("%1$d errors and %2$d warnings found.", errorCount,
-                    warningCount));
-            mWriter.write("<br/>"); //$NON-NLS-1$
+            mWriter.write(String.format("Check performed at %1$s.",
+                    new Date().toString()));
+            mWriter.write("<br/>");                                       //$NON-NLS-1$
+            mWriter.write(String.format("%1$d errors and %2$d warnings found:",
+                    errorCount, warningCount));
+            mWriter.write("<br/>");                                       //$NON-NLS-1$
+
+            // Write issue id summary
+            mWriter.write("<ul>\n");                                     //$NON-NLS-1$
+            for (List<Warning> warnings : related) {
+                mWriter.write("<li> <a href=\"#"                         //$NON-NLS-1$
+                        + warnings.get(0).issue.getId()
+                        +"\">");                                         //$NON-NLS-1$
+                mWriter.write(String.format("%1$3d %2$s",                //$NON-NLS-1$
+                        warnings.size(), warnings.get(0).issue.getId()));
+                mWriter.write("</a>\n");                                 //$NON-NLS-1$
+            }
+            mWriter.write("</ul>\n");                                    //$NON-NLS-1$
+            mWriter.write("<br/>");                                      //$NON-NLS-1$
 
             for (List<Warning> warnings : related) {
                 Warning first = warnings.get(0);
                 Issue issue = first.issue;
 
+                mWriter.write("<a name=\"" + issue.getId() + "\">\n");  //$NON-NLS-1$ //$NON-NLS-2$
                 mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
 
                 // Explain this issue
@@ -205,7 +220,7 @@ class HtmlReporter extends Reporter {
                     mWriter.write("<a href=\"");                         //$NON-NLS-1$
                     mWriter.write(issue.getMoreInfo());
                     mWriter.write("\">");                                //$NON-NLS-1$
-                    mWriter.write("More Info");
+                    mWriter.write(issue.getMoreInfo());
                     mWriter.write("</a></div>\n");                       //$NON-NLS-1$
                 }
 
