@@ -27,7 +27,7 @@ public class UseCompoundDrawableDetectorTest extends AbstractCheckTest {
 
     public void testCompound() throws Exception {
         assertEquals(
-                "compound.xml:8: Warning: This tag and its children can be replaced by one " +
+                "compound.xml:3: Warning: This tag and its children can be replaced by one " +
                         "<TextView/> and a compound drawable",
                 lint("res/layout/compound.xml"));
     }

@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.lint;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
@@ -589,19 +590,21 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
             return null;
         }
 
-        IStructuredModel model = null;
-        try {
-            IModelManager modelManager = StructuredModelManager.getModelManager();
-            model = modelManager.getModelForRead(file);
-            return model.getStructuredDocument().get();
-        } catch (IOException e) {
-            AdtPlugin.log(e, "Cannot read XML file");
-        } catch (CoreException e) {
-            AdtPlugin.log(e, null);
-        } finally {
-            if (model != null) {
-                // TODO: This may be too early...
-                model.releaseFromRead();
+        if (AdtUtils.endsWithIgnoreCase(file.getName(), DOT_XML)) {
+            IStructuredModel model = null;
+            try {
+                IModelManager modelManager = StructuredModelManager.getModelManager();
+                model = modelManager.getModelForRead(file);
+                return model.getStructuredDocument().get();
+            } catch (IOException e) {
+                AdtPlugin.log(e, "Cannot read XML file");
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+            } finally {
+                if (model != null) {
+                    // TODO: This may be too early...
+                    model.releaseFromRead();
+                }
             }
         }
 

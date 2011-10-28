@@ -30,19 +30,20 @@ public class DomUtilitiesTest extends TestCase {
     public void testToXmlAttributeValue() throws Exception {
         assertEquals("", DomUtilities.toXmlAttributeValue(""));
         assertEquals("foo", DomUtilities.toXmlAttributeValue("foo"));
-        assertEquals("foo<bar", DomUtilities.toXmlAttributeValue("foo<bar"));
+        assertEquals("foo&lt;bar", DomUtilities.toXmlAttributeValue("foo<bar"));
+        assertEquals("foo>bar", DomUtilities.toXmlAttributeValue("foo>bar"));
 
         assertEquals("&quot;", DomUtilities.toXmlAttributeValue("\""));
         assertEquals("&apos;", DomUtilities.toXmlAttributeValue("'"));
         assertEquals("foo&quot;b&apos;&apos;ar",
                 DomUtilities.toXmlAttributeValue("foo\"b''ar"));
-        assertEquals("<&quot;&apos;>&amp;", DomUtilities.toXmlAttributeValue("<\"'>&"));
+        assertEquals("&lt;&quot;&apos;>&amp;", DomUtilities.toXmlAttributeValue("<\"'>&"));
     }
 
     public void testAppendXmlAttributeValue() throws Exception {
         StringBuilder sb = new StringBuilder();
         DomUtilities.appendXmlAttributeValue(sb, "<\"'>&");
-        assertEquals("<&quot;&apos;>&amp;", sb.toString());
+        assertEquals("&lt;&quot;&apos;>&amp;", sb.toString());
     }
 
     public void testAppendXmlTextValue() throws Exception {

@@ -402,15 +402,17 @@ public class DomUtilities {
      * @return the escaped value
      */
     public static String toXmlAttributeValue(String attrValue) {
-        // Must escape ' and "
-        if (attrValue.indexOf('"') == -1 && attrValue.indexOf('\'') == -1) {
-            return attrValue;
+        // Must escape ', < and "
+        for (int i = 0, n = attrValue.length(); i < n; i++) {
+            char c = attrValue.charAt(i);
+            if (c == '"' || c == '\'' || c == '<' || c == '&') {
+                StringBuilder sb = new StringBuilder(2 * attrValue.length());
+                appendXmlAttributeValue(sb, attrValue);
+                return sb.toString();
+            }
         }
 
-        int n = attrValue.length();
-        StringBuilder sb = new StringBuilder(2 * n);
-        appendXmlAttributeValue(sb, attrValue);
-        return sb.toString();
+        return attrValue;
     }
 
     /**
@@ -422,10 +424,15 @@ public class DomUtilities {
      */
     public static void appendXmlAttributeValue(StringBuilder sb, String attrValue) {
         int n = attrValue.length();
+        // &, ", ' and < are illegal in attributes; see http://www.w3.org/TR/REC-xml/#NT-AttValue
+        // (' legal in a " string and " is legal in a ' string but here we'll stay on the safe
+        // side)
         for (int i = 0; i < n; i++) {
             char c = attrValue.charAt(i);
             if (c == '"') {
                 sb.append("&quot;"); //$NON-NLS-1$
+            } else if (c == '<') {
+                sb.append("&lt;"); //$NON-NLS-1$
             } else if (c == '\'') {
                 sb.append("&apos;"); //$NON-NLS-1$
             } else if (c == '&') {
