@@ -29,103 +29,292 @@ import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.AttributesImpl;
-import org.xml.sax.helpers.XMLFilterImpl;
-import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.sax.SAXSource;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
-/** A simple XML parser which can store and retrieve line:column information for the nodes */
+/**
+ * A simple DOM XML parser which can retrieve exact beginning and end offsets
+ * (and line and column numbers) for element nodes as well as attribute nodes.
+ */
 public class PositionXmlParser implements IDomParser {
-    private static final String ATTR_LOCATION = "location";                     //$NON-NLS-1$
-    private static final String PRIVATE_NAMESPACE = "http://tools.android.com"; //$NON-NLS-1$
-    private static final String PRIVATE_PREFIX = "temp";                        //$NON-NLS-1$
+    private static final String CONTENT_KEY = "contents";     //$NON-NLS-1$
+    private final static String POS_KEY = "offsets";          //$NON-NLS-1$
+    private static final String NAMESPACE_PREFIX_FEATURE =
+            "http://xml.org/sax/features/namespace-prefixes"; //$NON-NLS-1$
+    private static final String NAMESPACE_FEATURE =
+            "http://xml.org/sax/features/namespaces";         //$NON-NLS-1$
+
+    // ---- Implements IDomParser ----
 
     public Document parse(Context context) {
-        InputSource input = new InputSource(new StringReader(context.getContents()));
         try {
-            Filter filter = new Filter(XMLReaderFactory.createXMLReader());
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            DOMResult result = new DOMResult();
-            transformer.transform(new SAXSource(filter, input), result);
-            return (Document) result.getNode();
-        } catch (SAXException e) {
-            // The file doesn't parse: not an exception. Infrastructure will log a warning
-            // that this file was not analyzed.
-            return null;
-        } catch (TransformerConfigurationException e) {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setFeature(NAMESPACE_FEATURE, true);
+            factory.setFeature(NAMESPACE_PREFIX_FEATURE, true);
+            SAXParser parser = factory.newSAXParser();
+
+            String xml = context.getContents();
+            InputSource input = new InputSource(new StringReader(xml));
+            DomBuilder handler = new DomBuilder(xml);
+            parser.parse(input, handler);
+            return handler.getDocument();
+        } catch (ParserConfigurationException e) {
             context.toolContext.log(e, null);
-        } catch (TransformerException e) {
+        } catch (SAXException e) {
             context.toolContext.log(null, String.format("Failed parsing %1$s: %2$s",
-                    context.file.getName(), e.getCause().getLocalizedMessage()));
+                    context.file.getName(),
+                    e.getCause() != null ? e.getCause().getLocalizedMessage() :
+                        e.getLocalizedMessage()));
+        } catch (Throwable t) {
+            context.toolContext.log(t, null);
         }
-
         return null;
-    }
-
-    private static class Filter extends XMLFilterImpl {
-        private Locator mLocator;
-
-        Filter(XMLReader reader) {
-            super(reader);
-        }
-
-        @Override
-        public void setDocumentLocator(Locator locator) {
-            super.setDocumentLocator(locator);
-            this.mLocator = locator;
-        }
-
-        @Override
-        public void startElement(String uri, String localName, String qualifiedName,
-                Attributes attributes) throws SAXException {
-            int lineno = mLocator.getLineNumber();
-            int column = mLocator.getColumnNumber();
-            String location = Integer.toString(lineno) + ':' + Integer.toString(column);
-
-            // Modify attributes parameter to a copy that includes our private attribute
-            AttributesImpl wrapper = new AttributesImpl(attributes);
-            wrapper.addAttribute(PRIVATE_NAMESPACE, ATTR_LOCATION,
-                    PRIVATE_PREFIX + ':' + ATTR_LOCATION, "CDATA", location); //$NON-NLS-1$
-
-            super.startElement(uri, localName, qualifiedName, wrapper);
-        }
     }
 
     public Position getStartPosition(Context context, Node node) {
+        // Look up the position information stored while parsing for the given node.
+        // Note however that we only store position information for elements (because
+        // there is no SAX callback for individual attributes).
+        // Therefore, this method special cases this:
+        //  -- First, it looks at the owner element and uses its position
+        //     information as a first approximation.
+        //  -- Second, it uses that, as well as the original XML text, to search
+        //     within the node range for an exact text match on the attribute name
+        //     and if found uses that as the exact node offsets instead.
         if (node instanceof Attr) {
             Attr attr = (Attr) node;
-            node = attr.getOwnerElement();
-        }
-        if (node instanceof Element) {
-            Attr attribute = ((Element) node).getAttributeNodeNS(PRIVATE_NAMESPACE, ATTR_LOCATION);
-            if (attribute != null) {
-                String position = attribute.getValue();
-                int separator = position.indexOf(':');
-                int line = Integer.parseInt(position.substring(0, separator));
-                int column = Integer.parseInt(position.substring(separator + 1));
-                return new OffsetPosition(line, column, -1);
+            OffsetPosition pos = (OffsetPosition) attr.getOwnerElement().getUserData(POS_KEY);
+            if (pos != null) {
+                int startOffset = pos.getOffset();
+                int endOffset = pos.next.getOffset();
+
+                // Find attribute in the text
+                String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
+                if (contents == null) {
+                    return null;
+                }
+
+                // Locate the name=value attribute in the source text
+                // Fast string check first for the common occurrence
+                String name = attr.getName();
+                Pattern pattern = Pattern.compile(
+                        String.format("%1$s\\s*=\\s*[\"'].*[\"']", name)); //$NON-NLS-1$
+                Matcher matcher = pattern.matcher(contents);
+                if (matcher.find(startOffset) && matcher.start() <= endOffset) {
+                    int index = matcher.start();
+                    // Adjust the line and column to this new offset
+                    int line = pos.getLine();
+                    int column = pos.getColumn();
+                    for (int offset = pos.getOffset(); offset < index; offset++) {
+                        char t = contents.charAt(offset);
+                        if (t == '\n') {
+                            line++;
+                            column = 0;
+                        }
+                        column++;
+                    }
+
+                    // Also update end range
+                    pos.next = new OffsetPosition(line, column, matcher.end());
+
+                    return new OffsetPosition(line, column, index);
+                } else {
+                    // No regexp match either: just fall back to element position
+                    return pos;
+                }
             }
         }
 
-        return null;
+        return (OffsetPosition) node.getUserData(POS_KEY);
     }
 
     public Position getEndPosition(Context context, Node node) {
-        // TODO: Currently unused
+        OffsetPosition pos = (OffsetPosition) node.getUserData(POS_KEY);
+        if (pos == null && node instanceof Attr) {
+            pos = (OffsetPosition) ((Attr) node).getOwnerElement().getUserData(POS_KEY);
+        }
+        if (pos != null && pos.next != null) {
+            return pos.next;
+        }
+
         return null;
     }
 
     public Location getLocation(Context context, Node node) {
-        return new Location(context.file, getStartPosition(context, node), null);
+        return new Location(context.file, getStartPosition(context, node),
+                getEndPosition(context, node));
+    }
+
+    /**
+     * SAX parser handler which incrementally builds up a DOM document as we go
+     * along, and updates position information along the way. Position
+     * information is attached to the DOM nodes by setting user data with the
+     * {@link POS_KEY} key.
+     */
+    private static final class DomBuilder extends DefaultHandler {
+        private final String mXml;
+        private final Document mDocument;
+        private Locator mLocator;
+        private int mCurrentLine = 0;
+        private int mCurrentOffset;
+        private int mCurrentColumn;
+        private final List<Element> mStack = new ArrayList<Element>();
+        private final StringBuilder mPendingText = new StringBuilder();
+
+        private DomBuilder(String xml) throws ParserConfigurationException {
+            mXml = xml;
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setValidating(false);
+            DocumentBuilder docBuilder = factory.newDocumentBuilder();
+            mDocument = docBuilder.newDocument();
+            mDocument.setUserData(CONTENT_KEY, xml, null);
+        }
+
+        /** Returns the document parsed by the handler */
+        Document getDocument() {
+            return mDocument;
+        }
+
+        @Override
+        public void setDocumentLocator(Locator locator) {
+            this.mLocator = locator;
+        }
+
+        @Override
+        public void startElement(String uri, String localName, String qName,
+                Attributes attributes) throws SAXException {
+            flushText();
+            Element element = mDocument.createElement(qName);
+            for (int i = 0; i < attributes.getLength(); i++) {
+                if (attributes.getURI(i) != null && attributes.getURI(i).length() > 0) {
+                    Attr attr = mDocument.createAttributeNS(attributes.getURI(i),
+                            attributes.getQName(i));
+                    attr.setValue(attributes.getValue(i));
+                    element.setAttributeNodeNS(attr);
+                    assert attr.getParentNode() == element;
+                } else {
+                    Attr attr = mDocument.createAttribute(attributes.getQName(i));
+                    attr.setValue(attributes.getValue(i));
+                    element.setAttributeNode(attr);
+                    assert attr.getParentNode() == element;
+
+                }
+            }
+            OffsetPosition pos = getCurrentPosition();
+
+            // The starting position reported to us by SAX is really the END of the
+            // open tag in an element, when all the attributes have been processed.
+            // We have to scan backwards to find the real beginning. We'll do that
+            // by scanning backwards.
+            // -1: Make sure that when we have <foo></foo> we don't consider </foo>
+            // the beginning since pos.offset will typically point to the first character
+            // AFTER the element open tag, which could be a closing tag or a child open
+            // tag
+
+            for (int offset = pos.getOffset() - 1; offset >= 0; offset--) {
+                char c = mXml.charAt(offset);
+                // < cannot appear in attribute values or anywhere else within
+                // an element open tag, so we know the first occurrence is the real
+                // element start
+                if (c == '<') {
+                    // Adjust line position
+                    int line = pos.getLine();
+                    for (int i = offset, n = pos.getOffset(); i < n; i++) {
+                        if (mXml.charAt(i) == '\n') {
+                            line--;
+                        }
+                    }
+
+                    // Compute new column position
+                    int column = 0;
+                    for (int i = offset; i >= 0; i--, column++) {
+                        if (mXml.charAt(i) == '\n') {
+                            break;
+                        }
+                    }
+
+                    pos = new OffsetPosition(line, column, offset);
+                    break;
+                }
+            }
+
+            element.setUserData(POS_KEY, pos, null);
+            mStack.add(element);
+        }
+
+        @Override
+        public void endElement(String uri, String localName, String qName) {
+            flushText();
+            Element element = mStack.remove(mStack.size() - 1);
+
+            OffsetPosition pos = (OffsetPosition) element.getUserData(POS_KEY);
+            assert pos != null;
+            pos.next = getCurrentPosition();
+
+            if (mStack.isEmpty()) {
+                mDocument.appendChild(element);
+            } else {
+                Element parent = mStack.get(mStack.size() - 1);
+                parent.appendChild(element);
+            }
+        }
+
+        /**
+         * Returns a position holder for the current position. The most
+         * important part of this function is to incrementally compute the
+         * offset as well, by counting forwards until it reaches the new line
+         * number and column position of the XML parser, counting characters as
+         * it goes along.
+         */
+        private OffsetPosition getCurrentPosition() {
+            int line = mLocator.getLineNumber() - 1;
+            int column = mLocator.getColumnNumber() - 1;
+
+            // Compute offset incrementally now that we have the new line and column
+            // numbers
+            while (mCurrentLine < line) {
+                char c = mXml.charAt(mCurrentOffset);
+                if (c == '\n') {
+                    mCurrentLine++;
+                    mCurrentColumn = 0;
+                } else {
+                    mCurrentColumn++;
+                }
+                mCurrentOffset++;
+            }
+
+            mCurrentOffset += column - mCurrentColumn;
+            mCurrentColumn = column;
+
+            return new OffsetPosition(mCurrentLine, mCurrentColumn, mCurrentOffset);
+        }
+
+        @Override
+        public void characters(char c[], int start, int length) throws SAXException {
+            mPendingText.append(c, start, length);
+        }
+
+        private void flushText() {
+            if (mPendingText.length() > 0 && !mStack.isEmpty()) {
+                Element element = mStack.get(mStack.size() - 1);
+                Node textNode = mDocument.createTextNode(mPendingText.toString());
+                element.appendChild(textNode);
+                mPendingText.setLength(0);
+            }
+        }
     }
 
     private static class OffsetPosition extends Position {
@@ -140,6 +329,12 @@ public class PositionXmlParser implements IDomParser {
 
         /** The character offset */
         private final int mOffset;
+
+        /**
+         * Linked position: for a begin offset this will point to the end
+         * offset, and for an end offset this will be null
+         */
+        public OffsetPosition next;
 
         /**
          * Creates a new {@link Position}

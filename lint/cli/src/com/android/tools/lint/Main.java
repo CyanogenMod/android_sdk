@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,7 +58,8 @@ public class Main extends ToolContext {
     private static final String ARG_SHOW       = "--show";         //$NON-NLS-1$
     private static final String ARG_FULLPATH   = "--fullpath";     //$NON-NLS-1$
     private static final String ARG_HELP       = "--help";         //$NON-NLS-1$
-    private static final String ARG_LINES      = "--lines";        //$NON-NLS-1$
+    private static final String ARG_NOLINES    = "--nolines";      //$NON-NLS-1$
+    private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
     private static final int ERRNO_ERRORS = -1;
     private static final int ERRNO_USAGE = -2;
     private static final int ERRNO_EXISTS = -3;
@@ -66,13 +68,13 @@ public class Main extends ToolContext {
 
     private Set<String> mSuppress = new HashSet<String>();
     private Set<String> mEnabled = null;
-    private StringBuilder mOutput = new StringBuilder(2000);
     private boolean mFatal;
     private String mCommonPrefix;
     private boolean mFullPath;
     private int mErrorCount;
     private int mWarningCount;
-    private boolean mShowLines;
+    private boolean mShowLines = true;
+    private Reporter mReporter;
 
     /** Creates a CLI driver */
     public Main() {
@@ -129,11 +131,34 @@ public class Main extends ToolContext {
             } else if (arg.equals(ARG_FULLPATH)
                     || arg.equals(ARG_FULLPATH + "s")) { // allow "--fullpaths" too
                 mFullPath = true;
-            } else if (arg.equals(ARG_LINES)) {
-                mShowLines = true;
+            } else if (arg.equals(ARG_NOLINES)) {
+                mShowLines = false;
+            } else if (arg.equals(ARG_HTML)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing HTML output file name");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                File output = new File(args[++index]);
+                if (output.exists()) {
+                    boolean delete = output.delete();
+                    if (!delete) {
+                        System.err.println("Could not delete old " + output);
+                        System.exit(ERRNO_EXISTS);
+                    }
+                }
+                if (output.canWrite()) {
+                    System.err.println("Cannot write HTML output file " + output);
+                    System.exit(ERRNO_EXISTS);
+                }
+                try {
+                    mReporter = new HtmlReporter(output);
+                } catch (IOException e) {
+                    log(e, null);
+                    System.exit(ERRNO_INVALIDARGS);
+                }
             } else if (arg.equals(ARG_SUPPRESS)) {
                 if (index == args.length - 1) {
-                    System.err.println("Missing categories to suppress");
+                    System.err.println("Missing id's to suppress");
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 String[] ids = args[++index].split(",");
@@ -147,7 +172,7 @@ public class Main extends ToolContext {
                 }
             } else if (arg.equals(ARG_ENABLE)) {
                 if (index == args.length - 1) {
-                    System.err.println("Missing categories to enable");
+                    System.err.println("Missing id's to enable");
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 String[] ids = args[++index].split(",");
@@ -181,6 +206,10 @@ public class Main extends ToolContext {
             System.exit(ERRNO_INVALIDARGS);
         }
 
+        if (mReporter == null) {
+            mReporter = new TextReporter(new PrintWriter(System.out, true));
+        }
+
         mCommonPrefix = files.get(0).getPath();
         for (int i = 1; i < files.size(); i++) {
             File file = files.get(i);
@@ -190,16 +219,17 @@ public class Main extends ToolContext {
 
         Lint analyzer = new Lint(new BuiltinDetectorRegistry(), this, Scope.PROJECT);
         analyzer.analyze(files);
-        if (mOutput.length() == 0) {
-            System.out.println("No issues found.");
-            System.exit(0); // Success error code
-        } else {
-            System.out.println(mOutput.toString());
 
-            System.out.println(String.format("%1$d errors, %2$d warnings",
-                    mErrorCount, mWarningCount));
-            System.exit(mFatal ? ERRNO_ERRORS : 0);
+        Collections.sort(mWarnings);
+
+        try {
+            mReporter.write(mErrorCount, mWarningCount, mWarnings);
+        } catch (IOException e) {
+            log(e, null);
+            System.exit(ERRNO_INVALIDARGS);
         }
+
+        System.exit(mFatal ? ERRNO_ERRORS : 0);
     }
 
     private void displayValidIds(DetectorRegistry registry, PrintStream out) {
@@ -228,8 +258,19 @@ public class Main extends ToolContext {
             }
         });
 
-        System.out.println("Available issues:");
+        System.out.println("Available issues:\n");
+        String previousCategory = null;
         for (Issue issue : sorted) {
+            String category = issue.getCategory();
+            if (!category.equals(previousCategory)) {
+                System.out.println(category);
+                for (int i = 0, n = category.length(); i < n; i++) {
+                    System.out.print('=');
+                }
+                System.out.println('\n');
+                previousCategory = category;
+            }
+
             describeIssue(issue);
             System.out.println();
         }
@@ -241,18 +282,22 @@ public class Main extends ToolContext {
             System.out.print('-');
         }
         System.out.println();
-        System.out.println(wrap("Summary: " + issue.getDescription(), MAX_LINE_WIDTH));
+        System.out.println(wrap("Summary: " + issue.getDescription()));
         System.out.println("Priority: " + issue.getPriority() + " / 10");
         System.out.println("Severity: " + issue.getDefaultSeverity().getDescription());
         System.out.println("Category: " + issue.getCategory());
 
         if (issue.getExplanation() != null) {
             System.out.println();
-            System.out.println(wrap(issue.getExplanation(), MAX_LINE_WIDTH));
+            System.out.println(wrap(issue.getExplanation()));
         }
         if (issue.getMoreInfo() != null) {
             System.out.println("\nMore information: " + issue.getMoreInfo());
         }
+    }
+
+    static String wrap(String explanation) {
+        return wrap(explanation, MAX_LINE_WIDTH);
     }
 
     static String wrap(String explanation, int max) {
@@ -302,7 +347,8 @@ public class Main extends ToolContext {
         out.println(ARG_SUPPRESS + " <id-list>: Suppress a list of issue id's.");
         out.println(ARG_ENABLE + " <id-list>: Only check the specific list of issues");
         out.println(ARG_FULLPATH + " : Use full paths in the error output");
-        out.println(ARG_LINES + " : Include the lines with errors in the output");
+        out.println(ARG_NOLINES + " : Do not include the source file lines with errors in the output");
+        out.println(ARG_HTML + " <filename>: Create an HTML report instead");
         out.println();
         out.println(ARG_LISTIDS + ": List the available issue id's and exit.");
         out.println(ARG_SHOW + ": List available issues along with full explanations");
@@ -348,6 +394,8 @@ public class Main extends ToolContext {
         return !mSuppress.contains(issue.getId());
     }
 
+    private List<Warning> mWarnings = new ArrayList<Warning>();
+
     @Override
     public void report(Context context, Issue issue, Location location, String message,
             Object data) {
@@ -366,13 +414,14 @@ public class Main extends ToolContext {
             mWarningCount++;
         }
 
-        int startLength = mOutput.length();
-
-        String errorLine = null;
+        Warning warning = new Warning(issue, message, severity, data);
+        mWarnings.add(warning);
 
         if (location != null) {
             File file = location.getFile();
             if (file != null) {
+                warning.file = file;
+
                 String path = file.getPath();
                 if (!mFullPath && path.startsWith(mCommonPrefix)) {
                     int chop = mCommonPrefix.length();
@@ -381,88 +430,74 @@ public class Main extends ToolContext {
                     }
                     path = path.substring(chop);
                 }
-                mOutput.append(path);
-                mOutput.append(':');
+                warning.path = path;
             }
 
             Position startPosition = location.getStart();
             if (startPosition != null) {
                 int line = startPosition.getLine();
+                warning.line = line;
+                warning.offset = startPosition.getOffset();
                 if (line >= 0) {
-                    // line is 0-based, should display 1-based
-                    mOutput.append(Integer.toString(line + 1));
-                    mOutput.append(':');
+                    warning.fileContents = context.toolContext.readFile(location.getFile());
 
                     if (mShowLines) {
                         // Compute error line contents
-                        errorLine = getLine(context.getContents(), line);
-                        if (errorLine != null) {
-                            // Column number display does not work well because the
-                            // column numbers are all wrong; the XMLFilter approach gives
-                            // us the position *after* the element has been parsed.
-                            // Need a different approach.
-                            //int column = startPosition.getColumn();
-                            //if (column > 0) {
-                            //    StringBuilder sb = new StringBuilder();
-                            //    sb.append(errorLine);
-                            //    sb.append('\n');
-                            //    for (int i = 0; i < column - 1; i++) {
-                            //        sb.append(' ');
-                            //    }
-                            //    sb.append('^');
-                            //    sb.append('\n');
-                            //    errorLine = sb.toString();
-                            //} else {
-                            errorLine = errorLine + '\n';
-                            //}
+                        warning.errorLine = getLine(context.getContents(), line);
+                        if (warning.errorLine != null) {
+                            int column = startPosition.getColumn();
+                            if (column < 0) {
+                                column = 0;
+                                for (int i = 0; i < warning.errorLine.length(); i++, column++) {
+                                    if (!Character.isWhitespace(warning.errorLine.charAt(i))) {
+                                        break;
+                                    }
+                                }
+                            }
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(warning.errorLine);
+                            sb.append('\n');
+                            for (int i = 0; i < column - 1; i++) {
+                                sb.append(' ');
+                            }
+                            sb.append('^');
+                            sb.append('\n');
+                            warning.errorLine = sb.toString();
                         }
                     }
                 }
             }
-
-            // Column is not particularly useful here
-            //int column = location.getColumn();
-            //if (column > 0) {
-            //    mOutput.append(Integer.toString(column));
-            //    mOutput.append(':');
-            //}
-
-            if (startLength < mOutput.length()) {
-                mOutput.append(' ');
-            }
-        }
-
-        mOutput.append(severity.getDescription());
-        mOutput.append(':');
-        mOutput.append(' ');
-
-        mOutput.append(message);
-        if (issue != null) {
-            mOutput.append(' ').append('[');
-            mOutput.append(issue.getId());
-            mOutput.append(']');
-        }
-
-        mOutput.append('\n');
-
-        if (errorLine != null) {
-            mOutput.append(errorLine);
         }
     }
 
     /** Look up the contents of the given line */
-    private String getLine(String contents, int line) {
+    static String getLine(String contents, int line) {
+        int index = getLineOffset(contents, line);
+        if (index != -1) {
+            return getLineOfOffset(contents, index);
+        } else {
+            return null;
+        }
+    }
+
+    static String getLineOfOffset(String contents, int offset) {
+        int end = contents.indexOf('\n', offset);
+        return contents.substring(offset, end != -1 ? end : contents.length());
+    }
+
+
+    /** Look up the contents of the given line */
+    static int getLineOffset(String contents, int line) {
         int index = 0;
-        for (int i = 0; i < line - 1; i++) {
+        for (int i = 0; i < line; i++) {
             index = contents.indexOf('\n', index);
             if (index == -1) {
-                return null;
+                return -1;
             }
             index++;
         }
 
-        int end = contents.indexOf('\n', index);
-        return contents.substring(index, end != -1 ? end : contents.length());
+        return index;
     }
 
     @Override

@@ -27,9 +27,9 @@ public class HardcodedValuesDetectorTest  extends AbstractCheckTest {
 
     public void testStrings() throws Exception {
         assertEquals(
-            "accessibility.xml:4: Warning: [I18N] Hardcoded string \"Button\", " +
+            "accessibility.xml:3: Warning: [I18N] Hardcoded string \"Button\", " +
                 "should use @string resource\n" +
-            "accessibility.xml:7: Warning: [I18N] Hardcoded string \"Button\", " +
+            "accessibility.xml:6: Warning: [I18N] Hardcoded string \"Button\", " +
                 "should use @string resource",
             lint("res/layout/accessibility.xml"));
     }

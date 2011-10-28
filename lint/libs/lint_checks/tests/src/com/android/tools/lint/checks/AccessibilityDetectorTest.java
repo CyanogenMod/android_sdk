@@ -27,9 +27,9 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
 
     public void testAccessibility() throws Exception {
         assertEquals(
-                "accessibility.xml:5: Warning: [Accessibility] Missing contentDescription " +
+                "accessibility.xml:4: Warning: [Accessibility] Missing contentDescription " +
                         "attribute on image\n" +
-                "accessibility.xml:6: Warning: [Accessibility] Missing contentDescription " +
+                "accessibility.xml:5: Warning: [Accessibility] Missing contentDescription " +
                         "attribute on image",
                 lint("res/layout/accessibility.xml"));
     }

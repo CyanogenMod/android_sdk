@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.checks;
+package com.android.tools.lint;
 
-import com.android.tools.lint.detector.api.Detector;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
 
-@SuppressWarnings("javadoc")
-public class NestedScrollingWidgetDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new NestedScrollingWidgetDetector();
+/** A reporter is an output generator for lint warnings */
+abstract class Reporter {
+    protected Writer mWriter;
+
+    Reporter(Writer writer) {
+        mWriter = writer;
     }
 
-    public void testNested() throws Exception {
-        assertEquals(
-                "scrolling.xml:13: Warning: The vertically scrolling ScrollView should not " +
-                        "contain another vertically scrolling widget (ListView)",
-                lint("res/layout/scrolling.xml"));
-    }
+    abstract void write(int errorCount, int warningCount, List<Warning> issues) throws IOException;
 }

@@ -106,6 +106,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         parent.setLayout(gridLayout);
 
         mErrorLabel = new Label(parent, SWT.NONE);
+        mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 
         sashForm = new SashForm(parent, SWT.NONE);
         sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));

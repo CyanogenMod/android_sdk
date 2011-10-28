@@ -27,7 +27,7 @@ public class StateListDetectorTest extends AbstractCheckTest {
 
     public void testStates() throws Exception {
         assertEquals(
-                "states.xml:3: Warning: No android:state_ attribute found on <item> 0, " +
+                "states.xml:2: Warning: No android:state_ attribute found on <item> 0, " +
                         "later states not reachable",
                 lint("res/drawable/states.xml"));
     }

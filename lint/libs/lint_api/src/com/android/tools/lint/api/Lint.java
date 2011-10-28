@@ -152,6 +152,7 @@ public class Lint {
                     } else {
                         mToolContext.log(null, "Unexpected folder %1$s; should be project, " +
                                 "\"res\" folder or resource folder", file.getPath());
+                        return;
                     }
                 }
             } else if (file.isFile()) {

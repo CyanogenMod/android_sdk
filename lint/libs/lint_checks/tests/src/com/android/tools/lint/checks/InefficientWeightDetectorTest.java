@@ -27,9 +27,9 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
 
     public void testWeights() throws Exception {
         assertEquals(
-                "inefficient_weight.xml:13: Warning: Use a layout_width of 0dip instead of " +
+                "inefficient_weight.xml:10: Warning: Use a layout_width of 0dip instead of " +
                         "match_parent for better performance\n" +
-                "inefficient_weight.xml:26: Warning: Use a layout_height of 0dip instead of " +
+                "inefficient_weight.xml:24: Warning: Use a layout_height of 0dip instead of " +
                         "wrap_content for better performance",
                 lint("res/layout/inefficient_weight.xml"));
     }

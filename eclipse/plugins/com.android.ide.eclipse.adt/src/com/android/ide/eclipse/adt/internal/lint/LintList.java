@@ -203,7 +203,8 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                         // which is no longer available but which left a persistent marker behind
                         return id1.compareTo(id2);
                     }
-                    int priorityDelta = issue1.getPriority() - issue2.getPriority();
+                    // DECREASING priority order
+                    int priorityDelta = issue2.getPriority() - issue1.getPriority();
                     if (priorityDelta != 0) {
                         return priorityDelta;
                     }
