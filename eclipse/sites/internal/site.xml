@@ -3,28 +3,28 @@
    <description url="https://android.corp.google.com/adt/">
       Update Site for Android Development Toolkit
    </description>
-   <feature url="features/com.android.ide.eclipse.adt_14.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.adt_16.0.0.qualifier.jar" id="com.android.ide.eclipse.adt" version="16.0.0.qualifier">
       <category name="developer"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.ddms_14.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="14.0.0.qualifier">
-      <category name="developer"/>
-      <category name="platform"/>
-   </feature>
-   <feature url="features/com.android.ide.eclipse.hierarchyviewer_14.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.ddms_16.0.0.qualifier.jar" id="com.android.ide.eclipse.ddms" version="16.0.0.qualifier">
       <category name="developer"/>
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.tests_14.0.0.qualifier.jar" id="com.android.ide.eclipse.tests" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.hierarchyviewer_16.0.0.qualifier.jar" id="com.android.ide.eclipse.hierarchyviewer" version="16.0.0.qualifier">
+      <category name="developer"/>
+      <category name="platform"/>
+   </feature>
+   <feature url="features/com.android.ide.eclipse.tests_16.0.0.qualifier.jar" id="com.android.ide.eclipse.tests" version="16.0.0.qualifier">
       <category name="test"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.pdt_14.0.0.qualifier.jar" id="com.android.ide.eclipse.pdt" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.pdt_16.0.0.qualifier.jar" id="com.android.ide.eclipse.pdt" version="16.0.0.qualifier">
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.traceview_14.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.traceview_16.0.0.qualifier.jar" id="com.android.ide.eclipse.traceview" version="16.0.0.qualifier">
       <category name="developer"/>
       <category name="platform"/>
    </feature>
-   <feature url="features/com.android.ide.eclipse.gldebugger_14.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="14.0.0.qualifier">
+   <feature url="features/com.android.ide.eclipse.gldebugger_16.0.0.qualifier.jar" id="com.android.ide.eclipse.gldebugger" version="16.0.0.qualifier">
       <category name="developer"/>
    </feature>
    <category-def name="developer" label="Application Developer Tools">
