@@ -50,6 +50,7 @@ public class BuiltinDetectorRegistry extends com.android.tools.lint.api.Detector
         detectors.add(new UnusedResourceDetector());
         detectors.add(new ArraySizeDetector());
         detectors.add(new ManifestOrderDetector());
+        detectors.add(new ExportedServiceDetector());
 
         // TODO: Populate dynamically somehow?
 

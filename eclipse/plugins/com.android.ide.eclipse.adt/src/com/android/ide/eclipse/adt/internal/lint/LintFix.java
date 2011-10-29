@@ -24,6 +24,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
+import static com.android.tools.lint.checks.LintConstants.ATTR_PERMISSION;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -36,6 +37,7 @@ import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractSt
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.BuiltinDetectorRegistry;
+import com.android.tools.lint.checks.ExportedServiceDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
@@ -172,6 +174,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
         sFixes.put(PxUsageDetector.ISSUE.getId(), ConvertToDpFix.class);
         sFixes.put(TextFieldDetector.ISSUE.getId(), SetInputTypeFix.class);
+        sFixes.put(ExportedServiceDetector.ISSUE.getId(), PermissionFix.class);
     }
 
     public static boolean hasFix(String id) {
@@ -241,7 +244,11 @@ abstract class LintFix implements ICompletionProposal {
         protected abstract String getAttribute();
 
         protected String getProposal() {
-            return "TODO";
+            return invokeCodeCompletion() ? "" : "TODO"; //$NON-NLS-1$
+        }
+
+        protected boolean invokeCodeCompletion() {
+            return false;
         }
 
         @Override
@@ -287,6 +294,14 @@ abstract class LintFix implements ICompletionProposal {
             } catch (PartInitException e) {
                 AdtPlugin.log(e, null);
             }
+
+            // Invoke code assist
+            if (invokeCodeCompletion()) {
+                IEditorPart editor = AdtUtils.getActiveEditor();
+                if (editor instanceof AndroidXmlEditor) {
+                    ((AndroidXmlEditor) editor).invokeContentAssist(-1);
+                }
+            }
         }
 
         @Override
@@ -316,10 +331,26 @@ abstract class LintFix implements ICompletionProposal {
         public String getDisplayString() {
             return "Add content description attribute";
         }
+    }
+
+    private static final class PermissionFix extends SetPropertyFix {
+        private PermissionFix(String id, IMarker marker) {
+            super(id, marker);
+        }
 
         @Override
-        public boolean isCancelable() {
-            return false;
+        protected String getAttribute() {
+            return ATTR_PERMISSION;
+        }
+
+        @Override
+        protected boolean invokeCodeCompletion() {
+            return true;
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Add permission attribute";
         }
     }
 
@@ -334,29 +365,13 @@ abstract class LintFix implements ICompletionProposal {
         }
 
         @Override
-        protected String getProposal() {
-            return ""; //$NON-NLS-1$
-        }
-
-        @Override
         public String getDisplayString() {
             return "Set input type";
         }
 
-
         @Override
-        public boolean isCancelable() {
-            return false;
-        }
-
-        @Override
-        public void apply(IDocument document) {
-            super.apply(document);
-            // Invoke code assist
-            IEditorPart editor = AdtUtils.getActiveEditor();
-            if (editor instanceof AndroidXmlEditor) {
-                ((AndroidXmlEditor) editor).invokeContentAssist(-1);
-            }
+        protected boolean invokeCodeCompletion() {
+            return true;
         }
     }
 
