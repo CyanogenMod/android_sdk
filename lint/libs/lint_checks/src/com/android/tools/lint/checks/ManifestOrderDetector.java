@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.LintConstants.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.checks.LintConstants.TAG_APPLICATION;
+import static com.android.tools.lint.checks.LintConstants.TAG_USES_PERMISSION;
+
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -34,8 +38,6 @@ import java.util.Collection;
  * wrong order.
  */
 public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
-    private static final String TAG_APPLICATION = "application";   //$NON-NLS-1$
-    protected static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -80,7 +82,7 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
     public Collection<String> getApplicableElements() {
         return Arrays.asList(new String[] {
                 TAG_APPLICATION,
-                "uses-permission",         //$NON-NLS-1$
+                TAG_USES_PERMISSION,
                 "permission",              //$NON-NLS-1$
                 "permission-tree",         //$NON-NLS-1$
                 "permission-group",        //$NON-NLS-1$

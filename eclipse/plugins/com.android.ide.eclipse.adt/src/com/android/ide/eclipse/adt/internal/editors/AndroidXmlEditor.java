@@ -900,6 +900,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * a lock first.
      */
     protected void runEditHooks() {
+        runLint();
     }
 
     /**
