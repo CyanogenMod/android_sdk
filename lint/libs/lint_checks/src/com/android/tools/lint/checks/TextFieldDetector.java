@@ -45,7 +45,7 @@ public class TextFieldDetector extends LayoutDetector {
             "If you really want to keep the text field generic, you can suppress this warning " +
             "by setting inputType=\"text\".",
 
-            CATEGORY_USABILITY, 5, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_USABILITY, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link TextFieldDetector} */
     public TextFieldDetector() {

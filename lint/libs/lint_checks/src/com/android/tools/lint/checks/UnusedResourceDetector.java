@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.LintConstants.ANDROID_MANIFEST_XML;
-
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -32,16 +30,12 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +57,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
             "Looks for unused resources",
             "Unused resources make applications larger and slow down builds.",
-            CATEGORY_PERFORMANCE, 3, Severity.WARNING, Scope.PROJECT);
+            CATEGORY_PERFORMANCE, 3, Severity.WARNING,
+            EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES));
     /** Unused id's */
     public static final Issue ISSUE_IDS = Issue.create("UnusedIds", //$NON-NLS-1$
             "Looks for unused id's",
@@ -71,7 +66,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             "from anywhere. Having id definitions, even if unused, is not necessarily a bad " +
             "idea since they make working on layouts and menus easier, so there is not a " +
             "strong reason to delete these.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING, Scope.PROJECT).setEnabledByDefault(false);
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING,
+            EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES))
+            .setEnabledByDefault(false);
 
     protected Set<String> mDeclarations;
     protected Set<String> mReferences;
@@ -110,14 +107,14 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         // TODO: Use a proper Java AST...
         // For right now, this is hacked via String scanning in .java files instead.
         // TODO: Look up from project metadata
-        File src = new File(context.projectDir, "src"); //$NON-NLS-1$
+        File src = new File(context.project.getDir(), "src"); //$NON-NLS-1$
         if (!src.exists()) {
             context.toolContext.log(null, "Did not find source folder in project");
         } else {
             scanJavaFile(context, src);
         }
 
-        File gen = new File(context.projectDir, "gen"); //$NON-NLS-1$
+        File gen = new File(context.project.getDir(), "gen"); //$NON-NLS-1$
         if (!gen.exists()) {
             context.toolContext.log(null, "Did not find gen folder in project");
         } else {
@@ -282,36 +279,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         }
     }
 
-    private void addManifestReferences(Context context) {
-        File manifestFile = new File(context.projectDir, ANDROID_MANIFEST_XML);
-        if (manifestFile.exists()) {
-            Context ctx = new Context(context.toolContext, context.projectDir, manifestFile,
-                    context.scope);
-            Document document = context.toolContext.getParser().parse(ctx);
-            addManifestReferences(context, document.getDocumentElement());
-        }
-    }
-
-    private void addManifestReferences(Context context, Element element) {
-        NamedNodeMap attributes = element.getAttributes();
-        for (int i = 0, n = attributes.getLength(); i < n; i++) {
-            Attr attribute = (Attr) attributes.item(i);
-            visitAttribute(context, attribute);
-        }
-
-        NodeList childNodes = element.getChildNodes();
-        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-            Node child = childNodes.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                addManifestReferences(context, (Element) child);
-            }
-        }
-    }
-
     @Override
     public void afterCheckProject(Context context) {
-        addManifestReferences(context);
-
         mDeclarations.removeAll(mReferences);
         Set<String> unused = mDeclarations;
 
@@ -358,7 +327,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 ResourceType type = ResourceType.getEnum(typeName);
                 if (type != null && isFileBasedResourceType(type)) {
                     String name = resource.substring(secondDot + 1);
-                    File file = new File(context.projectDir,
+                    File file = new File(context.project.getDir(),
                             "res" + File.separator + typeName + File.separator + //$NON-NLS-1$
                             name + ".xml"); //$NON-NLS-1$
                     if (file.exists()) {

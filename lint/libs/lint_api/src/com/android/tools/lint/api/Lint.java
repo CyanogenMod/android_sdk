@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -28,21 +29,26 @@ import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /** Analyzes Android projects and files */
 public class Lint {
-    private static final String RES_FOLDER_NAME = "res"; //$NON-NLS-1$
+    private static final String PROGUARD_CFG = "proguard.cfg";                       //$NON-NLS-1$
+    private static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml";        //$NON-NLS-1$
+    private static final String RES_FOLDER_NAME = "res";                             //$NON-NLS-1$
+
     private final ToolContext mToolContext;
     private volatile boolean mCanceled;
     private DetectorRegistry mRegistry;
-    private Scope mScope;
-
-    private List<ResourceXmlDetector> mResourceChecks = new ArrayList<ResourceXmlDetector>();
-    private List<Detector> mXmlChecks = new ArrayList<Detector>();
-    private List<Detector> mClassChecks = new ArrayList<Detector>();
-    private List<Detector> mJavaChecks = new ArrayList<Detector>();
-    private List<Detector> mOtherChecks = new ArrayList<Detector>();
+    private EnumSet<Scope> mScope;
+    private Map<Scope, List<Detector>> mApplicableDetectors = new HashMap<Scope, List<Detector>>();
 
     /**
      * Creates a new {@link Lint}
@@ -51,9 +57,10 @@ public class Lint {
      * @param toolContext a context for the tool wrapping the analyzer, such as
      *            an IDE or a CLI
      * @param scope the scope of the analysis; detectors with a wider scope will
-     *            not be run
+     *            not be run. If null, the scope will be inferred from the files
+     *            passed to {@link #analyze(List)}.
      */
-    public Lint(DetectorRegistry registry, ToolContext toolContext, Scope scope) {
+    public Lint(DetectorRegistry registry, ToolContext toolContext, EnumSet<Scope> scope) {
         assert toolContext != null;
         mRegistry = registry;
         mToolContext = toolContext;
@@ -72,14 +79,55 @@ public class Lint {
      * @param files the files and directories to be analyzed
      */
     public void analyze(List<File> files) {
+        Collection<Project> projects = computeProjects(files);
+        if (projects.size() == 0) {
+            mToolContext.log(null, "No projects found for %1$s", files.toString());
+            return;
+        }
+        if (mCanceled) {
+            return;
+        }
+
+        if (mScope == null) {
+            // Infer the scope
+            mScope = EnumSet.noneOf(Scope.class);
+            for (Project project : projects) {
+                if (project.getSubset() != null) {
+                    for (File file : project.getSubset()) {
+                        String name = file.getName();
+                        if (name.equals(ANDROID_MANIFEST_XML)) {
+                            mScope.add(Scope.MANIFEST);
+                        } else if (name.endsWith(".xml")) {
+                            mScope.add(Scope.RESOURCE_FILE);
+                        } else if (name.equals(PROGUARD_CFG)) {
+                            mScope.add(Scope.PROGUARD);
+                        } else if (name.equals(RES_FOLDER_NAME)
+                                || file.getParent().equals(RES_FOLDER_NAME)) {
+                            mScope.add(Scope.ALL_RESOURCE_FILES);
+                            mScope.add(Scope.RESOURCE_FILE);
+                        } else if (name.endsWith(".java")) {
+                            mScope.add(Scope.JAVA_FILE);
+                        } else if (name.endsWith(".class")) {
+                            mScope.add(Scope.CLASS_FILE);
+                        }
+                    }
+                } else {
+                    // Specified a full project: just use the full project scope
+                    mScope = Scope.ALL;
+                    break;
+                }
+            }
+        }
+
         List<? extends Detector> availableChecks = mRegistry.getDetectors();
+        EnumSet<Scope> missingScopes = EnumSet.complementOf(mScope);
 
         // Filter out disabled checks
         List<Detector> checks = new ArrayList<Detector>(availableChecks.size());
         for (Detector detector : availableChecks) {
-            boolean hasValidScope = true;
+            boolean hasValidScope = false;
             for (Issue issue : detector.getIssues()) {
-                if (issue.getScope().within(mScope)) {
+                if (mScope.containsAll(issue.getScope())) {
                     hasValidScope = true;
                     break;
                 }
@@ -88,45 +136,178 @@ public class Lint {
                 continue;
             }
             // A detector is enabled if at least one of its issues is enabled
+            EnumSet<Scope> scope = EnumSet.noneOf(Scope.class);
             for (Issue issue : detector.getIssues()) {
                 if (mToolContext.isEnabled(issue)) {
-                    checks.add(detector);
-                    break;
+                    scope.addAll(issue.getScope());
+                }
+            }
+            // Only run those detectors whose scope are matched by the current analysis context:
+            scope.removeAll(missingScopes);
+            if (scope.size() > 0) {
+                checks.add(detector);
+                for (Scope s : scope) {
+                    List<Detector> detectors = mApplicableDetectors.get(s);
+                    if (detectors == null) {
+                        detectors = new ArrayList<Detector>();
+                        mApplicableDetectors.put(s, detectors);
+                    }
+                    detectors.add(detector);
                 }
             }
         }
 
-        // Process XML files in a single pass
-        for (Detector check : checks) {
-            boolean matched = false;
-            if (check instanceof ResourceXmlDetector) {
-                matched = true;
-                mResourceChecks.add((ResourceXmlDetector) check);
-                // Note the else-if here: we don't add resource xml detectors
-                // as plain xml scanners since they are handled specially
-            } else if (check instanceof Detector.XmlScanner) {
-                mXmlChecks.add(check);
-                matched = true;
+        validateScopeList();
+
+        for (Project project : projects) {
+            checkProject(project, checks);
+            if (mCanceled) {
+                return;
             }
-            if (check instanceof Detector.ClassScanner) {
-                mClassChecks.add(check);
-                matched = true;
+        }
+    }
+
+    /** Development diagnostics only, run with assertions on */
+    @SuppressWarnings("all") // Turn off warnings for the intentional assertion side effect below
+    private void validateScopeList() {
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // Intentional side-effect
+        if (assertionsEnabled) {
+            List<Detector> resourceFileDetectors = mApplicableDetectors.get(Scope.RESOURCE_FILE);
+            if (resourceFileDetectors != null) {
+                for (Detector detector : resourceFileDetectors) {
+                    assert detector instanceof ResourceXmlDetector : detector;
+                }
             }
-            if (check instanceof Detector.JavaScanner) {
-                mJavaChecks.add(check);
-                matched = true;
+
+            List<Detector> manifestDetectors = mApplicableDetectors.get(Scope.MANIFEST);
+            if (manifestDetectors != null) {
+                for (Detector detector : manifestDetectors) {
+                    assert detector instanceof Detector.XmlScanner : detector;
+                }
             }
-            if (!matched) {
-                mOtherChecks.add(check);
+            List<Detector> javaCodeDetectors = mApplicableDetectors.get(Scope.ALL_JAVA_FILES);
+            if (javaCodeDetectors != null) {
+                for (Detector detector : javaCodeDetectors) {
+                    assert detector instanceof Detector.JavaScanner : detector;
+                }
+            }
+            List<Detector> javaFileDetectors = mApplicableDetectors.get(Scope.JAVA_FILE);
+            if (javaFileDetectors != null) {
+                for (Detector detector : javaFileDetectors) {
+                    assert detector instanceof Detector.JavaScanner : detector;
+                }
+            }
+
+            List<Detector> classDetectors = mApplicableDetectors.get(Scope.CLASS_FILE);
+            if (classDetectors != null) {
+                for (Detector detector : classDetectors) {
+                    assert detector instanceof Detector.ClassScanner : detector;
+                }
+            }
+        }
+    }
+
+    private void registerProjectFile(Map<File, Project> fileToProject, File file,
+            File projectDir, File rootDir) {
+        Project project = fileToProject.get(projectDir);
+        if (project == null) {
+            project = new Project(mToolContext, projectDir, rootDir);
+        }
+        fileToProject.put(file, project);
+    }
+
+    private Collection<Project> computeProjects(List<File> files) {
+        // Compute list of projects
+        Map<File, Project> fileToProject = new HashMap<File, Project>();
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                // Figure out what to do with a directory. Note that the meaning of the
+                // directory can be ambiguous:
+                // If you pass a directory which is unknown, we don't know if we should
+                // search upwards (in case you're pointing at a deep java package folder
+                // within the project), or if you're pointing at some top level directory
+                // containing lots of projects you want to scan. We attempt to do the
+                // right thing, which is to see if you're pointing right at a project or
+                // right within it (say at the src/ or res/) folder, and if not, you're
+                // hopefully pointing at a project tree that you want to scan recursively.
+                if (isProjectDir(file)) {
+                    registerProjectFile(fileToProject, file, file, file);
+                    continue;
+                } else {
+                    File parent = file.getParentFile();
+                    if (parent != null) {
+                        if (isProjectDir(parent)) {
+                            registerProjectFile(fileToProject, file, parent, parent);
+                            continue;
+                        } else {
+                            parent = parent.getParentFile();
+                            if (isProjectDir(parent)) {
+                                registerProjectFile(fileToProject, file, parent, parent);
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Search downwards for nested projects
+                    addProjects(file, fileToProject, file);
+                }
+            } else {
+                // Pointed at a file: Search upwards for the containing project
+                File parent = file.getParentFile();
+                while (parent != null) {
+                    if (isProjectDir(parent)) {
+                        registerProjectFile(fileToProject, file, parent, parent);
+                        break;
+                    }
+                    parent = parent.getParentFile();
+                }
+            }
+
+            if (mCanceled) {
+                return Collections.emptySet();
             }
         }
 
-        // TODO: Handle multiple projects -- gotta split up the various arguments
-        // passed in and partition them into different Android projects and for each
-        // project call beforeCheck etc.
-        File projectDir = files.get(0);
+        for (Map.Entry<File, Project> entry : fileToProject.entrySet()) {
+            File file = entry.getKey();
+            Project project = entry.getValue();
+            if (!file.equals(project.getDir())) {
+                project.addFile(file);
+            }
+        }
 
-        Context projectContext = new Context(mToolContext, projectDir, projectDir, mScope);
+        return fileToProject.values();
+    }
+
+    private void addProjects(File dir, Map<File, Project> fileToProject, File rootDir) {
+        if (mCanceled) {
+            return;
+        }
+
+        if (isProjectDir(dir)) {
+            registerProjectFile(fileToProject, dir, dir, rootDir);
+        } else {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        addProjects(file, fileToProject, rootDir);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isProjectDir(File dir) {
+        return new File(dir, ANDROID_MANIFEST_XML).exists();
+    }
+
+    private void checkProject(Project project, List<Detector> checks) {
+        File projectDir = project.getDir();
+
+        Context projectContext = new Context(mToolContext, project, projectDir, mScope);
         for (Detector check : checks) {
             check.beforeCheckProject(projectContext);
             if (mCanceled) {
@@ -134,63 +315,7 @@ public class Lint {
             }
         }
 
-        for (File file : files) {
-            if (file.isDirectory()) {
-                // Is it a resource folder?
-                ResourceFolderType type = ResourceFolderType.getFolderType(file.getName());
-                if (type != null && new File(file.getParentFile(), RES_FOLDER_NAME).exists()) {
-                    // Yes.
-                    checkResourceFolder(projectDir, file, type);
-                } else if (file.getName().equals(RES_FOLDER_NAME)) { // Is it the "res" folder?
-                    // Yes
-                    checkResFolder(projectDir, file);
-                } else {
-                    // It must be a project
-                    File res = new File(file, RES_FOLDER_NAME);
-                    if (res.exists()) {
-                        checkProject(projectDir);
-                    } else {
-                        mToolContext.log(null, "Unexpected folder %1$s; should be project, " +
-                                "\"res\" folder or resource folder", file.getPath());
-                        return;
-                    }
-                }
-            } else if (file.isFile()) {
-                // Did we point to an XML resource?
-                if (ResourceXmlDetector.isXmlFile(file)) {
-                    // Yes, find out its resource type
-                    String folderName = file.getParentFile().getName();
-                    ResourceFolderType type = ResourceFolderType.getFolderType(folderName);
-                    if (type != null) {
-                        XmlVisitor visitor = getVisitor(type);
-                        if (visitor != null) {
-                            Context context = new Context(mToolContext, projectDir, file, mScope);
-                            visitor.visitFile(context, file);
-                        }
-                    } else if (mXmlChecks.size() > 0) {
-                        XmlVisitor v = new XmlVisitor(mToolContext.getParser(), mXmlChecks);
-                        Context context = new Context(mToolContext, projectDir, file, mScope);
-                        v.visitFile(context, file);
-                    }
-                } else {
-                    if (mOtherChecks.size() > 0) {
-                        Context context = new Context(mToolContext, projectDir, file, mScope);
-                        context.location = new Location(file, null, null);
-                        for (Detector detector : mOtherChecks) {
-                            if (detector.appliesTo(context, file)) {
-                                detector.beforeCheckFile(context);
-                                detector.run(context);
-                                detector.afterCheckFile(context);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (mCanceled) {
-                return;
-            }
-        }
+        runFileDetectors(project, projectDir);
 
         for (Detector check : checks) {
             check.afterCheckProject(projectContext);
@@ -204,52 +329,83 @@ public class Lint {
                 projectContext,
                 // Must provide an issue since API guarantees that the issue parameter
                 // is valid
-                Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL, Scope.SINGLE_FILE), //$NON-NLS-1$
+                Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL, //$NON-NLS-1$
+                        EnumSet.noneOf(Scope.class)),
                 null /*range*/,
                 "Lint canceled by user", null);
         }
     }
 
-    private void checkProject(File projectDir) {
-        File res = new File(projectDir, RES_FOLDER_NAME);
-        if (res.exists()) {
-            checkResFolder(projectDir, res);
-        }
-
-        if (mClassChecks.size() > 0 || mJavaChecks.size() > 0) {
-            if (mClassChecks.size() > 0) {
-                List<File> binFolders = mToolContext.getJavaClassFolder(projectDir);
-                checkClasses(projectDir, binFolders);
-            }
-            if (mJavaChecks.size() > 0) {
-                List<File> sourceFolders = mToolContext.getJavaSourceFolders(projectDir);
-                checkJava(projectDir, sourceFolders);
+    private void runFileDetectors(Project project, File projectDir) {
+        // Look up manifest information
+        if (mScope.contains(Scope.MANIFEST)) {
+            List<Detector> detectors = mApplicableDetectors.get(Scope.MANIFEST);
+            if (detectors != null) {
+                File file = new File(project.getDir(), ANDROID_MANIFEST_XML);
+                if (file.exists()) {
+                    Context context = new Context(mToolContext, project, file, mScope);
+                    context.location = new Location(file, null, null);
+                    XmlVisitor v = new XmlVisitor(mToolContext.getParser(), detectors);
+                    v.visitFile(context, file);
+                }
             }
         }
 
-        if (mOtherChecks.size() > 0 || mXmlChecks.size() > 0) {
-            // Run other checks on top level files in the project only -- proguard.cfg,
-            // AndroidManifest.xml, build.xml, etc.
-            File[] list = projectDir.listFiles();
-            if (list != null) {
-                for (File file : list) {
-                    if (file.isFile()) {
-                        Context context = new Context(mToolContext, projectDir, file, mScope);
-                        context.location = new Location(file, null, null);
-                        if (mOtherChecks.size() > 0) {
-                            for (Detector detector : mOtherChecks) {
-                                if (detector.appliesTo(context, file)) {
-                                    detector.beforeCheckFile(context);
-                                    detector.run(context);
-                                    detector.afterCheckFile(context);
-                                }
-                            }
+        // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
+        // in a single pass through the resource directories.
+        if (mScope.contains(Scope.ALL_RESOURCE_FILES) || mScope.contains(Scope.RESOURCE_FILE)) {
+            List<Detector> checks = union(mApplicableDetectors.get(Scope.RESOURCE_FILE),
+                    mApplicableDetectors.get(Scope.ALL_RESOURCE_FILES));
+            if (checks.size() > 0) {
+                List<ResourceXmlDetector> xmlDetectors =
+                        new ArrayList<ResourceXmlDetector>(checks.size());
+                for (Detector detector : checks) {
+                    if (detector instanceof ResourceXmlDetector) {
+                        xmlDetectors.add((ResourceXmlDetector) detector);
+                    }
+                }
+                if (xmlDetectors.size() > 0) {
+                    if (project.getSubset() != null) {
+                        checkIndividualResources(project, xmlDetectors, project.getSubset());
+                    } else {
+                        File res = new File(projectDir, RES_FOLDER_NAME);
+                        if (res.exists() && xmlDetectors.size() > 0) {
+                            checkResFolder(project, res, xmlDetectors);
                         }
+                    }
+                }
+            }
+        }
 
-                        if (ResourceXmlDetector.isXmlFile(file) && mXmlChecks.size() > 0) {
-                            XmlVisitor v = new XmlVisitor(mToolContext.getParser(), mXmlChecks);
-                            v.visitFile(context, file);
-                            // TBD: Run plain xml checks on other folders too, such as res/xml ?
+        if (mScope.contains(Scope.JAVA_FILE) || mScope.contains(Scope.ALL_JAVA_FILES)) {
+            List<Detector> checks = union(mApplicableDetectors.get(Scope.JAVA_FILE),
+                    mApplicableDetectors.get(Scope.ALL_JAVA_FILES));
+            if (checks.size() > 0) {
+                List<File> sourceFolders = project.getJavaSourceFolders();
+                checkJava(project, sourceFolders, checks);
+            }
+        }
+
+        if (mScope.contains(Scope.CLASS_FILE)) {
+            List<Detector> detectors = mApplicableDetectors.get(Scope.CLASS_FILE);
+            if (detectors != null) {
+                List<File> binFolders = project.getJavaClassFolders();
+                checkClasses(project, binFolders, detectors);
+            }
+        }
+
+        if (mScope.contains(Scope.PROGUARD)) {
+            List<Detector> detectors = mApplicableDetectors.get(Scope.PROGUARD);
+            if (detectors != null) {
+                File file = new File(project.getDir(), PROGUARD_CFG);
+                if (file.exists()) {
+                    Context context = new Context(mToolContext, project, file, mScope);
+                    context.location = new Location(file, null, null);
+                    for (Detector detector : detectors) {
+                        if (detector.appliesTo(context, file)) {
+                            detector.beforeCheckFile(context);
+                            detector.run(context);
+                            detector.afterCheckFile(context);
                         }
                     }
                 }
@@ -257,9 +413,25 @@ public class Lint {
         }
     }
 
-    private void checkClasses(File projectDir, List<File> binFolders) {
-        Context context = new Context(mToolContext, projectDir, projectDir, mScope);
-        for (Detector detector : mClassChecks) {
+    private static List<Detector> union(List<Detector> list1, List<Detector> list2) {
+        int size = (list1 != null ? list1.size() : 0) + (list2 != null ? list2.size() : 0);
+        // Use set to pick out unique detectors, since it's possible for there to be overlap,
+        // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
+        // single-file issue, so it shows up on both scope lists:
+        Set<Detector> set = new HashSet<Detector>(size);
+        if (list1 != null) {
+            set.addAll(list1);
+        }
+        if (list2 != null) {
+            set.addAll(list2);
+        }
+
+        return new ArrayList<Detector>(set);
+    }
+
+    private void checkClasses(Project project, List<File> binFolders, List<Detector> checks) {
+        Context context = new Context(mToolContext, project, project.getDir(), mScope);
+        for (Detector detector : checks) {
             ((Detector.ClassScanner) detector).checkJavaClasses(context);
 
             if (mCanceled) {
@@ -268,10 +440,10 @@ public class Lint {
         }
     }
 
-    private void checkJava(File projectDir, List<File> sourceFolders) {
-        Context context = new Context(mToolContext, projectDir, projectDir, mScope);
+    private void checkJava(Project project, List<File> sourceFolders, List<Detector> checks) {
+        Context context = new Context(mToolContext, project, project.getDir(), mScope);
 
-        for (Detector detector : mJavaChecks) {
+        for (Detector detector : checks) {
             ((Detector.JavaScanner) detector).checkJavaSources(context, sourceFolders);
 
             if (mCanceled) {
@@ -284,14 +456,14 @@ public class Lint {
     private List<ResourceXmlDetector> mCurrentXmlDetectors;
     private XmlVisitor mCurrentVisitor;
 
-    private XmlVisitor getVisitor(ResourceFolderType type) {
+    private XmlVisitor getVisitor(ResourceFolderType type, List<ResourceXmlDetector> checks) {
         if (type != mCurrentFolderType) {
             mCurrentFolderType = type;
 
             // Determine which XML resource detectors apply to the given folder type
             List<ResourceXmlDetector> applicableChecks =
-                    new ArrayList<ResourceXmlDetector>(mResourceChecks.size());
-            for (ResourceXmlDetector check : mResourceChecks) {
+                    new ArrayList<ResourceXmlDetector>(checks.size());
+            for (ResourceXmlDetector check : checks) {
                 if (check.appliesTo(type)) {
                     applicableChecks.add(check);
                 }
@@ -313,7 +485,7 @@ public class Lint {
         return mCurrentVisitor;
     }
 
-    private void checkResFolder(File projectDir, File res) {
+    private void checkResFolder(Project project, File res, List<ResourceXmlDetector> checks) {
         assert res.isDirectory();
         File[] resourceDirs = res.listFiles();
         if (resourceDirs == null) {
@@ -326,13 +498,9 @@ public class Lint {
         Arrays.sort(resourceDirs);
         ResourceFolderType type = null;
         for (File dir : resourceDirs) {
-            if (!dir.isDirectory()) {
-                continue;
-            }
-
             type = ResourceFolderType.getFolderType(dir.getName());
             if (type != null) {
-                checkResourceFolder(projectDir, dir, type);
+                checkResourceFolder(project, dir, type, checks);
             }
 
             if (mCanceled) {
@@ -341,19 +509,54 @@ public class Lint {
         }
     }
 
-    private void checkResourceFolder(File projectDir, File dir, ResourceFolderType type) {
+    private void checkResourceFolder(Project project, File dir, ResourceFolderType type,
+            List<ResourceXmlDetector> checks) {
         // Process the resource folder
         File[] xmlFiles = dir.listFiles();
         if (xmlFiles != null && xmlFiles.length > 0) {
-            XmlVisitor visitor = getVisitor(type);
+            XmlVisitor visitor = getVisitor(type, checks);
             if (visitor != null) { // if not, there are no applicable rules in this folder
-                for (File xmlFile : xmlFiles) {
-                    if (ResourceXmlDetector.isXmlFile(xmlFile)) {
-                        Context context = new Context(mToolContext, projectDir, xmlFile, mScope);
-                        visitor.visitFile(context, xmlFile);
+                for (File file : xmlFiles) {
+                    if (ResourceXmlDetector.isXmlFile(file)) {
+                        Context context = new Context(mToolContext, project, file,
+                                mScope);
+                        visitor.visitFile(context, file);
                         if (mCanceled) {
                             return;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Checks individual resources */
+    private void checkIndividualResources(Project project,
+            List<ResourceXmlDetector> xmlDetectors, List<File> files) {
+        for (File file : files) {
+            if (file.isDirectory()) {
+                // Is it a resource folder?
+                ResourceFolderType type = ResourceFolderType.getFolderType(file.getName());
+                if (type != null && new File(file.getParentFile(), RES_FOLDER_NAME).exists()) {
+                    // Yes.
+                    checkResourceFolder(project, file, type, xmlDetectors);
+                } else if (file.getName().equals(RES_FOLDER_NAME)) { // Is it the res folder?
+                    // Yes
+                    checkResFolder(project, file, xmlDetectors);
+                } else {
+                    mToolContext.log(null, "Unexpected folder %1$s; should be project, " +
+                            "\"res\" folder or resource folder", file.getPath());
+                    continue;
+                }
+            } else if (file.isFile() && ResourceXmlDetector.isXmlFile(file)) {
+                // Yes, find out its resource type
+                String folderName = file.getParentFile().getName();
+                ResourceFolderType type = ResourceFolderType.getFolderType(folderName);
+                if (type != null) {
+                    XmlVisitor visitor = getVisitor(type, xmlDetectors);
+                    if (visitor != null) {
+                        Context context = new Context(mToolContext, project, file, mScope);
+                        visitor.visitFile(context, file);
                     }
                 }
             }

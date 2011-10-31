@@ -270,6 +270,5 @@ public abstract class Detector {
     protected static final String CATEGORY_USABILITY = "Usability";
     protected static final String CATEGORY_I18N = "Internationalization";
     protected static final String CATEGORY_A11Y = "Accessibility";
-    protected static final String CATEGORY_LAYOUT = "Layout";
     protected static final String CATEGORY_SECURITY = "Security";
 }

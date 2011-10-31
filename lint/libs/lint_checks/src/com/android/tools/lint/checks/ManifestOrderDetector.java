@@ -32,6 +32,7 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 
 /**
  * Checks for issues in AndroidManifest files such as declaring elements in the
@@ -49,7 +50,7 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
             "themes not getting applied correctly) when the <application> tag appears " +
             "before some of these other elements, so it's best to order your" +
             "manifest in the logical dependency order.",
-            CATEGORY_CORRECTNESS, 5, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_CORRECTNESS, 5, Severity.WARNING, EnumSet.of(Scope.MANIFEST));
 
     /** Constructs a new accessibility check */
     public ManifestOrderDetector() {
@@ -86,7 +87,6 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
                 "permission",              //$NON-NLS-1$
                 "permission-tree",         //$NON-NLS-1$
                 "permission-group",        //$NON-NLS-1$
-                "instrumentation",         //$NON-NLS-1$
                 "uses-sdk",                //$NON-NLS-1$
                 "uses-configuration",      //$NON-NLS-1$
                 "uses-feature",            //$NON-NLS-1$
@@ -104,6 +104,9 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
         } else if (mSeenApplication) {
             context.toolContext.report(context, ISSUE, context.getLocation(element),
                     String.format("<%1$s> tag appears after <application> tag", tag), null);
+
+            // Don't complain for *every* element following the <application> tag
+            mSeenApplication = false;
         }
     }
 }

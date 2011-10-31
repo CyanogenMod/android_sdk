@@ -35,7 +35,7 @@ public class RunLintAction implements IActionDelegate {
     public void run(IAction action) {
         final IProject project = RunLintAction.getSelectedProject(mSelection);
         if (project != null) {
-            LintRunner.startLint(project, null);
+            LintRunner.startLint(project, null, false);
 
             // Show lint view where the results are listed
             LintViewPart.show(project);

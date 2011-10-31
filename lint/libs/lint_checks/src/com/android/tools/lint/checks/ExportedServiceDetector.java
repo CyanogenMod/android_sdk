@@ -36,6 +36,7 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 
 /**
  * Checks that exported services request a permission.
@@ -50,7 +51,7 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
             "an intent-filter and do not specify exported=false) should define a " +
             "permission that an entity must have in order to launch the service " +
             "or bind to it. Without this, any application can use this service.",
-            CATEGORY_SECURITY, 5, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_SECURITY, 5, Severity.WARNING, EnumSet.of(Scope.MANIFEST));
 
     /** Constructs a new accessibility check */
     public ExportedServiceDetector() {

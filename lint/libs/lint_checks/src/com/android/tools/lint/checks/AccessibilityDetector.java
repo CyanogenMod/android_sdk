@@ -44,7 +44,7 @@ public class AccessibilityDetector extends LayoutDetector {
             "contentDescription attribute to specify a textual description of " +
             "the widget such that screen readers and other accessibility tools " +
             "can adequately describe the user interface.",
-            CATEGORY_A11Y, 5, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_A11Y, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new accessibility check */
     public AccessibilityDetector() {

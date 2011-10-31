@@ -333,7 +333,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                             return;
                         }
                         for (IResource resource : resources) {
-                            Job job = LintRunner.startLint(resource, null);
+                            Job job = LintRunner.startLint(resource, null, false);
                             if (job != null) {
                                 job.addJobChangeListener(LintViewPart.this);
                                 IWorkbench workbench = PlatformUI.getWorkbench();

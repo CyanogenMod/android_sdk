@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import java.io.File;
+import java.util.EnumSet;
 
 /**
  * Check which looks for errors in Proguard files.
@@ -41,7 +42,7 @@ public class ProguardDetector extends Detector {
             "-keepclasseswithmembers, since the old flags also implies " +
             "\"allow shrinking\" which means symbols only referred to from XML and " +
             "not Java (such as possibly CustomViews) can get deleted.",
-            CATEGORY_CORRECTNESS, 5, Severity.ERROR, Scope.SINGLE_FILE).setMoreInfo(
+            CATEGORY_CORRECTNESS, 8, Severity.ERROR, EnumSet.of(Scope.PROGUARD)).setMoreInfo(
             "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$
 
     @Override

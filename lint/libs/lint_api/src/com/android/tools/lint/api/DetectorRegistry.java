@@ -18,9 +18,11 @@ package com.android.tools.lint.api;
 
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Severity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.Set;
 /** Registry which provides a list of checks to be performed on an Android project */
 public abstract class DetectorRegistry {
     private static List<Issue> sIssues;
+    private static List<String> sCategories;
     private static Map<String, Issue> sIdToIssue;
 
     /**
@@ -50,6 +53,71 @@ public abstract class DetectorRegistry {
         return getIssue(id) != null;
     }
 
+    /**
+     * Returns true if the given category is a valid category
+     *
+     * @param category the category to be checked
+     * @return true if the given string is a valid category
+     */
+    public boolean isCategory(String category) {
+        for (String c : getCategories()) {
+            if (c.equals(category)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the available categories
+     *
+     * @return an iterator for all the categories, never null
+     */
+    public List<String> getCategories() {
+        if (sCategories == null) {
+            // Compute the categories from the available issues. The order of categories
+            // will be determined by finding the maximum severity and maximum priority of
+            // the issues in each category and then sorting in descending order, using
+            // alphabetical order if the others are the same.
+            final Map<String, Integer> maxPriority = new HashMap<String, Integer>();
+            final Map<String, Severity> maxSeverity = new HashMap<String, Severity>();
+            for (Issue issue : getIssues()) {
+                String category = issue.getCategory();
+                Integer priority = maxPriority.get(category);
+                if (priority == null || priority.intValue() < issue.getPriority()) {
+                    maxPriority.put(category, issue.getPriority());
+                }
+                Severity severity = maxSeverity.get(category);
+                if (severity == null || severity.compareTo(issue.getDefaultSeverity()) < 0) {
+                    maxSeverity.put(category, issue.getDefaultSeverity());
+                }
+            }
+            List<String> categories = new ArrayList<String>(maxPriority.keySet());
+            Collections.sort(categories, new Comparator<String>() {
+                public int compare(String category1, String category2) {
+                    Severity severity1 = maxSeverity.get(category1);
+                    Severity severity2 = maxSeverity.get(category2);
+                    if (severity1 != severity2) {
+                        return severity2.compareTo(severity1);
+                    }
+
+                    Integer priority1 = maxPriority.get(category1);
+                    Integer priority2 = maxPriority.get(category2);
+                    int compare = priority2.compareTo(priority1);
+                    if (compare != 0) {
+                        return compare;
+                    }
+
+                    return category1.compareTo(category2);
+                }
+            });
+
+            sCategories = Collections.unmodifiableList(categories);
+        }
+
+        return sCategories;
+    }
 
     /**
      * Returns the issue for the given id, or null if it's not a valid id

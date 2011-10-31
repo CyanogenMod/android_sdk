@@ -28,6 +28,6 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
     public void testMerge() throws Exception {
         assertEquals(
                 "simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag",
-                lint("res/layout/simple.xml"));
+                lintFiles("res/layout/simple.xml"));
     }
 }

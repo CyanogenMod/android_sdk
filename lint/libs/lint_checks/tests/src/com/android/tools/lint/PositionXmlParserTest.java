@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 
 import org.w3c.dom.Attr;
@@ -29,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.EnumSet;
 
 import junit.framework.TestCase;
 
@@ -60,7 +62,8 @@ public class PositionXmlParserTest extends TestCase {
         Writer fw = new BufferedWriter(new FileWriter(file));
         fw.write(xml);
         fw.close();
-        Context context = new Context(new Main(), file, file, Scope.SINGLE_FILE);
+        Project project = new Project(null, file.getParentFile(), file.getParentFile());
+        Context context = new Context(new Main(), project, file, EnumSet.of(Scope.RESOURCE_FILE));
         Document document = parser.parse(context);
         assertNotNull(document);
 

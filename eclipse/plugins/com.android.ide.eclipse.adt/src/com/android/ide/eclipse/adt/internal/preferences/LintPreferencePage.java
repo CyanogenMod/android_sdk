@@ -330,7 +330,7 @@ public class LintPreferencePage extends PreferencePage implements IWorkbenchPref
                 IProject[] projects = workspace.getRoot().getProjects();
                 for (IProject project : projects) {
                     if (project.isOpen() && BaseProjectHelper.isAndroidProject(project)) {
-                        LintRunner.startLint(project, null);
+                        LintRunner.startLint(project, null, false);
                     }
                 }
             }

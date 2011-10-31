@@ -46,7 +46,7 @@ public class PxUsageDetector extends LayoutDetector {
             "in your application code to work with bitmaps that are not pre-scaled for the " +
             "current screen density, you might need to scale the pixel values that you use in " +
             "your code to match the un-scaled bitmap source.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE).setMoreInfo(
+            CATEGORY_CORRECTNESS, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html#screen-independence"); //$NON-NLS-1$
 
     /** Constructs a new {@link PxUsageDetector} */

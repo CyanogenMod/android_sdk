@@ -53,7 +53,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             "Checks for duplicate ids within a single layout",
             "Within a layout, id's should be unique since otherwise findViewById() can " +
             "return an unexpected view.",
-            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
     public static final Issue CROSS_LAYOUT = Issue.create(
@@ -63,7 +63,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             "layouts are combined with include tags, then the id's need to be unique " +
             "within any chain of included layouts, or Activity#findViewById() can " +
             "return an unexpected view.",
-            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.RESOURCES);
+            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
 
     /** Constructs a duplicate id check */
     public DuplicateIdDetector() {
@@ -147,8 +147,8 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     private void checkForIncludeDuplicates(Context context) {
-        if (!context.toolContext.isEnabled(CROSS_LAYOUT)
-                || !Scope.RESOURCES.within(context.scope)) {
+        if (!context.toolContext.isEnabled(CROSS_LAYOUT) ||
+                !context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
             return;
         }
 

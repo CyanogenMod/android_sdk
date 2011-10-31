@@ -43,7 +43,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
             "ScrollView children must set their layout_width or layout_height attributes " +
             "to wrap_content rather than fill_parent or match_parent in the scrolling " +
             "dimension",
-            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link ScrollViewChildDetector} */
     public ScrollViewChildDetector() {

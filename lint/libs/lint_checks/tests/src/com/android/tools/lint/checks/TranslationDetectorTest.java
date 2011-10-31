@@ -40,7 +40,8 @@ public class TranslationDetectorTest extends AbstractCheckTest {
             "values-es: Warning: Locale es is translating names not found in default locale: security_questions\n" +
             "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
 
-            lint("res/values/strings.xml",
+            lintProject(
+                 "res/values/strings.xml",
                  "res/values-cs/strings.xml",
                  "res/values-de-rDE/strings.xml",
                  "res/values-es/strings.xml",
@@ -60,7 +61,8 @@ public class TranslationDetectorTest extends AbstractCheckTest {
             "values-es-rUS: Error: Locale es-rUS is missing translations for: home_title, menu_settings, menu_wallpaper, show_all_apps... (1 more)\n" +
             "values-nl-rNL: Error: Locale nl-rNL is missing translations for: menu_settings, menu_wallpaper, show_all_apps",
 
-            lint("res/values/strings.xml",
+            lintProject(
+                 "res/values/strings.xml",
                  "res/values-cs/strings.xml",
                  "res/values-de-rDE/strings.xml",
                  "res/values-es-rUS/strings.xml",

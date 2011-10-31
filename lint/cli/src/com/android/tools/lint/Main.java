@@ -25,7 +25,6 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.BufferedReader;
@@ -37,8 +36,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,23 +54,29 @@ import java.util.Set;
 public class Main extends ToolContext {
     private static final int MAX_LINE_WIDTH = 70;
     private static final String ARG_ENABLE     = "--enable";       //$NON-NLS-1$
+    private static final String ARG_DISABLE    = "--disable";      //$NON-NLS-1$
+    private static final String ARG_CHECK      = "--check";        //$NON-NLS-1$
     private static final String ARG_SUPPRESS   = "--suppress";     //$NON-NLS-1$
+    private static final String ARG_IGNORE     = "--ignore";       //$NON-NLS-1$
     private static final String ARG_LISTIDS    = "--list";         //$NON-NLS-1$
     private static final String ARG_SHOW       = "--show";         //$NON-NLS-1$
     private static final String ARG_FULLPATH   = "--fullpath";     //$NON-NLS-1$
     private static final String ARG_HELP       = "--help";         //$NON-NLS-1$
     private static final String ARG_NOLINES    = "--nolines";      //$NON-NLS-1$
     private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
+    private static final String ARG_URL        = "--url";         //$NON-NLS-1$
     private static final int ERRNO_ERRORS = -1;
     private static final int ERRNO_USAGE = -2;
     private static final int ERRNO_EXISTS = -3;
     private static final int ERRNO_HELP = -4;
     private static final int ERRNO_INVALIDARGS = -5;
 
+    private List<Warning> mWarnings = new ArrayList<Warning>();
     private Set<String> mSuppress = new HashSet<String>();
-    private Set<String> mEnabled = null;
+    private Set<String> mEnabled = new HashSet<String>();
+    /** If non-null, only run the specified checks (possibly modified by enable/disables) */
+    private Set<String> mCheck = null;
     private boolean mFatal;
-    private String mCommonPrefix;
     private boolean mFullPath;
     private int mErrorCount;
     private int mWarningCount;
@@ -102,6 +109,9 @@ public class Main extends ToolContext {
 
         DetectorRegistry registry = new BuiltinDetectorRegistry();
 
+        // Mapping from file path prefix to URL. Applies only to HTML reports
+        String urlMap = null;
+
         List<File> files = new ArrayList<File>();
         for (int index = 0; index < args.length; index++) {
             String arg = args[index];
@@ -113,12 +123,12 @@ public class Main extends ToolContext {
                 System.exit(0);
             } else if (arg.equals(ARG_SHOW)) {
                 // Show specific issues?
-                if (index < args.length - 1) {
+                if (index < args.length - 1 && !args[index + 1].startsWith("-")) { //$NON-NLS-1$
                     String[] ids = args[++index].split(",");
                     for (String id : ids) {
                         Issue issue = registry.getIssue(id);
                         if (issue == null) {
-                            System.err.println("Invalid id \"" + id + "\".");
+                            System.err.println("Invalid id or category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
                             System.exit(ERRNO_INVALIDARGS);
                         }
@@ -133,6 +143,18 @@ public class Main extends ToolContext {
                 mFullPath = true;
             } else if (arg.equals(ARG_NOLINES)) {
                 mShowLines = false;
+            } else if (arg.equals(ARG_URL)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing URL mapping string");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                String map = args[++index];
+                // Allow repeated usage of the argument instead of just comma list
+                if (urlMap != null) {
+                    urlMap = urlMap + ',' + map;
+                } else {
+                    urlMap = map;
+                }
             } else if (arg.equals(ARG_HTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
@@ -156,34 +178,80 @@ public class Main extends ToolContext {
                     log(e, null);
                     System.exit(ERRNO_INVALIDARGS);
                 }
-            } else if (arg.equals(ARG_SUPPRESS)) {
+            } else if (arg.equals(ARG_SUPPRESS) || arg.equals(ARG_DISABLE)
+                    || arg.equals(ARG_IGNORE)) {
                 if (index == args.length - 1) {
-                    System.err.println("Missing id's to suppress");
+                    System.err.println("Missing categories or id's to disable");
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 String[] ids = args[++index].split(",");
                 for (String id : ids) {
-                    if (!registry.isIssueId(id)) {
-                        System.err.println("Invalid id \"" + id + "\".");
+                    if (registry.isCategory(id)) {
+                        // Suppress all issues with the given category
+                        String category = id;
+                        for (Issue issue : registry.getIssues()) {
+                            // Check prefix such that filtering on the "Usability" category
+                            // will match issue category "Usability:Icons" etc.
+                            if (category.startsWith(issue.getCategory())) {
+                                mSuppress.add(issue.getId());
+                            }
+                        }
+                    } else if (!registry.isIssueId(id)) {
+                        System.err.println("Invalid id or category \"" + id + "\".\n");
                         displayValidIds(registry, System.err);
                         System.exit(ERRNO_INVALIDARGS);
+                    } else {
+                        mSuppress.add(id);
                     }
-                    mSuppress.add(id);
                 }
             } else if (arg.equals(ARG_ENABLE)) {
                 if (index == args.length - 1) {
-                    System.err.println("Missing id's to enable");
+                    System.err.println("Missing categories or id's to enable");
                     System.exit(ERRNO_INVALIDARGS);
                 }
                 String[] ids = args[++index].split(",");
-                mEnabled = new HashSet<String>();
                 for (String id : ids) {
-                    if (!registry.isIssueId(id)) {
-                        System.err.println("Invalid id \"" + id + "\".");
+                    if (registry.isCategory(id)) {
+                        // Enable all issues with the given category
+                        String category = id;
+                        for (Issue issue : registry.getIssues()) {
+                            if (category.startsWith(issue.getCategory())) {
+                                mEnabled.add(issue.getId());
+                            }
+                        }
+                    } else if (!registry.isIssueId(id)) {
+                        System.err.println("Invalid id or category \"" + id + "\".\n");
                         displayValidIds(registry, System.err);
                         System.exit(ERRNO_INVALIDARGS);
+                    } else {
+                        mEnabled.add(id);
                     }
-                    mEnabled.add(id);
+                }
+            } else if (arg.equals(ARG_CHECK)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing categories or id's to check");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                mCheck = new HashSet<String>();
+                String[] ids = args[++index].split(",");
+                for (String id : ids) {
+                    if (registry.isCategory(id)) {
+                        // Suppress all issues with the given category
+                        String category = id;
+                        for (Issue issue : registry.getIssues()) {
+                            // Check prefix such that filtering on the "Usability" category
+                            // will match issue category "Usability:Icons" etc.
+                            if (category.startsWith(issue.getCategory())) {
+                                mCheck.add(issue.getId());
+                            }
+                        }
+                    } else if (!registry.isIssueId(id)) {
+                        System.err.println("Invalid id or category \"" + id + "\".\n");
+                        displayValidIds(registry, System.err);
+                        System.exit(ERRNO_INVALIDARGS);
+                    } else {
+                        mCheck.add(id);
+                    }
                 }
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
@@ -207,17 +275,34 @@ public class Main extends ToolContext {
         }
 
         if (mReporter == null) {
+            if (urlMap != null) {
+                System.err.println(String.format(
+                        "Warning: The %1$s option only applies to HTML reports (%2$s)",
+                            ARG_URL, ARG_HTML));
+            }
+
             mReporter = new TextReporter(new PrintWriter(System.out, true));
+        } else if (mReporter instanceof HtmlReporter) {
+            if (urlMap == null) {
+                // By default just map from /foo to file:///foo
+                // TODO: Find out if we need file:// on Windows.
+                urlMap = "=file://"; //$NON-NLS-1$
+            }
+            Map<String, String> map = new HashMap<String, String>();
+            String[] replace = urlMap.split(","); //$NON-NLS-1$
+            for (String s : replace) {
+                String[] v = s.split("="); //$NON-NLS-1$
+                if (v.length != 2) {
+                    System.err.println(
+                            "The URL map argument must be of the form 'path_prefix=url_prefix'");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                map.put(v[0], v[1]);
+            }
+            ((HtmlReporter) mReporter).setUrlMap(map);
         }
 
-        mCommonPrefix = files.get(0).getPath();
-        for (int i = 1; i < files.size(); i++) {
-            File file = files.get(i);
-            String path = file.getPath();
-            mCommonPrefix = getCommonPrefix(mCommonPrefix, path);
-        }
-
-        Lint analyzer = new Lint(new BuiltinDetectorRegistry(), this, Scope.PROJECT);
+        Lint analyzer = new Lint(new BuiltinDetectorRegistry(), this, null);
         analyzer.analyze(files);
 
         Collections.sort(mWarnings);
@@ -233,6 +318,12 @@ public class Main extends ToolContext {
     }
 
     private void displayValidIds(DetectorRegistry registry, PrintStream out) {
+        List<String> categories = registry.getCategories();
+        out.println("Valid issue categories:");
+        for (String category : categories) {
+            out.println("    " + category);
+        }
+        out.println();
         List<Issue> issues = registry.getIssues();
         out.println("Valid issue id's:");
         for (Issue issue : issues) {
@@ -286,6 +377,12 @@ public class Main extends ToolContext {
         System.out.println("Priority: " + issue.getPriority() + " / 10");
         System.out.println("Severity: " + issue.getDefaultSeverity().getDescription());
         System.out.println("Category: " + issue.getCategory());
+
+        if (!issue.isEnabledByDefault()) {
+            System.out.println("NOTE: This issue is disabled by default!");
+            System.out.println(String.format("You can enable it by adding %1$s %2$s", ARG_ENABLE,
+                    issue.getId()));
+        }
 
         if (issue.getExplanation() != null) {
             System.out.println();
@@ -344,29 +441,19 @@ public class Main extends ToolContext {
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
         out.println("Flags:");
-        out.println(ARG_SUPPRESS + " <id-list>: Suppress a list of issue id's.");
-        out.println(ARG_ENABLE + " <id-list>: Only check the specific list of issues");
+        out.println(ARG_SUPPRESS + " <list>: Suppress a list of categories or specific issue id's");
+        out.println(ARG_CHECK + " <list>: Only check the specific list of issues (categories or id's)");
+        out.println(ARG_DISABLE + " <list>: Disable the list of categories or specific issue id's");
+        out.println(ARG_ENABLE + " <list>: Enable the specific list of issues (plus default enabled)");
         out.println(ARG_FULLPATH + " : Use full paths in the error output");
         out.println(ARG_NOLINES + " : Do not include the source file lines with errors in the output");
         out.println(ARG_HTML + " <filename>: Create an HTML report instead");
+        out.println(ARG_URL + " filepath=url: Add links to HTML report, replacing local path prefixes with url prefix");
         out.println();
         out.println(ARG_LISTIDS + ": List the available issue id's and exit.");
         out.println(ARG_SHOW + ": List available issues along with full explanations");
         out.println(ARG_SHOW + " <ids>: Show full explanations for the given list of issue id's");
         out.println("Id lists should be comma separated with no spaces. ");
-    }
-
-    private static String getCommonPrefix(String a, String b) {
-        int aLength = a.length();
-        int bLength = b.length();
-        int aIndex = 0, bIndex = 0;
-        for (; aIndex < aLength && bIndex < bLength; aIndex++, bIndex++) {
-            if (a.charAt(aIndex) != b.charAt(bIndex)) {
-                break;
-            }
-        }
-
-        return a.substring(0, aIndex);
     }
 
     @Override
@@ -386,15 +473,21 @@ public class Main extends ToolContext {
 
     @Override
     public boolean isEnabled(Issue issue) {
-        if (mEnabled != null) {
-            return mEnabled.contains(issue.getId());
+        String id = issue.getId();
+        if (mSuppress.contains(id)) {
+            return false;
         }
-// TODO: Also include enabled by default
-//        && issue.isEnabledByDefault() || mAll);
-        return !mSuppress.contains(issue.getId());
-    }
 
-    private List<Warning> mWarnings = new ArrayList<Warning>();
+        if (mEnabled.contains(id)) {
+            return true;
+        }
+
+        if (mCheck != null) {
+            return mCheck.contains(id);
+        }
+
+        return issue.isEnabledByDefault();
+    }
 
     @Override
     public void report(Context context, Issue issue, Location location, String message,
@@ -418,13 +511,14 @@ public class Main extends ToolContext {
         mWarnings.add(warning);
 
         if (location != null) {
+            warning.location = location;
             File file = location.getFile();
             if (file != null) {
                 warning.file = file;
 
                 String path = file.getPath();
-                if (!mFullPath && path.startsWith(mCommonPrefix)) {
-                    int chop = mCommonPrefix.length();
+                if (!mFullPath && path.startsWith(context.project.getReferenceDir().getPath())) {
+                    int chop = context.project.getReferenceDir().getPath().length();
                     if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
                         chop++;
                     }

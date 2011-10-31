@@ -72,7 +72,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
             "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
-            CATEGORY_CORRECTNESS, 8, Severity.ERROR, Scope.RESOURCES);
+            CATEGORY_CORRECTNESS, 8, Severity.ERROR, Scope.ALL_RESOURCES_SCOPE);
 
     /** Are there extra translations that are "unused" (appear only in specific languages) ? */
     public static final Issue EXTRA = Issue.create(
@@ -82,7 +82,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "no corresponding string in the default locale, then this string is probably " +
             "unused. (It's technically possible that your application is only intended to " +
             "run in a specific locale, but it's still a good idea to provide a fallback.)",
-            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.RESOURCES);
+            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
 
     private Set<String> mNames;
     private boolean mIgnoreFile;

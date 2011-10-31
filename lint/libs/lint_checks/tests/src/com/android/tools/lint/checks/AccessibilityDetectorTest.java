@@ -31,6 +31,6 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
                         "attribute on image\n" +
                 "accessibility.xml:5: Warning: [Accessibility] Missing contentDescription " +
                         "attribute on image",
-                lint("res/layout/accessibility.xml"));
+                lintProject("res/layout/accessibility.xml"));
     }
 }

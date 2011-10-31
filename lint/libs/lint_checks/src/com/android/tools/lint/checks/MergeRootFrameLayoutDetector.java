@@ -38,7 +38,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
             "If a <FrameLayout> is the root of a layout and does not provide background " +
             "or padding etc, it can be replaced with a <merge> tag which is slightly " +
             "more efficient.",
-            CATEGORY_LAYOUT, 4, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_PERFORMANCE, 4, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {

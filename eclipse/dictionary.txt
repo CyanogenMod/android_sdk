@@ -228,6 +228,7 @@ serializer
 settable
 snip
 spec
+src
 standalone
 stash
 stat

@@ -35,6 +35,6 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
                 "is useless; transfer the background attribute to the other view\n" +
             "useless.xml:85: Warning: This FrameLayout view is useless (no children, " +
                 "no background, no id)",
-            lint("res/layout/useless.xml"));
+            lintFiles("res/layout/useless.xml"));
     }
 }

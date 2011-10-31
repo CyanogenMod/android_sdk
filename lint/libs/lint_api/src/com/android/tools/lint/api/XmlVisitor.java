@@ -34,6 +34,7 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,7 @@ class XmlVisitor {
                         // Must provide an issue since API guarantees that the issue parameter
                         // is valid
                         Issue.create("dummy", "", "", "", 0, Severity.ERROR, //$NON-NLS-1$
-                                Scope.SINGLE_FILE),
+                                EnumSet.noneOf(Scope.class)),
                         new Location(file, null, null),
                         "Skipped file because it contains parsing errors", null);
                 return;

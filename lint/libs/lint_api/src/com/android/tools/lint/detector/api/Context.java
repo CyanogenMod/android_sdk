@@ -24,6 +24,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,10 +42,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * to adjust your code for the next tools release.</b>
  */
 public class Context {
-    public final File projectDir;
+    public final Project project;
     public final File file;
     public final ToolContext toolContext;
-    public final Scope scope;
+    public final EnumSet<Scope> scope;
     public Document document;
     public Location location;
     public Element element;
@@ -59,9 +60,9 @@ public class Context {
 
     private Map<String, Object> properties;
 
-    public Context(ToolContext toolContext, File projectDir, File file, Scope scope) {
+    public Context(ToolContext toolContext, Project project, File file, EnumSet<Scope> scope) {
         this.toolContext = toolContext;
-        this.projectDir = projectDir;
+        this.project = project;
         this.file = file;
         this.scope = scope;
     }

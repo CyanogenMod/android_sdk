@@ -563,7 +563,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     protected Job runLint() {
         // Check for errors, if enabled
         if (AdtPrefs.getPrefs().isLintOnSave()) {
-            return LintRunner.startLint(getInputFile(), getStructuredDocument());
+            return LintRunner.startLint(getInputFile(), getStructuredDocument(), false);
         }
 
         return null;

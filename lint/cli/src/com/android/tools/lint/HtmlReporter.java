@@ -17,21 +17,28 @@
 package com.android.tools.lint;
 
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A reporter which emits lint results into an HTML report.
  */
 class HtmlReporter extends Reporter {
     private final File mOutput;
+    private Map<String, String> mUrlMap;
 
     HtmlReporter(File output) throws IOException {
         super(new BufferedWriter(new FileWriter(output)));
@@ -80,6 +87,11 @@ class HtmlReporter extends Reporter {
                 "}\n" +                                                  //$NON-NLS-1$
                 ".location {\n" +                                        //$NON-NLS-1$
                 "    font-family: monospace;\n" +                        //$NON-NLS-1$
+                "}\n" +
+                // Preview images for icon issues: limit size to at most 200 in one dimension
+                ".embedimage {\n" +                                      //$NON-NLS-1$
+                "    max-width: 200px;\n" +                              //$NON-NLS-1$
+                "    max-height: 200px;\n" +                             //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$
                 // The Priority/Category section
                 ".metadata { }\n" +                                      //$NON-NLS-1$
@@ -152,9 +164,20 @@ class HtmlReporter extends Reporter {
 
                 mWriter.write("<div class=\"warningslist\">\n");         //$NON-NLS-1$
                 for (Warning warning : warnings) {
+                    String url = null;
                     if (warning.path != null) {
                         mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
+
+                        url = getUrl(warning.file.getPath());
+                        if (url != null) {
+                            mWriter.write("<a href=\"");                 //$NON-NLS-1$
+                            mWriter.write(url);
+                            mWriter.write("\">");                        //$NON-NLS-1$
+                        }
                         mWriter.write(warning.path);
+                        if (url != null) {
+                            mWriter.write("</a>");                       //$NON-NLS-1$
+                        }
                         mWriter.write(':');
                         if (warning.line >= 0) {
                             // 0-based line numbers, but display 1-based
@@ -164,11 +187,22 @@ class HtmlReporter extends Reporter {
                         mWriter.write(' ');
                     }
 
+                    // Is the URL for a single image? If so, place it here near the top
+                    // of the error floating on the right. If there are multiple images,
+                    // they will instead be placed in a horizontal box below the error
+                    boolean addedImage = false;
+                    if (url != null && warning.location != null
+                            && warning.location.getSecondary() == null) {
+                        addedImage = addImage(url, warning.location);
+                    }
                     mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
                     appendEscapedText(warning.message);
                     mWriter.write("</span>");                            //$NON-NLS-1$
-                    mWriter.write("<br/>");                              //$NON-NLS-1$
-
+                    if (addedImage) {
+                        mWriter.write("<br clear=\"right\"/>");          //$NON-NLS-1$
+                    } else {
+                        mWriter.write("<br />");                         //$NON-NLS-1$
+                    }
 
                     // Insert surrounding code block window
                     if (warning.line >= 0 && warning.fileContents != null) {
@@ -177,6 +211,12 @@ class HtmlReporter extends Reporter {
                         mWriter.write("\n</pre>");                       //$NON-NLS-1$
                     }
                     mWriter.write('\n');
+
+                    // Place a block of images?
+                    if (!addedImage && url != null && warning.location != null
+                            && warning.location.getSecondary() != null) {
+                        addImage(url, warning.location);
+                    }
                 }
                 mWriter.write("</div>\n");                               //$NON-NLS-1$
 
@@ -239,6 +279,82 @@ class HtmlReporter extends Reporter {
         System.out.println(String.format("Wrote HTML report to %1$s", path));
     }
 
+    private boolean addImage(String url, Location location) throws IOException {
+        if (url != null && url.endsWith(".png")) {                       //$NON-NLS-1$
+            if (location.getSecondary() != null) {
+                // Emit many images
+                // Add in linked images as well
+                List<String> urls = new ArrayList<String>();
+                while (location != null && location.getFile() != null) {
+                    String imageUrl = getUrl(location.getFile().getPath());
+                    if (imageUrl != null
+                            && imageUrl.endsWith(".png")) {              //$NON-NLS-1$
+                        urls.add(imageUrl);
+                    }
+                    location = location.getSecondary();
+                }
+                if (urls.size() > 0) {
+                    // Sort in order
+                    Collections.sort(urls, new Comparator<String>() {
+                        public int compare(String s1, String s2) {
+                            return getDpiRank(s1) - getDpiRank(s2);
+                        }
+                    });
+                    mWriter.write("<table normal\" border=\"0\"><tr>");  //$NON-NLS-1$
+                    for (String linkedUrl : urls) {
+                        mWriter.write("<th>");                           //$NON-NLS-1$
+                        int index = linkedUrl.lastIndexOf("drawable-");  //$NON-NLS-1$
+                        if (index != -1) {
+                            index += "drawable-".length();               //$NON-NLS-1$
+                            int end = linkedUrl.indexOf('/', index);
+                            if (end != -1) {
+                                mWriter.write(linkedUrl.substring(index, end));
+                            }
+                        }
+                        mWriter.write("</th>");                          //$NON-NLS-1$
+                    }
+                    mWriter.write("</tr>\n<tr>");                        //$NON-NLS-1$
+                    for (String linkedUrl : urls) {
+                        // Image series: align top
+                        mWriter.write("<td>");                           //$NON-NLS-1$
+                        mWriter.write("<a href=\"");                     //$NON-NLS-1$
+                        mWriter.write(linkedUrl);
+                        mWriter.write("\">");                            //$NON-NLS-1$
+                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
+                        mWriter.write(linkedUrl);
+                        mWriter.write("\" /></a>\n");                    //$NON-NLS-1$
+                        mWriter.write("</td>");                          //$NON-NLS-1$
+                    }
+                    mWriter.write("</tr></table>");                      //$NON-NLS-1$
+                }
+            } else {
+                // Just this image: float to the right
+                mWriter.write("<img class=\"embedimage\" align=\"right\" src=\""); //$NON-NLS-1$
+                mWriter.write(url);
+                mWriter.write("\" />");                                  //$NON-NLS-1$
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /** Provide a sorting rank for a url */
+    private static int getDpiRank(String url) {
+        if (url.contains("-xhdpi")) {                                   //$NON-NLS-1$
+            return 0;
+        } else if (url.contains("-hdpi")) {                             //$NON-NLS-1$
+            return 1;
+        } else if (url.contains("-mdpi")) {                             //$NON-NLS-1$
+            return 2;
+        } else if (url.contains("-ldpi")) {                             //$NON-NLS-1$
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
     private void appendCodeBlock(String contents, int lineno, int offset)
             throws IOException {
         int max = lineno + 3;
@@ -287,5 +403,33 @@ class HtmlReporter extends Reporter {
                 mWriter.write(c);
             }
         }
+    }
+
+    private String getUrl(String path) {
+        if (mUrlMap != null) {
+            try {
+                // Perform the comparison using URLs such that we properly escape spaces etc.
+                String pathUrl = URLEncoder.encode(path, "UTF-8");         //$NON-NLS-1$
+                for (Map.Entry<String, String> entry : mUrlMap.entrySet()) {
+                    String prefix = entry.getKey();
+                    String prefixUrl = URLEncoder.encode(prefix, "UTF-8"); //$NON-NLS-1$
+                    if (pathUrl.startsWith(prefixUrl)) {
+                        String relative = pathUrl.substring(prefixUrl.length());
+                        return entry.getValue()
+                                + relative.replace("%2F", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
+                }
+            } catch (UnsupportedEncodingException e) {
+                // This shouldn't happen for UTF-8
+                System.err.println("Invalid URL map specification - " + e.getLocalizedMessage());
+            }
+        }
+
+        return null;
+    }
+
+    /** Set mapping of path prefixes to corresponding URLs in the HTML report */
+    void setUrlMap(Map<String, String> urlMap) {
+        mUrlMap = urlMap;
     }
 }

@@ -19,6 +19,7 @@ package com.android.tools.lint.api;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 
 import org.w3c.dom.Document;
@@ -131,29 +132,30 @@ public abstract class ToolContext {
     /**
      * Returns the list of source folders for Java source files
      *
-     * @param projectDir the directory containing the Android project
+     * @param project the project to look up Java source file locations for
      * @return a list of source folders to search for .java files
      */
-    public List<File> getJavaSourceFolders(File projectDir) {
-        return getEclipseClasspath(projectDir, "src", "src", "gen"); //$NON-NLS-1$ //$NON-NLS-2$
+    public List<File> getJavaSourceFolders(Project project) {
+        return getEclipseClasspath(project, "src", "src", "gen"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
      * Returns the list of output folders for class files
-     * @param projectDir the directory containing the Android project
+     * @param project the project to look up class file locations for
      * @return a list of output folders to search for .class files
      */
-    public List<File> getJavaClassFolder(File projectDir) {
-        return getEclipseClasspath(projectDir, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+    public List<File> getJavaClassFolders(Project project) {
+        return getEclipseClasspath(project, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
      * Considers the given directory as an Eclipse project and returns either
      * its source or its output folders depending on the {@code attribute} parameter.
      */
-    private List<File> getEclipseClasspath(File projectDir, String attribute,
+    private List<File> getEclipseClasspath(Project project, String attribute,
             String... fallbackPaths) {
         List<File> folders = new ArrayList<File>();
+        File projectDir = project.getDir();
         File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
         if (classpathFile.exists()) {
             String classpathXml = readFile(classpathFile);

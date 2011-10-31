@@ -66,7 +66,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             "decide if this is really an error.\n" +
             "\n" +
             "You can suppress this error type if it finds false errors in your project.",
-            CATEGORY_CORRECTNESS, 5, Severity.WARNING, Scope.RESOURCES);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
 
     private Map<File, Pair<String, Integer>> mFileToArrayCount;
 

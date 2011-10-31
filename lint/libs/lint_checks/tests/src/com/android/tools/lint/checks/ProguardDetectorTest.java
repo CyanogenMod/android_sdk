@@ -29,6 +29,6 @@ public class ProguardDetectorTest extends AbstractCheckTest {
         assertEquals(
                 "proguard.cfg: Error: Obsolete proguard file; use -keepclasseswithmembers " +
                     "instead of -keepclasseswithmembernames",
-                lint("proguard.cfg"));
+                lintFiles("proguard.cfg"));
     }
 }

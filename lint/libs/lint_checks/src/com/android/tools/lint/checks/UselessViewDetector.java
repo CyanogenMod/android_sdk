@@ -43,7 +43,7 @@ public class UselessViewDetector extends LayoutDetector {
             "a root layout, and does not have a background, can be removed and have " +
             "its children moved directly into the parent for a flatter and more " +
             "efficient layout hierarchy.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_PERFORMANCE, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Issue of including a leaf that isn't shown */
     public static final Issue USELESS_LEAF = Issue.create(
@@ -51,7 +51,7 @@ public class UselessViewDetector extends LayoutDetector {
             "Checks whether a leaf layout can be removed.",
             "A layout that has no children or no background can often be removed (since it " +
             "is invisible) for a flatter and more efficient layout hierarchy.",
-            CATEGORY_LAYOUT, 2, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_PERFORMANCE, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link UselessViewDetector} */
     public UselessViewDetector() {

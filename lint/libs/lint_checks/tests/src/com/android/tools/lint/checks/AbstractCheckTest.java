@@ -26,7 +26,6 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.BufferedReader;
@@ -59,13 +58,15 @@ abstract class AbstractCheckTest extends TestCase {
         }
     }
 
-    protected String lint(String... relativePaths) throws Exception {
+    protected String lintFiles(String... relativePaths) throws Exception {
         List<File> files = new ArrayList<File>();
         for (String relativePath : relativePaths) {
             File file = getTestfile(relativePath);
             assertNotNull(file);
             files.add(file);
         }
+
+        addManifestFile(getTargetDir());
 
         return checkLint(files);
     }
@@ -74,7 +75,7 @@ abstract class AbstractCheckTest extends TestCase {
         mOutput = new StringBuilder();
         TestToolContext toolContext = new TestToolContext();
         Lint analyzer = new Lint(new CustomDetectorRegistry(), toolContext,
-                Scope.PROJECT);
+                null);
         analyzer.analyze(files);
 
         List<String> errors = toolContext.getErrors();
@@ -107,13 +108,31 @@ abstract class AbstractCheckTest extends TestCase {
             files.add(file);
         }
 
+        addManifestFile(projectDir);
+
         return checkLint(Collections.singletonList(projectDir));
+    }
+
+    private void addManifestFile(File projectDir) throws IOException {
+        // Ensure that there is at least a manifest file there to make it a valid project
+        // as far as Lint is concerned:
+        if (!new File(projectDir, "AndroidManifest.xml").exists()) {
+            File manifest = new File(projectDir, "AndroidManifest.xml");
+            FileWriter fw = new FileWriter(manifest);
+            fw.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    package=\"foo.bar2\"\n" +
+                "    android:versionCode=\"1\"\n" +
+                "    android:versionName=\"1.0\" >\n" +
+                "</manifest>\n");
+            fw.close();
+        }
     }
 
     private StringBuilder mOutput = null;
 
     private static File sTempDir = null;
-    private File getTempDir() {
+    protected File getTempDir() {
         if (sTempDir == null) {
             File base = new File(System.getProperty("java.io.tmpdir"));     //$NON-NLS-1$
             String os = System.getProperty("os.name");          //$NON-NLS-1$
@@ -134,7 +153,7 @@ abstract class AbstractCheckTest extends TestCase {
     }
 
     protected File getTargetDir() {
-        return new File(getTempDir(), getClass().getSimpleName());
+        return new File(getTempDir(), getClass().getSimpleName() + "_" + getName());
     }
 
     private File makeTestFile(String name, String relative,
@@ -254,8 +273,17 @@ abstract class AbstractCheckTest extends TestCase {
 
         @Override
         public void log(Throwable exception, String format, Object... args) {
-            exception.printStackTrace();
-            fail(exception.toString());
+            if (exception != null) {
+                exception.printStackTrace();
+            }
+            StringBuilder sb = new StringBuilder();
+            if (format != null) {
+                sb.append(String.format(format, args));
+            }
+            if (exception != null) {
+                sb.append(exception.toString());
+            }
+            fail(sb.toString());
         }
 
         @Override

@@ -43,7 +43,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             // TODO: Better description!
             "A scrolling widget such as a ScrollView should not contain any nested " +
             "scrolling widgets since this has various usability issues",
-            CATEGORY_LAYOUT, 7, Severity.WARNING, Scope.SINGLE_FILE);
+            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link NestedScrollingWidgetDetector} */
     public NestedScrollingWidgetDetector() {

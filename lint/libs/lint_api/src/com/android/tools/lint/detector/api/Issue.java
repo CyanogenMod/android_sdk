@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import java.util.EnumSet;
+
 
 
 /**
@@ -39,11 +41,11 @@ public final class Issue implements Comparable<Issue> {
     private final Severity mSeverity;
     private String mMoreInfoUrl;
     private boolean mEnabledByDefault = true;
-    private final Scope mScope;
+    private final EnumSet<Scope> mScope;
 
     // Use factory methods
     private Issue(String id, String description, String explanation, String category, int priority,
-            Severity severity, Scope scope) {
+            Severity severity, EnumSet<Scope> scope) {
         super();
         mId = id;
         mDescription = description;
@@ -69,7 +71,7 @@ public final class Issue implements Comparable<Issue> {
      * @return a new {@link Issue}
      */
     public static Issue create(String id, String description, String explanation, String category,
-            int priority, Severity severity, Scope scope) {
+            int priority, Severity severity, EnumSet<Scope> scope) {
         return new Issue(id, description, explanation, category, priority, severity, scope);
     }
 
@@ -159,7 +161,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the required scope
      */
-    public Scope getScope() {
+    public EnumSet<Scope> getScope() {
         return mScope;
     }
 

@@ -31,7 +31,8 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
             "Warning: Array signal_strength has an inconsistent number of items " +
                 "(5 in values/arrays.xml, 6 in values-land/arrays.xml)",
 
-            lint("res/values/arrays.xml",
+            lintProject(
+                 "res/values/arrays.xml",
                  "res/values-cs/arrays.xml",
                  "res/values-land/arrays.xml",
                  "res/values-nl-rNL/arrays.xml",

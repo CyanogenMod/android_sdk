@@ -41,7 +41,7 @@ public class GridLayoutDetector extends LayoutDetector {
             "the declared grid dimensions",
             "Declaring a layout_row or layout_column that falls outside the declared size " +
             "of a GridLayout's rowCount or columnCount is usually an unintentional error.",
-            CATEGORY_LAYOUT, 4, Severity.ERROR, Scope.SINGLE_FILE);
+            CATEGORY_CORRECTNESS, 4, Severity.ERROR, Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new accessibility check */
     public GridLayoutDetector() {

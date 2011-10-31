@@ -16,56 +16,70 @@
 
 package com.android.tools.lint.detector.api;
 
+import java.util.EnumSet;
+
 /**
  * The scope of a detector is the set of files a detector must consider when
  * performing its analysis. This can be used to determine when issues are
  * potentially obsolete, whether a detector should re-run on a file save, etc.
  */
 public enum Scope {
-    /** The analysis only considers a single file at a time */
-    SINGLE_FILE,
-
-    /** The analysis considers more than one file but only resource files */
-    RESOURCES,
-
-    /** The analysis considers more than one file but only the Java code */
-    JAVA_CODE,
+    /**
+     * The analysis only considers a single XML resource file at a time.
+     * <p>
+     * Issues which are only affected by a single resource file can be checked
+     * for incrementally when a file is edited.
+     */
+    RESOURCE_FILE,
 
     /**
-     * The analysis considers both the Java code in the project and any
-     * libraries
+     * The analysis considers <b>all</b> the resource file. This scope must not
+     * be used in conjunction with {@link #RESOURCE_FILE}; an issue scope is
+     * either considering just a single resource file or all the resources, not
+     * both.
      */
-    JAVA,
-
-    /** The analysis considers the full project */
-    PROJECT;
+    ALL_RESOURCE_FILES,
 
     /**
-     * Returns true if this scope is within the given scope. For example a file
-     * scope is within a project scope, but a project scope is not within a file
-     * scope.
-     *
-     * @param scope the scope to compare with
-     * @return true if this scope is within the other scope
+     * The analysis only considers a single Java source file at a time.
+     * <p>
+     * Issues which are only affected by a single Java source file can be
+     * checked for incrementally when a Java source file is edited.
      */
-    public boolean within(Scope scope) {
-        if (this == scope) {
-            return true;
-        }
-        if (scope == PROJECT) {
-            // Everything is within a project
-            return true;
-        }
+    JAVA_FILE,
 
-        if (this == SINGLE_FILE) {
-            // A single file is within everything else
-            return true;
-        }
+    /**
+     * The analysis considers <b>all</b> the Java source files together.
+     * <p>
+     * This flag is mutually exclusive with {@link #JAVA_FILE}.
+     */
+    ALL_JAVA_FILES,
 
-        if (this == JAVA_CODE) {
-            return scope == JAVA; // or scope == PROJECT but that's handled above
-        }
+    /**
+     * The analysis only considers a single Java class file at a time.
+     * <p>
+     * Issues which are only affected by a single Java class file can be checked
+     * for incrementally when a Java source file is edited and then recompiled.
+     */
+    CLASS_FILE,
 
-        return false;
-    }
+    /** The analysis considers the manifest file */
+    MANIFEST,
+
+    /** The analysis considers the Proguard configuration file */
+    PROGUARD,
+
+    /**
+     * The analysis considers classes in the libraries for this project.
+     */
+    JAVA_LIBRARIES;
+
+    /** All scopes: running lint on a project will check these scopes */
+    public static final EnumSet<Scope> ALL = EnumSet.allOf(Scope.class);
+    /** Scope-set used for detectors which are affected by a single resource file */
+    public static final EnumSet<Scope> RESOURCE_FILE_SCOPE = EnumSet.of(RESOURCE_FILE);
+    /** Scope-set used for detectors which scan all resources */
+    public static final EnumSet<Scope> ALL_RESOURCES_SCOPE = EnumSet.of(ALL_RESOURCE_FILES);
+    /** Scope-set used for detectors which are affected by a single Java source file */
+    public static final EnumSet<Scope> JAVA_FILE_SCOPE = EnumSet.of(RESOURCE_FILE);
 }

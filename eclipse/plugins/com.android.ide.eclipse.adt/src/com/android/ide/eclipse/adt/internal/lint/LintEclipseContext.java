@@ -767,4 +767,16 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
             return mEnd;
         }
     }
+
+    /** Specialized context which only provides fatal issues as enabled */
+    static class FatalContext extends LintEclipseContext {
+        public FatalContext(DetectorRegistry registry, IResource resource, IDocument document) {
+            super(registry, resource, document);
+        }
+
+        @Override
+        public boolean isEnabled(Issue issue) {
+            return super.isEnabled(issue) && getSeverity(issue) == Severity.ERROR;
+        }
+    }
 }
