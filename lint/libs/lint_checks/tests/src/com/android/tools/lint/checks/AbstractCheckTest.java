@@ -211,6 +211,9 @@ abstract class AbstractCheckTest extends TestCase {
         }
     }
 
+    protected boolean isEnabled(Issue issue) {
+        return false;
+    }
 
     private class TestToolContext extends ToolContext {
         private List<String> mErrors = new ArrayList<String>();
@@ -268,7 +271,7 @@ abstract class AbstractCheckTest extends TestCase {
                 }
             }
 
-            return false;
+            return AbstractCheckTest.this.isEnabled(issue);
         }
 
         @Override

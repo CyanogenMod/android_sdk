@@ -59,11 +59,19 @@ import java.util.Set;
 public class UnusedResourceDetector extends ResourceXmlDetector implements Detector.JavaScanner {
     private static final String R_PREFIX = "R."; //$NON-NLS-1$
 
-    /** The main issue discovered by this detector */
+    /** Unused resources (other than ids). */
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
             "Looks for unused resources",
             "Unused resources make applications larger and slow down builds.",
             CATEGORY_PERFORMANCE, 3, Severity.WARNING, Scope.PROJECT);
+    /** Unused id's */
+    public static final Issue ISSUE_IDS = Issue.create("UnusedIds", //$NON-NLS-1$
+            "Looks for unused id's",
+            "This resource id definition appears not to be needed since it is not referenced " +
+            "from anywhere. Having id definitions, even if unused, is not necessarily a bad " +
+            "idea since they make working on layouts and menus easier, so there is not a " +
+            "strong reason to delete these.",
+            CATEGORY_PERFORMANCE, 1, Severity.WARNING, Scope.PROJECT).setEnabledByDefault(false);
 
     protected Set<String> mDeclarations;
     protected Set<String> mReferences;
@@ -306,6 +314,17 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
         mDeclarations.removeAll(mReferences);
         Set<String> unused = mDeclarations;
+
+        if (unused.size() > 0 && !context.toolContext.isEnabled(ISSUE_IDS)) {
+            // Remove all R.id references
+            List<String> ids = new ArrayList<String>();
+            for (String resource : unused) {
+                if (resource.startsWith("R.id.")) { //$NON-NLS-1$
+                    ids.add(resource);
+                }
+            }
+            unused.removeAll(ids);
+        }
 
         List<String> sorted = new ArrayList<String>();
         for (String r : unused) {

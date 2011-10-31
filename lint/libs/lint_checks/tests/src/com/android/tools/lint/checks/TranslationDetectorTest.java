@@ -46,6 +46,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-es/strings.xml",
                  "res/values-es-rUS/strings.xml",
                  "res/values-land/strings.xml",
+                 "res/values-es/donottranslate.xml",
                  "res/values-nl-rNL/strings.xml"));
     }
 

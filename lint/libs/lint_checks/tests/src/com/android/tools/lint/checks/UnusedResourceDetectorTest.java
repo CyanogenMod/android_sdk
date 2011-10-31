@@ -17,15 +17,44 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Issue;
 
 @SuppressWarnings("javadoc")
 public class UnusedResourceDetectorTest extends AbstractCheckTest {
+    private boolean mEnableIds = false;
+
     @Override
     protected Detector getDetector() {
         return new UnusedResourceDetector();
     }
 
+    @Override
+    protected boolean isEnabled(Issue issue) {
+        if (issue == UnusedResourceDetector.ISSUE_IDS) {
+            return mEnableIds;
+        }
+
+        return super.isEnabled(issue);
+    }
+
     public void testUnused() throws Exception {
+        mEnableIds = false;
+        assertEquals(
+           "Warning: The resource R.layout.main appears to be unused\n" +
+           "Warning: The resource R.layout.other appears to be unused\n" +
+           "Warning: The resource R.string.hello appears to be unused",
+
+            lintProject(
+                // Rename .txt files to .java
+                "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
+                "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",
+                "AndroidManifest.xml",
+                "res/layout/accessibility.xml"));
+    }
+
+    public void testUnusedIds() throws Exception {
+        mEnableIds = true;
+
         assertEquals(
            "Warning: The resource R.id.imageView1 appears to be unused\n" +
            "Warning: The resource R.id.include1 appears to be unused\n" +

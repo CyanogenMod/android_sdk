@@ -85,6 +85,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.RESOURCES);
 
     private Set<String> mNames;
+    private boolean mIgnoreFile;
     private Map<File, Set<String>> mFileToNames;
 
     /** Constructs a new {@link TranslationDetector} */
@@ -122,6 +123,9 @@ public class TranslationDetector extends ResourceXmlDetector {
     @Override
     public void beforeCheckFile(Context context) {
         mNames = new HashSet<String>();
+
+        // Convention seen in various projects
+        mIgnoreFile = context.file.getName().startsWith("donottranslate"); //$NON-NLS-1$
     }
 
     @Override
@@ -359,6 +363,10 @@ public class TranslationDetector extends ResourceXmlDetector {
 
     @Override
     public void visitElement(Context context, Element element) {
+        if (mIgnoreFile) {
+            return;
+        }
+
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
             context.toolContext.report(context, MISSING, context.getLocation(element),

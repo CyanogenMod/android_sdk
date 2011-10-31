@@ -138,7 +138,11 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
             }
         }
 
-        return !mDisabledIds.contains(issue.getId());
+        if (mDisabledIds.contains(issue.getId())) {
+            return false;
+        }
+
+        return issue.isEnabledByDefault();
     }
 
     // ----- Implements IDomParser -----
