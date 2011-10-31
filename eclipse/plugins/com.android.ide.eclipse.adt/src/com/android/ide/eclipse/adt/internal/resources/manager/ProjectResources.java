@@ -210,23 +210,19 @@ public class ProjectResources extends ResourceRepository {
      * with the same names will return the same value).
      */
     public Integer getResourceId(ResourceType type, String name) {
+        Integer result = null;
         if (mResourceValueMap != null) {
             Map<String, Integer> map = mResourceValueMap.get(type);
             if (map != null) {
-                Integer value = map.get(name);
-
-                // if no value
-                if (value == null && ResourceType.ID == type) {
-                    return getDynamicId(name);
-                }
-
-                return value;
-            } else if (ResourceType.ID == type) {
-                return getDynamicId(name);
+                result = map.get(name);
             }
         }
 
-        return null;
+        if (result == null && ResourceType.ID == type) {
+            result = getDynamicId(name);
+        }
+
+        return result;
     }
 
     /**
