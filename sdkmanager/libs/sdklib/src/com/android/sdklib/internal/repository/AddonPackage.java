@@ -495,4 +495,22 @@ public class AddonPackage extends Package
         }
         return true;
     }
+
+    /**
+     * For addon packages, we want to add vendor|name to the sorting key
+     * <em>before<em/> the revision number.
+     * <p/>
+     * {@inheritDoc}
+     */
+    @Override
+    protected String comparisonKey() {
+        String s = super.comparisonKey();
+        int pos = s.indexOf("|r:");         //$NON-NLS-1$
+        assert pos > 0;
+        s = s.substring(0, pos) +
+            "|ve:" + getVendor() +          //$NON-NLS-1$
+            "|na:" + getName() +            //$NON-NLS-1$
+            s.substring(pos);
+        return s;
+    }
 }

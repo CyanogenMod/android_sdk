@@ -667,8 +667,8 @@ public class SdkRepoSourceTest extends TestCase {
         }
         assertEquals(
                 "[42 armeabi, " +
-                "2 x86, " +
-                "2 armeabi-v7a]",
+                "2 armeabi-v7a, " +
+                "2 x86]",
                 Arrays.toString(sysImgVersionAbi.toArray()));
 
         // Check the source packages

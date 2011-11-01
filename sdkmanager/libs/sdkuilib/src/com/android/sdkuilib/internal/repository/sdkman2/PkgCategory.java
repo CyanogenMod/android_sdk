@@ -20,12 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class PkgCategory {
-        private final Object mKey;
-        private final Object mIconRef;
-        private final List<PkgItem> mItems = new ArrayList<PkgItem>();
-        private String mLabel;
-        /** Transient flag used during incremental updates. */
-    private boolean mUnused;
+    private final Object mKey;
+    private final Object mIconRef;
+    private final List<PkgItem> mItems = new ArrayList<PkgItem>();
+    private String mLabel;
 
     public PkgCategory(Object key, String label, Object iconRef) {
         mKey = key;
@@ -51,14 +49,6 @@ abstract class PkgCategory {
 
     public List<PkgItem> getItems() {
         return mItems;
-    }
-
-    public void setUnused(boolean unused) {
-        mUnused = unused;
-    }
-
-    public boolean isUnused() {
-        return mUnused;
     }
 
     @Override

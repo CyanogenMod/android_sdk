@@ -672,14 +672,13 @@ public abstract class Package implements IDescription, Comparable<Package> {
             // extras and everything else
             sb.append(9);
         }
-        sb.append("|v:");                                                       //$NON-NLS-1$
 
 
         // We insert the package version here because it is more important
         // than the revision number. We want package version to be sorted
         // top-down, so we'll use 10k-api as the sorting key. The day we
         // get reach 10k APIs, we'll need to revisit this.
-
+        sb.append("|v:");                                                       //$NON-NLS-1$
         if (this instanceof IPackageVersion) {
             AndroidVersion v = ((IPackageVersion) this).getVersion();
 
@@ -688,14 +687,12 @@ public abstract class Package implements IDescription, Comparable<Package> {
                     v.isPreview() ? 1 : 0
                     ));
         }
-        sb.append("|r:");                                                       //$NON-NLS-1$
-
 
         // Append revision number
-
+        sb.append("|r:");                                                       //$NON-NLS-1$
         sb.append(String.format("%1$04d", getRevision()));                      //$NON-NLS-1$
-        sb.append('|');
 
+        sb.append('|');
         return sb.toString();
     }
 

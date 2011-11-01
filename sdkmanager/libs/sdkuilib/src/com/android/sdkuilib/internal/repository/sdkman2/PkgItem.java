@@ -40,6 +40,9 @@ public class PkgItem implements Comparable<PkgItem> {
      * a given remote package and the local repository.
      */
     public enum PkgState {
+        // Implementation detail: order matters. Installed items must be dealt with before
+        // new items and the order of PkgState.values() matters.
+
         /**
          * Package is locally installed and may or may not have an update.
          */
@@ -151,6 +154,18 @@ public class PkgItem implements Comparable<PkgItem> {
         if (mMainPkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
             // package revision numbers must match
             return mMainPkg.getRevision() == pkg.getRevision();
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether the update packages are of the same type and are
+     * not an update of each other.
+     */
+    public boolean isSameUpdatePackageAs(Package pkg) {
+        if (mUpdatePkg != null && mUpdatePkg.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE) {
+            // package revision numbers must match
+            return mUpdatePkg.getRevision() == pkg.getRevision();
         }
         return false;
     }

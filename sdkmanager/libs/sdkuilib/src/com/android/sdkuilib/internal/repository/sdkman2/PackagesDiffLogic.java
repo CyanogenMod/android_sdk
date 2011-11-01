@@ -26,21 +26,18 @@ import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SystemImagePackage;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
-import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.SparseArray;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 import com.android.sdkuilib.internal.repository.sdkman2.PkgItem.PkgState;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -247,7 +244,10 @@ class PackagesDiffLogic {
      */
     abstract class UpdateOp {
         private final Set<SdkSource> mVisitedSources = new HashSet<SdkSource>();
-        protected final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
+        private final List<PkgCategory> mCategories = new ArrayList<PkgCategory>();
+        private final Set<PkgCategory> mCatsToRemove = new HashSet<PkgCategory>();
+        private final Set<PkgItem> mItemsToRemove = new HashSet<PkgItem>();
+        private final Map<Package, PkgItem> mUpdatesToRemove = new HashMap<Package, PkgItem>();
 
         /** Removes all internal state. */
         public void clear() {
@@ -276,18 +276,23 @@ class PackagesDiffLogic {
          * items and/or adjust the category name. */
         public abstract void postCategoryItemsChanged();
 
-        /** Add the new package or merge it as an update or does nothing if this package
-         * is already part of the category items.
-         * Returns true if the category item list has changed. */
-        public abstract boolean mergeNewPackage(Package newPackage, PkgCategory cat);
-
         public void updateStart() {
             mVisitedSources.clear();
 
             // Note that default categories are created after the unused ones so that
             // the callback can decide whether they should be marked as unused or not.
+            mCatsToRemove.clear();
+            mItemsToRemove.clear();
+            mUpdatesToRemove.clear();
             for (PkgCategory cat : mCategories) {
-                cat.setUnused(true);
+                mCatsToRemove.add(cat);
+                List<PkgItem> items = cat.getItems();
+                mItemsToRemove.addAll(items);
+                for (PkgItem item : items) {
+                    if (item.hasUpdatePkg()) {
+                        mUpdatesToRemove.put(item.getUpdatePkg(), item);
+                    }
+                }
             }
 
             addDefaultCategories();
@@ -307,34 +312,57 @@ class PackagesDiffLogic {
         public boolean updateEnd() {
             boolean hasChanged = false;
 
-            // Remove unused categories
+            // Remove unused categories & items at the end of the update
             synchronized (mCategories) {
-                for (Iterator<PkgCategory> catIt = mCategories.iterator(); catIt.hasNext(); ) {
-                    PkgCategory cat = catIt.next();
-                    if (cat.isUnused()) {
-                        catIt.remove();
+                for (PkgCategory unusedCat : mCatsToRemove) {
+                    if (mCategories.remove(unusedCat)) {
                         hasChanged  = true;
-                        continue;
-                    }
-
-                    // Remove all *remote* items which obsolete source we have not been visited.
-                    // This detects packages which have disappeared from a remote source during an
-                    // update and removes from the current list.
-                    // Locally installed item are never removed.
-                    for (Iterator<PkgItem> itemIt = cat.getItems().iterator();
-                            itemIt.hasNext(); ) {
-                        PkgItem item = itemIt.next();
-                        if (item.getState() == PkgState.NEW &&
-                                !mVisitedSources.contains(item.getSource())) {
-                            itemIt.remove();
-                            hasChanged  = true;
-                        }
                     }
                 }
             }
+
+            for (PkgCategory cat : mCategories) {
+                for (Iterator<PkgItem> itemIt = cat.getItems().iterator(); itemIt.hasNext(); ) {
+                    PkgItem item = itemIt.next();
+                    if (mItemsToRemove.contains(item)) {
+                        itemIt.remove();
+                    } else if (item.hasUpdatePkg() &&
+                            mUpdatesToRemove.containsKey(item.getUpdatePkg())) {
+                        item.removeUpdate();
+                    }
+                }
+            }
+
+            mCatsToRemove.clear();
+            mItemsToRemove.clear();
+            mUpdatesToRemove.clear();
+
             return hasChanged;
         }
 
+        public boolean isKeep(PkgItem item) {
+            return !mItemsToRemove.contains(item);
+        }
+
+        public void keep(Package pkg) {
+            mUpdatesToRemove.remove(pkg);
+        }
+
+        public void keep(PkgItem item) {
+            mItemsToRemove.remove(item);
+        }
+
+        public void keep(PkgCategory cat) {
+            mCatsToRemove.remove(cat);
+        }
+
+        public void dontKeep(PkgItem item) {
+            mItemsToRemove.add(item);
+        }
+
+        public void dontKeep(PkgCategory cat) {
+            mCatsToRemove.add(cat);
+        }
     }
 
     private final UpdateOpApi    mOpApi    = new UpdateOpApi();
@@ -389,79 +417,132 @@ class PackagesDiffLogic {
         return displayIsSortByApi ? apiListChanged : sourceListChanged;
     }
 
+
     /** Process all local packages. Returns true if something changed. */
     private boolean processLocals(UpdateOp op, Package[] packages) {
         boolean hasChanged = false;
-        Set<Package> newPackages = new HashSet<Package>(Arrays.asList(packages));
-        Set<Package> unusedPackages = new HashSet<Package>(newPackages);
+        List<PkgCategory> cats = op.getCategories();
+        Set<PkgItem> keep = new HashSet<PkgItem>();
 
-        assert newPackages.size() == packages.length;
+        // For all locally installed packages, check they are either listed
+        // as installed or create new installed items for them.
 
-        // Upgrade NEW items to INSTALLED for any local package we already know about.
-        // We can't just change the state of the NEW item to INSTALLED, we also need its
-        // installed package/archive information and so we swap them in-place in the items list.
-
-        for (PkgCategory cat : op.getCategories()) {
-            List<PkgItem> items = cat.getItems();
-            for (int i = 0; i < items.size(); i++) {
-                PkgItem item = items.get(i);
-
-                if (item.hasUpdatePkg()) {
-                    Package newPkg = setContainsLocalPackage(newPackages, item.getUpdatePkg());
-                    if (newPkg != null) {
-                        // This item has an update package that is now installed.
-                        PkgItem installed = new PkgItem(newPkg, PkgState.INSTALLED);
-                        removePackageFromSet(unusedPackages, newPkg);
-                        item.removeUpdate();
-                        items.add(installed);
-                        cat.setUnused(false);
-                        hasChanged = true;
+        nextPkg: for (Package localPkg : packages) {
+            // Check to see if we already have the exact same package
+            // (type & revision) marked as installed.
+            for (PkgCategory cat : cats) {
+                for (PkgItem currItem : cat.getItems()) {
+                    if (currItem.getState() == PkgState.INSTALLED &&
+                            currItem.isSameMainPackageAs(localPkg)) {
+                        // This package is already listed as installed.
+                        op.keep(currItem);
+                        op.keep(cat);
+                        keep.add(currItem);
+                        continue nextPkg;
                     }
                 }
+            }
 
-                Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
-                if (newPkg != null) {
-                    removePackageFromSet(unusedPackages, newPkg);
-                    cat.setUnused(false);
-                    if (item.getState() == PkgState.NEW) {
-                        // This item has a main package that is now installed.
-                        replace(items, i, new PkgItem(newPkg, PkgState.INSTALLED));
-                        hasChanged = true;
-                    }
+            // If not found, create a new installed package item
+            keep.add(addNewItem(op, localPkg, PkgState.INSTALLED));
+            hasChanged = true;
+        }
+
+        // Remove installed items that we don't want to keep anymore. They would normally be
+        // cleanup up in UpdateOp.updateEnd(); however it's easier to remove them before we
+        // run processSource() to avoid merging updates in items that would be removed later.
+
+        for (PkgCategory cat : cats) {
+            for (Iterator<PkgItem> itemIt = cat.getItems().iterator(); itemIt.hasNext(); ) {
+                PkgItem item = itemIt.next();
+                if (item.getState() == PkgState.INSTALLED && !keep.contains(item)) {
+                    itemIt.remove();
+                    hasChanged = true;
                 }
             }
         }
 
-        // Remove INSTALLED items if their package isn't listed anymore in locals
-        for (PkgCategory cat : op.getCategories()) {
-            List<PkgItem> items = cat.getItems();
-            for (int i = 0; i < items.size(); i++) {
-                PkgItem item = items.get(i);
+        if (hasChanged) {
+            op.postCategoryItemsChanged();
+        }
 
-                if (item.getState() == PkgState.INSTALLED) {
-                    Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
-                    if (newPkg == null) {
-                        items.remove(i--);
-                        hasChanged = true;
+        return hasChanged;
+    }
+
+    /** Process all remote packages. Returns true if something changed. */
+    private boolean processSource(UpdateOp op, SdkSource source, Package[] packages) {
+        boolean hasChanged = false;
+        List<PkgCategory> cats = op.getCategories();
+
+        nextPkg: for (Package newPkg : packages) {
+            for (PkgCategory cat : cats) {
+                for (PkgState state : PkgState.values()) {
+                    for (Iterator<PkgItem> currItemIt = cat.getItems().iterator();
+                                           currItemIt.hasNext(); ) {
+                        PkgItem currItem = currItemIt.next();
+                        // We need to merge with installed items first. When installing
+                        // the diff will have both the new and the installed item and we
+                        // need to merge with the installed one before the new one.
+                        if (currItem.getState() != state) {
+                            continue;
+                        }
+                        // Only process current items if they represent the same item (but
+                        // with a different revision number) than the new package.
+                        Package mainPkg = currItem.getMainPackage();
+                        if (!mainPkg.sameItemAs(newPkg)) {
+                            continue;
+                        }
+
+                        // Check to see if we already have the exact same package
+                        // (type & revision) marked as main or update package.
+                        if (currItem.isSameMainPackageAs(newPkg)) {
+                            op.keep(currItem);
+                            op.keep(cat);
+                            continue nextPkg;
+                        } else if (currItem.hasUpdatePkg() &&
+                                currItem.isSameUpdatePackageAs(newPkg)) {
+                            op.keep(currItem.getUpdatePkg());
+                            op.keep(cat);
+                            continue nextPkg;
+                        }
+
+                        switch (currItem.getState()) {
+                        case NEW:
+                            if (newPkg.getRevision() < mainPkg.getRevision()) {
+                                if (!op.isKeep(currItem)) {
+                                    // The new item has a lower revision than the current one,
+                                    // but the current one hasn't been marked as being kept so
+                                    // it's ok to downgrade it.
+                                    currItemIt.remove();
+                                    addNewItem(op, newPkg, PkgState.NEW);
+                                    hasChanged = true;
+                                }
+                            } else if (newPkg.getRevision() > mainPkg.getRevision()) {
+                                // We have a more recent new version, remove the current one
+                                // and replace by a new one
+                                currItemIt.remove();
+                                addNewItem(op, newPkg, PkgState.NEW);
+                                hasChanged = true;
+                            }
+                            break;
+                        case INSTALLED:
+                            // if newPkg.revision <= mainPkg.revision: it's already installed, ignore.
+                            if (newPkg.getRevision() > mainPkg.getRevision()) {
+                                // This is a new update for the main package.
+                                if (currItem.mergeUpdate(newPkg)) {
+                                    op.keep(currItem.getUpdatePkg());
+                                    op.keep(cat);
+                                    hasChanged = true;
+                                }
+                            }
+                            break;
+                        }
+                        continue nextPkg;
                     }
                 }
             }
-        }
-
-        // Create new 'installed' items for any local package we haven't processed yet
-        for (Package newPackage : unusedPackages) {
-            Object catKey = op.getCategoryKey(newPackage);
-            PkgCategory cat = findCurrentCategory(op.getCategories(), catKey);
-
-            if (cat == null) {
-                // This is a new category. Create it and add it to the list.
-                cat = op.createCategory(catKey);
-                op.getCategories().add(cat);
-                op.sortCategoryList();
-            }
-
-            cat.getItems().add(new PkgItem(newPackage, PkgState.INSTALLED));
-            cat.setUnused(false);
+            // If not found, create a new package item
+            addNewItem(op, newPkg, PkgState.NEW);
             hasChanged = true;
         }
 
@@ -472,253 +553,25 @@ class PackagesDiffLogic {
         return hasChanged;
     }
 
-    /**
-     * Replaces the item at {@code index} in {@code list} with the new {@code obj} element.
-     * This uses {@link ArrayList#set(int, Object)} if possible, remove+add otherwise.
-     *
-     * @return The old item at the same index position.
-     * @throws IndexOutOfBoundsException if index out of range (index < 0 || index >= size()).
-     */
-    private <T> T replace(List<T> list, int index, T obj) {
-        if (list instanceof ArrayList<?>) {
-            return ((ArrayList<T>) list).set(index, obj);
-        } else {
-            T old = list.remove(index);
-            list.add(index, obj);
-            return old;
-        }
-    }
+    private PkgItem addNewItem(UpdateOp op, Package pkg, PkgState state) {
+        List<PkgCategory> cats = op.getCategories();
+        Object catKey = op.getCategoryKey(pkg);
+        PkgCategory cat = findCurrentCategory(cats, catKey);
 
-    /**
-     * Checks whether the {@code newPackages} set contains a package that is the
-     * same as {@code pkgToFind}.
-     * This is based on Package being the same from an install point of view rather than
-     * pure object equality.
-     * @return The matching package from the {@code newPackages} set or null if not found.
-     */
-    private Package setContainsLocalPackage(Collection<Package> newPackages, Package pkgToFind) {
-        // Most of the time, local packages don't have the exact same hash code
-        // as new ones since the objects are similar but not exactly the same,
-        // for example their installed OS path cannot match (by definition) so
-        // their hash code do not match when used with Set.contains().
-
-        for (Package newPkg : newPackages) {
-            // Two packages are the same if they are compatible types,
-            // do not update each other and have the same revision number.
-            if (pkgToFind.canBeUpdatedBy(newPkg) == UpdateInfo.NOT_UPDATE &&
-                    newPkg.getRevision() == pkgToFind.getRevision()) {
-                return newPkg;
+        if (cat == null) {
+            // This is a new category. Create it and add it to the list.
+            cat = op.createCategory(catKey);
+            synchronized (cats) {
+                cats.add(cat);
             }
+            op.sortCategoryList();
         }
 
-        return null;
-    }
-
-    /**
-     * Removes the given package from the set.
-     * This is based on Package being the same from an install point of view rather than
-     * pure object equality.
-     */
-    private void removePackageFromSet(Collection<Package> packages, Package pkgToFind) {
-        // First try to remove the package based on its hash code. This can fail
-        // for a variety of reasons, as explained in setContainsLocalPackage().
-        if (packages.remove(pkgToFind)) {
-            return;
-        }
-
-        for (Package pkg : packages) {
-            // Two packages are the same if they are compatible types,
-            // or not updates of each other and have the same revision number.
-            if (pkgToFind.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
-                    pkg.getRevision() == pkgToFind.getRevision()) {
-                packages.remove(pkg);
-                // Implementation detail: we can get away with using Collection.remove()
-                // whilst in the for iterator because we return right away (otherwise the
-                // iterator would complain the collection just changed.)
-                return;
-            }
-        }
-    }
-
-    /**
-     * Removes any package from the set that is equal or lesser than {@code pkgToFind}.
-     * This is based on Package being the same from an install point of view rather than
-     * pure object equality.
-     * </p>
-     * This is a slight variation on {@link #removePackageFromSet(Collection, Package)}
-     * where we remove from the set any package that is similar to {@code pkgToFind}
-     * and has either the same revision number or a <em>lesser</em> revision number.
-     * An example of this use-case is there's an installed local package in rev 5
-     * (that is the pkgToFind) and there's a remote package in rev 3 (in the package list),
-     * in which case we 'forget' the rev 3 package even exists.
-     */
-    private void removePackageOrLesserFromSet(Collection<Package> packages, Package pkgToFind) {
-        for (Iterator<Package> it = packages.iterator(); it.hasNext(); ) {
-            Package pkg = it.next();
-
-            // Two packages are the same if they are compatible types,
-            // or not updates of each other and have the same revision number.
-            if (pkgToFind.canBeUpdatedBy(pkg) == UpdateInfo.NOT_UPDATE &&
-                    pkg.getRevision() <= pkgToFind.getRevision()) {
-                it.remove();
-            }
-        }
-    }
-
-    /** Process all remote packages. Returns true if something changed. */
-    private boolean processSource(UpdateOp op, SdkSource source, Package[] packages) {
-        boolean hasChanged = false;
-        // Note: unusedPackages must respect the original packages order. It can't be a set.
-        List<Package> unusedPackages = new ArrayList<Package>(Arrays.asList(packages));
-        Set<Package> newPackages = new HashSet<Package>(unusedPackages);
-
-        assert source != null;
-        assert newPackages.size() == packages.length;
-
-        // Remove any items or updates that are no longer in the source's packages
-        for (PkgCategory cat : op.getCategories()) {
-            List<PkgItem> items = cat.getItems();
-            for (int i = 0; i < items.size(); i++) {
-                PkgItem item = items.get(i);
-
-                // Does the source provide this kind of package?
-                // FIXME. This is a crude workaround for bug 5508174; the
-                // diff logic has a larger issue, this is merely a quick fix.
-                // The downside is that if a remote source stops offering a given
-                // package type (e.g. a specific addon), it will still show up as
-                // available until the sdk manager is restarted.
-                boolean foundSame = false;
-                for (Package pkg : packages) {
-                    if (pkg.sameItemAs(item.getMainPackage())) {
-                        foundSame = true;
-                        break;
-                    }
-                }
-                if (!foundSame) {
-                    continue;
-                }
-
-                // Try to prune current items that are no longer on the remote site.
-                // Installed items have been dealt with the local source, so only
-                // change new items here.
-                if (item.getState() == PkgState.NEW) {
-                    Package newPkg = setContainsLocalPackage(newPackages, item.getMainPackage());
-                    if (newPkg == null) {
-                        // This package is no longer part of the source.
-                        items.remove(i--);
-                        hasChanged = true;
-                        continue;
-                    }
-                }
-
-                cat.setUnused(false);
-                removePackageOrLesserFromSet(unusedPackages, item.getMainPackage());
-
-                if (item.hasUpdatePkg()) {
-                    Package newPkg = setContainsLocalPackage(newPackages, item.getUpdatePkg());
-                    if (newPkg != null) {
-                        removePackageFromSet(unusedPackages, newPkg);
-                    } else {
-                        // This update is no longer part of the source
-                        item.removeUpdate();
-                        hasChanged = true;
-                    }
-                }
-            }
-        }
-
-        // Add any new unknown packages
-        for (Package newPackage : unusedPackages) {
-            Object catKey = op.getCategoryKey(newPackage);
-            PkgCategory cat = findCurrentCategory(op.getCategories(), catKey);
-
-            if (cat == null) {
-                // This is a new category. Create it and add it to the list.
-                cat = op.createCategory(catKey);
-                op.getCategories().add(cat);
-                op.sortCategoryList();
-            }
-
-            // Add the new package or merge it as an update
-            hasChanged |= op.mergeNewPackage(newPackage, cat);
-        }
-
-        if (hasChanged) {
-            op.postCategoryItemsChanged();
-        }
-
-        return hasChanged;
-    }
-
-    private boolean isSourceCompatible(PkgItem currentItem, Package newPackage) {
-        assert currentItem != null;
-        assert newPackage  != null;
-
-        // Don't compare source of packages which are not the same (their revision # can differ)
-        Package currentPkg = currentItem.getMainPackage();
-        if (!currentPkg.sameItemAs(newPackage)) {
-            return false;
-        }
-
-        SdkSource currentSource = currentItem.getSource();
-        SdkSource newItemSource = newPackage.getParentSource();
-
-        // Only process items matching the current source.
-        if (currentSource == newItemSource) {
-            // Object identity, so definitely the same source. Accept it.
-            return true;
-
-        } else if (currentSource != null && currentSource.equals(newItemSource)) {
-            // Same source. Accept it.
-            return true;
-
-        } else if (currentSource != null && newItemSource != null &&
-                !currentSource.getClass().equals(newItemSource.getClass())) {
-            // Both sources don't have the same type (e.g. sdk repository versus add-on repository)
-            return false;
-
-        } else if (currentSource == null && currentItem.getState() == PkgState.INSTALLED) {
-            // Accept it.
-            // If a locally installed item has no source, it probably has been
-            // manually installed. In this case just match any remote source.
-            return true;
-
-        } else if (currentSource != null && currentSource.getUrl().startsWith("file://")) {
-            // Heuristic: Probably a manual local install. Accept it.
-            return true;
-        }
-
-        // Reject the source mismatch. The idea is that if two remote repositories
-        // have similar packages, we don't want to merge them together and have
-        // one hide the other. This is a design error from the repository owners
-        // and we want the case to be blatant so that we can get it fixed.
-
-        if (currentSource != null && newItemSource != null) {
-            try {
-                String str1 = rewriteUrl(currentSource.getUrl());
-                String str2 = rewriteUrl(newItemSource.getUrl());
-
-                URL url1 = new URL(str1);
-                URL url2 = new URL(str2);
-
-                // Make an exception if both URLs have the same host name & domain name.
-                if (url1.sameFile(url2) || url1.getHost().equals(url2.getHost())) {
-                    return true;
-                }
-            } catch (Exception ignore) {
-                // Ignore MalformedURLException or other exceptions
-            }
-        }
-
-        return false;
-    }
-
-    private String rewriteUrl(String url) {
-        if (url != null && url.startsWith(SdkRepoConstants.URL_GOOGLE_SDK_SITE)) {
-            url = url.replaceAll("repository-[0-9]+\\.xml^",    //$NON-NLS-1$
-                                 "repository.xml");             //$NON-NLS-1$
-        }
-        return url;
+        PkgItem item = new PkgItem(pkg, state);
+        op.keep(item);
+        cat.getItems().add(item);
+        op.keep(cat);
+        return item;
     }
 
     private PkgCategory findCurrentCategory(
@@ -756,13 +609,14 @@ class PackagesDiffLogic {
             boolean needTools = true;
             boolean needExtras = true;
 
-            for (PkgCategory cat : mCategories) {
+            List<PkgCategory> cats = getCategories();
+            for (PkgCategory cat : cats) {
                 if (cat.getKey().equals(PkgCategoryApi.KEY_TOOLS)) {
                     // Mark them as no unused to prevent their removal in updateEnd().
-                    cat.setUnused(false);
+                    keep(cat);
                     needTools = false;
                 } else if (cat.getKey().equals(PkgCategoryApi.KEY_EXTRA)) {
-                    cat.setUnused(false);
+                    keep(cat);
                     needExtras = false;
                 }
             }
@@ -773,8 +627,8 @@ class PackagesDiffLogic {
                         PkgCategoryApi.KEY_TOOLS,
                         null,
                         mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_OTHER));
-                synchronized (mCategories) {
-                    mCategories.add(acat);
+                synchronized (cats) {
+                    cats.add(acat);
                 }
             }
 
@@ -783,8 +637,8 @@ class PackagesDiffLogic {
                         PkgCategoryApi.KEY_EXTRA,
                         null,
                         mUpdaterData.getImageFactory().getImageByName(PackagesPage.ICON_CAT_OTHER));
-                synchronized (mCategories) {
-                    mCategories.add(acat);
+                synchronized (cats) {
+                    cats.add(acat);
                 }
             }
         }
@@ -823,35 +677,6 @@ class PackagesDiffLogic {
         }
 
         @Override
-        public boolean mergeNewPackage(Package newPackage, PkgCategory cat) {
-            // First check if the new package could be an update
-            // to an existing package
-            for (PkgItem item : cat.getItems()) {
-                if (!isSourceCompatible(item, newPackage)) {
-                    continue;
-                }
-
-                if (item.isSameMainPackageAs(newPackage)) {
-                    // Seems like this isn't really a new item after all.
-                    cat.setUnused(false);
-                    // Return false since we're not changing anything.
-                    return false;
-                } else if (item.mergeUpdate(newPackage)) {
-                    // The new package is an update for the existing package
-                    // and has been merged in the PkgItem as such.
-                    cat.setUnused(false);
-                    // Return true to indicate we changed something.
-                    return true;
-                }
-            }
-
-            // This is truly a new item.
-            cat.getItems().add(new PkgItem(newPackage, PkgState.NEW));
-            cat.setUnused(false);
-            return true; // something has changed
-        }
-
-        @Override
         public void sortCategoryList() {
             // Sort the categories list.
             // We always want categories in order tools..platforms..extras.
@@ -859,8 +684,8 @@ class PackagesDiffLogic {
             // This order is achieved by having the category keys ordered as
             // needed for the sort to just do what we expect.
 
-            synchronized (mCategories) {
-                Collections.sort(mCategories, new Comparator<PkgCategory>() {
+            synchronized (getCategories()) {
+                Collections.sort(getCategories(), new Comparator<PkgCategory>() {
                     public int compare(PkgCategory cat1, PkgCategory cat2) {
                         assert cat1 instanceof PkgCategoryApi;
                         assert cat2 instanceof PkgCategoryApi;
@@ -875,7 +700,7 @@ class PackagesDiffLogic {
         @Override
         public void postCategoryItemsChanged() {
             // Sort the items
-            for (PkgCategory cat : mCategories) {
+            for (PkgCategory cat : getCategories()) {
                 Collections.sort(cat.getItems());
 
                 // When sorting by API, we can't always get the platform name
@@ -922,7 +747,8 @@ class PackagesDiffLogic {
 
         @Override
         public void addDefaultCategories() {
-            for (PkgCategory cat : mCategories) {
+            List<PkgCategory> cats = getCategories();
+            for (PkgCategory cat : cats) {
                 if (cat.getKey().equals(PkgCategorySource.UNKNOWN_SOURCE)) {
                     // Already present.
                     return;
@@ -933,10 +759,10 @@ class PackagesDiffLogic {
             PkgCategorySource cat = new PkgCategorySource(
                     PkgCategorySource.UNKNOWN_SOURCE,
                     mUpdaterData);
-            // Mark it as unused so that it can be cleared in updateEnd() if not used.
-            cat.setUnused(true);
-            synchronized (mCategories) {
-                mCategories.add(cat);
+            // Mark it so that it can be cleared in updateEnd() if not used.
+            dontKeep(cat);
+            synchronized (cats) {
+                cats.add(cat);
             }
         }
 
@@ -949,37 +775,12 @@ class PackagesDiffLogic {
         }
 
         @Override
-        public boolean mergeNewPackage(Package newPackage, PkgCategory cat) {
-            // First check if the new package could be an update
-            // to an existing package
-            for (PkgItem item : cat.getItems()) {
-                if (item.isSameMainPackageAs(newPackage)) {
-                    // Seems like this isn't really a new item after all.
-                    cat.setUnused(false);
-                    // Return false since we're not changing anything.
-                    return false;
-                } else if (item.mergeUpdate(newPackage)) {
-                    // The new package is an update for the existing package
-                    // and has been merged in the PkgItem as such.
-                    cat.setUnused(false);
-                    // Return true to indicate we changed something.
-                    return true;
-                }
-            }
-
-            // This is truly a new item.
-            cat.getItems().add(new PkgItem(newPackage, PkgState.NEW));
-            cat.setUnused(false);
-            return true; // something has changed
-        }
-
-        @Override
         public void sortCategoryList() {
             // Sort the sources in ascending source name order,
             // with the local packages always first.
 
-            synchronized (mCategories) {
-                Collections.sort(mCategories, new Comparator<PkgCategory>() {
+            synchronized (getCategories()) {
+                Collections.sort(getCategories(), new Comparator<PkgCategory>() {
                     public int compare(PkgCategory cat1, PkgCategory cat2) {
                         assert cat1 instanceof PkgCategorySource;
                         assert cat2 instanceof PkgCategorySource;
@@ -1005,7 +806,7 @@ class PackagesDiffLogic {
         @Override
         public void postCategoryItemsChanged() {
             // Sort the items
-            for (PkgCategory cat : mCategories) {
+            for (PkgCategory cat : getCategories()) {
                 Collections.sort(cat.getItems());
             }
         }

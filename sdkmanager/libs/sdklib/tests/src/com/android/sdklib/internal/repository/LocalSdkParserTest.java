@@ -70,8 +70,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
-                 "ARM EABI System Image, Android API 0, revision 0, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "ARM EABI System Image, Android API 0, revision 0, " +
                  "Sources for Android SDK, API 0, revision 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
 
@@ -84,8 +84,8 @@ public class LocalSdkParserTest extends SdkManagerTestCase {
 
         assertEquals(
                 "[SDK Platform Android 0.0, API 0, revision 1, " +
-                 "ARM EABI System Image, Android API 0, revision 0, " +
                  "ARM EABI v7a System Image, Android API 0, revision 0, " +
+                 "ARM EABI System Image, Android API 0, revision 0, " +
                  "Sources for Android SDK, API 0, revision 0, " +
                  "Broken Intel x86 Atom System Image, API 0]",
                 Arrays.toString(parser.parseSdk(sdkman.getLocation(), sdkman, monitor)));
