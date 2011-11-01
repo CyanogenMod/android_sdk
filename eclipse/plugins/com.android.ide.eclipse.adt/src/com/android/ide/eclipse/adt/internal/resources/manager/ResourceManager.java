@@ -174,13 +174,8 @@ public final class ResourceManager {
             return;
         }
 
-        // Process children recursively
-        IResourceDelta[] children = delta.getAffectedChildren();
-        for (IResourceDelta child : children)  {
-            processDelta(child, context);
-        }
-
-        // Process this delta
+        // Process this delta first as we need to make sure new folders are created before
+        // we process their content
         IResource r = delta.getResource();
         int type = r.getType();
 
@@ -192,6 +187,12 @@ public final class ResourceManager {
             updateFolder((IFolder)r, kind, context);
         } // We only care about files and folders.
           // Project deltas are handled by our project listener
+
+        // Now, process children recursively
+        IResourceDelta[] children = delta.getAffectedChildren();
+        for (IResourceDelta child : children)  {
+            processDelta(child, context);
+        }
     }
 
     /**
