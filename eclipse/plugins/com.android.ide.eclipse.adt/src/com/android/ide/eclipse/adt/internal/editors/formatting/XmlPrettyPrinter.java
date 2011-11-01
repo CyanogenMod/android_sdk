@@ -819,7 +819,7 @@ public class XmlPrettyPrinter {
     private boolean isSingleLineTag(Element element) {
         String tag = element.getTagName();
 
-        return tag.equals(ITEM_TAG)
+        return (tag.equals(ITEM_TAG) && mStyle == XmlFormatStyle.RESOURCE)
                 || tag.equals(STRING_ELEMENT)
                 || tag.equals(DIMEN_ELEMENT)
                 || tag.equals(COLOR_ELEMENT);

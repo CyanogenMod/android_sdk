@@ -318,26 +318,20 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testEOLcomments() throws Exception {
         checkFormat(
-                XmlFormatStyle.LAYOUT,
+                XmlFormatStyle.RESOURCE,
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "    <item android:state_pressed=\"true\"\n" +
-                "          android:color=\"#ffff0000\"></item> <!-- pressed -->\n" +
+                "          android:color=\"#ffff0000\"/> <!-- pressed -->\n" +
                 "    <item android:state_focused=\"true\"\n" +
-                "          android:color=\"#ff0000ff\"></item> <!-- focused -->\n" +
-                "    <item android:color=\"#ff000000\"></item> <!-- default -->\n" +
+                "          android:color=\"#ff0000ff\"/> <!-- focused -->\n" +
+                "    <item android:color=\"#ff000000\"/> <!-- default -->\n" +
                 "</selector>",
 
-                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "\n" +
-                "    <item\n" +
-                "        android:state_pressed=\"true\"\n" +
-                "        android:color=\"#ffff0000\"></item> <!-- pressed -->\n" +
-                "\n" +
-                "    <item\n" +
-                "        android:state_focused=\"true\"\n" +
-                "        android:color=\"#ff0000ff\"></item> <!-- focused -->\n" +
-                "\n" +
-                "    <item android:color=\"#ff000000\"></item> <!-- default -->\n" +
+                "    <item android:state_pressed=\"true\" android:color=\"#ffff0000\"/> <!-- pressed -->\n" +
+                "    <item android:state_focused=\"true\" android:color=\"#ff0000ff\"/> <!-- focused -->\n" +
+                "    <item android:color=\"#ff000000\"/> <!-- default -->\n" +
                 "\n" +
                 "</selector>");
     }
@@ -551,5 +545,152 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <bar />\n" +
                 "\n" +
                 "</foo>");
+    }
+
+    public void testMenus1() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                // http://code.google.com/p/android/issues/detail?id=21383
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:id=\"@+id/menu_debug\"\n" +
+                "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
+                "        android:showAsAction=\"ifRoom|withText\"\n" +
+                "        android:title=\"@string/menu_debug\">\n" +
+                "    \n" +
+                "        <menu>\n" +
+                "                <item\n" +
+                "                    android:id=\"@+id/menu_debug_clearCache_memory\"\n" +
+                "                    android:icon=\"@android:drawable/ic_menu_delete\"\n" +
+                "                    android:showAsAction=\"ifRoom|withText\"\n" +
+                "                    android:title=\"@string/menu_debug_clearCache_memory\"/>\n" +
+                "    \n" +
+                "                <item\n" +
+                "                    android:id=\"@+id/menu_debug_clearCache_file\"\n" +
+                "                    android:icon=\"@android:drawable/ic_menu_delete\"\n" +
+                "                    android:showAsAction=\"ifRoom|withText\"\n" +
+                "                    android:title=\"@string/menu_debug_clearCache_file\"/>\n" +
+                "        </menu>\n" +
+                "    </item>\n" +
+                "</menu>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:id=\"@+id/menu_debug\"\n" +
+                "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
+                "        android:showAsAction=\"ifRoom|withText\"\n" +
+                "        android:title=\"@string/menu_debug\">\n" +
+                "\n" +
+                "        <menu >\n" +
+                "\n" +
+                "            <item\n" +
+                "                android:id=\"@+id/menu_debug_clearCache_memory\"\n" +
+                "                android:icon=\"@android:drawable/ic_menu_delete\"\n" +
+                "                android:showAsAction=\"ifRoom|withText\"\n" +
+                "                android:title=\"@string/menu_debug_clearCache_memory\"/>\n" +
+                "\n" +
+                "            <item\n" +
+                "                android:id=\"@+id/menu_debug_clearCache_file\"\n" +
+                "                android:icon=\"@android:drawable/ic_menu_delete\"\n" +
+                "                android:showAsAction=\"ifRoom|withText\"\n" +
+                "                android:title=\"@string/menu_debug_clearCache_file\"/>\n" +
+                "        </menu>\n" +
+                "    </item>\n" +
+                "\n" +
+                "</menu>");
+    }
+
+    public void testMenus2() throws Exception {
+        XmlFormatPreferences prefs = XmlFormatPreferences.create();
+        prefs.removeEmptyLines = true;
+        checkFormat(
+                prefs, XmlFormatStyle.LAYOUT,
+                // http://code.google.com/p/android/issues/detail?id=21346
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<layer-list xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                "  <item>\n" +
+                "    <shape android:shape=\"rectangle\">\n" +
+                "      <stroke\n" +
+                "        android:width=\"1dip\"\n" +
+                "        android:color=\"@color/line_separator\"/>\n" +
+                "      <solid android:color=\"@color/event_header_background\"/>\n" +
+                "    </shape>\n" +
+                "  </item>\n" +
+                "  <item\n" +
+                "    android:bottom=\"1dip\"\n" +
+                "    android:top=\"1dip\">\n" +
+                "    <shape android:shape=\"rectangle\">\n" +
+                "      <stroke\n" +
+                "        android:width=\"1dip\"\n" +
+                "        android:color=\"@color/event_header_background\"/>\n" +
+                "      <solid android:color=\"@color/transparent\"/>\n" +
+                "    </shape>\n" +
+                "  </item>\n" +
+                "</layer-list>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<layer-list xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "    <item>\n" +
+                "        <shape android:shape=\"rectangle\" >\n" +
+                "            <stroke\n" +
+                "                android:width=\"1dip\"\n" +
+                "                android:color=\"@color/line_separator\" />\n" +
+                "            <solid android:color=\"@color/event_header_background\" />\n" +
+                "        </shape>\n" +
+                "    </item>\n" +
+                "    <item\n" +
+                "        android:bottom=\"1dip\"\n" +
+                "        android:top=\"1dip\">\n" +
+                "        <shape android:shape=\"rectangle\" >\n" +
+                "            <stroke\n" +
+                "                android:width=\"1dip\"\n" +
+                "                android:color=\"@color/event_header_background\" />\n" +
+                "            <solid android:color=\"@color/transparent\" />\n" +
+                "        </shape>\n" +
+                "    </item>\n" +
+                "</layer-list>");
+    }
+
+    public void testMenus3() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                // http://code.google.com/p/android/issues/detail?id=21227
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
+                "        android:title=\"@string/account_list_menu_more\">\n" +
+                "        <menu>\n" +
+                "            <item\n" +
+                "                android:id=\"@+id/account_list_menu_backup_restore\"\n" +
+                "                android:icon=\"@android:drawable/ic_menu_save\"\n" +
+                "                android:title=\"@string/account_list_menu_backup_restore\"/>\n" +
+                "        </menu>\n" +
+                "    </item>\n" +
+                "\n" +
+                "</menu>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                "\n" +
+                "    <item\n" +
+                "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
+                "        android:title=\"@string/account_list_menu_more\">\n" +
+                "\n" +
+                "        <menu >\n" +
+                "\n" +
+                "            <item\n" +
+                "                android:id=\"@+id/account_list_menu_backup_restore\"\n" +
+                "                android:icon=\"@android:drawable/ic_menu_save\"\n" +
+                "                android:title=\"@string/account_list_menu_backup_restore\"/>\n" +
+                "        </menu>\n" +
+                "    </item>\n" +
+                "\n" +
+                "</menu>");
     }
 }
