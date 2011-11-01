@@ -110,6 +110,10 @@
             class="android.widget.RatingBar"
             topAttrs="numStars,stepSize,style,isIndicator"
             resize="horizontal" />
+        <view
+            class="android.widget.Switch"
+            topAttrs="text,textOff,textOn,style,checked"
+            relatedTo="CheckBox,ToggleButton" />
     </category>
     <category
         name="Text Fields">
