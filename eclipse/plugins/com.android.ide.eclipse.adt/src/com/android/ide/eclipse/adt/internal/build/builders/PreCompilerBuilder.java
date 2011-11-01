@@ -275,10 +275,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                         if (context.needsFullAapt()) {
                             mMustCompileResources = true;
 
-                            assert context.getAaptRequestedProjects() != null &&
-                                    context.getAaptRequestedProjects().size() == 1 &&
-                                    context.getAaptRequestedProjects().iterator().next() == project;
-
                             // Must also call markAaptRequested on the project to not just
                             // store "aapt required" on this project, but also on any projects
                             // depending on this project if it's a library project

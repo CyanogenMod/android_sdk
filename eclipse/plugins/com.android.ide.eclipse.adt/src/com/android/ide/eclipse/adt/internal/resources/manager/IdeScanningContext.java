@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_AAPT_COMPILE;
+
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
@@ -26,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -113,7 +115,7 @@ public class IdeScanningContext extends ScanningContext {
         }
 
         // First clear out old/previous markers
-        for (IResource resource :mScannedResources) {
+        for (IResource resource : mScannedResources) {
             try {
                 if (resource.exists()) {
                     int depth = resource instanceof IFolder ? DEPTH_ONE : DEPTH_ZERO;
@@ -136,7 +138,34 @@ public class IdeScanningContext extends ScanningContext {
 
     @Override
     public boolean needsFullAapt() {
-        return super.needsFullAapt();
+        // returns true if it was explicitly requested or if a file that has errors was modified.
+        // This handles the case where an edit doesn't add any new id but fix a compile error.
+        return super.needsFullAapt() || hasModifiedFilesWithErrors();
+    }
+
+    /**
+     * Returns true if any of the scanned resources has an error marker on it.
+     */
+    private boolean hasModifiedFilesWithErrors() {
+        for (IResource resource : mScannedResources) {
+            try {
+                int depth = resource instanceof IFolder ? DEPTH_ONE : DEPTH_ZERO;
+                if (resource.exists()) {
+                    IMarker[] markers = resource.findMarkers(IMarker.PROBLEM,
+                            true /*includeSubtypes*/, depth);
+                    for (IMarker marker : markers) {
+                        if (marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) ==
+                                IMarker.SEVERITY_ERROR) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (CoreException ce) {
+                // Pass
+            }
+        }
+
+        return false;
     }
 
     @Override
