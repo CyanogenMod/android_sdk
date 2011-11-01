@@ -31,6 +31,7 @@ import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.resources.ResourceType;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.jface.text.BadLocationException;
@@ -500,7 +501,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
 
     /**
      * Guess what style to use to edit the given document - layout, resource, manifest, ... ? */
-    private static XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
+    static XmlFormatStyle guessStyle(IStructuredModel model, Document domDocument) {
         // The "layout" style is used for most XML resource file types:
         // layouts, color-lists and state-lists, animations, drawables, menus, etc
         XmlFormatStyle style = XmlFormatStyle.LAYOUT;
@@ -516,7 +517,7 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
 
         // Selectors are also used similar to resources
         if (rootElement != null && SELECTOR_TAG.equals(rootElement.getTagName())) {
-            style = XmlFormatStyle.RESOURCE;
+            return XmlFormatStyle.RESOURCE;
         }
 
         // The "manifest" style is used for manifest files
@@ -527,13 +528,17 @@ public class AndroidXmlFormattingStrategy extends ContextBasedFormattingStrategy
             } else {
                 int lastSlash = baseLocation.lastIndexOf('/');
                 if (lastSlash != -1) {
-                    lastSlash = baseLocation.lastIndexOf('/', lastSlash - 1);
-                    if (lastSlash != -1 && baseLocation.startsWith("/values", lastSlash)) { //$NON-NLS-1$
-                        style = XmlFormatStyle.RESOURCE;
+                    int end = baseLocation.lastIndexOf('/', lastSlash - 1); // -1 is okay
+                    String resourceFolder = baseLocation.substring(end + 1, lastSlash);
+                    String[] segments = resourceFolder.split("-"); //$NON-NLS-1$
+                    ResourceType type = ResourceType.getEnum(segments[0]);
+                    if (type != null) {
+                        style = XmlFormatStyle.get(type);
                     }
                 }
             }
         }
+
         return style;
     }
 

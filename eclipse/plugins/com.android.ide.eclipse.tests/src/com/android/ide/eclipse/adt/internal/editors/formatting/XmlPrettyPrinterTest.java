@@ -19,13 +19,17 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 
 import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import junit.framework.TestCase;
 
-@SuppressWarnings("javadoc")
+@SuppressWarnings({
+    "javadoc", "restriction"
+})
 public class XmlPrettyPrinterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
@@ -39,12 +43,23 @@ public class XmlPrettyPrinterTest extends TestCase {
         assertTrue(formatPrefs.oneAttributeOnFirstLine);
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
-            String xml, String expected, String delimiter,
-            String startNodeName, boolean openTagOnly, String endNodeName) throws Exception {
+    private void checkFormat(XmlFormatPreferences prefs, String baseLocation,
+            String xml,
+            String expected, String delimiter, String startNodeName,
+            boolean openTagOnly, String endNodeName) throws Exception {
 
-        Document document = DomUtilities.parseStructuredDocument(xml);
-        assertNotNull(document);
+        IStructuredModel model = DomUtilities.createStructuredModel(xml);
+        assertNotNull(model);
+        model.setBaseLocation(baseLocation);
+        Document document = null;
+        if (model instanceof IDOMModel) {
+            IDOMModel domModel = (IDOMModel) model;
+            document = domModel.getDocument();
+        } else {
+            fail("Can't get DOM model");
+            return;
+        }
+        XmlFormatStyle style = AndroidXmlFormattingStrategy.guessStyle(model, document);
 
         XmlPrettyPrinter printer = new XmlPrettyPrinter(prefs, style, delimiter);
 
@@ -95,31 +110,29 @@ public class XmlPrettyPrinterTest extends TestCase {
         return caretContextIndex + caretDelta;
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
-            String xml, String expected, String delimiter) throws Exception {
-        checkFormat(prefs, style, xml, expected, delimiter, null, false, null);
+    private void checkFormat(XmlFormatPreferences prefs, String baseLocation, String xml,
+            String expected, String delimiter) throws Exception {
+        checkFormat(prefs, baseLocation, xml, expected, delimiter, null, false, null);
     }
 
-    private void checkFormat(XmlFormatPreferences prefs, XmlFormatStyle style,
-            String xml, String expected) throws Exception {
-        checkFormat(prefs, style, xml, expected, "\n"); //$NON-NLS-1$
+    private void checkFormat(XmlFormatPreferences prefs, String baseLocation, String xml,
+            String expected) throws Exception {
+        checkFormat(prefs, baseLocation, xml, expected, "\n"); //$NON-NLS-1$
     }
-    private void checkFormat(XmlFormatStyle style, String xml, String expected)
+    private void checkFormat(String baseLocation, String xml, String expected)
             throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
-        checkFormat(prefs, style, xml, expected);
-    }
-
-    private void checkFormat(String xml, String expected) throws Exception {
-        checkFormat(XmlFormatStyle.LAYOUT, xml, expected);
+        checkFormat(prefs, baseLocation, xml, expected);
     }
 
     public void testLayout1() throws Exception {
         checkFormat(
+                "res/layout-port/layout1.xml",
                 "<LinearLayout><Button></Button></LinearLayout>",
-                "<LinearLayout >\n" +
+
+                "<LinearLayout>\n" +
                 "\n" +
-                "    <Button >\n" +
+                "    <Button>\n" +
                 "    </Button>\n" +
                 "\n" +
                 "</LinearLayout>");
@@ -127,8 +140,10 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testLayout2() throws Exception {
         checkFormat(
+                "res/layout-port/layout2.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout >\n" +
+
+                "<LinearLayout>\n" +
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
@@ -140,9 +155,10 @@ public class XmlPrettyPrinterTest extends TestCase {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
         prefs.oneAttributeOnFirstLine = true;
         checkFormat(
-                prefs, XmlFormatStyle.LAYOUT,
+                prefs, "res/layout-land/layout3.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout >\n" +
+
+                "<LinearLayout>\n" +
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
@@ -150,26 +166,25 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "</LinearLayout>");
     }
 
-    /*
-    // TODO: This test will only work with the Eclipse DOM because our parser doesn't
-    // handle the ElementImpl case which records empty elements
     public void testClosedElements() throws Exception {
         checkFormat(
-                XmlPrettyPrinter.Style.RESOURCE,
+                "res/values/strings.xml",
                 "<resources>\n" +
                 "<item   name=\"title_container\"  type=\"id\"   />\n" +
                 "<item name=\"title_logo\" type=\"id\"/>\n" +
                 "</resources>\n",
+
                 "<resources>\n" +
-                "    <item name=\"title_container\" type=\"id\" />\n" +
-                "    <item name=\"title_logo\" type=\"id\" />\n" +
+                "\n" +
+                "    <item name=\"title_container\" type=\"id\"/>\n" +
+                "    <item name=\"title_logo\" type=\"id\"/>\n" +
+                "\n" +
                 "</resources>");
     }
-     */
 
     public void testResources() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values-us/strings.xml",
                 "<resources><item name=\"foo\">Text value here </item></resources>",
                 "<resources>\n\n" +
                 "    <item name=\"foo\">Text value here </item>\n" +
@@ -179,7 +194,7 @@ public class XmlPrettyPrinterTest extends TestCase {
     public void testNodeTypes() throws Exception {
         // Ensures that a document with all kinds of node types is serialized correctly
         checkFormat(
-                XmlFormatStyle.LAYOUT,
+                "res/layout-xlarge/layout.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<!--\n" +
                 "/**\n" +
@@ -207,7 +222,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "Type <key>less-than</key> (&#x3C;)\n" +
                 "-->        \n" +
                 "</LinearLayout>",
-
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<!--\n" +
                 "/**\n" +
@@ -241,9 +255,10 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testWindowsDelimiters() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button></LinearLayout>",
-                "<LinearLayout >\r\n" +
+
+                "<LinearLayout>\r\n" +
                 "\r\n" +
                 "    <Button foo=\"bar\" >\r\n" +
                 "    </Button>\r\n" +
@@ -256,19 +271,20 @@ public class XmlPrettyPrinterTest extends TestCase {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
-                prefs, XmlFormatStyle.LAYOUT,
+                prefs, "res/layout-xlarge/layout.xml",
                 "<foo><bar><baz1></baz1><baz2></baz2></bar><bar2></bar2><bar3><baz12></baz12></bar3></foo>",
-                "<foo >\n" +
-                "    <bar >\n" +
-                "        <baz1 >\n" +
+
+                "<foo>\n" +
+                "    <bar>\n" +
+                "        <baz1>\n" +
                 "        </baz1>\n" +
-                "        <baz2 >\n" +
+                "        <baz2>\n" +
                 "        </baz2>\n" +
                 "    </bar>\n" +
-                "    <bar2 >\n" +
+                "    <bar2>\n" +
                 "    </bar2>\n" +
-                "    <bar3 >\n" +
-                "        <baz12 >\n" +
+                "    <bar3>\n" +
+                "        <baz12>\n" +
                 "        </baz12>\n" +
                 "    </bar3>\n" +
                 "</foo>");
@@ -276,49 +292,54 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testRange() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n" +
                 "\n" +
                 "    <CheckBox />\n",
-                "\n", "Button", false, "CheckBox");
+                "\n",
+                "Button", false, "CheckBox");
     }
 
     public void testOpenTagOnly() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<LinearLayout><Button foo=\"bar\"></Button><CheckBox/></LinearLayout>",
                 "\n" +
                 "    <Button foo=\"bar\" >\n" +
                 "    </Button>\n",
+                "\n",
 
-                "\n", "Button", true, "Button");
+                "Button", true, "Button");
     }
 
     public void testRange2() throws Exception {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
-                prefs, XmlFormatStyle.LAYOUT,
+                prefs, "res/layout-xlarge/layout.xml",
                 "<foo><bar><baz1></baz1><baz2></baz2></bar><bar2></bar2><bar3><baz12></baz12></bar3></foo>",
-                "        <baz1 >\n" +
+
+                "        <baz1>\n" +
                 "        </baz1>\n" +
-                "        <baz2 >\n" +
+                "        <baz2>\n" +
                 "        </baz2>\n" +
                 "    </bar>\n" +
-                "    <bar2 >\n" +
+                "    <bar2>\n" +
                 "    </bar2>\n" +
-                "    <bar3 >\n" +
-                "        <baz12 >\n" +
+                "    <bar3>\n" +
+                "        <baz12>\n" +
                 "        </baz12>\n",
-                "\n", "baz1", false, "baz12");
+
+                "\n",
+                "baz1", false, "baz12");
     }
 
     public void testEOLcomments() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/drawable-mdpi/states.xml",
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "    <item android:state_pressed=\"true\"\n" +
                 "          android:color=\"#ffff0000\"/> <!-- pressed -->\n" +
@@ -326,7 +347,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "          android:color=\"#ff0000ff\"/> <!-- focused -->\n" +
                 "    <item android:color=\"#ff000000\"/> <!-- default -->\n" +
                 "</selector>",
-
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "\n" +
                 "    <item android:state_pressed=\"true\" android:color=\"#ffff0000\"/> <!-- pressed -->\n" +
@@ -338,12 +358,11 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testFormatColorList() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/drawable-hdpi/states.xml",
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "<item android:state_activated=\"true\" android:color=\"#FFFFFF\"/>\n" +
                 "<item android:color=\"#777777\" /> <!-- not selected -->\n" +
                 "</selector>",
-
                 "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                 "\n" +
                 "    <item android:state_activated=\"true\" android:color=\"#FFFFFF\"/>\n" +
@@ -354,7 +373,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testPreserveNewlineAfterComment() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values/dimen.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<resources><dimen name=\"colorstrip_height\">6dip</dimen>\n" +
                 "    <!-- comment1 --><dimen name=\"title_height\">45dip</dimen>\n" +
@@ -369,7 +388,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "    <dimen name=\"text_size_medium\">18sp</dimen><dimen name=\"text_size_large\">22sp</dimen>\n" +
                 "</resources>",
-
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<resources>\n" +
                 "\n" +
@@ -391,7 +409,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testPlurals() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values-us/strings.xml",
                 "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
                 "<string name=\"toast_sync_error\">Sync error: <xliff:g id=\"error\">%1$s</xliff:g></string>\n" +
                 "<string name=\"session_subtitle\"><xliff:g id=\"time\">%1$s</xliff:g> in <xliff:g id=\"room\">%2$s</xliff:g></string>\n" +
@@ -401,7 +419,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "<item quantity=\"other\"><xliff:g id=\"number_of_days\">%1$s</xliff:g> days, <xliff:g id=\"remaining_time\">%2$s</xliff:g></item>\n" +
                 "</plurals>\n" +
                 "</resources>",
-
                 "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
                 "\n" +
                 "    <string name=\"toast_sync_error\">Sync error: <xliff:g id=\"error\">%1$s</xliff:g></string>\n" +
@@ -418,7 +435,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMultiAttributeResource() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values-us/strings.xml",
                 "<resources><string name=\"debug_enable_debug_logging_label\" translatable=\"false\">Enable extra debug logging?</string></resources>",
                 "<resources>\n" +
                 "\n" +
@@ -429,14 +446,13 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMultilineCommentAlignment() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values-us/strings.xml",
                 "<resources>" +
                 "    <!-- Deprecated strings - Move the identifiers to this section, mark as DO NOT TRANSLATE,\n" +
                 "         and remove the actual text.  These will be removed in a bulk operation. -->\n" +
                 "    <!-- Do Not Translate.  Unused string. -->\n" +
                 "    <string name=\"meeting_invitation\"></string>\n" +
                 "</resources>",
-
                 "<resources>\n" +
                 "\n" +
                 "    <!--\n" +
@@ -451,7 +467,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testLineCommentSpacing() throws Exception {
         checkFormat(
-                XmlFormatStyle.RESOURCE,
+                "res/values-us/strings.xml",
                 "<resources>\n" +
                 "\n" +
                 "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
@@ -467,7 +483,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <dimen name=\"text_size_large\">22sp</dimen>\n" +
                 "\n" +
                 "</resources>",
-
                 "<resources>\n" +
                 "\n" +
                 "    <dimen name=\"colorstrip_height\">6dip</dimen>\n" +
@@ -487,7 +502,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testCommentHandling() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/layout/layout1.xml",
                 "<foo >\n" +
                 "\n" +
                 "    <!-- abc\n" +
@@ -504,7 +519,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</foo>",
 
-                "<foo >\n" +
+                "<foo>\n" +
                 "\n" +
                 "    <!--\n" +
                 "         abc\n" +
@@ -531,14 +546,14 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testCommentHandling2() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/layout-xlarge/layout.xml",
                 "<foo >\n" +
                 "    <!-- multi -->\n" +
                 "\n" +
                 "    <bar />\n" +
                 "</foo>",
 
-                "<foo >\n" +
+                "<foo>\n" +
                 "\n" +
                 "    <!-- multi -->\n" +
                 "\n" +
@@ -549,7 +564,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMenus1() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/menu/menu1.xml",
                 // http://code.google.com/p/android/issues/detail?id=21383
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
@@ -584,15 +599,12 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
                 "        android:showAsAction=\"ifRoom|withText\"\n" +
                 "        android:title=\"@string/menu_debug\">\n" +
-                "\n" +
-                "        <menu >\n" +
-                "\n" +
+                "        <menu>\n" +
                 "            <item\n" +
                 "                android:id=\"@+id/menu_debug_clearCache_memory\"\n" +
                 "                android:icon=\"@android:drawable/ic_menu_delete\"\n" +
                 "                android:showAsAction=\"ifRoom|withText\"\n" +
                 "                android:title=\"@string/menu_debug_clearCache_memory\"/>\n" +
-                "\n" +
                 "            <item\n" +
                 "                android:id=\"@+id/menu_debug_clearCache_file\"\n" +
                 "                android:icon=\"@android:drawable/ic_menu_delete\"\n" +
@@ -608,7 +620,7 @@ public class XmlPrettyPrinterTest extends TestCase {
         XmlFormatPreferences prefs = XmlFormatPreferences.create();
         prefs.removeEmptyLines = true;
         checkFormat(
-                prefs, XmlFormatStyle.LAYOUT,
+                prefs, "res/drawable-hdpi/layerlist.xml",
                 // http://code.google.com/p/android/issues/detail?id=21346
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<layer-list xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
@@ -631,7 +643,6 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    </shape>\n" +
                 "  </item>\n" +
                 "</layer-list>",
-
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<layer-list xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
                 "    <item>\n" +
@@ -657,7 +668,7 @@ public class XmlPrettyPrinterTest extends TestCase {
 
     public void testMenus3() throws Exception {
         checkFormat(
-                XmlFormatPreferences.create(), XmlFormatStyle.LAYOUT,
+                XmlFormatPreferences.create(), "res/menu/menu1.xml",
                 // http://code.google.com/p/android/issues/detail?id=21227
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
@@ -681,9 +692,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    <item\n" +
                 "        android:icon=\"@android:drawable/ic_menu_more\"\n" +
                 "        android:title=\"@string/account_list_menu_more\">\n" +
-                "\n" +
-                "        <menu >\n" +
-                "\n" +
+                "        <menu>\n" +
                 "            <item\n" +
                 "                android:id=\"@+id/account_list_menu_backup_restore\"\n" +
                 "                android:icon=\"@android:drawable/ic_menu_save\"\n" +
@@ -692,5 +701,80 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "    </item>\n" +
                 "\n" +
                 "</menu>");
+
+    }
+
+    public void testColors1() throws Exception {
+        checkFormat(
+                XmlFormatPreferences.create(), "res/values/colors.xml",
+                "<resources>\n" +
+                "  <color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "\n" +
+                "  <color name=\"service_starting_up\">#99000000</color>\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "    <color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "    <color name=\"service_starting_up\">#99000000</color>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testEclipseFormatStyle1() throws Exception {
+        XmlFormatPreferences prefs = new XmlFormatPreferences() {
+            @Override
+            public String getOneIndentUnit() {
+                return "\t";
+            }
+
+            @Override
+            public int getTabWidth() {
+                return 8;
+            }
+        };
+        checkFormat(
+                prefs, "res/values/colors.xml",
+                "<resources>\n" +
+                "  <color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "\n" +
+                "  <color name=\"service_starting_up\">#99000000</color>\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "\t<color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "\t<color name=\"service_starting_up\">#99000000</color>\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testEclipseFormatStyle2() throws Exception {
+        XmlFormatPreferences prefs = new XmlFormatPreferences() {
+            @Override
+            public String getOneIndentUnit() {
+                return "  ";
+            }
+
+            @Override
+            public int getTabWidth() {
+                return 2;
+            }
+        };
+        prefs.useEclipseIndent = true;
+        checkFormat(
+                prefs, "res/values/colors.xml",
+                "<resources>\n" +
+                "  <color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "\n" +
+                "  <color name=\"service_starting_up\">#99000000</color>\n" +
+                "</resources>",
+
+                "<resources>\n" +
+                "\n" +
+                "  <color name=\"enrollment_error\">#99e21f14</color>\n" +
+                "  <color name=\"service_starting_up\">#99000000</color>\n" +
+                "\n" +
+                "</resources>");
     }
 }
