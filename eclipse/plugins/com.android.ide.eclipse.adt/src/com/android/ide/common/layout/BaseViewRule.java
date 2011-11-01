@@ -17,6 +17,7 @@
 package com.android.ide.common.layout;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_CLASS;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_HINT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
@@ -30,6 +31,7 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
 import com.android.ide.common.api.DropFeedback;
 import com.android.ide.common.api.IAttributeInfo;
@@ -243,6 +245,10 @@ public class BaseViewRule implements IViewRule {
                                 if (isStyle) {
                                     uri = null;
                                 }
+                            } else if (actionId.equals(ATTR_CLASS) && selectedNodes.size() >= 1 &&
+                                    VIEW_FRAGMENT.equals(selectedNodes.get(0).getFqcn())) {
+                                v = mRulesEngine.displayFragmentSourceInput();
+                                uri = null;
                             } else {
                                 v = inputAttributeValue(firstNode, actionId);
                             }
