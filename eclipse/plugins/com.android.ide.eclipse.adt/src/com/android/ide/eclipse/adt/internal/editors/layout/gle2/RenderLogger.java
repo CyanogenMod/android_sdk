@@ -108,6 +108,12 @@ class RenderLogger extends LayoutLog {
 
         AdtPlugin.log(IStatus.ERROR, "%1$s: %2$s", mName, description);
 
+        // Workaround: older layout libraries don't provide a tag for this error
+        if (tag == null && message != null
+                && message.startsWith("Failed to find style ")) { //$NON-NLS-1$
+            tag = LayoutLog.TAG_RESOURCES_RESOLVE_THEME_ATTR;
+        }
+
         addError(tag, description);
     }
 
