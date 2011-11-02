@@ -119,6 +119,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final String IMAGE_SAVE_LOG_TO_FILE = "save.png"; //$NON-NLS-1$
     private static final String IMAGE_CLEAR_LOG = "clear.png"; //$NON-NLS-1$
     private static final String IMAGE_DISPLAY_FILTERS = "displayfilters.png"; //$NON-NLS-1$
+    private static final String IMAGE_SCROLL_TO_LATEST = "scroll_latest.png"; //$NON-NLS-1$
 
     private static final int[] WEIGHTS_SHOW_FILTERS = new int[] {15, 85};
     private static final int[] WEIGHTS_LOGCAT_ONLY = new int[] {0, 100};
@@ -138,7 +139,9 @@ public final class LogCatPanel extends SelectionDependentPanel
     private Text mLiveFilterText;
 
     private TableViewer mViewer;
+
     private boolean mShouldScrollToLatestLog = true;
+    private ToolItem mScrollToLastCheckBox;
 
     private String mLogFileExportFolder;
     private LogCatMessageLabelProvider mLogCatMessageLabelProvider;
@@ -557,6 +560,20 @@ public final class LogCatPanel extends SelectionDependentPanel
                 updateFiltersColumn(showFilters);
             }
         });
+
+        mScrollToLastCheckBox = new ToolItem(toolBar, SWT.CHECK);
+        mScrollToLastCheckBox.setImage(
+                ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_SCROLL_TO_LATEST,
+                        toolBar.getDisplay()));
+        mScrollToLastCheckBox.setSelection(true);
+        mScrollToLastCheckBox.setToolTipText("Scroll to display the latest logcat message.");
+        mScrollToLastCheckBox.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                boolean shouldScroll = mScrollToLastCheckBox.getSelection();
+                setScrollToLatestLog(shouldScroll, false);
+            }
+        });
     }
 
     private void updateFiltersColumn(boolean showFilters) {
@@ -749,8 +766,9 @@ public final class LogCatPanel extends SelectionDependentPanel
                 // But on Windows 7, the scrollbar never touches the bottom, and as a result
                 //        sb.getSelection + sb.getThumb is slightly less than sb.getMaximum.
                 // So we assume that as long as the thumb is close to the bottom, we want to scroll.
-                mShouldScrollToLatestLog =
+                boolean shouldScroll =
                         Math.abs(sb.getSelection() + sb.getThumb() - sb.getMaximum()) < 10;
+                setScrollToLatestLog(shouldScroll, true);
             }
         });
 
@@ -760,11 +778,25 @@ public final class LogCatPanel extends SelectionDependentPanel
                 Table table = (Table) event.getSource();
                 int[] indices = table.getSelectionIndices();
 
-                mShouldScrollToLatestLog =
+                boolean shouldScroll =
                         indices.length == 1 // only 1 item selected
-                        && indices[0] == table.getItemCount() -1; // and it is the last entry
+                        && indices[0] == table.getItemCount() - 1; // and it is the last entry
+                setScrollToLatestLog(shouldScroll, true);
             }
         });
+    }
+
+    private void setScrollToLatestLog(boolean scroll, boolean updateCheckbox) {
+        mShouldScrollToLatestLog = scroll;
+
+        if (updateCheckbox) {
+            mScrollToLastCheckBox.setSelection(scroll);
+        }
+
+        if (scroll) {
+            mViewer.refresh();
+            scrollToLatestLog();
+        }
     }
 
     private static class WrappingToolTipSupport extends ColumnViewerToolTipSupport {
@@ -943,7 +975,7 @@ public final class LogCatPanel extends SelectionDependentPanel
      */
     private void refreshLogCatTable() {
         synchronized (this) {
-            if (mCurrentRefresher == null) {
+            if (mCurrentRefresher == null && mShouldScrollToLatestLog) {
                 mCurrentRefresher = new LogCatTableRefresherTask();
                 Display.getDefault().asyncExec(mCurrentRefresher);
             }
@@ -959,9 +991,8 @@ public final class LogCatPanel extends SelectionDependentPanel
                 mCurrentRefresher = null;
             }
 
-            mViewer.refresh();
-
             if (mShouldScrollToLatestLog) {
+                mViewer.refresh();
                 scrollToLatestLog();
             }
         }
