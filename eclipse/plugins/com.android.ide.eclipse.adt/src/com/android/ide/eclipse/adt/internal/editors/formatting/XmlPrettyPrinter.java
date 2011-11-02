@@ -649,7 +649,8 @@ public class XmlPrettyPrinter {
         // element
         if (mPrefs.spaceBeforeClose && (mStyle != XmlFormatStyle.RESOURCE || isClosed)
                 // in <selector> files etc still treat the <item> entries as in resource files
-                && !ITEM_TAG.equals(element.getTagName())) {
+                && !ITEM_TAG.equals(element.getTagName())
+                && (isClosed || element.getAttributes().getLength() > 0)) {
             mOut.append(' ');
         }
 
@@ -708,7 +709,8 @@ public class XmlPrettyPrinter {
             return true;
         }
 
-        if (mStyle == XmlFormatStyle.MANIFEST || mStyle == XmlFormatStyle.RESOURCE) {
+        if (mStyle == XmlFormatStyle.MANIFEST || mStyle == XmlFormatStyle.RESOURCE
+                || mStyle == XmlFormatStyle.FILE) {
             Node curr = element.getPreviousSibling();
 
             // <style> elements are traditionally separated unless it follows a comment

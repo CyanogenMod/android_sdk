@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AttributeSortOrder;
 
@@ -56,7 +57,8 @@ public class XmlFormatPreferences {
     /** Tab width (number of spaces to display for a tab) */
     private int mTabWidth = -1; // -1: uninitialized
 
-    private XmlFormatPreferences() {
+    @VisibleForTesting
+    protected XmlFormatPreferences() {
     }
 
     /**

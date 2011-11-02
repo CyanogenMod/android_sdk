@@ -34,6 +34,9 @@ public enum XmlFormatStyle {
     /** Layout formatting style: blank lines between elements, attributes on separate lines */
     LAYOUT,
 
+    /** Similar to layout formatting style, but no blank lines inside opening elements */
+    FILE,
+
     /** Resource style: one line per complete element including text child content */
     RESOURCE,
 
@@ -62,12 +65,22 @@ public enum XmlFormatStyle {
             case ID:
             case INTEGER:
             case STRING:
+            case PLURALS:
             case STYLE:
             case STYLEABLE:
+            case COLOR:
                 return RESOURCE;
 
-            default:
+            case LAYOUT:
                 return LAYOUT;
+
+            case DRAWABLE:
+            case MENU:
+            case ANIM:
+            case ANIMATOR:
+            case INTERPOLATOR:
+            default:
+                return FILE;
         }
     }
 
@@ -79,10 +92,19 @@ public enum XmlFormatStyle {
      * @return the suitable format style to use
      */
     public static XmlFormatStyle getForFolderType(ResourceFolderType folderType) {
-        if (folderType == ResourceFolderType.VALUES) {
-            return RESOURCE;
-        } else {
-            return LAYOUT;
+        switch (folderType) {
+            case LAYOUT:
+                return LAYOUT;
+            case COLOR:
+            case VALUES:
+                return RESOURCE;
+            case ANIM:
+            case ANIMATOR:
+            case DRAWABLE:
+            case INTERPOLATOR:
+            case MENU:
+            default:
+                return FILE;
         }
     }
 
@@ -97,8 +119,12 @@ public enum XmlFormatStyle {
             return MANIFEST;
         }
 
-        String parentName = path.segment(path.segmentCount() - 1);
-        ResourceFolderType folderType = ResourceFolderType.getFolderType(parentName);
-        return getForFolderType(folderType);
+        if (path.segmentCount() > 2) {
+            String parentName = path.segment(path.segmentCount() - 2);
+            ResourceFolderType folderType = ResourceFolderType.getFolderType(parentName);
+            return getForFolderType(folderType);
+        }
+
+        return FILE;
     }
 }
