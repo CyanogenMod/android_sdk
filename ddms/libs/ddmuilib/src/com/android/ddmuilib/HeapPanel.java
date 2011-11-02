@@ -105,11 +105,11 @@ public final class HeapPanel extends BaseHeapPanel {
     private static final int PLACEHOLDER_LINEAR_H_SIZE = 300;
 
     private static final int[] ZOOMS = {100, 50, 25};
-    
+
     private static final NumberFormat sByteFormatter = NumberFormat.getInstance();
     private static final NumberFormat sLargeByteFormatter = NumberFormat.getInstance();
     private static final NumberFormat sCountFormatter = NumberFormat.getInstance();
-    
+
     static {
         sByteFormatter.setMinimumFractionDigits(0);
         sByteFormatter.setMaximumFractionDigits(1);
@@ -276,7 +276,7 @@ public final class HeapPanel extends BaseHeapPanel {
             }
 
             fillSummaryTable(cd);
-            
+
             int mode = mDisplayMode.getSelectionIndex();
             if (mode == 0) {
                 fillDetailedTable(client, false /* forceRedraw */);
@@ -364,10 +364,10 @@ public final class HeapPanel extends BaseHeapPanel {
         mStatisticsBase.setLayout(gl = new GridLayout(1, false));
         gl.marginHeight = gl.marginWidth = 0;
         mDisplayStack.topControl = mStatisticsBase;
-        
+
         mStatisticsTable = createDetailedTable(mStatisticsBase);
         mStatisticsTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-        
+
         createChart();
 
         //create the linear composite
@@ -393,7 +393,7 @@ public final class HeapPanel extends BaseHeapPanel {
             createLegend(bottomSection);
         }
 
-/*        
+/*
         mScrolledComposite = new ScrolledComposite(mTop, SWT.H_SCROLL | SWT.V_SCROLL);
         mScrolledComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
         mScrolledComposite.setExpandHorizontal(true);
@@ -489,7 +489,7 @@ public final class HeapPanel extends BaseHeapPanel {
     public void setFocus() {
         mHeapSummary.setFocus();
     }
-    
+
 
     private Table createSummaryTable(Composite base) {
         Table tab = new Table(base, SWT.SINGLE | SWT.FULL_SELECTION);
@@ -527,12 +527,16 @@ public final class HeapPanel extends BaseHeapPanel {
         col.pack();
         col.setText("# Objects");
 
+        // make sure there is always one empty item so that one table row is always displayed.
+        TableItem item = new TableItem(tab, SWT.NONE);
+        item.setText("");
+
         return tab;
     }
-    
+
     private Table createDetailedTable(Composite base) {
         IPreferenceStore store = DdmUiPreferences.getStore();
-        
+
         Table tab = new Table(base, SWT.SINGLE | SWT.FULL_SELECTION);
         tab.setHeaderVisible(true);
         tab.setLinesVisible(true);
@@ -568,16 +572,16 @@ public final class HeapPanel extends BaseHeapPanel {
         tab.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                
+
                 Client client = getCurrentClient();
                 if (client != null) {
                     int index = mStatisticsTable.getSelectionIndex();
                     TableItem item = mStatisticsTable.getItem(index);
-                    
+
                     if (item != null) {
                         Map<Integer, ArrayList<HeapSegmentElement>> heapMap =
                             client.getClientData().getVmHeapData().getProcessedHeapMap();
-                        
+
                         ArrayList<HeapSegmentElement> list = heapMap.get(item.getData());
                         if (list != null) {
                             showChart(list);
@@ -587,10 +591,10 @@ public final class HeapPanel extends BaseHeapPanel {
 
             }
         });
-        
+
         return tab;
     }
-    
+
     /**
      * Creates the chart below the statistics table
      */
@@ -598,30 +602,30 @@ public final class HeapPanel extends BaseHeapPanel {
         mAllocCountDataSet = new DefaultCategoryDataset();
         mChart = ChartFactory.createBarChart(null, "Size", "Count", mAllocCountDataSet,
                 PlotOrientation.VERTICAL, false, true, false);
-        
+
         // get the font to make a proper title. We need to convert the swt font,
         // into an awt font.
         Font f = mStatisticsBase.getFont();
         FontData[] fData = f.getFontData();
-        
+
         // event though on Mac OS there could be more than one fontData, we'll only use
         // the first one.
         FontData firstFontData = fData[0];
-        
+
         java.awt.Font awtFont = SWTUtils.toAwtFont(mStatisticsBase.getDisplay(),
                 firstFontData, true /* ensureSameSize */);
 
         mChart.setTitle(new TextTitle("Allocation count per size", awtFont));
-        
+
         Plot plot = mChart.getPlot();
         if (plot instanceof CategoryPlot) {
             // get the plot
             CategoryPlot categoryPlot = (CategoryPlot)plot;
-            
+
             // set the domain axis to draw labels that are displayed even with many values.
             CategoryAxis domainAxis = categoryPlot.getDomainAxis();
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
-            
+
             CategoryItemRenderer renderer = categoryPlot.getRenderer();
             renderer.setBaseToolTipGenerator(new CategoryToolTipGenerator() {
                 public String generateToolTip(CategoryDataset dataset, int row, int column) {
@@ -629,8 +633,8 @@ public final class HeapPanel extends BaseHeapPanel {
                     ByteLong columnKey = (ByteLong)dataset.getColumnKey(column);
                     String rowKey = (String)dataset.getRowKey(row);
                     Number value = dataset.getValue(rowKey, columnKey);
-                    
-                    return String.format("%1$d %2$s of %3$d bytes", value.intValue(), rowKey, 
+
+                    return String.format("%1$d %2$s of %3$d bytes", value.intValue(), rowKey,
                             columnKey.getValue());
                 }
             });
@@ -714,11 +718,13 @@ public final class HeapPanel extends BaseHeapPanel {
         mHeapSummary.setRedraw(false);
         mHeapSummary.removeAll();
 
+        int numRows = 0;
         if (cd != null) {
             synchronized (cd) {
                 Iterator<Integer> iter = cd.getVmHeapIds();
-    
+
                 while (iter.hasNext()) {
+                    numRows++;
                     Integer id = iter.next();
                     Map<String, Long> heapInfo = cd.getVmHeapInfo(id);
                     if (heapInfo == null) {
@@ -727,10 +733,10 @@ public final class HeapPanel extends BaseHeapPanel {
                     long sizeInBytes = heapInfo.get(ClientData.HEAP_SIZE_BYTES);
                     long bytesAllocated = heapInfo.get(ClientData.HEAP_BYTES_ALLOCATED);
                     long objectsAllocated = heapInfo.get(ClientData.HEAP_OBJECTS_ALLOCATED);
-    
+
                     TableItem item = new TableItem(mHeapSummary, SWT.NONE);
                     item.setText(0, id.toString());
-    
+
                     item.setText(1, prettyByteCount(sizeInBytes));
                     item.setText(2, prettyByteCount(bytesAllocated));
                     item.setText(3, prettyByteCount(sizeInBytes - bytesAllocated));
@@ -740,10 +746,16 @@ public final class HeapPanel extends BaseHeapPanel {
             }
         }
 
+        if (numRows == 0) {
+            // make sure there is always one empty item so that one table row is always displayed.
+            TableItem item = new TableItem(mHeapSummary, SWT.NONE);
+            item.setText("");
+        }
+
         mHeapSummary.pack();
         mHeapSummary.setRedraw(true);
     }
-    
+
     private void fillDetailedTable(Client client, boolean forceRedraw) {
         // first check if the client is invalid or heap updates are not enabled.
         if (client == null || client.isHeapUpdateEnabled() == false) {
@@ -751,7 +763,7 @@ public final class HeapPanel extends BaseHeapPanel {
             showChart(null);
             return;
         }
-        
+
         ClientData cd = client.getClientData();
 
         Map<Integer, ArrayList<HeapSegmentElement>> heapMap;
@@ -762,12 +774,12 @@ public final class HeapPanel extends BaseHeapPanel {
                 // no change, we return.
                 return;
             }
-            
+
             heapMap = cd.getVmHeapData().getProcessedHeapMap();
         }
-        
+
         // we have new data, lets display it.
-        
+
         // First, get the current selection, and its key.
         int index = mStatisticsTable.getSelectionIndex();
         Integer selectedKey = null;
@@ -778,11 +790,11 @@ public final class HeapPanel extends BaseHeapPanel {
         // disable redraws and remove all from the table.
         mStatisticsTable.setRedraw(false);
         mStatisticsTable.removeAll();
-        
+
         if (heapMap != null) {
             int selectedIndex = -1;
             ArrayList<HeapSegmentElement> selectedList = null;
-            
+
             // get the keys
             Set<Integer> keys = heapMap.keySet();
             int iter = 0; // use a manual iter int because Set<?> doesn't have an index
@@ -802,11 +814,11 @@ public final class HeapPanel extends BaseHeapPanel {
 
                 // get the type
                 item.setText(0, mMapLegend[key]);
-                
+
                 // set the count, smallest, largest
                 int count = list.size();
                 item.setText(1, addCommasToNumber(count));
-                
+
                 if (count > 0) {
                     item.setText(3, prettyByteCount(list.get(0).getLength()));
                     item.setText(4, prettyByteCount(list.get(count-1).getLength()));
@@ -819,11 +831,11 @@ public final class HeapPanel extends BaseHeapPanel {
                     long totalSize = 0;
                     for (int i = 0 ; i < count; i++) {
                         element = list.get(i);
-                        
+
                         size = element.getLength();
                         totalSize += size;
                     }
-                    
+
                     // set the average and total
                     item.setText(2, prettyByteCount(totalSize));
                     item.setText(6, prettyByteCount(totalSize / count));
@@ -831,7 +843,7 @@ public final class HeapPanel extends BaseHeapPanel {
             }
 
             mStatisticsTable.setRedraw(true);
-            
+
             if (selectedIndex != -1) {
                 mStatisticsTable.setSelection(selectedIndex);
                 showChart(selectedList);
@@ -842,14 +854,14 @@ public final class HeapPanel extends BaseHeapPanel {
             mStatisticsTable.setRedraw(true);
         }
     }
-    
+
     private static class ByteLong implements Comparable<ByteLong> {
         private long mValue;
-        
+
         private ByteLong(long value) {
             mValue = value;
         }
-        
+
         public long getValue() {
             return mValue;
         }
@@ -865,9 +877,9 @@ public final class HeapPanel extends BaseHeapPanel {
             }
             return 0;
         }
-        
+
     }
-    
+
     /**
      * Fills the chart with the content of the list of {@link HeapSegmentElement}.
      */
@@ -876,7 +888,7 @@ public final class HeapPanel extends BaseHeapPanel {
 
         if (list != null) {
             String rowKey = "Alloc Count";
-    
+
             long currentSize = -1;
             int currentCount = 0;
             for (HeapSegmentElement element : list) {
@@ -885,14 +897,14 @@ public final class HeapPanel extends BaseHeapPanel {
                         ByteLong columnKey = new ByteLong(currentSize);
                         mAllocCountDataSet.addValue(currentCount, rowKey, columnKey);
                     }
-                    
+
                     currentSize = element.getLength();
                     currentCount = 1;
                 } else {
                     currentCount++;
                 }
             }
-            
+
             // add the last item
             if (currentSize != -1) {
                 ByteLong columnKey = new ByteLong(currentSize);
