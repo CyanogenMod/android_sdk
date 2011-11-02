@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.ManifestOrderDetector.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.checks.LintConstants.ANDROID_MANIFEST_XML;
 
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;

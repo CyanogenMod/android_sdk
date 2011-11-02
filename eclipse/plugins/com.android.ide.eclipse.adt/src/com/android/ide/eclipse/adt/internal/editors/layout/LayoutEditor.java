@@ -183,11 +183,6 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
         return job;
     }
 
-    @Override
-    protected void runEditHooks() {
-        runLint();
-    }
-
     /**
      * Create the various form pages.
      */
