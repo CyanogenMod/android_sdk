@@ -59,16 +59,6 @@ function check_params() {
   [ -d "$DEST_DIR" ] || die "Destination directory $DEST_DIR must exist."
 }
 
-function build_libs() {
-  J="8"
-  [[ $(uname) == "Darwin" ]] && J=$(sysctl hw.ncpu | cut -d : -f 2 | tr -d ' ')
-  [[ $(uname) == "Linux"  ]] && J=$(( $(cat /proc/cpuinfo | grep processor | wc -l) + 2 ))
-  MAKE_OPT="-j$J"
-  LIBS="dx ping ddms androidprefs layoutlib layoutlib_api ide_common ninepatch sdklib sdkuilib traceview assetstudio"
-  echo "*** Building: make $MAKE_OPT $LIBS"
-  make $MAKE_OPT $LIBS
-}
-
 function build_plugin {
   sdk/eclipse/scripts/create_all_symlinks.sh
 
@@ -118,5 +108,4 @@ function build_plugin {
 
 get_params "$@"
 check_params
-build_libs
 build_plugin
