@@ -446,13 +446,14 @@ final class Device implements IDevice {
 
     public void pushFile(String local, String remote)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        SyncService sync = null;
         try {
             String targetFileName = getFileName(local);
 
             Log.d(targetFileName, String.format("Uploading %1$s onto device '%2$s'",
                     targetFileName, getSerialNumber()));
 
-            SyncService sync = getSyncService();
+            sync = getSyncService();
             if (sync != null) {
                 String message = String.format("Uploading file onto device '%1$s'",
                         getSerialNumber());
@@ -473,18 +474,23 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
+        } finally {
+            if (sync != null) {
+                sync.close();
+            }
         }
     }
 
     public void pullFile(String remote, String local)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        SyncService sync = null;
         try {
             String targetFileName = getFileName(remote);
 
             Log.d(targetFileName, String.format("Downloading %1$s from device '%2$s'",
                     targetFileName, getSerialNumber()));
 
-            SyncService sync = getSyncService();
+            sync = getSyncService();
             if (sync != null) {
                 String message = String.format("Downloding file from device '%1$s'",
                         getSerialNumber());
@@ -505,6 +511,10 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
+        } finally {
+            if (sync != null) {
+                sync.close();
+            }
         }
     }
 
@@ -528,6 +538,7 @@ final class Device implements IDevice {
 
     public String syncPackageToDevice(String localFilePath)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        SyncService sync = null;
         try {
             String packageFileName = getFileName(localFilePath);
             String remoteFilePath = String.format("/data/local/tmp/%1$s", packageFileName); //$NON-NLS-1$
@@ -535,7 +546,7 @@ final class Device implements IDevice {
             Log.d(packageFileName, String.format("Uploading %1$s onto device '%2$s'",
                     packageFileName, getSerialNumber()));
 
-            SyncService sync = getSyncService();
+            sync = getSyncService();
             if (sync != null) {
                 String message = String.format("Uploading file onto device '%1$s'",
                         getSerialNumber());
@@ -557,6 +568,10 @@ final class Device implements IDevice {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
 
+        } finally {
+            if (sync != null) {
+                sync.close();
+            }
         }
     }
 
