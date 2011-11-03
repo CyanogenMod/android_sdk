@@ -219,6 +219,10 @@ public class PostCompilerBuilder extends BaseBuilder {
         // Get the project.
         IProject project = getProject();
 
+        if (DEBUG) {
+            System.out.println("CLEAN(POST) " + project.getName());
+        }
+
         // Clear the project of the generic markers
         removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_PACKAGE);
         removeMarkersFromContainer(project, AdtConstants.MARKER_PACKAGING);
@@ -245,6 +249,10 @@ public class PostCompilerBuilder extends BaseBuilder {
             throws CoreException {
         // get a project object
         IProject project = getProject();
+
+        if (DEBUG) {
+            System.out.println("BUILD(POST) " + project.getName());
+        }
 
         // Benchmarking start
         long startBuildTime = 0;
@@ -309,6 +317,10 @@ public class PostCompilerBuilder extends BaseBuilder {
             } else if (kind == FULL_BUILD) {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
                         Messages.Start_Full_Apk_Build);
+
+                if (DEBUG) {
+                    System.out.println("\tfull build!");
+                }
 
                 // Full build: we do all the steps.
                 mUpdateCrunchCache = true;
@@ -414,6 +426,9 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // also update the crunch cache if needed.
                 if (mUpdateCrunchCache) {
+                    if (DEBUG) {
+                        System.out.println("\trunning crunch!");
+                    }
                     BuildHelper helper = new BuildHelper(project,
                             mOutStream, mErrStream,
                             true /*debugMode*/,
@@ -421,20 +436,24 @@ public class PostCompilerBuilder extends BaseBuilder {
                     updateCrunchCache(project, helper);
 
                     // refresh recursively bin/res folder
-                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+                    postBuildRefresh(resOutputFolder, IResource.DEPTH_INFINITE);
                 }
 
                 if (mConvertToDex) { // in this case this means some class files changed and
                                      // we need to update the jar file.
+                    if (DEBUG) {
+                        System.out.println("\tupdating jar!");
+                    }
                     IFolder javaOutputFolder = BaseProjectHelper.getJavaOutputFolder(project);
 
                     writeLibraryPackage(jarIFile, project, javaOutputFolder,
                             referencedJavaProjects);
                     saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex = false);
 
+
                     // refresh the bin folder content with no recursion to update the library
                     // jar file.
-                    androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
+                    postBuildRefresh(androidOutputFolder, IResource.DEPTH_ONE);
 
                     // Also update the projects. The only way to force recompile them is to
                     // reset the library container.
@@ -560,16 +579,22 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // Check if we need to update the PNG cache
                 if (mUpdateCrunchCache) {
+                    if (DEBUG) {
+                        System.out.println("\trunning crunch!");
+                    }
                     if (updateCrunchCache(project, helper) == false) {
                         return allRefProjects;
                     }
 
                     // refresh recursively bin/res folder
-                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+                    postBuildRefresh(resOutputFolder, IResource.DEPTH_INFINITE);
                 }
 
                 // Check if we need to package the resources.
                 if (mPackageResources) {
+                    if (DEBUG) {
+                        System.out.println("\tpackaging resources!");
+                    }
                     // remove some aapt_package only markers.
                     removeMarkersFromContainer(project, AdtConstants.MARKER_AAPT_PACKAGE);
 
@@ -612,6 +637,9 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                 // then we check if we need to package the .class into classes.dex
                 if (mConvertToDex) {
+                    if (DEBUG) {
+                        System.out.println("\trunning dex!");
+                    }
                     try {
                         String[] dxInputPaths = helper.getCompiledCodePaths(
                                 true /*includeProjectOutputs*/, mResourceMarker);
@@ -648,6 +676,9 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // This is the default package with all the resources.
 
                 try {
+                    if (DEBUG) {
+                        System.out.println("\tmaking final package!");
+                    }
                     helper.finalDebugPackage(
                             osAndroidBinPath + File.separator + AdtConstants.FN_RESOURCES_AP_,
                         classesDexPath, osFinalPackagePath,
@@ -708,7 +739,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // we are done.
 
                 // refresh the bin folder content with no recursion.
-                androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
+                postBuildRefresh(androidOutputFolder, IResource.DEPTH_ONE);
 
                 // build has been done. reset the state of the builder
                 mBuildFinalPackage = false;

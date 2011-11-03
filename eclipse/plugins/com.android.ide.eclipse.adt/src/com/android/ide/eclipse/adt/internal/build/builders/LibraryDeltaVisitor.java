@@ -69,6 +69,14 @@ public class LibraryDeltaVisitor implements IResourceDeltaVisitor {
                 // libs folder was changed.
                 // This is all that matters, we can stop (return false below)
                 mLibChange = true;
+            } else if (SdkConstants.FD_OUTPUT.equalsIgnoreCase(segments[1])) {
+                // need to dig into the content of the bin folder.
+                return true;
+            }
+        } else {
+            // we must be in the bin folder since it's the only case we go deeper.
+            if (SdkConstants.FD_RESOURCES.equalsIgnoreCase(segments[2])) {
+                mResChange = true;
             }
         }
 
