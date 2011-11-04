@@ -412,13 +412,12 @@ class SdkCommandLine extends CommandLineProcessor {
         define(Mode.STRING, true,
                 VERB_CREATE, OBJECT_IDENTITY, "k", KEY_ALIAS,                        //$NON-NLS-1$
                 "The key alias.", null);
-        define(Mode.STRING, true,
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_IDENTITY, "p", KEY_STOREPASS,                    //$NON-NLS-1$
-                "The keystore password.", null);
-        define(Mode.STRING, true,
+                "The keystore password. Default is to prompt.", null);
+        define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_IDENTITY, "w", KEY_KEYPASS,                      //$NON-NLS-1$
-                "The alias password.", null);
-
+                "The alias password. Default is to prompt.", null);
     }
 
     @Override

@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
@@ -1276,35 +1277,43 @@ public class Main {
 
 
     private void createIdentity() {
-        String account = (String) mSdkCommandLine.getValue(
-                SdkCommandLine.VERB_CREATE,
-                SdkCommandLine.OBJECT_IDENTITY,
-                SdkCommandLine.KEY_ACCOUNT);
-
-        String keystorePath = (String) mSdkCommandLine.getValue(
-                SdkCommandLine.VERB_CREATE,
-                SdkCommandLine.OBJECT_IDENTITY,
-                SdkCommandLine.KEY_KEYSTORE);
-
-        String aliasName = (String) mSdkCommandLine.getValue(
-                SdkCommandLine.VERB_CREATE,
-                SdkCommandLine.OBJECT_IDENTITY,
-                SdkCommandLine.KEY_ALIAS);
-
-        String keystorePass = (String) mSdkCommandLine.getValue(
-                SdkCommandLine.VERB_CREATE,
-                SdkCommandLine.OBJECT_IDENTITY,
-                SdkCommandLine.KEY_STOREPASS);
-
-        String aliasPass = (String) mSdkCommandLine.getValue(
-                SdkCommandLine.VERB_CREATE,
-                SdkCommandLine.OBJECT_IDENTITY,
-                SdkCommandLine.KEY_KEYPASS);
-
-        MakeIdentity mi = new MakeIdentity(account, keystorePath, keystorePass,
-                aliasName, aliasPass);
-
         try {
+            String account = (String) mSdkCommandLine.getValue(
+                    SdkCommandLine.VERB_CREATE,
+                    SdkCommandLine.OBJECT_IDENTITY,
+                    SdkCommandLine.KEY_ACCOUNT);
+
+            String keystorePath = (String) mSdkCommandLine.getValue(
+                    SdkCommandLine.VERB_CREATE,
+                    SdkCommandLine.OBJECT_IDENTITY,
+                    SdkCommandLine.KEY_KEYSTORE);
+
+            String aliasName = (String) mSdkCommandLine.getValue(
+                    SdkCommandLine.VERB_CREATE,
+                    SdkCommandLine.OBJECT_IDENTITY,
+                    SdkCommandLine.KEY_ALIAS);
+
+            String keystorePass = (String) mSdkCommandLine.getValue(
+                    SdkCommandLine.VERB_CREATE,
+                    SdkCommandLine.OBJECT_IDENTITY,
+                    SdkCommandLine.KEY_STOREPASS);
+
+            if (keystorePass == null) {
+                keystorePass = promptPassword("Keystore Password:  ").trim();
+            }
+
+            String aliasPass = (String) mSdkCommandLine.getValue(
+                    SdkCommandLine.VERB_CREATE,
+                    SdkCommandLine.OBJECT_IDENTITY,
+                    SdkCommandLine.KEY_KEYPASS);
+
+            if (aliasPass == null) {
+                aliasPass = promptPassword("Alias Password:  ").trim();
+            }
+
+            MakeIdentity mi = new MakeIdentity(account, keystorePath, keystorePass,
+                    aliasName, aliasPass);
+
             mi.make(System.out, mSdkLog);
         } catch (Exception e) {
             errorAndExit("Unexpected error: %s", e.getMessage());
@@ -1451,6 +1460,45 @@ public class Main {
         }
 
         return new String(buffer, 0, count);
+    }
+
+    /**
+     * Reads a line from the input stream, masking it as much as possible.
+     */
+    private String promptPassword(String prompt) throws IOException {
+
+        // Setup a thread that tries to overwrite any input by
+        // masking the last character with a space. This is quite
+        // crude but is a documented workaround to the lack of a
+        // proper password getter.
+        final AtomicBoolean keepErasing = new AtomicBoolean(true);
+
+        Thread eraser = new Thread(new Runnable() {
+            public void run() {
+                while (keepErasing.get()) {
+                    System.err.print("\b ");    //$NON-NLS-1$. \b=Backspace
+                    try {
+                        Thread.sleep(10 /*millis*/);
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+                }
+            }
+        }, "eraser");                           //$NON-NLS-1$
+
+        try {
+            System.err.print(prompt);
+            eraser.start();
+            byte[] buffer = new byte[256];
+            return readLine(buffer);
+        } finally {
+            keepErasing.set(false);
+            try {
+                eraser.join();
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+        }
     }
 
     /**
