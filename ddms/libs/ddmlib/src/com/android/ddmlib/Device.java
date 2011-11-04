@@ -65,6 +65,9 @@ final class Device implements IDevice {
 
     private boolean mArePropertiesSet = false;
 
+    private Integer mLastBatteryLevel = null;
+    private long mLastBatteryCheckTime = 0;
+
     /**
      * Output receiver for "pm install package.apk" command line.
      */
@@ -100,6 +103,56 @@ final class Device implements IDevice {
 
         public String getErrorMessage() {
             return mErrorMessage;
+        }
+    }
+
+    /**
+     * Output receiver for "dumpsys battery" command line.
+     */
+    private static final class BatteryReceiver extends MultiLineReceiver {
+        private static final Pattern BATTERY_LEVEL = Pattern.compile("\\s*level: (\\d+)");
+        private static final Pattern SCALE = Pattern.compile("\\s*scale: (\\d+)");
+
+        private Integer mBatteryLevel = null;
+        private Integer mBatteryScale = null;
+
+        /**
+         * Get the parsed percent battery level.
+         * @return
+         */
+        public Integer getBatteryLevel() {
+            if (mBatteryLevel != null && mBatteryScale != null) {
+                return (mBatteryLevel * 100) / mBatteryScale;
+            }
+            return null;
+        }
+
+        @Override
+        public void processNewLines(String[] lines) {
+            for (String line : lines) {
+                Matcher batteryMatch = BATTERY_LEVEL.matcher(line);
+                if (batteryMatch.matches()) {
+                    try {
+                        mBatteryLevel = Integer.parseInt(batteryMatch.group(1));
+                    } catch (NumberFormatException e) {
+                        Log.w(LOG_TAG, String.format("Failed to parse %s as an integer",
+                                batteryMatch.group(1)));
+                    }
+                }
+                Matcher scaleMatch = SCALE.matcher(line);
+                if (scaleMatch.matches()) {
+                    try {
+                        mBatteryScale = Integer.parseInt(scaleMatch.group(1));
+                    } catch (NumberFormatException e) {
+                        Log.w(LOG_TAG, String.format("Failed to parse %s as an integer",
+                                batteryMatch.group(1)));
+                    }
+                }
+            }
+        }
+
+        public boolean isCancelled() {
+            return false;
         }
     }
 
@@ -648,5 +701,24 @@ final class Device implements IDevice {
     public void reboot(String into)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         AdbHelper.reboot(into, AndroidDebugBridge.getSocketAddress(), this);
+    }
+
+    public Integer getBatteryLevel() throws TimeoutException, AdbCommandRejectedException,
+            IOException, ShellCommandUnresponsiveException {
+        // use default of 5 minutes
+        return getBatteryLevel(5 * 60 * 1000);
+    }
+
+    public Integer getBatteryLevel(long freshnessMs) throws TimeoutException,
+            AdbCommandRejectedException, IOException, ShellCommandUnresponsiveException {
+        if (mLastBatteryLevel != null
+                && mLastBatteryCheckTime > (System.currentTimeMillis() - freshnessMs)) {
+            return mLastBatteryLevel;
+        }
+        BatteryReceiver receiver = new BatteryReceiver();
+        executeShellCommand("dumpsys battery", receiver);
+        mLastBatteryLevel = receiver.getBatteryLevel();
+        mLastBatteryCheckTime = System.currentTimeMillis();
+        return mLastBatteryLevel;
     }
 }

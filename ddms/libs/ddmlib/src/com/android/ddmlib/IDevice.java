@@ -445,4 +445,29 @@ public interface IDevice {
      */
     public void reboot(String into)
             throws TimeoutException, AdbCommandRejectedException, IOException;
+
+    /**
+     * Return the device's battery level, from 0 to 100 percent.
+     * <p/>
+     * The battery level may be cached. Only queries the device for its
+     * battery level if 5 minutes have expired since the last successful query.
+     *
+     * @return the battery level or <code>null</code> if it could not be retrieved
+     */
+    public Integer getBatteryLevel() throws TimeoutException,
+            AdbCommandRejectedException, IOException, ShellCommandUnresponsiveException;
+
+    /**
+     * Return the device's battery level, from 0 to 100 percent.
+     * <p/>
+     * The battery level may be cached. Only queries the device for its
+     * battery level if <code>freshnessMs</code> ms have expired since the last successful query.
+     *
+     * @param freshnessMs
+     * @return the battery level or <code>null</code> if it could not be retrieved
+     * @throws ShellCommandUnresponsiveException
+     */
+    public Integer getBatteryLevel(long freshnessMs) throws TimeoutException,
+            AdbCommandRejectedException, IOException, ShellCommandUnresponsiveException;
+
 }
