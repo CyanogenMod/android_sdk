@@ -326,30 +326,34 @@ public class NativeHeapPanel extends BaseHeapPanel {
     public void clientSelected() {
         Client c = getCurrentClient();
 
+        if (c == null) {
+            // if there is no client selected, then we disable the buttons but leave the
+            // display as is so that whatever snapshots are displayed continue to stay
+            // visible to the user.
+            mSnapshotHeapButton.setEnabled(false);
+            mLoadHeapDataButton.setEnabled(false);
+            return;
+        }
+
         mNativeHeapSnapshots = new ArrayList<NativeHeapSnapshot>();
         mDiffSnapshots = new ArrayList<NativeHeapSnapshot>();
 
-        if (c != null) {
-            mSnapshotHeapButton.setEnabled(true);
-            mLoadHeapDataButton.setEnabled(true);
+        mSnapshotHeapButton.setEnabled(true);
+        mLoadHeapDataButton.setEnabled(true);
 
-            List<NativeHeapSnapshot> importedSnapshots = mImportedSnapshotsPerPid.get(
-                    c.getClientData().getPid());
-            if (importedSnapshots != null) {
-                for (NativeHeapSnapshot n : importedSnapshots) {
-                    addNativeHeapSnapshot(n);
-                }
+        List<NativeHeapSnapshot> importedSnapshots = mImportedSnapshotsPerPid.get(
+                c.getClientData().getPid());
+        if (importedSnapshots != null) {
+            for (NativeHeapSnapshot n : importedSnapshots) {
+                addNativeHeapSnapshot(n);
             }
+        }
 
-            List<NativeAllocationInfo> allocations = c.getClientData().getNativeAllocationList();
-            allocations = shallowCloneList(allocations);
+        List<NativeAllocationInfo> allocations = c.getClientData().getNativeAllocationList();
+        allocations = shallowCloneList(allocations);
 
-            if (allocations.size() > 0) {
-                addNativeHeapSnapshot(new NativeHeapSnapshot(allocations));
-            }
-        } else {
-            mSnapshotHeapButton.setEnabled(false);
-            mLoadHeapDataButton.setEnabled(false);
+        if (allocations.size() > 0) {
+            addNativeHeapSnapshot(new NativeHeapSnapshot(allocations));
         }
 
         updateDisplay();
