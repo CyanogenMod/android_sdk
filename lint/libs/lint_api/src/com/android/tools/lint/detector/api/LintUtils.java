@@ -109,6 +109,20 @@ public class LintUtils {
     }
 
     /**
+     * Case insensitive ends with
+     *
+     * @param string the string to be tested whether it ends with the given
+     *            suffix
+     * @param suffix the suffix to check
+     * @return true if {@code string} ends with {@code suffix},
+     *         case-insensitively.
+     */
+    public static boolean endsWith(String string, String suffix) {
+        return string.regionMatches(true /* ignoreCase */, string.length() - suffix.length(),
+                suffix, 0, suffix.length());
+    }
+
+    /**
      * Returns the children elements of the given node
      *
      * @param node the parent node

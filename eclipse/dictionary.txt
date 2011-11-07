@@ -75,6 +75,7 @@ dir
 dirs
 discoverable
 ditto
+div
 docs
 dp
 dpi
@@ -96,6 +97,7 @@ foreach
 fqcn
 framelayout
 gen
+gif
 git
 groovy
 guava
@@ -129,8 +131,10 @@ interpolators
 iterable
 javac
 javadoc
+jpg
 keystore
 layoutlib
+ldpi
 leaky
 levenshtein
 lib
@@ -149,6 +153,7 @@ macs
 malformed
 markup
 marquee
+mdpi
 metadata
 min
 mipmap
@@ -161,6 +166,7 @@ multimaps
 namespace
 namespaces
 newfound
+nodpi
 num
 ok
 os
@@ -172,6 +178,7 @@ placeholder
 placeholders
 plugin
 plugins
+png
 popup
 popups
 pre
@@ -241,6 +248,7 @@ stretchiness
 struct
 styleable
 styleables
+stylesheet
 subclassed
 subclassing
 submenu
@@ -254,6 +262,7 @@ textfield
 textfields
 thematically
 themed
+timestamp
 tmp
 toolbar
 tooltip
@@ -289,6 +298,7 @@ webtools
 whilst
 workflow
 xdpi
+xhdpi
 xml
 xmlns
 ydpi

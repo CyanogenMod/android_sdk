@@ -59,6 +59,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(ManifestOrderDetector.ISSUE);
         issues.add(ExportedServiceDetector.ISSUE);
+        issues.add(IconDetector.GIF_USAGE);
+        issues.add(IconDetector.ICON_DENSITIES);
+        issues.add(IconDetector.ICON_DIP_SIZE);
+        issues.add(IconDetector.ICON_EXPECTED_SIZE);
+        issues.add(IconDetector.ICON_LOCATION);
 
         // TODO: Populate dynamically somehow?
 
