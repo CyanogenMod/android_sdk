@@ -113,7 +113,8 @@
         <view
             class="android.widget.Switch"
             topAttrs="text,textOff,textOn,style,checked"
-            relatedTo="CheckBox,ToggleButton" />
+            relatedTo="CheckBox,ToggleButton"
+            render="alone" />
     </category>
     <category
         name="Text Fields">
