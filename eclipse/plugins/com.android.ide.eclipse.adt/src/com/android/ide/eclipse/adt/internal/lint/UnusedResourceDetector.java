@@ -59,7 +59,7 @@ class UnusedResourceDetector extends com.android.tools.lint.checks.UnusedResourc
         try {
             javaProject = BaseProjectHelper.getJavaProject(project);
         } catch (CoreException e) {
-            context.toolContext.log(e, null);
+            context.client.log(e, null);
             return;
         }
         if (javaProject == null) {
@@ -94,7 +94,7 @@ class UnusedResourceDetector extends com.android.tools.lint.checks.UnusedResourc
                 }
             }
         } catch (CoreException e) {
-            context.toolContext.log(e, null);
+            context.client.log(e, null);
         }
     }
 

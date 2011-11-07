@@ -33,8 +33,8 @@ public class ClearLintMarkersAction implements IActionDelegate {
     public void run(IAction action) {
         IProject project = RunLintAction.getSelectedProject(mSelection);
         if (project != null) {
-            LintRunner.cancelCurrentJobs();
-            LintEclipseContext.clearMarkers(project);
+            LintRunner.cancelCurrentJobs(false);
+            EclipseLintClient.clearMarkers(project);
         }
     }
 }

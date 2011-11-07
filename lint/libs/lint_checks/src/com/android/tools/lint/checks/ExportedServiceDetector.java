@@ -16,16 +16,19 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.checks.LintConstants.ATTR_EXPORTED;
-import static com.android.tools.lint.checks.LintConstants.ATTR_PERMISSION;
-import static com.android.tools.lint.checks.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.checks.LintConstants.TAG_INTENT_FILTER;
-import static com.android.tools.lint.checks.LintConstants.TAG_SERVICE;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_EXPORTED;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PERMISSION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_INTENT_FILTER;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -51,15 +54,14 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
             "an intent-filter and do not specify exported=false) should define a " +
             "permission that an entity must have in order to launch the service " +
             "or bind to it. Without this, any application can use this service.",
-            CATEGORY_SECURITY, 5, Severity.WARNING, EnumSet.of(Scope.MANIFEST));
+            Category.SECURITY,
+            5,
+            Severity.WARNING,
+            ExportedServiceDetector.class,
+            EnumSet.of(Scope.MANIFEST));
 
     /** Constructs a new accessibility check */
     public ExportedServiceDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -90,7 +92,7 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
             exported = Boolean.valueOf(exportValue);
         } else {
             boolean haveIntentFilters = false;
-            for (Element child : getChildren(element)) {
+            for (Element child : LintUtils.getChildren(element)) {
                 if (child.getTagName().equals(TAG_INTENT_FILTER)) {
                     haveIntentFilters = true;
                     break;
@@ -110,9 +112,9 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
                     permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
                     if (permission == null || permission.length() == 0) {
                         // No declared permission for this exported service: complain
-                        context.toolContext.report(context, ISSUE,
+                        context.client.report(context, ISSUE,
                             context.getLocation(element),
-                            "Export service does not require permission", null);
+                            "Exported service does not require permission", null);
                     }
                 }
             }

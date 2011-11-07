@@ -16,6 +16,12 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.tools.lint.detector.api.LintConstants.IMAGE_BUTTON;
+import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -44,15 +50,14 @@ public class AccessibilityDetector extends LayoutDetector {
             "contentDescription attribute to specify a textual description of " +
             "the widget such that screen readers and other accessibility tools " +
             "can adequately describe the user interface.",
-            CATEGORY_A11Y, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.A11Y,
+            3,
+            Severity.WARNING,
+            AccessibilityDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new accessibility check */
     public AccessibilityDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -71,12 +76,12 @@ public class AccessibilityDetector extends LayoutDetector {
     @Override
     public void visitElement(Context context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
-            context.toolContext.report(context, ISSUE, context.getLocation(context),
+            context.client.report(context, ISSUE, context.getLocation(context),
                     "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
             String attribute = element.getAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
-                context.toolContext.report(context, ISSUE, context.getLocation(context),
+                context.client.report(context, ISSUE, context.getLocation(context),
                         "[Accessibility] Empty contentDescription attribute on image", null);
             }
         }

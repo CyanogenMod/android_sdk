@@ -16,6 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_HINT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_METHOD;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_TYPE;
+import static com.android.tools.lint.detector.api.LintConstants.EDIT_TEXT;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -45,15 +52,14 @@ public class TextFieldDetector extends LayoutDetector {
             "If you really want to keep the text field generic, you can suppress this warning " +
             "by setting inputType=\"text\".",
 
-            CATEGORY_USABILITY, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.USABILITY,
+            5,
+            Severity.WARNING,
+            TextFieldDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link TextFieldDetector} */
     public TextFieldDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -76,7 +82,7 @@ public class TextFieldDetector extends LayoutDetector {
                 return;
             }
 
-            context.toolContext.report(context, ISSUE, context.getLocation(element),
+            context.client.report(context, ISSUE, context.getLocation(element),
                     "This text field does not specify an inputType or a hint", null);
         }
     }

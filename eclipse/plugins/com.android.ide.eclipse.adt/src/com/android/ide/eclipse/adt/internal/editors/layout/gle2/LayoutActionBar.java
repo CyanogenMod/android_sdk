@@ -28,7 +28,7 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.configuration.ConfigurationComposite;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
-import com.android.ide.eclipse.adt.internal.lint.LintEclipseContext;
+import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdkuilib.internal.widgets.ResolutionChooserDialog;
 
@@ -460,7 +460,7 @@ public class LayoutActionBar extends Composite {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IFile file = mEditor.getLayoutEditor().getInputFile();
-                LintEclipseContext.showErrors(getShell(), file);
+                EclipseLintClient.showErrors(getShell(), file);
             }
         });
 
@@ -471,7 +471,7 @@ public class LayoutActionBar extends Composite {
      * Updates the lint indicator state in the given layout editor
      */
     public void updateErrorIndicator() {
-        updateErrorIndicator(LintEclipseContext.hasMarkers(mEditor.getEditedFile()));
+        updateErrorIndicator(EclipseLintClient.hasMarkers(mEditor.getEditedFile()));
     }
 
     /**

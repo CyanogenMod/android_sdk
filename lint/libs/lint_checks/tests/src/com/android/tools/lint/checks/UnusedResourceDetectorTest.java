@@ -32,9 +32,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     protected boolean isEnabled(Issue issue) {
         if (issue == UnusedResourceDetector.ISSUE_IDS) {
             return mEnableIds;
+        } else {
+            return true;
         }
-
-        return super.isEnabled(issue);
     }
 
     public void testUnused() throws Exception {

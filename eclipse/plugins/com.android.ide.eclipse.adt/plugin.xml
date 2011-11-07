@@ -666,6 +666,18 @@
                     args="com.android.ide.eclipse.adt.AndroidNature" />
             </enabledWhen>
         </page>
+        <page
+            class="com.android.ide.eclipse.adt.internal.preferences.LintPreferencePage"
+            id="com.android.ide.eclipse.adt.internal.preferences.LintPreferencePage"
+            name="Android Lint Preferences">
+            <filter
+                name="nature"
+                value="com.android.ide.eclipse.adt.AndroidNature">
+            </filter>
+            <enabledWhen>
+                <adapt type="org.eclipse.core.resources.IProject" />
+            </enabledWhen>
+        </page>
     </extension>
     <extension point="org.eclipse.ui.actionSets">
         <actionSet
@@ -823,6 +835,22 @@
                 style="push"
                 toolbarPath="android_project"
                 tooltip="Opens the Android SDK Manager">
+            </action>
+        </actionSet>
+        <actionSet
+            description="Android Lint"
+            id="adt.actionSet.lint"
+            label="Android Lint"
+            visible="true">
+            <action
+                class="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
+                icon="icons/lintrun.png"
+                id="com.android.ide.eclipse.adt.ui.lintrunner"
+                label="Run Android Lint"
+                menubarPath="Window/additions"
+                style="push"
+                toolbarPath="android_project"
+                tooltip="Runs Android Lint">
             </action>
         </actionSet>
     </extension>

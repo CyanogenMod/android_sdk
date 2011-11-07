@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -46,16 +47,15 @@ public class PxUsageDetector extends LayoutDetector {
             "in your application code to work with bitmaps that are not pre-scaled for the " +
             "current screen density, you might need to scale the pixel values that you use in " +
             "your code to match the un-scaled bitmap source.",
-            CATEGORY_CORRECTNESS, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            Category.CORRECTNESS,
+            2,
+            Severity.WARNING,
+            PxUsageDetector.class,
+            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html#screen-independence"); //$NON-NLS-1$
 
     /** Constructs a new {@link PxUsageDetector} */
     public PxUsageDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -76,7 +76,7 @@ public class PxUsageDetector extends LayoutDetector {
                 // 0px is fine. 0px is 0dp regardless of density...
                 return;
             }
-            context.toolContext.report(context, ISSUE, context.getLocation(attribute),
+            context.client.report(context, ISSUE, context.getLocation(attribute),
                     "Avoid using \"px\" as units; use \"dp\" instead", null);
         }
     }

@@ -21,17 +21,18 @@ import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
-import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.tools.lint.api.DetectorRegistry;
-import com.android.tools.lint.api.IDomParser;
-import com.android.tools.lint.api.ToolContext;
-import com.android.tools.lint.checks.BuiltinDetectorRegistry;
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.util.Pair;
 
@@ -42,7 +43,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -64,45 +64,39 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Eclipse implementation for running lint on workspace files and projects.
  */
 @SuppressWarnings("restriction") // DOM model
-public class LintEclipseContext extends ToolContext implements IDomParser {
+public class EclipseLintClient extends LintClient implements IDomParser {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
     private static final String DOCUMENT_PROPERTY = "document"; //$NON-NLS-1$
-    private final DetectorRegistry mRegistry;
+    private final IssueRegistry mRegistry;
     private final IResource mResource;
     private final IDocument mDocument;
-    private boolean mFatal;
-    private Map<Issue, Severity> mSeverities;
-    private String mDisabledIdsList; // String version of map: used to detect when to replace map
-    private Set<String> mDisabledIds;
-
+    private boolean mWasFatal;
+    private boolean mFatalOnly;
+    private Configuration mConfiguration;
 
     /**
-     * Creates a new {@link LintEclipseContext}.
+     * Creates a new {@link EclipseLintClient}.
      *
      * @param registry the associated detector registry
      * @param resource the associated resource (project, file or null)
      * @param document the associated document, or null if the {@code resource}
      *            param is not a file
+     * @param fatalOnly whether only fatal issues should be reported (and therefore checked)
      */
-    public LintEclipseContext(DetectorRegistry registry, IResource resource, IDocument document) {
+    public EclipseLintClient(IssueRegistry registry, IResource resource, IDocument document,
+            boolean fatalOnly) {
         mRegistry = registry;
         mResource = resource;
         mDocument = document;
+        mFatalOnly = fatalOnly;
     }
 
-    // ----- Extends ToolContext -----
+    // ----- Extends LintClient -----
 
     @Override
     public void log(Throwable exception, String format, Object... args) {
@@ -116,33 +110,6 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
     @Override
     public IDomParser getParser() {
         return this;
-    }
-
-    @Override
-    public boolean isEnabled(Issue issue) {
-        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
-        String idList = store.getString(AdtPrefs.PREFS_DISABLED_ISSUES);
-        if (idList == null) {
-            idList = ""; //$NON-NLS-1$
-        }
-        if (mDisabledIds == null || !mDisabledIdsList.equals(idList)) {
-            mDisabledIdsList = idList;
-            if (idList.length() > 0) {
-                String[] ids = idList.split(","); //$NON-NLS-1$
-                mDisabledIds = new HashSet<String>(ids.length);
-                for (String s : ids) {
-                    mDisabledIds.add(s);
-                }
-            } else {
-                mDisabledIds = Collections.emptySet();
-            }
-        }
-
-        if (mDisabledIds.contains(issue.getId())) {
-            return false;
-        }
-
-        return issue.isEnabledByDefault();
     }
 
     // ----- Implements IDomParser -----
@@ -215,82 +182,24 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
     }
 
     @Override
-    public Severity getSeverity(Issue issue) {
-        if (mSeverities == null) {
-            mSeverities = new HashMap<Issue, Severity>();
-            IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
-            String assignments = store.getString(AdtPrefs.PREFS_LINT_SEVERITIES);
-            if (assignments != null && assignments.length() > 0) {
-                for (String assignment : assignments.split(",")) { //$NON-NLS-1$
-                    String[] s = assignment.split("="); //$NON-NLS-1$
-                    if (s.length == 2) {
-                        Issue d = mRegistry.getIssue(s[0]);
-                        if (d != null) {
-                            Severity severity = Severity.valueOf(s[1]);
-                            if (severity != null) {
-                                mSeverities.put(d, severity);
-                            }
-                        }
-                    }
-                }
+    public Configuration getConfiguration(Project project) {
+        if (mConfiguration == null) {
+            if (mResource != null) {
+                IProject eclipseProject = mResource.getProject();
+                mConfiguration = ProjectLintConfiguration.get(this, eclipseProject, mFatalOnly);
+            } else {
+                mConfiguration = GlobalLintConfiguration.get();
             }
         }
-
-        Severity severity = mSeverities.get(issue);
-        if (severity != null) {
-            return severity;
-        }
-
-        return issue.getDefaultSeverity();
-    }
-
-    /**
-     * Sets the custom severity for the given detector to the given new severity
-     *
-     * @param severities a map from detector to severity to use from now on
-     */
-    public void setSeverities(Map<Issue, Severity> severities) {
-        mSeverities = null;
-
-        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
-        if (severities.size() == 0) {
-            store.setToDefault(AdtPrefs.PREFS_LINT_SEVERITIES);
-            return;
-        }
-        List<Issue> sortedKeys = new ArrayList<Issue>(severities.keySet());
-        Collections.sort(sortedKeys);
-
-        StringBuilder sb = new StringBuilder(severities.size() * 20);
-        for (Issue issue : sortedKeys) {
-            Severity severity = severities.get(issue);
-            if (severity != issue.getDefaultSeverity()) {
-                if (sb.length() > 0) {
-                    sb.append(',');
-                }
-                sb.append(issue.getId());
-                sb.append('=');
-                sb.append(severity.name());
-            }
-        }
-
-        if (sb.length() > 0) {
-            store.setValue(AdtPrefs.PREFS_LINT_SEVERITIES, sb.toString());
-        } else {
-            store.setToDefault(AdtPrefs.PREFS_LINT_SEVERITIES);
-        }
+        return mConfiguration;
     }
 
     @Override
     public void report(Context context, Issue issue, Location location, String message,
             Object data) {
-        if (!isEnabled(issue)) {
-            return;
-        }
-
-        Severity s = getSeverity(issue);
-        if (s == Severity.IGNORE) {
-            return;
-        }
+        assert context.configuration.isEnabled(issue);
+        assert context.configuration.getSeverity(issue) != Severity.IGNORE;
+        Severity s = context.configuration.getSeverity(issue);
 
         int severity = getMarkerSeverity(s);
         IMarker marker = null;
@@ -335,7 +244,7 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
         }
 
         if (s == Severity.ERROR) {
-            mFatal = true;
+            mWasFatal = true;
         }
     }
 
@@ -501,8 +410,8 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
      *
      * @return true if a fatal error was encountered
      */
-    public boolean isFatal() {
-        return mFatal;
+    public boolean hasFatalErrors() {
+        return mWasFatal;
     }
 
     /**
@@ -512,7 +421,7 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
      * @return a full description of the corresponding issue, never null
      */
     public static String describe(IMarker marker) {
-        DetectorRegistry registry = getRegistry();
+        IssueRegistry registry = getRegistry();
         Issue issue = registry.getIssue(getId(marker));
         String summary = issue.getDescription();
         String explanation = issue.getExplanation();
@@ -649,40 +558,23 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
     }
 
     /**
-     * Returns the registry of detectors to use from within Eclipse. This method
-     * should be used rather than calling
-     * {@link BuiltinDetectorRegistry#BuiltinDetectorRegistry} directly since it can replace
-     * some detectors with Eclipse-optimized replacements.
+     * Returns the registry of issues to check from within Eclipse.
      *
-     * @return the detector registry to use to access detectors and issues
+     * @return the issue registry to use to access detectors and issues
      */
-    public static DetectorRegistry getRegistry() {
-        return new EclipseDetectorRegistry();
+    public static IssueRegistry getRegistry() {
+        return new BuiltinIssueRegistry();
     }
 
-    /**
-     * Custom Eclipse registry which replaces some builtin checks with
-     * Eclipse-optimized versions
-     */
-    private static class EclipseDetectorRegistry extends BuiltinDetectorRegistry {
-        private static final List<Detector> sDetectors;
-        static {
-            List<Detector> detectors = new ArrayList<Detector>(20);
-            for (Detector detector : new BuiltinDetectorRegistry().getDetectors()) {
-                // Replace the generic UnusedResourceDetector with an Eclipse optimized one
-                // which uses the Java AST
-                if (detector instanceof com.android.tools.lint.checks.UnusedResourceDetector) {
-                    detectors.add(new UnusedResourceDetector());
-                } else {
-                    detectors.add(detector);
-                }
-            }
-            sDetectors = Collections.unmodifiableList(detectors);
+    @Override
+    public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+        // Replace the generic UnusedResourceDetector with an Eclipse optimized one
+        // which uses the Java AST
+        if (detectorClass == com.android.tools.lint.checks.UnusedResourceDetector.class) {
+            return UnusedResourceDetector.class;
         }
-        @Override
-        public List<? extends Detector> getDetectors() {
-            return sDetectors;
-        }
+
+        return detectorClass;
     }
 
     private static class OffsetPosition extends Position {
@@ -768,15 +660,8 @@ public class LintEclipseContext extends ToolContext implements IDomParser {
         }
     }
 
-    /** Specialized context which only provides fatal issues as enabled */
-    static class FatalContext extends LintEclipseContext {
-        public FatalContext(DetectorRegistry registry, IResource resource, IDocument document) {
-            super(registry, resource, document);
-        }
-
-        @Override
-        public boolean isEnabled(Issue issue) {
-            return super.isEnabled(issue) && getSeverity(issue) == Severity.ERROR;
-        }
+    public void dispose(Context context) {
+        // TODO: Consider leaving read-lock on the document in parse() and freeing it here.
     }
 }
+

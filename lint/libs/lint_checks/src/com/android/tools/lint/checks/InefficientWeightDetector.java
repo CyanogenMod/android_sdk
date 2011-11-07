@@ -16,9 +16,19 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WEIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_ORIENTATION;
+import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_VERTICAL;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -43,15 +53,14 @@ public class InefficientWeightDetector extends LayoutDetector {
             "efficient to assign a width/height of 0dp to it since it will absorb all " +
             "the remaining space anyway. With a declared width/height of 0dp it " +
             "does not have to measure its own size first.",
-            CATEGORY_PERFORMANCE, 3, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.PERFORMANCE,
+            3,
+            Severity.WARNING,
+            InefficientWeightDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link InefficientWeightDetector} */
     public InefficientWeightDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -66,7 +75,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     @Override
     public void visitElement(Context context, Element element) {
-        List<Element> children = getChildren(element);
+        List<Element> children = LintUtils.getChildren(element);
         // See if there is exactly one child with a weight
         Element weightChild = null;
         for (Element child : children) {
@@ -93,7 +102,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                 String msg = String.format(
                         "Use a %1$s of 0dip instead of %2$s for better performance",
                         dimension, size);
-                context.toolContext.report(context, ISSUE,
+                context.client.report(context, ISSUE,
                         context.getLocation(sizeNode != null ? sizeNode : weightChild), msg, null);
 
             }

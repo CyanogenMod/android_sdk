@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -297,8 +298,9 @@ public class AdtUtils {
      * @return an absolute file system path to the resource
      */
     public static IPath getAbsolutePath(IResource resource) {
-        IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
-        IPath workspacePath = workspace.getLocation();
+        IWorkspace workspace = ResourcesPlugin.getWorkspace();
+        IWorkspaceRoot root = workspace.getRoot();
+        IPath workspacePath = root.getLocation();
         return workspacePath.append(resource.getFullPath());
     }
 

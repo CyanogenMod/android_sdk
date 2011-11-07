@@ -22,8 +22,10 @@ import static com.android.tools.lint.checks.TranslationDetector.TAG_INTEGER_ARRA
 import static com.android.tools.lint.checks.TranslationDetector.TAG_STRING_ARRAY;
 
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -66,7 +68,11 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             "decide if this is really an error.\n" +
             "\n" +
             "You can suppress this error type if it finds false errors in your project.",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
+            Category.CORRECTNESS,
+            7,
+            Severity.WARNING,
+            ArraySizeDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
 
     private Map<File, Pair<String, Integer>> mFileToArrayCount;
 
@@ -77,11 +83,6 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { INCONSISTENT };
     }
 
     @Override
@@ -134,7 +135,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                 File otherFile = fileMap.get(name);
                 String otherName = otherFile.getParentFile().getName() + File.separator
                         + otherFile.getName();
-                context.toolContext.report(context, INCONSISTENT, location,
+                context.client.report(context, INCONSISTENT, location,
                     String.format(
                      "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
                      name, count, thisName, current, otherName), null);
@@ -149,12 +150,12 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     public void visitElement(Context context, Element element) {
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.toolContext.report(context, INCONSISTENT, context.getLocation(element),
+            context.client.report(context, INCONSISTENT, context.getLocation(element),
                 String.format("Missing name attribute in %1$s declaration", element.getTagName()),
                 null);
         } else {
             String name = attribute.getValue();
-            int childCount = getChildCount(element);
+            int childCount = LintUtils.getChildCount(element);
             mFileToArrayCount.put(context.file, Pair.of(name, childCount));
         }
     }

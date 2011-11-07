@@ -16,13 +16,11 @@
 
 package com.android.tools.lint;
 
-import com.android.tools.lint.api.IDomParser;
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -36,7 +34,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,25 +71,19 @@ public class PositionXmlParser implements IDomParser {
             parser.parse(input, handler);
             return handler.getDocument();
         } catch (ParserConfigurationException e) {
-            context.toolContext.log(e, null);
+            context.client.log(e, null);
         } catch (SAXException e) {
-            context.toolContext.report(
+            context.client.report(
                     context,
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    Issue.create("fatal", "", "", "", 10, Severity.ERROR, //$NON-NLS-1$
-                            EnumSet.noneOf(Scope.class)),
+                    IssueRegistry.PARSER_ERROR,
                     new Location(context.file, null, null),
                     e.getCause() != null ? e.getCause().getLocalizedMessage() :
                         e.getLocalizedMessage(),
                     null);
-
-            context.toolContext.log(null, String.format("Failed parsing %1$s: %2$s",
-                    context.file.getName(),
-                    e.getCause() != null ? e.getCause().getLocalizedMessage() :
-                        e.getLocalizedMessage()));
         } catch (Throwable t) {
-            context.toolContext.log(t, null);
+            context.client.log(t, null);
         }
         return null;
     }
@@ -377,5 +368,8 @@ public class PositionXmlParser implements IDomParser {
         public int getColumn() {
             return mColumn;
         }
+    }
+
+    public void dispose(Context context) {
     }
 }

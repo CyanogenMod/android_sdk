@@ -16,7 +16,7 @@
 
 package com.android.tools.lint;
 
-import com.android.tools.lint.api.ToolContext;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
@@ -24,7 +24,7 @@ import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 
 /**
- * A {@link Warning} represents a specific warning that a {@link ToolContext}
+ * A {@link Warning} represents a specific warning that a {@link LintClient}
  * has been told about. The context stores these as they are reported into a
  * list of warnings such that it can sort them all before presenting them all at
  * the end.
@@ -52,7 +52,7 @@ class Warning implements Comparable<Warning> {
 
     // ---- Implements Comparable<Warning> ----
     public int compareTo(Warning other) {
-        // Sort by priority, then by category, then by id,
+        // Sort by category, then by priority, then by id,
         // then by file, then by line
         String id1 = issue.getId();
         String id2 = other.issue.getId();
@@ -60,14 +60,14 @@ class Warning implements Comparable<Warning> {
             return file.getName().compareTo(
                     other.file.getName());
         }
+        int categoryDelta = issue.getCategory().compareTo(other.issue.getCategory());
+        if (categoryDelta != 0) {
+            return categoryDelta;
+        }
         // DECREASING priority order
         int priorityDelta = other.issue.getPriority() - issue.getPriority();
         if (priorityDelta != 0) {
             return priorityDelta;
-        }
-        int categoryDelta = issue.getCategory().compareTo(other.issue.getCategory());
-        if (categoryDelta != 0) {
-            return categoryDelta;
         }
         int idDelta = id1.compareTo(id2);
         if (idDelta != -1) {

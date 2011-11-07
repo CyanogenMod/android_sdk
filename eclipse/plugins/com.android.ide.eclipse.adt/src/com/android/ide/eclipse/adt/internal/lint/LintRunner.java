@@ -21,8 +21,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.sdklib.SdkConstants;
-import com.android.tools.lint.api.DetectorRegistry;
-import com.android.tools.lint.api.Lint;
+import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.Lint;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 
@@ -81,7 +81,7 @@ public class LintRunner {
      */
     public static Job startLint(IResource resource, IDocument doc, boolean fatalOnly) {
         if (resource != null) {
-            cancelCurrentJobs();
+            cancelCurrentJobs(false);
 
             CheckFileJob job = new CheckFileJob(resource, doc, fatalOnly);
             job.schedule();
@@ -124,11 +124,22 @@ public class LintRunner {
         return jobManager.find(CheckFileJob.FAMILY_RUN_LINT);
     }
 
-    /** Cancels the current lint jobs, if any */
-    static void cancelCurrentJobs() {
+    /** Cancels the current lint jobs, if any, and optionally waits for them to finish */
+    static void cancelCurrentJobs(boolean wait) {
         // Cancel any current running jobs first
-        for (Job job : getCurrentJobs()) {
+        Job[] currentJobs = getCurrentJobs();
+        for (Job job : currentJobs) {
             job.cancel();
+        }
+
+        if (wait) {
+            for (Job job : currentJobs) {
+                try {
+                    job.join();
+                } catch (InterruptedException e) {
+                    AdtPlugin.log(e, null);
+                }
+            }
         }
     }
 
@@ -165,7 +176,7 @@ public class LintRunner {
         protected IStatus run(IProgressMonitor monitor) {
             try {
                 monitor.beginTask("Looking for errors", IProgressMonitor.UNKNOWN);
-                DetectorRegistry registry = LintEclipseContext.getRegistry();
+                IssueRegistry registry = EclipseLintClient.getRegistry();
                 File file = AdtUtils.getAbsolutePath(mResource).toFile();
                 EnumSet<Scope> scope;
                 if (mResource instanceof IProject) {
@@ -182,7 +193,7 @@ public class LintRunner {
                             "Only XML files are supported for single file lint", null); //$NON-NLS-1$
                 }
                 if (scope == Scope.RESOURCE_FILE_SCOPE || scope == EnumSet.of(Scope.MANIFEST)) {
-                    IMarker[] markers = LintEclipseContext.getMarkers(mResource);
+                    IMarker[] markers = EclipseLintClient.getMarkers(mResource);
                     for (IMarker marker : markers) {
                         String id = marker.getAttribute(MARKER_CHECKID_PROPERTY, ""); //$NON-NLS-1$
                         Issue issue = registry.getIssue(id);
@@ -191,19 +202,14 @@ public class LintRunner {
                         }
                     }
                 } else {
-                    LintEclipseContext.clearMarkers(mResource);
+                    EclipseLintClient.clearMarkers(mResource);
                 }
 
-                LintEclipseContext toolContext;
-                if (mFatalOnly) {
-                    toolContext = new LintEclipseContext.FatalContext(registry, mResource,
-                            mDocument);
-                } else {
-                    toolContext = new LintEclipseContext(registry, mResource, mDocument);
-                }
-                mLint = new Lint(registry, toolContext, scope);
-                mLint.analyze(Collections.singletonList(file));
-                mFatal = toolContext.isFatal();
+                EclipseLintClient client = new EclipseLintClient(registry, mResource,
+                            mDocument, mFatalOnly);
+                mLint = new Lint(registry, client);
+                mLint.analyze(Collections.singletonList(file), scope);
+                mFatal = client.hasFatalErrors();
                 return Status.OK_STATUS;
             } catch (Exception e) {
                 return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,

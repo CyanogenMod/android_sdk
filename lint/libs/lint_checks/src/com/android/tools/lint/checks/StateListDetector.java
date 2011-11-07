@@ -17,8 +17,10 @@
 package com.android.tools.lint.checks;
 
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -42,16 +44,15 @@ public class StateListDetector extends ResourceXmlDetector {
             "In a selector, only the last child in the state list should omit a " +
             "state qualifier. If not, all subsequent items in the list will be ignored " +
             "since the given item will match all.",
-            CATEGORY_CORRECTNESS, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.CORRECTNESS,
+            5,
+            Severity.WARNING,
+            StateListDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {
     };
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
-    }
 
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
@@ -72,7 +73,7 @@ public class StateListDetector extends ResourceXmlDetector {
 
         Element root = document.getDocumentElement();
         if (root != null && root.getTagName().equals("selector")) { //$NON-NLS-1$
-            List<Element> children = getChildren(root);
+            List<Element> children = LintUtils.getChildren(root);
             for (int i = 0; i < children.size() - 1; i++) {
                 Element child = children.get(i);
                 boolean hasState = false;
@@ -85,7 +86,7 @@ public class StateListDetector extends ResourceXmlDetector {
                     }
                 }
                 if (!hasState) {
-                    context.toolContext.report(context, ISSUE, context.getLocation(child),
+                    context.client.report(context, ISSUE, context.getLocation(child),
                         String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
                                 i), null);
                 }

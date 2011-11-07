@@ -16,9 +16,21 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
+import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.MERGE;
+import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -43,7 +55,11 @@ public class UselessViewDetector extends LayoutDetector {
             "a root layout, and does not have a background, can be removed and have " +
             "its children moved directly into the parent for a flatter and more " +
             "efficient layout hierarchy.",
-            CATEGORY_PERFORMANCE, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.PERFORMANCE,
+            2,
+            Severity.WARNING,
+            UselessViewDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Issue of including a leaf that isn't shown */
     public static final Issue USELESS_LEAF = Issue.create(
@@ -51,15 +67,14 @@ public class UselessViewDetector extends LayoutDetector {
             "Checks whether a leaf layout can be removed.",
             "A layout that has no children or no background can often be removed (since it " +
             "is invisible) for a flatter and more efficient layout hierarchy.",
-            CATEGORY_PERFORMANCE, 2, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.PERFORMANCE,
+            2,
+            Severity.WARNING,
+            UselessViewDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link UselessViewDetector} */
     public UselessViewDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { USELESS_PARENT, USELESS_LEAF };
     }
 
     @Override
@@ -106,7 +121,7 @@ public class UselessViewDetector extends LayoutDetector {
 
     @Override
     public void visitElement(Context context, Element element) {
-        int childCount = getChildCount(element);
+        int childCount = LintUtils.getChildCount(element);
         if (childCount == 0) {
             // Check to see if this is a leaf layout that can be removed
             checkUselessLeaf(context, element);
@@ -141,9 +156,9 @@ public class UselessViewDetector extends LayoutDetector {
         }
 
         // This method is only called when we've already ensured that it has children
-        assert getChildCount(element) > 0;
+        assert LintUtils.getChildCount(element) > 0;
 
-        int parentChildCount = getChildCount(parent);
+        int parentChildCount = LintUtils.getChildCount(parent);
         if (parentChildCount != 1) {
             // Don't remove if the node has siblings
             return;
@@ -176,12 +191,12 @@ public class UselessViewDetector extends LayoutDetector {
             format += "; transfer the background attribute to the other view";
         }
         String message = String.format(format, tag, parentTag);
-        context.toolContext.report(context, USELESS_PARENT, location, message, null);
+        context.client.report(context, USELESS_PARENT, location, message, null);
     }
 
     // This is the old UselessView check from layoutopt
     private void checkUselessLeaf(Context context, Element element) {
-        assert getChildCount(element) == 0;
+        assert LintUtils.getChildCount(element) == 0;
 
         // Conditions:
         // - The node is a container view (LinearLayout, etc.)
@@ -201,6 +216,6 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String message = String.format(
                 "This %1$s view is useless (no children, no background, no id)", tag);
-        context.toolContext.report(context, USELESS_LEAF, location, message, null);
+        context.client.report(context, USELESS_LEAF, location, message, null);
     }
 }

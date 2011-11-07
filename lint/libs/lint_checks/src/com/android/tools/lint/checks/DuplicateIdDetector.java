@@ -16,7 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_LAYOUT_PREFIX;
+
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -53,7 +59,11 @@ public class DuplicateIdDetector extends LayoutDetector {
             "Checks for duplicate ids within a single layout",
             "Within a layout, id's should be unique since otherwise findViewById() can " +
             "return an unexpected view.",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.CORRECTNESS,
+            7,
+            Severity.WARNING,
+            DuplicateIdDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
     public static final Issue CROSS_LAYOUT = Issue.create(
@@ -63,17 +73,16 @@ public class DuplicateIdDetector extends LayoutDetector {
             "layouts are combined with include tags, then the id's need to be unique " +
             "within any chain of included layouts, or Activity#findViewById() can " +
             "return an unexpected view.",
-            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            DuplicateIdDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
 
     /** Constructs a duplicate id check */
     public DuplicateIdDetector() {
     };
 
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { WITHIN_LAYOUT, CROSS_LAYOUT };
-    }
 
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
@@ -147,7 +156,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     private void checkForIncludeDuplicates(Context context) {
-        if (!context.toolContext.isEnabled(CROSS_LAYOUT) ||
+        if (!context.configuration.isEnabled(CROSS_LAYOUT) ||
                 !context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
             return;
         }
@@ -342,7 +351,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             // Also record the secondary location
             location.setSecondary(new Location(second, null, null));
         }
-        context.toolContext.report(context, CROSS_LAYOUT, location, msg, null);
+        context.client.report(context, CROSS_LAYOUT, location, msg, null);
     }
 
     /**
@@ -390,7 +399,7 @@ public class DuplicateIdDetector extends LayoutDetector {
         assert attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         if (mIds.contains(id)) {
-            context.toolContext.report(context, WITHIN_LAYOUT, context.getLocation(attribute),
+            context.client.report(context, WITHIN_LAYOUT, context.getLocation(attribute),
                     String.format("Duplicate id %1$s, already defined earlier in this layout",
                             id), null);
         } else if (id.startsWith("@+id/")) { //$NON-NLS-1$

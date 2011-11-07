@@ -16,8 +16,9 @@
 
 package com.android.tools.lint.detector.api;
 
-import java.util.EnumSet;
+import com.android.tools.lint.client.api.Configuration;
 
+import java.util.EnumSet;
 
 
 /**
@@ -36,16 +37,17 @@ public final class Issue implements Comparable<Issue> {
     private final String mId;
     private final String mDescription;
     private final String mExplanation;
-    private final String mCategory;
+    private final Category mCategory;
     private final int mPriority;
     private final Severity mSeverity;
     private String mMoreInfoUrl;
     private boolean mEnabledByDefault = true;
     private final EnumSet<Scope> mScope;
+    private final Class<? extends Detector> mClass;
 
     // Use factory methods
-    private Issue(String id, String description, String explanation, String category, int priority,
-            Severity severity, EnumSet<Scope> scope) {
+    private Issue(String id, String description, String explanation, Category category, int priority,
+            Severity severity, Class<? extends Detector> detectorClass, EnumSet<Scope> scope) {
         super();
         mId = id;
         mDescription = description;
@@ -53,6 +55,7 @@ public final class Issue implements Comparable<Issue> {
         mCategory = category;
         mPriority = priority;
         mSeverity = severity;
+        mClass = detectorClass;
         mScope = scope;
     }
 
@@ -67,12 +70,15 @@ public final class Issue implements Comparable<Issue> {
      * @param priority the priority, a number from 1 to 10 with 10 being most
      *            important/severe
      * @param severity the default severity of the issue
+     * @param detectorClass the class of the detector to find this issue
      * @param scope the scope of files required to analyze this issue
      * @return a new {@link Issue}
      */
-    public static Issue create(String id, String description, String explanation, String category,
-            int priority, Severity severity, EnumSet<Scope> scope) {
-        return new Issue(id, description, explanation, category, priority, severity, scope);
+    public static Issue create(String id, String description, String explanation,
+            Category category, int priority, Severity severity,
+            Class<? extends Detector> detectorClass, EnumSet<Scope> scope) {
+        return new Issue(id, description, explanation, category, priority, severity,
+                detectorClass, scope);
     }
 
     /**
@@ -112,7 +118,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the category, or null if no category has been assigned
      */
-    public String getCategory() {
+    public Category getCategory() {
         return mCategory;
     }
 
@@ -129,6 +135,15 @@ public final class Issue implements Comparable<Issue> {
     /**
      * Returns the default severity of the issues found by this detector (some
      * tools may allow the user to specify custom severities for detectors).
+     * <p>
+     * Note that even though the normal way for an issue to be disabled is for
+     * the {@link Configuration} to return {@link Severity#IGNORE}, there is a
+     * {@link #isEnabledByDefault()} method which can be used to turn off issues
+     * by default. This is done rather than just having the severity as the only
+     * attribute on the issue such that an issue can be configured with an
+     * appropriate severity (such as {@link Severity#ERROR}) even when issues
+     * are disabled by default for example because they are experimental or not
+     * yet stable.
      *
      * @return the severity of the issues found by this detector
      */
@@ -198,5 +213,19 @@ public final class Issue implements Comparable<Issue> {
     public Issue setEnabledByDefault(boolean enabledByDefault) {
         mEnabledByDefault = enabledByDefault;
         return this;
+    }
+
+    /**
+     * Returns the class of the detector to use to find this issue
+     *
+     * @return the class of the detector to use to find this issue
+     */
+    public Class<? extends Detector> getDetectorClass() {
+        return mClass;
+    }
+
+    @Override
+    public String toString() {
+        return mId;
     }
 }

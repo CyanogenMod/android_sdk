@@ -19,8 +19,6 @@ package com.android.tools.lint.detector.api;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -124,7 +122,6 @@ public abstract class Detector {
     /** Concrete implementation of a detector that is a {@link Detector.XmlScanner} */
     public static abstract class XmlDetectorAdapter extends Detector
             implements Detector.XmlScanner {
-        private static final String XML_SUFFIX = ".xml"; //$NON-NLS-1$
 
         @Override
         public void run(Context context) {
@@ -164,67 +161,11 @@ public abstract class Detector {
         public Collection<String> getApplicableAttributes() {
             return null;
         }
-
-        /**
-         * Returns true if the given file represents an XML file
-         *
-         * @param file the file to be checked
-         * @return true if the given file is an xml file
-         */
-        public static boolean isXmlFile(File file) {
-            String string = file.getName();
-            return string.regionMatches(true, string.length() - XML_SUFFIX.length(),
-                    XML_SUFFIX, 0, XML_SUFFIX.length());
-        }
-
-        /**
-         * Returns the children elements of the given node
-         *
-         * @param node the parent node
-         * @return a list of element children, never null
-         */
-        public static List<Element> getChildren(Node node) {
-            NodeList childNodes = node.getChildNodes();
-            List<Element> children = new ArrayList<Element>(childNodes.getLength());
-            for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-                Node child = childNodes.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    children.add((Element) child);
-                }
-            }
-
-            return children;
-        }
-
-        /**
-         * Returns the <b>number</b> of children of the given node
-         *
-         * @param node the parent node
-         * @return the count of element children
-         */
-        public static int getChildCount(Node node) {
-            NodeList childNodes = node.getChildNodes();
-            int childCount = 0;
-            for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-                Node child = childNodes.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    childCount++;
-                }
-            }
-
-            return childCount;
-        }
     }
 
     /**
-     * Returns a list of issues detected by this detector.
-     *
-     * @return a list of issues detected by this detector, never null.
-     */
-    public abstract Issue[] getIssues();
-
-    /**
      * Runs the detector
+     *
      * @param context the context describing the work to be done
      */
     public abstract void run(Context context);
@@ -232,7 +173,12 @@ public abstract class Detector {
     /** Returns true if this detector applies to the given file */
     public abstract boolean appliesTo(Context context, File file);
 
-    /** Analysis is about to begin, perform any setup steps. */
+    /**
+     * Analysis is about to begin, perform any setup steps.
+     * <p>
+     * TODO: Rename "check" to "scan" here? beforeScanProject, beforeScanFile
+     * etc?
+     */
     public void beforeCheckProject(Context context) {
     }
 
@@ -260,15 +206,4 @@ public abstract class Detector {
      * @return the expected speed of this detector
      */
     public abstract Speed getSpeed();
-
-    /** Namespace used in XML files for Android attributes */
-    protected final static String ANDROID_URI =
-            "http://schemas.android.com/apk/res/android";                   //$NON-NLS-1$
-
-    protected static final String CATEGORY_CORRECTNESS = "Correctness";
-    protected static final String CATEGORY_PERFORMANCE = "Performance";
-    protected static final String CATEGORY_USABILITY = "Usability";
-    protected static final String CATEGORY_I18N = "Internationalization";
-    protected static final String CATEGORY_A11Y = "Accessibility";
-    protected static final String CATEGORY_SECURITY = "Security";
 }

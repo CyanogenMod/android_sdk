@@ -24,7 +24,6 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
-import static com.android.tools.lint.checks.LintConstants.ATTR_PERMISSION;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -36,7 +35,6 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.tools.lint.checks.AccessibilityDetector;
-import com.android.tools.lint.checks.BuiltinDetectorRegistry;
 import com.android.tools.lint.checks.ExportedServiceDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
@@ -44,6 +42,7 @@ import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -131,7 +130,7 @@ abstract class LintFix implements ICompletionProposal {
     }
 
     public String getAdditionalProposalInfo() {
-        Issue issue = new BuiltinDetectorRegistry().getIssue(mId);
+        Issue issue = EclipseLintClient.getRegistry().getIssue(mId);
         if (issue != null) {
             return issue.getExplanation().replace("\n", "<br>"); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -340,7 +339,7 @@ abstract class LintFix implements ICompletionProposal {
 
         @Override
         protected String getAttribute() {
-            return ATTR_PERMISSION;
+            return LintConstants.ATTR_PERMISSION;
         }
 
         @Override

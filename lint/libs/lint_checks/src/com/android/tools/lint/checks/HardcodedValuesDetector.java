@@ -16,6 +16,14 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_CONTENT_DESCRIPTION;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_HINT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LABEL;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PROMPT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -45,17 +53,16 @@ public class HardcodedValuesDetector extends LayoutDetector {
             "* The application cannot be translated to other languages by just adding new " +
             "translations for existing string resources.",
 
-            CATEGORY_I18N, 5, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.I18N,
+            5,
+            Severity.WARNING,
+            HardcodedValuesDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     // TODO: Add additional issues here, such as hardcoded colors, hardcoded sizes, etc
 
     /** Constructs a new {@link HardcodedValuesDetector} */
     public HardcodedValuesDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -83,7 +90,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 return;
             }
 
-            context.toolContext.report(context, ISSUE, context.getLocation(attribute),
+            context.client.report(context, ISSUE, context.getLocation(attribute),
                     String.format("[I18N] Hardcoded string \"%1$s\", should use @string resource",
                             value), null);
         }

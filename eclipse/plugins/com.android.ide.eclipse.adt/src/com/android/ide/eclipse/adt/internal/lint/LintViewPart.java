@@ -126,15 +126,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
 
         // If there are currently running jobs, listen for them such that we can update the
         // button state
-        Job[] currentJobs = LintRunner.getCurrentJobs();
-        if (currentJobs.length > 0) {
-            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
-            mRefreshAction.setImageDescriptor(sharedImages.getImageDescriptor(
-                    ISharedImages.IMG_ELCL_STOP));
-            for (Job job : currentJobs) {
-                job.addJobChangeListener(this);
-            }
-        }
+        refreshStopIcon();
 
         if (sInitialProject != null) {
             mLintView.setResources(Collections.<IResource>singletonList(sInitialProject));
@@ -184,11 +176,11 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
      */
     private void initializeToolBar() {
         IToolBarManager toolbarManager = getViewSite().getActionBars().getToolBarManager();
+        toolbarManager.add(mRefreshAction);
         toolbarManager.add(mFixAction);
         toolbarManager.add(mIgnoreAction);
         toolbarManager.add(mRemoveAction);
         toolbarManager.add(mRemoveAllAction);
-        toolbarManager.add(mRefreshAction);
     }
 
     @Override
@@ -203,6 +195,25 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
      */
     public void setResources(List<IResource> resources) {
         mLintView.setResources(resources);
+
+        // Refresh the stop/refresh icon status
+        refreshStopIcon();
+    }
+
+    private void refreshStopIcon() {
+        Job[] currentJobs = LintRunner.getCurrentJobs();
+        if (currentJobs.length > 0) {
+            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+            mRefreshAction.setImageDescriptor(sharedImages.getImageDescriptor(
+                    ISharedImages.IMG_ELCL_STOP));
+            for (Job job : currentJobs) {
+                job.addJobChangeListener(this);
+            }
+        } else {
+            mRefreshAction.setImageDescriptor(
+                    IconFactory.getInstance().getImageDescriptor(REFRESH_ICON));
+
+        }
     }
 
     // ---- Implements SelectionListener ----
@@ -212,7 +223,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         if (markers.size() != 1) {
             mDetailsText.setText(""); //$NON-NLS-1$
         } else {
-            mDetailsText.setText(LintEclipseContext.describe(markers.get(0)));
+            mDetailsText.setText(EclipseLintClient.describe(markers.get(0)));
         }
         updateIssueCount();
 
@@ -224,14 +235,14 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         boolean hasSelection = markers.size() > 0;
         boolean canFix = hasSelection;
         for (IMarker marker : markers) {
-            if (!LintFix.hasFix(LintEclipseContext.getId(marker))) {
+            if (!LintFix.hasFix(EclipseLintClient.getId(marker))) {
                 canFix = false;
                 break;
             }
 
             // Some fixes cannot be run in bulk
             if (markers.size() > 1) {
-                LintFix fix = LintFix.getFix(LintEclipseContext.getId(marker), marker);
+                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
                 if (!fix.isBulkCapable()) {
                     canFix = false;
                     break;
@@ -254,7 +265,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
             // Jump to editor
             List<IMarker> selection = mLintView.getSelectedMarkers();
             if (selection.size() > 0) {
-                LintEclipseContext.showMarker(selection.get(0));
+                EclipseLintClient.showMarker(selection.get(0));
             }
         }
     }
@@ -326,7 +337,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                 case ACTION_REFRESH: {
                     Job[] jobs = LintRunner.getCurrentJobs();
                     if (jobs.length > 0) {
-                        LintRunner.cancelCurrentJobs();
+                        LintRunner.cancelCurrentJobs(false);
                     } else {
                         List<IResource> resources = mLintView.getResources();
                         if (resources == null) {
@@ -348,7 +359,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                 case ACTION_FIX: {
                     List<IMarker> markers = mLintView.getSelectedMarkers();
                     for (IMarker marker : markers) {
-                        LintFix fix = LintFix.getFix(LintEclipseContext.getId(marker), marker);
+                        LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
                         IEditorPart editor = AdtUtils.getActiveEditor();
                         if (editor instanceof AndroidXmlEditor) {
                             IStructuredDocument doc =
@@ -375,15 +386,16 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     List<IResource> resources = mLintView.getResources();
                     if (resources != null) {
                         for (IResource resource : resources) {
-                            LintEclipseContext.clearMarkers(resource);
+                            EclipseLintClient.clearMarkers(resource);
                         }
                     }
                     break;
                 case ACTION_IGNORE: {
                     for (IMarker marker : mLintView.getSelectedMarkers()) {
-                        String id = LintEclipseContext.getId(marker);
+                        String id = EclipseLintClient.getId(marker);
                         if (id != null) {
-                            LintFixGenerator.suppressDetector(id, true, null);
+                            // TODO: Add "ignore in all" button!
+                            LintFixGenerator.suppressDetector(id, true, null, true/*all*/);
                         }
                     }
                     break;

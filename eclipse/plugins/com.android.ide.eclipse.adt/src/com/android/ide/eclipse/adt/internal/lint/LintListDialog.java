@@ -167,7 +167,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
             return;
         }
 
-        mDetailsText.setText(LintEclipseContext.describe(marker));
+        mDetailsText.setText(EclipseLintClient.describe(marker));
     }
 
     // ---- Implements SelectionListener ----
@@ -180,12 +180,12 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         } else if (source == mShowButton) {
             List<IMarker> selection = mList.getSelectedMarkers();
             if (selection.size() > 0) {
-                LintEclipseContext.showMarker(selection.get(0));
+                EclipseLintClient.showMarker(selection.get(0));
             }
         } else if (source == mFixButton) {
             List<IMarker> selection = mList.getSelectedMarkers();
             for (IMarker marker : selection) {
-                LintFix fix = LintFix.getFix(LintEclipseContext.getId(marker), marker);
+                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
                 IEditorPart editor = AdtUtils.getActiveEditor();
                 if (editor instanceof AndroidXmlEditor) {
                     IStructuredDocument doc = ((AndroidXmlEditor) editor).getStructuredDocument();
@@ -199,9 +199,9 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
             }
         } else if (source == mIgnoreTypeButton) {
             for (IMarker marker : mList.getSelectedMarkers()) {
-                String id = LintEclipseContext.getId(marker);
+                String id = EclipseLintClient.getId(marker);
                 if (id != null) {
-                    LintFixGenerator.suppressDetector(id, true, mFile);
+                    LintFixGenerator.suppressDetector(id, true, mFile, true /*all*/);
                 }
             }
         }
@@ -218,14 +218,14 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
 
         boolean canFix = selection.size() > 0;
         for (IMarker marker : selection) {
-            if (!LintFix.hasFix(LintEclipseContext.getId(marker))) {
+            if (!LintFix.hasFix(EclipseLintClient.getId(marker))) {
                 canFix = false;
                 break;
             }
 
             // Some fixes cannot be run in bulk
             if (selection.size() > 1) {
-                LintFix fix = LintFix.getFix(LintEclipseContext.getId(marker), marker);
+                LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
                 if (!fix.isBulkCapable()) {
                     canFix = false;
                     break;
@@ -242,7 +242,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
             // Jump to editor
             List<IMarker> selection = mList.getSelectedMarkers();
             if (selection.size() > 0) {
-                LintEclipseContext.showMarker(selection.get(0));
+                EclipseLintClient.showMarker(selection.get(0));
                 close();
             }
         }

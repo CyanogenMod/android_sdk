@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.api;
+package com.android.tools.lint.client.api;
 
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.LintUtils;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -34,7 +30,6 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,45 +113,43 @@ class XmlVisitor {
     }
 
     void visitFile(Context context, File file) {
-        assert ResourceXmlDetector.isXmlFile(file);
+        assert LintUtils.isXmlFile(file);
 
         context.location = null;
         context.parser = mParser;
 
-        if (context.document == null) {
-            context.document = mParser.parse(context);
+        try {
             if (context.document == null) {
-                context.toolContext.report(
-                        context,
-                        // Must provide an issue since API guarantees that the issue parameter
-                        // is valid
-                        Issue.create("dummy", "", "", "", 0, Severity.ERROR, //$NON-NLS-1$
-                                EnumSet.noneOf(Scope.class)),
-                        new Location(file, null, null),
-                        "Skipped file because it contains parsing errors", null);
-                return;
+                context.document = mParser.parse(context);
+                if (context.document == null) {
+                    context.client.log(
+                            null, "Skipped file because it contains parsing errors");
+                    return;
+                }
+                if (context.document.getDocumentElement() == null) {
+                    // Ignore empty documents
+                    return;
+                }
             }
-            if (context.document.getDocumentElement() == null) {
-                // Ignore empty documents
-                return;
+
+            for (Detector check : mAllDetectors) {
+                check.beforeCheckFile(context);
             }
-        }
 
-        for (Detector check : mAllDetectors) {
-            check.beforeCheckFile(context);
-        }
+            for (Detector.XmlScanner check : mDocumentDetectors) {
+                check.visitDocument(context, context.document);
+            }
 
-        for (Detector.XmlScanner check : mDocumentDetectors) {
-            check.visitDocument(context, context.document);
-        }
+            if (mElementToCheck.size() > 0 || mAttributeToCheck.size() > 0
+                    || mAllAttributeDetectors.size() > 0 || mAllElementDetectors.size() > 0) {
+                visitElement(context, context.document.getDocumentElement());
+            }
 
-        if (mElementToCheck.size() > 0 || mAttributeToCheck.size() > 0
-                || mAllAttributeDetectors.size() > 0 || mAllElementDetectors.size() > 0) {
-            visitElement(context, context.document.getDocumentElement());
-        }
-
-        for (Detector check : mAllDetectors) {
-            check.afterCheckFile(context);
+            for (Detector check : mAllDetectors) {
+                check.afterCheckFile(context);
+            }
+        } finally {
+            mParser.dispose(context);
         }
     }
 

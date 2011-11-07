@@ -16,9 +16,19 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PARENT;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -43,15 +53,14 @@ public class ScrollViewChildDetector extends LayoutDetector {
             "ScrollView children must set their layout_width or layout_height attributes " +
             "to wrap_content rather than fill_parent or match_parent in the scrolling " +
             "dimension",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.CORRECTNESS,
+            7,
+            Severity.WARNING,
+            ScrollViewChildDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link ScrollViewChildDetector} */
     public ScrollViewChildDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -69,7 +78,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
 
     @Override
     public void visitElement(Context context, Element element) {
-        List<Element> children = getChildren(element);
+        List<Element> children = LintUtils.getChildren(element);
         boolean isHorizontal = HORIZONTAL_SCROLL_VIEW.equals(element.getTagName());
         String attributeName = isHorizontal ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
         for (Element child : children) {
@@ -78,7 +87,7 @@ public class ScrollViewChildDetector extends LayoutDetector {
             if (VALUE_FILL_PARENT.equals(value) || VALUE_MATCH_PARENT.equals(value)) {
                 String msg = String.format("This %1$s should use android:%2$s=\"wrap_content\"",
                         child.getTagName(), attributeName);
-                context.toolContext.report(context, ISSUE, context.getLocation(sizeNode), msg,
+                context.client.report(context, ISSUE, context.getLocation(sizeNode), msg,
                         null);
             }
         }

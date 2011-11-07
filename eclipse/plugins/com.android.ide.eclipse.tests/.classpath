@@ -15,5 +15,7 @@
 	<classpathentry kind="lib" path="/adt/libs/sdkuilib.jar" sourcepath="/SdkUiLib"/>
 	<classpathentry kind="lib" path="/adt/libs/rule_api.jar" sourcepath="/rule_api"/>
 	<classpathentry kind="lib" path="/adt/libs/common.jar"/>
+        <classpathentry kind="lib" path="/adt/libs/lint_api.jar" sourcepath="/lint-api"/>
+        <classpathentry kind="lib" path="/adt/libs/lint_checks.jar" sourcepath="/lint-checks"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

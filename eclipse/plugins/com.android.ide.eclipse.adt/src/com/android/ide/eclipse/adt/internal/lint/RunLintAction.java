@@ -21,12 +21,15 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IActionDelegate;
+import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /** Action which runs Lint on the current project */
-public class RunLintAction implements IActionDelegate {
+public class RunLintAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
 
-     private ISelection mSelection;
+    private ISelection mSelection;
 
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
@@ -63,5 +66,15 @@ public class RunLintAction implements IActionDelegate {
         }
 
         return null;
+    }
+
+    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
+    }
+
+    public void dispose() {
+        // Nothing to dispose
+    }
+
+    public void init(IWorkbenchWindow window) {
     }
 }

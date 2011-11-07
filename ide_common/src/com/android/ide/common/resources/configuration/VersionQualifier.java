@@ -26,7 +26,7 @@ public final class VersionQualifier extends ResourceQualifier {
     /** Default pixel density value. This means the property is not set. */
     private final static int DEFAULT_VERSION = -1;
 
-    private final static Pattern sCountryCodePattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
+    private final static Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
 
     private int mVersion = DEFAULT_VERSION;
 
@@ -39,7 +39,7 @@ public final class VersionQualifier extends ResourceQualifier {
      * @return a new {@link VersionQualifier} object or <code>null</code>
      */
     public static VersionQualifier getQualifier(String segment) {
-        Matcher m = sCountryCodePattern.matcher(segment);
+        Matcher m = sVersionPattern.matcher(segment);
         if (m.matches()) {
             String v = m.group(1);
 

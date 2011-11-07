@@ -20,14 +20,18 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.DefaultConfiguration;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Severity;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
@@ -43,6 +47,7 @@ import org.eclipse.ui.IMarkerResolutionGenerator2;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,10 +108,9 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         IResource resource = marker.getResource();
         return new IMarkerResolution[] {
                 new MoreInfoProposal(id, marker.getAttribute(IMarker.MESSAGE, null)),
-                new SuppressProposal(id, true /* all */),
-                // Not yet implemented
-                //new SuppressProposal(id, false),
-                new ClearMarkersProposal(resource, false /* all */),
+                new SuppressProposal(resource, id, false),
+                new SuppressProposal(resource.getProject(), id, true /* all */),
+                new SuppressProposal(resource, id, true /* all */),
                 new ClearMarkersProposal(resource, true /* all */),
         };
     }
@@ -148,11 +152,10 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                     String message = marker.getAttribute(IMarker.MESSAGE, null);
                     proposals.add(new MoreInfoProposal(id, message));
 
-                    proposals.add(new SuppressProposal(id, true /* all */));
-                    // Not yet implemented
-                    //proposals.add(new SuppressProposal(id, false));
+                    proposals.add(new SuppressProposal(file, id, false));
+                    proposals.add(new SuppressProposal(file.getProject(), id, true /* all */));
+                    proposals.add(new SuppressProposal(file, id, true /* all */));
 
-                    proposals.add(new ClearMarkersProposal(file, false /* all */));
                     proposals.add(new ClearMarkersProposal(file, true /* all */));
                 }
             }
@@ -169,40 +172,52 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
      *
      * @param id the id of the detector to be suppressed, or null
      * @param updateMarkers if true, update all markers
+     * @param resource the resource associated with the markers
+     * @param thisFileOnly if true, only suppress this issue in this file
      */
-    public static void suppressDetector(String id, boolean updateMarkers, IResource resource) {
-        // Excluded checks
-        IPreferenceStore store = AdtPlugin.getDefault().getPreferenceStore();
-        String value = store.getString(AdtPrefs.PREFS_DISABLED_ISSUES);
-        assert value == null || !value.contains(id);
-        if (value == null || value.length() == 0) {
-            value = id;
-        } else {
-            value = value + ',' + id;
+    public static void suppressDetector(String id, boolean updateMarkers, IResource resource,
+            boolean thisFileOnly) {
+        IssueRegistry registry = EclipseLintClient.getRegistry();
+        Issue issue = registry.getIssue(id);
+        if (issue != null) {
+            EclipseLintClient mClient = new EclipseLintClient(registry, resource, null, false);
+            Configuration configuration = mClient.getConfiguration(null);
+            if (thisFileOnly && configuration instanceof DefaultConfiguration) {
+                File file = AdtUtils.getAbsolutePath(resource).toFile();
+                ((DefaultConfiguration) configuration).ignore(issue, file);
+            } else {
+                configuration.setSeverity(issue, Severity.IGNORE);
+            }
         }
-        store.setValue(AdtPrefs.PREFS_DISABLED_ISSUES, value);
 
         if (updateMarkers) {
-            LintEclipseContext.removeMarkers(resource, id);
+            EclipseLintClient.removeMarkers(resource, id);
         }
     }
 
     private static class SuppressProposal implements ICompletionProposal, IMarkerResolution2 {
         private final String mId;
         private final boolean mGlobal;
+        private final IResource mResource;
 
-        public SuppressProposal(String check, boolean global) {
-            super();
+        private SuppressProposal(IResource resource, String check, boolean global) {
+            mResource = resource;
             mId = check;
             mGlobal = global;
         }
 
         private void perform() {
-            suppressDetector(mId, true, null);
+            suppressDetector(mId, true, mResource, !mGlobal);
         }
 
         public String getDisplayString() {
-            return mGlobal ? "Disable Check" : "Disable Check in this file only";
+            if (mResource instanceof IProject) {
+                return "Disable Check in This Project";
+            } else if (mGlobal) {
+                return "Disable Check";
+            } else {
+                return "Disable Check in This File Only";
+            }
         }
 
         // ---- Implements MarkerResolution2 ----
@@ -231,7 +246,9 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         public String getAdditionalProposalInfo() {
             StringBuilder sb = new StringBuilder(200);
-            if (mGlobal) {
+            if (mResource instanceof IProject) {
+                sb.append("Suppresses this type of lint warning in the current project only.");
+            } else if (mGlobal) {
                 sb.append("Suppresses this type of lint warning in all files.");
             } else {
                 sb.append("Suppresses this type of lint warning in the current file only.");
@@ -263,7 +280,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         private void perform() {
             IResource resource = mGlobal ? mResource.getProject() : mResource;
-            LintEclipseContext.clearMarkers(resource);
+            EclipseLintClient.clearMarkers(resource);
         }
 
         public String getDisplayString() {
@@ -316,7 +333,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         public Image getImage() {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
-            return sharedImages.getImage(ISharedImages.IMG_OBJS_WARN_TSK);
+            return sharedImages.getImage(ISharedImages.IMG_ELCL_REMOVE);
         }
 
         public IContextInformation getContextInformation() {
@@ -334,7 +351,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         }
 
         private void perform() {
-            Issue issue = LintEclipseContext.getRegistry().getIssue(mId);
+            Issue issue = EclipseLintClient.getRegistry().getIssue(mId);
             assert issue != null : mId;
 
             StringBuilder sb = new StringBuilder(300);

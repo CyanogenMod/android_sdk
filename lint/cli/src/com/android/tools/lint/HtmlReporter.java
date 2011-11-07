@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
@@ -66,6 +67,11 @@ class HtmlReporter extends Reporter {
                 "    font-weight: bold;\n" +                             //$NON-NLS-1$
                 "    margin: 5px 0px 5px 0px;\n" +                       //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$
+                ".category {\n" +                                        //$NON-NLS-1$
+                "    font-size: 18pt;\n" +                               //$NON-NLS-1$
+                "    font-weight: bold;\n" +                             //$NON-NLS-1$
+                "    margin: 10px 0px 5px 0px;\n" +                      //$NON-NLS-1$
+                "}\n" +                                                  //$NON-NLS-1$
                 // The issue summary line
                 //".summary {\n" +                                       //$NON-NLS-1$
                 //"    font-weight: bold;\n" +                           //$NON-NLS-1$
@@ -93,6 +99,9 @@ class HtmlReporter extends Reporter {
                 "    max-width: 200px;\n" +                              //$NON-NLS-1$
                 "    max-height: 200px;\n" +                             //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$
+                // Image labels
+                "th { font-weight: normal; }\n" +                        //$NON-NLS-1$
+                "table { border: none; }\n" +                            //$NON-NLS-1$
                 // The Priority/Category section
                 ".metadata { }\n" +                                      //$NON-NLS-1$
                 // Each error message
@@ -132,27 +141,58 @@ class HtmlReporter extends Reporter {
 
             mWriter.write(String.format("Check performed at %1$s.",
                     new Date().toString()));
-            mWriter.write("<br/>");                                       //$NON-NLS-1$
+            mWriter.write("<br/><br/>");                                  //$NON-NLS-1$
             mWriter.write(String.format("%1$d errors and %2$d warnings found:",
                     errorCount, warningCount));
             mWriter.write("<br/>");                                       //$NON-NLS-1$
 
             // Write issue id summary
             mWriter.write("<ul>\n");                                     //$NON-NLS-1$
+            Category previousCategory = null;
             for (List<Warning> warnings : related) {
-                mWriter.write("<li> <a href=\"#"                         //$NON-NLS-1$
-                        + warnings.get(0).issue.getId()
-                        +"\">");                                         //$NON-NLS-1$
+                Issue issue = warnings.get(0).issue;
+
+                if (issue.getCategory() != previousCategory) {
+                    if (previousCategory != null) {
+                        mWriter.write("</ul>\n");                         //$NON-NLS-1$
+                    }
+                    previousCategory = issue.getCategory();
+                    String categoryName = issue.getCategory().getFullName();
+                    mWriter.write("<li> <a href=\"#");                   //$NON-NLS-1$
+                    mWriter.write(categoryName);
+                    mWriter.write("\">");                                //$NON-NLS-1$
+                    mWriter.write(categoryName);
+                    mWriter.write("</a>\n");                             //$NON-NLS-1$
+                    mWriter.write("\n<ul>\n");                           //$NON-NLS-1$
+                }
+
+                mWriter.write("<li> <a href=\"#");                       //$NON-NLS-1$
+                mWriter.write(issue.getId());
+                mWriter.write("\">");                                    //$NON-NLS-1$
                 mWriter.write(String.format("%1$3d %2$s",                //$NON-NLS-1$
-                        warnings.size(), warnings.get(0).issue.getId()));
+                        warnings.size(), issue.getId()));
                 mWriter.write("</a>\n");                                 //$NON-NLS-1$
+            }
+            if (previousCategory != null) {
+                mWriter.write("</ul>\n");                                //$NON-NLS-1$
             }
             mWriter.write("</ul>\n");                                    //$NON-NLS-1$
             mWriter.write("<br/>");                                      //$NON-NLS-1$
 
+            previousCategory = null;
             for (List<Warning> warnings : related) {
                 Warning first = warnings.get(0);
                 Issue issue = first.issue;
+
+                if (issue.getCategory() != previousCategory) {
+                    previousCategory = issue.getCategory();
+                    mWriter.write("\n<a name=\"");                       //$NON-NLS-1$
+                    mWriter.write(issue.getCategory().getFullName());
+                    mWriter.write("\">\n");                              //$NON-NLS-1$
+                    mWriter.write("<div class=\"category\">");           //$NON-NLS-1$
+                    mWriter.write(issue.getCategory().getFullName());
+                    mWriter.write("</div>\n");                           //$NON-NLS-1$
+                }
 
                 mWriter.write("<a name=\"" + issue.getId() + "\">\n");  //$NON-NLS-1$ //$NON-NLS-2$
                 mWriter.write("<div class=\"issue\">\n");                //$NON-NLS-1$
@@ -225,7 +265,7 @@ class HtmlReporter extends Reporter {
                 mWriter.write(issue.getPriority());
                 mWriter.write("<br/>\n");                                //$NON-NLS-1$
                 mWriter.write("Category: ");
-                mWriter.write(issue.getCategory());
+                mWriter.write(issue.getCategory().getFullName());
                 mWriter.write("</div>\n");                               //$NON-NLS-1$
 
                 mWriter.write("Severity: ");
@@ -300,7 +340,22 @@ class HtmlReporter extends Reporter {
                             return getDpiRank(s1) - getDpiRank(s2);
                         }
                     });
-                    mWriter.write("<table normal\" border=\"0\"><tr>");  //$NON-NLS-1$
+                    mWriter.write("<table>");      //$NON-NLS-1$
+                    mWriter.write("<tr>");                               //$NON-NLS-1$
+                    for (String linkedUrl : urls) {
+                        // Image series: align top
+                        mWriter.write("<td>");                           //$NON-NLS-1$
+                        mWriter.write("<a href=\"");                     //$NON-NLS-1$
+                        mWriter.write(linkedUrl);
+                        mWriter.write("\">");                            //$NON-NLS-1$
+                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
+                        mWriter.write(linkedUrl);
+                        mWriter.write("\" /></a>\n");                    //$NON-NLS-1$
+                        mWriter.write("</td>");                          //$NON-NLS-1$
+                    }
+                    mWriter.write("</tr>");                              //$NON-NLS-1$
+
+                    mWriter.write("<tr>");                               //$NON-NLS-1$
                     for (String linkedUrl : urls) {
                         mWriter.write("<th>");                           //$NON-NLS-1$
                         int index = linkedUrl.lastIndexOf("drawable-");  //$NON-NLS-1$
@@ -313,19 +368,9 @@ class HtmlReporter extends Reporter {
                         }
                         mWriter.write("</th>");                          //$NON-NLS-1$
                     }
-                    mWriter.write("</tr>\n<tr>");                        //$NON-NLS-1$
-                    for (String linkedUrl : urls) {
-                        // Image series: align top
-                        mWriter.write("<td>");                           //$NON-NLS-1$
-                        mWriter.write("<a href=\"");                     //$NON-NLS-1$
-                        mWriter.write(linkedUrl);
-                        mWriter.write("\">");                            //$NON-NLS-1$
-                        mWriter.write("<img border=\"0\" align=\"top\" src=\"");      //$NON-NLS-1$
-                        mWriter.write(linkedUrl);
-                        mWriter.write("\" /></a>\n");                    //$NON-NLS-1$
-                        mWriter.write("</td>");                          //$NON-NLS-1$
-                    }
-                    mWriter.write("</tr></table>");                      //$NON-NLS-1$
+                    mWriter.write("</tr>\n");                            //$NON-NLS-1$
+
+                    mWriter.write("</table>\n");                           //$NON-NLS-1$
                 }
             } else {
                 // Just this image: float to the right

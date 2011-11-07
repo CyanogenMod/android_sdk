@@ -16,7 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.tools.lint.api.ToolContext;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.LintClient;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,9 +32,11 @@ import java.util.List;
  */
 public class Project {
     /** The associated tool */
-    private final ToolContext mTool;
-    private final File dir;
-    private final File referenceDir;
+    private final LintClient mTool;
+    private final File mDir;
+    private final File mReferenceDir;
+    private Configuration mConfiguration;
+
     /**
      * If non null, specifies a non-empty list of specific files under this
      * project which should be checked.
@@ -49,22 +52,22 @@ public class Project {
      * @param dir the root directory of the project
      * @param referenceDir See {@link #getReferenceDir()}.
      */
-    public Project(ToolContext tool, File dir, File referenceDir) {
-        this.mTool = tool;
-        this.dir = dir;
-        this.referenceDir = referenceDir;
+    public Project(LintClient tool, File dir, File referenceDir) {
+        mTool = tool;
+        mDir = dir;
+        mReferenceDir = referenceDir;
     }
 
     @Override
     public String toString() {
-        return "Project [dir=" + dir + "]";
+        return "Project [dir=" + mDir + "]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((dir == null) ? 0 : dir.hashCode());
+        result = prime * result + ((mDir == null) ? 0 : mDir.hashCode());
         return result;
     }
 
@@ -77,10 +80,10 @@ public class Project {
         if (getClass() != obj.getClass())
             return false;
         Project other = (Project) obj;
-        if (dir == null) {
-            if (other.dir != null)
+        if (mDir == null) {
+            if (other.mDir != null)
                 return false;
-        } else if (!dir.equals(other.dir))
+        } else if (!mDir.equals(other.mDir))
             return false;
         return true;
     }
@@ -138,11 +141,32 @@ public class Project {
      * directory when a directory tree is being scanned
      *
      * @param file the file under this project to check
-     * @return the relative path
+     * @return the path relative to the reference directory (often the project directory)
+     */
+    public String getDisplayPath(File file) {
+       String path = file.getPath();
+       String referencePath = mReferenceDir.getPath();
+       if (path.startsWith(referencePath)) {
+           int length = referencePath.length();
+           if (path.length() > length && path.charAt(length) == File.separatorChar) {
+               length++;
+           }
+
+           return path.substring(length);
+       }
+
+       return path;
+    }
+
+    /**
+     * Returns the relative path of a given file within the current project.
+     *
+     * @param file the file under this project to check
+     * @return the path relative to the project
      */
     public String getRelativePath(File file) {
        String path = file.getPath();
-       String referencePath = referenceDir.getPath();
+       String referencePath = mDir.getPath();
        if (path.startsWith(referencePath)) {
            int length = referencePath.length();
            if (path.length() > length && path.charAt(length) == File.separatorChar) {
@@ -161,7 +185,7 @@ public class Project {
      * @return the dir
      */
     public File getDir() {
-        return dir;
+        return mDir;
     }
 
     /**
@@ -174,6 +198,24 @@ public class Project {
      * @return the reference directory, never null
      */
     public File getReferenceDir() {
-        return referenceDir;
+        return mReferenceDir;
+    }
+
+    /**
+     * Gets the configuration associated with this project
+     *
+     * @return the configuration associated with this project
+     */
+    public Configuration getConfiguration() {
+        return mConfiguration;
+    }
+
+    /**
+     * Sets the configuration associated with this project
+     *
+     * @param configuration sets the configuration associated with this project
+     */
+    public void setConfiguration(Configuration configuration) {
+        mConfiguration = configuration;
     }
 }

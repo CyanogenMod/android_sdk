@@ -16,6 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_FOREGROUND;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -38,15 +45,14 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
             "If a <FrameLayout> is the root of a layout and does not provide background " +
             "or padding etc, it can be replaced with a <merge> tag which is slightly " +
             "more efficient.",
-            CATEGORY_PERFORMANCE, 4, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.PERFORMANCE,
+            4,
+            Severity.WARNING,
+            MergeRootFrameLayoutDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -63,7 +69,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
                 && !hasPadding(root)) {
-            context.toolContext.report(context, ISSUE, context.getLocation(root),
+            context.client.report(context, ISSUE, context.getLocation(root),
                     "This <FrameLayout> can be replaced with a <merge> tag", null);
         }
     }

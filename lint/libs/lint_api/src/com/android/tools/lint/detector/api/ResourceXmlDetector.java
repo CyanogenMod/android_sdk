@@ -31,7 +31,7 @@ import java.io.File;
 public abstract class ResourceXmlDetector extends Detector.XmlDetectorAdapter {
     @Override
     public boolean appliesTo(Context context, File file) {
-        return isXmlFile(file);
+        return LintUtils.isXmlFile(file);
     }
 
     /**

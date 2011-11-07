@@ -16,9 +16,16 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.LIST_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -40,7 +47,11 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that ScrollViews have exactly one child widget",
             "ScrollViews can only have one child widget. If you want more children, wrap them " +
             "in a container layout.",
-            CATEGORY_CORRECTNESS, 8, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.CORRECTNESS,
+            8,
+            Severity.WARNING,
+            ChildCountDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
     public static final Issue ADAPTERVIEW_ISSUE = Issue.create(
@@ -48,16 +59,15 @@ public class ChildCountDetector extends LayoutDetector {
             "Checks that AdapterViews do not define their children in XML",
             "AdapterViews such as ListViews must be configured with data from Java code, " +
             "such as a ListAdapter.",
-            CATEGORY_CORRECTNESS, 10, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            Category.CORRECTNESS,
+            10,
+            Severity.WARNING,
+            ChildCountDetector.class,
+            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
                 "http://developer.android.com/reference/android/widget/AdapterView.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link ChildCountDetector} */
     public ChildCountDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { SCROLLVIEW_ISSUE, ADAPTERVIEW_ISSUE };
     }
 
     @Override
@@ -78,18 +88,18 @@ public class ChildCountDetector extends LayoutDetector {
 
     @Override
     public void visitElement(Context context, Element element) {
-        int childCount = getChildCount(element);
+        int childCount = LintUtils.getChildCount(element);
         String tagName = element.getTagName();
         if (tagName.equals(SCROLL_VIEW) || tagName.equals(HORIZONTAL_SCROLL_VIEW)) {
             if (childCount > 1) {
-                context.toolContext.report(context, SCROLLVIEW_ISSUE,
+                context.client.report(context, SCROLLVIEW_ISSUE,
                         context.getLocation(element), "A scroll view can have only one child",
                         null);
             }
         } else {
             // Adapter view
             if (childCount > 0) {
-                context.toolContext.report(context, ADAPTERVIEW_ISSUE,
+                context.client.report(context, ADAPTERVIEW_ISSUE,
                         context.getLocation(element),
                         "A list/grid should have no children declared in XML", null);
             }

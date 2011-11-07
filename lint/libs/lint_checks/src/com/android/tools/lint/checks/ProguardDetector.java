@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -42,13 +43,12 @@ public class ProguardDetector extends Detector {
             "-keepclasseswithmembers, since the old flags also implies " +
             "\"allow shrinking\" which means symbols only referred to from XML and " +
             "not Java (such as possibly CustomViews) can get deleted.",
-            CATEGORY_CORRECTNESS, 8, Severity.ERROR, EnumSet.of(Scope.PROGUARD)).setMoreInfo(
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            ProguardDetector.class,
+            EnumSet.of(Scope.PROGUARD)).setMoreInfo(
             "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
-    }
 
     @Override
     public void run(Context context) {
@@ -59,7 +59,7 @@ public class ProguardDetector extends Detector {
                     "-keepclasseswithmembernames class * {\n" + //$NON-NLS-1$
                     "    public <init>(android.");              //$NON-NLS-1$
             if (index != -1) {
-                context.toolContext.report(context, ISSUE, context.getLocation(context),
+                context.client.report(context, ISSUE, context.getLocation(context),
                     "Obsolete proguard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames", null);
             }
         }

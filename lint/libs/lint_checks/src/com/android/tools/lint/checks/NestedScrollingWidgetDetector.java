@@ -16,6 +16,13 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.GALLERY;
+import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.LIST_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
@@ -43,15 +50,14 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             // TODO: Better description!
             "A scrolling widget such as a ScrollView should not contain any nested " +
             "scrolling widgets since this has various usability issues",
-            CATEGORY_CORRECTNESS, 7, Severity.WARNING, Scope.RESOURCE_FILE_SCOPE);
+            Category.CORRECTNESS,
+            7,
+            Severity.WARNING,
+            NestedScrollingWidgetDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
 
     /** Constructs a new {@link NestedScrollingWidgetDetector} */
     public NestedScrollingWidgetDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -116,7 +122,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
                             "horizontally scrolling widget (%2$s)";
                 }
                 String msg = String.format(format, parent.getTagName(), element.getTagName());
-                context.toolContext.report(context, ISSUE, context.getLocation(element), msg, null);
+                context.client.report(context, ISSUE, context.getLocation(element), msg, null);
             }
         }
     }

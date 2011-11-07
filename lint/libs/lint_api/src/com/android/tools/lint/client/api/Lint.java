@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.api;
+package com.android.tools.lint.client.api;
 
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.LintListener.EventType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -44,27 +47,24 @@ public class Lint {
     private static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml";        //$NON-NLS-1$
     private static final String RES_FOLDER_NAME = "res";                             //$NON-NLS-1$
 
-    private final ToolContext mToolContext;
+    private final LintClient mClient;
     private volatile boolean mCanceled;
-    private DetectorRegistry mRegistry;
+    private IssueRegistry mRegistry;
     private EnumSet<Scope> mScope;
-    private Map<Scope, List<Detector>> mApplicableDetectors = new HashMap<Scope, List<Detector>>();
+    private List<? extends Detector> mApplicableDetectors;
+    private Map<Scope, List<Detector>> mScopeDetectors;
+    private List<LintListener> mListeners;
 
     /**
      * Creates a new {@link Lint}
      *
-     * @param registry The registry containing rules to be run
-     * @param toolContext a context for the tool wrapping the analyzer, such as
-     *            an IDE or a CLI
-     * @param scope the scope of the analysis; detectors with a wider scope will
-     *            not be run. If null, the scope will be inferred from the files
-     *            passed to {@link #analyze(List)}.
+     * @param registry The registry containing issues to be checked
+     * @param client the tool wrapping the analyzer, such as an IDE or a CLI
      */
-    public Lint(DetectorRegistry registry, ToolContext toolContext, EnumSet<Scope> scope) {
-        assert toolContext != null;
+    public Lint(IssueRegistry registry, LintClient client) {
+        assert client != null;
         mRegistry = registry;
-        mToolContext = toolContext;
-        mScope = scope;
+        mClient = new LintClientWrapper(client);
     }
 
     /** Cancels the current lint run as soon as possible */
@@ -74,14 +74,19 @@ public class Lint {
 
     /**
      * Analyze the given file (which can point to an Android project). Issues found
-     * are reported to the associated {@link ToolContext}.
+     * are reported to the associated {@link LintClient}.
      *
      * @param files the files and directories to be analyzed
+     * @param scope the scope of the analysis; detectors with a wider scope will
+     *            not be run. If null, the scope will be inferred from the files.
      */
-    public void analyze(List<File> files) {
+    public void analyze(List<File> files, EnumSet<Scope> scope) {
+        mCanceled = false;
+        mScope = scope;
+
         Collection<Project> projects = computeProjects(files);
         if (projects.size() == 0) {
-            mToolContext.log(null, "No projects found for %1$s", files.toString());
+            mClient.log(null, "No projects found for %1$s", files.toString());
             return;
         }
         if (mCanceled) {
@@ -119,52 +124,28 @@ public class Lint {
             }
         }
 
-        List<? extends Detector> availableChecks = mRegistry.getDetectors();
-        EnumSet<Scope> missingScopes = EnumSet.complementOf(mScope);
-
-        // Filter out disabled checks
-        List<Detector> checks = new ArrayList<Detector>(availableChecks.size());
-        for (Detector detector : availableChecks) {
-            boolean hasValidScope = false;
-            for (Issue issue : detector.getIssues()) {
-                if (mScope.containsAll(issue.getScope())) {
-                    hasValidScope = true;
-                    break;
-                }
-            }
-            if (!hasValidScope) {
-                continue;
-            }
-            // A detector is enabled if at least one of its issues is enabled
-            EnumSet<Scope> scope = EnumSet.noneOf(Scope.class);
-            for (Issue issue : detector.getIssues()) {
-                if (mToolContext.isEnabled(issue)) {
-                    scope.addAll(issue.getScope());
-                }
-            }
-            // Only run those detectors whose scope are matched by the current analysis context:
-            scope.removeAll(missingScopes);
-            if (scope.size() > 0) {
-                checks.add(detector);
-                for (Scope s : scope) {
-                    List<Detector> detectors = mApplicableDetectors.get(s);
-                    if (detectors == null) {
-                        detectors = new ArrayList<Detector>();
-                        mApplicableDetectors.put(s, detectors);
-                    }
-                    detectors.add(detector);
-                }
-            }
-        }
-
-        validateScopeList();
+        fireEvent(EventType.STARTING, null);
 
         for (Project project : projects) {
-            checkProject(project, checks);
+            // The set of available detectors varies between projects
+            computeDetectors(project);
+
+            checkProject(project);
             if (mCanceled) {
-                return;
+                break;
             }
         }
+
+        fireEvent(mCanceled ? EventType.CANCELED : EventType.COMPLETED, null);
+    }
+
+    private void computeDetectors(Project project) {
+        Configuration configuration = project.getConfiguration();
+        mScopeDetectors = new HashMap<Scope, List<Detector>>();
+        mApplicableDetectors = mRegistry.createDetectors(mClient, configuration,
+                mScope, mScopeDetectors);
+
+        validateScopeList();
     }
 
     /** Development diagnostics only, run with assertions on */
@@ -173,33 +154,33 @@ public class Lint {
         boolean assertionsEnabled = false;
         assert assertionsEnabled = true; // Intentional side-effect
         if (assertionsEnabled) {
-            List<Detector> resourceFileDetectors = mApplicableDetectors.get(Scope.RESOURCE_FILE);
+            List<Detector> resourceFileDetectors = mScopeDetectors.get(Scope.RESOURCE_FILE);
             if (resourceFileDetectors != null) {
                 for (Detector detector : resourceFileDetectors) {
                     assert detector instanceof ResourceXmlDetector : detector;
                 }
             }
 
-            List<Detector> manifestDetectors = mApplicableDetectors.get(Scope.MANIFEST);
+            List<Detector> manifestDetectors = mScopeDetectors.get(Scope.MANIFEST);
             if (manifestDetectors != null) {
                 for (Detector detector : manifestDetectors) {
                     assert detector instanceof Detector.XmlScanner : detector;
                 }
             }
-            List<Detector> javaCodeDetectors = mApplicableDetectors.get(Scope.ALL_JAVA_FILES);
+            List<Detector> javaCodeDetectors = mScopeDetectors.get(Scope.ALL_JAVA_FILES);
             if (javaCodeDetectors != null) {
                 for (Detector detector : javaCodeDetectors) {
                     assert detector instanceof Detector.JavaScanner : detector;
                 }
             }
-            List<Detector> javaFileDetectors = mApplicableDetectors.get(Scope.JAVA_FILE);
+            List<Detector> javaFileDetectors = mScopeDetectors.get(Scope.JAVA_FILE);
             if (javaFileDetectors != null) {
                 for (Detector detector : javaFileDetectors) {
                     assert detector instanceof Detector.JavaScanner : detector;
                 }
             }
 
-            List<Detector> classDetectors = mApplicableDetectors.get(Scope.CLASS_FILE);
+            List<Detector> classDetectors = mScopeDetectors.get(Scope.CLASS_FILE);
             if (classDetectors != null) {
                 for (Detector detector : classDetectors) {
                     assert detector instanceof Detector.ClassScanner : detector;
@@ -212,7 +193,8 @@ public class Lint {
             File projectDir, File rootDir) {
         Project project = fileToProject.get(projectDir);
         if (project == null) {
-            project = new Project(mToolContext, projectDir, rootDir);
+            project = new Project(mClient, projectDir, rootDir);
+            project.setConfiguration(mClient.getConfiguration(project));
         }
         fileToProject.put(file, project);
     }
@@ -304,11 +286,14 @@ public class Lint {
         return new File(dir, ANDROID_MANIFEST_XML).exists();
     }
 
-    private void checkProject(Project project, List<Detector> checks) {
+    private void checkProject(Project project) {
+
         File projectDir = project.getDir();
 
-        Context projectContext = new Context(mToolContext, project, projectDir, mScope);
-        for (Detector check : checks) {
+        Context projectContext = new Context(mClient, project, projectDir, mScope);
+        fireEvent(EventType.SCANNING_PROJECT, projectContext);
+
+        for (Detector check : mApplicableDetectors) {
             check.beforeCheckProject(projectContext);
             if (mCanceled) {
                 return;
@@ -317,7 +302,7 @@ public class Lint {
 
         runFileDetectors(project, projectDir);
 
-        for (Detector check : checks) {
+        for (Detector check : mApplicableDetectors) {
             check.afterCheckProject(projectContext);
             if (mCanceled) {
                 return;
@@ -325,12 +310,12 @@ public class Lint {
         }
 
         if (mCanceled) {
-            mToolContext.report(
+            mClient.report(
                 projectContext,
                 // Must provide an issue since API guarantees that the issue parameter
                 // is valid
-                Issue.create("dummy", "", "", "", 0, Severity.INFORMATIONAL, //$NON-NLS-1$
-                        EnumSet.noneOf(Scope.class)),
+                Issue.create("Lint", "", "", Category.PERFORMANCE, 0, Severity.INFORMATIONAL, //$NON-NLS-1$
+                        null, EnumSet.noneOf(Scope.class)),
                 null /*range*/,
                 "Lint canceled by user", null);
         }
@@ -339,13 +324,14 @@ public class Lint {
     private void runFileDetectors(Project project, File projectDir) {
         // Look up manifest information
         if (mScope.contains(Scope.MANIFEST)) {
-            List<Detector> detectors = mApplicableDetectors.get(Scope.MANIFEST);
+            List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
             if (detectors != null) {
                 File file = new File(project.getDir(), ANDROID_MANIFEST_XML);
                 if (file.exists()) {
-                    Context context = new Context(mToolContext, project, file, mScope);
+                    Context context = new Context(mClient, project, file, mScope);
                     context.location = new Location(file, null, null);
-                    XmlVisitor v = new XmlVisitor(mToolContext.getParser(), detectors);
+                    XmlVisitor v = new XmlVisitor(mClient.getParser(), detectors);
+                    fireEvent(EventType.SCANNING_FILE, context);
                     v.visitFile(context, file);
                 }
             }
@@ -354,8 +340,8 @@ public class Lint {
         // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
         // in a single pass through the resource directories.
         if (mScope.contains(Scope.ALL_RESOURCE_FILES) || mScope.contains(Scope.RESOURCE_FILE)) {
-            List<Detector> checks = union(mApplicableDetectors.get(Scope.RESOURCE_FILE),
-                    mApplicableDetectors.get(Scope.ALL_RESOURCE_FILES));
+            List<Detector> checks = union(mScopeDetectors.get(Scope.RESOURCE_FILE),
+                    mScopeDetectors.get(Scope.ALL_RESOURCE_FILES));
             if (checks.size() > 0) {
                 List<ResourceXmlDetector> xmlDetectors =
                         new ArrayList<ResourceXmlDetector>(checks.size());
@@ -377,29 +363,42 @@ public class Lint {
             }
         }
 
+        if (mCanceled) {
+            return;
+        }
+
         if (mScope.contains(Scope.JAVA_FILE) || mScope.contains(Scope.ALL_JAVA_FILES)) {
-            List<Detector> checks = union(mApplicableDetectors.get(Scope.JAVA_FILE),
-                    mApplicableDetectors.get(Scope.ALL_JAVA_FILES));
+            List<Detector> checks = union(mScopeDetectors.get(Scope.JAVA_FILE),
+                    mScopeDetectors.get(Scope.ALL_JAVA_FILES));
             if (checks.size() > 0) {
                 List<File> sourceFolders = project.getJavaSourceFolders();
                 checkJava(project, sourceFolders, checks);
             }
         }
 
+        if (mCanceled) {
+            return;
+        }
+
         if (mScope.contains(Scope.CLASS_FILE)) {
-            List<Detector> detectors = mApplicableDetectors.get(Scope.CLASS_FILE);
+            List<Detector> detectors = mScopeDetectors.get(Scope.CLASS_FILE);
             if (detectors != null) {
                 List<File> binFolders = project.getJavaClassFolders();
                 checkClasses(project, binFolders, detectors);
             }
         }
 
+        if (mCanceled) {
+            return;
+        }
+
         if (mScope.contains(Scope.PROGUARD)) {
-            List<Detector> detectors = mApplicableDetectors.get(Scope.PROGUARD);
+            List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD);
             if (detectors != null) {
                 File file = new File(project.getDir(), PROGUARD_CFG);
                 if (file.exists()) {
-                    Context context = new Context(mToolContext, project, file, mScope);
+                    Context context = new Context(mClient, project, file, mScope);
+                    fireEvent(EventType.SCANNING_FILE, context);
                     context.location = new Location(file, null, null);
                     for (Detector detector : detectors) {
                         if (detector.appliesTo(context, file)) {
@@ -430,7 +429,8 @@ public class Lint {
     }
 
     private void checkClasses(Project project, List<File> binFolders, List<Detector> checks) {
-        Context context = new Context(mToolContext, project, project.getDir(), mScope);
+        Context context = new Context(mClient, project, project.getDir(), mScope);
+        fireEvent(EventType.SCANNING_FILE, context);
         for (Detector detector : checks) {
             ((Detector.ClassScanner) detector).checkJavaClasses(context);
 
@@ -441,7 +441,8 @@ public class Lint {
     }
 
     private void checkJava(Project project, List<File> sourceFolders, List<Detector> checks) {
-        Context context = new Context(mToolContext, project, project.getDir(), mScope);
+        Context context = new Context(mClient, project, project.getDir(), mScope);
+        fireEvent(EventType.SCANNING_FILE, context);
 
         for (Detector detector : checks) {
             ((Detector.JavaScanner) detector).checkJavaSources(context, sourceFolders);
@@ -479,7 +480,7 @@ public class Lint {
                 return null;
             }
 
-            mCurrentVisitor = new XmlVisitor(mToolContext.getParser(), applicableChecks);
+            mCurrentVisitor = new XmlVisitor(mClient.getParser(), applicableChecks);
         }
 
         return mCurrentVisitor;
@@ -517,9 +518,10 @@ public class Lint {
             XmlVisitor visitor = getVisitor(type, checks);
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
-                    if (ResourceXmlDetector.isXmlFile(file)) {
-                        Context context = new Context(mToolContext, project, file,
+                    if (LintUtils.isXmlFile(file)) {
+                        Context context = new Context(mClient, project, file,
                                 mScope);
+                        fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {
                             return;
@@ -544,18 +546,19 @@ public class Lint {
                     // Yes
                     checkResFolder(project, file, xmlDetectors);
                 } else {
-                    mToolContext.log(null, "Unexpected folder %1$s; should be project, " +
+                    mClient.log(null, "Unexpected folder %1$s; should be project, " +
                             "\"res\" folder or resource folder", file.getPath());
                     continue;
                 }
-            } else if (file.isFile() && ResourceXmlDetector.isXmlFile(file)) {
+            } else if (file.isFile() && LintUtils.isXmlFile(file)) {
                 // Yes, find out its resource type
                 String folderName = file.getParentFile().getName();
                 ResourceFolderType type = ResourceFolderType.getFolderType(folderName);
                 if (type != null) {
                     XmlVisitor visitor = getVisitor(type, xmlDetectors);
                     if (visitor != null) {
-                        Context context = new Context(mToolContext, project, file, mScope);
+                        Context context = new Context(mClient, project, file, mScope);
+                        fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                     }
                 }
@@ -564,12 +567,107 @@ public class Lint {
     }
 
     /**
-     * Returns the associated tool context for the surrounding tool that is
-     * embedding lint analysis
+     * Adds a listener to be notified of lint progress
      *
-     * @return the surrounding tool context
+     * @param listener the listener to be added
      */
-    public ToolContext getToolContext() {
-        return mToolContext;
+    public void addLintListener(LintListener listener) {
+        if (mListeners == null) {
+            mListeners = new ArrayList<LintListener>(1);
+        }
+        mListeners.add(listener);
+    }
+
+    /**
+     * Removes a listener such that it is no longer notified of progress
+     *
+     * @param listener the listener to be removed
+     */
+    public void removeLintListener(LintListener listener) {
+        mListeners.remove(listener);
+        if (mListeners.size() == 0) {
+            mListeners = null;
+        }
+    }
+
+    /** Notifies listeners, if any, that the given event has occurred */
+    private void fireEvent(LintListener.EventType type, Context context) {
+        if (mListeners != null) {
+            for (int i = 0, n = mListeners.size(); i < n; i++) {
+                LintListener listener = mListeners.get(i);
+                listener.update(type, context);
+            }
+        }
+    }
+
+    /**
+     * Wrapper around the lint client. This sits in the middle between a
+     * detector calling for example
+     * {@link LintClient#report(Context, Issue, Location, String, Object)} and
+     * the actual embedding tool, and performs filtering etc such that detectors
+     * and lint clients don't have to make sure they check for ignored issues or
+     * filtered out warnings.
+     */
+    private static class LintClientWrapper extends LintClient {
+        private LintClient mDelegate;
+
+        public LintClientWrapper(LintClient delegate) {
+            mDelegate = delegate;
+        }
+
+        @Override
+        public void report(Context context, Issue issue, Location location, String message,
+                Object data) {
+            Configuration configuration = context.configuration;
+            if (!configuration.isEnabled(issue)) {
+                mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
+                        issue.toString());
+                return;
+            }
+
+            if (configuration.isIgnored(context, issue, location, message, data)) {
+                return;
+            }
+
+            Severity severity = configuration.getSeverity(issue);
+            if (severity == Severity.IGNORE) {
+                return;
+            }
+
+            mDelegate.report(context, issue, location, message, data);
+        }
+
+        // Everything else just delegates to the embedding lint client
+
+        @Override
+        public Configuration getConfiguration(Project project) {
+            return mDelegate.getConfiguration(project);
+        }
+
+
+        @Override
+        public void log(Throwable exception, String format, Object... args) {
+            mDelegate.log(exception, format, args);
+        }
+
+        @Override
+        public IDomParser getParser() {
+            return mDelegate.getParser();
+        }
+
+        @Override
+        public String readFile(File file) {
+            return mDelegate.readFile(file);
+        }
+
+        @Override
+        public List<File> getJavaSourceFolders(Project project) {
+            return mDelegate.getJavaSourceFolders(project);
+        }
+
+        @Override
+        public List<File> getJavaClassFolders(Project project) {
+            return mDelegate.getJavaClassFolders(project);
+        }
     }
 }

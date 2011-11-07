@@ -16,10 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.LintConstants.ANDROID_MANIFEST_XML;
-import static com.android.tools.lint.checks.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.checks.LintConstants.TAG_USES_PERMISSION;
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_PERMISSION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -50,7 +52,11 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
             "themes not getting applied correctly) when the <application> tag appears " +
             "before some of these other elements, so it's best to order your" +
             "manifest in the logical dependency order.",
-            CATEGORY_CORRECTNESS, 5, Severity.WARNING, EnumSet.of(Scope.MANIFEST));
+            Category.CORRECTNESS,
+            5,
+            Severity.WARNING,
+            ManifestOrderDetector.class,
+            EnumSet.of(Scope.MANIFEST));
 
     /** Constructs a new accessibility check */
     public ManifestOrderDetector() {
@@ -59,14 +65,10 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
     private boolean mSeenApplication;
 
     @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
-    }
-
-    @Override
     public Speed getSpeed() {
         return Speed.FAST;
     }
+
     @Override
     public boolean appliesTo(Context context, File file) {
         return file.getName().equals(ANDROID_MANIFEST_XML);
@@ -87,7 +89,7 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
                 "permission",              //$NON-NLS-1$
                 "permission-tree",         //$NON-NLS-1$
                 "permission-group",        //$NON-NLS-1$
-                "uses-sdk",                //$NON-NLS-1$
+                TAG_USES_SDK,
                 "uses-configuration",      //$NON-NLS-1$
                 "uses-feature",            //$NON-NLS-1$
                 "supports-screens",        //$NON-NLS-1$
@@ -102,7 +104,7 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
         } else if (mSeenApplication) {
-            context.toolContext.report(context, ISSUE, context.getLocation(element),
+            context.client.report(context, ISSUE, context.getLocation(element),
                     String.format("<%1$s> tag appears after <application> tag", tag), null);
 
             // Don't complain for *every* element following the <application> tag

@@ -17,15 +17,17 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.PositionXmlParser;
-import com.android.tools.lint.api.DetectorRegistry;
-import com.android.tools.lint.api.IDomParser;
-import com.android.tools.lint.api.Lint;
-import com.android.tools.lint.api.ToolContext;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.Lint;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.BufferedReader;
@@ -49,12 +51,25 @@ import junit.framework.TestCase;
 abstract class AbstractCheckTest extends TestCase {
     protected abstract Detector getDetector();
 
-    private class CustomDetectorRegistry extends DetectorRegistry {
+    protected List<Issue> getIssues() {
+        List<Issue> issues = new ArrayList<Issue>();
+        Class<? extends Detector> detectorClass = getDetector().getClass();
+        // Get the list of issues from the registry and filter out others, to make sure
+        // issues are properly registered
+        List<Issue> candidates = new BuiltinIssueRegistry().getIssues();
+        for (Issue issue : candidates) {
+            if (issue.getDetectorClass() == detectorClass) {
+                issues.add(issue);
+            }
+        }
+
+        return issues;
+    }
+
+    private class CustomIssueRegistry extends IssueRegistry {
         @Override
-        public List<? extends Detector> getDetectors() {
-            List<Detector> detectors = new ArrayList<Detector>(1);
-            detectors.add(AbstractCheckTest.this.getDetector());
-            return detectors;
+        public List<Issue> getIssues() {
+            return AbstractCheckTest.this.getIssues();
         }
     }
 
@@ -73,12 +88,11 @@ abstract class AbstractCheckTest extends TestCase {
 
     protected String checkLint(List<File> files) throws Exception {
         mOutput = new StringBuilder();
-        TestToolContext toolContext = new TestToolContext();
-        Lint analyzer = new Lint(new CustomDetectorRegistry(), toolContext,
-                null);
-        analyzer.analyze(files);
+        TestLintClient lintClient = new TestLintClient();
+        Lint analyzer = new Lint(new CustomIssueRegistry(), lintClient);
+        analyzer.analyze(files, null /* scope */);
 
-        List<String> errors = toolContext.getErrors();
+        List<String> errors = lintClient.getErrors();
         Collections.sort(errors);
         for (String error : errors) {
             if (mOutput.length() > 0) {
@@ -140,9 +154,9 @@ abstract class AbstractCheckTest extends TestCase {
                 base = new File("/tmp");
             }
             Calendar c = Calendar.getInstance();
-            String name = String.format("lintTests_%1$tF_%1$tT", c).replace(':', '-'); //$NON-NLS-1$
+            String name = String.format("lintTests/%1$tF_%1$tT", c).replace(':', '-'); //$NON-NLS-1$
             File tmpDir = new File(base, name);
-            if (!tmpDir.exists() && tmpDir.mkdir()) {
+            if (!tmpDir.exists() && tmpDir.mkdirs()) {
                 sTempDir = tmpDir;
             } else {
                 sTempDir = base;
@@ -231,10 +245,15 @@ abstract class AbstractCheckTest extends TestCase {
     }
 
     protected boolean isEnabled(Issue issue) {
+        Class<? extends Detector> detectorClass = getDetector().getClass();
+        if (issue.getDetectorClass() == detectorClass) {
+            return true;
+        }
+
         return false;
     }
 
-    private class TestToolContext extends ToolContext {
+    private class TestLintClient extends LintClient {
         private List<String> mErrors = new ArrayList<String>();
 
         public List<String> getErrors() {
@@ -263,7 +282,7 @@ abstract class AbstractCheckTest extends TestCase {
                 sb.append(' ');
             }
 
-            Severity severity = getSeverity(issue);
+            Severity severity = context.configuration.getSeverity(issue);
             sb.append(severity.getDescription());
             sb.append(": ");
 
@@ -292,28 +311,6 @@ abstract class AbstractCheckTest extends TestCase {
         }
 
         @Override
-        public boolean isEnabled(Issue issue) {
-            for (Issue detectorIssue : getDetector().getIssues()) {
-                if (issue == detectorIssue) {
-                    return true;
-                }
-            }
-
-            return AbstractCheckTest.this.isEnabled(issue);
-        }
-
-        @Override
-        public boolean isSuppressed(Context context, Issue issue, Location range, String message,
-                Severity severity, Object data) {
-            return false;
-        }
-
-        @Override
-        public Severity getSeverity(Issue issue) {
-            return issue.getDefaultSeverity();
-        }
-
-        @Override
         public String readFile(File file) {
             try {
                 return AbstractCheckTest.readFile(new FileReader(file));
@@ -321,6 +318,29 @@ abstract class AbstractCheckTest extends TestCase {
                 fail(e.toString());
             }
             return null;
+        }
+
+        @Override
+        public Configuration getConfiguration(Project project) {
+            return new TestConfiguration();
+        }
+    }
+
+    public class TestConfiguration extends Configuration {
+        @Override
+        public boolean isEnabled(Issue issue) {
+            return AbstractCheckTest.this.isEnabled(issue);
+        }
+
+        @Override
+        public void ignore(Context context, Issue issue, Location location, String message,
+                Object data) {
+            fail("Not supported in tests.");
+        }
+
+        @Override
+        public void setSeverity(Issue issue, Severity severity) {
+            fail("Not supported in tests.");
         }
     }
 }

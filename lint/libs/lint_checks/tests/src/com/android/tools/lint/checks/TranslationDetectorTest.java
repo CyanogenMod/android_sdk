@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.LintUtils;
 
 import java.util.Arrays;
 
@@ -68,19 +69,5 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-es-rUS/strings.xml",
                  "res/values-land/strings.xml",
                  "res/values-nl-rNL/strings.xml"));
-    }
-
-    public void testPrintList() throws Exception {
-        assertEquals("foo, bar, baz",
-                TranslationDetector.formatList(Arrays.asList("foo", "bar", "baz"), 3));
-        assertEquals("foo, bar, baz",
-                TranslationDetector.formatList(Arrays.asList("foo", "bar", "baz"), 5));
-
-        assertEquals("foo, bar, baz... (3 more)",
-                TranslationDetector.formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 3));
-        assertEquals("foo... (5 more)",
-                TranslationDetector.formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1));
     }
 }

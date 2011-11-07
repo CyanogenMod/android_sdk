@@ -16,6 +16,17 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_BOTTOM;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_LEFT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_RIGHT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PADDING_TOP;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PARENT;
+import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
+
 import com.android.resources.ResourceFolderType;
 
 import org.w3c.dom.Element;
@@ -28,57 +39,6 @@ import org.w3c.dom.Element;
  * to adjust your code for the next tools release.</b>
  */
 public abstract class LayoutDetector extends ResourceXmlDetector {
-    // Layouts
-    protected static final String FRAME_LAYOUT = "FrameLayout";           //$NON-NLS-1$
-    protected static final String LINEAR_LAYOUT = "LinearLayout";         //$NON-NLS-1$
-    protected static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
-    protected static final String GALLERY = "Gallery";                    //$NON-NLS-1$
-    protected static final String GRID_VIEW = "GridView";                 //$NON-NLS-1$
-    protected static final String EDIT_TEXT = "EditText";                 //$NON-NLS-1$
-    protected static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
-    protected static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
-    protected static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
-    protected static final String IMAGE_BUTTON = "ImageButton";           //$NON-NLS-1$
-    protected static final String INCLUDE = "include";                    //$NON-NLS-1$
-    protected static final String MERGE = "merge";                        //$NON-NLS-1$
-    protected static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
-
-    // Attributes
-    protected static final String ATTR_ID = "id";                         //$NON-NLS-1$
-    protected static final String ATTR_TEXT = "text";                     //$NON-NLS-1$
-    protected static final String ATTR_LABEL = "label";                   //$NON-NLS-1$
-    protected static final String ATTR_HINT = "hint";                     //$NON-NLS-1$
-    protected static final String ATTR_PROMPT = "prompt";                 //$NON-NLS-1$
-    protected static final String ATTR_INPUT_TYPE = "inputType";          //$NON-NLS-1$
-    protected static final String ATTR_INPUT_METHOD = "inputMethod";      //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_GRAVITY = "layout_gravity"; //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_WIDTH = "layout_width";     //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_HEIGHT = "layout_height";   //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_WEIGHT = "layout_weight";   //$NON-NLS-1$
-    protected static final String ATTR_PADDING = "padding";               //$NON-NLS-1$
-    protected static final String ATTR_PADDING_BOTTOM = "paddingBottom";  //$NON-NLS-1$
-    protected static final String ATTR_PADDING_TOP = "paddingTop";        //$NON-NLS-1$
-    protected static final String ATTR_PADDING_RIGHT = "paddingRight";    //$NON-NLS-1$
-    protected static final String ATTR_PADDING_LEFT = "paddingLeft";      //$NON-NLS-1$
-    protected static final String ATTR_FOREGROUND = "foreground";         //$NON-NLS-1$
-    protected static final String ATTR_BACKGROUND = "background";         //$NON-NLS-1$
-    protected static final String ATTR_ORIENTATION = "orientation";       //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT = "layout";                 //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_ROW = "layout_row";         //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";//$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_COLUMN = "layout_column";   //$NON-NLS-1$
-    protected static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
-    protected static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
-    protected static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan"; //$NON-NLS-1$
-    protected static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
-
-
-    // Attribute values
-    protected static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$
-    protected static final String VALUE_MATCH_PARENT = "match_parent";     //$NON-NLS-1$
-    protected static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
-    protected static final String VALUE_LAYOUT_PREFIX = "@layout/";        //$NON-NLS-1$
-
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
         return folderType == ResourceFolderType.LAYOUT;

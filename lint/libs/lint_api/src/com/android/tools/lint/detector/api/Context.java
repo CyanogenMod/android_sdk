@@ -16,8 +16,9 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.tools.lint.api.IDomParser;
-import com.android.tools.lint.api.ToolContext;
+import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.LintClient;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -44,7 +45,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Context {
     public final Project project;
     public final File file;
-    public final ToolContext toolContext;
+    public final LintClient client;
+    public final Configuration configuration;
     public final EnumSet<Scope> scope;
     public Document document;
     public Location location;
@@ -60,11 +62,14 @@ public class Context {
 
     private Map<String, Object> properties;
 
-    public Context(ToolContext toolContext, Project project, File file, EnumSet<Scope> scope) {
-        this.toolContext = toolContext;
+    public Context(LintClient client, Project project, File file,
+            EnumSet<Scope> scope) {
+        this.client = client;
         this.project = project;
         this.file = file;
         this.scope = scope;
+
+        this.configuration = project.getConfiguration();
     }
 
     public Location getLocation(Node node) {
@@ -87,7 +92,7 @@ public class Context {
     // TODO: This should be delegated to the tool context!
     public String getContents() {
         if (contents == null) {
-            contents = toolContext.readFile(file);
+            contents = client.readFile(file);
         }
 
         return contents;

@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.resources.FolderTypeRelationship;
-import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -57,7 +57,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
             "Looks for unused resources",
             "Unused resources make applications larger and slow down builds.",
-            CATEGORY_PERFORMANCE, 3, Severity.WARNING,
+            Category.PERFORMANCE,
+            3,
+            Severity.WARNING,
+            UnusedResourceDetector.class,
             EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES));
     /** Unused id's */
     public static final Issue ISSUE_IDS = Issue.create("UnusedIds", //$NON-NLS-1$
@@ -66,7 +69,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             "from anywhere. Having id definitions, even if unused, is not necessarily a bad " +
             "idea since they make working on layouts and menus easier, so there is not a " +
             "strong reason to delete these.",
-            CATEGORY_PERFORMANCE, 1, Severity.WARNING,
+            Category.PERFORMANCE,
+            1,
+            Severity.WARNING,
+            UnusedResourceDetector.class,
             EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES))
             .setEnabledByDefault(false);
 
@@ -80,11 +86,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
      * Constructs a new {@link UnusedResourceDetector}
      */
     public UnusedResourceDetector() {
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { ISSUE };
     }
 
     @Override
@@ -109,14 +110,16 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         // TODO: Look up from project metadata
         File src = new File(context.project.getDir(), "src"); //$NON-NLS-1$
         if (!src.exists()) {
-            context.toolContext.log(null, "Did not find source folder in project");
+            context.client.log(null, "Did not find source folder in project %1$s",
+                    context.project.getDir());
         } else {
             scanJavaFile(context, src);
         }
 
         File gen = new File(context.project.getDir(), "gen"); //$NON-NLS-1$
         if (!gen.exists()) {
-            context.toolContext.log(null, "Did not find gen folder in project");
+            context.client.log(null, "Did not find gen folder in project %1$s",
+                    context.project.getDir());
         } else {
             scanJavaFile(context, gen);
         }
@@ -146,7 +149,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     private void addJavaDeclarations(Context context, File file) {
         // mDeclarations
-        String s = context.toolContext.readFile(file);
+        String s = context.client.readFile(file);
         String[] lines = s.split("\n"); //$NON-NLS-1$
         String currentType = null;
         for (int i = 0; i < lines.length; i++) {
@@ -183,7 +186,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
     /** Adds the resource identifiers found in the given file into the given set */
     private void addJavaReferences(Context context, File file) {
-        String s = context.toolContext.readFile(file);
+        String s = context.client.readFile(file);
         if (s.length() <= 2) {
             return;
         }
@@ -284,7 +287,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         mDeclarations.removeAll(mReferences);
         Set<String> unused = mDeclarations;
 
-        if (unused.size() > 0 && !context.toolContext.isEnabled(ISSUE_IDS)) {
+        if (unused.size() > 0 && !context.configuration.isEnabled(ISSUE_IDS)) {
             // Remove all R.id references
             List<String> ids = new ArrayList<String>();
             for (String resource : unused) {
@@ -309,11 +312,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 location = mAttrToLocation.get(attr);
                 if (location == null) {
                     File f = mAttrToFile.get(attr);
-                    Position start = context.toolContext.getParser().getStartPosition(context,
+                    Position start = context.client.getParser().getStartPosition(context,
                             attr);
                     Position end = null;
                     if (start != null) {
-                        end = context.toolContext.getParser().getEndPosition(context, attr);
+                        end = context.client.getParser().getEndPosition(context, attr);
                     }
                     location = new Location(f, start, end);
                 }
@@ -325,7 +328,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 int secondDot = resource.indexOf('.', 2);
                 String typeName = resource.substring(2, secondDot); // 2: Skip R.
                 ResourceType type = ResourceType.getEnum(typeName);
-                if (type != null && isFileBasedResourceType(type)) {
+                if (type != null && LintUtils.isFileBasedResourceType(type)) {
                     String name = resource.substring(secondDot + 1);
                     File file = new File(context.project.getDir(),
                             "res" + File.separator + typeName + File.separator + //$NON-NLS-1$
@@ -335,7 +338,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     }
                 }
             }
-            context.toolContext.report(context, ISSUE, location, message, resource);
+            context.client.report(context, ISSUE, location, message, resource);
         }
 
         mReferences = null;
@@ -344,21 +347,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         mIdToAttr = null;
         mDeclarations = null;
     }
-
-    /** Determine if the given type corresponds to a resource that has a unique file */
-    private static boolean isFileBasedResourceType(ResourceType type) {
-        List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
-        for (ResourceFolderType folderType : folderTypes) {
-            if (folderType != ResourceFolderType.VALUES) {
-                if (type == ResourceType.ID) {
-                    return false;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     @Override
     public Collection<String> getApplicableAttributes() {

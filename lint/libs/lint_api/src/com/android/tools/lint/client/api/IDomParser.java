@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.api;
+package com.android.tools.lint.client.api;
 
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
@@ -72,4 +72,10 @@ public interface IDomParser {
      * @return a location for the given node
      */
     public Location getLocation(Context context, Node node);
+
+    /**
+     * Dispose any data structures held for the given context.
+     * @param context information about the file previously parsed
+     */
+    public void dispose(Context context);
 }

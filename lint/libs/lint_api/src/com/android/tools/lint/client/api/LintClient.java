@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.api;
+package com.android.tools.lint.client.api;
 
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.Severity;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,9 +43,27 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
-public abstract class ToolContext {
+public abstract class LintClient {
     /**
-     * Report the given issue.
+     * Returns a configuration for use by the given project. The configuration
+     * provides information about which issues are enabled, any customizations
+     * to the severity of an issue, etc.
+     * <p>
+     * By default this method returns a {@link DefaultConfiguration}.
+     *
+     * @param project the project to obtain a configuration for
+     * @return a configuration, never null.
+     */
+    public Configuration getConfiguration(Project project) {
+        return DefaultConfiguration.create(this, project, null);
+    }
+
+    /**
+     * Report the given issue. This method will only be called if the configuration
+     * provided by {@link #getConfiguration(Project)} has reported the corresponding
+     * issue as enabled and has not filtered out the issue with its
+     * {@link Configuration#ignore(Context, Issue, Location, String, Object)} method.
+     * <p>
      *
      * @param context the context used by the detector when the issue was found
      * @param issue the issue that was found
@@ -62,27 +80,6 @@ public abstract class ToolContext {
             Object data);
 
     /**
-     * Checks whether this issue should be ignored because the user has already
-     * suppressed the error? Note that this refers to individual issues being
-     * suppressed/ignored, not a whole detector being disabled via something
-     * like {@link #isEnabled(Issue)}.
-     *
-     * @param context the context used by the detector when the issue was found
-     * @param issue the issue that was found
-     * @param location the location of the issue
-     * @param message the associated user message
-     * @param severity the severity of the issue
-     * @param data additional information about an issue (see
-     *            {@link #report(Context, Issue, Location, String, Object)} for
-     *            more information
-     * @return true if this issue should be suppressed
-     */
-    public boolean isSuppressed(Context context, Issue issue, Location location,
-            String message, Severity severity, Object data) {
-        return false;
-    }
-
-    /**
      * Send an exception to the log
      *
      * @param exception the exception, possibly null
@@ -92,33 +89,23 @@ public abstract class ToolContext {
     public abstract void log(Throwable exception, String format, Object... args);
 
     /**
+     * Returns an optimal detector, if applicable. By default, just returns the
+     * original detector, but tools can replace detectors using this hook with a version
+     * that takes advantage of native capabilities of the tool.
+     *
+     * @param detectorClass the class of the detector to be replaced
+     * @return the new detector class, or just the original detector (not null)
+     */
+    public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+        return detectorClass;
+    }
+
+    /**
      * Returns a {@link IDomParser} to use to parse XML
      *
      * @return a new {@link IDomParser}
      */
     public abstract IDomParser getParser();
-
-    /**
-     * Returns false if the given issue has been disabled
-     *
-     * @param issue the issue to check
-     * @return false if the issue has been disabled
-     */
-    public boolean isEnabled(Issue issue) {
-        return true;
-    }
-
-    /**
-     * Returns the severity for a given issue. This is the same as the
-     * {@link Issue#getDefaultSeverity()} unless the user has selected a custom
-     * severity (which is tool context dependent).
-     *
-     * @param issue the issue to look up the severity from
-     * @return the severity use for issues for the given detector
-     */
-    public Severity getSeverity(Issue issue) {
-        return issue.getDefaultSeverity();
-    }
 
     /**
      * Reads the given text file and returns the content as a string

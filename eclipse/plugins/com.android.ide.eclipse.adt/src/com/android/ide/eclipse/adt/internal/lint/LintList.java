@@ -21,7 +21,7 @@ import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
-import com.android.tools.lint.api.DetectorRegistry;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 
 import org.eclipse.core.resources.IFile;
@@ -172,7 +172,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         List<IMarker> markerList = new ArrayList<IMarker>();
         if (mResources != null) {
             for (IResource resource : mResources) {
-                IMarker[] markers = LintEclipseContext.getMarkers(resource);
+                IMarker[] markers = EclipseLintClient.getMarkers(resource);
                 for (IMarker marker : markers) {
                     markerList.add(marker);
                     int severity = marker.getAttribute(IMarker.SEVERITY, 0);
@@ -184,14 +184,14 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                 }
             }
 
-            final DetectorRegistry registry = LintEclipseContext.getRegistry();
+            final IssueRegistry registry = EclipseLintClient.getRegistry();
             Collections.sort(markerList, new Comparator<IMarker>() {
 
                 public int compare(IMarker marker1, IMarker marker2) {
                     // Sort by priority, then by category, then by id,
                     // then by file, then by line
-                    String id1 = LintEclipseContext.getId(marker1);
-                    String id2 = LintEclipseContext.getId(marker2);
+                    String id1 = EclipseLintClient.getId(marker1);
+                    String id2 = EclipseLintClient.getId(marker2);
                     if (id1 == null || id2 == null) {
                         return marker1.getResource().getName().compareTo(
                                 marker2.getResource().getName());
@@ -299,12 +299,12 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             switch (severity) {
                 case IMarker.SEVERITY_ERROR:
-                    if (LintFix.hasFix(LintEclipseContext.getId(marker))) {
+                    if (LintFix.hasFix(EclipseLintClient.getId(marker))) {
                         return IconFactory.getInstance().getIcon("quickfix_error");   //$NON-NLS-1$
                     }
                     return sharedImages.getImage(ISharedImages.IMG_OBJS_ERROR_TSK);
                 case IMarker.SEVERITY_WARNING:
-                    if (LintFix.hasFix(LintEclipseContext.getId(marker))) {
+                    if (LintFix.hasFix(EclipseLintClient.getId(marker))) {
                         return IconFactory.getInstance().getIcon("quickfix_warning"); //$NON-NLS-1$
                     }
                     return sharedImages.getImage(ISharedImages.IMG_OBJS_WARN_TSK);

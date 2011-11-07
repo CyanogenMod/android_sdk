@@ -18,8 +18,10 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -72,7 +74,11 @@ public class TranslationDetector extends ResourceXmlDetector {
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
             "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
-            CATEGORY_CORRECTNESS, 8, Severity.ERROR, Scope.ALL_RESOURCES_SCOPE);
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            TranslationDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
 
     /** Are there extra translations that are "unused" (appear only in specific languages) ? */
     public static final Issue EXTRA = Issue.create(
@@ -82,7 +88,11 @@ public class TranslationDetector extends ResourceXmlDetector {
             "no corresponding string in the default locale, then this string is probably " +
             "unused. (It's technically possible that your application is only intended to " +
             "run in a specific locale, but it's still a good idea to provide a fallback.)",
-            CATEGORY_CORRECTNESS, 6, Severity.WARNING, Scope.ALL_RESOURCES_SCOPE);
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            TranslationDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
 
     private Set<String> mNames;
     private boolean mIgnoreFile;
@@ -95,11 +105,6 @@ public class TranslationDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
-    }
-
-    @Override
-    public Issue[] getIssues() {
-        return new Issue[] { MISSING, EXTRA };
     }
 
     @Override
@@ -163,8 +168,8 @@ public class TranslationDetector extends ResourceXmlDetector {
             return;
         }
 
-        boolean reportMissing = context.toolContext.isEnabled(MISSING);
-        boolean reportExtra = context.toolContext.isEnabled(EXTRA);
+        boolean reportMissing = context.configuration.isEnabled(MISSING);
+        boolean reportExtra = context.configuration.isEnabled(EXTRA);
 
         // res/strings.xml etc
         String defaultLanguage = "Default";
@@ -299,26 +304,26 @@ public class TranslationDetector extends ResourceXmlDetector {
             // defined in other languages, so there's no problem.
             if (stringCount != strings.size()) {
                 if (reportMissing) {
-                    Set<String> difference = difference(defaultStrings, strings);
+                    Set<String> difference = LintUtils.difference(defaultStrings, strings);
                     if (difference.size() > 0) {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
-                        context.toolContext.report(context, MISSING, location,
+                        context.client.report(context, MISSING, location,
                             String.format("Locale %1$s is missing translations for: %2$s",
-                                language, formatList(sorted, 4)), null);
+                                language, LintUtils.formatList(sorted, 4)), null);
                     }
                 }
 
                 if (reportExtra) {
-                    Set<String> difference = difference(strings, defaultStrings);
+                    Set<String> difference = LintUtils.difference(strings, defaultStrings);
                     if (difference.size() > 0) {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
-                        context.toolContext.report(context, EXTRA, location, String.format(
+                        context.client.report(context, EXTRA, location, String.format(
                               "Locale %1$s is translating names not found in default locale: %2$s",
-                              language, formatList(sorted, 4)), null);
+                              language, LintUtils.formatList(sorted, 4)), null);
                     }
                 }
             }
@@ -337,30 +342,6 @@ public class TranslationDetector extends ResourceXmlDetector {
         return location;
     }
 
-    private static Set<String> difference(Set<String> a, Set<String> b) {
-        HashSet<String> copy = new HashSet<String>(a);
-        copy.removeAll(b);
-        return copy;
-    }
-
-    static String formatList(List<String> strings, int maxItems) {
-        StringBuilder sb = new StringBuilder(20 * strings.size());
-
-        for (int i = 0, n = strings.size(); i < n; i++) {
-            if (sb.length() > 0) {
-                sb.append(", "); //$NON-NLS-1$
-            }
-            sb.append(strings.get(i));
-
-            if (i == maxItems - 1 && n > maxItems) {
-                sb.append(String.format("... (%1$d more)", n - i - 1));
-                break;
-            }
-        }
-
-        return sb.toString();
-    }
-
     @Override
     public void visitElement(Context context, Element element) {
         if (mIgnoreFile) {
@@ -369,7 +350,7 @@ public class TranslationDetector extends ResourceXmlDetector {
 
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.toolContext.report(context, MISSING, context.getLocation(element),
+            context.client.report(context, MISSING, context.getLocation(element),
                     "Missing name attribute in <string> declaration", null);
         } else {
             String name = attribute.getValue();
@@ -379,12 +360,10 @@ public class TranslationDetector extends ResourceXmlDetector {
                 return;
             }
 
-            // TODO: Consider string-arrays as well?
-
             // Check for duplicate name definitions? No, because there can be
             // additional customizations like product=
             //if (mNames.contains(name)) {
-            //    context.toolContext.report(ISSUE, context.getLocation(attribute),
+            //    context.mClient.report(ISSUE, context.getLocation(attribute),
             //        String.format("Duplicate name %1$s, already defined earlier in this file",
             //            name));
             //}

@@ -27,7 +27,7 @@ public class ExportedServiceDetectorTest extends AbstractCheckTest {
 
     public void testBroken() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Export service does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
             lintProject(
                     "exportservice1.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
@@ -35,7 +35,7 @@ public class ExportedServiceDetectorTest extends AbstractCheckTest {
 
     public void testBroken2() throws Exception {
         assertEquals(
-            "AndroidManifest.xml:12: Warning: Export service does not require permission",
+            "AndroidManifest.xml:12: Warning: Exported service does not require permission",
             lintProject(
                     "exportservice1.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));

@@ -29,7 +29,7 @@ public class MainTest extends TestCase {
             "\n" +
             "* The application cannot be translated to other languages by just adding new " +
             "translations for existing string resources.";
-        String wrapped = Main.wrap(s, 70);
+        String wrapped = Main.wrap(s, 70, "");
         assertEquals(
             "Hardcoding text attributes directly in layout files is bad for several\n" +
             "reasons:\n" +
@@ -40,6 +40,29 @@ public class MainTest extends TestCase {
             "\n" +
             "* The application cannot be translated to other languages by just\n" +
             "adding new translations for existing string resources.\n",
+            wrapped);
+    }
+
+    public void testWrapPrefix() {
+        String s =
+            "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
+            "\n" +
+            "* When creating configuration variations (for example for landscape or portrait)" +
+            "you have to repeat the actual text (and keep it up to date when making changes)\n" +
+            "\n" +
+            "* The application cannot be translated to other languages by just adding new " +
+            "translations for existing string resources.";
+        String wrapped = Main.wrap(s, 70, "    ");
+        assertEquals(
+            "Hardcoding text attributes directly in layout files is bad for several\n" +
+            "    reasons:\n" +
+            "    \n" +
+            "    * When creating configuration variations (for example for\n" +
+            "    landscape or portrait)you have to repeat the actual text (and keep\n" +
+            "    it up to date when making changes)\n" +
+            "    \n" +
+            "    * The application cannot be translated to other languages by just\n" +
+            "    adding new translations for existing string resources.\n",
             wrapped);
     }
 }
