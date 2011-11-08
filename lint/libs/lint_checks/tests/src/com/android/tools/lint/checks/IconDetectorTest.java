@@ -53,4 +53,14 @@ public class IconDetectorTest extends AbstractCheckTest {
                     ));
     }
 
+    public void testNoDpi() throws Exception {
+        assertEquals(
+            "Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi\n" +
+            "frame.png: Warning: The following images appear in both -nodpi and in a density folder: frame.png\n" +
+            "frame.png: Warning: The frame.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable-nodpi, drawable-xlarge-nodpi-v11",
+            lintProject(
+                "res/drawable-mdpi/frame.png",
+                "res/drawable-nodpi/frame.png",
+                "res/drawable-xlarge-nodpi-v11/frame.png"));
+    }
 }
