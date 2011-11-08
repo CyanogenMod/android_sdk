@@ -317,10 +317,13 @@ public class Main extends LintClient {
 
             mReporter = new TextReporter(new PrintWriter(System.out, true));
         } else if (mReporter instanceof HtmlReporter) {
+            HtmlReporter htmlReporter = (HtmlReporter) mReporter;
+
             if (urlMap == null) {
                 // By default just map from /foo to file:///foo
                 // TODO: Find out if we need file:// on Windows.
                 urlMap = "=file://"; //$NON-NLS-1$
+                htmlReporter.setBundleResources(true);
             }
             Map<String, String> map = new HashMap<String, String>();
             String[] replace = urlMap.split(","); //$NON-NLS-1$
@@ -333,7 +336,7 @@ public class Main extends LintClient {
                 }
                 map.put(v[0], v[1]);
             }
-            ((HtmlReporter) mReporter).setUrlMap(map);
+            htmlReporter.setUrlMap(map);
         }
 
         Lint analyzer = new Lint(registry, this);
@@ -715,7 +718,7 @@ public class Main extends LintClient {
             switch (type) {
                 case SCANNING_PROJECT:
                     System.out.print(String.format(
-                            "Scanning %1$s: ",
+                            "\nScanning %1$s: ",
                             context.project.getDir().getName()));
                     break;
                 case SCANNING_FILE:

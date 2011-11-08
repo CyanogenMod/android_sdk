@@ -54,24 +54,23 @@ class Warning implements Comparable<Warning> {
     public int compareTo(Warning other) {
         // Sort by category, then by priority, then by id,
         // then by file, then by line
-        String id1 = issue.getId();
-        String id2 = other.issue.getId();
-        if (id1 == null || id2 == null) {
-            return file.getName().compareTo(
-                    other.file.getName());
-        }
         int categoryDelta = issue.getCategory().compareTo(other.issue.getCategory());
         if (categoryDelta != 0) {
             return categoryDelta;
+        }
+        String id1 = issue.getId();
+        String id2 = other.issue.getId();
+        if (id1 == null || id2 == null) {
+            return file.getName().compareTo(other.file.getName());
+        }
+        int idDelta = id1.compareTo(id2);
+        if (idDelta != 0) {
+            return idDelta;
         }
         // DECREASING priority order
         int priorityDelta = other.issue.getPriority() - issue.getPriority();
         if (priorityDelta != 0) {
             return priorityDelta;
-        }
-        int idDelta = id1.compareTo(id2);
-        if (idDelta != -1) {
-            return idDelta;
         }
         if (file != null && other.file != null) {
             int fileDelta = file.getName().compareTo(

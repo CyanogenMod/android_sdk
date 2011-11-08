@@ -23,7 +23,9 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_ZERO_DP;
+import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -35,10 +37,12 @@ import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringRefactoring;
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.tools.lint.checks.AccessibilityDetector;
+import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.ExportedServiceDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
+import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.detector.api.Issue;
@@ -48,6 +52,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Region;
@@ -174,6 +179,8 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(PxUsageDetector.ISSUE.getId(), ConvertToDpFix.class);
         sFixes.put(TextFieldDetector.ISSUE.getId(), SetInputTypeFix.class);
         sFixes.put(ExportedServiceDetector.ISSUE.getId(), PermissionFix.class);
+        sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
+        sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
     }
 
     public static boolean hasFix(String id) {
@@ -419,6 +426,47 @@ abstract class LintFix implements ICompletionProposal {
         }
     }
 
+    private static final class SetScrollViewSizeFix extends DocumentFix {
+        private SetScrollViewSizeFix(String id, IMarker marker) {
+            super(id, marker);
+        }
+
+        @Override
+        public boolean needsFocus() {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
+
+        @Override
+        protected void apply(IDocument document, IStructuredModel model, Node node, int start,
+                int end) {
+            if (node instanceof Element && node.getParentNode() instanceof Element) {
+                Element element = (Element) node;
+                Element parent = (Element) node.getParentNode();
+
+                boolean isHorizontal = HORIZONTAL_SCROLL_VIEW.equals(parent.getTagName());
+                String attributeName = isHorizontal ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
+                element.setAttributeNS(ANDROID_URI, attributeName, VALUE_WRAP_CONTENT);
+            }
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Replace size attribute with wrap_content";
+        }
+
+        @Override
+        public Image getImage() {
+            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+            // TODO: Need a better icon here
+            return sharedImages.getImage(ISharedImages.IMG_OBJ_ELEMENT);
+        }
+    }
+
     private static final class RemoveUselessViewFix extends DocumentFix {
         private RemoveUselessViewFix(String id, IMarker marker) {
             super(id, marker);
@@ -611,6 +659,44 @@ abstract class LintFix implements ICompletionProposal {
             }
 
             return null;
+        }
+    }
+
+    private static final class AddPrefixFix extends DocumentFix {
+        private AddPrefixFix(String id, IMarker marker) {
+            super(id, marker);
+        }
+
+        @Override
+        public boolean needsFocus() {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
+
+        @Override
+        protected void apply(IDocument document, IStructuredModel model, Node node, int start,
+                int end) {
+            String prefix = UiElementNode.lookupNamespacePrefix(node, ANDROID_URI);
+            try {
+                document.replace(start, 0, prefix + ':');
+            } catch (BadLocationException e) {
+                AdtPlugin.log(e, null);
+            }
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Add in an Android namespace prefix";
+        }
+
+        @Override
+        public Image getImage() {
+            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+            return sharedImages.getImage(ISharedImages.IMG_OBJ_ADD);
         }
     }
 }
