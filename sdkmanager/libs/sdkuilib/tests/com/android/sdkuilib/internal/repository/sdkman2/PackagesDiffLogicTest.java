@@ -379,6 +379,8 @@ public class PackagesDiffLogicTest extends TestCase {
         m.updateStart();
         MockPlatformPackage p1;
         MockPlatformPackage p2;
+        @SuppressWarnings("unused") // keep p3 for clarity
+        MockPlatformPackage p3;
 
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -386,8 +388,9 @@ public class PackagesDiffLogicTest extends TestCase {
                 new MockExtraPackage(src1, "android", "usb_driver", 4, 3),
                 // second update
                 p1 = new MockPlatformPackage(src1, 1, 2, 3),  // API 1
-                new MockPlatformPackage(src1, 3, 6, 3),
+                p3 = new MockPlatformPackage(src1, 3, 6, 3),
                 new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon D", p1, 10),
         }));
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -400,10 +403,15 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
                 new MockAddonPackage(src2, "addon C", p2, 9),
                 new MockAddonPackage(src2, "addon A", p1, 6),
+                // the rev 7+8 will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 7),
-                // the rev 8 update will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 8),
                 new MockAddonPackage(src2, "addon B", p2, 9),
+                // 11+12 should be ignored updates, 13 will update 10
+                new MockAddonPackage(src2, "addon D", p1, 10),
+                new MockAddonPackage(src2, "addon D", p1, 12),  // note: 12 listed before 11
+                new MockAddonPackage(src2, "addon D", p1, 11),
+                new MockAddonPackage(src2, "addon D", p1, 13),
         }));
         assertFalse(m.updateEnd(true /*sortByApi*/));
 
@@ -415,11 +423,12 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
                 "PkgCategoryApi <API=API 2, label=Android android-2 (API 2), #items=3>\n" +
                 "-- <NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
-                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
+                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
-                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
+                "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
@@ -435,8 +444,9 @@ public class PackagesDiffLogicTest extends TestCase {
                 new MockExtraPackage(src1, "android", "usb_driver", 4, 3),
                 // second update
                 p1 = new MockPlatformPackage(src1, 1, 2, 3),
-                new MockPlatformPackage(src1, 3, 6, 3),
+                p3 = new MockPlatformPackage(src1, 3, 6, 3),
                 new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon D", p1, 10),
         }));
         assertFalse(m.updateSourcePackages(true /*sortByApi*/, src1, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -449,12 +459,15 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateSourcePackages(true /*sortByApi*/, src2, new Package[] {
                 new MockAddonPackage(src2, "addon C", p2, 9),
                 new MockAddonPackage(src2, "addon A", p1, 6),
+                // the rev 7+8 will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 7),
-                // the rev 8 update will be ignored since there's a rev 9 coming after
-                // however as a side effect it makes the update method return true as it
-                // incorporated the update.
                 new MockAddonPackage(src2, "addon B", p2, 8),
                 new MockAddonPackage(src2, "addon B", p2, 9),
+                // 11+12 should be ignored updates, 13 will update 10
+                new MockAddonPackage(src2, "addon D", p1, 10),
+                new MockAddonPackage(src2, "addon D", p1, 12),  // note: 12 listed before 11
+                new MockAddonPackage(src2, "addon D", p1, 11),
+                new MockAddonPackage(src2, "addon D", p1, 13),
         }));
         assertFalse(m.updateEnd(true /*sortByApi*/));
 
@@ -466,11 +479,12 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-3, API 3, revision 6>\n" +
                 "PkgCategoryApi <API=API 2, label=Android android-2 (API 2), #items=3>\n" +
                 "-- <NEW, pkg:SDK Platform Android android-2, API 2, revision 4>\n" +
-                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
+                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
-                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=2>\n" +
+                "PkgCategoryApi <API=API 1, label=Android android-1 (API 1), #items=3>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
+                "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n" +
                 "PkgCategoryApi <API=EXTRAS, label=Extras, #items=2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n",
@@ -708,6 +722,8 @@ public class PackagesDiffLogicTest extends TestCase {
         m.updateStart();
         MockPlatformPackage p1;
         MockPlatformPackage p2;
+        @SuppressWarnings("unused") // keep p3 for clarity
+        MockPlatformPackage p3;
 
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, null /*locals*/, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -715,8 +731,10 @@ public class PackagesDiffLogicTest extends TestCase {
                 new MockExtraPackage(src1, "android", "usb_driver", 4, 3),
                 // second update
                 p1 = new MockPlatformPackage(src1, 1, 2, 3),  // API 1
+                p3 = new MockPlatformPackage(src1, 3, 6, 3),
                 new MockPlatformPackage(src1, 3, 6, 3),       // API 3
                 new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon D", p1, 10),
         }));
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, src1, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -729,10 +747,15 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, src2, new Package[] {
                 new MockAddonPackage(src2, "addon C", p2, 9),
                 new MockAddonPackage(src2, "addon A", p1, 6),
+                // the rev 7+8 will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 7),
-                // the rev 8 update will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 8),
                 new MockAddonPackage(src2, "addon B", p2, 9),
+                // 11+12 should be ignored updates, 13 will update 10
+                new MockAddonPackage(src2, "addon D", p1, 10),
+                new MockAddonPackage(src2, "addon D", p1, 12),  // note: 12 listed before 11
+                new MockAddonPackage(src2, "addon D", p1, 11),
+                new MockAddonPackage(src2, "addon D", p1, 13),
         }));
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
@@ -745,10 +768,11 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
-                "PkgCategorySource <source=repo2 (2.example.com), #items=3>\n" +
-                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
+                "PkgCategorySource <source=repo2 (2.example.com), #items=4>\n" +
+                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
-                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n",
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
+                "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n",
                 getTree(m, false /*displaySortByApi*/));
 
         // Reloading the same thing should have no impact except for the update methods
@@ -760,9 +784,11 @@ public class PackagesDiffLogicTest extends TestCase {
                 new MockPlatformToolPackage(src1, 3),
                 new MockExtraPackage(src1, "android", "usb_driver", 4, 3),
                 // second update
-                p1 = new MockPlatformPackage(src1, 1, 2, 3),
-                new MockPlatformPackage(src1, 3, 6, 3),
+                p1 = new MockPlatformPackage(src1, 1, 2, 3),  // API 1
+                p3 = new MockPlatformPackage(src1, 3, 6, 3),
+                new MockPlatformPackage(src1, 3, 6, 3),       // API 3
                 new MockAddonPackage(src2, "addon A", p1, 5),
+                new MockAddonPackage(src2, "addon D", p1, 10),
         }));
         assertFalse(m.updateSourcePackages(false /*sortByApi*/, src1, new Package[] {
                 new MockToolPackage(src1, 10, 3),
@@ -775,12 +801,15 @@ public class PackagesDiffLogicTest extends TestCase {
         assertTrue(m.updateSourcePackages(false /*sortByApi*/, src2, new Package[] {
                 new MockAddonPackage(src2, "addon C", p2, 9),
                 new MockAddonPackage(src2, "addon A", p1, 6),
+                // the rev 7+8 will be ignored since there's a rev 9 coming after
                 new MockAddonPackage(src2, "addon B", p2, 7),
-                // the rev 8 update will be ignored since there's a rev 9 coming after
-                // however as a side effect it makes the update method return true as it
-                // incorporated the update.
                 new MockAddonPackage(src2, "addon B", p2, 8),
                 new MockAddonPackage(src2, "addon B", p2, 9),
+                // 11+12 should be ignored updates, 13 will update 10
+                new MockAddonPackage(src2, "addon D", p1, 10),
+                new MockAddonPackage(src2, "addon D", p1, 12),  // note: 12 listed before 11
+                new MockAddonPackage(src2, "addon D", p1, 11),
+                new MockAddonPackage(src2, "addon D", p1, 13),
         }));
         assertTrue(m.updateEnd(false /*sortByApi*/));
 
@@ -793,10 +822,11 @@ public class PackagesDiffLogicTest extends TestCase {
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "-- <INSTALLED, pkg:Android USB Driver package, revision 4, updated by:Android USB Driver package, revision 5>\n" +
                 "-- <NEW, pkg:Carrier Custom Rom package, revision 1>\n" +
-                "PkgCategorySource <source=repo2 (2.example.com), #items=3>\n" +
-                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 7, updated by:addon B by vendor 2, Android API 2, revision 9>\n" +
+                "PkgCategorySource <source=repo2 (2.example.com), #items=4>\n" +
+                "-- <NEW, pkg:addon B by vendor 2, Android API 2, revision 9>\n" +
                 "-- <NEW, pkg:addon C by vendor 2, Android API 2, revision 9>\n" +
-                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n",
+                "-- <INSTALLED, pkg:addon A by vendor 1, Android API 1, revision 5, updated by:addon A by vendor 1, Android API 1, revision 6>\n" +
+                "-- <INSTALLED, pkg:addon D by vendor 1, Android API 1, revision 10, updated by:addon D by vendor 1, Android API 1, revision 13>\n",
                 getTree(m, false /*displaySortByApi*/));
     }
 
@@ -1387,13 +1417,8 @@ public class PackagesDiffLogicTest extends TestCase {
                 getTree(m, true /*displaySortByApi*/));
         assertEquals(
                 "PkgCategorySource <source=Local Packages (no.source), #items=1>\n" +
-                // FIXME: tools rev 3 is installed in one source, and there's a rev 4 update
-                // it a different source. We should still mark the rev 3 here as having an update.
-                // We typically don't want to hide the fact the update comes from a different
-                // source but here it's OK since the local package has no source defined.
-                "-- <INSTALLED, pkg:Android SDK Tools, revision 3>\n" + // ERROR: missing update 4
-                "PkgCategorySource <source=repo1 (1.example.com), #items=3>\n" +
-                "-- <NEW, pkg:Android SDK Tools, revision 4>\n" +
+                "-- <INSTALLED, pkg:Android SDK Tools, revision 3, updated by:Android SDK Tools, revision 4>\n" +
+                "PkgCategorySource <source=repo1 (1.example.com), #items=2>\n" +
                 "-- <INSTALLED, pkg:Android SDK Platform-tools, revision 3, updated by:Android SDK Platform-tools, revision 4>\n" +
                 "-- <INSTALLED, pkg:SDK Platform Android android-1, API 1, revision 2>\n" +
                 "PkgCategorySource <source=repo2 (2.example.com), #items=2>\n" +
