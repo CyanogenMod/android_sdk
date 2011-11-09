@@ -24,6 +24,7 @@ public class LintConstants {
     /** Namespace used in XML files for Android attributes */
     public static final String ANDROID_URI =
             "http://schemas.android.com/apk/res/android";              //$NON-NLS-1$
+    public static final String XMLNS_PREFIX = "xmlns:";                //$NON-NLS-1$
 
     // Tags: Manifest
     public static final String TAG_SERVICE = "service";                //$NON-NLS-1$
@@ -33,6 +34,7 @@ public class LintConstants {
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
 
     // Tags: Layouts
+    public static final String VIEW_TAG = "view";                      //$NON-NLS-1$
     public static final String FRAME_LAYOUT = "FrameLayout";           //$NON-NLS-1$
     public static final String LINEAR_LAYOUT = "LinearLayout";         //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
@@ -55,6 +57,9 @@ public class LintConstants {
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$
 
     // Attributes: Layout
+    public static final String ATTR_CLASS = "class";                   //$NON-NLS-1$
+    public static final String ATTR_STYLE = "style";                   //$NON-NLS-1$
+
     public static final String ATTR_ID = "id";                         //$NON-NLS-1$
     public static final String ATTR_TEXT = "text";                     //$NON-NLS-1$
     public static final String ATTR_LABEL = "label";                   //$NON-NLS-1$

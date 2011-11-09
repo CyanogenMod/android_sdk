@@ -16,8 +16,12 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
+import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
@@ -31,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,11 +44,16 @@ import java.util.Map;
  */
 class HtmlReporter extends Reporter {
     private final File mOutput;
+    private File mResources;
+    private boolean mBundleResources;
     private Map<String, String> mUrlMap;
+    private Map<File, String> mResourceUrl = new HashMap<File, String>();
+    private Map<String, File> mNameToFile = new HashMap<String, File>();
 
     HtmlReporter(File output) throws IOException {
         super(new BufferedWriter(new FileWriter(output)));
         mOutput = output;
+
         mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
@@ -208,7 +218,7 @@ class HtmlReporter extends Reporter {
                     if (warning.path != null) {
                         mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
 
-                        url = getUrl(warning.file.getPath());
+                        url = getUrl(warning.file);
                         if (url != null) {
                             mWriter.write("<a href=\"");                 //$NON-NLS-1$
                             mWriter.write(url);
@@ -326,7 +336,7 @@ class HtmlReporter extends Reporter {
                 // Add in linked images as well
                 List<String> urls = new ArrayList<String>();
                 while (location != null && location.getFile() != null) {
-                    String imageUrl = getUrl(location.getFile().getPath());
+                    String imageUrl = getUrl(location.getFile());
                     if (imageUrl != null
                             && imageUrl.endsWith(".png")) {              //$NON-NLS-1$
                         urls.add(imageUrl);
@@ -450,8 +460,16 @@ class HtmlReporter extends Reporter {
         }
     }
 
-    private String getUrl(String path) {
+    private String getUrl(File file) {
+        if (mBundleResources) {
+            String url = getRelativeResourceUrl(file);
+            if (url != null) {
+                return url;
+            }
+        }
+
         if (mUrlMap != null) {
+            String path = file.getPath();
             try {
                 // Perform the comparison using URLs such that we properly escape spaces etc.
                 String pathUrl = URLEncoder.encode(path, "UTF-8");         //$NON-NLS-1$
@@ -473,8 +491,89 @@ class HtmlReporter extends Reporter {
         return null;
     }
 
+    /** Encodes the given String as a safe URL substring, escaping spaces etc */
+    private static String encodeUrl(String url) {
+        try {
+            return URLEncoder.encode(url, "UTF-8");         //$NON-NLS-1$
+        } catch (UnsupportedEncodingException e) {
+            // This shouldn't happen for UTF-8
+            System.err.println("Invalid string " + e.getLocalizedMessage());
+            return url;
+        }
+    }
+
     /** Set mapping of path prefixes to corresponding URLs in the HTML report */
     void setUrlMap(Map<String, String> urlMap) {
         mUrlMap = urlMap;
+    }
+
+    /** Gets a pointer to the local resource directory, if any */
+    private File getResourceDir() {
+        if (mResources == null && mBundleResources) {
+            String fileName = mOutput.getName();
+            int dot = fileName.indexOf('.');
+            if (dot != -1) {
+                fileName = fileName.substring(0, dot);
+            }
+
+            mResources = new File(mOutput.getParentFile(), fileName + "_files"); //$NON-NLS-1$
+            if (!mResources.mkdir()) {
+                mResources = null;
+                mBundleResources = false;
+            }
+        }
+
+        return mResources;
+    }
+
+    /** Returns a URL to a local copy of the given file, or null */
+    private String getRelativeResourceUrl(File file) {
+        String resource = mResourceUrl.get(file);
+        if (resource != null) {
+            return resource;
+        }
+
+        String name = file.getName();
+        if (!endsWith(name, DOT_PNG)) {
+            return null;
+        }
+
+        // Attempt to make local copy
+        File resourceDir = getResourceDir();
+        if (resourceDir != null) {
+            String base = file.getName();
+
+            File path = mNameToFile.get(base);
+            if (path != null && !path.equals(file)) {
+                // That filename already exists and is associated with a different path:
+                // make a new unique version
+                for (int i = 0; i < 100; i++) {
+                    base = '_' + base;
+                    path = mNameToFile.get(base);
+                    if (path == null || path.equals(file)) {
+                        break;
+                    }
+                }
+            }
+
+            File target = new File(resourceDir, base);
+            try {
+                LintUtils.copyFile(file, target);
+            } catch (IOException e) {
+                return null;
+            }
+            return resourceDir.getName() + '/' + encodeUrl(base);
+        }
+        return null;
+    }
+
+    /**
+     * Whether the report should bundle up resources along with the HTML report
+     *
+     * @param bundleResources if true, copy images into a directory relative to
+     *            the report
+     */
+    public void setBundleResources(boolean bundleResources) {
+        mBundleResources = bundleResources;
     }
 }

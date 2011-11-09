@@ -26,7 +26,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -158,5 +165,36 @@ public class LintUtils {
         }
 
         return childCount;
+    }
+
+    /**
+     * Copies a file
+     *
+     * @param src the file to copy
+     * @param target the filename to write the file into
+     * @throws IOException if an I/O problem occurs
+     */
+    public static void copyFile(File src, File target) throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new BufferedInputStream(new FileInputStream(src));
+            output = new BufferedOutputStream(new FileOutputStream(target));
+            byte[] buffer = new byte[1024];
+            while (true) {
+                int bytesRead = input.read(buffer);
+                if (bytesRead == -1) {
+                    break;
+                }
+                output.write(buffer, 0, bytesRead);
+            }
+        } finally {
+            if (input != null) {
+                input.close();
+            }
+            if (output != null) {
+                output.close();
+            }
+        }
     }
 }
