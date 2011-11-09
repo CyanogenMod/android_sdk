@@ -16,6 +16,16 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STYLEABLE;
+import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
+import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ATTR;
+import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+
 import com.android.resources.ResourceType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -30,9 +40,13 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -51,12 +65,22 @@ import java.util.Set;
  * use it.
  */
 public class UnusedResourceDetector extends ResourceXmlDetector implements Detector.JavaScanner {
-    private static final String R_PREFIX = "R."; //$NON-NLS-1$
+    private static final String ATTR_REF_PREFIX = "?attr/";           //$NON-NLS-1$
+    private static final String R_PREFIX = "R.";                      //$NON-NLS-1$
 
     /** Unused resources (other than ids). */
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
             "Looks for unused resources",
-            "Unused resources make applications larger and slow down builds.",
+            "Unused resources make applications larger and slow down builds.\n" +
+            "\n" +
+            "LIMITATIONS:\n" +
+            "* If you are running lint from the command line instead of Eclipse, then the " +
+            "analysis of Java files is pattern based rather than using an accurate parse " +
+            "tree, so the results may not be accurate. (This limitation will go away soon.)\n" +
+            "* The analysis does not consider dependencies between projects, so if you " +
+            "have a library project which defines resources and a project including the " +
+            "library project referencing the resources, then the resources will still be " +
+            "reported as unused.",
             Category.PERFORMANCE,
             3,
             Severity.WARNING,
@@ -81,6 +105,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     protected Map<String, Attr> mIdToAttr;
     protected Map<Attr, File> mAttrToFile;
     protected Map<Attr, Location> mAttrToLocation;
+    protected Map<String, File> mDeclarationToFile;
 
     /**
      * Constructs a new {@link UnusedResourceDetector}
@@ -100,31 +125,19 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         mAttrToLocation = new HashMap<Attr, Location>(300);
         mDeclarations = new HashSet<String>(300);
         mReferences = new HashSet<String>(300);
+        mDeclarationToFile = new HashMap<String, File>(300);
     }
 
     // ---- Implements JavaScanner ----
 
     public void checkJavaSources(Context context, List<File> sourceFolders) {
-        // TODO: Use a proper Java AST...
         // For right now, this is hacked via String scanning in .java files instead.
-        // TODO: Look up from project metadata
-        File src = new File(context.project.getDir(), "src"); //$NON-NLS-1$
-        if (!src.exists()) {
-            context.client.log(null, "Did not find source folder in project %1$s",
-                    context.project.getDir());
-        } else {
-            scanJavaFile(context, src);
-        }
-
-        File gen = new File(context.project.getDir(), "gen"); //$NON-NLS-1$
-        if (!gen.exists()) {
-            context.client.log(null, "Did not find gen folder in project %1$s",
-                    context.project.getDir());
-        } else {
-            scanJavaFile(context, gen);
+        for (File dir : sourceFolders) {
+            scanJavaFile(context, dir);
         }
     }
 
+    // TODO: Use a proper Java AST...
     private void scanJavaFile(Context context, File file) {
         String fileName = file.getName();
         if (fileName.endsWith(".java") && file.exists()) { //$NON-NLS-1$
@@ -288,10 +301,38 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
+    public void beforeCheckFile(Context context) {
+        File file = context.file;
+        String fileName = file.getName();
+        if (LintUtils.endsWith(fileName, DOT_XML)) {
+            String parentName = file.getParentFile().getName();
+            int dash = parentName.indexOf('-');
+            String typeName = parentName.substring(0, dash == -1 ? parentName.length() : dash);
+            ResourceType type = ResourceType.getEnum(typeName);
+            if (type != null && LintUtils.isFileBasedResourceType(type)) {
+                String baseName = fileName.substring(0, fileName.length() - DOT_XML.length());
+                String resource = R_PREFIX + typeName + '.' + baseName;
+                mDeclarations.add(resource);
+                mDeclarationToFile.put(resource, file);
+            }
+        }
+    }
+
+    @Override
     public void afterCheckProject(Context context) {
         mDeclarations.removeAll(mReferences);
         Set<String> unused = mDeclarations;
 
+        // Remove styles: they may be used
+        List<String> styles = new ArrayList<String>();
+        for (String resource : unused) {
+            if (resource.startsWith("R.style.")) { //$NON-NLS-1$
+                styles.add(resource);
+            }
+        }
+        unused.removeAll(styles);
+
+        // Remove id's if the user has disabled reporting issue ids
         if (unused.size() > 0 && !context.configuration.isEnabled(ISSUE_IDS)) {
             // Remove all R.id references
             List<String> ids = new ArrayList<String>();
@@ -343,6 +384,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     }
                 }
             }
+            if (location == null) {
+                File file = mDeclarationToFile.get(resource);
+                if (file != null) {
+                    location = new Location(file, null, null);
+                }
+            }
             context.client.report(context, ISSUE, location, message, resource);
         }
 
@@ -359,6 +406,67 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
+    public Collection<String> getApplicableElements() {
+        return Arrays.asList(
+                TAG_STYLE,
+                TAG_RESOURCES
+        );
+    }
+
+    @Override
+    public void visitElement(Context context, Element element) {
+        if (TAG_RESOURCES.equals(element.getTagName())) {
+            for (Element item : LintUtils.getChildren(element)) {
+                String name = item.getAttribute(ATTR_NAME);
+                if (name.length() > 0) {
+                    if (name.indexOf('.') != -1) {
+                        name = name.replace('.', '_');
+                    }
+                    String type = item.getTagName();
+                    if (type.equals(TAG_ITEM)) {
+                        type = RESOURCE_CLZ_ID;
+                    } else if (type.equals("declare-styleable")) {   //$NON-NLS-1$
+                        type = RESOURCE_CLR_STYLEABLE;
+                    } else if (type.contains("array")) {             //$NON-NLS-1$
+                        // <string-array> etc
+                        type = RESOURCE_CLZ_ARRAY;
+                    }
+                    String resource = R_PREFIX + type + '.' + name;
+                    mDeclarations.add(resource);
+                    mDeclarationToFile.put(resource, context.file);
+                }
+            }
+        } else {
+            assert TAG_STYLE.equals(element.getTagName());
+            // Look for ?attr/ and @dimen/foo etc references in the item children
+            for (Element item : LintUtils.getChildren(element)) {
+                NodeList childNodes = item.getChildNodes();
+                for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                    Node child = childNodes.item(i);
+                    if (child.getNodeType() == Node.TEXT_NODE) {
+                        String text = child.getNodeValue();
+
+                        int index = text.indexOf(ATTR_REF_PREFIX);
+                        if (index != -1) {
+                            String name = text.substring(index + ATTR_REF_PREFIX.length()).trim();
+                            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + name);
+                        } else {
+                            index = text.indexOf('@');
+                            if (index != -1 && text.indexOf('/', index) != -1
+                                    && !text.startsWith("@android:", index)) {  //$NON-NLS-1$
+                                // Compute R-string, e.g. @string/foo => R.string.foo
+                                String token = text.substring(index + 1).trim().replace('/', '.');
+                                String r = R_PREFIX + token;
+                                mReferences.add(r);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void visitAttribute(Context context, Attr attribute) {
         String value = attribute.getValue();
         if (value.startsWith("@+") && !value.startsWith("@+android")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -371,11 +479,15 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             // It's important for this to be lightweight since we're storing ALL attribute
             // locations even if we don't know that we're going to have any unused resources!
             mAttrToLocation.put(attribute, context.parser.getLocation(context, attribute));
+            mDeclarationToFile.put(r, context.file);
         } else if (value.startsWith("@")              //$NON-NLS-1$
                 && !value.startsWith("@android:")) {  //$NON-NLS-1$
             // Compute R-string, e.g. @string/foo => R.string.foo
             String r = R_PREFIX + value.substring(1).replace('/', '.');
             mReferences.add(r);
+        } else if (value.startsWith(ATTR_REF_PREFIX)) {
+            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.'
+                    + value.substring(ATTR_REF_PREFIX.length()));
         }
     }
 

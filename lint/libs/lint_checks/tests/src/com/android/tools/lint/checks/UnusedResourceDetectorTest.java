@@ -42,7 +42,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         assertEquals(
            "Warning: The resource R.layout.main appears to be unused\n" +
            "Warning: The resource R.layout.other appears to be unused\n" +
-           "Warning: The resource R.string.hello appears to be unused",
+           "Warning: The resource R.string.hello appears to be unused\n" +
+           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused",
 
             lintProject(
                 // Rename .txt files to .java
@@ -62,6 +63,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
            "Warning: The resource R.layout.main appears to be unused\n" +
            "Warning: The resource R.layout.other appears to be unused\n" +
            "Warning: The resource R.string.hello appears to be unused\n" +
+           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused\n" +
            "accessibility.xml:2: Warning: The resource R.id.newlinear appears to be unused\n" +
            "accessibility.xml:3: Warning: The resource R.id.button1 appears to be unused\n" +
            "accessibility.xml:4: Warning: The resource R.id.android_logo appears to be unused\n" +

@@ -16,10 +16,11 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.TranslationDetector.ATTR_NAME;
-import static com.android.tools.lint.checks.TranslationDetector.TAG_ARRAY;
-import static com.android.tools.lint.checks.TranslationDetector.TAG_INTEGER_ARRAY;
-import static com.android.tools.lint.checks.TranslationDetector.TAG_STRING_ARRAY;
+
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_INTEGER_ARRAY;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
