@@ -61,11 +61,13 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ExportedServiceDetector.ISSUE);
         issues.add(IconDetector.GIF_USAGE);
         issues.add(IconDetector.ICON_DENSITIES);
+        issues.add(IconDetector.ICON_MISSING_FOLDER);
         issues.add(IconDetector.ICON_DIP_SIZE);
         issues.add(IconDetector.ICON_EXPECTED_SIZE);
         issues.add(IconDetector.ICON_LOCATION);
         issues.add(IconDetector.DUPLICATES_NAMES);
         issues.add(IconDetector.DUPLICATES_CONFIGURATIONS);
+        issues.add(IconDetector.ICON_NODPI);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
 
         // TODO: Populate dynamically somehow?

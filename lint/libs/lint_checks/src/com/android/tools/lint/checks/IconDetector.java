@@ -36,7 +36,9 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 import static com.android.tools.lint.detector.api.LintUtils.difference;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.android.tools.lint.detector.api.LintUtils.intersection;
 
+import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -91,7 +93,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
     /** Pattern for the expected density folders to be found in the project */
     private static final Pattern DENSITY_PATTERN = Pattern.compile(
-            "^drawable-(xhdpi|hdpi|mdpi"                  //$NON-NLS-1$
+            "^drawable-(nodpi|xhdpi|hdpi|mdpi"            //$NON-NLS-1$
                 + (INCLUDE_LDPI ? "|ldpi" : "") + ")$");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     /** Pattern for version qualifiers */
@@ -177,6 +179,26 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             Scope.ALL_RESOURCES_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/practices/screens_support.html"); //$NON-NLS-1$
 
+    /** Missing density folders */
+    public static final Issue ICON_MISSING_FOLDER = Issue.create(
+            "IconMissingDensityFolder", //$NON-NLS-1$
+            "Ensures that all the density folders are present",
+            "Icons will look best if a custom version is provided for each of the " +
+            "major screen density classes (low, medium, high, extra high). " +
+            "This lint check identifies folders which are missing, such as drawable-hdpi." +
+            "\n" +
+            "Low density is not really used much anymore, so this check ignores " +
+            "the ldpi density. To force lint to include it, set the environment " +
+            "variable ANDROID_LINT_INCLUDE_LDPI=true. For more information on " +
+            "current density usage, see " +
+            "http://developer.android.com/resources/dashboard/screens.html",
+            Category.ICONS,
+            3,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE).setMoreInfo(
+            "http://developer.android.com/guide/practices/screens_support.html"); //$NON-NLS-1$
+
     /** Using .gif bitmaps */
     public static final Issue GIF_USAGE = Issue.create(
             "GifUsage", //$NON-NLS-1$
@@ -218,6 +240,21 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             IconDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
+    /** Icons appearing in both -nodpi and a -Ndpi folder */
+    public static final Issue ICON_NODPI = Issue.create(
+            "IconNoDpi", //$NON-NLS-1$
+            "Finds icons that appear in both a -nodpi folder and a dpi folder",
+            "Bitmaps that appear in drawable-nodpi folders will not be scaled by the " +
+            "Android framework. If a drawable resource of the same name appears *both* in " +
+            "a -nodpi folder as well as a dpi folder such as drawable-hdpi, then " +
+            "the behavior is ambiguous and probably not intentional. Delete one or the " +
+            "other, or use different names for the icons.",
+            Category.ICONS,
+            7,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
+
     private int mMinSdk;
     private String mApplicationIcon;
 
@@ -243,10 +280,13 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         if (res.isDirectory()) {
             File[] folders = res.listFiles();
             if (folders != null) {
-                boolean checkDensities = context.configuration.isEnabled(ICON_DENSITIES);
-                boolean checkDipSizes = context.configuration.isEnabled(ICON_DIP_SIZE);
-                boolean checkDuplicates = context.configuration.isEnabled(DUPLICATES_NAMES)
-                         || context.configuration.isEnabled(DUPLICATES_CONFIGURATIONS);
+                Configuration configuration = context.configuration;
+                boolean checkFolders = configuration.isEnabled(ICON_DENSITIES) ||
+                        configuration.isEnabled(ICON_MISSING_FOLDER) ||
+                        configuration.isEnabled(ICON_NODPI);
+                boolean checkDipSizes = configuration.isEnabled(ICON_DIP_SIZE);
+                boolean checkDuplicates = configuration.isEnabled(DUPLICATES_NAMES)
+                         || configuration.isEnabled(DUPLICATES_CONFIGURATIONS);
 
                 Map<File, Dimension> pixelSizes = null;
                 Map<File, Long> fileSizes = null;
@@ -262,7 +302,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                         if (files != null) {
                             checkDrawableDir(context, folder, files, pixelSizes, fileSizes);
 
-                            if (checkDensities && DENSITY_PATTERN.matcher(folderName).matches()) {
+                            if (checkFolders && DENSITY_PATTERN.matcher(folderName).matches()) {
                                 Set<String> names = new HashSet<String>(files.length);
                                 for (File f : files) {
                                     String name = f.getName();
@@ -284,7 +324,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                     checkDuplicates(context, pixelSizes, fileSizes);
                 }
 
-                if (checkDensities && folderToNames.size() > 0) {
+                if (checkFolders && folderToNames.size() > 0) {
                     checkDensities(context, res, folderToNames);
                 }
             }
@@ -703,60 +743,115 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
         // Look for missing folders -- if you define say drawable-mdpi then you
         // should also define -hdpi and -xhdpi.
-
-        List<String> missing = new ArrayList<String>();
-        for (String density : REQUIRED_DENSITIES) {
-            if (!definedDensities.contains(density)) {
-                missing.add(density);
+        if (context.configuration.isEnabled(ICON_MISSING_FOLDER)) {
+            List<String> missing = new ArrayList<String>();
+            for (String density : REQUIRED_DENSITIES) {
+                if (!definedDensities.contains(density)) {
+                    missing.add(density);
+                }
+            }
+            if (missing.size() > 0 ) {
+                context.client.report(
+                    context,
+                    ICON_MISSING_FOLDER,
+                    null /* location */,
+                    String.format("Missing density variation folders in %1$s: %2$s",
+                            context.project.getDisplayPath(res),
+                            LintUtils.formatList(missing, missing.size())),
+                    null);
             }
         }
-        if (missing.size() > 0) {
-            context.client.report(context,
-                ICON_DENSITIES,
-                null /* location */,
-                String.format("Missing density variation folders in %1$s: %2$s",
-                        context.project.getDisplayPath(res),
-                        LintUtils.formatList(missing, missing.size())),
-                null);
-        }
 
-        // Look for folders missing some of the specific assets
-        Set<String> allNames = new HashSet<String>();
-        for (Set<String> n : folderToNames.values()) {
-            allNames.addAll(n);
-        }
-        for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
-            Set<String> names = entry.getValue();
-            if (names.size() != allNames.size()) {
-                List<String> delta =
-                        new ArrayList<String>(difference(allNames, names));
-                Collections.sort(delta);
-                File file = entry.getKey();
-                String foundIn = "";
-                if (delta.size() == 1) {
-                    // Produce list of where the icon is actually defined
-                    List<String> defined = new ArrayList<String>();
-                    String name = delta.get(0);
-                    for (Map.Entry<File, Set<String>> e : folderToNames.entrySet()) {
-                        if (e.getValue().contains(name)) {
-                            defined.add(e.getKey().getName());
+        if (context.configuration.isEnabled(ICON_NODPI)) {
+            Set<String> noDpiNames = new HashSet<String>();
+            for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+                File folder = entry.getKey();
+                String folderName = folder.getName();
+                if (folderName.contains("-nodpi")) { //$NON-NLS-1$
+                    noDpiNames.addAll(entry.getValue());
+                }
+            }
+            if (noDpiNames.size() > 0) {
+                // Make sure that none of the nodpi names appear in a non-nodpi folder
+                Set<String> inBoth = new HashSet<String>();
+                List<File> files = new ArrayList<File>();
+                for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+                    File folder = entry.getKey();
+                    String folderName = folder.getName();
+                    if (!folderName.contains("-nodpi")) { //$NON-NLS-1$
+                        assert DENSITY_PATTERN.matcher(folderName).matches();
+                        Set<String> overlap = intersection(noDpiNames, entry.getValue());
+                        inBoth.addAll(overlap);
+                        for (String name : overlap) {
+                            files.add(new File(folder, name));
                         }
-                    }
-                    if (defined.size() > 0) {
-                        foundIn = String.format(" (found in %1$s)",
-                                LintUtils.formatList(defined, 5));
                     }
                 }
 
-                context.client.report(context,
+                if (inBoth.size() > 0) {
+                    List<String> list = new ArrayList<String>(inBoth);
+                    Collections.sort(list);
+
+                    // Chain locations together
+                    Collections.sort(files);
+                    Location location = null;
+                    for (File file : files) {
+                        Location linkedLocation = location;
+                        location = new Location(file, null, null);
+                        location.setSecondary(linkedLocation);
+                    }
+
+                    context.client.report(context,
                         ICON_DENSITIES,
-                        new Location(file, null, null),
+                        location,
                         String.format(
-                                "Missing the following drawables in %1$s: %2$s%3$s",
-                                file.getName(),
-                                LintUtils.formatList(delta, 5),
-                                foundIn),
+                            "The following images appear in both -nodpi and in a density folder: %1$s",
+                            LintUtils.formatList(list, 10)),
                         null);
+                }
+            }
+        }
+
+        if (context.configuration.isEnabled(ICON_DENSITIES)) {
+            // Look for folders missing some of the specific assets
+            Set<String> allNames = new HashSet<String>();
+            for (Set<String> n : folderToNames.values()) {
+                allNames.addAll(n);
+            }
+
+            for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+                Set<String> names = entry.getValue();
+                if (names.size() != allNames.size()) {
+                    List<String> delta =
+                            new ArrayList<String>(difference(allNames, names));
+                    Collections.sort(delta);
+                    File file = entry.getKey();
+                    String foundIn = "";
+                    if (delta.size() == 1) {
+                        // Produce list of where the icon is actually defined
+                        List<String> defined = new ArrayList<String>();
+                        String name = delta.get(0);
+                        for (Map.Entry<File, Set<String>> e : folderToNames.entrySet()) {
+                            if (e.getValue().contains(name)) {
+                                defined.add(e.getKey().getName());
+                            }
+                        }
+                        if (defined.size() > 0) {
+                            foundIn = String.format(" (found in %1$s)",
+                                    LintUtils.formatList(defined, 5));
+                        }
+                    }
+
+                    context.client.report(context,
+                            ICON_DENSITIES,
+                            new Location(file, null, null),
+                            String.format(
+                                    "Missing the following drawables in %1$s: %2$s%3$s",
+                                    file.getName(),
+                                    LintUtils.formatList(delta, 5),
+                                    foundIn),
+                            null);
+                }
             }
         }
     }

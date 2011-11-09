@@ -84,6 +84,32 @@ public class LintUtils {
     }
 
     /**
+     * Computes the set intersection {@code a intersect b}
+     *
+     * @param a the first set to intersect
+     * @param b the second set to intersect
+     * @return the elements that are in {@code a} and in {@code b}
+     */
+    public static Set<String> intersection(Set<String> a, Set<String> b) {
+        HashSet<String> intersection = new HashSet<String>(a);
+        intersection.retainAll(b);
+        return intersection;
+    }
+
+    /**
+     * Computes the set union {@code a union b}
+     *
+     * @param a the first set to add
+     * @param b the second set to add
+     * @return the elements that are in {@code a} or in {@code b}
+     */
+    public static Set<String> union(Set<String> a, Set<String> b) {
+        HashSet<String> union = new HashSet<String>(a);
+        union.addAll(b);
+        return union;
+    }
+
+    /**
      * Determine if the given type corresponds to a resource that has a unique
      * file
      *
