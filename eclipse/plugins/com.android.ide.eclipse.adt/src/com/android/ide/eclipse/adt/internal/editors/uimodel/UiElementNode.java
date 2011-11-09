@@ -45,7 +45,6 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -1224,9 +1223,6 @@ public class UiElementNode implements IPropertySource {
                                 false /* recursive */);
                         if (desc == null) {
                             // Unknown element. Simply ignore it.
-                            AdtPlugin.log(IStatus.WARNING,
-                                    "AndroidManifest: Ignoring unknown '%s' XML element", //$NON-NLS-1$
-                                    elementName);
                         } else {
                             structureChanged = true;
                             uiNode = insertNewUiChild(uiIndex, desc);
