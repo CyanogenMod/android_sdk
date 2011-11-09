@@ -28,10 +28,9 @@ public class IconDetectorTest extends AbstractCheckTest {
     public void test() throws Exception {
         assertEquals(
             "Warning: Missing density variation folders in res: drawable-xhdpi\n" +
-            "drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: " +
-                    "sample_icon.gif (found in drawable-mdpi)\n" +
-            "ic_launcher.png: Warning: Found bitmap drawable res/drawable/ic_launcher.png " +
-                    "in densityless folder\n" +
+            "drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi)\n" +
+            "ic_launcher.png: Warning: Found bitmap drawable res/drawable/ic_launcher.png in densityless folder\n" +
+            "ic_launcher.png: Warning: The ic_launcher.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable\n" +
             "sample_icon.gif: Warning: Using the .gif format for bitmaps is discouraged",
             lintProject(
                     "res/drawable/ic_launcher.png",
@@ -39,4 +38,19 @@ public class IconDetectorTest extends AbstractCheckTest {
                     "res/drawable-mdpi/sample_icon.gif",
                     "res/drawable-hdpi/ic_launcher.png"));
     }
+
+    public void test2() throws Exception {
+        assertEquals(
+            "Warning: Missing density variation folders in res: drawable-mdpi, drawable-xhdpi\n" +
+            "other.9.png: Warning: The following unrelated icon files have identical contents: appwidget_bg.9.png, other.9.png\n" +
+            "unrelated.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, unrelated.png",
+            lintProject(
+                    "res/drawable-hdpi/unrelated.png",
+                    "res/drawable-hdpi/appwidget_bg.9.png",
+                    "res/drawable-hdpi/appwidget_bg_focus.9.png",
+                    "res/drawable-hdpi/other.9.png",
+                    "res/drawable-hdpi/ic_launcher.png"
+                    ));
+    }
+
 }

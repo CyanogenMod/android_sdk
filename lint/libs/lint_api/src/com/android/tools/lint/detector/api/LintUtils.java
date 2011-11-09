@@ -197,4 +197,37 @@ public class LintUtils {
             }
         }
     }
+
+    /**
+     * Reads the file contents of the given file and returns it as a byte array.
+     *
+     * @param src the file to be read
+     * @return the contents of the file, or null
+     * @throws IOException if an I/O error occurs
+     */
+    public static byte[] readBytes(File src) throws IOException {
+        InputStream input = null;
+        try {
+            int length = (int) src.length();
+            if (length <= 0) {
+                return null;
+            }
+            byte[] buffer = new byte[length];
+            input = new BufferedInputStream(new FileInputStream(src));
+            int offset = 0;
+            while (offset < length) {
+                int n = input.read(buffer, offset, length - offset);
+                if (n == -1) {
+                    break;
+                }
+                offset += n;
+            }
+
+            return buffer;
+        } finally {
+            if (input != null) {
+                input.close();
+            }
+        }
+    }
 }

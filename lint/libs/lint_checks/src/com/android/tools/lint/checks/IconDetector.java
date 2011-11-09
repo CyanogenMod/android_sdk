@@ -190,6 +190,34 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             Scope.ALL_RESOURCES_SCOPE).setMoreInfo(
             "http://developer.android.com/guide/topics/resources/drawable-resource.html#Bitmap"); //$NON-NLS-1$
 
+    /** Duplicated icons across different names */
+    public static final Issue DUPLICATES_NAMES = Issue.create(
+            "IconDuplicates", //$NON-NLS-1$
+            "Finds duplicated icons under different names",
+            "If an icon is repeated under different names, you can consolidate and just " +
+            "use one of the icons and delete the others to make your application smaller. " +
+            "However, duplicated icons usually are not intentional and can sometimes point " +
+            "to icons that were accidentally overwritten or accidentally not updated.",
+            Category.ICONS,
+            3,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
+
+    /** Duplicated contents across configurations for a given name */
+    public static final Issue DUPLICATES_CONFIGURATIONS = Issue.create(
+            "IconDuplicatesConfig", //$NON-NLS-1$
+            "Finds icons that have identical bitmaps across various configuration parameters",
+            "If an icon is provided under different configuration parameters such as " +
+            "drawable-hdpi or -v11, they should typically be different. This detector " +
+            "catches cases where the same icon is provided in different configuration folder " +
+            "which is usually not intentional.",
+            Category.ICONS,
+            5,
+            Severity.WARNING,
+            IconDetector.class,
+            Scope.ALL_RESOURCES_SCOPE);
+
     private int mMinSdk;
     private String mApplicationIcon;
 
@@ -217,10 +245,14 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             if (folders != null) {
                 boolean checkDensities = context.configuration.isEnabled(ICON_DENSITIES);
                 boolean checkDipSizes = context.configuration.isEnabled(ICON_DIP_SIZE);
+                boolean checkDuplicates = context.configuration.isEnabled(DUPLICATES_NAMES)
+                         || context.configuration.isEnabled(DUPLICATES_CONFIGURATIONS);
 
                 Map<File, Dimension> pixelSizes = null;
-                if (checkDipSizes) {
+                Map<File, Long> fileSizes = null;
+                if (checkDipSizes || checkDuplicates) {
                     pixelSizes = new HashMap<File, Dimension>();
+                    fileSizes = new HashMap<File, Long>();
                 }
                 Map<File, Set<String>> folderToNames = new HashMap<File, Set<String>>();
                 for (File folder : folders) {
@@ -228,7 +260,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                     if (folderName.startsWith(DRAWABLE_FOLDER)) {
                         File[] files = folder.listFiles();
                         if (files != null) {
-                            checkDrawableDir(context, folder, files, pixelSizes);
+                            checkDrawableDir(context, folder, files, pixelSizes, fileSizes);
 
                             if (checkDensities && DENSITY_PATTERN.matcher(folderName).matches()) {
                                 Set<String> names = new HashSet<String>(files.length);
@@ -244,9 +276,12 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                     }
                 }
 
-                if (pixelSizes != null) {
-                    assert checkDipSizes;
+                if (checkDipSizes) {
                     checkDipSizes(context, pixelSizes);
+                }
+
+                if (checkDuplicates) {
+                    checkDuplicates(context, pixelSizes, fileSizes);
                 }
 
                 if (checkDensities && folderToNames.size() > 0) {
@@ -256,6 +291,234 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         }
     }
 
+    // This method looks for duplicates in the assets. This uses two pieces of information
+    // (file sizes and image dimensions) to quickly reject candidates, such that it only
+    // needs to check actual file contents on a small subset of the available files.
+    private void checkDuplicates(Context context, Map<File, Dimension> pixelSizes,
+            Map<File, Long> fileSizes) {
+        Map<Long, Set<File>> sameSizes = new HashMap<Long, Set<File>>();
+        Map<Long, File> seenSizes = new HashMap<Long, File>(fileSizes.size());
+        for (Map.Entry<File, Long> entry : fileSizes.entrySet()) {
+            File file = entry.getKey();
+            Long size = entry.getValue();
+            if (seenSizes.containsKey(size)) {
+                Set<File> set = sameSizes.get(size);
+                if (set == null) {
+                    set = new HashSet<File>();
+                    set.add(seenSizes.get(size));
+                    sameSizes.put(size, set);
+                }
+                set.add(file);
+            } else {
+                seenSizes.put(size, file);
+            }
+        }
+
+        if (sameSizes.size() == 0) {
+            return;
+        }
+
+        // Now go through the files that have the same size and check to see if we can
+        // split them apart based on image dimensions
+        // Note: we may not have file sizes on all the icons; in particular,
+        // we don't have file sizes for ninepatch files.
+        Collection<Set<File>> candidateLists = sameSizes.values();
+        for (Set<File> candidates : candidateLists) {
+            Map<Dimension, Set<File>> sameDimensions = new HashMap<Dimension, Set<File>>(
+                    candidates.size());
+            List<File> noSize = new ArrayList<File>();
+            for (File file : candidates) {
+                Dimension dimension = pixelSizes.get(file);
+                if (dimension != null) {
+                    Set<File> set = sameDimensions.get(dimension);
+                    if (set == null) {
+                        set = new HashSet<File>();
+                        sameDimensions.put(dimension, set);
+                    }
+                    set.add(file);
+                } else {
+                    noSize.add(file);
+                }
+            }
+
+
+            // Files that we have no dimensions for must be compared against everything
+            Collection<Set<File>> sets = sameDimensions.values();
+            if (noSize.size() > 0) {
+                if (sets.size() > 0) {
+                    for (Set<File> set : sets) {
+                        set.addAll(noSize);
+                    }
+                } else {
+                    // Must just test the noSize elements against themselves
+                    HashSet<File> noSizeSet = new HashSet<File>(noSize);
+                    sets = Collections.<Set<File>>singletonList(noSizeSet);
+                }
+            }
+
+            // Map from file to actual byte contents of the file.
+            // We store this in a map such that for repeated files, such as noSize files
+            // which can appear in multiple buckets, we only need to read them once
+            Map<File, byte[]> fileContents = new HashMap<File, byte[]>();
+
+            // Now we're ready for the final check where we actually check the
+            // bits. We have to partition the files into buckets of files that
+            // are identical.
+            for (Set<File> set : sets) {
+                if (set.size() < 2) {
+                    continue;
+                }
+
+                // Read all files in this set and store in map
+                for (File file : set) {
+                    byte[] bits = fileContents.get(file);
+                    if (bits == null) {
+                        try {
+                            bits = LintUtils.readBytes(file);
+                            fileContents.put(file, bits);
+                        } catch (IOException e) {
+                            context.client.log(e, null);
+                        }
+                    }
+                }
+
+                // Map where the key file is known to be equal to the value file.
+                // After we check individual files for equality this will be used
+                // to look for transitive equality.
+                Map<File, File> equal = new HashMap<File, File>();
+
+                // Now go and compare all the files. This isn't an efficient algorithm
+                // but the number of candidates should be very small
+
+                List<File> files = new ArrayList<File>(set);
+                Collections.sort(files);
+                for (int i = 0; i < files.size() - 1; i++) {
+                    for (int j = i + 1; j < files.size(); j++) {
+                        File file1 = files.get(i);
+                        File file2 = files.get(j);
+                        byte[] contents1 = fileContents.get(file1);
+                        byte[] contents2 = fileContents.get(file2);
+                        if (contents1 == null || contents2 == null) {
+                            // File couldn't be read: ignore
+                            continue;
+                        }
+                        if (contents1.length != contents2.length) {
+                            // Sizes differ: not identical.
+                            // This shouldn't happen since we've already partitioned based
+                            // on File.length(), but just make sure here since the file
+                            // system could have lied, or cached a value that has changed
+                            // if the file was just overwritten
+                            continue;
+                        }
+                        boolean same = true;
+                        for (int k = 0; k < contents1.length; k++) {
+                            if (contents1[k] != contents2[k]) {
+                                same = false;
+                                break;
+                            }
+                        }
+                        if (same) {
+                            equal.put(file1, file2);
+                        }
+                    }
+                }
+
+                if (equal.size() > 0) {
+                    Map<File, Set<File>> partitions = new HashMap<File, Set<File>>();
+                    List<Set<File>> sameSets = new ArrayList<Set<File>>();
+                    for (Map.Entry<File, File> entry : equal.entrySet()) {
+                        File file1 = entry.getKey();
+                        File file2 = entry.getValue();
+                        Set<File> set1 = partitions.get(file1);
+                        Set<File> set2 = partitions.get(file2);
+                        if (set1 != null) {
+                            set1.add(file2);
+                        } else if (set2 != null) {
+                            set2.add(file1);
+                        } else {
+                            set = new HashSet<File>();
+                            sameSets.add(set);
+                            set.add(file1);
+                            set.add(file2);
+                            partitions.put(file1, set);
+                            partitions.put(file2, set);
+                        }
+                    }
+
+                    // We've computed the partitions of equal files. Now sort them
+                    // for stable output.
+                    List<List<File>> lists = new ArrayList<List<File>>();
+                    for (Set<File> same : sameSets) {
+                        assert same.size() > 0;
+                        ArrayList<File> sorted = new ArrayList<File>(same);
+                        Collections.sort(sorted);
+                        lists.add(sorted);
+                    }
+                    // Sort overall partitions by the first item in each list
+                    Collections.sort(lists, new Comparator<List<File>>() {
+                        public int compare(List<File> list1, List<File> list2) {
+                            return list1.get(0).compareTo(list2.get(0));
+                        }
+                    });
+
+                    for (List<File> sameFiles : lists) {
+                        Location location = null;
+                        boolean sameNames = true;
+                        String lastName = null;
+                        for (File file : sameFiles) {
+                             if (lastName != null && !lastName.equals(file.getName())) {
+                                sameNames = false;
+                            }
+                            lastName = file.getName();
+                            // Chain locations together
+                            Location linkedLocation = location;
+                            location = new Location(file, null, null);
+                            location.setSecondary(linkedLocation);
+                        }
+
+                        if (sameNames) {
+                            StringBuilder sb = new StringBuilder();
+                            for (File file : sameFiles) {
+                                if (sb.length() > 0) {
+                                    sb.append(", "); //$NON-NLS-1$
+                                }
+                                sb.append(file.getParentFile().getName());
+                            }
+                            String message = String.format(
+                                "The %1$s icon has identical contents in the following configuration folders: %2$s",
+                                        lastName, sb.toString());
+                                context.client.report(context,
+                                        DUPLICATES_CONFIGURATIONS,
+                                        location,
+                                        message,
+                                        null);
+                        } else {
+                            StringBuilder sb = new StringBuilder();
+                            for (File file : sameFiles) {
+                                if (sb.length() > 0) {
+                                    sb.append(", "); //$NON-NLS-1$
+                                }
+                                sb.append(file.getName());
+                            }
+                            String message = String.format(
+                                "The following unrelated icon files have identical contents: %1$s",
+                                        sb.toString());
+                                context.client.report(context,
+                                        DUPLICATES_NAMES,
+                                        location,
+                                        message,
+                                        null);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    // This method checks the given map from resource file to pixel dimensions for each
+    // such image and makes sure that the normalized dip sizes across all the densities
+    // are mostly the same.
     private void checkDipSizes(Context context, Map<File, Dimension> pixelSizes) {
         // Partition up the files such that I can look at a series by name. This
         // creates a map from filename (such as foo.png) to a list of files
@@ -499,7 +762,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
     }
 
     private void checkDrawableDir(Context context, File folder, File[] files,
-            Map<File, Dimension> dipSizes) {
+            Map<File, Dimension> pixelSizes, Map<File, Long> fileSizes) {
         if (folder.getName().equals(DRAWABLE_FOLDER)
                 && context.configuration.isEnabled(ICON_LOCATION)) {
             for (File file : files) {
@@ -538,16 +801,22 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             checkExpectedSizes(context, folder, files);
         }
 
-        if (dipSizes != null) {
+        if (pixelSizes != null || fileSizes != null) {
             for (File file : files) {
                 // TODO: Combine this check with the check for expected sizes such that
                 // I don't check file sizes twice!
                 String fileName = file.getName();
-                // Only scan .png files (except 9-patch png's) and jpg files
-                if (endsWith(fileName, DOT_PNG) && !endsWith(fileName, DOT_9PNG) ||
-                        endsWith(fileName, DOT_JPG)) {
-                    Dimension size = getSize(file);
-                    dipSizes.put(file, size);
+
+                if (endsWith(fileName, DOT_PNG) || endsWith(fileName, DOT_JPG)) {
+                    // Only scan .png files (except 9-patch png's) and jpg files for
+                    // dip sizes. Duplicate checks can also be performed on ninepatch files.
+                    if (pixelSizes != null && !endsWith(fileName, DOT_9PNG)) {
+                        Dimension size = getSize(file);
+                        pixelSizes.put(file, size);
+                    }
+                    if (fileSizes != null) {
+                        fileSizes.put(file, file.length());
+                    }
                 }
             }
         }
