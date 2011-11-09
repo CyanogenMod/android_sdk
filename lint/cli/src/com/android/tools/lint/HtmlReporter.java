@@ -43,8 +43,20 @@ import java.util.Map;
  * A reporter which emits lint results into an HTML report.
  */
 class HtmlReporter extends Reporter {
+    /**
+     * Maximum number of warnings allowed for a single issue type before we
+     * split up and hide all but the first {@link #SHOWN_COUNT} items.
+     */
+    private static final int SPLIT_LIMIT = 8;
+    /**
+     * When a warning has at least {@link #SPLIT_LIMIT} items, then we show the
+     * following number of items before the "Show more" button/link.
+     */
+    private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
+
     private final File mOutput;
     private File mResources;
+    private boolean mSimpleFormat;
     private boolean mBundleResources;
     private Map<String, String> mUrlMap;
     private Map<File, String> mResourceUrl = new HashMap<File, String>();
@@ -53,7 +65,10 @@ class HtmlReporter extends Reporter {
     HtmlReporter(File output) throws IOException {
         super(new BufferedWriter(new FileWriter(output)));
         mOutput = output;
+    }
 
+    @Override
+    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
         mWriter.write(
                 "<html>\n" +                                             //$NON-NLS-1$
                 "<head>\n" +                                             //$NON-NLS-1$
@@ -70,7 +85,7 @@ class HtmlReporter extends Reporter {
                 "    margin-bottom: 10px;\n" +                           //$NON-NLS-1$
                 "    padding: 5px;\n" +                                  //$NON-NLS-1$
                 "    background-color: #eeeeee;\n" +                     //$NON-NLS-1$
-                "}\n" +                                                  //$NON-NLS-1$
+                "}\n" +
                 // The issue id header label
                 ".id {\n" +                                              //$NON-NLS-1$
                 "    font-size: 14pt;\n" +                               //$NON-NLS-1$
@@ -125,16 +140,27 @@ class HtmlReporter extends Reporter {
                 // The list of specific warnings for a given issue
                 ".warningslist { margin-bottom: 20px; }\n" +             //$NON-NLS-1$
 
-                "</style>\n" +                                           //$NON-NLS-1$
+                "</style>\n");
+        if (!mSimpleFormat) {
+            mWriter.write(
+                "<script language=\"javascript\"> \n" +                  //$NON-NLS-1$
+                "<!--\n" +
+                "function reveal(id) {\n" +                              //$NON-NLS-1$
+                "if (document.getElementById) {\n" +                     //$NON-NLS-1$
+                "document.getElementById(id).style.display = 'block';\n" +       //$NON-NLS-1$
+                "document.getElementById(id+'Link').style.display = 'none';\n" + //$NON-NLS-1$
+                "}\n" +                                                  //$NON-NLS-1$
+                "}\n" +                                                  //$NON-NLS-1$
+                "//--> \n" +                                             //$NON-NLS-1$
+                "</script>\n");                                          //$NON-NLS-1$
+        }
+        mWriter.write(
                 "</head>\n" +                                            //$NON-NLS-1$
                 "<body>\n" +                                             //$NON-NLS-1$
                 "<h1>" +                                                 //$NON-NLS-1$
                 "Lint Report" +
                 "</h1>");                                                //$NON-NLS-1$
-    }
 
-    @Override
-    void write(int errorCount, int warningCount, List<Warning> issues) throws IOException {
         Issue previousIssue = null;
         if (issues.size() > 0) {
             List<List<Warning>> related = new ArrayList<List<Warning>>();
@@ -213,7 +239,25 @@ class HtmlReporter extends Reporter {
                 mWriter.write("</div>\n"); //$NON-NLS-1$
 
                 mWriter.write("<div class=\"warningslist\">\n");         //$NON-NLS-1$
+                boolean partialHide = !mSimpleFormat && warnings.size() > SPLIT_LIMIT;
+
+                int count = 0;
                 for (Warning warning : warnings) {
+                    if (partialHide && count == SHOWN_COUNT) {
+                        String id = warning.issue.getId() + "Div";       //$NON-NLS-1$
+                        mWriter.write("<input id=\"");                   //$NON-NLS-1$
+                        mWriter.write(id);
+                        mWriter.write("Link\" onclick=\"reveal('");      //$NON-NLS-1$
+                        mWriter.write(id);
+                        mWriter.write("');\" type=\"button\" value=\""); //$NON-NLS-1$
+                        mWriter.write(String.format("+ %1$d More...",
+                                warnings.size() - SHOWN_COUNT));
+                        mWriter.write("\" />\n");                        //$NON-NLS-1$
+                        mWriter.write("<div id=\"");                     //$NON-NLS-1$
+                        mWriter.write(id);
+                        mWriter.write("\" style=\"display: none\">\n");  //$NON-NLS-1$
+                    }
+                    count++;
                     String url = null;
                     if (warning.path != null) {
                         mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
@@ -268,11 +312,15 @@ class HtmlReporter extends Reporter {
                         addImage(url, warning.location);
                     }
                 }
+                if (partialHide) { // Close up the extra div
+                    mWriter.write("</div>\n");                           //$NON-NLS-1$
+                }
+
                 mWriter.write("</div>\n");                               //$NON-NLS-1$
 
                 mWriter.write("<div class=\"metadata\">");               //$NON-NLS-1$
                 mWriter.write("Priority: ");
-                mWriter.write(issue.getPriority());
+                mWriter.write(String.format("%1$d / 10", issue.getPriority()));
                 mWriter.write("<br/>\n");                                //$NON-NLS-1$
                 mWriter.write("Category: ");
                 mWriter.write(issue.getCategory().getFullName());
@@ -461,7 +509,7 @@ class HtmlReporter extends Reporter {
     }
 
     private String getUrl(File file) {
-        if (mBundleResources) {
+        if (mBundleResources && !mSimpleFormat) {
             String url = getRelativeResourceUrl(file);
             if (url != null) {
                 return url;
@@ -568,12 +616,34 @@ class HtmlReporter extends Reporter {
     }
 
     /**
-     * Whether the report should bundle up resources along with the HTML report
+     * Sets whether the report should bundle up resources along with the HTML report.
+     * This implies a non-simple format (see {@link #setSimpleFormat(boolean)}).
      *
      * @param bundleResources if true, copy images into a directory relative to
      *            the report
      */
     public void setBundleResources(boolean bundleResources) {
         mBundleResources = bundleResources;
+        mSimpleFormat = false;
+    }
+
+    /**
+     * Sets whether the report should use simple formatting (meaning no JavaScript,
+     * embedded images, etc).
+     *
+     * @param simpleFormat whether the formatting should be simple
+     */
+    public void setSimpleFormat(boolean simpleFormat) {
+        mSimpleFormat = simpleFormat;
+    }
+
+    /**
+     * Returns whether the report should use simple formatting (meaning no JavaScript,
+     * embedded images, etc).
+     *
+     * @return whether the report should use simple formatting
+     */
+    public boolean isSimpleFormat() {
+        return mSimpleFormat;
     }
 }

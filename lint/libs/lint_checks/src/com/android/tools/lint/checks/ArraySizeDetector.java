@@ -130,9 +130,10 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                 fileMap.put(name, file);
             } else if (!count.equals(current)) {
                 //Location location = getLocation(language, parentFolderToLanguage);
-                Location location = null;
                 String thisName = file.getParentFile().getName() + File.separator + file.getName();
                 File otherFile = fileMap.get(name);
+                Location location = new Location(otherFile, null, null);
+                location.setSecondary(new Location(file, null, null));
                 String otherName = otherFile.getParentFile().getName() + File.separator
                         + otherFile.getName();
                 context.client.report(context, INCONSISTENT, location,

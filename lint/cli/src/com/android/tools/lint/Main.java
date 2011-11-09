@@ -69,6 +69,7 @@ public class Main extends LintClient {
     private static final String ARG_HELP       = "--help";         //$NON-NLS-1$
     private static final String ARG_NOLINES    = "--nolines";      //$NON-NLS-1$
     private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
+    private static final String ARG_SIMPLEHTML = "--simplehtml";   //$NON-NLS-1$
     private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final int ERRNO_ERRORS = -1;
@@ -164,7 +165,7 @@ public class Main extends LintClient {
                 } else {
                     urlMap = map;
                 }
-            } else if (arg.equals(ARG_HTML)) {
+            } else if (arg.equals(ARG_HTML) || arg.equals(ARG_SIMPLEHTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
                     System.exit(ERRNO_INVALIDARGS);
@@ -182,7 +183,11 @@ public class Main extends LintClient {
                     System.exit(ERRNO_EXISTS);
                 }
                 try {
-                    mReporter = new HtmlReporter(output);
+                    HtmlReporter htmlReporter = new HtmlReporter(output);
+                    if (arg.equals(ARG_SIMPLEHTML)) {
+                        htmlReporter.setSimpleFormat(true);
+                    }
+                    mReporter = htmlReporter;
                 } catch (IOException e) {
                     log(e, null);
                     System.exit(ERRNO_INVALIDARGS);
@@ -323,7 +328,9 @@ public class Main extends LintClient {
                 // By default just map from /foo to file:///foo
                 // TODO: Find out if we need file:// on Windows.
                 urlMap = "=file://"; //$NON-NLS-1$
-                htmlReporter.setBundleResources(true);
+                if (!htmlReporter.isSimpleFormat()) {
+                    htmlReporter.setBundleResources(true);
+                }
             }
             Map<String, String> map = new HashMap<String, String>();
             String[] replace = urlMap.split(","); //$NON-NLS-1$
@@ -515,6 +522,7 @@ public class Main extends LintClient {
             "path prefixes with url prefix. The mapping can be a comma-separated list of " +
             "path prefixes to corresponding URL prefixes, such as " +
             "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1"));
+        out.print(wrapArg(ARG_SIMPLEHTML + " <filename>: Create a simple HTML report"));
         out.print(wrapArg(ARG_XML + " <filename>: Create an XML report instead."));
         out.println();
         out.print(wrapArg(ARG_LISTIDS + ": List the available issue id's and exit."));
