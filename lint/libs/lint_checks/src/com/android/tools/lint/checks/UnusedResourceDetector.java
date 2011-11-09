@@ -199,7 +199,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
 
         char c = s.charAt(0);
         char next = s.charAt(1);
-        for (; index < length - 2; index++, c = s.charAt(index), next = s.charAt(index + 1)) {
+        for (; index < length; index++) {
+            c = s.charAt(index);
+            if (index == length - 1) {
+                break;
+            }
+            next = s.charAt(index + 1);
             if (Character.isWhitespace(c)) {
                 continue;
             }
@@ -356,7 +361,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     @Override
     public void visitAttribute(Context context, Attr attribute) {
         String value = attribute.getValue();
-        if (value.startsWith("@+")) { //$NON-NLS-1$
+        if (value.startsWith("@+") && !value.startsWith("@+android")) { //$NON-NLS-1$ //$NON-NLS-2$
             String r = R_PREFIX + value.substring(2).replace('/', '.');
             // We already have the declarations when we scan the R file, but we're tracking
             // these here to get attributes for position info

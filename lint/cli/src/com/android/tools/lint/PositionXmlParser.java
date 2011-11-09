@@ -59,13 +59,16 @@ public class PositionXmlParser implements IDomParser {
     // ---- Implements IDomParser ----
 
     public Document parse(Context context) {
+        return parse(context, context.getContents(), true);
+    }
+
+    private Document parse(Context context, String xml, boolean checkBom) {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setFeature(NAMESPACE_FEATURE, true);
             factory.setFeature(NAMESPACE_PREFIX_FEATURE, true);
             SAXParser parser = factory.newSAXParser();
 
-            String xml = context.getContents();
             InputSource input = new InputSource(new StringReader(xml));
             DomBuilder handler = new DomBuilder(xml);
             parser.parse(input, handler);
@@ -73,6 +76,13 @@ public class PositionXmlParser implements IDomParser {
         } catch (ParserConfigurationException e) {
             context.client.log(e, null);
         } catch (SAXException e) {
+            if (checkBom && e.getMessage().contains("Content is not allowed in prolog")) {
+                // Byte order mark in the string? Skip it. There are many markers
+                // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
+                // just skip those up to the XML prolog beginning character, <
+                xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
+                return parse(context, xml, false);
+            }
             context.client.report(
                     context,
                     // Must provide an issue since API guarantees that the issue parameter
@@ -131,10 +141,10 @@ public class PositionXmlParser implements IDomParser {
                         column++;
                     }
 
-                    // Also update end range
-                    pos.next = new OffsetPosition(line, column, matcher.end());
-
-                    return new OffsetPosition(line, column, index);
+                    OffsetPosition attributePosition = new OffsetPosition(line, column, index);
+                    // Also set end range for retrieval in getEndPosition
+                    attributePosition.next = new OffsetPosition(line, column, matcher.end());
+                    return attributePosition;
                 } else {
                     // No regexp match either: just fall back to element position
                     return pos;
@@ -146,10 +156,7 @@ public class PositionXmlParser implements IDomParser {
     }
 
     public Position getEndPosition(Context context, Node node) {
-        OffsetPosition pos = (OffsetPosition) node.getUserData(POS_KEY);
-        if (pos == null && node instanceof Attr) {
-            pos = (OffsetPosition) ((Attr) node).getOwnerElement().getUserData(POS_KEY);
-        }
+        OffsetPosition pos = (OffsetPosition) getStartPosition(context, node);
         if (pos != null && pos.next != null) {
             return pos.next;
         }
@@ -218,6 +225,7 @@ public class PositionXmlParser implements IDomParser {
                     assert attr.getOwnerElement() == element;
                 }
             }
+
             OffsetPosition pos = getCurrentPosition();
 
             // The starting position reported to us by SAX is really the END of the

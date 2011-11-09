@@ -111,8 +111,9 @@ class HtmlReporter extends Reporter {
                 //".warning { color: rgb(244,200,45); }\n" +             //$NON-NLS-1$
                 "pre {\n" +                                              //$NON-NLS-1$
                 "    border: solid 1px #cccccc;\n" +                     //$NON-NLS-1$
-                "    background-color: #dddddd;" +                       //$NON-NLS-1$
-                "    margin: 10pt;" +                                    //$NON-NLS-1$
+                "    background-color: #dddddd;\n" +                     //$NON-NLS-1$
+                "    margin: 10pt;\n" +
+                "    overflow: auto;\n" +                                //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$
                 ".moreinfo {\n" +                                        //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$

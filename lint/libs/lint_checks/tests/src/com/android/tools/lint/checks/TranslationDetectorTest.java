@@ -17,9 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.LintUtils;
-
-import java.util.Arrays;
 
 @SuppressWarnings("javadoc")
 public class TranslationDetectorTest extends AbstractCheckTest {
@@ -69,5 +66,16 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-es-rUS/strings.xml",
                  "res/values-land/strings.xml",
                  "res/values-nl-rNL/strings.xml"));
+    }
+
+    public void testHandleBom() throws Exception {
+        // This isn't really testing translation detection; it's just making sure that the
+        // XML parser doesn't bomb on BOM bytes (byte order marker) at the beginning of
+        // the XML document
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                 "res/values-de/strings.xml"
+            ));
     }
 }

@@ -58,6 +58,11 @@ class Warning implements Comparable<Warning> {
         if (categoryDelta != 0) {
             return categoryDelta;
         }
+        // DECREASING priority order
+        int priorityDelta = other.issue.getPriority() - issue.getPriority();
+        if (priorityDelta != 0) {
+            return priorityDelta;
+        }
         String id1 = issue.getId();
         String id2 = other.issue.getId();
         if (id1 == null || id2 == null) {
@@ -66,11 +71,6 @@ class Warning implements Comparable<Warning> {
         int idDelta = id1.compareTo(id2);
         if (idDelta != 0) {
             return idDelta;
-        }
-        // DECREASING priority order
-        int priorityDelta = other.issue.getPriority() - issue.getPriority();
-        if (priorityDelta != 0) {
-            return priorityDelta;
         }
         if (file != null && other.file != null) {
             int fileDelta = file.getName().compareTo(
