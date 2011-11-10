@@ -122,8 +122,9 @@ class XmlVisitor {
             if (context.document == null) {
                 context.document = mParser.parse(context);
                 if (context.document == null) {
-                    context.client.log(
-                            null, "Skipped file because it contains parsing errors");
+                    // No need to log this; the parser should be reporting
+                    // a full warning (such as IssueRegistry#PARSER_ERROR)
+                    // with details, location, etc.
                     return;
                 }
                 if (context.document.getDocumentElement() == null) {

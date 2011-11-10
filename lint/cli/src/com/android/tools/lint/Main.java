@@ -599,6 +599,9 @@ public class Main extends LintClient {
                         // Compute error line contents
                         warning.errorLine = getLine(context.getContents(), line);
                         if (warning.errorLine != null) {
+                            // Replace tabs with spaces such that the column
+                            // marker (^) lines up properly:
+                            warning.errorLine = warning.errorLine.replace('\t', ' ');
                             int column = startPosition.getColumn();
                             if (column < 0) {
                                 column = 0;

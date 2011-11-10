@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -53,10 +54,22 @@ public class RunLintAction implements IWorkbenchWindowActionDelegate, IObjectAct
             if (structuredSelection.size() == 1) {
                 Object element = structuredSelection.getFirstElement();
 
+                // First look up the resource (since some adaptables
+                // provide an IResource but not an IProject, and we can
+                // always go from IResource to IProject)
+                IResource resource = null;
+                if (element instanceof IResource) { // may include IProject
+                   resource = (IResource) element;
+                } else if (element instanceof IAdaptable) {
+                    IAdaptable adaptable = (IAdaptable)element;
+                    Object adapter = adaptable.getAdapter(IResource.class);
+                    resource = (IResource) adapter;
+                }
+
                 // get the project object from it.
                 IProject project = null;
-                if (element instanceof IProject) {
-                    project = (IProject) element;
+                if (resource != null) {
+                    project = resource.getProject();
                 } else if (element instanceof IAdaptable) {
                     project = (IProject) ((IAdaptable) element).getAdapter(IProject.class);
                 }
