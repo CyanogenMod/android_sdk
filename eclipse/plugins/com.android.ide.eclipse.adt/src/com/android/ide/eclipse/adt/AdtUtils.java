@@ -298,10 +298,15 @@ public class AdtUtils {
      * @return an absolute file system path to the resource
      */
     public static IPath getAbsolutePath(IResource resource) {
-        IWorkspace workspace = ResourcesPlugin.getWorkspace();
-        IWorkspaceRoot root = workspace.getRoot();
-        IPath workspacePath = root.getLocation();
-        return workspacePath.append(resource.getFullPath());
+        IPath location = resource.getRawLocation();
+        if (location != null) {
+            return location.makeAbsolute();
+        } else {
+            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+            IWorkspaceRoot root = workspace.getRoot();
+            IPath workspacePath = root.getLocation();
+            return workspacePath.append(resource.getFullPath());
+        }
     }
 
     /**

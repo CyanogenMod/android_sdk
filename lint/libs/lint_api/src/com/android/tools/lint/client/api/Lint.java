@@ -140,6 +140,10 @@ public class Lint {
     }
 
     private void computeDetectors(Project project) {
+        // Ensure that the current visitor is recomputed
+        mCurrentFolderType = null;
+        mCurrentVisitor = null;
+
         Configuration configuration = project.getConfiguration();
         mScopeDetectors = new HashMap<Scope, List<Detector>>();
         mApplicableDetectors = mRegistry.createDetectors(mClient, configuration,

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
@@ -364,7 +365,7 @@ class HtmlReporter extends Reporter {
                 }
 
                 mWriter.write("<br/>");                                  //$NON-NLS-1$
-                mWriter.write("To suppress this error, run lint with <code>--suppress ");
+                mWriter.write("To suppress this error, run lint with <code>--ignore ");
                 mWriter.write(issue.getId());
                 mWriter.write("</code><br/>");                           //$NON-NLS-1$
 
@@ -379,7 +380,7 @@ class HtmlReporter extends Reporter {
     }
 
     private boolean addImage(String url, Location location) throws IOException {
-        if (url != null && url.endsWith(".png")) {                       //$NON-NLS-1$
+        if (url != null && endsWith(url, DOT_PNG) && !endsWith(url, DOT_9PNG)) {
             if (location.getSecondary() != null) {
                 // Emit many images
                 // Add in linked images as well
@@ -387,7 +388,7 @@ class HtmlReporter extends Reporter {
                 while (location != null && location.getFile() != null) {
                     String imageUrl = getUrl(location.getFile());
                     if (imageUrl != null
-                            && imageUrl.endsWith(".png")) {              //$NON-NLS-1$
+                            && endsWith(imageUrl, DOT_PNG)) {
                         urls.add(imageUrl);
                     }
                     location = location.getSecondary();
@@ -518,7 +519,7 @@ class HtmlReporter extends Reporter {
         }
 
         if (mUrlMap != null) {
-            String path = file.getPath();
+            String path = file.getAbsolutePath();
             try {
                 // Perform the comparison using URLs such that we properly escape spaces etc.
                 String pathUrl = URLEncoder.encode(path, "UTF-8");         //$NON-NLS-1$
@@ -583,7 +584,7 @@ class HtmlReporter extends Reporter {
         }
 
         String name = file.getName();
-        if (!endsWith(name, DOT_PNG)) {
+        if (!endsWith(name, DOT_PNG) || endsWith(name, DOT_9PNG)) {
             return null;
         }
 
