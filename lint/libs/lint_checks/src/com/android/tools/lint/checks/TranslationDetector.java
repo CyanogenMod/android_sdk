@@ -16,6 +16,11 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TRANSLATABLE;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
+
 import com.android.annotations.VisibleForTesting;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -49,13 +54,6 @@ import java.util.regex.Pattern;
  * locales but not all.
  */
 public class TranslationDetector extends ResourceXmlDetector {
-    protected static final String TAG_STRING = "string";              //$NON-NLS-1$
-    protected static final String ATTR_NAME = "name";                 //$NON-NLS-1$
-    protected static final String ATTR_TRANSLATABLE = "translatable"; //$NON-NLS-1$
-    protected static final String TAG_ARRAY = "array";                //$NON-NLS-1$
-    protected static final String TAG_STRING_ARRAY = "string-array";  //$NON-NLS-1$
-    protected static final String TAG_INTEGER_ARRAY = "integer-array";//$NON-NLS-1$
-
     @VisibleForTesting
     static boolean COMPLETE_REGIONS =
             System.getenv("ANDROID_LINT_COMPLETE_REGIONS") != null; //$NON-NLS-1$

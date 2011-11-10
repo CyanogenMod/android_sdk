@@ -33,6 +33,15 @@ public class LintConstants {
     public static final String TAG_INTENT_FILTER = " intent-filter";   //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
 
+    // Tags: Resources
+    public static final String TAG_RESOURCES = "resources";            //$NON-NLS-1$
+    public static final String TAG_STRING = "string";                  //$NON-NLS-1$
+    public static final String TAG_ARRAY = "array";                    //$NON-NLS-1$
+    public static final String TAG_STYLE = "style";                    //$NON-NLS-1$
+    public static final String TAG_ITEM = "item";                      //$NON-NLS-1$
+    public static final String TAG_STRING_ARRAY = "string-array";      //$NON-NLS-1$
+    public static final String TAG_INTEGER_ARRAY = "integer-array";    //$NON-NLS-1$
+
     // Tags: Layouts
     public static final String VIEW_TAG = "view";                      //$NON-NLS-1$
     public static final String FRAME_LAYOUT = "FrameLayout";           //$NON-NLS-1$
@@ -55,6 +64,10 @@ public class LintConstants {
     public static final String ATTR_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$
+
+    // Attributes: Resources
+    public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
+    public static final String ATTR_TRANSLATABLE = "translatable";     //$NON-NLS-1$
 
     // Attributes: Layout
     public static final String ATTR_CLASS = "class";                   //$NON-NLS-1$
@@ -110,4 +123,8 @@ public class LintConstants {
     // Resources
     public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/";//$NON-NLS-1$
     public static final String VALUE_LAYOUT_PREFIX = "@layout/";        //$NON-NLS-1$
+    public static final String RESOURCE_CLZ_ID = "id";                  //$NON-NLS-1$
+    public static final String RESOURCE_CLZ_ARRAY = "array";            //$NON-NLS-1$
+    public static final String RESOURCE_CLZ_ATTR = "attr";              //$NON-NLS-1$
+    public static final String RESOURCE_CLR_STYLEABLE = "styleable";    //$NON-NLS-1$
 }
