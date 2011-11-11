@@ -33,6 +33,8 @@ import java.util.Map.Entry;
  */
 public class BuildConfigGenerator {
 
+    public final static String BUILD_CONFIG_NAME = "BuildConfig.java";
+
     private final static String PH_PACKAGE = "#PACKAGE#";
     private final static String PH_DEBUG = "#DEBUG#";
 
@@ -53,6 +55,19 @@ public class BuildConfigGenerator {
     }
 
     /**
+     * Returns a File representing where the BuildConfig class will be.
+     */
+    public File getFolderPath() {
+        File genFolder = new File(mGenFolder);
+        return new File(genFolder, mAppPackage.replace('.', File.separatorChar));
+    }
+
+    public File getBuildConfigFile() {
+        File folder = getFolderPath();
+        return new File(folder, BUILD_CONFIG_NAME);
+    }
+
+    /**
      * Generates the BuildConfig class.
      */
     public void generate() throws IOException {
@@ -64,13 +79,12 @@ public class BuildConfigGenerator {
 
         String content = replaceParameters(template, map);
 
-        File genFolder = new File(mGenFolder);
-        File pkgFolder = new File(genFolder, mAppPackage.replaceAll("\\.", File.separator));
+        File pkgFolder = getFolderPath();
         if (pkgFolder.isDirectory() == false) {
             pkgFolder.mkdirs();
         }
 
-        File buildConfigJava = new File(pkgFolder, "BuildConfig.java");
+        File buildConfigJava = new File(pkgFolder, BUILD_CONFIG_NAME);
         writeFile(buildConfigJava, content);
     }
 

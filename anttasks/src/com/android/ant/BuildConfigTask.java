@@ -21,6 +21,7 @@ import com.android.sdklib.internal.build.BuildConfigGenerator;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
 
+import java.io.File;
 import java.io.IOException;
 
 public class BuildConfigTask extends BuildTypedTask {
@@ -46,15 +47,22 @@ public class BuildConfigTask extends BuildTypedTask {
             throw new BuildException("Missing attribute package");
         }
 
-        if (hasBuildTypeChanged()) {
+        BuildConfigGenerator generator = new BuildConfigGenerator(
+                mGenFolder, mAppPackage,
+                Boolean.parseBoolean(getBuildType()));
+
+        // first check if the file is missing.
+        File buildConfigFile = generator.getBuildConfigFile();
+        boolean missingFile = buildConfigFile.exists() == false;
+
+        if (missingFile || hasBuildTypeChanged()) {
             if (isNewBuild()) {
                 System.out.println("Generating BuildConfig class.");
+            } else if (missingFile) {
+                System.out.println("BuildConfig class missing: Generating new BuildConfig class.");
             } else {
                 System.out.println("Build type changed: Generating new BuildConfig class.");
             }
-            BuildConfigGenerator generator = new BuildConfigGenerator(
-                    mGenFolder, mAppPackage,
-                    Boolean.parseBoolean(getBuildType()));
 
             try {
                 generator.generate();
