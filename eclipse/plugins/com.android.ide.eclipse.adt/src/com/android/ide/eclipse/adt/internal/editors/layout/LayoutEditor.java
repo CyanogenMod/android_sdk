@@ -320,10 +320,6 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
      */
     @Override
     protected void xmlModelChanged(Document xml_doc) {
-        if (mIgnoreXmlUpdate) {
-            return;
-        }
-
         // init the ui root on demand
         initUiRootNode(false /*force*/);
 

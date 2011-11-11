@@ -160,10 +160,6 @@ public final class ManifestEditor extends AndroidXmlEditor {
      */
     @Override
     protected void xmlModelChanged(Document xml_doc) {
-        if (mIgnoreXmlUpdate) {
-            return;
-        }
-
         // create the ui root node on demand.
         initUiRootNode(false /*force*/);
 

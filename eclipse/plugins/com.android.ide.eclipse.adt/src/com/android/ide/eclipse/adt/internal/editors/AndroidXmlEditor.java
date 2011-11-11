@@ -969,29 +969,30 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                     model.changedModel();
 
                     if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
-                        if (!mFormatNode.hasError()) {
-                            if (mFormatNode == getUiRootNode()) {
-                                reformatDocument();
-                            } else {
-                                Node node = mFormatNode.getXmlNode();
-                                if (node instanceof IndexedRegion) {
-                                    IndexedRegion region = (IndexedRegion) node;
-                                    int begin = region.getStartOffset();
-                                    int end = region.getEndOffset();
+                        boolean oldIgnore = mIgnoreXmlUpdate;
+                        try {
+                            mIgnoreXmlUpdate = true;
+                            if (!mFormatNode.hasError()) {
+                                if (mFormatNode == getUiRootNode()) {
+                                    reformatDocument();
+                                } else {
+                                    Node node = mFormatNode.getXmlNode();
+                                    if (node instanceof IndexedRegion) {
+                                        IndexedRegion region = (IndexedRegion) node;
+                                        int begin = region.getStartOffset();
+                                        int end = region.getEndOffset();
 
-                                    if (!mFormatChildren) {
-                                        // This will format just the attribute list
-                                        end = begin + 1;
-                                    }
+                                        if (!mFormatChildren) {
+                                            // This will format just the attribute list
+                                            end = begin + 1;
+                                        }
 
-                                    model.aboutToChangeModel();
-                                    try {
                                         reformatRegion(begin, end);
-                                    } finally {
-                                        model.changedModel();
                                     }
                                 }
                             }
+                        } finally {
+                            mIgnoreXmlUpdate = oldIgnore;
                         }
                         mFormatNode = null;
                         mFormatChildren = false;
@@ -1295,13 +1296,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 StyledText textWidget = textViewer.getTextWidget();
                 textWidget.setSelection(begin, end);
 
+                boolean oldIgnore = mIgnoreXmlUpdate;
                 try {
                     // Formatting does not affect the XML model so ignore notifications
                     // about model edits from this
                     mIgnoreXmlUpdate = true;
                     structuredTextViewer.doOperation(operation);
                 } finally {
-                    mIgnoreXmlUpdate = false;
+                    mIgnoreXmlUpdate = oldIgnore;
                 }
 
                 textWidget.setSelection(0, 0);
@@ -1363,13 +1365,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             int operation = StructuredTextViewer.FORMAT_DOCUMENT;
             boolean canFormat = structuredTextViewer.canDoOperation(operation);
             if (canFormat) {
+                boolean oldIgnore = mIgnoreXmlUpdate;
                 try {
                     // Formatting does not affect the XML model so ignore notifications
                     // about model edits from this
                     mIgnoreXmlUpdate = true;
                     structuredTextViewer.doOperation(operation);
                 } finally {
-                    mIgnoreXmlUpdate = false;
+                    mIgnoreXmlUpdate = oldIgnore;
                 }
             }
         }
@@ -1490,6 +1493,9 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * This AndroidXmlEditor implementation calls the xmlModelChanged callback.
          */
         public void modelChanged(IStructuredModel model) {
+            if (mIgnoreXmlUpdate) {
+                return;
+            }
             xmlModelChanged(getXmlDocument(model));
         }
 
