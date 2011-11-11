@@ -3,7 +3,7 @@
 <!-- Template obtained from org.eclipse.pde.build/templates/headless-build     -->
 <!-- ========================================================================= -->
 <project name="allElements Delegator">
-    
+
      <!-- ===================================================================== -->
      <!-- Run a given ${target} on all elements being built                     -->
      <!-- Replace element.id with the id of the top level element being built.    -->
@@ -13,7 +13,7 @@
      <!-- Add on <ant> task for each top level element being built.             -->
      <!-- ===================================================================== -->
      <target name="allElementsDelegator">
-         
+
          <ant antfile="${genericTargets}" target="${target}">
              <property name="type" value="feature" />
              <property name="id" value="com.android.ide.eclipse.ddms" />
@@ -23,10 +23,15 @@
              <property name="type" value="feature" />
              <property name="id" value="com.android.ide.eclipse.hierarchyviewer" />
          </ant>
-         
+
          <ant antfile="${genericTargets}" target="${target}">
              <property name="type" value="feature" />
              <property name="id" value="com.android.ide.eclipse.adt" />
+         </ant>
+
+         <ant antfile="${genericTargets}" target="${target}">
+             <property name="type" value="feature" />
+             <property name="id" value="com.android.ide.eclipse.adt.ndk" />
          </ant>
 
          <ant antfile="${genericTargets}" target="${target}">
@@ -35,9 +40,9 @@
          </ant>
 
         <antcall target="buildInternalFeatures"/>
-         
+
      </target>
-    
+
      <!-- ===================================================================== -->
      <!-- Conditional target for building the internal features                 -->
      <!-- Builds if property internalSite is set                                -->
@@ -57,8 +62,8 @@
             <property name="type" value="feature" />
             <property name="id" value="com.android.ide.eclipse.gldebugger" />
         </ant>
-     </target>    
-         
+     </target>
+
      <!-- ===================================================================== -->
      <!-- Targets to assemble the built elements for particular configurations  -->
      <!-- These generally call the generated assemble scripts (named in         -->
@@ -74,14 +79,18 @@
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
 
+     <target name="assemble.com.android.ide.eclipse.adt.ndk">
+         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
+     </target>
+
      <target name="assemble.com.android.ide.eclipse.ddms">
          <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
      </target>
-    
+
     <target name="assemble.com.android.ide.eclipse.tests">
         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
     </target>
-    
+
     <target name="assemble.com.android.ide.eclipse.hierarchyviewer">
         <ant antfile="${assembleScriptName}" dir="${buildDirectory}"/>
     </target>

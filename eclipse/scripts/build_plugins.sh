@@ -92,7 +92,7 @@ if [ -z "$ECLIPSE_HOME" ]; then
   fi
 
   # download the version if not available
-  VERSION="3.5.2"
+  VERSION="3.6.2"
   BASE_DIR="$BASE_DIR/$VERSION"
   scripts/setup_eclipse.sh -p "$BASE_DIR"
 
@@ -193,6 +193,8 @@ echo "  Launcher:     $LAUNCHER"
 echo "  Build File:   $BUILDFILE"
 echo "  Build Config: $BUILDCONFIG"
 echo "  Config Dir:   $CONFIG_DIR"
+echo "  Java:         " $(which java)
+java -version
 
 # clean input directories to make sure there's nothing left from previous run
 
@@ -202,7 +204,7 @@ find . -name "@*" | xargs rm -rfv
 # Now execute the ant runner
 
 set +e  # don't stop on errors anymore, we want to catch them here
-
+set -x
 
 java \
   -jar $LAUNCHER \
@@ -219,6 +221,7 @@ java \
   -Dbasearch=$BASEARCH \
   $SITE_PARAM
 RESULT=$?
+set +x
 
 if [ "0" != "$RESULT" ]; then
     echo "JAVA died with error code $RESULT"

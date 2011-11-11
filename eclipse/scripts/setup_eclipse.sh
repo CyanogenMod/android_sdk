@@ -45,7 +45,7 @@ BASE_DIR="$1"
 [[ -n "$1" ]] || die "Usage: $0 <dest-dir>"
 
 # URL for 3.5.2 RCP Linux 32 Bits. Includes GEF, WTP as needed.
-DOWNLOAD_URL="http://download.eclipse.org/technology/epp/downloads/release/galileo/SR2/eclipse-rcp-galileo-SR2-linux-gtk.tar.gz"
+DOWNLOAD_URL="http://download.eclipse.org/technology/epp/downloads/release/helios/SR2/eclipse-rcp-helios-SR2-linux-gtk-x86_64.tar.gz"
 
 BIN="$BASE_DIR/eclipse/eclipse"           # path to installed binary
 TARGZ="$BASE_DIR/${DOWNLOAD_URL##*/}"     # base dir + filename of the download URL
