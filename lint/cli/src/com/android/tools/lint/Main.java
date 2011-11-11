@@ -57,7 +57,7 @@ import java.util.Set;
  * </ul>
  */
 public class Main extends LintClient {
-    private static final int MAX_LINE_WIDTH = 70;
+    private static final int MAX_LINE_WIDTH = 78;
     private static final String ARG_ENABLE     = "--enable";       //$NON-NLS-1$
     private static final String ARG_DISABLE    = "--disable";      //$NON-NLS-1$
     private static final String ARG_CHECK      = "--check";        //$NON-NLS-1$
@@ -123,24 +123,60 @@ public class Main extends LintClient {
         List<File> files = new ArrayList<File>();
         for (int index = 0; index < args.length; index++) {
             String arg = args[index];
-            if (arg.equals(ARG_HELP) || arg.equals("-h")) { //$NON-NLS-1$
+
+            if (arg.equals(ARG_HELP)
+                    || arg.equals("-h") || arg.equals("-?")) { //$NON-NLS-1$ //$NON-NLS-2$
                 printUsage(System.out);
                 System.exit(ERRNO_HELP);
             } else if (arg.equals(ARG_LISTIDS)) {
-                displayValidIds(registry, System.out);
+                // Did the user provide a category list?
+                if (index < args.length - 1 && !args[index + 1].startsWith("-")) { //$NON-NLS-1$
+                    String[] ids = args[++index].split(",");
+                    for (String id : ids) {
+                        if (registry.isCategoryName(id)) {
+                            // List all issues with the given category
+                            String category = id;
+                            for (Issue issue : registry.getIssues()) {
+                                // Check prefix such that filtering on the "Usability" category
+                                // will match issue category "Usability:Icons" etc.
+                                if (issue.getCategory().getName().startsWith(category) ||
+                                        issue.getCategory().getFullName().startsWith(category)) {
+                                    listIssue(System.out, issue);
+                                }
+                            }
+                        } else {
+                            System.err.println("Invalid category \"" + id + "\".\n");
+                            displayValidIds(registry, System.err);
+                            System.exit(ERRNO_INVALIDARGS);
+                        }
+                    }
+                } else {
+                    displayValidIds(registry, System.out);
+                }
                 System.exit(0);
             } else if (arg.equals(ARG_SHOW)) {
                 // Show specific issues?
                 if (index < args.length - 1 && !args[index + 1].startsWith("-")) { //$NON-NLS-1$
                     String[] ids = args[++index].split(",");
                     for (String id : ids) {
-                        Issue issue = registry.getIssue(id);
-                        if (issue == null) {
+                        if (registry.isCategoryName(id)) {
+                            // Show all issues in the given category
+                            String category = id;
+                            for (Issue issue : registry.getIssues()) {
+                                // Check prefix such that filtering on the "Usability" category
+                                // will match issue category "Usability:Icons" etc.
+                                if (issue.getCategory().getName().startsWith(category) ||
+                                        issue.getCategory().getFullName().startsWith(category)) {
+                                    describeIssue(issue);
+                                }
+                            }
+                        } else if (registry.isIssueId(id)) {
+                            describeIssue(registry.getIssue(id));
+                        } else {
                             System.err.println("Invalid id or category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
                             System.exit(ERRNO_INVALIDARGS);
                         }
-                        describeIssue(issue);
                     }
                 } else {
                     showIssues(registry);
@@ -274,7 +310,7 @@ public class Main extends LintClient {
                 String[] ids = args[++index].split(",");
                 for (String id : ids) {
                     if (registry.isCategoryName(id)) {
-                        // Suppress all issues with the given category
+                        // Check all issues with the given category
                         String category = id;
                         for (Issue issue : registry.getIssues()) {
                             // Check prefix such that filtering on the "Usability" category
@@ -376,8 +412,12 @@ public class Main extends LintClient {
         List<Issue> issues = registry.getIssues();
         out.println("Valid issue id's:");
         for (Issue issue : issues) {
-            out.println("\"" + issue.getId() + "\": " + issue.getDescription());
+            listIssue(out, issue);
         }
+    }
+
+    private void listIssue(PrintStream out, Issue issue) {
+        out.print(wrapArg("\"" + issue.getId() + "\": " + issue.getDescription()));
     }
 
     private void showIssues(IssueRegistry registry) {
@@ -426,7 +466,7 @@ public class Main extends LintClient {
         System.out.println(wrap("Summary: " + issue.getDescription()));
         System.out.println("Priority: " + issue.getPriority() + " / 10");
         System.out.println("Severity: " + issue.getDefaultSeverity().getDescription());
-        System.out.println("Category: " + issue.getCategory());
+        System.out.println("Category: " + issue.getCategory().getFullName());
 
         if (!issue.isEnabledByDefault()) {
             System.out.println("NOTE: This issue is disabled by default!");
