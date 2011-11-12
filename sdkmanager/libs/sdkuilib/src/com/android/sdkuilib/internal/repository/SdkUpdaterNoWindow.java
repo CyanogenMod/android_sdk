@@ -22,6 +22,7 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskFactory;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
+import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.util.Pair;
 
@@ -360,11 +361,14 @@ public class SdkUpdaterNoWindow {
          *         <b>second element</b> is always the <b>Password</b>. This
          *         method will never return null, in case of error the pair will
          *         be filled with empty strings.
-         * @see ITaskMonitor#displayLoginPasswordPrompt(String, String)
+         * @see ITaskMonitor#displayLoginCredentialsPrompt(String, String)
          */
-        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+        public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
             String login = "";    //$NON-NLS-1$
             String password = ""; //$NON-NLS-1$
+            String workstation = ""; //$NON-NLS-1$
+            String domain = ""; //$NON-NLS-1$
+
             mSdkLog.printf("\n%1$s\n%2$s", title, message);
             byte[] readBuffer = new byte[2048];
             try {
@@ -372,6 +376,12 @@ public class SdkUpdaterNoWindow {
                 login = readLine(readBuffer);
                 mSdkLog.printf("\nPassword: ");
                 password = readLine(readBuffer);
+                mSdkLog.printf("\nIf your proxy uses NTLM authentication, provide the following information. Leave blank otherwise.");
+                mSdkLog.printf("\nWorkstation: ");
+                workstation = readLine(readBuffer);
+                mSdkLog.printf("\nDomain: ");
+                domain = readLine(readBuffer);
+
                 /*
                  * TODO: Implement a way to don't echo the typed password On
                  * Java 5 there's no simple way to do this. There's just a
@@ -382,11 +392,13 @@ public class SdkUpdaterNoWindow {
                 // Reset login/pass to empty Strings.
                 login = "";    //$NON-NLS-1$
                 password = ""; //$NON-NLS-1$
+                workstation = ""; //$NON-NLS-1$
+                domain = ""; //$NON-NLS-1$
                 //Just print the error to console.
                 mSdkLog.printf("\nError occurred during login/pass query: %s\n", e.getMessage());
             }
 
-            return Pair.of(login, password);
+            return new UserCredentials(login, password, workstation, domain);
         }
 
         private String readLine(byte[] buffer) throws IOException {
@@ -504,8 +516,8 @@ public class SdkUpdaterNoWindow {
             return mRoot.displayPrompt(title, message);
         }
 
-        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
-            return mRoot.displayLoginPasswordPrompt(title, message);
+        public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
+            return mRoot.displayLoginCredentialsPrompt(title, message);
         }
 
         public ITaskMonitor createSubMonitor(int tickCount) {

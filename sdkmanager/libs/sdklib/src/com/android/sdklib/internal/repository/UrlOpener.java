@@ -16,17 +16,17 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.util.Pair;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthState;
 import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.params.AuthPNames;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
@@ -39,7 +39,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProxySelector;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -56,8 +58,8 @@ public class UrlOpener {
         }
     }
 
-    private static Map<String, Pair<String, String>> sRealmCache =
-            new HashMap<String, Pair<String, String>>();
+    private static Map<String, UserCredentials> sRealmCache =
+            new HashMap<String, UserCredentials>();
 
     /**
      * Opens a URL. It can be a simple URL or one which requires basic
@@ -107,7 +109,7 @@ public class UrlOpener {
 
     private static InputStream openWithHttpClient(String url, ITaskMonitor monitor)
             throws IOException, ClientProtocolException, CanceledByUserException {
-        Pair<String, String> result = null;
+        UserCredentials result = null;
         String realm = null;
 
         // use the simple one
@@ -123,6 +125,19 @@ public class UrlOpener {
                     httpClient.getConnectionManager().getSchemeRegistry(),
                     ProxySelector.getDefault());
         httpClient.setRoutePlanner(routePlanner);
+
+        // Set preference order for authentication options.
+        // In particular, we don't add AuthPolicy.SPNEGO, which is given preference over NTLM in
+        // servers that support both, as it is more secure. However, we don't seem to handle it
+        // very well, so we leave it off the list.
+        // See http://hc.apache.org/httpcomponents-client-ga/tutorial/html/authentication.html for
+        // more info.
+        List<String> authpref = new ArrayList<String>();
+        authpref.add(AuthPolicy.BASIC);
+        authpref.add(AuthPolicy.DIGEST);
+        authpref.add(AuthPolicy.NTLM);
+        httpClient.getParams().setParameter(AuthPNames.PROXY_AUTH_PREF, authpref);
+        httpClient.getParams().setParameter(AuthPNames.TARGET_AUTH_PREF, authpref);
 
         boolean trying = true;
         // loop while the response is being fetched
@@ -171,7 +186,7 @@ public class UrlOpener {
                     result = sRealmCache.get(realm);
                 } else {
                     // since there is no cache, request for login and password
-                    result = monitor.displayLoginPasswordPrompt("Site Authentication",
+                    result = monitor.displayLoginCredentialsPrompt("Site Authentication",
                             "Please login to the following domain: " + realm +
                             "\n\nServer requiring authentication:\n" + authScope.getHost());
                     if (result == null) {
@@ -180,12 +195,15 @@ public class UrlOpener {
                 }
 
                 // retrieve authentication data
-                String user = result.getFirst();
-                String password = result.getSecond();
+                String user = result.getUserName();
+                String password = result.getPassword();
+                String workstation = result.getWorkstation();
+                String domain = result.getDomain();
 
                 // proceed in case there is indeed a user
                 if (user != null && user.length() > 0) {
-                    Credentials credentials = new UsernamePasswordCredentials(user, password);
+                    Credentials credentials = new NTCredentials(user, password,
+                            workstation, domain);
                     httpClient.getCredentialsProvider().setCredentials(authScope, credentials);
                     trying = true;
                 } else {

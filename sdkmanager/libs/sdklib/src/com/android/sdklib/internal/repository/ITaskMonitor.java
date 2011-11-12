@@ -17,7 +17,6 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.ISdkLog;
-import com.android.util.Pair;
 
 
 /**
@@ -134,18 +133,15 @@ public interface ITaskMonitor extends ISdkLog {
     public boolean displayPrompt(final String title, final String message);
 
     /**
-     * Launch an interface which asks for login and password. Implementations
+     * Launch an interface which asks for user credentials. Implementations
      * MUST allow this to be called from any thread, e.g. by making sure the
      * dialog is opened synchronously in the UI thread.
      *
      * @param title The title of the dialog box.
      * @param message The message to be displayed as an instruction.
-     * @return Returns a {@link Pair} holding the entered login and password.
-     *         The information must always be in the following order:
-     *         Login,Password. So in order to retrieve the <b>login</b> callers
-     *         should retrieve the first element, and the second value for the
-     *         <b>password</b>.
+     * @return Returns the user provided credentials. Some fields may be blank if the user
+     *         did not provide any input.
                If operation is <b>canceled</b> by user the return value must be <b>null</b>.
      */
-    public Pair<String, String> displayLoginPasswordPrompt(String title, String message);
+    public UserCredentials displayLoginCredentialsPrompt(String title, String message);
 }
