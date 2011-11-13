@@ -139,7 +139,7 @@ if [[ $PLATFORM != "windows-x86" ]]; then
   # liblzf doesn't build under cygwin. If necessary, this should be fixed first.
   
   GLD_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.gldebugger/libs"
-  GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf sdklib"
+  GLD_LIBS="host-libprotobuf-java-2.3.0-lite liblzf sdklib ddmlib"
 
   LIBS="$LIBS $GLD_LIBS"
   CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS"

@@ -30,5 +30,43 @@
             file="contexts.xml">
       </contexts>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer"
+            default="true"
+            extensions="gltrace"
+            icon="icons/opengl.png"
+            id="com.android.ide.eclipse.gltrace.GLFunctionTrace"
+            name="OpenGL Function Trace">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            description="OpenGL Trace Actions"
+            id="gltrace.actionset"
+            label="OpenGL Trace Actions"
+            visible="true">
+         <action
+               class="com.android.ide.eclipse.gltrace.CollectTraceAction"
+               icon="icons/connect.png"
+               id="gltrace.action.connect"
+               label="Collects OpenGL trace from device"
+               style="push"
+               toolbarPath="Normal/additions"
+               tooltip="Connects to the device and collects OpenGL trace information">
+         </action>
+         <action
+               class="com.android.ide.eclipse.gltrace.OpenGLTraceAction"
+               icon="icons/opengl.png"
+               id="gltrace.action.open"
+               label="Open GL Trace File"
+               style="push"
+               toolbarPath="Normal/additions"
+               tooltip="Open a saved OpenGL Trace File">
+         </action>
+      </actionSet>
+   </extension>
 
 </plugin>
