@@ -33,24 +33,19 @@ import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
-import com.android.ide.common.api.DropFeedback;
+import com.android.ide.common.api.AbstractViewRule;
 import com.android.ide.common.api.IAttributeInfo;
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.api.IClientRulesEngine;
 import com.android.ide.common.api.IDragElement;
-import com.android.ide.common.api.IGraphics;
 import com.android.ide.common.api.IMenuCallback;
 import com.android.ide.common.api.INode;
 import com.android.ide.common.api.IValidator;
 import com.android.ide.common.api.IViewMetadata;
 import com.android.ide.common.api.IViewRule;
-import com.android.ide.common.api.InsertType;
-import com.android.ide.common.api.Point;
-import com.android.ide.common.api.Rect;
 import com.android.ide.common.api.RuleAction;
 import com.android.ide.common.api.RuleAction.ActionProvider;
 import com.android.ide.common.api.RuleAction.ChoiceProvider;
-import com.android.ide.common.api.SegmentType;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
 
@@ -71,7 +66,7 @@ import java.util.Set;
 /**
  * Common IViewRule processing to all view and layout classes.
  */
-public class BaseViewRule implements IViewRule {
+public class BaseViewRule extends AbstractViewRule {
     /** List of recently edited properties */
     private static List<String> sRecent = new LinkedList<String>();
 
@@ -92,6 +87,7 @@ public class BaseViewRule implements IViewRule {
     private Map<String, Map<String, Prop>> mAttributesMap =
         new HashMap<String, Map<String, Prop>>();
 
+    @Override
     public boolean onInitialize(String fqcn, IClientRulesEngine engine) {
         this.mRulesEngine = engine;
 
@@ -103,15 +99,6 @@ public class BaseViewRule implements IViewRule {
         // FQCN and will be unloaded.
 
         return true;
-    }
-
-    public void onDispose() {
-        // Nothing to dispose.
-    }
-
-    public String getDisplayName() {
-        // Default is to not override the selection display name.
-        return null;
     }
 
     /**
@@ -130,6 +117,7 @@ public class BaseViewRule implements IViewRule {
      * - Explicit layout_width and layout_height attributes.
      * - List of all other simple toggle attributes.
      */
+    @Override
     public void addContextMenuActions(List<RuleAction> actions, final INode selectedNode) {
         String width = null;
         String currentWidth = selectedNode.getStringAttr(ANDROID_URI, ATTR_LAYOUT_WIDTH);
@@ -872,39 +860,6 @@ public class BaseViewRule implements IViewRule {
         return name;
     }
 
-    // ==== Selection ====
-
-    public List<String> getSelectionHint(INode parentNode, INode childNode) {
-        return null;
-    }
-
-    public void addLayoutActions(List<RuleAction> actions, INode parentNode,
-            List<? extends INode> children) {
-    }
-
-    // ==== Drag'n'drop support ====
-
-    // By default Views do not accept drag'n'drop.
-    public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
-        return null;
-    }
-
-    public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
-            DropFeedback feedback, Point p) {
-        return null;
-    }
-
-    public void onDropLeave(INode targetNode, IDragElement[] elements, DropFeedback feedback) {
-        // ignore
-    }
-
-    public void onDropped(
-            INode targetNode,
-            IDragElement[] elements,
-            DropFeedback feedback,
-            Point p) {
-        // ignore
-    }
 
     // ==== Paste support ====
 
@@ -913,6 +868,7 @@ public class BaseViewRule implements IViewRule {
      * this case, defer the call to the parent layout and use the target node as
      * an indication of where to paste.
      */
+    @Override
     public void onPaste(INode targetNode, Object targetView, IDragElement[] elements) {
         //
         INode parent = targetNode.getParent();
@@ -992,15 +948,6 @@ public class BaseViewRule implements IViewRule {
         return "@android:drawable/btn_star"; //$NON-NLS-1$
     }
 
-    public void onCreate(INode node, INode parent, InsertType insertType) {
-    }
-
-    public void onChildInserted(INode node, INode parent, InsertType insertType) {
-    }
-
-    public void onRemovingChildren(List<INode> deleted, INode parent) {
-    }
-
     /**
      * Strips the {@code @+id} or {@code @id} prefix off of the given id
      *
@@ -1024,23 +971,4 @@ public class BaseViewRule implements IViewRule {
         }
         return value;
     }
-
-    public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes, Object view) {
-    }
-
-    // ---- Resizing ----
-
-    public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
-            SegmentType verticalEdge, Object childView, Object parentView) {
-        return null;
-    }
-
-    public void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
-            int modifierMask) {
-    }
-
-    public void onResizeEnd(DropFeedback feedback, INode child, final INode parent,
-            final Rect newBounds) {
-    }
-}
+ }

@@ -172,6 +172,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         if (visible) {
             if (mValues.projectName != null) {
                 mProjectNameText.setText(mValues.projectName);
+                mProjectNameText.setFocus();
             }
             if (mValues.mode == Mode.ANY || mValues.mode == Mode.TEST) {
                 if (mValues.useExisting) {

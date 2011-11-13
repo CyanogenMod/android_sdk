@@ -39,18 +39,11 @@ import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorP
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleElement;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.internal.project.ProjectProperties;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IStatus;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,6 +60,7 @@ import java.util.Map;
 public class RulesEngine {
     private final IProject mProject;
     private final Map<Object, IViewRule> mRulesCache = new HashMap<Object, IViewRule>();
+
     /**
      * The type of any upcoming node manipulations performed by the {@link IViewRule}s.
      * When actions are performed in the tool (like a paste action, or a drag from palette,
@@ -78,16 +72,10 @@ public class RulesEngine {
     private InsertType mInsertType = InsertType.CREATE;
 
     /**
-     * Class loader (or null) used to load user/project-specific IViewRule
-     * classes
+     * Per-project loader for custom view rules
      */
+    private RuleLoader mRuleLoader;
     private ClassLoader mUserClassLoader;
-
-    /**
-     * Flag set when we've attempted to initialize the {@link #mUserClassLoader}
-     * already
-     */
-    private boolean mUserClassLoaderInited;
 
     /**
      * The editor which owns this {@link RulesEngine}
@@ -105,63 +93,11 @@ public class RulesEngine {
     public RulesEngine(GraphicalEditorPart editor, IProject project) {
         mProject = project;
         mEditor = editor;
+
+        mRuleLoader = RuleLoader.get(project);
     }
 
-    /**
-     * Find out whether the given project has 3rd party ViewRules, and if so
-     * return a ClassLoader which can locate them. If not, return null.
-     * @param project The project to load user rules from
-     * @return A class loader which can user view rules, or otherwise null
-     */
-    private static ClassLoader computeUserClassLoader(IProject project) {
-        // Default place to locate layout rules. The user may also add to this
-        // path by defining a config property specifying
-        // additional .jar files to search via a the layoutrules.jars property.
-        ProjectState state = Sdk.getProjectState(project);
-        ProjectProperties projectProperties = state.getProperties();
-
-        // Ensure we have the latest & greatest version of the properties.
-        // This allows users to reopen editors in a running Eclipse instance
-        // to get updated view rule jars
-        projectProperties.reload();
-
-        String path = projectProperties.getProperty(
-                ProjectProperties.PROPERTY_RULES_PATH);
-
-        if (path != null && path.length() > 0) {
-            List<URL> urls = new ArrayList<URL>();
-            String[] pathElements = path.split(File.pathSeparator);
-            for (String pathElement : pathElements) {
-                pathElement = pathElement.trim(); // Avoid problems with trailing whitespace etc
-                File pathFile = new File(pathElement);
-                if (!pathFile.isAbsolute()) {
-                    pathFile = new File(project.getLocation().toFile(), pathElement);
-                }
-                // Directories and jar files are okay. Do we need to
-                // validate the files here as .jar files?
-                if (pathFile.isFile() || pathFile.isDirectory()) {
-                    URL url;
-                    try {
-                        url = pathFile.toURI().toURL();
-                        urls.add(url);
-                    } catch (MalformedURLException e) {
-                        AdtPlugin.log(IStatus.WARNING,
-                                "Invalid URL: %1$s", //$NON-NLS-1$
-                                e.toString());
-                    }
-                }
-            }
-
-            if (urls.size() > 0) {
-                return new URLClassLoader(urls.toArray(new URL[urls.size()]),
-                        RulesEngine.class.getClassLoader());
-            }
-        }
-
-        return null;
-    }
-
-    /**
+     /**
      * Returns the {@link IProject} on which the {@link RulesEngine} was created.
      */
     public IProject getProject() {
@@ -651,6 +587,31 @@ public class RulesEngine {
     }
 
     /**
+     * Checks whether the project class loader has changed, and if so
+     * unregisters any view rules that use classes from the old class loader. It
+     * then returns the class loader to be used.
+     */
+    private ClassLoader updateClassLoader() {
+        ClassLoader classLoader = mRuleLoader.getClassLoader();
+        if (mUserClassLoader != null && classLoader != mUserClassLoader) {
+            // We have to unload all the IViewRules from the old class
+            List<Object> dispose = new ArrayList<Object>();
+            for (Map.Entry<Object, IViewRule> entry : mRulesCache.entrySet()) {
+                IViewRule rule = entry.getValue();
+                if (rule.getClass().getClassLoader() == mUserClassLoader) {
+                    dispose.add(entry.getKey());
+                }
+            }
+            for (Object object : dispose) {
+                mRulesCache.remove(object);
+            }
+        }
+
+        mUserClassLoader = classLoader;
+        return mUserClassLoader;
+    }
+
+    /**
      * Load a rule using its descriptor. This will try to first load the rule using its
      * actual FQCN and if that fails will find the first parent that works in the view
      * hierarchy.
@@ -674,6 +635,9 @@ public class RulesEngine {
             targetDesc = getBaseViewDescriptor();
         }
 
+        // Check whether any of the custom view .jar files have changed and if so
+        // unregister previously cached view rules to force a new view rule to be loaded.
+        updateClassLoader();
 
         // Return the rule if we find it in the cache, even if it was stored as null
         // (which means we didn't find it earlier, so don't look for it again)
@@ -782,27 +746,19 @@ public class RulesEngine {
                     baseName + "Rule"; //$NON-NLS-1$
             } else {
                 // Initialize the user-classpath for 3rd party IViewRules, if necessary
-                if (mUserClassLoader == null) {
-                    // Only attempt to load rule paths once (per RulesEngine instance);
-                    if (!mUserClassLoaderInited) {
-                        mUserClassLoaderInited = true;
-                        mUserClassLoader = computeUserClassLoader(mProject);
-                    }
-
-                    if (mUserClassLoader == null) {
-                        // The mUserClassLoader can be null; this is the typical scenario,
-                        // when the user is only using builtin layout rules.
-                        // This means however we can't resolve this fqcn since it's not
-                        // in the name space of the builtin rules.
-                        mRulesCache.put(realFqcn, null);
-                        return null;
-                    }
+                classLoader = updateClassLoader();
+                if (classLoader == null) {
+                    // The mUserClassLoader can be null; this is the typical scenario,
+                    // when the user is only using builtin layout rules.
+                    // This means however we can't resolve this fqcn since it's not
+                    // in the name space of the builtin rules.
+                    mRulesCache.put(realFqcn, null);
+                    return null;
                 }
 
                 // For other (3rd party) widgets, look in the same package (though most
                 // likely not in the same jar!)
                 ruleClassName = realFqcn + "Rule"; //$NON-NLS-1$
-                classLoader = mUserClassLoader;
             }
 
             Class<?> clz = Class.forName(ruleClassName, true, classLoader);
