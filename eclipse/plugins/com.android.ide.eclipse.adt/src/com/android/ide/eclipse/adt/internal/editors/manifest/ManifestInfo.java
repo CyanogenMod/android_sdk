@@ -205,6 +205,7 @@ public class ManifestInfo {
             }
 
             NodeList applications = root.getElementsByTagName(AndroidManifest.NODE_APPLICATION);
+            String defaultTheme = null;
             if (applications.getLength() > 0) {
                 assert applications.getLength() == 1;
                 Element application = (Element) applications.item(0);
@@ -214,10 +215,11 @@ public class ManifestInfo {
                 if (application.hasAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL)) {
                     mApplicationLabel = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_LABEL);
                 }
+
+                defaultTheme = application.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
             }
 
             // Look up target SDK
-            String defaultTheme = root.getAttributeNS(NS_RESOURCES, ATTRIBUTE_THEME);
             if (defaultTheme == null || defaultTheme.length() == 0) {
                 // From manifest theme documentation:
                 // "If that attribute is also not set, the default system theme is used."
@@ -306,7 +308,7 @@ public class ManifestInfo {
         int apiLevel = Math.min(mTargetSdk, renderingTargetSdk);
         // For now this theme works only on XLARGE screens. When it works for all sizes,
         // add that new apiLevel to this check.
-        if (apiLevel >= 11 && screenSize == ScreenSize.XLARGE) {
+        if (apiLevel >= 11 && screenSize == ScreenSize.XLARGE || apiLevel >= 14) {
             return PREFIX_ANDROID_STYLE + "Theme.Holo"; //$NON-NLS-1$
         } else {
             return PREFIX_ANDROID_STYLE + "Theme"; //$NON-NLS-1$

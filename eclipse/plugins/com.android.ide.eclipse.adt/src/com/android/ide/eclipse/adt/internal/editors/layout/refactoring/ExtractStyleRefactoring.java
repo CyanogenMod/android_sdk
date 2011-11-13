@@ -135,6 +135,9 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         mRemoveAll = Boolean.parseBoolean(arguments.get(KEY_REMOVE_ALL));
         mApplyStyle = Boolean.parseBoolean(arguments.get(KEY_APPLY_STYLE));
         mParent = arguments.get(KEY_PARENT);
+        if (mParent != null && mParent.length() == 0) {
+            mParent = null;
+        }
     }
 
     public ExtractStyleRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
@@ -191,7 +194,7 @@ public class ExtractStyleRefactoring extends VisualRefactoring {
         args.put(KEY_REMOVE_EXTRACTED, Boolean.toString(mRemoveExtracted));
         args.put(KEY_REMOVE_ALL, Boolean.toString(mRemoveAll));
         args.put(KEY_APPLY_STYLE, Boolean.toString(mApplyStyle));
-        args.put(KEY_PARENT, mParent);
+        args.put(KEY_PARENT, mParent != null ? mParent : "");
 
         return args;
     }
