@@ -98,6 +98,7 @@ public class LintConstants {
     public static final String ATTR_LAYOUT_COLUMN = "layout_column";   //$NON-NLS-1$
     public static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
+    public static final String ATTR_BASELINE_ALIGNED = "baselineAligned"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan"; //$NON-NLS-1$
     public static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
 
