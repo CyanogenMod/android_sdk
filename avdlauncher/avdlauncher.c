@@ -68,7 +68,7 @@ void display_error(LPSTR description) {
 }
 
 
-int sdk_launcher() {
+int avd_launcher() {
     int                   result = 0;
     STARTUPINFO           startup;
     PROCESS_INFORMATION   pinfo;
