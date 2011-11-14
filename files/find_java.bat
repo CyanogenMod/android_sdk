@@ -24,10 +24,13 @@ rem   http://technet.microsoft.com/en-us/library/bb490890.aspx
 rem Check we have a valid Java.exe in the path. The return code will
 rem be 0 if the command worked or 9009 if the exec failed (program not found).
 rem Java itself will return 1 if the argument is not understood.
-set java_exe=java
+set java_exe=java.exe
+rem search it in the path and verify we can execute it
+for %%a in (%java_exe%) do set java_exe=%%~s$PATH:a
+if not exist %java_exe% goto SearchForJava
 %java_exe% -version 2>nul
 if ERRORLEVEL 1 goto SearchForJava
-goto :EOF
+goto :SearchJavaW
 
 
 rem ---------------
@@ -49,7 +52,7 @@ echo Checking if Java is installed in %ProgramFiles%\Java.
 
 set java_exe=
 for /D %%a in ( "%ProgramW6432%\Java\*" ) do call :TestJavaDir "%%a"
-if defined java_exe goto :EOF
+if defined java_exe goto :SearchJavaW
 
 rem Check for the "default" 64-bit version if it's not the same path
 :Check64
@@ -59,7 +62,7 @@ echo Checking if Java is installed in %ProgramW6432%\Java instead (64-bit).
 
 set java_exe=
 for /D %%a in ( "%ProgramW6432%\Java\*" ) do call :TestJavaDir "%%a"
-if defined java_exe goto :EOF
+if defined java_exe goto :SearchJavaW
 
 rem Check for the "default" 32-bit version if it's not the same path
 :Check32
@@ -69,7 +72,7 @@ echo Checking if Java is installed in %ProgramFiles(x86)%\Java instead (32-bit).
 
 set java_exe=
 for /D %%a in ( "%ProgramFiles(x86)%\Java\*" ) do call :TestJavaDir "%%a"
-if defined java_exe goto :EOF
+if defined java_exe goto :SearchJavaW
 
 :CheckFailed
 echo.
@@ -104,3 +107,16 @@ echo - Under Windows Vista or Windows 7, open Control Panel / System / Advanced 
 echo At the end of the "Path" entry in "User variables", add the following:
 echo   ;%full_path%
 echo.
+goto :EOF
+
+rem ---------------
+:SearchJavaW
+rem Called once java_exe has been set. Try to see if we can find a javaw
+rem to use. If not, we'll default to using java_exe.
+for %%a in (%java_exe%) do set p=%%~pa
+for %%a in (%java_exe%) do set n=%%~na
+for %%a in (%java_exe%) do set x=%%~xa
+set n=%n:java=javaw%
+set javaw_exe=%p%%n%%x%
+if not exist %javaw_exe% set javaw_exe=%java_exe%
+goto :EOF
