@@ -413,13 +413,13 @@ public final class SdkConstants {
 
 
 
-    /** Returns the appropriate name for the 'android' command, which is 'android.bat' for
+    /** Returns the appropriate name for the 'android' command, which is 'android.exe' for
      * Windows and 'android' for all other platforms. */
     public static String androidCmdName() {
         String os = System.getProperty("os.name");          //$NON-NLS-1$
         String cmd = "android";                             //$NON-NLS-1$
         if (os.startsWith("Windows")) {                     //$NON-NLS-1$
-            cmd += ".bat";                                  //$NON-NLS-1$
+            cmd += ".exe";                                  //$NON-NLS-1$
         }
         return cmd;
     }
