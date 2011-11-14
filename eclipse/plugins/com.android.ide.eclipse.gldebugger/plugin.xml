@@ -11,6 +11,13 @@
             class="com.android.ide.eclipse.gldebugger.GLFramesView"
             id="glesv2debuggerclient.views.SampleView">
       </view>
+      <view
+            class="com.android.ide.eclipse.gltrace.views.GLFramebufferView"
+            icon="icons/opengl.png"
+            id="com.android.ide.eclipse.gltrace.GLFrameBuffer"
+            name="OpenGL Framebuffer"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
