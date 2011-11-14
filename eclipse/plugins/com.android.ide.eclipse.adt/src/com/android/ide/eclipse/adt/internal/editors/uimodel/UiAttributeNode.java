@@ -20,6 +20,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_ID;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_STYLE;
 import static com.android.ide.eclipse.adt.internal.editors.color.ColorDescriptors.ATTR_COLOR;
 
@@ -208,6 +209,10 @@ public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
     private static int getAttributePriority(String name) {
         if (ATTR_ID.equals(name)) {
             return 10;
+        }
+
+        if (ATTR_NAME.equals(name)) {
+            return 15;
         }
 
         if (ATTR_STYLE.equals(name)) {

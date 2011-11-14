@@ -777,4 +777,22 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "\n" +
                 "</resources>");
     }
+
+    public void testNameSorting() throws Exception {
+        checkFormat(
+                "res/values/dimen.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <attr format=\"integer\" name=\"no\" />\n" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <attr name=\"no\" format=\"integer\" />\n" +
+                "\n" +
+                "</resources>");
+    }
+
+
 }
