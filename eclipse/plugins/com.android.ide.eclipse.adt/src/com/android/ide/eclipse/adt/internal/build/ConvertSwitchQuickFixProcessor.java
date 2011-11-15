@@ -17,7 +17,10 @@
 package com.android.ide.eclipse.adt.internal.build;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,6 +36,10 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.texteditor.IDocumentProvider;
+
+import java.util.List;
 
 /**
  * A quickfix processor which looks for "case expressions must be constant
@@ -80,7 +87,54 @@ public class ConvertSwitchQuickFixProcessor implements IQuickFixProcessor {
         int errorLength = error.getLength();
         int caret = context.getSelectionOffset();
 
-        IBuffer buffer = context.getCompilationUnit().getBuffer();
+        // Even though the hasCorrections() method above will return false for everything
+        // other than non-constant expression errors, it turns out this getCorrections()
+        // method will ALSO be called on lines where there is no such error. In particular,
+        // if you have an invalid cast expression like this:
+        //     Button button = findViewById(R.id.textView);
+        // then this method will be called, and the expression will pass all of the above
+        // checks. However, we -don't- want to show a migrate code suggestion in that case!
+        // Therefore, we'll need to check if we're *actually* on a line with the given
+        // problem.
+        //
+        // Unfortunately, we don't get passed the problemId again, and there's no access
+        // to it. So instead we'll need to look up the markers on the line, and see
+        // if we actually have a constant expression warning. This is not pretty!!
+
+        boolean foundError = false;
+        ICompilationUnit compilationUnit = context.getCompilationUnit();
+        IResource file = compilationUnit.getResource();
+        if (file != null) {
+            IDocumentProvider provider = new TextFileDocumentProvider();
+            try {
+                provider.connect(file);
+                IDocument document = provider.getDocument(file);
+                if (document != null) {
+                    List<IMarker> markers = AdtUtils.findMarkersOnLine(IMarker.PROBLEM,
+                            file, document, errorStart);
+                    for (IMarker marker : markers) {
+                        String message = marker.getAttribute(IMarker.MESSAGE, "");
+                        // There are no other attributes in the marker we can use to identify
+                        // the exact error, so we'll need to resort to the actual message
+                        // text even though that would not work if the messages had been
+                        // localized... This can also break if the error messages change. Yuck.
+                        if (message.contains("constant expressions")) { //$NON-NLS-1$
+                            foundError = true;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                AdtPlugin.log(e, "Can't validate error message in %1$s", file.getName());
+            } finally {
+                provider.disconnect(file);
+            }
+        }
+        if (!foundError) {
+            // Not a constant-expression warning, so do nothing
+            return null;
+        }
+
+        IBuffer buffer = compilationUnit.getBuffer();
         boolean sameLine = false;
         // See if the caret is on the same line as the error
         if (caret <= errorStart) {
