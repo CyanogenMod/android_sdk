@@ -12,6 +12,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 # If the dependency list is changed, etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
         common \
+        androidprefs \
 	lint_api
 
 LOCAL_MODULE := lint_checks

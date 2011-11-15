@@ -16,17 +16,38 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+
+import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /** Registry which provides a list of checks to be performed on an Android project */
 public class BuiltinIssueRegistry extends IssueRegistry {
+    /** Folder name in the .android dir where additional detector jars are found */
+    private static final String LINT_FOLDER = "lint"; //$NON-NLS-1$
+
+    /**
+     * Manifest constant for declaring an issue provider. Example:
+     * Lint-Issues: foo.bar.CustomIssueRegistry
+     */
+    private static final String MF_LINT_REGISTRY = "Lint-Registry"; //$NON-NLS-1$
+
     private static final List<Issue> sIssues;
 
     static {
@@ -70,7 +91,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(IconDetector.ICON_NODPI);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
 
-        // TODO: Populate dynamically somehow?
+        addCustomIssues(issues);
 
         sIssues = Collections.unmodifiableList(issues);
 
@@ -96,5 +117,87 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     @Override
     public List<Issue> getIssues() {
         return sIssues;
+    }
+
+    /**
+     * Add in custom issues registered by the user - via an environment variable
+     * or in the .android/lint directory.
+     */
+    private static void addCustomIssues(List<Issue> issues) {
+        // Look for additional detectors registered by the user, via
+        // (1) an environment variable (useful for build servers etc), and
+        // (2) via jar files in the .android/lint directory
+        Set<File> files = null;
+        try {
+            File lint = new File(AndroidLocation.getFolder() + File.separator + LINT_FOLDER);
+            if (lint.exists()) {
+                File[] list = lint.listFiles();
+                if (list != null) {
+                    for (File jarFile : list) {
+                        if (endsWith(jarFile.getName(), ".jar")) { //$NON-NLS-1$
+                            if (files == null) {
+                                files = new HashSet<File>();
+                            }
+                            files.add(jarFile);
+                            addIssuesFromJar(jarFile, issues);
+                        }
+                    }
+                }
+            }
+        } catch (AndroidLocationException e) {
+            // Ignore -- no android dir, so no rules to load.
+        }
+
+        String lintClassPath = System.getenv("ANDROID_LINT_JARS"); //$NON-NLS-1$
+        if (lintClassPath != null && lintClassPath.length() > 0) {
+            String[] paths = lintClassPath.split(File.pathSeparator);
+            for (String path : paths) {
+                File jarFile = new File(path);
+                if (jarFile.exists() && (files == null || !files.contains(jarFile))) {
+                    addIssuesFromJar(jarFile, issues);
+                }
+            }
+        }
+
+    }
+
+    /** Add the issues found in the given jar file into the given list of issues */
+    private static void addIssuesFromJar(File jarFile, List<Issue> issues) {
+        try {
+            JarFile jarfile = new JarFile(jarFile);
+            Manifest manifest = jarfile.getManifest();
+            Attributes attrs = manifest.getMainAttributes();
+            Object object = attrs.get(new Attributes.Name(MF_LINT_REGISTRY));
+            if (object instanceof String) {
+                String className = (String) object;
+
+                // Make a class loader for this jar
+                try {
+                    URL url = jarFile.toURI().toURL();
+                    URLClassLoader loader = new URLClassLoader(new URL[] { url },
+                            BuiltinIssueRegistry.class.getClassLoader());
+                    try {
+                        Class<?> registryClass = Class.forName(className, true, loader);
+                        IssueRegistry registry = (IssueRegistry) registryClass.newInstance();
+                        for (Issue issue : registry.getIssues()) {
+                            issues.add(issue);
+                        }
+                    } catch (Throwable e) {
+                        log(e);
+                    }
+                } catch (MalformedURLException e) {
+                    log(e);
+                }
+            }
+        } catch (IOException e) {
+            log(e);
+        }
+    }
+
+    private static void log(Throwable e) {
+        // TODO: Where do we log this? There's no embedding tool context here. For now,
+        // just dump to the console so detector developers get some feedback on what went
+        // wrong.
+        e.printStackTrace();
     }
 }
