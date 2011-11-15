@@ -48,10 +48,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import com.android.sdklib.util.LineUtil;
 import com.android.sdklib.util.SparseIntArray;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
-import com.android.sdkuilib.internal.repository.sdkman1.LocalSdkAdapter;
-import com.android.sdkuilib.internal.repository.sdkman1.RemotePackagesPage;
-import com.android.sdkuilib.internal.repository.sdkman1.RepoSourcesAdapter;
-import com.android.sdkuilib.internal.repository.sdkman1.SdkUpdaterWindowImpl1;
+import com.android.sdkuilib.internal.repository.sdkman2.SdkUpdaterWindowImpl2;
 import com.android.sdkuilib.repository.ISdkChangeListener;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -71,7 +68,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Data shared between {@link SdkUpdaterWindowImpl1} and its pages.
+ * Data shared between {@link SdkUpdaterWindowImpl2} and its pages.
  */
 public class UpdaterData implements IUpdaterData {
 
@@ -89,9 +86,6 @@ public class UpdaterData implements IUpdaterData {
 
     private final LocalSdkParser mLocalSdkParser = new LocalSdkParser();
     private final SdkSources mSources = new SdkSources();
-
-    private final LocalSdkAdapter mLocalSdkAdapter = new LocalSdkAdapter(this);
-    private final RepoSourcesAdapter mSourcesAdapter = new RepoSourcesAdapter(this);
 
     private ImageFactory mImageFactory;
 
@@ -144,16 +138,8 @@ public class UpdaterData implements IUpdaterData {
         return mSources;
     }
 
-    public RepoSourcesAdapter getSourcesAdapter() {
-        return mSourcesAdapter;
-    }
-
     public LocalSdkParser getLocalSdkParser() {
         return mLocalSdkParser;
-    }
-
-    public LocalSdkAdapter getLocalSdkAdapter() {
-        return mLocalSdkAdapter;
     }
 
     public ISdkLog getSdkLog() {
@@ -317,9 +303,6 @@ public class UpdaterData implements IUpdaterData {
      * - the user sources from prefs <br/>
      * - the extra repo URLs from the environment, <br/>
      * - and finally the extra user repo URLs from the environment.
-     * <p/>
-     * Note that the "remote add-ons" list is not loaded from here. Instead
-     * it is fetched the first time the {@link RemotePackagesPage} is displayed.
      */
     public void setupDefaultSources() {
         SdkSources sources = getSources();

@@ -20,7 +20,6 @@ import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.Package;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
-import com.android.sdkuilib.internal.repository.sdkman1.RepoSourcesAdapter;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
@@ -113,11 +112,12 @@ public class ImageFactory {
         } else if (object instanceof SdkSource) {
             return getImageByName("source_icon16.png");                         //$NON-NLS-1$
 
-        } else if (object instanceof RepoSourcesAdapter.RepoSourceError) {
-            return getImageByName("error_icon16.png");                          //$NON-NLS-1$
-
-        } else if (object instanceof RepoSourcesAdapter.RepoSourceEmpty) {
-            return getImageByName("nopkg_icon16.png");                          //$NON-NLS-1$
+        // TODO reintroduce this in SDK Manager 2 in repository view
+        // } else if (object instanceof RepoSourcesAdapter.RepoSourceError) {
+        //     return getImageByName("error_icon16.png");                       //$NON-NLS-1$
+        //
+        // } else if (object instanceof RepoSourcesAdapter.RepoSourceEmpty) {
+        //     return getImageByName("nopkg_icon16.png");                       //$NON-NLS-1$
         }
 
         if (object instanceof Archive) {
