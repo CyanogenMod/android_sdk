@@ -16,3 +16,4 @@
 SDKMANAGER_LOCAL_DIR := $(call my-dir)
 include $(SDKMANAGER_LOCAL_DIR)/app/Android.mk
 include $(SDKMANAGER_LOCAL_DIR)/libs/Android.mk
+include $(SDKMANAGER_LOCAL_DIR)/win_android/Android.mk
