@@ -17,7 +17,7 @@
 package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.internal.repository.ITaskMonitor;
-import com.android.util.Pair;
+import com.android.sdklib.internal.repository.UserCredentials;
 
 /**
  * Internal class that implements the logic of an {@link ITaskMonitor}.
@@ -177,8 +177,8 @@ class TaskMonitorImpl implements ITaskMonitor {
      *         element and Password is always the second. If any error occurs a
      *         pair with empty strings is returned.
      */
-    public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
-        return mUi.displayLoginPasswordPrompt(title, message);
+    public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
+        return mUi.displayLoginCredentialsPrompt(title, message);
     }
 
     /**
@@ -297,8 +297,8 @@ class TaskMonitorImpl implements ITaskMonitor {
             return mRoot.displayPrompt(title, message);
         }
 
-        public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
-            return mRoot.displayLoginPasswordPrompt(title, message);
+        public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
+            return mRoot.displayLoginCredentialsPrompt(title, message);
         }
 
         public ITaskMonitor createSubMonitor(int tickCount) {

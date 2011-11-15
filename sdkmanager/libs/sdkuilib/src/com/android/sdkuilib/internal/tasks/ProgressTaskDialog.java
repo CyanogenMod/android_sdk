@@ -18,6 +18,7 @@ package com.android.sdkuilib.internal.tasks;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.repository.ITaskMonitor;
+import com.android.sdklib.internal.repository.UserCredentials;
 import com.android.sdkuilib.ui.AuthenticationDialog;
 import com.android.sdkuilib.ui.GridDialog;
 import com.android.util.Pair;
@@ -408,31 +409,46 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      *         should retrieve the first element, and the second value for the
      *         <b>password</b>.
      *         If operation is <b>canceled</b> by user the return value must be <b>null</b>.
-     * @see ITaskMonitor#displayLoginPasswordPrompt(String, String)
+     * @see ITaskMonitor#displayLoginCredentialsPrompt(String, String)
      */
-    public Pair<String, String> displayLoginPasswordPrompt(
+    public UserCredentials displayLoginCredentialsPrompt(
             final String title, final String message) {
-        final String[] resultArray = new String[2];
         Display display = mDialogShell.getDisplay();
 
         // open dialog and request login and password
-        display.syncExec(new Runnable() {
-            public void run() {
-                AuthenticationDialog authenticationDialog = new AuthenticationDialog(mDialogShell,
-                            title,
-                            message);
-                int dlgResult= authenticationDialog.open();
-                if(dlgResult == GridDialog.OK) {
-                    resultArray[0] = authenticationDialog.getLogin();
-                    resultArray[1] = authenticationDialog.getPassword();
-                } else {
-                        resultArray[0] = null;
-                        resultArray[1] = null;
-                }
-            }
-        });
+        GetUserCredentialsTask task = new GetUserCredentialsTask(mDialogShell, title, message);
+        display.syncExec(task);
 
-        return resultArray[0] == null ? null : Pair.of(resultArray[0], resultArray[1]);
+        return new UserCredentials(task.userName, task.password, task.workstation, task.domain);
+    }
+
+    private static class GetUserCredentialsTask implements Runnable {
+        public String userName = null;
+        public String password = null;
+        public String workstation = null;
+        public String domain = null;
+
+        private Shell mShell;
+        private String mTitle;
+        private String mMessage;
+
+        public GetUserCredentialsTask(Shell shell, String title, String message) {
+            mShell = shell;
+            mTitle = title;
+            mMessage = message;
+        }
+
+        public void run() {
+            AuthenticationDialog authenticationDialog = new AuthenticationDialog(mShell,
+                        mTitle, mMessage);
+            int dlgResult= authenticationDialog.open();
+            if(dlgResult == GridDialog.OK) {
+                userName = authenticationDialog.getLogin();
+                password = authenticationDialog.getPassword();
+                workstation = authenticationDialog.getWorkstation();
+                domain = authenticationDialog.getDomain();
+            }
+        }
     }
 
     /**

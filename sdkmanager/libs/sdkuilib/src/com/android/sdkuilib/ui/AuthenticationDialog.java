@@ -30,18 +30,18 @@ import org.eclipse.swt.widgets.Text;
  * Dialog which collects from the user his/her login and password.
  */
 public class AuthenticationDialog extends GridDialog {
-
     private Text mTxtLogin;
-
     private Text mTxtPassword;
+    private Text mTxtWorkstation;
+    private Text mTxtDomain;
 
     private String mTitle;
-
     private String mMessage;
 
-    protected String mLogin;
-
-    protected String mPassword;
+    private String mLogin;
+    private String mPassword;
+    private String mWorkstation;
+    private String mDomain;
 
     /**
      * Constructor which retrieves the parent {@link Shell} and the message to
@@ -92,7 +92,7 @@ public class AuthenticationDialog extends GridDialog {
         mTxtLogin.setFocus();
         mTxtLogin.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
-                mLogin = mTxtLogin.getText();
+                mLogin = mTxtLogin.getText().trim();
             }
         });
 
@@ -108,6 +108,43 @@ public class AuthenticationDialog extends GridDialog {
         mTxtPassword.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
                 mPassword = mTxtPassword.getText();
+            }
+        });
+
+        // add a label indicating that the following two fields are optional
+        Label lblInfo = new Label(upperComposite, SWT.NONE);
+        lblInfo.setText("Provide the following info if your proxy uses NTLM authentication. Leave blank otherwise.");
+        data = new GridData();
+        data.horizontalSpan = 2;
+        lblInfo.setLayoutData(data);
+
+        // add workstation label and text field
+        Label lblWorkstation = new Label(upperComposite, SWT.NONE);
+        lblWorkstation.setText("Workstation:");
+        data = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+        lblWorkstation.setLayoutData(data);
+
+        mTxtWorkstation = new Text(upperComposite, SWT.SINGLE | SWT.BORDER);
+        data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+        mTxtWorkstation.setLayoutData(data);
+        mTxtWorkstation.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent arg0) {
+                mWorkstation = mTxtWorkstation.getText().trim();
+            }
+        });
+
+        // add domain label and text field
+        Label lblDomain = new Label(upperComposite, SWT.NONE);
+        lblDomain.setText("Domain:");
+        data = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+        lblDomain.setLayoutData(data);
+
+        mTxtDomain = new Text(upperComposite, SWT.SINGLE | SWT.BORDER);
+        data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+        mTxtDomain.setLayoutData(data);
+        mTxtDomain.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent arg0) {
+                mDomain = mTxtDomain.getText().trim();
             }
         });
     }
@@ -128,5 +165,23 @@ public class AuthenticationDialog extends GridDialog {
      */
     public String getPassword() {
         return mPassword != null ? mPassword : ""; //$NON-NLS-1$
+    }
+
+    /**
+     * Retrieves the workstation field information
+     *
+     * @return Workstation field value or empty String. Return value is never null
+     */
+    public String getWorkstation() {
+        return mWorkstation != null ? mWorkstation : "";
+    }
+
+    /**
+     * Retrieves the domain field information
+     *
+     * @return Domain field value or empty String. Return value is never null
+     */
+    public String getDomain() {
+        return mDomain != null ? mDomain : "";
     }
 }

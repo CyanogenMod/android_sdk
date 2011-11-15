@@ -18,7 +18,6 @@ package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
-import com.android.util.Pair;
 
 
 /**
@@ -94,7 +93,7 @@ public class NullTaskMonitor implements ITaskMonitor {
     }
 
     /** Always return null. */
-    public Pair<String, String> displayLoginPasswordPrompt(String title, String message) {
+    public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
         return null;
     }
 
