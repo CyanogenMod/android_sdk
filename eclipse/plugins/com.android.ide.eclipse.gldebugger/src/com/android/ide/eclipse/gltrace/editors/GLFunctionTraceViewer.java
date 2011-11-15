@@ -21,6 +21,7 @@ import com.android.ide.eclipse.gltrace.GLFrame;
 import com.android.ide.eclipse.gltrace.GLTrace;
 import com.android.ide.eclipse.gltrace.GLTraceReader;
 import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -42,7 +43,11 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IURIEditorInput;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
 /** Display OpenGL function trace in a tabular view. */
@@ -173,12 +178,12 @@ public class GLFunctionTraceViewer extends EditorPart {
     }
 
     private void createFrameTraceView(Composite parent) {
-        Table t = new Table(parent, SWT.BORDER);
+        final Table table = new Table(parent, SWT.BORDER);
         GridData gd = new GridData(GridData.FILL_BOTH);
-        t.setLayoutData(gd);
-        t.setLinesVisible(true);
+        table.setLayoutData(gd);
+        table.setLinesVisible(true);
 
-        mFrameTableViewer = new TableViewer(t);
+        mFrameTableViewer = new TableViewer(table);
 
         // single column that has a list of function calls
         TableViewerColumn tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
@@ -188,6 +193,53 @@ public class GLFunctionTraceViewer extends EditorPart {
 
         tvc.setLabelProvider(new GLFrameLabelProvider());
         mFrameTableViewer.setContentProvider(new GLFrameContentProvider());
+
+        table.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent event) {
+                int []indices = table.getSelectionIndices();
+                if (indices.length != 1) {
+                    return;
+                }
+
+                int selectedIndex = indices[0];
+                GLCall glCall = (GLCall) table.getItem(selectedIndex).getData();
+                displayFB(glCall);
+            }
+        });
+    }
+
+    private void displayFB(GLCall glCall) {
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window == null) {
+            return;
+        }
+
+        IWorkbenchPage page = window.getActivePage();
+        if (page == null) {
+            return;
+        }
+
+        final GLFramebufferView v = displayFBView(page);
+        if (v == null) {
+            return;
+        }
+
+        v.displayFB(glCall);
+    }
+
+    private GLFramebufferView displayFBView(IWorkbenchPage page) {
+        IViewPart view = page.findView(GLFramebufferView.ID);
+        if (view != null) {
+            page.bringToTop(view);
+            return (GLFramebufferView) view;
+        }
+
+        try {
+            return (GLFramebufferView) page.showView(GLFramebufferView.ID);
+        } catch (PartInitException e) {
+            return null;
+        }
     }
 
     @Override
