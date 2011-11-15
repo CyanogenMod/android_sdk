@@ -29,7 +29,10 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -40,6 +43,7 @@ import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IURIEditorInput;
@@ -50,9 +54,15 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /** Display OpenGL function trace in a tabular view. */
 public class GLFunctionTraceViewer extends EditorPart {
     private static final String GL_SPECS_FILE = "/entries.in"; //$NON-NLS-1$
+    private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
     private final GLCallFormatter mGLCallFormatter =
             new GLCallFormatter(getClass().getResourceAsStream(GL_SPECS_FILE));
 
@@ -63,6 +73,8 @@ public class GLFunctionTraceViewer extends EditorPart {
     private GLTrace mTrace;
     private GLFrame mSelectedFrame;
     private TableViewer mFrameTableViewer;
+    private Text mFilterText;
+    private GLCallFilter mGLCallFilter;
 
     public GLFunctionTraceViewer() {
     }
@@ -105,6 +117,7 @@ public class GLFunctionTraceViewer extends EditorPart {
         c.setLayoutData(gd);
 
         createFrameSelectionControls(c);
+        createFilterBar(c);
         createFrameTraceView(c);
 
         // this should be done in a separate thread
@@ -177,6 +190,30 @@ public class GLFunctionTraceViewer extends EditorPart {
         mFrameTableViewer.setInput(mSelectedFrame);
     }
 
+    private void createFilterBar(Composite parent) {
+        Composite c = new Composite(parent, SWT.NONE);
+        c.setLayout(new GridLayout(2, false));
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        c.setLayoutData(gd);
+
+        Label l = new Label(c, SWT.NONE);
+        l.setText("Filter:");
+
+        mFilterText = new Text(c, SWT.BORDER);
+        mFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mFilterText.setMessage(DEFAULT_FILTER_MESSAGE);
+        mFilterText.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                updateAppliedFilters();
+            }
+        });
+    }
+
+    private void updateAppliedFilters() {
+        mGLCallFilter.setFilters(mFilterText.getText().trim());
+        mFrameTableViewer.refresh();
+    }
+
     private void createFrameTraceView(Composite parent) {
         final Table table = new Table(parent, SWT.BORDER);
         GridData gd = new GridData(GridData.FILL_BOTH);
@@ -207,6 +244,9 @@ public class GLFunctionTraceViewer extends EditorPart {
                 displayFB(glCall);
             }
         });
+
+        mGLCallFilter = new GLCallFilter();
+        mFrameTableViewer.addFilter(mGLCallFilter);
     }
 
     private void displayFB(GLCall glCall) {
@@ -280,5 +320,41 @@ public class GLFunctionTraceViewer extends EditorPart {
         }
 
         return result;
+    }
+
+    private static class GLCallFilter extends ViewerFilter {
+        private final List<Pattern> mPatterns = new ArrayList<Pattern>();
+
+        public void setFilters(String filter) {
+            mPatterns.clear();
+
+            // split the user input into multiple regexes
+            // we assume that the regexes are OR'ed together i.e., all text that matches
+            // any one of the regexes will be displayed
+            for (String regex : filter.split(" ")) {
+                mPatterns.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
+            }
+        }
+
+        @Override
+        public boolean select(Viewer viewer, Object parentElement, Object element) {
+            GLCall call = (GLCall) element;
+            String text = call.getFunction().toString();
+
+            if (mPatterns.size() == 0) {
+                // match if there are no regex filters
+                return true;
+            }
+
+            for (Pattern p : mPatterns) {
+                Matcher matcher = p.matcher(text);
+                if (matcher.find()) {
+                    // match if atleast one of the regexes matches this text
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
