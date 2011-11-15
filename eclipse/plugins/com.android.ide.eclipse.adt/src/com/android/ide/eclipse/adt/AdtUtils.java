@@ -382,7 +382,7 @@ public class AdtUtils {
      * @return a list (possibly empty but never null) of matching markers
      */
     public static List<IMarker> findMarkersOnLine(String markerType,
-            IFile file, IDocument document, int offset) {
+            IResource file, IDocument document, int offset) {
         List<IMarker> matchingMarkers = new ArrayList<IMarker>(2);
         try {
             IMarker[] markers = file.findMarkers(markerType, true, IResource.DEPTH_ZERO);
