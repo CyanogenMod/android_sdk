@@ -54,9 +54,6 @@ $(call dist-for-goals,droid,$(LOCAL_BUILT_MODULE))
 
 endif
 
-#----- New experimental sdklauncher. Not ready for production. -----
-
-include $(LOCAL_PATH)/app/Android.mk
 
 
 
