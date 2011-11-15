@@ -1,1 +1,1 @@
-Class-Path: lint_api.jar common.jar
+Class-Path: lint_api.jar common.jar androidprefs.jar
