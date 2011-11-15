@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * Scans a local SDK to find which packages are currently installed.
@@ -417,16 +416,24 @@ public class LocalSdkParser {
 
         // We're not going to check that all tools are present. At the very least
         // we should expect to find android and an emulator adapted to the current OS.
-        Set<String> names = new HashSet<String>();
+        boolean hasEmulator = false;
+        boolean hasAndroid = false;
+        String android1 = SdkConstants.androidCmdName();
+        String android2 = android1.indexOf('.') == -1 ? null : android1.replace(".exe", ".bat");
         File[] files = toolFolder.listFiles();
         if (files != null) {
             for (File file : files) {
-                names.add(file.getName());
+                String name = file.getName();
+                if (SdkConstants.FN_EMULATOR.equals(name)) {
+                    hasEmulator = true;
+                }
+                if (android1.equals(name) || (android2 != null && android2.equals(name))) {
+                    hasAndroid = true;
+                }
             }
         }
 
-        if (!names.contains(SdkConstants.androidCmdName()) ||
-                !names.contains(SdkConstants.FN_EMULATOR)) {
+        if (!hasAndroid || !hasEmulator) {
             return null;
         }
 
