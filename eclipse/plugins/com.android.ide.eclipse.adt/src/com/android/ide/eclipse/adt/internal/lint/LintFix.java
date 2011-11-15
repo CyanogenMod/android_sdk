@@ -21,6 +21,7 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_INPUT_TYPE;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.ide.common.layout.LayoutConstants.ATTR_ORIENTATION;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_N_DP;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_VERTICAL;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
@@ -171,14 +172,16 @@ abstract class LintFix implements ICompletionProposal {
     private static final Map<String, Class<? extends LintFix>> sFixes =
             new HashMap<String, Class<? extends LintFix>>();
     static {
-        sFixes.put(AccessibilityDetector.ISSUE.getId(), AccessibilityFix.class);
-        sFixes.put(InefficientWeightDetector.ISSUE.getId(), LinearLayoutWeightFix.class);
+        sFixes.put(InefficientWeightDetector.INEFFICIENT_WEIGHT.getId(),
+                LinearLayoutWeightFix.class);
+        sFixes.put(AccessibilityDetector.ISSUE.getId(), SetAttributeFix.class);
+        sFixes.put(InefficientWeightDetector.BASELINE_WEIGHTS.getId(), SetAttributeFix.class);
         sFixes.put(HardcodedValuesDetector.ISSUE.getId(), ExtractStringFix.class);
         sFixes.put(UselessViewDetector.USELESS_LEAF.getId(), RemoveUselessViewFix.class);
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
         sFixes.put(PxUsageDetector.ISSUE.getId(), ConvertToDpFix.class);
-        sFixes.put(TextFieldDetector.ISSUE.getId(), SetInputTypeFix.class);
-        sFixes.put(ExportedServiceDetector.ISSUE.getId(), PermissionFix.class);
+        sFixes.put(TextFieldDetector.ISSUE.getId(), SetAttributeFix.class);
+        sFixes.put(ExportedServiceDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
         sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
     }
@@ -323,62 +326,59 @@ abstract class LintFix implements ICompletionProposal {
         }
     }
 
-    private static final class AccessibilityFix extends SetPropertyFix {
-        private AccessibilityFix(String id, IMarker marker) {
+    /** Shared fix class for various builtin attributes */
+    private static final class SetAttributeFix extends SetPropertyFix {
+        private SetAttributeFix(String id, IMarker marker) {
             super(id, marker);
         }
 
         @Override
         protected String getAttribute() {
-            return ATTR_CONTENT_DESCRIPTION;
+            if (mId.equals(AccessibilityDetector.ISSUE.getId())) {
+                return ATTR_CONTENT_DESCRIPTION;
+            } else if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
+                return LintConstants.ATTR_BASELINE_ALIGNED;
+            } else if (mId.equals(ExportedServiceDetector.ISSUE.getId())) {
+                return LintConstants.ATTR_PERMISSION;
+            } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
+                return ATTR_INPUT_TYPE;
+            } else {
+                assert false : mId;
+                return "";
+            }
         }
 
         @Override
         public String getDisplayString() {
-            return "Add content description attribute";
-        }
-    }
-
-    private static final class PermissionFix extends SetPropertyFix {
-        private PermissionFix(String id, IMarker marker) {
-            super(id, marker);
-        }
-
-        @Override
-        protected String getAttribute() {
-            return LintConstants.ATTR_PERMISSION;
+            if (mId.equals(AccessibilityDetector.ISSUE.getId())) {
+                return "Add content description attribute";
+            } else if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
+                return "Set baseline attribute";
+            } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
+                return "Set input type";
+            } else if (mId.equals(ExportedServiceDetector.ISSUE.getId())) {
+                return "Add permission attribute";
+            } else {
+                assert false : mId;
+                return "";
+            }
         }
 
         @Override
         protected boolean invokeCodeCompletion() {
-            return true;
+            return mId.equals(ExportedServiceDetector.ISSUE.getId())
+                    || mId.equals(TextFieldDetector.ISSUE.getId());
         }
 
         @Override
-        public String getDisplayString() {
-            return "Add permission attribute";
-        }
-    }
+        protected String getProposal() {
+            if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
+                return VALUE_FALSE;
+            }
 
-    private static final class SetInputTypeFix extends SetPropertyFix {
-        private SetInputTypeFix(String id, IMarker marker) {
-            super(id, marker);
+            return super.getProposal();
         }
 
-        @Override
-        protected String getAttribute() {
-            return ATTR_INPUT_TYPE;
-        }
-
-        @Override
-        public String getDisplayString() {
-            return "Set input type";
-        }
-
-        @Override
-        protected boolean invokeCodeCompletion() {
-            return true;
-        }
     }
 
     private static final class LinearLayoutWeightFix extends DocumentFix {
