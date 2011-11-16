@@ -38,10 +38,10 @@ public class AuthenticationDialog extends GridDialog {
     private String mTitle;
     private String mMessage;
 
-    private String mLogin;
-    private String mPassword;
-    private String mWorkstation;
-    private String mDomain;
+    private static String sLogin = "";
+    private static String sPassword = "";
+    private static String sWorkstation = "";
+    private static String sDomain = "";
 
     /**
      * Constructor which retrieves the parent {@link Shell} and the message to
@@ -90,9 +90,10 @@ public class AuthenticationDialog extends GridDialog {
         data = new GridData(SWT.FILL, SWT.CENTER, true, false);
         mTxtLogin.setLayoutData(data);
         mTxtLogin.setFocus();
+        mTxtLogin.setText(sLogin);
         mTxtLogin.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
-                mLogin = mTxtLogin.getText().trim();
+                sLogin = mTxtLogin.getText().trim();
             }
         });
 
@@ -105,9 +106,10 @@ public class AuthenticationDialog extends GridDialog {
         mTxtPassword = new Text(upperComposite, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
         data = new GridData(SWT.FILL, SWT.CENTER, true, false);
         mTxtPassword.setLayoutData(data);
+        mTxtPassword.setText(sPassword);
         mTxtPassword.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
-                mPassword = mTxtPassword.getText();
+                sPassword = mTxtPassword.getText();
             }
         });
 
@@ -127,9 +129,10 @@ public class AuthenticationDialog extends GridDialog {
         mTxtWorkstation = new Text(upperComposite, SWT.SINGLE | SWT.BORDER);
         data = new GridData(SWT.FILL, SWT.CENTER, true, false);
         mTxtWorkstation.setLayoutData(data);
+        mTxtWorkstation.setText(sWorkstation);
         mTxtWorkstation.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
-                mWorkstation = mTxtWorkstation.getText().trim();
+                sWorkstation = mTxtWorkstation.getText().trim();
             }
         });
 
@@ -142,9 +145,10 @@ public class AuthenticationDialog extends GridDialog {
         mTxtDomain = new Text(upperComposite, SWT.SINGLE | SWT.BORDER);
         data = new GridData(SWT.FILL, SWT.CENTER, true, false);
         mTxtDomain.setLayoutData(data);
+        mTxtDomain.setText(sDomain);
         mTxtDomain.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent arg0) {
-                mDomain = mTxtDomain.getText().trim();
+                sDomain = mTxtDomain.getText().trim();
             }
         });
     }
@@ -155,7 +159,7 @@ public class AuthenticationDialog extends GridDialog {
      * @return Login field value or empty String. Return value is never null
      */
     public String getLogin() {
-        return mLogin != null ? mLogin : ""; //$NON-NLS-1$
+        return sLogin;
     }
 
     /**
@@ -164,7 +168,7 @@ public class AuthenticationDialog extends GridDialog {
      * @return Password field value or empty String. Return value is never null
      */
     public String getPassword() {
-        return mPassword != null ? mPassword : ""; //$NON-NLS-1$
+        return sPassword;
     }
 
     /**
@@ -173,7 +177,7 @@ public class AuthenticationDialog extends GridDialog {
      * @return Workstation field value or empty String. Return value is never null
      */
     public String getWorkstation() {
-        return mWorkstation != null ? mWorkstation : "";
+        return sWorkstation;
     }
 
     /**
@@ -182,6 +186,6 @@ public class AuthenticationDialog extends GridDialog {
      * @return Domain field value or empty String. Return value is never null
      */
     public String getDomain() {
-        return mDomain != null ? mDomain : "";
+        return sDomain;
     }
 }
