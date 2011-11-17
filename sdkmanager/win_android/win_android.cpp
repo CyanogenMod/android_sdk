@@ -77,7 +77,7 @@ template <class T> class CArray {
     T* mPtr;
     int mSize;
 public:
-    CArray(int size) {
+    explicit CArray(int size) {
         mSize = size;
         mPtr = new T[size];
     }
@@ -95,7 +95,7 @@ public:
         return mPtr[i];
     }
 
-    int size() {
+    int size() const {
         return mSize;
     }
 };
@@ -105,9 +105,9 @@ class CString {
 protected:
     char *mStr;
 public:
-    CString() { mStr = NULL; }
-    CString(const CString &str) { mStr = str.mStr == NULL ? NULL : _strdup(str.mStr); }
-    CString(const char *str) { mStr = NULL; set(str); }
+    CString()                              { mStr = NULL; }
+    CString(const CString &str)            { mStr = str.mStr == NULL ? NULL : _strdup(str.mStr); }
+    explicit CString(const char *str)      { mStr = NULL; set(str); }
     CString(const char *start, int length) { mStr = NULL; set(start, length); }
 
     CString& set(const char *str) {
@@ -166,15 +166,15 @@ public:
 
     // Returns the C string owned by this CString. It will be
     // invalid as soon as this CString is deleted or out of scope.
-    operator const char* () {
+    const char * cstr() const {
         return mStr;
     }
 
-    bool isEmpty() {
+    bool isEmpty() const {
         return mStr == NULL || *mStr == 0;
     }
 
-    int length() {
+    int length() const {
         return mStr == NULL ? 0 : strlen(mStr);
     }
 
@@ -183,12 +183,12 @@ public:
             set(s);
         } else {
             mStr = (char *)realloc((void *)mStr, strlen(mStr) + strlen(s) + 1);
-            strcat((char *)mStr, s);
+            strcat(mStr, s);
         }
         return *this;
     }
 
-    CArray<CString> * split(char sep) {
+    CArray<CString> * split(char sep) const {
         if (mStr == NULL) {
             return new CArray<CString>(0);
         }
@@ -230,22 +230,30 @@ private:
 // A simple path class wrapper.
 class CPath : public CString {
 public:
-    CPath()                 : CString()    { }
-    CPath(const CPath &str) : CString(str) { }
-    CPath(const char *str)  : CString(str) { }
+    CPath()                              : CString()    { }
+    CPath(const CPath &str)              : CString(str) { }
+    explicit CPath(const char *str)      : CString(str) { }
     CPath(const char *start, int length) : CString(start, length) { }
 
     // Appends a path segment, adding a \ as necessary.
+    CPath& addPath(const CString &s) {
+        return addPath(s.cstr());
+    }
+
+    // Appends a path segment, adding a \ as necessary.
     CPath& addPath(const char *s) {
-        int n = length();
-        if (n > 0 && mStr[n-1] != '\\') add("\\");
-        add(s);
+        _ASSERT(s != NULL);
+        if (s != NULL && s[0] != 0) {
+            int n = length();
+            if (n > 0 && s[0] != '\\' && mStr[n-1] != '\\') add("\\");
+            add(s);
+        }
         return *this;
     }
 
     // Returns true if file exist and is not a directory.
     // There's no garantee we have rights to access it.
-    bool fileExists() {
+    bool fileExists() const {
         if (mStr == NULL) return false;
         DWORD attribs = GetFileAttributesA(mStr);
         return attribs != INVALID_FILE_ATTRIBUTES &&
@@ -254,7 +262,7 @@ public:
 
     // Returns true if file exist and is a directory.
     // There's no garantee we have rights to access it.
-    bool dirExists() {
+    bool dirExists() const {
         if (mStr == NULL) return false;
         DWORD attribs = GetFileAttributesA(mStr);
         return attribs != INVALID_FILE_ATTRIBUTES &&
@@ -262,7 +270,7 @@ public:
     }
 
     // Returns a copy of the directory portion of the path, if any
-    CPath dirName() {
+    CPath dirName() const {
         CPath result;
         if (mStr != NULL) {
             char *pos = strrchr(mStr, '\\');
@@ -275,7 +283,7 @@ public:
 
     // Returns a pointer to the baseName part of the path.
     // It becomes invalid if the path changes.
-    const char *baseName() {
+    const char * baseName() const {
         if (mStr != NULL) {
             char *pos = strrchr(mStr, '\\');
             if (pos != NULL) {
@@ -285,7 +293,7 @@ public:
         return NULL;
     }
 
-    // If the path ends with the given searchName, replace it by the new name
+    // If the path ends with the given searchName, replace in-place by the new name
     void replaceName(const char *searchName, const char* newName) {
         if (mStr == NULL) return;
         int n = length();
@@ -313,7 +321,7 @@ static void msgBox(const char* text, ...) {
     formatted.setv(text, ap);
     va_end(ap);
 
-    MessageBoxA(NULL, formatted, "Android SDK Manager", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(NULL, formatted.cstr(), "Android SDK Manager", MB_OK | MB_ICONINFORMATION);
 }
 
 static void displayLastError(const char *description, ...) {
@@ -335,7 +343,7 @@ static void displayLastError(const char *description, ...) {
                       NULL) != 0) {                     /* va_list args */
         formatted.add("\r\n");
         formatted.add(errStr);
-        MessageBox(NULL, formatted, "Android SDK Manager - Error", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, formatted.cstr(), "Android SDK Manager - Error", MB_OK | MB_ICONERROR);
         LocalFree(errStr);
     }
 }
@@ -493,16 +501,16 @@ static bool findJavaInEnvPath(CPath *outJavaPath) {
 
     CArray<CString> *paths = CString(envPath).split(';');
     for(int i = 0; i < paths->size(); i++) {
-        CPath p((*paths)[i]);
+        CPath p((*paths)[i].cstr());
         p.addPath("java.exe");
         if (p.fileExists()) {
             // Make sure we can actually run "java -version".
             CString cmd;
-            cmd.setf("\"%s\" -version", (const char*)p);
-            int code = execWait(cmd);
+            cmd.setf("\"%s\" -version", p.cstr());
+            int code = execWait(cmd.cstr());
             if (code == 0) {
-                if (gDebug) msgBox("Java found via env path: %s", (const char *)p);
-                outJavaPath->set(p);
+                if (gDebug) msgBox("Java found via env path: %s", p.cstr());
+                outJavaPath->set(p.cstr());
                 delete paths;
                 return true;
             }
@@ -555,8 +563,8 @@ static bool mkDirs(const char *tmpDir, const char * dirList[]) {
         CPath path(tmpDir);
         path.addPath(*dir);
         if (!path.dirExists()) {
-            if (!CreateDirectoryA(path, NULL /*lpSecurityAttributes*/)) {
-                displayLastError("Failed to create directory: %s", (const char *)path);
+            if (!CreateDirectoryA(path.cstr(), NULL /*lpSecurityAttributes*/)) {
+                displayLastError("Failed to create directory: %s", path.cstr());
                 return false;
             }
         }
@@ -574,7 +582,7 @@ static bool copyFiles(const char *toolsDir, const char *tmpDir, const char *glob
         CPath fullGlob(toolsDir);
         fullGlob.addPath(*glob);
 
-        HANDLE srcH = FindFirstFileA(fullGlob, &srcFindData);
+        HANDLE srcH = FindFirstFileA(fullGlob.cstr(), &srcFindData);
         if (srcH == INVALID_HANDLE_VALUE) {
             displayLastError("Failed to list files: %s", *glob);
             return false;
@@ -591,7 +599,7 @@ static bool copyFiles(const char *toolsDir, const char *tmpDir, const char *glob
             destPath.addPath(globDir).addPath(srcFindData.cFileName);
 
             // Skip copy if files are likely to not have changed.
-            HANDLE destH = FindFirstFileA(destPath, &destFindData);
+            HANDLE destH = FindFirstFileA(destPath.cstr(), &destFindData);
             if (destH != INVALID_HANDLE_VALUE) {
                 // Size must be same for us to skip it.
                 if (srcFindData.nFileSizeHigh == destFindData.nFileSizeHigh &&
@@ -616,14 +624,14 @@ static bool copyFiles(const char *toolsDir, const char *tmpDir, const char *glob
                 // as read-only so we need to remove any r-o attribute on existing
                 // files if we want a recopy to succeed.
                 if ((destFindData.dwFileAttributes && FILE_ATTRIBUTE_READONLY) != 0) {
-                    SetFileAttributes(destPath,
+                    SetFileAttributes(destPath.cstr(),
                         destFindData.dwFileAttributes ^ FILE_ATTRIBUTE_READONLY);
                 }
             }
 
-            if (!CopyFileA(srcPath, destPath, false /*bFailIfExists*/)) {
+            if (!CopyFileA(srcPath.cstr(), destPath.cstr(), false /*bFailIfExists*/)) {
                 FindClose(srcH);
-                displayLastError("Failed to copy file: %s", (const char*)destPath);
+                displayLastError("Failed to copy file: %s", destPath.cstr());
                 return false;
             }
         } while (FindNextFileA(srcH, &srcFindData) != 0);
@@ -679,12 +687,12 @@ static bool execSdkManager(const char *javaPath,
                  "-classpath \"lib\\sdkmanager.jar;lib\\swtmenubar.jar;lib\\%s\\swt.jar\" " // arch
                  "com.android.sdkmanager.Main "
                  "%s",                                       // extra parameters
-        javawPath.baseName(), toolsDir, tmpDir, (const char *)arch, lpCmdLine);
+        javawPath.baseName(), toolsDir, tmpDir, arch.cstr(), lpCmdLine);
 
-    if (gDebug) msgBox("Executing: %s", (const char *)cmdLine);
+    if (gDebug) msgBox("Executing: %s", cmdLine.cstr());
 
-    if (!execNoWait(javawPath, cmdLine, tmpDir)) {
-        displayLastError("Failed to run %s", (const char *)cmdLine);
+    if (!execNoWait(javawPath.cstr(), cmdLine.cstr(), tmpDir)) {
+        displayLastError("Failed to run %s", cmdLine.cstr());
         return false;
     }
 
@@ -727,15 +735,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     }
     _ASSERT(!tmpDir.isEmpty());
 
-    if (!mkDirs(tmpDir, sMkDirList)) {
+    if (!mkDirs(tmpDir.cstr(), sMkDirList)) {
         return 1;
     }
 
-    if (!copyFiles(toolsDir, tmpDir, sFilesToCopy)) {
+    if (!copyFiles(toolsDir.cstr(), tmpDir.cstr(), sFilesToCopy)) {
         return 1;
     }
 
-    if (!execSdkManager(javaPath, toolsDir, tmpDir, lpCmdLine)) {
+    if (!execSdkManager(javaPath.cstr(), toolsDir.cstr(), tmpDir.cstr(), lpCmdLine)) {
         displayLastError("Failed to start SDK Manager: ");
         return 1;
     }
