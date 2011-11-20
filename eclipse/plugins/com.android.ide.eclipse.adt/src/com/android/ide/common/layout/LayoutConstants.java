@@ -251,6 +251,7 @@ public class LayoutConstants {
     public static final String ATTR_WEIGHT_SUM = "weightSum"; //$NON-NLS-1$
     public static final String ATTR_BASELINE_ALIGNED = "baselineAligned"; //$NON-NLS-1$
     public static String ATTR_ORIENTATION = "orientation"; //$NON-NLS-1$
+    public static String ATTR_EMS = "ems"; //$NON-NLS-1$
 
     public static String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
