@@ -79,11 +79,16 @@ public class DefaultConfiguration extends Configuration {
      */
     private Map<String, Severity> mSeverity;
 
-    protected DefaultConfiguration(LintClient client, Project project, Configuration parent) {
+    protected DefaultConfiguration(LintClient client, Project project, Configuration parent,
+            File configFile) {
         mClient = client;
         mProject = project;
         mParent = parent;
-        mConfigFile = new File(project.getDir(), CONFIG_FILE_NAME);
+        mConfigFile = configFile;
+    }
+
+    protected DefaultConfiguration(LintClient client, Project project, Configuration parent) {
+        this(client, project, parent, new File(project.getDir(), CONFIG_FILE_NAME));
     }
 
     /**
@@ -97,6 +102,19 @@ public class DefaultConfiguration extends Configuration {
     public static DefaultConfiguration create(LintClient client, Project project,
             Configuration parent) {
         return new DefaultConfiguration(client, project, parent);
+    }
+
+    /**
+     * Creates a new {@link DefaultConfiguration} for the given lint config
+     * file, not affiliated with a project. This is used for global
+     * configurations.
+     *
+     * @param client the client to report errors to etc
+     * @param lintFile the lint file containing the configuration
+     * @return a new configuration
+     */
+    public static DefaultConfiguration create(LintClient client, File lintFile) {
+        return new DefaultConfiguration(client, null /*project*/, null /*parent*/, lintFile);
     }
 
     @Override
@@ -331,7 +349,7 @@ public class DefaultConfiguration extends Configuration {
     public void ignore(Issue issue, File file) {
         ensureInitialized();
 
-        String path = mProject.getRelativePath(file);
+        String path = mProject != null ? mProject.getRelativePath(file) : file.getPath();
 
         List<String> paths = mSuppressed.get(issue.getId());
         if (paths == null) {

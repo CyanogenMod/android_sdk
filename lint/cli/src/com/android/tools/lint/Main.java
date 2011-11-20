@@ -16,6 +16,9 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
+import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
@@ -71,6 +74,7 @@ public class Main extends LintClient {
     private static final String ARG_HTML       = "--html";         //$NON-NLS-1$
     private static final String ARG_SIMPLEHTML = "--simplehtml";   //$NON-NLS-1$
     private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
+    private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
     private static final int ERRNO_ERRORS = -1;
     private static final int ERRNO_USAGE = -2;
@@ -90,6 +94,7 @@ public class Main extends LintClient {
     private boolean mShowLines = true;
     private Reporter mReporter;
     private boolean mQuiet;
+    private Configuration mDefaultConfiguration;
 
     /** Creates a CLI driver */
     public Main() {
@@ -201,6 +206,18 @@ public class Main extends LintClient {
                 } else {
                     urlMap = map;
                 }
+            } else if (arg.equals(ARG_CONFIG)) {
+                if (index == args.length - 1 || !endsWith(args[index + 1], DOT_XML)) {
+                    System.err.println("Missing XML configuration file argument");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                String filename = args[++index];
+                File file = new File(filename);
+                if (!file.exists()) {
+                    System.err.println(file.getAbsolutePath() + " does not exist");
+                    System.exit(ERRNO_INVALIDARGS);
+                }
+                mDefaultConfiguration = new CliConfiguration(file);
             } else if (arg.equals(ARG_HTML) || arg.equals(ARG_SIMPLEHTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
@@ -563,6 +580,9 @@ public class Main extends LintClient {
             "path prefixes to corresponding URL prefixes, such as " +
             "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1"));
         out.print(wrapArg(ARG_SIMPLEHTML + " <filename>: Create a simple HTML report"));
+        out.print(wrapArg(ARG_CONFIG + " <filename>: Use the given configuration file to " +
+            "determine whether issues are enabled or disabled. If a project contains " +
+            "a lint.xml file, then this config file will be used as a fallback."));
         out.print(wrapArg(ARG_XML + " <filename>: Create an XML report instead."));
         out.println();
         out.print(wrapArg(ARG_LISTIDS + ": List the available issue id's and exit."));
@@ -588,7 +608,7 @@ public class Main extends LintClient {
 
     @Override
     public Configuration getConfiguration(Project project) {
-        return new CliConfiguration(null, project);
+        return new CliConfiguration(mDefaultConfiguration, project);
     }
 
     @Override
@@ -733,6 +753,10 @@ public class Main extends LintClient {
     private class CliConfiguration extends DefaultConfiguration {
         CliConfiguration(Configuration parent, Project project) {
             super(Main.this, project, parent);
+        }
+
+        CliConfiguration(File lintFile) {
+            super(Main.this, null /*project*/, null /*parent*/, lintFile);
         }
 
         @Override
