@@ -61,6 +61,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InefficientWeightDetector.NESTED_WEIGHTS);
         issues.add(InefficientWeightDetector.BASELINE_WEIGHTS);
         issues.add(ScrollViewChildDetector.ISSUE);
+        issues.add(DeprecationDetector.ISSUE);
+        issues.add(ObsoleteLayoutParamsDetector.ISSUE);
         issues.add(MergeRootFrameLayoutDetector.ISSUE);
         issues.add(NestedScrollingWidgetDetector.ISSUE);
         issues.add(ChildCountDetector.SCROLLVIEW_ISSUE);

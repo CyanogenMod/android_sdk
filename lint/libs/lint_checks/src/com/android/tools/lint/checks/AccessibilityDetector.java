@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 import java.util.Arrays;
@@ -76,12 +77,13 @@ public class AccessibilityDetector extends LayoutDetector {
     @Override
     public void visitElement(Context context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
-            context.client.report(context, ISSUE, context.getLocation(context),
+            context.client.report(context, ISSUE, context.getLocation(element),
                     "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
-            String attribute = element.getAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
+            Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
+            String attribute = attributeNode.getValue();
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
-                context.client.report(context, ISSUE, context.getLocation(context),
+                context.client.report(context, ISSUE, context.getLocation(attributeNode),
                         "[Accessibility] Empty contentDescription attribute on image", null);
             }
         }

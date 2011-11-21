@@ -46,6 +46,8 @@ public class LintConstants {
     public static final String VIEW_TAG = "view";                      //$NON-NLS-1$
     public static final String FRAME_LAYOUT = "FrameLayout";           //$NON-NLS-1$
     public static final String LINEAR_LAYOUT = "LinearLayout";         //$NON-NLS-1$
+    public static final String RELATIVE_LAYOUT = "RelativeLayout";     //$NON-NLS-1$
+    public static final String GRID_LAYOUT = "GridLayout";             //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                    //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                 //$NON-NLS-1$
@@ -53,6 +55,9 @@ public class LintConstants {
     public static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     public static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
     public static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
+    public static final String ABSOLUTE_LAYOUT = "AbsoluteLayout";     //$NON-NLS-1$
+    public static final String TABLE_LAYOUT = "TableLayout";           //$NON-NLS-1$
+    public static final String TABLE_ROW = "TableRow";                 //$NON-NLS-1$
     public static final String IMAGE_BUTTON = "ImageButton";           //$NON-NLS-1$
     public static final String INCLUDE = "include";                    //$NON-NLS-1$
     public static final String MERGE = "merge";                        //$NON-NLS-1$
@@ -93,14 +98,49 @@ public class LintConstants {
     public static final String ATTR_BACKGROUND = "background";         //$NON-NLS-1$
     public static final String ATTR_ORIENTATION = "orientation";       //$NON-NLS-1$
     public static final String ATTR_LAYOUT = "layout";                 //$NON-NLS-1$
-    public static final String ATTR_LAYOUT_ROW = "layout_row";         //$NON-NLS-1$
-    public static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";//$NON-NLS-1$
-    public static final String ATTR_LAYOUT_COLUMN = "layout_column";   //$NON-NLS-1$
     public static final String ATTR_ROW_COUNT = "rowCount";            //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount";      //$NON-NLS-1$
     public static final String ATTR_BASELINE_ALIGNED = "baselineAligned"; //$NON-NLS-1$
-    public static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan"; //$NON-NLS-1$
     public static final String ATTR_CONTENT_DESCRIPTION = "contentDescription"; //$NON-NLS-1$
+
+    // AbsoluteLayout layout params
+    public static final String ATTR_LAYOUT_Y = "layout_y";             //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_X = "layout_x";             //$NON-NLS-1$
+
+    // GridLayout layout params
+    public static final String ATTR_LAYOUT_ROW = "layout_row";         //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ROW_SPAN = "layout_rowSpan";//$NON-NLS-1$
+    public static final String ATTR_LAYOUT_COLUMN = "layout_column";   //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_COLUMN_SPAN = "layout_columnSpan";       //$NON-NLS-1$
+
+    // TableRow
+    public static final String ATTR_LAYOUT_SPAN = "layout_span";       //$NON-NLS-1$
+
+    // RelativeLayout layout params:
+    public static final String ATTR_LAYOUT_ALIGN_LEFT = "layout_alignLeft";        //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_RIGHT = "layout_alignRight";      //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_TOP = "layout_alignTop";          //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_BOTTOM = "layout_alignBottom";    //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_PARENT_TOP = "layout_alignParentTop"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_PARENT_BOTTOM = "layout_alignParentBottom"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_PARENT_LEFT = "layout_alignParentLeft";//$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_PARENT_RIGHT = "layout_alignParentRight";   //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_WITH_PARENT_MISSING = "layout_alignWithParentIfMissing"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ALIGN_BASELINE = "layout_alignBaseline"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_CENTER_IN_PARENT = "layout_centerInParent"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_CENTER_VERTICAL = "layout_centerVertical"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_CENTER_HORIZONTAL = "layout_centerHorizontal"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_TO_RIGHT_OF = "layout_toRightOf";    //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_TO_LEFT_OF = "layout_toLeftOf";      //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_BELOW = "layout_below";              //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ABOVE = "layout_above";              //$NON-NLS-1$
+
+    // Margins
+    public static final String ATTR_LAYOUT_MARGIN = "layout_margin";               //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MARGIN_LEFT = "layout_marginLeft";      //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MARGIN_RIGHT = "layout_marginRight";    //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MARGIN_TOP = "layout_marginTop";        //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MARGIN_BOTTOM = "layout_marginBottom";  //$NON-NLS-1$
 
     // Attribute values
     public static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$
