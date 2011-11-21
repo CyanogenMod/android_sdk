@@ -136,4 +136,6 @@ public final class Category implements Comparable<Category> {
     // Sub categories
     /** Issues related to icons */
     public static final Category ICONS = Category.create(USABILITY, "Icons", null, 7);
+    /** Issues related to typography */
+    public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 8);
 }

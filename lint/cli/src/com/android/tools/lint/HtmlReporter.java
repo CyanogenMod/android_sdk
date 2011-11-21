@@ -352,7 +352,7 @@ class HtmlReporter extends Reporter {
                 String explanation = issue.getExplanation();
                 explanation = explanation.replace("\n", "<br/>");       //$NON-NLS-1$ //$NON-NLS-2$
                 explanation = Main.wrap(explanation);
-                mWriter.write(explanation);
+                appendEscapedText(explanation);
                 mWriter.write("\n</div>\n");                             //$NON-NLS-1$;
                 if (issue.getMoreInfo() != null) {
                     mWriter.write("<div class=\"moreinfo\">");           //$NON-NLS-1$
@@ -505,7 +505,12 @@ class HtmlReporter extends Reporter {
             } else if (c == '&') {
                 mWriter.write("&amp;");                                  //$NON-NLS-1$
             } else {
-                mWriter.write(c);
+                if (c > 255) {
+                    mWriter.write("&#");                                 //$NON-NLS-1$
+                    mWriter.write(Integer.toString(c));
+                } else {
+                    mWriter.write(c);
+                }
             }
         }
     }

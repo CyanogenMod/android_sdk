@@ -46,6 +46,7 @@ import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
+import com.android.tools.lint.checks.TypographyDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintConstants;
@@ -80,9 +81,11 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -186,6 +189,11 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
         sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
         sFixes.put(ObsoleteLayoutParamsDetector.ISSUE.getId(), ObsoleteLayoutParamsFix.class);
+        sFixes.put(TypographyDetector.DASHES.getId(), TypographyFix.class);
+        sFixes.put(TypographyDetector.ELLIPSIS.getId(), TypographyFix.class);
+        sFixes.put(TypographyDetector.FRACTIONS.getId(), TypographyFix.class);
+        sFixes.put(TypographyDetector.OTHER.getId(), TypographyFix.class);
+        sFixes.put(TypographyDetector.QUOTES.getId(), TypographyFix.class);
     }
 
     public static boolean hasFix(String id) {
@@ -476,6 +484,66 @@ abstract class LintFix implements ICompletionProposal {
         public Image getImage() {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             return sharedImages.getImage(ISharedImages.IMG_ETOOL_DELETE);
+        }
+    }
+
+    private static final class TypographyFix extends DocumentFix {
+        private TypographyFix(String id, IMarker marker) {
+            super(id, marker);
+        }
+
+        @Override
+        public boolean needsFocus() {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
+
+        @Override
+        public boolean isBulkCapable() {
+            return false;
+        }
+
+        @Override
+        protected void apply(IDocument document, IStructuredModel model, Node node, int start,
+                int end) {
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                // Find the text node which contains the character in question
+                NodeList childNodes = element.getChildNodes();
+                for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                    Node child = childNodes.item(i);
+                    if (child.getNodeType() == Node.TEXT_NODE) {
+                        IndexedRegion region = (IndexedRegion) child;
+                        String message = mMarker.getAttribute(IMarker.MESSAGE, "");
+                        List<TypographyDetector.ReplaceEdit> edits =
+                                TypographyDetector.getEdits(mId, message, child);
+                        for (TypographyDetector.ReplaceEdit edit : edits) {
+                            try {
+                                document.replace(edit.offset + region.getStartOffset(),
+                                        edit.length, edit.replaceWith);
+                            } catch (BadLocationException e) {
+                                AdtPlugin.log(e, null);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Replace with suggested characters";
+        }
+
+        @Override
+        public Image getImage() {
+            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+            // TODO: Need a better icon here
+            return sharedImages.getImage(ISharedImages.IMG_OBJ_ELEMENT);
         }
     }
 

@@ -102,6 +102,7 @@ gif
 git
 groovy
 guava
+guillemets
 hardcode
 hardcoded
 hardcodes

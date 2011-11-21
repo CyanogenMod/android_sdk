@@ -93,6 +93,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(IconDetector.DUPLICATES_NAMES);
         issues.add(IconDetector.DUPLICATES_CONFIGURATIONS);
         issues.add(IconDetector.ICON_NODPI);
+        issues.add(TypographyDetector.DASHES);
+        issues.add(TypographyDetector.QUOTES);
+        issues.add(TypographyDetector.FRACTIONS);
+        issues.add(TypographyDetector.ELLIPSIS);
+        issues.add(TypographyDetector.OTHER);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
 
         addCustomIssues(issues);
