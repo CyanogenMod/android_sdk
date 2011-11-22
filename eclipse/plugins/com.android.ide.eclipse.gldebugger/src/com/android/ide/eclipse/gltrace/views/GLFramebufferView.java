@@ -17,7 +17,10 @@
 package com.android.ide.eclipse.gltrace.views;
 
 import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
 
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -25,12 +28,18 @@ import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.liblzf.CLZF;
 
-public class GLFramebufferView extends ViewPart {
+import java.util.List;
+
+public class GLFramebufferView extends ViewPart implements ISelectionListener {
     public static final String ID = "com.android.ide.eclipse.gltrace.GLFrameBuffer";
     private Canvas mCanvas;
+    private Image mImage;
 
     public GLFramebufferView() {
     }
@@ -38,6 +47,16 @@ public class GLFramebufferView extends ViewPart {
     @Override
     public void createPartControl(Composite parent) {
         mCanvas = new Canvas(parent, SWT.NONE);
+
+        ISelectionService selectionService = getSite().getWorkbenchWindow().getSelectionService();
+        selectionService.addPostSelectionListener(this);
+    }
+
+    @Override
+    public void dispose() {
+        ISelectionService selectionService = getSite().getWorkbenchWindow().getSelectionService();
+        selectionService.removePostSelectionListener(this);
+        super.dispose();
     }
 
     @Override
@@ -63,7 +82,12 @@ public class GLFramebufferView extends ViewPart {
 
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
-                mCanvas.setBackgroundImage(getImage(glCall, imageArg));
+                if (mImage != null) {
+                    mImage.dispose();
+                }
+
+                mImage = getImage(glCall, imageArg);
+                mCanvas.setBackgroundImage(mImage);
             }
         });
     }
@@ -99,5 +123,25 @@ public class GLFramebufferView extends ViewPart {
         imageData = imageData.scaledTo(imageData.width, -imageData.height);
 
         return new Image(Display.getCurrent(), imageData);
+    }
+
+    public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+        if (!(part instanceof GLFunctionTraceViewer)) {
+            return;
+        }
+
+        if (!(selection instanceof IStructuredSelection)) {
+            return;
+        }
+
+        IStructuredSelection ssel = (IStructuredSelection) selection;
+        @SuppressWarnings("rawtypes")
+        List objects = ssel.toList();
+        if (objects.size() > 0) {
+            Object data = objects.get(0);
+            if (data instanceof GLCall) {
+                displayFB((GLCall) data);
+            }
+        }
     }
 }

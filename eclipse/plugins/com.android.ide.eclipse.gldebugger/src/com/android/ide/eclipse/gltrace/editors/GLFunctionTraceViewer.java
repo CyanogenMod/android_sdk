@@ -21,10 +21,14 @@ import com.android.ide.eclipse.gltrace.GLFrame;
 import com.android.ide.eclipse.gltrace.GLTrace;
 import com.android.ide.eclipse.gltrace.GLTraceReader;
 import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.state.IGLProperty;
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -56,11 +60,14 @@ import org.eclipse.ui.part.EditorPart;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Display OpenGL function trace in a tabular view. */
-public class GLFunctionTraceViewer extends EditorPart {
+public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvider {
+    public static final String ID = "com.android.ide.eclipse.gltrace.GLFunctionTrace"; //$NON-NLS-1$
+
     private static final String GL_SPECS_FILE = "/entries.in"; //$NON-NLS-1$
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
     private final GLCallFormatter mGLCallFormatter =
@@ -123,6 +130,8 @@ public class GLFunctionTraceViewer extends EditorPart {
         // this should be done in a separate thread
         GLTraceReader reader = new GLTraceReader(mFilePath);
         mTrace = reader.parseTrace();
+
+        getSite().setSelectionProvider(mFrameTableViewer);
 
         refreshUI();
     }
@@ -356,5 +365,47 @@ public class GLFunctionTraceViewer extends EditorPart {
 
             return false;
         }
+    }
+
+    public void addSelectionChangedListener(ISelectionChangedListener listener) {
+        if (mFrameTableViewer != null) {
+            mFrameTableViewer.addSelectionChangedListener(listener);
+        }
+    }
+
+    public ISelection getSelection() {
+        if (mFrameTableViewer != null) {
+            return mFrameTableViewer.getSelection();
+        } else {
+            return null;
+        }
+    }
+
+    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+        if (mFrameTableViewer != null) {
+            mFrameTableViewer.removeSelectionChangedListener(listener);
+        }
+    }
+
+    public void setSelection(ISelection selection) {
+        if (mFrameTableViewer != null) {
+            mFrameTableViewer.setSelection(selection);
+        }
+    }
+
+    public IGLProperty getStateAt(GLCall call) {
+        if (mSelectedFrame == null) {
+            return null;
+        }
+
+        return mSelectedFrame.getStateAt(call);
+    }
+
+    public Set<IGLProperty> getChangedProperties(GLCall from, GLCall to, IGLProperty state) {
+        if (mSelectedFrame == null) {
+            return null;
+        }
+
+        return mSelectedFrame.getChangedProperties(from, to, state);
     }
 }
