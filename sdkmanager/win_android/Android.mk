@@ -1,13 +1,27 @@
 # Copyright 2011 The Android Open Source Project
 #
 # Android.mk for sdkmanager/win_android
-#
-# This provides "win_android.exe", a replacement for "android.bat" for Windows only.
 
-
-#----- The current C++ sdklauncher -----
 
 LOCAL_PATH := $(call my-dir)
+
+# find_java static library for host
+# ========================================================
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libfindjava
+LOCAL_SRC_FILES := find_java.cpp utils.cpp
+
+LOCAL_CFLAGS += -Wall -Wno-unused-parameter
+LOCAL_CFLAGS += -D_XOPEN_SOURCE -D_GNU_SOURCE -DSH_HISTORY -DUSE_MINGW
+
+include $(BUILD_HOST_STATIC_LIBRARY)
+
+
+# "win_android.exe", a host replacement for "android.bat". For the Windows SDK only.
+# ========================================================
+
 include $(CLEAR_VARS)
 
 ifeq ($(HOST_OS),windows)
@@ -15,9 +29,11 @@ ifeq ($(HOST_OS),windows)
 LOCAL_SRC_FILES := \
 	win_android.cpp
 
+LOCAL_MODULE := win_android
+LOCAL_STATIC_LIBRARIES := libfindjava
+
 LOCAL_CFLAGS += -Wall -Wno-unused-parameter
 LOCAL_CFLAGS += -D_XOPEN_SOURCE -D_GNU_SOURCE -DSH_HISTORY -DUSE_MINGW
-LOCAL_MODULE := win_android
 
 LOCAL_MODULE_TAGS := optional
 
