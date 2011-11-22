@@ -42,6 +42,7 @@ import junit.framework.TestCase;
 /**
  * Common layout helpers from LayoutRule tests
  */
+@SuppressWarnings("javadoc")
 public class LayoutTestBase extends TestCase {
     /**
      * Helper function used by tests to drag a button into a canvas containing
@@ -308,6 +309,11 @@ public class LayoutTestBase extends TestCase {
         public int dpToPx(int dp) {
             fail("Not supported in tests yet");
             return 0;
+        }
+
+        public String getAppNameSpace() {
+            fail("Not supported in tests yet");
+            return null;
         }
     }
 

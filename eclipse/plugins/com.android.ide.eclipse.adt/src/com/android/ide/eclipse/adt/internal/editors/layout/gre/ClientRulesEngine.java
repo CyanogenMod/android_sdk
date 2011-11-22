@@ -509,4 +509,9 @@ class ClientRulesEngine implements IClientRulesEngine {
         prefix = Character.toLowerCase(prefix.charAt(0)) + prefix.substring(1);
         return DescriptorsUtils.getFreeWidgetId(root, prefix);
     }
+
+    public String getAppNameSpace() {
+        ManifestInfo info = ManifestInfo.get(mRulesEngine.getEditor().getProject());
+        return info.getPackage();
+    }
 }

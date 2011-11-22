@@ -242,5 +242,12 @@ public interface IClientRulesEngine {
      */
     public String getUniqueId(String fqcn);
 
+    /**
+     * Returns the namespace URI for attributes declared and used inside the
+     * app. (This is not the Android namespace.)
+     *
+     * @return the namespace URI
+     */
+    public String getAppNameSpace();
 }
 
