@@ -168,10 +168,12 @@ public class Main extends LintClient {
                                 if (issue.getCategory().getName().startsWith(category) ||
                                         issue.getCategory().getFullName().startsWith(category)) {
                                     describeIssue(issue);
+                                    System.out.println();
                                 }
                             }
                         } else if (registry.isIssueId(id)) {
                             describeIssue(registry.getIssue(id));
+                            System.out.println();
                         } else {
                             System.err.println("Invalid id or category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
@@ -479,7 +481,7 @@ public class Main extends LintClient {
             System.out.println(wrap(issue.getExplanation()));
         }
         if (issue.getMoreInfo() != null) {
-            System.out.println("\nMore information: " + issue.getMoreInfo());
+            System.out.println("More information: " + issue.getMoreInfo());
         }
     }
 

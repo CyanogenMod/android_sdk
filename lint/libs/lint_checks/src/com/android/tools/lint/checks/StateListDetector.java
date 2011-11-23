@@ -52,7 +52,7 @@ public class StateListDetector extends ResourceXmlDetector {
 
     /** Constructs a new {@link StateListDetector} */
     public StateListDetector() {
-    };
+    }
 
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {
