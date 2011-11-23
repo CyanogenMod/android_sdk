@@ -209,8 +209,8 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
             mValues.projectLocationModifiedByUser = true;
             if (!mValues.useDefaultLocation) {
                 File f = new File(mLocationText.getText().trim());
+                mValues.projectLocation = f;
                 if (f.exists() && f.isDirectory() && !f.equals(mValues.projectLocation)) {
-                    mValues.projectLocation = f;
                     updateLocationPathField(mValues.projectLocation.getPath());
                 }
             }
