@@ -33,6 +33,7 @@ public class LintConstants {
     public static final String TAG_INTENT_FILTER = " intent-filter";   //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
     public static final String TAG_ACTIVITY = "activity";              //$NON-NLS-1$
+    public static final String TAG_GRANT_PERMISSION = "grant-uri-permission"; //$NON-NLS-1$
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources";            //$NON-NLS-1$
@@ -75,6 +76,9 @@ public class LintConstants {
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$
     public final static String ATTR_PACKAGE = "package";               //$NON-NLS-1$
     public static final String ATTR_THEME = "theme";                   //$NON-NLS-1$
+    public static final String ATTR_PATH = "path";                     //$NON-NLS-1$
+    public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
+    public static final String ATTR_PATH_PATTERN = "pathPattern";      //$NON-NLS-1$
 
     // Attributes: Resources
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$

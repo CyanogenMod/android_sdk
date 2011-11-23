@@ -19,8 +19,12 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_EXPORTED;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH_PATTERN;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PATH_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_GRANT_PERMISSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_INTENT_FILTER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_SERVICE;
 
@@ -33,6 +37,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -44,10 +49,10 @@ import java.util.EnumSet;
 /**
  * Checks that exported services request a permission.
  */
-public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
+public class SecurityDetector extends Detector.XmlDetectorAdapter {
 
-    /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
+    /** Exported services */
+    public static final Issue EXPORTED_SERVICE = Issue.create(
             "ExportedService", //$NON-NLS-1$
             "Checks for exported services that do not require permissions",
             "Exported services (services which either set exported=true or contain " +
@@ -57,11 +62,24 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
             Category.SECURITY,
             5,
             Severity.WARNING,
-            ExportedServiceDetector.class,
+            SecurityDetector.class,
+            EnumSet.of(Scope.MANIFEST));
+
+    /** Content provides which grant all URIs access */
+    public static final Issue OPEN_PROVIDER = Issue.create(
+            "GrantAllUris", //$NON-NLS-1$
+            "Checks for <grant-uri-permission> elements where everything is shared",
+            "The <grant-uri-permission> element allows specific paths to be shared. " +
+            "This detector checks for a path URL of just '/' (everything), which is " +
+            "probably not what you want; you should limit access to a subset.",
+            Category.SECURITY,
+            7,
+            Severity.WARNING,
+            SecurityDetector.class,
             EnumSet.of(Scope.MANIFEST));
 
     /** Constructs a new accessibility check */
-    public ExportedServiceDetector() {
+    public SecurityDetector() {
     }
 
     @Override
@@ -79,13 +97,21 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
     public Collection<String> getApplicableElements() {
         return Arrays.asList(new String[] {
             TAG_SERVICE,
+            TAG_GRANT_PERMISSION
         });
     }
 
     @Override
     public void visitElement(Context context, Element element) {
-        assert element.getTagName().equals(TAG_SERVICE);
+        String tag = element.getTagName();
+        if (tag.equals(TAG_SERVICE)) {
+            checkService(context, element);
+        } else if (tag.equals(TAG_GRANT_PERMISSION)) {
+            checkGrantPermission(context, element);
+        }
+    }
 
+    private void checkService(Context context, Element element) {
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         boolean exported;
         if (exportValue != null && exportValue.length() > 0) {
@@ -112,12 +138,30 @@ public class ExportedServiceDetector extends Detector.XmlDetectorAdapter {
                     permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
                     if (permission == null || permission.length() == 0) {
                         // No declared permission for this exported service: complain
-                        context.client.report(context, ISSUE,
+                        context.client.report(context, EXPORTED_SERVICE,
                             context.getLocation(element),
                             "Exported service does not require permission", null);
                     }
                 }
             }
+        }
+    }
+
+    private void checkGrantPermission(Context context, Element element) {
+        Attr path = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH);
+        Attr prefix = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PREFIX);
+        Attr pattern = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PATTERN);
+
+        String msg = "Content provider shares everything; this is potentially dangerous.";
+        if (path != null && path.getValue().equals("/")) { //$NON-NLS-1$
+            context.client.report(context, OPEN_PROVIDER, context.getLocation(path), msg, null);
+        }
+        if (prefix != null && prefix.getValue().equals("/")) { //$NON-NLS-1$
+            context.client.report(context, OPEN_PROVIDER, context.getLocation(prefix), msg, null);
+        }
+        if (pattern != null && (pattern.getValue().equals("/")  //$NON-NLS-1$
+               /* || pattern.getValue().equals(".*")*/)) {
+            context.client.report(context, OPEN_PROVIDER, context.getLocation(pattern), msg, null);
         }
     }
 }

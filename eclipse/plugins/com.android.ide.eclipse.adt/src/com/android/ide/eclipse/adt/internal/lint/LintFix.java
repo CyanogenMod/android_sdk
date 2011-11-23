@@ -39,12 +39,12 @@ import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractSt
 import com.android.ide.eclipse.adt.internal.refactorings.extractstring.ExtractStringWizard;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
-import com.android.tools.lint.checks.ExportedServiceDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
+import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TypographyDetector;
 import com.android.tools.lint.checks.UselessViewDetector;
@@ -185,7 +185,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(UselessViewDetector.USELESS_PARENT.getId(), RemoveUselessViewFix.class);
         sFixes.put(PxUsageDetector.ISSUE.getId(), ConvertToDpFix.class);
         sFixes.put(TextFieldDetector.ISSUE.getId(), SetAttributeFix.class);
-        sFixes.put(ExportedServiceDetector.ISSUE.getId(), SetAttributeFix.class);
+        sFixes.put(SecurityDetector.EXPORTED_SERVICE.getId(), SetAttributeFix.class);
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
         sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
         sFixes.put(ObsoleteLayoutParamsDetector.ISSUE.getId(), ObsoleteLayoutParamsFix.class);
@@ -348,7 +348,7 @@ abstract class LintFix implements ICompletionProposal {
                 return ATTR_CONTENT_DESCRIPTION;
             } else if (mId.equals(InefficientWeightDetector.BASELINE_WEIGHTS.getId())) {
                 return LintConstants.ATTR_BASELINE_ALIGNED;
-            } else if (mId.equals(ExportedServiceDetector.ISSUE.getId())) {
+            } else if (mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())) {
                 return LintConstants.ATTR_PERMISSION;
             } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
                 return ATTR_INPUT_TYPE;
@@ -366,7 +366,7 @@ abstract class LintFix implements ICompletionProposal {
                 return "Set baseline attribute";
             } else if (mId.equals(TextFieldDetector.ISSUE.getId())) {
                 return "Set input type";
-            } else if (mId.equals(ExportedServiceDetector.ISSUE.getId())) {
+            } else if (mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())) {
                 return "Add permission attribute";
             } else {
                 assert false : mId;
@@ -376,7 +376,7 @@ abstract class LintFix implements ICompletionProposal {
 
         @Override
         protected boolean invokeCodeCompletion() {
-            return mId.equals(ExportedServiceDetector.ISSUE.getId())
+            return mId.equals(SecurityDetector.EXPORTED_SERVICE.getId())
                     || mId.equals(TextFieldDetector.ISSUE.getId());
         }
 

@@ -83,7 +83,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnusedResourceDetector.ISSUE_IDS);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(ManifestOrderDetector.ISSUE);
-        issues.add(ExportedServiceDetector.ISSUE);
+        issues.add(SecurityDetector.EXPORTED_SERVICE);
+        issues.add(SecurityDetector.OPEN_PROVIDER);
         issues.add(IconDetector.GIF_USAGE);
         issues.add(IconDetector.ICON_DENSITIES);
         issues.add(IconDetector.ICON_MISSING_FOLDER);

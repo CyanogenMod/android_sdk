@@ -19,10 +19,10 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
-public class ExportedServiceDetectorTest extends AbstractCheckTest {
+public class SecurityDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
-        return new ExportedServiceDetector();
+        return new SecurityDetector();
     }
 
     public void testBroken() throws Exception {
@@ -58,4 +58,16 @@ public class ExportedServiceDetectorTest extends AbstractCheckTest {
                     "exportservice3.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
+
+    public void testUri() throws Exception {
+        assertEquals(
+            "AndroidManifest.xml:24: Warning: Content provider shares everything; this is potentially dangerous.\n" +
+            "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous.",
+
+            lintProject(
+                    "grantpermission.xml=>AndroidManifest.xml",
+                    "res/values/strings.xml"));
+    }
+
+
 }
