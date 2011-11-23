@@ -41,7 +41,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.views.LogCatView;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -80,6 +79,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -135,6 +135,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * <b>ALL ACCESS MUST BE INSIDE A <code>synchronized (sListLock)</code> block!</b>
      */
     private final ArrayList<Client> mUnknownClientsWaitingForDebugger = new ArrayList<Client>();
+
+    /** A map of launch config name to device used for that launch config. */
+    private static final Map<String, String> sDeviceUsedForLaunch = new HashMap<String, String>();
 
     /** static instance for singleton */
     private static AndroidLaunchController sThis = new AndroidLaunchController();
@@ -334,6 +337,9 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
          *       The UI must show which devices are compatibles, and allow launching new emulators
          *       with compatible (and not yet running) AVD.
          * - Automatic Way
+         *     * Last Launched Device/AVD set.
+         *           If the last launched device/avd is still present, then simply launch
+         *           on the same device/avd.
          *     * Preferred AVD set.
          *           If Preferred AVD is not running: launch it.
          *           Launch the application on the preferred AVD.
@@ -346,6 +352,14 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         if (config.mTargetMode == TargetMode.AUTO) {
             // if we are in automatic target mode, we need to find the current devices
             IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
+
+            IDevice deviceUsedInLastLaunch = getDeviceUsedForLastLaunch(devices,
+                    launch.getLaunchConfiguration().getName());
+            if (deviceUsedInLastLaunch != null) {
+                response.setDeviceToUse(deviceUsedInLastLaunch);
+                continueLaunch(response, project, launch, launchInfo, config);
+                return;
+            }
 
             // first check if we have a preferred AVD name, and if it actually exists, and is valid
             // (ie able to run the project).
@@ -566,6 +580,8 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                             AdtPlugin.getDisplay().getActiveShell(),
                             response, launchInfo.getPackageName(), desiredProjectTarget);
                     if (dialog.open() == Dialog.OK) {
+                        updateLaunchOnSameDeviceState(response,
+                                launch.getLaunchConfiguration().getName());
                         AndroidLaunchController.this.continueLaunch(response, project, launch,
                                 launchInfo, config);
                     } else {
@@ -588,6 +604,40 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                 }
             }
         });
+    }
+
+    private IDevice getDeviceUsedForLastLaunch(IDevice[] devices,
+            String launchConfigName) {
+        String deviceName = sDeviceUsedForLaunch.get(launchConfigName);
+        if (deviceName == null) {
+            return null;
+        }
+
+        for (IDevice device : devices) {
+            if (deviceName.equals(device.getAvdName()) ||
+                    deviceName.equals(device.getSerialNumber())) {
+                return device;
+            }
+        }
+
+        return null;
+    }
+
+    private void updateLaunchOnSameDeviceState(DeviceChooserResponse response,
+            String launchConfigName) {
+        if (!response.useDeviceForFutureLaunches()) {
+            return;
+        }
+
+        AvdInfo avd = response.getAvdToLaunch();
+        String device = null;
+        if (avd != null) {
+            device = avd.getName();
+        } else {
+            device = response.getDeviceToUse().getSerialNumber();
+        }
+
+        sDeviceUsedForLaunch.put(launchConfigName, device);
     }
 
     /**
