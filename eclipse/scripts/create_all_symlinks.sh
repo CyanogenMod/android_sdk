@@ -145,6 +145,14 @@ if [[ $PLATFORM != "windows-x86" ]]; then
   CP_FILES="$CP_FILES @:$GLD_DEST $GLD_LIBS"
 fi
 
+# Make sure we have lunch sdk-<something>
+if [[ ! "$TARGET_PRODUCT" ]]; then
+    echo "## TARGET_PRODUCT is not set, running build/envsetup.sh"
+  . build/envsetup.sh
+    echo "## lunch sdk-eng"
+  lunch sdk-eng
+fi
+
 # Run make on all libs
 
 J="4"
