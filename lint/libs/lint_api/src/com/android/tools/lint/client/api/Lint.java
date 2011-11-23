@@ -630,8 +630,10 @@ public class Lint {
                 Object data) {
             Configuration configuration = context.configuration;
             if (!configuration.isEnabled(issue)) {
-                mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
-                        issue.toString());
+                if (issue != IssueRegistry.PARSER_ERROR) {
+                    mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
+                            issue.toString());
+                }
                 return;
             }
 
