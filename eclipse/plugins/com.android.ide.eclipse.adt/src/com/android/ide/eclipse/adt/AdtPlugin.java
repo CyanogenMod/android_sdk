@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.adt;
 
+import com.android.AndroidConstants;
 import com.android.ddmuilib.console.DdmConsole;
 import com.android.ddmuilib.console.IDdmConsole;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
-import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -39,9 +39,8 @@ import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerIni
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
-import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
@@ -1411,29 +1410,21 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         // check if we are inside the res folder.
                         String segment = file.getFullPath().segment(1);
                         if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
-                            // we are inside a res/ folder, get the actual ResourceFolder
-                            ProjectResources resources = ResourceManager.getInstance().
-                                getProjectResources(file.getProject());
+                            // we are inside a res/ folder, get the ResourceFolderType of the
+                            // parent folder.
+                            IFolder folder = (IFolder)file.getParent();
+                            String[] folderSegments = folder.getName().split(
+                                    AndroidConstants.RES_QUALIFIER_SEP);
 
-                            // This happens when importing old Android projects in Eclipse
-                            // that lack the container (probably because resources fail to build
-                            // properly.)
-                            if (resources == null) {
-                                log(IStatus.INFO,
-                                        "getProjectResources failed for path %1$s in project %2$s", //$NON-NLS-1$
-                                        file.getFullPath().toOSString(),
-                                        file.getProject().getName());
-                                return;
-                            }
+                            // get the enum for the resource type.
+                            ResourceFolderType type = ResourceFolderType.getTypeByName(
+                                    folderSegments[0]);
 
-                            ResourceFolder resFolder = resources.getResourceFolder(
-                                (IFolder)file.getParent());
-
-                            if (resFolder != null) {
+                            if (type != null) {
                                 if (kind == IResourceDelta.ADDED) {
-                                    resourceAdded(file, resFolder.getType());
+                                    resourceAdded(file, type);
                                 } else if (kind == IResourceDelta.CHANGED) {
-                                    resourceChanged(file, resFolder.getType());
+                                    resourceChanged(file, type);
                                 }
                             } else {
                                 if (DEBUG_XML_FILE_INIT) {
