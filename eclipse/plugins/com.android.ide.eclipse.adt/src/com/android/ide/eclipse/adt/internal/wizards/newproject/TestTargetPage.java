@@ -53,6 +53,7 @@ class TestTargetPage extends WizardPage implements SelectionListener {
     private Button mCurrentRadioButton;
     private Button mExistingRadioButton;
     private FilteredList mProjectList;
+    private boolean mPageShown;
 
     /**
      * Create the wizard.
@@ -114,6 +115,7 @@ class TestTargetPage extends WizardPage implements SelectionListener {
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
+        mPageShown = true;
 
         if (visible) {
             try {
@@ -253,6 +255,16 @@ class TestTargetPage extends WizardPage implements SelectionListener {
         } else if (packageName != null) {
             mValues.testTargetPackageName = packageName;
         }
+    }
+
+    @Override
+    public boolean isPageComplete() {
+        // Ensure that the user sees the page and makes a selection
+        if (!mPageShown) {
+            return false;
+        }
+
+        return super.isPageComplete();
     }
 
     private void validatePage() {
