@@ -99,6 +99,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TypographyDetector.ELLIPSIS);
         issues.add(TypographyDetector.OTHER);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
+        issues.add(OverdrawDetector.ISSUE);
 
         addCustomIssues(issues);
 

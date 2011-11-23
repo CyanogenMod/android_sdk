@@ -32,6 +32,7 @@ public class LintConstants {
     public static final String TAG_APPLICATION = "application";        //$NON-NLS-1$
     public static final String TAG_INTENT_FILTER = " intent-filter";   //$NON-NLS-1$
     public static final String TAG_USES_SDK = "uses-sdk";              //$NON-NLS-1$
+    public static final String TAG_ACTIVITY = "activity";              //$NON-NLS-1$
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources";            //$NON-NLS-1$
@@ -63,16 +64,21 @@ public class LintConstants {
     public static final String MERGE = "merge";                        //$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
 
+    // Tags: Drawables
+    public static final String TAG_BITMAP = "bitmap";                  //$NON-NLS-1$
+
     // Attributes: Manifest
     public static final String ATTR_EXPORTED = "exported";             //$NON-NLS-1$
     public static final String ATTR_PERMISSION = "permission";         //$NON-NLS-1$
     public static final String ATTR_MIN_SDK_VERSION = "minSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_TARGET_SDK_VERSION = "targetSdkVersion"; //$NON-NLS-1$
     public static final String ATTR_ICON = "icon";                     //$NON-NLS-1$
-    public final static String ATTRIBUTE_PACKAGE = "package";          //$NON-NLS-1$
+    public final static String ATTR_PACKAGE = "package";               //$NON-NLS-1$
+    public static final String ATTR_THEME = "theme";                   //$NON-NLS-1$
 
     // Attributes: Resources
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
+    public static final String ATTR_PARENT = "parent";                 //$NON-NLS-1$
     public static final String ATTR_TRANSLATABLE = "translatable";     //$NON-NLS-1$
 
     // Attributes: Layout
@@ -143,10 +149,17 @@ public class LintConstants {
     public static final String ATTR_LAYOUT_MARGIN_TOP = "layout_marginTop";        //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MARGIN_BOTTOM = "layout_marginBottom";  //$NON-NLS-1$
 
-    // Attribute values
+    // Attributes: Drawables
+    public static final String ATTR_TILE_MODE = "tileMode";            //$NON-NLS-1$
+
+    // Values: Layouts
     public static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$
     public static final String VALUE_MATCH_PARENT = "match_parent";     //$NON-NLS-1$
     public static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
+
+    // Values: Drawables
+    public static final String VALUE_DISABLED = "disabled";            //$NON-NLS-1$
+    public static final String VALUE_CLAMP = "clamp";                  //$NON-NLS-1$
 
     // Filenames and folder names
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
@@ -156,6 +169,8 @@ public class LintConstants {
     public static final String DOT_JPG = ".jpg";                       //$NON-NLS-1$
     public static final String DOT_PNG = ".png";                       //$NON-NLS-1$
     public static final String DOT_9PNG = ".9.png";                    //$NON-NLS-1$
+    public static final String DOT_JAVA = ".java";                     //$NON-NLS-1$
+    public static final String DOT_CLASS = ".class";                   //$NON-NLS-1$
     public static final String DRAWABLE_FOLDER = "drawable";           //$NON-NLS-1$
     public static final String DRAWABLE_XHDPI = "drawable-xhdpi";      //$NON-NLS-1$
     public static final String DRAWABLE_HDPI = "drawable-hdpi";        //$NON-NLS-1$
@@ -163,10 +178,15 @@ public class LintConstants {
     public static final String DRAWABLE_LDPI = "drawable-ldpi";        //$NON-NLS-1$
 
     // Resources
-    public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/";//$NON-NLS-1$
-    public static final String VALUE_LAYOUT_PREFIX = "@layout/";        //$NON-NLS-1$
+    public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/"; //$NON-NLS-1$
+    public static final String LAYOUT_RESOURCE_PREFIX = "@layout/";     //$NON-NLS-1$
+    public static final String STYLE_RESOURCE_PREFIX = "@style/";       //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ID = "id";                  //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ARRAY = "array";            //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ATTR = "attr";              //$NON-NLS-1$
     public static final String RESOURCE_CLR_STYLEABLE = "styleable";    //$NON-NLS-1$
+    public static final String NULL_RESOURCE = "@null";                 //$NON-NLS-1$
+    public static final String TRANSPARENT_COLOR = "@android:color/transparent";      //$NON-NLS-1$
+    public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/";     //$NON-NLS-1$
+
 }

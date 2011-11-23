@@ -17,7 +17,7 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTRIBUTE_PACKAGE;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
@@ -272,7 +272,7 @@ public class Project {
             return;
         }
 
-        mPackage = root.getAttribute(ATTRIBUTE_PACKAGE);
+        mPackage = root.getAttribute(ATTR_PACKAGE);
 
         // Initialize minSdk and targetSdk
         NodeList usesSdks = root.getElementsByTagName(TAG_USES_SDK);

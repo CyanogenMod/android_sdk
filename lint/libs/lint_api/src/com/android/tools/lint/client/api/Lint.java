@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
+
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.Category;
@@ -110,9 +113,9 @@ public class Lint {
                                 || file.getParent().equals(RES_FOLDER_NAME)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
                             mScope.add(Scope.RESOURCE_FILE);
-                        } else if (name.endsWith(".java")) {
+                        } else if (name.endsWith(DOT_JAVA)) {
                             mScope.add(Scope.JAVA_FILE);
-                        } else if (name.endsWith(".class")) {
+                        } else if (name.endsWith(DOT_CLASS)) {
                             mScope.add(Scope.CLASS_FILE);
                         }
                     }
@@ -529,8 +532,7 @@ public class Lint {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
                     if (LintUtils.isXmlFile(file)) {
-                        Context context = new Context(mClient, project, file,
-                                mScope);
+                        Context context = new Context(mClient, project, file, mScope);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {

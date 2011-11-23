@@ -55,12 +55,12 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_Y;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.GRID_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
+import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.MERGE;
 import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_LAYOUT_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 
 import com.android.tools.lint.detector.api.Category;
@@ -337,8 +337,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     @Override
     public void visitElement(Context context, Element element) {
         String layout = element.getAttribute(ATTR_LAYOUT);
-        if (layout.startsWith(VALUE_LAYOUT_PREFIX)) { // Ignore @android:layout/ layouts
-            layout = layout.substring(VALUE_LAYOUT_PREFIX.length());
+        if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
+            layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
 
             Node parent = element.getParentNode();
             if (parent.getNodeType() == Node.ELEMENT_NODE) {
