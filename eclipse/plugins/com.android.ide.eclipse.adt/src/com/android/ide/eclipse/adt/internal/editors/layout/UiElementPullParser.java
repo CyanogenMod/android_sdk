@@ -348,7 +348,7 @@ public class UiElementPullParser extends BasePullParser {
         Node xmlNode = uiNode.getXmlNode();
 
         if (xmlNode != null) {
-            if (localName.equals(ATTR_LAYOUT) && xmlNode.getNodeName().equals(VIEW_FRAGMENT)) {
+            if (ATTR_LAYOUT.equals(localName) && VIEW_FRAGMENT.equals(xmlNode.getNodeName())) {
                 String layout = FragmentMenu.getFragmentLayout(xmlNode);
                 if (layout != null) {
                     return layout;
