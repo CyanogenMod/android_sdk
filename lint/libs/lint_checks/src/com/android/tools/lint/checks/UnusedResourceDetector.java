@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STYLEABLE;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
@@ -27,6 +28,7 @@ import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
 
 import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -140,7 +142,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     // TODO: Use a proper Java AST...
     private void scanJavaFile(Context context, File file) {
         String fileName = file.getName();
-        if (fileName.endsWith(".java") && file.exists()) { //$NON-NLS-1$
+        if (fileName.endsWith(DOT_JAVA) && file.exists()) {
             if (fileName.equals("R.java")) { //$NON-NLS-1$
                 addJavaDeclarations(context, file);
             } else {
@@ -358,11 +360,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 location = mAttrToLocation.get(attr);
                 if (location == null) {
                     File f = mAttrToFile.get(attr);
-                    Position start = context.client.getParser().getStartPosition(context,
-                            attr);
+                    IDomParser parser = context.client.getParser();
+                    Position start = parser.getStartPosition(context, attr);
                     Position end = null;
                     if (start != null) {
-                        end = context.client.getParser().getEndPosition(context, attr);
+                        end = parser.getEndPosition(context, attr);
                     }
                     location = new Location(f, start, end);
                 }

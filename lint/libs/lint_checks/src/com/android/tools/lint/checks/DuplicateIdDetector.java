@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
-import static com.android.tools.lint.detector.api.LintConstants.VALUE_LAYOUT_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
 
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -143,8 +143,8 @@ public class DuplicateIdDetector extends LayoutDetector {
         // project has been fully checked
 
         String layout = element.getAttribute(ATTR_LAYOUT); // NOTE: Not in android: namespace
-        if (layout.startsWith(VALUE_LAYOUT_PREFIX)) { // Ignore @android:layout/ layouts
-            layout = layout.substring(VALUE_LAYOUT_PREFIX.length());
+        if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
+            layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
 
             List<String> to = mIncludes.get(context.file);
             if (to == null) {
