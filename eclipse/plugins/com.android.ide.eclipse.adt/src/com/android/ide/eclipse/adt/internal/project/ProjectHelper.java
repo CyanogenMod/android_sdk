@@ -961,5 +961,11 @@ public final class ProjectHelper {
             project.build(IncrementalProjectBuilder.FULL_BUILD,
                           PostCompilerBuilder.ID, args, monitor);
         }
+
+        // because the post compiler builder does a delayed refresh due to
+        // library not picking the refresh up if it's done during the build,
+        // we want to force a refresh here as this call is generally asking for
+        // a build to use the apk right after the call.
+        project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
     }
 }
