@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="" default="debug">
+<project name="android_rules" default="debug">
 
     <!--
         This build file is imported by the project build file. It contains
@@ -50,6 +50,7 @@
     <property name="java.encoding" value="UTF-8" />
     <property name="java.target" value="1.5" />
     <property name="java.source" value="1.5" />
+    <property name="java.compilerargs" value="" />
 
     <!-- Verbosity -->
     <property name="verbose" value="false" />
@@ -376,8 +377,13 @@
          to clean the main project as well as the libraries and tested project -->
     <target name="all" depends="-setup"/>
 
+    <!-- empty default pre-clean target. Create a similar target in
+         your build.xml and it'll be called instead of this one. -->
+    <target name="-pre-clean"/>
+
     <!-- clean target -->
-    <target name="clean" description="Removes output files created by other targets.">
+    <target name="clean" depends="-pre-clean"
+            description="Removes output files created by other targets.">
         <delete dir="${out.absolute.dir}" verbose="${verbose}" />
         <delete dir="${gen.absolute.dir}" verbose="${verbose}" />
 
@@ -654,6 +660,7 @@
                 <classpath>
                     <fileset dir="${extensible.libs.classpath}" includes="*.jar" />
                 </classpath>
+                <compilerarg line="${java.compilerargs}" />
             </javac>
             <!-- if the project is a library then we generate a jar file -->
             <if condition="${project.is.library}">
@@ -863,7 +870,7 @@
     </target>
 
     <target name="-set-mode-check">
-        <fail if="out.final.file"
+        <fail if="build.is.mode.set"
                 message="Cannot run two different modes at the same time. If you are running more than one debug/release/instrument type targets, call them from different Ant calls." />
     </target>
 
@@ -875,6 +882,7 @@
 
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-debug-unaligned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-debug.apk" />
+        <property name="build.is.mode.set" value="true" />
     </target>
 
 
@@ -964,6 +972,7 @@
     <target name="-set-release-mode" depends="-set-mode-check">
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-release-unsigned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-release.apk" />
+        <property name="build.is.mode.set" value="true" />
 
         <!-- record the current build target -->
         <property name="build.target" value="release" />
@@ -1039,6 +1048,7 @@
     <target name="-set-instrumented-mode" depends="-set-mode-check">
         <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-instrumented-unaligned.apk" />
         <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-instrumented.apk" />
+        <property name="build.is.mode.set" value="true" />
 
         <!-- whether the build is an instrumented build. -->
         <property name="build.is.instrumented" value="true" />
