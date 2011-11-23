@@ -39,8 +39,8 @@ import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerIni
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
 import com.android.ide.eclipse.adt.internal.ui.EclipseUiHelper;
@@ -51,7 +51,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
@@ -1375,6 +1374,8 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return mResourceMonitor;
     }
 
+    private static final String UNKNOWN_EDITOR = "unknown-editor"; //$NON-NLS-1$
+
     /**
      * Sets up the editor to register default editors for resource files when needed.
      *
@@ -1384,8 +1385,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      */
     public void setupDefaultEditor(GlobalProjectMonitor monitor) {
         monitor.addFileListener(new IFileListener() {
-
-            private static final String UNKNOWN_EDITOR = "unknown-editor"; //$NON-NLS-1$
 
             /* (non-Javadoc)
              * Sent when a file changed.
@@ -1412,8 +1411,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         if (segment.equalsIgnoreCase(SdkConstants.FD_RESOURCES)) {
                             // we are inside a res/ folder, get the ResourceFolderType of the
                             // parent folder.
-                            IFolder folder = (IFolder)file.getParent();
-                            String[] folderSegments = folder.getName().split(
+                            String[] folderSegments = file.getParent().getName().split(
                                     AndroidConstants.RES_QUALIFIER_SEP);
 
                             // get the enum for the resource type.
@@ -1461,40 +1459,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                     AdtPlugin.log(IStatus.INFO, "resourceAdded %1$s - type=%1$s",
                         file.getFullPath().toOSString(), type);
                 }
-                // set the default editor based on the type.
-                if (type == ResourceFolderType.LAYOUT) {
-                    if (DEBUG_XML_FILE_INIT) {
-                        AdtPlugin.log(IStatus.INFO, "   set default editor id to layout");
-                    }
-                    IDE.setDefaultEditor(file, LayoutEditor.ID);
-                } else if (type == ResourceFolderType.VALUES) {
-                    IDE.setDefaultEditor(file, ResourcesEditor.ID);
-                } else if (type == ResourceFolderType.MENU) {
-                    IDE.setDefaultEditor(file, MenuEditor.ID);
-                } else if (type == ResourceFolderType.COLOR) {
-                    IDE.setDefaultEditor(file, ColorEditor.ID);
-                } else if (type == ResourceFolderType.DRAWABLE) {
-                    IDE.setDefaultEditor(file, DrawableEditor.ID);
-                } else if (type == ResourceFolderType.ANIMATOR
-                        || type == ResourceFolderType.ANIM) {
-                    IDE.setDefaultEditor(file, AnimationEditor.ID);
-                } else if (type == ResourceFolderType.XML) {
-                    if (XmlEditor.canHandleFile(file)) {
-                        if (DEBUG_XML_FILE_INIT) {
-                            AdtPlugin.log(IStatus.INFO, "   set default editor id to XmlEditor.id");
-                        }
-                        IDE.setDefaultEditor(file, XmlEditor.ID);
-                    } else {
-                        if (DEBUG_XML_FILE_INIT) {
-                            AdtPlugin.log(IStatus.INFO, "   set default editor id unknown");
-                        }
-                        // set a property to determine later if the XML can be handled
-                        QualifiedName qname = new QualifiedName(
-                                AdtPlugin.PLUGIN_ID,
-                                UNKNOWN_EDITOR);
-                        setFileProperty(file, qname, "1"); //$NON-NLS-1$
-                    }
-                }
+                assignEditor(file, type);
             }
 
             private void resourceChanged(IFile file, ResourceFolderType type) {
@@ -1706,6 +1671,49 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     public void warning(String format, Object... args) {
         log(IStatus.WARNING, format, args);
+    }
+
+    /**
+     * Assign an editor for the given {@link IFile}.
+     *
+     * @param file the file to assign
+     * @param type resource type for the file
+     */
+    public static void assignEditor(IFile file, ResourceFolderType type) {
+        // set the default editor based on the type.
+        if (type == ResourceFolderType.LAYOUT) {
+            if (DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(IStatus.INFO, "   set default editor id to layout");
+            }
+            IDE.setDefaultEditor(file, LayoutEditor.ID);
+        } else if (type == ResourceFolderType.VALUES) {
+            IDE.setDefaultEditor(file, ResourcesEditor.ID);
+        } else if (type == ResourceFolderType.MENU) {
+            IDE.setDefaultEditor(file, MenuEditor.ID);
+        } else if (type == ResourceFolderType.COLOR) {
+            IDE.setDefaultEditor(file, ColorEditor.ID);
+        } else if (type == ResourceFolderType.DRAWABLE) {
+            IDE.setDefaultEditor(file, DrawableEditor.ID);
+        } else if (type == ResourceFolderType.ANIMATOR
+                || type == ResourceFolderType.ANIM) {
+            IDE.setDefaultEditor(file, AnimationEditor.ID);
+        } else if (type == ResourceFolderType.XML) {
+            if (XmlEditor.canHandleFile(file)) {
+                if (DEBUG_XML_FILE_INIT) {
+                    AdtPlugin.log(IStatus.INFO, "   set default editor id to XmlEditor.id");
+                }
+                IDE.setDefaultEditor(file, XmlEditor.ID);
+            } else {
+                if (DEBUG_XML_FILE_INIT) {
+                    AdtPlugin.log(IStatus.INFO, "   set default editor id unknown");
+                }
+                // set a property to determine later if the XML can be handled
+                QualifiedName qname = new QualifiedName(
+                        AdtPlugin.PLUGIN_ID,
+                        UNKNOWN_EDITOR);
+                setFileProperty(file, qname, "1"); //$NON-NLS-1$
+            }
+        }
     }
 
     /**

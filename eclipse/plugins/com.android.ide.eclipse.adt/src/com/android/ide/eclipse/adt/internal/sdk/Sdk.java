@@ -16,6 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.sdk;
 
+import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.AdtUtils.endsWith;
+import static com.android.sdklib.SdkConstants.FD_RES;
+
+import com.android.AndroidConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
@@ -33,6 +38,7 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryDifference;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
@@ -40,22 +46,26 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
+import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.ui.ide.IDE;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,8 +76,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Central point to load, manipulate and deal with the Android SDK. Only one SDK can be used
@@ -946,6 +956,9 @@ public final class Sdk  {
                     }
                 }
 
+                // Correct file editor associations.
+                fixEditorAssociations(openedProject);
+
                 if (DEBUG) {
                     System.out.println("<<<");
                 }
@@ -1136,5 +1149,84 @@ public final class Sdk  {
         // done, but there may be parents that are also libraries. Need to update their parents.
         updateParentProjects();
     }
-}
 
+    /** Fix editor associations for the given project, if not already done.
+     * <p>
+     * Eclipse has a per-file setting for which editor should be used for each file
+     * (see {@link IDE#setDefaultEditor(IFile, String)}).
+     * We're using this flag to pick between the various XML editors (layout, drawable, etc)
+     * since they all have the same file name extension.
+     * <p>
+     * Unfortunately, the file setting can be "wrong" for two reasons:
+     * <ol>
+     *   <li> The editor type was added <b>after</b> a file had been seen by the IDE.
+     *        For example, we added new editors for animations and for drawables around
+     *        ADT 12, but any file seen by ADT in earlier versions will continue to use
+     *        the vanilla Eclipse XML editor instead.
+     *   <li> A bug in ADT 14 and ADT 15 (see issue 21124) meant that files created in new
+     *        folders would end up with wrong editor associations. Even though that bug
+     *        is fixed in ADT 16, the fix only affects new files, it cannot retroactively
+     *        fix editor associations that were set incorrectly by ADT 14 or 15.
+     * </ol>
+     * <p>
+     * This method attempts to fix the editor bindings retroactively by scanning all the
+     * resource XML files and resetting the editor associations.
+     * Since this is a potentially slow operation, this is only done "once"; we use a
+     * persistent project property to avoid looking repeatedly. In the future if we add
+     * additional editors, we can rev the scanned version value.
+     */
+    private void fixEditorAssociations(final IProject project) {
+        QualifiedName KEY = new QualifiedName(AdtPlugin.PLUGIN_ID, "editorbinding"); //$NON-NLS-1$
+
+        try {
+            String value = project.getPersistentProperty(KEY);
+
+            if (value != null) {
+                return;
+            }
+
+            // Set to specific version such that we can rev the version in the future
+            // to trigger further scanning
+            project.setPersistentProperty(KEY, "1"); //$NON-NLS-1$
+
+            Job job = new Job("Update Android editor bindings") { //$NON-NLS-1$
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    try {
+                        for (IResource folderResource : project.getFolder(FD_RES).members()) {
+                            if (folderResource instanceof IFolder) {
+                                IFolder folder = (IFolder) folderResource;
+
+                                String[] folderSegments = folder.getName().split(
+                                        AndroidConstants.RES_QUALIFIER_SEP);
+
+                                ResourceFolderType type = ResourceFolderType.getTypeByName(
+                                        folderSegments[0]);
+
+                                if (type == null) {
+                                    continue;
+                                }
+
+                                for (IResource resource : folder.members()) {
+                                    if (endsWith(resource.getName(), DOT_XML)
+                                            && resource instanceof IFile) {
+                                        IFile file = (IFile) resource;
+                                        AdtPlugin.assignEditor(file, type);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (CoreException e) {
+                        AdtPlugin.log(e, null);
+                    }
+
+                    return Status.OK_STATUS;
+                }
+            };
+            job.setPriority(Job.BUILD);
+            job.schedule();
+        } catch (CoreException e) {
+            AdtPlugin.log(e, null);
+        }
+    }
+}

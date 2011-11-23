@@ -219,6 +219,7 @@ residual
 resilient
 resizability
 resizable
+rev
 risky
 rollback
 rowspan
