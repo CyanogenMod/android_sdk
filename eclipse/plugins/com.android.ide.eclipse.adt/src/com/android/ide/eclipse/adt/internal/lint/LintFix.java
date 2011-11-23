@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.ExportedServiceDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.InefficientWeightDetector;
+import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
@@ -184,6 +185,7 @@ abstract class LintFix implements ICompletionProposal {
         sFixes.put(ExportedServiceDetector.ISSUE.getId(), SetAttributeFix.class);
         sFixes.put(DetectMissingPrefix.MISSING_NAMESPACE.getId(), AddPrefixFix.class);
         sFixes.put(ScrollViewChildDetector.ISSUE.getId(), SetScrollViewSizeFix.class);
+        sFixes.put(ObsoleteLayoutParamsDetector.ISSUE.getId(), ObsoleteLayoutParamsFix.class);
     }
 
     public static boolean hasFix(String id) {
@@ -423,6 +425,57 @@ abstract class LintFix implements ICompletionProposal {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             // TODO: Need a better icon here
             return sharedImages.getImage(ISharedImages.IMG_OBJ_ELEMENT);
+        }
+    }
+
+    private static final class ObsoleteLayoutParamsFix extends DocumentFix {
+        private ObsoleteLayoutParamsFix(String id, IMarker marker) {
+            super(id, marker);
+        }
+
+        @Override
+        public boolean needsFocus() {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return false;
+        }
+
+        @Override
+        public boolean isBulkCapable() {
+            return false;
+        }
+
+        @Override
+        protected void apply(IDocument document, IStructuredModel model, Node node, int start,
+                int end) {
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                NamedNodeMap attributes = element.getAttributes();
+                for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                    Attr attribute = (Attr) attributes.item(i);
+                    if (attribute instanceof IndexedRegion) {
+                        IndexedRegion region = (IndexedRegion) attribute;
+                        if (region.getStartOffset() == start) {
+                            element.removeAttribute(attribute.getName());
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Remove attribute";
+        }
+
+        @Override
+        public Image getImage() {
+            ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
+            return sharedImages.getImage(ISharedImages.IMG_ETOOL_DELETE);
         }
     }
 
