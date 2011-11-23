@@ -18,6 +18,13 @@
             name="OpenGL Framebuffer"
             restorable="true">
       </view>
+      <view
+            class="com.android.ide.eclipse.gltrace.views.GLStateView"
+            icon="icons/opengl.png"
+            id="com.android.ide.eclipse.gltrace.GLState"
+            name="OpenGL State"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
