@@ -282,6 +282,38 @@ public class XmlPrettyPrinter {
             // Note that we append the actual text content, NOT the trimmed content,
             // since the whitespace may be significant, e.g.
             // <string name="toast_sync_error">Sync error: <xliff:g id="error">%1$s</xliff:g>...
+
+            // However, we should remove all blank lines in the prefix and suffix of the
+            // text node, or we will end up inserting additional blank lines each time you're
+            // formatting a text node within an outer element (which also adds spacing lines)
+            int lastPrefixNewline = -1;
+            for (int i = 0, n = text.length(); i < n; i++) {
+                char c = text.charAt(i);
+                if (c == '\n') {
+                    lastPrefixNewline = i;
+                } else if (!Character.isWhitespace(c)) {
+                    break;
+                }
+            }
+            int firstSuffixNewline = -1;
+            for (int i = text.length() - 1; i >= 0; i--) {
+                char c = text.charAt(i);
+                if (c == '\n') {
+                    firstSuffixNewline = i;
+                } else if (!Character.isWhitespace(c)) {
+                    break;
+                }
+            }
+            if (lastPrefixNewline != -1 || firstSuffixNewline != -1) {
+                if (lastPrefixNewline == -1) {
+                    lastPrefixNewline = 0;
+                }
+                if (firstSuffixNewline == -1) {
+                    firstSuffixNewline = text.length();
+                }
+                text = text.substring(lastPrefixNewline + 1, firstSuffixNewline);
+            }
+
             DomUtilities.appendXmlTextValue(mOut, text);
 
             if (mStyle != XmlFormatStyle.RESOURCE) {

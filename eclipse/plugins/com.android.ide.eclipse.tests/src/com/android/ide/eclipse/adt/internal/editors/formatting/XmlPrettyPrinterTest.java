@@ -222,6 +222,7 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "Type <key>less-than</key> (&#x3C;)\n" +
                 "-->        \n" +
                 "</LinearLayout>",
+
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<!--\n" +
                 "/**\n" +
@@ -240,14 +241,10 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "<!-- This is not a comment! -->\n" +
                 "and <this is not an element>\n" +
                 "]]>\n" +
-                "         \n" +
                 "This is text: &lt; and &amp;\n" +
-                "\n" +
                 "    <!-- comment 1 \"test\"... -->\n" +
                 "    <!-- ... comment2 -->\n" +
-                "\n" +
                 "%ISOLat2;        \n" +
-                "\n" +
                 "<!-- Type <key>less-than</key> (&#x3C;) -->\n" +
                 "\n" +
                 "</LinearLayout>");
@@ -794,5 +791,25 @@ public class XmlPrettyPrinterTest extends TestCase {
                 "</resources>");
     }
 
+    public void testStableText() throws Exception {
+        checkFormat(
+                "res/layout/stable.xml",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\"\n" +
+                "    android:orientation=\"vertical\">\n" +
+                "    Hello World\n" +
+                "\n" +
+                "</LinearLayout>",
 
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\"\n" +
+                "    android:orientation=\"vertical\" >\n" +
+                "    Hello World\n" +
+                "\n" +
+                "</LinearLayout>");
+    }
 }
