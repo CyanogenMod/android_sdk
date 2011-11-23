@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_MANIFEST_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ICON;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_9PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_GIF;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JPG;
@@ -33,7 +32,6 @@ import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_RESOURC
 import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_XHDPI;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 import static com.android.tools.lint.detector.api.LintUtils.difference;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.tools.lint.detector.api.LintUtils.intersection;
@@ -56,7 +54,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -255,7 +252,6 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             IconDetector.class,
             Scope.ALL_RESOURCES_SCOPE);
 
-    private int mMinSdk;
     private String mApplicationIcon;
 
     /** Constructs a new accessibility check */
@@ -269,7 +265,6 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
     @Override
     public void beforeCheckProject(Context context) {
-        mMinSdk = -1;
         mApplicationIcon = null;
     }
 
@@ -992,7 +987,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
      * manifest is at least 11.
      */
     private boolean isAndroid30(Context context, int folderVersion) {
-        return folderVersion >= 11 || mMinSdk >= 11;
+        return folderVersion >= 11 || context.project.getMinSdk() >= 11;
     }
 
     /**
@@ -1005,7 +1000,13 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             return false;
         }
 
-        return folderVersion == 9 || folderVersion == 10 || mMinSdk == 9 || mMinSdk == 10;
+        if (folderVersion == 9 || folderVersion == 10) {
+            return true;
+        }
+
+        int minSdk = context.project.getMinSdk();
+
+        return minSdk == 9 || minSdk == 10;
     }
 
     private float getMdpiScalingFactor(String folderName) {
@@ -1124,32 +1125,15 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
-            TAG_APPLICATION,
-            TAG_USES_SDK,
-        });
+        return Collections.singletonList(TAG_APPLICATION);
     }
 
     @Override
     public void visitElement(Context context, Element element) {
-        if (element.getTagName().equals(TAG_USES_SDK)) {
-            String minSdk = null;
-            if (element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
-                minSdk = element.getAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION);
-            }
-            if (minSdk != null) {
-                try {
-                    mMinSdk = Integer.valueOf(minSdk);
-                } catch (NumberFormatException e) {
-                    mMinSdk = -1;
-                }
-            }
-        } else {
-            assert element.getTagName().equals(TAG_APPLICATION);
-            mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
-            if (mApplicationIcon.startsWith(DRAWABLE_RESOURCE_PREFIX)) {
-                mApplicationIcon = mApplicationIcon.substring(DRAWABLE_RESOURCE_PREFIX.length());
-            }
+        assert element.getTagName().equals(TAG_APPLICATION);
+        mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
+        if (mApplicationIcon.startsWith(DRAWABLE_RESOURCE_PREFIX)) {
+            mApplicationIcon = mApplicationIcon.substring(DRAWABLE_RESOURCE_PREFIX.length());
         }
     }
 }

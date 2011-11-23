@@ -16,8 +16,18 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+import static com.android.tools.lint.detector.api.LintConstants.ATTRIBUTE_PACKAGE;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
+
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +46,9 @@ public class Project {
     private final File mDir;
     private final File mReferenceDir;
     private Configuration mConfiguration;
+    private String mPackage;
+    private int mMinSdk = -1;
+    private int mTargetSdk = -1;
 
     /**
      * If non null, specifies a non-empty list of specific files under this
@@ -217,5 +230,81 @@ public class Project {
      */
     public void setConfiguration(Configuration configuration) {
         mConfiguration = configuration;
+    }
+
+    /**
+     * Returns the application package specified by the manifest
+     *
+     * @return the application package, or null if unknown
+     */
+    public String getPackage() {
+        return mPackage;
+    }
+
+    /**
+     * Returns the minimum API level requested by the manifest, or -1 if not
+     * specified
+     *
+     * @return the minimum API level or -1 if unknown
+     */
+    public int getMinSdk() {
+        return mMinSdk;
+    }
+
+    /**
+     * Returns the target API level specified by the manifest, or -1 if not
+     * specified
+     *
+     * @return the target API level or -1 if unknown
+     */
+    public int getTargetSdk() {
+        return mTargetSdk;
+    }
+
+    /**
+     * Initialized the manifest state from the given manifest model
+     *
+     * @param document the DOM document for the manifest XML document
+     */
+    public void readManifest(Document document) {
+        Element root = document.getDocumentElement();
+        if (root == null) {
+            return;
+        }
+
+        mPackage = root.getAttribute(ATTRIBUTE_PACKAGE);
+
+        // Initialize minSdk and targetSdk
+        NodeList usesSdks = root.getElementsByTagName(TAG_USES_SDK);
+        if (usesSdks.getLength() > 0) {
+            Element element = (Element) usesSdks.item(0);
+
+            String minSdk = null;
+            if (element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
+                minSdk = element.getAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION);
+            }
+            if (minSdk != null) {
+                try {
+                    mMinSdk = Integer.valueOf(minSdk);
+                } catch (NumberFormatException e) {
+                    mMinSdk = -1;
+                }
+            }
+
+            String targetSdk = null;
+            if (element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
+                targetSdk = element.getAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
+            } else if (minSdk != null) {
+                targetSdk = minSdk;
+            }
+            if (targetSdk != null) {
+                try {
+                    mTargetSdk = Integer.valueOf(targetSdk);
+                } catch (NumberFormatException e) {
+                    // TODO: Handle codenames?
+                    mTargetSdk = -1;
+                }
+            }
+        }
     }
 }

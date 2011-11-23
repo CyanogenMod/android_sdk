@@ -327,16 +327,22 @@ public class Lint {
 
     private void runFileDetectors(Project project, File projectDir) {
         // Look up manifest information
-        if (mScope.contains(Scope.MANIFEST)) {
-            List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
-            if (detectors != null) {
-                File file = new File(project.getDir(), ANDROID_MANIFEST_XML);
-                if (file.exists()) {
-                    Context context = new Context(mClient, project, file, mScope);
-                    context.location = new Location(file, null, null);
-                    XmlVisitor v = new XmlVisitor(mClient.getParser(), detectors);
-                    fireEvent(EventType.SCANNING_FILE, context);
-                    v.visitFile(context, file);
+        File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
+        if (manifestFile.exists()) {
+            Context context = new Context(mClient, project, manifestFile, mScope);
+            context.location = new Location(manifestFile, null, null);
+            IDomParser parser = mClient.getParser();
+            context.document = parser.parse(context);
+            if (context.document != null) {
+                project.readManifest(context.document);
+
+                if (mScope.contains(Scope.MANIFEST)) {
+                    List<Detector> detectors = mScopeDetectors.get(Scope.MANIFEST);
+                    if (detectors != null) {
+                        XmlVisitor v = new XmlVisitor(parser, detectors);
+                        fireEvent(EventType.SCANNING_FILE, context);
+                        v.visitFile(context, manifestFile);
+                    }
                 }
             }
         }
