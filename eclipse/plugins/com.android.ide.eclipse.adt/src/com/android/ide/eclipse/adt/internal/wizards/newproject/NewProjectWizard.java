@@ -52,8 +52,18 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     }
 
     protected NewProjectWizard(Mode mode) {
-        setWindowTitle("New Android Project");
         mMode = mode;
+        switch (mMode) {
+            case SAMPLE:
+                setWindowTitle("New Android Sample Project");
+                break;
+            case TEST:
+                setWindowTitle("New Android Test Project");
+                break;
+            default:
+                setWindowTitle("New Android Project");
+                break;
+        }
     }
 
     @Override
