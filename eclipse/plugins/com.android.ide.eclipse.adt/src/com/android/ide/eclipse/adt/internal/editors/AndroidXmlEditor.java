@@ -965,13 +965,13 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
             mIsEditXmlModelPending--;
             if (model != null) {
                 try {
-                    // Notify the model we're done modifying it. This must *always* be executed.
-                    model.changedModel();
+                    boolean oldIgnore = mIgnoreXmlUpdate;
+                    try {
+                        mIgnoreXmlUpdate = true;
+                        // Notify the model we're done modifying it. This must *always* be executed.
+                        model.changedModel();
 
-                    if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
-                        boolean oldIgnore = mIgnoreXmlUpdate;
-                        try {
-                            mIgnoreXmlUpdate = true;
+                        if (AdtPrefs.getPrefs().getFormatGuiXml() && mFormatNode != null) {
                             if (!mFormatNode.hasError()) {
                                 if (mFormatNode == getUiRootNode()) {
                                     reformatDocument();
@@ -991,17 +991,17 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                                     }
                                 }
                             }
-                        } finally {
-                            mIgnoreXmlUpdate = oldIgnore;
+                            mFormatNode = null;
+                            mFormatChildren = false;
                         }
-                        mFormatNode = null;
-                        mFormatChildren = false;
-                    }
 
-                    // Clean up the undo unit. This is done more than once as explained
-                    // above for beginRecording.
-                    for (int i = 0; i < undoReverseCount; i++) {
-                        model.endRecording(this);
+                        // Clean up the undo unit. This is done more than once as explained
+                        // above for beginRecording.
+                        for (int i = 0; i < undoReverseCount; i++) {
+                            model.endRecording(this);
+                        }
+                    } finally {
+                        mIgnoreXmlUpdate = oldIgnore;
                     }
                 } catch (Exception e) {
                     AdtPlugin.log(e, "Failed to clean up undo unit");
@@ -1016,6 +1016,18 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
                 }
 
                 runEditHooks();
+
+                // Notify listeners
+                IStructuredModel readModel = getModelForRead();
+                if (readModel != null) {
+                    try {
+                        mXmlModelStateListener.modelChanged(readModel);
+                    } catch (Exception e) {
+                        AdtPlugin.log(e, "Error while notifying changes"); //$NON-NLS-1$
+                    } finally {
+                        readModel.releaseFromRead();
+                    }
+                }
             }
         }
     }

@@ -36,6 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IUnknownDescript
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
+import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
@@ -45,6 +46,7 @@ import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -1221,8 +1223,18 @@ public class UiElementNode implements IPropertySource {
                         // Inserting new node
                         ElementDescriptor desc = mDescriptor.findChildrenDescriptor(elementName,
                                 false /* recursive */);
+                        if (desc == null && elementName.indexOf('.') != -1) {
+                            IProject project = getEditor().getProject();
+                            if (project != null) {
+                                desc = CustomViewDescriptorService.getInstance().getDescriptor(
+                                        project, elementName);
+                            }
+                        }
                         if (desc == null) {
-                            // Unknown element. Simply ignore it.
+                            // Unknown node. Create a temporary descriptor for it.
+                            // We'll add unknown attributes to it later.
+                            IUnknownDescriptorProvider p = getUnknownDescriptorProvider();
+                            desc = p.getDescriptor(elementName);
                         } else {
                             structureChanged = true;
                             uiNode = insertNewUiChild(uiIndex, desc);
