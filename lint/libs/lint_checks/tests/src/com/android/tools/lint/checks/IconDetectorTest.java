@@ -36,6 +36,9 @@ public class IconDetectorTest extends AbstractCheckTest {
                     "res/drawable/ic_launcher.png",
                     "res/drawable/ic_launcher.png=>res/drawable-mdpi/ic_launcher.png",
                     "res/drawable-mdpi/sample_icon.gif",
+                    // Make a dummy file named .svn to make sure it doesn't get seen as
+                    // an icon name
+                    "res/drawable-mdpi/sample_icon.gif=>res/drawable-hdpi/.svn",
                     "res/drawable-hdpi/ic_launcher.png"));
     }
 

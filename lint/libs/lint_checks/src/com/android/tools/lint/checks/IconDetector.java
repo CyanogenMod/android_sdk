@@ -62,8 +62,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -301,8 +301,8 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                                 Set<String> names = new HashSet<String>(files.length);
                                 for (File f : files) {
                                     String name = f.getName();
-                                    if (!endsWith(name, DOT_XML)) {
-                                        names.add(name);
+                                    if (hasBitmapExtension(name)) {
+                                        names.add(f.getName());
                                     }
                                 }
                                 folderToNames.put(folder, names);
@@ -324,6 +324,11 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                 }
             }
         }
+    }
+
+    private static boolean hasBitmapExtension(String name) {
+        // endsWith(name, DOT_PNG) is also true for endsWith(name, DOT_9PNG)
+        return endsWith(name, DOT_PNG)|| endsWith(name, DOT_JPG) || endsWith(name, DOT_GIF);
     }
 
     // This method looks for duplicates in the assets. This uses two pieces of information

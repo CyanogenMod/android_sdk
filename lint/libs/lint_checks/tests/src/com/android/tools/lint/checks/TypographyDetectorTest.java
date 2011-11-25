@@ -33,21 +33,21 @@ public class TypographyDetectorTest extends AbstractCheckTest {
     public void test() throws Exception {
         assertEquals(
             "typography.xml:10: Warning: Avoid quoting with grave accents; use apostrophes or better yet directional quotes instead\n" +
-            "typography.xml:11: Warning: Replace straight quotes ('') with directional quotes (‘’, \\u2018 and \\u2019) ?\n" +
-            "typography.xml:12: Warning: Use fraction character ½ (\\u00BD) instead of 1/2 ?\n" +
-            "typography.xml:13: Warning: Use fraction character ¼ (\\u00BC) instead of 1/4 ?\n" +
-            "typography.xml:15: Warning: Replace \"...\" with ellipsis character (…) ?\n" +
-            "typography.xml:17: Warning: Replace \"-\" with an \"en dash\" character (–, \\u2013) ?\n" +
-            "typography.xml:18: Warning: Replace \"-\" with an \"en dash\" character (–, \\u2013) ?\n" +
-            "typography.xml:20: Warning: Replace \"--\" with an \"em dash\" character (—, \\u2014) ?\n" +
-            "typography.xml:24: Warning: Replace \"-\" with an \"en dash\" character (–, \\u2013) ?\n" +
-            "typography.xml:25: Warning: Use fraction character ½ (\\u00BD) instead of 1/2 ?\n" +
-            "typography.xml:3: Warning: Replace straight quotes ('') with directional quotes (‘’, \\u2018 and \\u2019) ?\n" +
-            "typography.xml:5: Warning: Replace straight quotes (\") with directional quotes (“”, \\u201C and \\u201D) ?\n" +
-            "typography.xml:6: Warning: Replace straight quotes (\") with directional quotes (“”, \\u201C and \\u201D) ?\n" +
-            "typography.xml:7: Warning: Replace apostrophe (') with typographic apostrophe (’, \\u2019) ?\n" +
-            "typography.xml:8: Warning: Replace (c) with copyright symbol © (\\u00A9) ?\n" +
-            "typography.xml:9: Warning: Replace apostrophe (') with typographic apostrophe (’, \\u2019) ?",
+            "typography.xml:11: Warning: Replace straight quotes ('') with directional quotes (‘’, &#8216; and &#8217;) ?\n" +
+            "typography.xml:12: Warning: Use fraction character ½ (&#189;) instead of 1/2 ?\n" +
+            "typography.xml:13: Warning: Use fraction character ¼ (&#188;) instead of 1/4 ?\n" +
+            "typography.xml:15: Warning: Replace \"...\" with ellipsis character (…, &#8230;) ?\n" +
+            "typography.xml:17: Warning: Replace \"-\" with an \"en dash\" character (–, &#8211;) ?\n" +
+            "typography.xml:18: Warning: Replace \"-\" with an \"en dash\" character (–, &#8211;) ?\n" +
+            "typography.xml:20: Warning: Replace \"--\" with an \"em dash\" character (—, &#8212;) ?\n" +
+            "typography.xml:24: Warning: Replace \"-\" with an \"en dash\" character (–, &#8211;) ?\n" +
+            "typography.xml:25: Warning: Use fraction character ½ (&#189;) instead of 1/2 ?\n" +
+            "typography.xml:3: Warning: Replace straight quotes ('') with directional quotes (‘’, &#8216; and &#8217;) ?\n" +
+            "typography.xml:5: Warning: Replace straight quotes (\") with directional quotes (“”, &#8220; and &#8221;) ?\n" +
+            "typography.xml:6: Warning: Replace straight quotes (\") with directional quotes (“”, &#8220; and &#8221;) ?\n" +
+            "typography.xml:7: Warning: Replace apostrophe (') with typographic apostrophe (’, &#8217;) ?\n" +
+            "typography.xml:8: Warning: Replace (c) with copyright symbol © (&#169;) ?\n" +
+            "typography.xml:9: Warning: Replace apostrophe (') with typographic apostrophe (’, &#8217;) ?",
 
             lintProject("res/values/typography.xml"));
     }

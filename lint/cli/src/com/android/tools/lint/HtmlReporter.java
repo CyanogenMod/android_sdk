@@ -508,6 +508,7 @@ class HtmlReporter extends Reporter {
                 if (c > 255) {
                     mWriter.write("&#");                                 //$NON-NLS-1$
                     mWriter.write(Integer.toString(c));
+                    mWriter.write(';');
                 } else {
                     mWriter.write(c);
                 }

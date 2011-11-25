@@ -31,4 +31,11 @@ public class ChildCountDetectorTest extends AbstractCheckTest {
                         "in XML",
                 lintFiles("res/layout/has_children.xml"));
     }
+
+    public void testChildCount2() throws Exception {
+        // A <requestFocus/> tag is okay.
+        assertEquals(
+                "No warnings.",
+                lintFiles("res/layout/has_children2.xml"));
+    }
 }

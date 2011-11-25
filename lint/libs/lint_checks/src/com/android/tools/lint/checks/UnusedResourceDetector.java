@@ -202,7 +202,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     /** Adds the resource identifiers found in the given file into the given set */
     private void addJavaReferences(Context context, File file) {
         String s = context.client.readFile(file);
-        if (s.length() <= 2) {
+        if (s == null || s.length() <= 2) {
             return;
         }
 

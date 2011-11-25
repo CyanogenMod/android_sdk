@@ -49,7 +49,7 @@ public class TypographyDetector extends ResourceXmlDetector {
     public static final Issue DASHES = Issue.create(
             "TypographyDashes", //$NON-NLS-1$
             "Looks for usages of hyphens which can be replaced by n dash and m dash characters",
-            "The \"n dash\" (\u2013, \\u2013) and the \"m dash\" (\u2014, \\u2014) " +
+            "The \"n dash\" (\u2013, &#8211;) and the \"m dash\" (\u2014, &#8212;) " +
             "characters are used for ranges (n dash) and breaks (m dash). Using these " +
             "instead of plain hyphens can make text easier to read and your application " +
             "will look more polished.",
@@ -87,7 +87,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             "TypographyFractions", //$NON-NLS-1$
             "Looks for fraction strings which can be replaced with a fraction character",
             "You can replace certain strings, such as 1/2, and 1/4, with dedicated " +
-            "characters for these, such as \u00BD (\\u00Bd) and \00BC (\\u00Bc). " +
+            "characters for these, such as \u00BD (&#189;) and \00BC (&#188;). " +
             "This can help make the text more readable.",
             Category.TYPOGRAPHY,
             5,
@@ -101,7 +101,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             "TypographyEllipsis", //$NON-NLS-1$
             "Looks for ellipsis strings (...) which can be replaced with an ellipsis character",
             "You can replace the string \"...\" with a dedicated ellipsis character, " +
-            "ellipsis character (\u2026, \\u2026). This can help make the text more readable.",
+            "ellipsis character (\u2026, &#8230;). This can help make the text more readable.",
             Category.TYPOGRAPHY,
             5,
             Severity.WARNING,
@@ -125,19 +125,19 @@ public class TypographyDetector extends ResourceXmlDetector {
     private static final String GRAVE_QUOTE_MESSAGE =
         "Avoid quoting with grave accents; use apostrophes or better yet directional quotes instead";
     private static final String ELLIPSIS_MESSAGE =
-        "Replace \"...\" with ellipsis character (\u2026) ?";
+        "Replace \"...\" with ellipsis character (\u2026, &#8230;) ?";
     private static final String EN_DASH_MESSAGE =
-        "Replace \"-\" with an \"en dash\" character (\u2013, \\u2013) ?";
+        "Replace \"-\" with an \"en dash\" character (\u2013, &#8211;) ?";
     private static final String EM_DASH_MESSAGE =
-        "Replace \"--\" with an \"em dash\" character (\u2014, \\u2014) ?";
+        "Replace \"--\" with an \"em dash\" character (\u2014, &#8212;) ?";
     private static final String TYPOGRAPHIC_APOSTROPHE_MESSAGE =
-        "Replace apostrophe (') with typographic apostrophe (\u2019, \\u2019) ?";
+        "Replace apostrophe (') with typographic apostrophe (\u2019, &#8217;) ?";
     private static final String SINGLE_QUOTE_MESSAGE =
-        "Replace straight quotes ('') with directional quotes (\u2018\u2019, \\u2018 and \\u2019) ?";
+        "Replace straight quotes ('') with directional quotes (\u2018\u2019, &#8216; and &#8217;) ?";
     private static final String DBL_QUOTES_MESSAGE =
-        "Replace straight quotes (\") with directional quotes (\u201C\u201D, \\u201C and \\u201D) ?";
+        "Replace straight quotes (\") with directional quotes (\u201C\u201D, &#8220; and &#8221;) ?";
     private static final String COPYRIGHT_MESSAGE =
-        "Replace (c) with copyright symbol \u00A9 (\\u00A9) ?";
+        "Replace (c) with copyright symbol \u00A9 (&#169;) ?";
 
     /**
      * Pattern used to detect scenarios which can be replaced with n dashes: a
@@ -339,19 +339,19 @@ public class TypographyDetector extends ResourceXmlDetector {
                 String bottom = matcher.group(2); // Denominator
                 if (top.equals("1") && bottom.equals("2")) { //$NON-NLS-1$ //$NON-NLS-2$
                     context.client.report(context, FRACTIONS, context.getLocation(element),
-                            String.format(FRACTION_MESSAGE, '\u00BD', "\\u00BD", "1/2"), null);
+                            String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2"), null);
                 } else if (top.equals("1") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
                     context.client.report(context, FRACTIONS, context.getLocation(element),
-                            String.format(FRACTION_MESSAGE, '\u00BC', "\\u00BC", "1/4"), null);
+                            String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4"), null);
                 } else if (top.equals("3") && bottom.equals("4")) { //$NON-NLS-1$ //$NON-NLS-2$
                     context.client.report(context, FRACTIONS, context.getLocation(element),
-                            String.format(FRACTION_MESSAGE, '\u00BE', "\\u00BE", "3/4"), null);
+                            String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4"), null);
                 } else if (top.equals("1") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
                     context.client.report(context, FRACTIONS, context.getLocation(element),
-                            String.format(FRACTION_MESSAGE, '\u2153', "\\u2153", "1/3"), null);
+                            String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3"), null);
                 } else if (top.equals("2") && bottom.equals("3")) { //$NON-NLS-1$ //$NON-NLS-2$
                     context.client.report(context, FRACTIONS, context.getLocation(element),
-                            String.format(FRACTION_MESSAGE, '\u2154', "\\u2154", "2/3"), null);
+                            String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3"), null);
                 }
             }
         }

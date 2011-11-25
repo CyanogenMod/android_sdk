@@ -500,7 +500,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         if (file == null || !file.exists()) {
             String path = f.getPath();
             AdtPlugin.log(IStatus.ERROR, "Can't find file %1$s in workspace", path);
-            return null;
+            return readPlainFile(f);
         }
 
         if (AdtUtils.endsWithIgnoreCase(file.getName(), DOT_XML)) {

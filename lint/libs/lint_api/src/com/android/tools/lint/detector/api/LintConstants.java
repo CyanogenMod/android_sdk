@@ -63,6 +63,7 @@ public class LintConstants {
     public static final String IMAGE_BUTTON = "ImageButton";           //$NON-NLS-1$
     public static final String INCLUDE = "include";                    //$NON-NLS-1$
     public static final String MERGE = "merge";                        //$NON-NLS-1$
+    public static final String REQUEST_FOCUS = "requestFocus";         //$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
 
     // Tags: Drawables

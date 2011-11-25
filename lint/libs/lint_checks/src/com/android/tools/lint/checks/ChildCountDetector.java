@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.LIST_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.REQUEST_FOCUS;
 import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 
 import com.android.tools.lint.detector.api.Category;
@@ -31,6 +32,8 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -91,18 +94,33 @@ public class ChildCountDetector extends LayoutDetector {
         int childCount = LintUtils.getChildCount(element);
         String tagName = element.getTagName();
         if (tagName.equals(SCROLL_VIEW) || tagName.equals(HORIZONTAL_SCROLL_VIEW)) {
-            if (childCount > 1) {
+            if (childCount > 1 && getAccurateChildCount(element) > 1) {
                 context.client.report(context, SCROLLVIEW_ISSUE,
                         context.getLocation(element), "A scroll view can have only one child",
                         null);
             }
         } else {
             // Adapter view
-            if (childCount > 0) {
+            if (childCount > 0 && getAccurateChildCount(element) > 0) {
                 context.client.report(context, ADAPTERVIEW_ISSUE,
                         context.getLocation(element),
                         "A list/grid should have no children declared in XML", null);
             }
         }
+    }
+
+    /** Counts the number of children, but skips certain tags like {@code <requestFocus>} */
+    private static int getAccurateChildCount(Element element) {
+        NodeList childNodes = element.getChildNodes();
+        int childCount = 0;
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            Node child = childNodes.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE &&
+                    !REQUEST_FOCUS.equals(child.getNodeName())) {
+                childCount++;
+            }
+        }
+
+        return childCount;
     }
 }
