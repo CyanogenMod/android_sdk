@@ -419,7 +419,7 @@ public final class SdkConstants {
         String os = System.getProperty("os.name");          //$NON-NLS-1$
         String cmd = "android";                             //$NON-NLS-1$
         if (os.startsWith("Windows")) {                     //$NON-NLS-1$
-            cmd += ".exe";                                  //$NON-NLS-1$
+            cmd += ".bat";                                  //$NON-NLS-1$
         }
         return cmd;
     }

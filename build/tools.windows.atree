@@ -19,7 +19,9 @@
 #
 
 rm tools/android
-bin/win_android.exe                         strip tools/android.exe
+sdk/sdkmanager/app/etc/android.bat                tools/android.bat
+#TODO enable later. Not ready for prime time yet.
+#bin/win_android.exe                         strip tools/android.exe
 
 rm tools/apkbuilder
 sdk/apkbuilder/etc/apkbuilder.bat                 tools/apkbuilder.bat
