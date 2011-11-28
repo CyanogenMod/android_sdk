@@ -476,6 +476,11 @@ public final class LogCatPanel extends SelectionDependentPanel
             public void widgetSelected(SelectionEvent event) {
                 filterSelectionChanged();
             }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent arg0) {
+                editSelectedFilter();
+            }
         });
     }
 
