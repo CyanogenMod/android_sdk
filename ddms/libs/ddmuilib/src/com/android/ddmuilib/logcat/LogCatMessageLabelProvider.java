@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 
 /**
  * A JFace Column label provider for the LogCat log messages. It expects elements of type
@@ -41,6 +42,9 @@ public final class LogCatMessageLabelProvider extends ColumnLabelProvider {
     private static final Color ERROR_MSG_COLOR =   new Color(null, 255, 0, 0);
     private static final Color WARN_MSG_COLOR =    new Color(null, 255, 127, 0);
     private static final Color VERBOSE_MSG_COLOR = new Color(null, 0, 0, 0);
+
+    /** Amount of pixels to shift the tooltip by. */
+    private static final Point LOGCAT_TOOLTIP_SHIFT = new Point(10, 10);
 
     private Font mLogFont;
     private int mWrapWidth = 100;
@@ -129,5 +133,12 @@ public final class LogCatMessageLabelProvider extends ColumnLabelProvider {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public Point getToolTipShift(Object object) {
+        // The only reason we override this method is that the default shift amounts
+        // don't seem to work on OS X Lion.
+        return LOGCAT_TOOLTIP_SHIFT;
     }
 }
