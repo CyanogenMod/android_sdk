@@ -183,9 +183,11 @@ public class LintConstants {
     public static final String DRAWABLE_LDPI = "drawable-ldpi";        //$NON-NLS-1$
 
     // Resources
+    public static final String ANDROID_RESOURCE_PREFIX = "@android:";    //$NON-NLS-1$
     public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/"; //$NON-NLS-1$
     public static final String LAYOUT_RESOURCE_PREFIX = "@layout/";     //$NON-NLS-1$
     public static final String STYLE_RESOURCE_PREFIX = "@style/";       //$NON-NLS-1$
+    public static final String STRING_RESOURCE_PREFIX = "@string/";     //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ID = "id";                  //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ARRAY = "array";            //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ATTR = "attr";              //$NON-NLS-1$

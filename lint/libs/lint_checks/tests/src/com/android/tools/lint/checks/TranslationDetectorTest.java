@@ -78,4 +78,14 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                  "res/values-de/strings.xml"
             ));
     }
+
+    public void testTranslatedArrays() throws Exception {
+        TranslationDetector.COMPLETE_REGIONS = true;
+        assertEquals(
+            "No warnings.",
+
+            lintProject(
+                 "res/values/translatedarrays.xml",
+                 "res/values-cs/translatedarrays.xml"));
+    }
 }

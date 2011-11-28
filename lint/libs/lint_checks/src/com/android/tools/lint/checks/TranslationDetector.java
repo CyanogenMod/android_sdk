@@ -16,8 +16,11 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TRANSLATABLE;
+import static com.android.tools.lint.detector.api.LintConstants.STRING_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 
@@ -35,6 +38,8 @@ import com.android.tools.lint.detector.api.Speed;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -358,6 +363,18 @@ public class TranslationDetector extends ResourceXmlDetector {
                 return;
             }
 
+            if (element.getTagName().equals(TAG_STRING_ARRAY) &&
+                    allItemsAreReferences(element)) {
+                // No need to provide translations for string arrays where all
+                // the children items are defined as translated string resources,
+                // e.g.
+                //    <string-array name="foo">
+                //       <item>@string/item1</item>
+                //       <item>@string/item2</item>
+                //    </string-array>
+                return;
+            }
+
             // Check for duplicate name definitions? No, because there can be
             // additional customizations like product=
             //if (mNames.contains(name)) {
@@ -370,5 +387,29 @@ public class TranslationDetector extends ResourceXmlDetector {
 
             // TBD: Also make sure that the strings are not empty or placeholders?
         }
+    }
+
+    private boolean allItemsAreReferences(Element element) {
+        assert element.getTagName().equals(TAG_STRING_ARRAY);
+        NodeList childNodes = element.getChildNodes();
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            Node item = childNodes.item(i);
+            if (item.getNodeType() == Node.ELEMENT_NODE &&
+                    TAG_ITEM.equals(item.getNodeName())) {
+                NodeList itemChildren = item.getChildNodes();
+                for (int j = 0, m = itemChildren.getLength(); j < m; j++) {
+                    Node valueNode = itemChildren.item(j);
+                    if (valueNode.getNodeType() == Node.TEXT_NODE) {
+                        String value = valueNode.getNodeValue().trim();
+                        if (!value.startsWith(ANDROID_RESOURCE_PREFIX)
+                                && !value.startsWith(STRING_RESOURCE_PREFIX)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }
