@@ -62,8 +62,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -765,9 +765,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         if (context.configuration.isEnabled(ICON_NODPI)) {
             Set<String> noDpiNames = new HashSet<String>();
             for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
-                File folder = entry.getKey();
-                String folderName = folder.getName();
-                if (folderName.contains("-nodpi")) { //$NON-NLS-1$
+                if (isNoDpiFolder(entry.getKey())) {
                     noDpiNames.addAll(entry.getValue());
                 }
             }
@@ -778,7 +776,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                 for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
                     File folder = entry.getKey();
                     String folderName = folder.getName();
-                    if (!folderName.contains("-nodpi")) { //$NON-NLS-1$
+                    if (!isNoDpiFolder(folder)) {
                         assert DENSITY_PATTERN.matcher(folderName).matches();
                         Set<String> overlap = intersection(noDpiNames, entry.getValue());
                         inBoth.addAll(overlap);
@@ -815,17 +813,23 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         if (context.configuration.isEnabled(ICON_DENSITIES)) {
             // Look for folders missing some of the specific assets
             Set<String> allNames = new HashSet<String>();
-            for (Set<String> n : folderToNames.values()) {
-                allNames.addAll(n);
+            for (Entry<File,Set<String>> entry : folderToNames.entrySet()) {
+                if (!isNoDpiFolder(entry.getKey())) {
+                    Set<String> names = entry.getValue();
+                    allNames.addAll(names);
+                }
             }
 
             for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+                File file = entry.getKey();
+                if (isNoDpiFolder(file)) {
+                    continue;
+                }
                 Set<String> names = entry.getValue();
                 if (names.size() != allNames.size()) {
                     List<String> delta =
                             new ArrayList<String>(difference(allNames, names));
                     Collections.sort(delta);
-                    File file = entry.getKey();
                     String foundIn = "";
                     if (delta.size() == 1) {
                         // Produce list of where the icon is actually defined
@@ -854,6 +858,10 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                 }
             }
         }
+    }
+
+    private static boolean isNoDpiFolder(File file) {
+        return file.getName().contains("-nodpi");
     }
 
     private void checkDrawableDir(Context context, File folder, File[] files,
