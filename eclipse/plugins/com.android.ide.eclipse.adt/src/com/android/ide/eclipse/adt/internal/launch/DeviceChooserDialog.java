@@ -84,7 +84,7 @@ public class DeviceChooserDialog extends Dialog implements IDeviceChangeListener
 
     private Button mDeviceRadioButton;
     private Button mUseDeviceForFutureLaunchesCheckbox;
-    private static boolean sUseDeviceForFutureLaunchesValue = true;
+    private static boolean sUseDeviceForFutureLaunchesValue = false;
 
     private boolean mDisableAvdSelectionChange = false;
 
