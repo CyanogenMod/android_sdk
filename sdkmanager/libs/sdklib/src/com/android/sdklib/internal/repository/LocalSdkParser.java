@@ -418,7 +418,7 @@ public class LocalSdkParser {
         // we should expect to find android and an emulator adapted to the current OS.
         boolean hasEmulator = false;
         boolean hasAndroid = false;
-        String android1 = SdkConstants.androidCmdName();
+        String android1 = SdkConstants.androidCmdName().replace(".bat", ".exe");
         String android2 = android1.indexOf('.') == -1 ? null : android1.replace(".exe", ".bat");
         File[] files = toolFolder.listFiles();
         if (files != null) {
