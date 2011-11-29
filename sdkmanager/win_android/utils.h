@@ -179,6 +179,7 @@ public:
         return result;
     }
 
+    // Sets the string to the message matching Win32 GetLastError.
     CString& setLastWin32Error() {
         DWORD err = GetLastError();
         LPSTR errStr;
@@ -190,7 +191,7 @@ public:
                           (LPSTR)&errStr,                   /* lpBuffer */
                           0,                                /* nSize */
                           NULL) != 0) {                     /* va_list args */
-            set(errStr);
+            setf("[%d] %s", err, errStr);
             LocalFree(errStr);
         }
         return *this;

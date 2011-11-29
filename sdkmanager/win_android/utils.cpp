@@ -59,7 +59,7 @@ int execNoWait(const char *app, const char *params, const char *workDir) {
     ZeroMemory(&startup, sizeof(startup));
     startup.cb          = sizeof(startup);
     startup.dwFlags     = STARTF_USESHOWWINDOW;
-    startup.wShowWindow = SW_HIDE|SW_MINIMIZE;
+    startup.wShowWindow = SW_SHOWDEFAULT;
 
     int ret = CreateProcessA(
             (LPSTR) app,                                /* program path */
@@ -67,7 +67,7 @@ int execNoWait(const char *app, const char *params, const char *workDir) {
             NULL,                  /* process handle is not inheritable */
             NULL,                   /* thread handle is not inheritable */
             TRUE,                          /* yes, inherit some handles */
-            CREATE_NO_WINDOW,                /* we don't want a console */
+            0,                                          /* create flags */
             NULL,                     /* use parent's environment block */
             workDir,                 /* use parent's starting directory */
             &startup,                 /* startup info, i.e. std handles */
@@ -142,13 +142,14 @@ bool getModuleDir(CPath *outDir) {
 // Because this runs as a 32-bit app, Windows automagically remaps some
 // folder under the hood (e.g. "Programs Files(x86)" is mapped as "Program Files").
 // This prevents the app from correctly searching for java.exe in these folders.
-// The registry is also remapped.
+// The registry is also remapped. This method disables this redirection.
+// Caller should restore the redirection later by using revertWow64FsRedirection().
 PVOID disableWow64FsRedirection() {
 
     // The call we want to make is the following:
     //    PVOID oldWow64Value;
     //    Wow64DisableWow64FsRedirection(&oldWow64Value);
-    // However that method may not exist (e.g. on non-64 systems) so
+    // However that method may not exist (e.g. on XP non-64 systems) so
     // we must not call it directly.
 
     PVOID oldWow64Value = 0;
@@ -173,7 +174,7 @@ void revertWow64FsRedirection(PVOID oldWow64Value) {
 
     // The call we want to make is the following:
     //    Wow64RevertWow64FsRedirection(oldWow64Value);
-    // However that method may not exist (e.g. on non-64 systems) so
+    // However that method may not exist (e.g. on XP non-64 systems) so
     // we must not call it directly.
 
     HMODULE hmod = LoadLibrary("kernel32.dll");
