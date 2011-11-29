@@ -212,6 +212,21 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                                 ITextRegion last = subRegions.get(subRegions.size() - 1);
                                 if (last.getType() == XML_TAG_CLOSE ||
                                         last.getType() == XML_EMPTY_TAG_CLOSE) {
+                                    // See if the last tag was a closing tag
+                                    boolean wasClose = last.getType() == XML_EMPTY_TAG_CLOSE;
+                                    if (!wasClose) {
+                                        // Search backwards to see if the XML_TAG_CLOSE
+                                        // is the end of an </endtag>
+                                        for (int i = subRegions.size() - 2; i >= 0; i--) {
+                                            ITextRegion current = subRegions.get(i);
+                                            String type = current.getType();
+                                            if (type != XML_TAG_NAME) {
+                                                wasClose = type == XML_END_TAG_OPEN;
+                                                break;
+                                            }
+                                        }
+                                    }
+
                                     int begin = AndroidXmlCharacterMatcher.findTagBackwards(doc,
                                             previous.getStartOffset() + last.getStart(), 0);
                                     int prevLineStart = findLineStart(doc, begin);
@@ -224,8 +239,6 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                                     }
                                     StringBuilder sb = new StringBuilder(c.text);
                                     sb.append(lineIndent);
-                                    String oneIndentUnit =
-                                            XmlFormatPreferences.create().getOneIndentUnit();
 
                                     // See if there is whitespace on the insert line that
                                     // we should also remove
@@ -237,21 +250,33 @@ public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
                                             break;
                                         }
                                     }
-                                    boolean onClosingTagLine = false;
-                                    if (text.indexOf('\n', delta) == -1) {
+
+                                    boolean addIndent = (last.getType() == XML_TAG_CLOSE)
+                                            && !wasClose;
+
+                                    // Is there just whitespace left of this text tag
+                                    // until we reach an end tag?
+                                    boolean whitespaceToEndTag = true;
+                                    for (int i = delta; i < text.length(); i++) {
+                                        char ch = text.charAt(i);
+                                        if (ch == '\n' || !Character.isWhitespace(ch)) {
+                                            whitespaceToEndTag = false;
+                                            break;
+                                        }
+                                    }
+                                    if (whitespaceToEndTag) {
                                         IStructuredDocumentRegion next = region.getNext();
                                         if (next != null && next.getType() == XML_TAG_NAME) {
                                             String nextType = next.getRegions().get(0).getType();
                                             if (nextType == XML_END_TAG_OPEN) {
-                                                onClosingTagLine = true;
+                                                addIndent = false;
                                             }
                                         }
                                     }
 
-                                    boolean addIndent = (last.getType() == XML_TAG_CLOSE)
-                                            && !onClosingTagLine;
                                     if (addIndent) {
-                                        sb.append(oneIndentUnit);
+                                        sb.append(XmlFormatPreferences.create()
+                                                .getOneIndentUnit());
                                     }
                                     c.text = sb.toString();
 

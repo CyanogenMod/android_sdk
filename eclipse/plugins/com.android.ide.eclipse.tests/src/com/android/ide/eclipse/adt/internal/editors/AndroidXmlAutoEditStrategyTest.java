@@ -417,6 +417,44 @@ public class AndroidXmlAutoEditStrategyTest extends AdtProjectTest {
                 "");
     }
 
+    public void testIssue22332a() throws Exception {
+        checkInsertNewline(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"hello\">Hello World, MainActivity!</string>^\n" +
+                "\n" +
+                "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "\n" +
+                "    <string name=\"hello\">Hello World, MainActivity!</string>\n" +
+                "    ^\n" +
+                "\n" +
+                "</resources>");
+    }
+
+    public void testIssue22332b() throws Exception {
+        checkInsertNewline(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<resources>\n" +
+                        "\n" +
+                        "    <string name=\"hello\">Hello World, MainActivity!</string>\n" +
+                        "    ^\n" +
+                        "\n" +
+                        "</resources>",
+
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<resources>\n" +
+                        "\n" +
+                        "    <string name=\"hello\">Hello World, MainActivity!</string>\n" +
+                        "    \n" +
+                        "    ^\n" +
+                        "\n" +
+                        "</resources>");
+    }
+
     /**
      * To test
      *    When you press / after < I should reindent the current line. For example,
