@@ -141,6 +141,14 @@ public class DefaultConfiguration extends Configuration {
         return false;
     }
 
+    protected Severity getDefaultSeverity(Issue issue) {
+        if (!issue.isEnabledByDefault()) {
+            return Severity.IGNORE;
+        }
+
+        return issue.getDefaultSeverity();
+    }
+
     @Override
     public Severity getSeverity(Issue issue) {
         ensureInitialized();
@@ -154,11 +162,7 @@ public class DefaultConfiguration extends Configuration {
             return mParent.getSeverity(issue);
         }
 
-        if (!issue.isEnabledByDefault()) {
-            return Severity.IGNORE;
-        }
-
-        return issue.getDefaultSeverity();
+        return getDefaultSeverity(issue);
     }
 
     private void ensureInitialized() {
