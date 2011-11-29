@@ -66,4 +66,19 @@ public class IconDetectorTest extends AbstractCheckTest {
                 "res/drawable-nodpi/frame.png",
                 "res/drawable-xlarge-nodpi-v11/frame.png"));
     }
+
+    public void testNoDpi2() throws Exception {
+        // Having additional icon names in the no-dpi folder should not cause any complaints
+        assertEquals(
+            "frame.png: Warning: The following unrelated icon files have identical contents: frame.png, frame.png, frame.png, file1.png, file2.png, frame.png\n" +
+            "frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px)",
+
+            lintProject(
+                    "res/drawable-mdpi/frame.png=>res/drawable-mdpi/frame.png",
+                    "res/drawable-mdpi/frame.png=>res/drawable-hdpi/frame.png",
+                    "res/drawable-mdpi/frame.png=>res/drawable-ldpi/frame.png",
+                    "res/drawable-mdpi/frame.png=>res/drawable-xhdpi/frame.png",
+                    "res/drawable-mdpi/frame.png=>res/drawable-nodpi/file1.png",
+                    "res/drawable-mdpi/frame.png=>res/drawable-nodpi/file2.png"));
+    }
 }
