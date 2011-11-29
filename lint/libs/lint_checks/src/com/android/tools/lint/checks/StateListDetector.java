@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
+
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -83,6 +85,16 @@ public class StateListDetector extends ResourceXmlDetector {
                     if (attribute.getLocalName().startsWith("state_")) {
                         hasState = true;
                         break;
+                    } else {
+                        String namespaceUri = attribute.getNamespaceURI();
+                        if (namespaceUri != null && namespaceUri.length() > 0 &&
+                                !ANDROID_URI.equals(namespaceUri)) {
+                            // There is a custom attribute on this item.
+                            // This could be a state, see
+                            //   http://code.google.com/p/android/issues/detail?id=22339
+                            // so don't flag this one.
+                            hasState = true;
+                        }
                     }
                 }
                 if (!hasState) {
