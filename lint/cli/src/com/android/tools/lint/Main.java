@@ -76,6 +76,13 @@ public class Main extends LintClient {
     private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
     private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
+
+    private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
+    // GCC style flag names for options
+    private static final String ARG_NOWARN1    = "-w";             //$NON-NLS-1$
+    private static final String ARG_WARNALL    = "-Wall";          //$NON-NLS-1$
+    private static final String ARG_ALLERROR   = "-Werror";        //$NON-NLS-1$
+
     private static final int ERRNO_ERRORS = -1;
     private static final int ERRNO_USAGE = -2;
     private static final int ERRNO_EXISTS = -3;
@@ -94,6 +101,10 @@ public class Main extends LintClient {
     private boolean mShowLines = true;
     private Reporter mReporter;
     private boolean mQuiet;
+    private boolean mWarnAll;
+    private boolean mNoWarnings;
+    private boolean mAllErrors;
+
     private Configuration mDefaultConfiguration;
 
     /** Creates a CLI driver */
@@ -347,6 +358,12 @@ public class Main extends LintClient {
                         mCheck.add(id);
                     }
                 }
+            } else if (arg.equals(ARG_NOWARN1) || arg.equals(ARG_NOWARN2)) {
+                mNoWarnings = true;
+            } else if (arg.equals(ARG_WARNALL)) {
+                mWarnAll = true;
+            } else if (arg.equals(ARG_ALLERROR)) {
+                mAllErrors = true;
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -561,36 +578,69 @@ public class Main extends LintClient {
         String command = "lint"; //$NON-NLS-1$
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
-        out.println("Flags:");
-        out.print(wrapArg(ARG_HELP + ": This message."));
-        out.print(wrapArg(ARG_DISABLE + " <list>: Disable the list of categories or " +
-            "specific issue id's. The list should be a comma-separated list of issue " +
-            "id's or categories."));
-        out.print(wrapArg(ARG_ENABLE + " <list>: Enable the specific list of issues. " +
-            "This checks all the default issues plus the specifically enabled issues. The " +
-            "list should be a comma-separated list of issue id's or categories."));
-        out.print(wrapArg(ARG_CHECK + " <list>: Only check the specific list of issues. " +
-            "This will disable everything and re-enable the given list of issues. " +
-            "The list should be a comma-separated list of issue id's or categories."));
-        out.print(wrapArg(ARG_FULLPATH + " : Use full paths in the error output."));
-        out.print(wrapArg(ARG_NOLINES + " : Do not include the source file lines with errors " +
-            "in the output. By default, the error output includes snippets of source code " +
-            "on the line containing the error, but this flag turns it off."));
-        out.print(wrapArg(ARG_HTML + " <filename>: Create an HTML report instead."));
-        out.print(wrapArg(ARG_URL + " filepath=url: Add links to HTML report, replacing local " +
-            "path prefixes with url prefix. The mapping can be a comma-separated list of " +
-            "path prefixes to corresponding URL prefixes, such as " +
-            "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1"));
-        out.print(wrapArg(ARG_SIMPLEHTML + " <filename>: Create a simple HTML report"));
-        out.print(wrapArg(ARG_CONFIG + " <filename>: Use the given configuration file to " +
-            "determine whether issues are enabled or disabled. If a project contains " +
-            "a lint.xml file, then this config file will be used as a fallback."));
-        out.print(wrapArg(ARG_XML + " <filename>: Create an XML report instead."));
-        out.println();
-        out.print(wrapArg(ARG_LISTIDS + ": List the available issue id's and exit."));
-        out.print(wrapArg(ARG_SHOW + ": List available issues along with full explanations."));
-        out.print(wrapArg(ARG_SHOW + " <ids>: Show full explanations for the given list of issue id's."));
-        out.print(wrapArg(ARG_QUIET + ": Don't show progress."));
+        out.println("Flags:\n");
+
+        printUsage(out, new String[] {
+            ARG_HELP, "This message.",
+            ARG_LISTIDS, "List the available issue id's and exit.",
+            ARG_SHOW, "List available issues along with full explanations.",
+            ARG_SHOW + " <ids>", "Show full explanations for the given list of issue id's.",
+            "", "\nEnabled Checks:",
+            ARG_DISABLE + " <list>", "Disable the list of categories or " +
+                "specific issue id's. The list should be a comma-separated list of issue " +
+                "id's or categories.",
+            ARG_ENABLE + " <list>", "Enable the specific list of issues. " +
+                "This checks all the default issues plus the specifically enabled issues. The " +
+                "list should be a comma-separated list of issue id's or categories.",
+            ARG_CHECK + " <list>", "Only check the specific list of issues. " +
+                "This will disable everything and re-enable the given list of issues. " +
+                "The list should be a comma-separated list of issue id's or categories.",
+            ARG_NOWARN1 + ", " + ARG_NOWARN2, "Only check for errors (ignore warnings)",
+            ARG_WARNALL, "Check all warnings, including those off by default",
+            ARG_ALLERROR, "Treat all warnings as errors",
+            ARG_CONFIG + " <filename>", "Use the given configuration file to " +
+                    "determine whether issues are enabled or disabled. If a project contains " +
+                    "a lint.xml file, then this config file will be used as a fallback.",
+                    "", "\nOutput Options:",
+            ARG_QUIET, "Don't show progress.",
+            ARG_FULLPATH, "Use full paths in the error output.",
+            ARG_NOLINES, "Do not include the source file lines with errors " +
+                "in the output. By default, the error output includes snippets of source code " +
+                "on the line containing the error, but this flag turns it off.",
+            ARG_HTML + " <filename>", "Create an HTML report instead.",
+            ARG_URL + " filepath=url", "Add links to HTML report, replacing local " +
+                "path prefixes with url prefix. The mapping can be a comma-separated list of " +
+                "path prefixes to corresponding URL prefixes, such as " +
+                "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1",
+            ARG_SIMPLEHTML + " <filename>", "Create a simple HTML report",
+            ARG_XML + " <filename>", "Create an XML report instead.",
+        });
+    }
+
+    private static void printUsage(PrintStream out, String[] args) {
+        int argWidth = 0;
+        for (int i = 0; i < args.length; i += 2) {
+            String arg = args[i];
+            argWidth = Math.max(argWidth, arg.length());
+        }
+        argWidth += 2;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < argWidth; i++) {
+            sb.append(' ');
+        }
+        String indent = sb.toString();
+        String formatString = "%1$-" + argWidth + "s%2$s"; //$NON-NLS-1$
+
+        for (int i = 0; i < args.length; i += 2) {
+            String arg = args[i];
+            String description = args[i + 1];
+            if (arg.length() == 0) {
+                out.println(description);
+            } else {
+                out.print(wrap(String.format(formatString, arg, description),
+                        MAX_LINE_WIDTH, indent));
+            }
+        }
     }
 
     @Override
@@ -655,7 +705,12 @@ public class Main extends LintClient {
                 warning.line = line;
                 warning.offset = startPosition.getOffset();
                 if (line >= 0) {
-                    warning.fileContents = context.client.readFile(location.getFile());
+                    if (context.file == location.getFile()) {
+                        warning.fileContents = context.getContents();
+                    }
+                    if (warning.fileContents == null) {
+                        warning.fileContents = context.client.readFile(location.getFile());
+                    }
 
                     if (mShowLines) {
                         // Compute error line contents
@@ -763,6 +818,29 @@ public class Main extends LintClient {
 
         @Override
         public Severity getSeverity(Issue issue) {
+            Severity severity = computeSeverity(issue);
+
+            if (mAllErrors && severity != Severity.IGNORE) {
+                severity = Severity.ERROR;
+            }
+
+            if (mNoWarnings && severity == Severity.WARNING) {
+                severity = Severity.IGNORE;
+            }
+
+            return severity;
+        }
+
+        @Override
+        protected Severity getDefaultSeverity(Issue issue) {
+            if (mWarnAll) {
+                return issue.getDefaultSeverity();
+            }
+
+            return super.getDefaultSeverity(issue);
+        }
+
+        private Severity computeSeverity(Issue issue) {
             Severity severity = super.getSeverity(issue);
 
             String id = issue.getId();
