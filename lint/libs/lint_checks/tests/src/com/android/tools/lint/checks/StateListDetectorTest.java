@@ -31,4 +31,10 @@ public class StateListDetectorTest extends AbstractCheckTest {
                         "later states not reachable",
                 lintProject("res/drawable/states.xml"));
     }
+
+    public void testCustomStates() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProject("res/drawable/states2.xml"));
+    }
 }
