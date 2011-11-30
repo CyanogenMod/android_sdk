@@ -16,16 +16,15 @@
 package com.android.ide.eclipse.adt.internal.lint;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
@@ -33,6 +32,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.SelectionEvent;
@@ -43,7 +45,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbench;
@@ -51,8 +52,9 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -360,14 +362,36 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     List<IMarker> markers = mLintView.getSelectedMarkers();
                     for (IMarker marker : markers) {
                         LintFix fix = LintFix.getFix(EclipseLintClient.getId(marker), marker);
-                        IEditorPart editor = AdtUtils.getActiveEditor();
-                        if (editor instanceof AndroidXmlEditor) {
-                            IStructuredDocument doc =
-                                ((AndroidXmlEditor) editor).getStructuredDocument();
-                            fix.apply(doc);
-                        } else {
-                            AdtPlugin.log(IStatus.ERROR,
-                                    "Did not find associated editor to apply fix");
+                        IResource resource = marker.getResource();
+                        if (fix.needsFocus() && resource instanceof IFile) {
+                            IRegion region = null;
+                            try {
+                                int start = marker.getAttribute(IMarker.CHAR_START, -1);
+                                int end = marker.getAttribute(IMarker.CHAR_END, -1);
+                                if (start != -1) {
+                                    region = new Region(start, end - start);
+                                }
+                                AdtPlugin.openFile((IFile) resource, region);
+                            } catch (PartInitException e) {
+                                AdtPlugin.log(e, "Can't open file %1$s", resource);
+                            }
+                        }
+                        IDocumentProvider provider = new TextFileDocumentProvider();
+                        try {
+                            provider.connect(resource);
+                            IDocument document = provider.getDocument(resource);
+                            if (document != null) {
+                                fix.apply(document);
+                                if (!fix.needsFocus()) {
+                                    provider.saveDocument(new NullProgressMonitor(), resource,
+                                            document,  true /*overwrite*/);
+                                }
+                            }
+                        } catch (Exception e) {
+                            AdtPlugin.log(e, "Did not find associated editor to apply fix: %1$s",
+                                    resource.getName());
+                        } finally {
+                            provider.disconnect(resource);
                         }
                     }
                     break;

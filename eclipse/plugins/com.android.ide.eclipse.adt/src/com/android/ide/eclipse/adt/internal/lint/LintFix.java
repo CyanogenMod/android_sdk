@@ -77,6 +77,7 @@ import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
+import org.eclipse.wst.sse.core.internal.provisional.text.IStructuredDocument;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -102,7 +103,8 @@ abstract class LintFix implements ICompletionProposal {
 
     /**
      * Returns true if this fix needs focus (which means that when the fix is
-     * performed from a {@link LintListDialog}'s Fix button
+     * performed from for example a {@link LintListDialog}'s Fix button) the
+     * editor needs to be given focus.
      *
      * @return true if this fix needs focus after being applied
      */
@@ -233,12 +235,17 @@ abstract class LintFix implements ICompletionProposal {
                 int start, int end);
 
         public void apply(IDocument document) {
+            if (!(document instanceof IStructuredDocument)) {
+                AdtPlugin.log(null, "Unexpected document type: %1$s. Can't fix.",
+                        document.getClass().getName());
+                return;
+            }
             int start = mMarker.getAttribute(IMarker.CHAR_START, -1);
             int end = mMarker.getAttribute(IMarker.CHAR_END, -1);
             if (start != -1 && end != -1) {
-                Node node = DomUtilities.getNode(document, start);
                 IModelManager manager = StructuredModelManager.getModelManager();
-                IStructuredModel model = manager.getExistingModelForEdit(document);
+                IStructuredModel model = manager.getModelForEdit((IStructuredDocument) document);
+                Node node = DomUtilities.getNode(document, start);
                 try {
                     apply(document, model, node, start, end);
                 } finally {
