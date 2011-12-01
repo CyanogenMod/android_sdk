@@ -27,6 +27,7 @@ import com.android.sdklib.repository.RepoConstants;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -703,15 +704,26 @@ public class ArchiveInstaller {
                 }
 
                 FileOutputStream fos = null;
+                long remains = entry.getSize();
                 try {
                     fos = new FileOutputStream(destFile);
-                    int n;
+
+                    // Java bug 4040920: do not rely on the input stream EOF and don't
+                    // try to read more than the entry's size.
                     InputStream entryContent = zipFile.getInputStream(entry);
-                    while ((n = entryContent.read(buf)) != -1) {
+                    int n;
+                    while (remains > 0 &&
+                            (n = entryContent.read(
+                                    buf, 0, (int) Math.min(remains, buf.length))) != -1) {
+                        remains -= n;
                         if (n > 0) {
                             fos.write(buf, 0, n);
                         }
                     }
+                } catch (EOFException e) {
+                    monitor.logError("Error uncompressing file %s. Size: %d bytes, Unwritten: %d bytes.",
+                            entry.getName(), entry.getSize(), remains);
+                    throw e;
                 } finally {
                     if (fos != null) {
                         fos.close();
