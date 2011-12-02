@@ -151,7 +151,7 @@ static bool copyFiles(const char *toolsDir, const char *tmpDir, const char *glob
                 // CopyFile copies some attributes. It's common for tools to be unzipped
                 // as read-only so we need to remove any r-o attribute on existing
                 // files if we want a recopy to succeed.
-                if ((destFindData.dwFileAttributes && FILE_ATTRIBUTE_READONLY) != 0) {
+                if ((destFindData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0) {
                     SetFileAttributes(destPath.cstr(),
                         destFindData.dwFileAttributes ^ FILE_ATTRIBUTE_READONLY);
                 }
@@ -174,14 +174,34 @@ static bool execSdkManager(const char *javaPath,
                            const char *lpCmdLine) {
     SetLastError(0);
 
-    CPath javawPath(javaPath);
-    javawPath.replaceName("java.exe", "javaw.exe");
-    // Only accept it if we can actually find the exec
-    PVOID oldWow64Value = disableWow64FsRedirection();
-    if (!javawPath.fileExists()) {
-        javawPath.set(javaPath);
+    // Which java binary to call.
+    // The default is to use java.exe to automatically dump stdout in
+    // the parent console.
+    CPath javaExecPath(javaPath);
+
+    // Attach to the parent console, if there's one.
+    if (AttachConsole(-1) == 0) {
+        // This can fail with ERROR_ACCESS_DENIED if the process is already
+        // attached to the parent console. That means there's a console so
+        // we want to keep invoking java.exe to get stdout into it.
+        //
+        // This also fails if there is no parent console, in which
+        // it means this was invoked not from a shell. It's a good
+        // signal we don't want a new console to show up so we'll
+        // switch to javaw.exe instead, if available.
+
+        if (GetLastError() != ERROR_ACCESS_DENIED) {
+            SetLastError(0);
+
+            javaExecPath.replaceName("java.exe", "javaw.exe");
+            // Only accept it if we can actually find the exec
+            PVOID oldWow64Value = disableWow64FsRedirection();
+            if (!javaExecPath.fileExists()) {
+                javaExecPath.set(javaPath);
+            }
+            revertWow64FsRedirection(&oldWow64Value);
+        }
     }
-    revertWow64FsRedirection(&oldWow64Value);
 
     // Check whether the underlying system is x86 or x86_64.
     // We use GetSystemInfo which will see the one masqueraded by Wow64.
@@ -194,19 +214,16 @@ static bool execSdkManager(const char *javaPath,
         arch.set("x86_64");
     } else if (sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
         // Skip this. We'll just assume x86 and let it fail later.
+        // Keep this line for debugging purposes:
         // displayLastError("Unknown Processor Architecture: %d", sysInfo.wProcessorArchitecture);
-        // return false;
     }
 
     // Now build the command line.
-    // Note that we pass the absolute javawPath to execNoWait
-    // and the first parameter is just for the show.
+    // Note that we pass the absolute javaExecPath both to CreateProcess (via execNoWait)
+    // and we set it as argv[0] in the command line just for the show.
     // Important: for the classpath to be able to contain "lib\\sdkmanager.jar", etc.,
     // we need to set the toolsDir as the *temp* directory in execNoWait.
     // It's important to not use toolsDir otherwise it would lock that diretory.
-
-    // Tip: to connect the Java debugging to a running process, add this to the Java command line:
-    // "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
 
     CString cmdLine;
     cmdLine.setf("\"%s\" "                                   // javaPath
@@ -215,11 +232,14 @@ static bool execSdkManager(const char *javaPath,
                  "-classpath \"lib\\sdkmanager.jar;lib\\swtmenubar.jar;lib\\%s\\swt.jar\" " // arch
                  "com.android.sdkmanager.Main "
                  "%s",                                       // extra parameters
-        javawPath.baseName(), toolsDir, tmpDir, arch.cstr(), lpCmdLine);
+        javaExecPath.baseName(), toolsDir, tmpDir, arch.cstr(), lpCmdLine);
+
+    // Tip: to connect the Java debugging to a running process, add this to the Java command line:
+    // "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
 
     if (gDebug) msgBox("Executing: %s", cmdLine.cstr());
 
-    if (!execNoWait(javawPath.cstr(), cmdLine.cstr(), tmpDir)) {
+    if (!execNoWait(javaExecPath.cstr(), cmdLine.cstr(), tmpDir)) {
         displayLastError("Failed to run %s", cmdLine.cstr());
         return false;
     }
@@ -247,7 +267,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     revertWow64FsRedirection(oldWow64Value);
 
-    // For debugging it's more convenient to be able to override the tools directory location
+    // For debugging it's convenient to override the tools directory location
     CPath toolsDir(getenv("ANDROID_SDKMAN_TOOLS_DIR"));
     if (toolsDir.isEmpty()) {
         if (!getModuleDir(&toolsDir)) {
