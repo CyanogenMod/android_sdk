@@ -262,6 +262,7 @@ public final class ExportHelper {
             // By using a normal build, we'll simply rebuild the debug version, and let the
             // builder decide whether to build the full package or not.
             ProjectHelper.buildWithDeps(project, IncrementalProjectBuilder.FULL_BUILD, monitor);
+            project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
         }
     }
 
