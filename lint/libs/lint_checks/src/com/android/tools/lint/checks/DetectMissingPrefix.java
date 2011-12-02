@@ -23,12 +23,12 @@ import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 import static com.android.tools.lint.detector.api.LintConstants.XMLNS_PREFIX;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -79,7 +79,7 @@ public class DetectMissingPrefix extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(Context context, Attr attribute) {
+    public void visitAttribute(XmlContext context, Attr attribute) {
         String uri = attribute.getNamespaceURI();
         if (uri == null || uri.length() == 0) {
             String name = attribute.getName();
@@ -99,7 +99,7 @@ public class DetectMissingPrefix extends LayoutDetector {
                 return;
             }
 
-            context.client.report(context, MISSING_NAMESPACE,
+            context.report(MISSING_NAMESPACE,
                     context.getLocation(attribute),
                     "Attribute is missing the Android namespace prefix",
                     null);

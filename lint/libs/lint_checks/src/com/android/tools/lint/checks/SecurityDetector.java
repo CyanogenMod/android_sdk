@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -49,7 +50,7 @@ import java.util.EnumSet;
 /**
  * Checks that exported services request a permission.
  */
-public class SecurityDetector extends Detector.XmlDetectorAdapter {
+public class SecurityDetector extends Detector implements Detector.XmlScanner {
 
     /** Exported services */
     public static final Issue EXPORTED_SERVICE = Issue.create(
@@ -102,7 +103,7 @@ public class SecurityDetector extends Detector.XmlDetectorAdapter {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_SERVICE)) {
             checkService(context, element);
@@ -111,7 +112,7 @@ public class SecurityDetector extends Detector.XmlDetectorAdapter {
         }
     }
 
-    private void checkService(Context context, Element element) {
+    private void checkService(XmlContext context, Element element) {
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         boolean exported;
         if (exportValue != null && exportValue.length() > 0) {
@@ -138,7 +139,7 @@ public class SecurityDetector extends Detector.XmlDetectorAdapter {
                     permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
                     if (permission == null || permission.length() == 0) {
                         // No declared permission for this exported service: complain
-                        context.client.report(context, EXPORTED_SERVICE,
+                        context.report(EXPORTED_SERVICE,
                             context.getLocation(element),
                             "Exported service does not require permission", null);
                     }
@@ -147,21 +148,21 @@ public class SecurityDetector extends Detector.XmlDetectorAdapter {
         }
     }
 
-    private void checkGrantPermission(Context context, Element element) {
+    private void checkGrantPermission(XmlContext context, Element element) {
         Attr path = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH);
         Attr prefix = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PREFIX);
         Attr pattern = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PATTERN);
 
         String msg = "Content provider shares everything; this is potentially dangerous.";
         if (path != null && path.getValue().equals("/")) { //$NON-NLS-1$
-            context.client.report(context, OPEN_PROVIDER, context.getLocation(path), msg, null);
+            context.report(OPEN_PROVIDER, context.getLocation(path), msg, null);
         }
         if (prefix != null && prefix.getValue().equals("/")) { //$NON-NLS-1$
-            context.client.report(context, OPEN_PROVIDER, context.getLocation(prefix), msg, null);
+            context.report(OPEN_PROVIDER, context.getLocation(prefix), msg, null);
         }
         if (pattern != null && (pattern.getValue().equals("/")  //$NON-NLS-1$
                /* || pattern.getValue().equals(".*")*/)) {
-            context.client.report(context, OPEN_PROVIDER, context.getLocation(pattern), msg, null);
+            context.report(OPEN_PROVIDER, context.getLocation(pattern), msg, null);
         }
     }
 }

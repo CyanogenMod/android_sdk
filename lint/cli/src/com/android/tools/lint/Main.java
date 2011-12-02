@@ -249,7 +249,7 @@ public class Main extends LintClient {
                     System.exit(ERRNO_EXISTS);
                 }
                 try {
-                    HtmlReporter htmlReporter = new HtmlReporter(output);
+                    HtmlReporter htmlReporter = new HtmlReporter(this, output);
                     if (arg.equals(ARG_SIMPLEHTML)) {
                         htmlReporter.setSimpleFormat(true);
                     }
@@ -392,7 +392,7 @@ public class Main extends LintClient {
                             ARG_URL, ARG_HTML));
             }
 
-            mReporter = new TextReporter(new PrintWriter(System.out, true));
+            mReporter = new TextReporter(this, new PrintWriter(System.out, true));
         } else if (mReporter instanceof HtmlReporter) {
             HtmlReporter htmlReporter = (HtmlReporter) mReporter;
 
@@ -524,7 +524,6 @@ public class Main extends LintClient {
         return wrap(explanation, MAX_LINE_WIDTH, "      ");
     }
 
-
     static String wrap(String explanation) {
         return wrap(explanation, MAX_LINE_WIDTH, "");
     }
@@ -645,6 +644,12 @@ public class Main extends LintClient {
 
     @Override
     public void log(Throwable exception, String format, Object... args) {
+        System.out.flush();
+        if (!mQuiet) {
+            // Place the error message on a line of its own since we're printing '.' etc
+            // with newlines during analysis
+            System.err.println();
+        }
         if (format != null) {
             System.err.println(String.format(format, args));
         }
@@ -654,7 +659,7 @@ public class Main extends LintClient {
     }
 
     @Override
-    public IDomParser getParser() {
+    public IDomParser getDomParser() {
         return new PositionXmlParser();
     }
 
@@ -666,9 +671,9 @@ public class Main extends LintClient {
     @Override
     public void report(Context context, Issue issue, Location location, String message,
             Object data) {
-        assert context.configuration.isEnabled(issue);
+        assert context.isEnabled(issue);
 
-        Severity severity = context.configuration.getSeverity(issue);
+        Severity severity = context.getConfiguration().getSeverity(issue);
         if (severity == Severity.IGNORE) {
             return;
         }
@@ -679,7 +684,7 @@ public class Main extends LintClient {
             mWarningCount++;
         }
 
-        Warning warning = new Warning(issue, message, severity, data);
+        Warning warning = new Warning(issue, message, severity, context.getProject(), data);
         mWarnings.add(warning);
 
         if (location != null) {
@@ -687,16 +692,7 @@ public class Main extends LintClient {
             File file = location.getFile();
             if (file != null) {
                 warning.file = file;
-
-                String path = file.getPath();
-                if (!mFullPath && path.startsWith(context.project.getReferenceDir().getPath())) {
-                    int chop = context.project.getReferenceDir().getPath().length();
-                    if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
-                        chop++;
-                    }
-                    path = path.substring(chop);
-                }
-                warning.path = path;
+                warning.path = getDisplayPath(context.getProject(), file);
             }
 
             Position startPosition = location.getStart();
@@ -709,19 +705,19 @@ public class Main extends LintClient {
                         warning.fileContents = context.getContents();
                     }
                     if (warning.fileContents == null) {
-                        warning.fileContents = context.client.readFile(location.getFile());
+                        warning.fileContents = readFile(location.getFile());
                     }
 
                     if (mShowLines) {
                         // Compute error line contents
-                        warning.errorLine = getLine(context.getContents(), line);
+                        warning.errorLine = getLine(warning.fileContents, line);
                         if (warning.errorLine != null) {
                             // Replace tabs with spaces such that the column
                             // marker (^) lines up properly:
                             warning.errorLine = warning.errorLine.replace('\t', ' ');
                             int column = startPosition.getColumn();
                             if (column < 0) {
-                                column = 0;
+                                column = 1;
                                 for (int i = 0; i < warning.errorLine.length(); i++, column++) {
                                     if (!Character.isWhitespace(warning.errorLine.charAt(i))) {
                                         break;
@@ -874,7 +870,7 @@ public class Main extends LintClient {
                 case SCANNING_PROJECT:
                     System.out.print(String.format(
                             "\nScanning %1$s: ",
-                            context.project.getDir().getName()));
+                            context.getProject().getDir().getName()));
                     break;
                 case SCANNING_FILE:
                     System.out.print('.');
@@ -885,5 +881,18 @@ public class Main extends LintClient {
                     break;
             }
         }
+    }
+
+    String getDisplayPath(Project project, File file) {
+        String path = file.getPath();
+        if (!mFullPath && path.startsWith(project.getReferenceDir().getPath())) {
+            int chop = project.getReferenceDir().getPath().length();
+            if (path.length() > chop && path.charAt(chop) == File.separatorChar) {
+                chop++;
+            }
+            path = path.substring(chop);
+        }
+
+        return path;
     }
 }

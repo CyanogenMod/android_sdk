@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -59,7 +60,8 @@ public class ProguardDetector extends Detector {
                     "-keepclasseswithmembernames class * {\n" + //$NON-NLS-1$
                     "    public <init>(android.");              //$NON-NLS-1$
             if (index != -1) {
-                context.client.report(context, ISSUE, context.getLocation(context),
+                context.report(ISSUE,
+                    Location.create(context.file, contents, index, index),
                     "Obsolete proguard file; use -keepclasseswithmembers instead of -keepclasseswithmembernames", null);
             }
         }

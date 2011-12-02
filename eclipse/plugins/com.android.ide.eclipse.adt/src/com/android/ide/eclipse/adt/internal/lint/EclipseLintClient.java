@@ -28,12 +28,15 @@ import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
@@ -72,7 +75,6 @@ import java.io.IOException;
 public class EclipseLintClient extends LintClient implements IDomParser {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
     private static final String DOCUMENT_PROPERTY = "document"; //$NON-NLS-1$
-    private final IssueRegistry mRegistry;
     private final IResource mResource;
     private final IDocument mDocument;
     private boolean mWasFatal;
@@ -90,7 +92,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      */
     public EclipseLintClient(IssueRegistry registry, IResource resource, IDocument document,
             boolean fatalOnly) {
-        mRegistry = registry;
         mResource = resource;
         mDocument = document;
         mFatalOnly = fatalOnly;
@@ -108,13 +109,13 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     }
 
     @Override
-    public IDomParser getParser() {
+    public IDomParser getDomParser() {
         return this;
     }
 
     // ----- Implements IDomParser -----
 
-    public Document parse(Context context) {
+    public Document parseXml(XmlContext context) {
         // Map File to IFile
         IFile file = AdtUtils.fileToIFile(context.file);
         if (file == null || !file.exists()) {
@@ -146,41 +147,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
-    private static Position getPosition(Context context, int offset) {
-        IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
-        if (doc != null && offset < doc.getLength()) {
-            int line = doc.getLineOfOffset(offset);
-            int column = -1;
-            try {
-                int lineOffset = doc.getLineOffset(line);
-                column = offset - lineOffset;
-            } catch (BadLocationException e) {
-                AdtPlugin.log(e, null);
-            }
-            return new OffsetPosition(line, column, offset);
-        }
-
-        return null;
-    }
-
-    public Position getStartPosition(Context context, Node node) {
-        if (node instanceof IndexedRegion) {
-            IndexedRegion region = (IndexedRegion) node;
-            return getPosition(context, region.getStartOffset());
-        }
-
-        return null;
-    }
-
-    public Position getEndPosition(Context context, Node node) {
-        if (node instanceof IndexedRegion) {
-            IndexedRegion region = (IndexedRegion) node;
-            return getPosition(context, region.getEndOffset());
-        }
-
-        return null;
-    }
-
     @Override
     public Configuration getConfiguration(Project project) {
         if (mConfiguration == null) {
@@ -197,9 +163,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     @Override
     public void report(Context context, Issue issue, Location location, String message,
             Object data) {
-        assert context.configuration.isEnabled(issue);
-        assert context.configuration.getSeverity(issue) != Severity.IGNORE;
-        Severity s = context.configuration.getSeverity(issue);
+        assert context.isEnabled(issue);
+        assert context.getConfiguration().getSeverity(issue) != Severity.IGNORE;
+        Severity s = context.getConfiguration().getSeverity(issue);
 
         int severity = getMarkerSeverity(s);
         IMarker marker = null;
@@ -553,8 +519,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return ""; //$NON-NLS-1$
     }
 
-    public Location getLocation(Context context, Node node) {
-        return new LazyLocation(context.file, (IndexedRegion) node);
+    public Location getLocation(XmlContext context, Node node) {
+        IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
+        return new LazyLocation(context.file, doc, (IndexedRegion) node);
+    }
+
+    public Handle createLocationHandle(XmlContext context, Node node) {
+        IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
+        return new LazyLocation(context.file, doc, (IndexedRegion) node);
     }
 
     /**
@@ -577,74 +549,41 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return detectorClass;
     }
 
-    private static class OffsetPosition extends Position {
-        /** The line number (0-based where the first line is line 0) */
-        private final int mLine;
-
-        /**
-         * The column number (where the first character on the line is 0), or -1 if
-         * unknown
-         */
-        private final int mColumn;
-
-        /** The character offset */
-        private final int mOffset;
-
-        /**
-         * Creates a new {@link Position}
-         *
-         * @param line the 0-based line number, or -1 if unknown
-         * @param column the 0-based column number, or -1 if unknown
-         * @param offset the offset, or -1 if unknown
-         */
-        public OffsetPosition(int line, int column, int offset) {
-            super();
-            this.mLine = line;
-            this.mColumn = column;
-            this.mOffset = offset;
-        }
-
-        /**
-         * Returns the line number (0-based where the first line is line 0)
-         *
-         * @return the 0-based line number
-         */
-        @Override
-        public int getLine() {
-            return mLine;
-        }
-
-        @Override
-        public int getOffset() {
-            return mOffset;
-        }
-
-        /**
-         * Returns the column number (where the first character on the line is 0),
-         * or -1 if unknown
-         *
-         * @return the 0-based column number
-         */
-        @Override
-        public int getColumn() {
-            return mColumn;
-        }
+    public void dispose(XmlContext context, Document document) {
+        // TODO: Consider leaving read-lock on the document in parse() and freeing it here.
     }
 
-    private static class LazyLocation extends Location {
+    private static class LazyLocation extends Location implements Location.Handle {
+        private final IStructuredDocument mDocument;
         private final IndexedRegion mRegion;
         private Position mStart;
         private Position mEnd;
 
-        public LazyLocation(File file, IndexedRegion region) {
+        public LazyLocation(File file, IStructuredDocument document, IndexedRegion region) {
             super(file, null /*start*/, null /*end*/);
+            mDocument = document;
             mRegion = region;
         }
 
         @Override
         public Position getStart() {
             if (mStart == null) {
-                mStart = new OffsetPosition(-1, -1, mRegion.getStartOffset());
+                int line = -1;
+                int column = -1;
+                int offset = mRegion.getStartOffset();
+
+                if (mDocument != null && offset < mDocument.getLength()) {
+                    line = mDocument.getLineOfOffset(offset);
+                    column = -1;
+                    try {
+                        int lineOffset = mDocument.getLineOffset(line);
+                        column = offset - lineOffset;
+                    } catch (BadLocationException e) {
+                        AdtPlugin.log(e, null);
+                    }
+                }
+
+                mStart = new DefaultPosition(line, column, offset);
             }
 
             return mStart;
@@ -653,15 +592,15 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         @Override
         public Position getEnd() {
             if (mEnd == null) {
-                mEnd = new OffsetPosition(-1, -1, mRegion.getEndOffset());
+                mEnd = new DefaultPosition(-1, -1, mRegion.getEndOffset());
             }
 
             return mEnd;
         }
-    }
 
-    public void dispose(Context context) {
-        // TODO: Consider leaving read-lock on the document in parse() and freeing it here.
+        public Location resolve() {
+            return this;
+        }
     }
 }
 

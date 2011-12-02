@@ -35,6 +35,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -171,8 +172,8 @@ public class TranslationDetector extends ResourceXmlDetector {
             return;
         }
 
-        boolean reportMissing = context.configuration.isEnabled(MISSING);
-        boolean reportExtra = context.configuration.isEnabled(EXTRA);
+        boolean reportMissing = context.isEnabled(MISSING);
+        boolean reportExtra = context.isEnabled(EXTRA);
 
         // res/strings.xml etc
         String defaultLanguage = "Default";
@@ -312,7 +313,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
-                        context.client.report(context, MISSING, location,
+                        context.report(MISSING, location,
                             String.format("Locale %1$s is missing translations for: %2$s",
                                 language, LintUtils.formatList(sorted, 4)), null);
                     }
@@ -324,7 +325,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
                         Location location = getLocation(language, parentFolderToLanguage);
-                        context.client.report(context, EXTRA, location, String.format(
+                        context.report(EXTRA, location, String.format(
                               "Locale %1$s is translating names not found in default locale: %2$s",
                               language, LintUtils.formatList(sorted, 4)), null);
                     }
@@ -338,7 +339,7 @@ public class TranslationDetector extends ResourceXmlDetector {
         for (Entry<File, String> e : parentFolderToLanguage.entrySet()) {
             if (e.getValue().equals(language)) {
                 // Use the location of the parent folder for this language
-                location = new Location(e.getKey(), null, null);
+                location = Location.create(e.getKey());
                 break;
             }
         }
@@ -346,14 +347,14 @@ public class TranslationDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         if (mIgnoreFile) {
             return;
         }
 
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.client.report(context, MISSING, context.getLocation(element),
+            context.report(MISSING, context.getLocation(element),
                     "Missing name attribute in <string> declaration", null);
         } else {
             String name = attribute.getValue();

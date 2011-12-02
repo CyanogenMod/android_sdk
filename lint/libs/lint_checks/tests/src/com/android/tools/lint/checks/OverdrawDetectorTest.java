@@ -27,7 +27,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(
-            "main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme.First)\n" +
+            "main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_First)\n" +
             "second.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme)\n" +
             "sixth.xml:4: Warning: Possible overdraw: Root element paints background @drawable/custombg with a theme that also paints a background (inferred theme is @style/MyTheme)\n" +
             "third.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_Third)",

@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
 import org.w3c.dom.Attr;
@@ -130,14 +131,16 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                 countMap.put(name, count);
                 fileMap.put(name, file);
             } else if (!count.equals(current)) {
-                //Location location = getLocation(language, parentFolderToLanguage);
                 String thisName = file.getParentFile().getName() + File.separator + file.getName();
                 File otherFile = fileMap.get(name);
-                Location location = new Location(otherFile, null, null);
-                location.setSecondary(new Location(file, null, null));
+                Location location = Location.create(otherFile);
+                Location secondary = Location.create(file);
+                secondary.setMessage("Declaration with conflicting size");
+                location.setSecondary(secondary);
+
                 String otherName = otherFile.getParentFile().getName() + File.separator
                         + otherFile.getName();
-                context.client.report(context, INCONSISTENT, location,
+                context.report(INCONSISTENT, location,
                     String.format(
                      "Array %1$s has an inconsistent number of items (%2$d in %3$s, %4$d in %5$s)",
                      name, count, thisName, current, otherName), null);
@@ -149,10 +152,10 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         Attr attribute = element.getAttributeNode(ATTR_NAME);
         if (attribute == null || attribute.getValue().length() == 0) {
-            context.client.report(context, INCONSISTENT, context.getLocation(element),
+            context.report(INCONSISTENT, context.getLocation(element),
                 String.format("Missing name attribute in %1$s declaration", element.getTagName()),
                 null);
         } else {

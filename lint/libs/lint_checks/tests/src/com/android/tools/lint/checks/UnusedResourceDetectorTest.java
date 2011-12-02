@@ -40,12 +40,16 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testUnused() throws Exception {
         mEnableIds = false;
         assertEquals(
-           "Warning: The resource R.layout.main appears to be unused\n" +
-           "Warning: The resource R.layout.other appears to be unused\n" +
-           "Warning: The resource R.string.hello appears to be unused\n" +
-           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused",
+           "accessibility.xml: Warning: The resource R.layout.accessibility appears to be unused\n" +
+           "main.xml: Warning: The resource R.layout.main appears to be unused\n" +
+           "other.xml: Warning: The resource R.layout.other appears to be unused\n" +
+           "strings2.xml:3: Warning: The resource R.string.hello appears to be unused",
 
             lintProject(
+                "res/values/strings2.xml",
+                "res/layout/layout1.xml=>res/layout/main.xml",
+                "res/layout/layout1.xml=>res/layout/other.xml",
+
                 // Rename .txt files to .java
                 "src/my/pkg/Test.java.txt=>src/my/pkg/Test.java",
                 "gen/my/pkg/R.java.txt=>gen/my/pkg/R.java",

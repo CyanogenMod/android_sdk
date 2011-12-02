@@ -43,12 +43,14 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
 import org.w3c.dom.Attr;
@@ -148,25 +150,30 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
+    public boolean appliesTo(Context context, File file) {
+        return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
+    }
+
+    @Override
     public Speed getSpeed() {
         return Speed.FAST;
     }
 
     /** Is the given theme a "blank" theme (one not painting its background) */
     private boolean isBlankTheme(String name) {
-        if (name.startsWith("@android:style/Theme.")) {               //$NON-NLS-1$
+        if (name.startsWith("@android:style/Theme_")) {               //$NON-NLS-1$
             if (name.contains("NoFrame")                              //$NON-NLS-1$
-                    || name.contains("Theme.Wallpaper")               //$NON-NLS-1$
-                    || name.contains("Theme.Holo.Wallpaper")          //$NON-NLS-1$
-                    || name.contains("Theme.Translucent")             //$NON-NLS-1$
-                    || name.contains("Theme.Dialog.NoFrame")          //$NON-NLS-1$
-                    || name.contains("Theme.Holo.Dialog.Alert")       //$NON-NLS-1$
-                    || name.contains("Theme.Holo.Light.Dialog.Alert") //$NON-NLS-1$
-                    || name.contains("Theme.Dialog.Alert")            //$NON-NLS-1$
-                    || name.contains("Theme.Panel")                   //$NON-NLS-1$
-                    || name.contains("Theme.Light.Panel")             //$NON-NLS-1$
-                    || name.contains("Theme.Holo.Panel")              //$NON-NLS-1$
-                    || name.contains("Theme.Holo.Light.Panel")) {     //$NON-NLS-1$
+                    || name.contains("Theme_Wallpaper")               //$NON-NLS-1$
+                    || name.contains("Theme_Holo_Wallpaper")          //$NON-NLS-1$
+                    || name.contains("Theme_Translucent")             //$NON-NLS-1$
+                    || name.contains("Theme_Dialog_NoFrame")          //$NON-NLS-1$
+                    || name.contains("Theme_Holo_Dialog_Alert")       //$NON-NLS-1$
+                    || name.contains("Theme_Holo_Light_Dialog_Alert") //$NON-NLS-1$
+                    || name.contains("Theme_Dialog_Alert")            //$NON-NLS-1$
+                    || name.contains("Theme_Panel")                   //$NON-NLS-1$
+                    || name.contains("Theme_Light_Panel")             //$NON-NLS-1$
+                    || name.contains("Theme_Holo_Panel")              //$NON-NLS-1$
+                    || name.contains("Theme_Holo_Light_Panel")) {     //$NON-NLS-1$
                 return true;
             }
         }
@@ -196,7 +203,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                             "Possible overdraw: Root element paints background %1$s with " +
                             "a theme that also paints a background (inferred theme is %2$s)",
                             drawable, theme);
-                    context.client.report(context, ISSUE, location, message, null);
+                    context.report(ISSUE, location, message, null);
                 }
 
             }
@@ -221,7 +228,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             return mManifestTheme;
         }
 
-        Project project = context.project;
+        Project project = context.getProject();
         int apiLevel = project.getTargetSdk();
         if (apiLevel == -1) {
             apiLevel = project.getMinSdk();
@@ -237,7 +244,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     // ---- Implements XmlScanner ----
 
     @Override
-    public void visitAttribute(Context context, Attr attribute) {
+    public void visitAttribute(XmlContext context, Attr attribute) {
         // Only consider the root element's background
         if (attribute.getOwnerDocument().getDocumentElement() == attribute.getOwnerElement()) {
             // If the drawable is a non-repeated pattern then the overdraw might be
@@ -265,13 +272,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                 return;
             }
 
-            IDomParser parser = context.client.getParser();
-            Position start = parser.getStartPosition(context, attribute);
-            Position end = null;
-            if (start != null) {
-                end = parser.getEndPosition(context, attribute);
-            }
-            Location location = new Location(context.file, start, end);
+            Location location = context.getLocation(attribute);
             if (mRootAttributes == null) {
                 mRootAttributes = new ArrayList<Pair<Location,String>>();
             }
@@ -321,7 +322,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_STYLE)) {
             scanTheme(element);
@@ -360,7 +361,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             name = name.replace('$', '.');
         }
         if (name.startsWith(".")) {  //$NON-NLS-1$
-            String pkg = context.project.getPackage();
+            String pkg = context.getProject().getPackage();
             if (pkg != null && pkg.length() > 0) {
                 name = pkg + name;
             }
@@ -376,7 +377,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             if (mActivityToTheme == null) {
                 mActivityToTheme = new HashMap<String, String>();
             }
-            mActivityToTheme.put(name, theme);
+            mActivityToTheme.put(name, theme.replace('.', '_'));
         }
     }
 
@@ -391,8 +392,9 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
                 parent = styleName.substring(0, index);
             }
         }
+        parent = parent.replace('.', '_');
 
-        String resource = STYLE_RESOURCE_PREFIX + styleName;
+        String resource = STYLE_RESOURCE_PREFIX + styleName.replace('.', '_');
 
         NodeList items = element.getChildNodes();
         for (int i = 0, n = items.getLength(); i < n; i++) {
@@ -436,6 +438,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
 
     // ---- Implements JavaScanner ----
 
+    @Override
     public void checkJavaSources(Context context, List<File> sourceFolders) {
         if (mActivities == null) {
             return;
@@ -457,7 +460,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             String fqn = pkg + '.' + clz;
 
             if (mActivities.contains(fqn) || fqn.endsWith("Activity")) { //$NON-NLS-1$
-                String code = context.client.readFile(file);
+                String code = context.getClient().readFile(file);
                 scanLayoutReferences(code, fqn);
                 scanThemeReferences(code, fqn);
             }

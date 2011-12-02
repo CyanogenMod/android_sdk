@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -332,10 +333,9 @@ public class Lint {
         // Look up manifest information
         File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
         if (manifestFile.exists()) {
-            Context context = new Context(mClient, project, manifestFile, mScope);
-            context.location = new Location(manifestFile, null, null);
-            IDomParser parser = mClient.getParser();
-            context.document = parser.parse(context);
+            XmlContext context = new XmlContext(mClient, project, manifestFile, mScope);
+            IDomParser parser = mClient.getDomParser();
+            context.document = parser.parseXml(context);
             if (context.document != null) {
                 project.readManifest(context.document);
 
@@ -412,7 +412,6 @@ public class Lint {
                 if (file.exists()) {
                     Context context = new Context(mClient, project, file, mScope);
                     fireEvent(EventType.SCANNING_FILE, context);
-                    context.location = new Location(file, null, null);
                     for (Detector detector : detectors) {
                         if (detector.appliesTo(context, file)) {
                             detector.beforeCheckFile(context);
@@ -493,7 +492,7 @@ public class Lint {
                 return null;
             }
 
-            mCurrentVisitor = new XmlVisitor(mClient.getParser(), applicableChecks);
+            mCurrentVisitor = new XmlVisitor(mClient.getDomParser(), applicableChecks);
         }
 
         return mCurrentVisitor;
@@ -532,7 +531,7 @@ public class Lint {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
                     if (LintUtils.isXmlFile(file)) {
-                        Context context = new Context(mClient, project, file, mScope);
+                        XmlContext context = new XmlContext(mClient, project, file, mScope);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {
@@ -569,7 +568,7 @@ public class Lint {
                 if (type != null) {
                     XmlVisitor visitor = getVisitor(type, xmlDetectors);
                     if (visitor != null) {
-                        Context context = new Context(mClient, project, file, mScope);
+                        XmlContext context = new XmlContext(mClient, project, file, mScope);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                     }
@@ -630,7 +629,7 @@ public class Lint {
         @Override
         public void report(Context context, Issue issue, Location location, String message,
                 Object data) {
-            Configuration configuration = context.configuration;
+            Configuration configuration = context.getConfiguration();
             if (!configuration.isEnabled(issue)) {
                 if (issue != IssueRegistry.PARSER_ERROR) {
                     mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
@@ -665,11 +664,6 @@ public class Lint {
         }
 
         @Override
-        public IDomParser getParser() {
-            return mDelegate.getParser();
-        }
-
-        @Override
         public String readFile(File file) {
             return mDelegate.readFile(file);
         }
@@ -682,6 +676,11 @@ public class Lint {
         @Override
         public List<File> getJavaClassFolders(Project project) {
             return mDelegate.getJavaClassFolders(project);
+        }
+
+        @Override
+        public IDomParser getDomParser() {
+            return mDelegate.getDomParser();
         }
     }
 }

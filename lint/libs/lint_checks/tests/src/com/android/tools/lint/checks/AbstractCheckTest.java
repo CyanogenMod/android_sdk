@@ -266,7 +266,17 @@ abstract class AbstractCheckTest extends TestCase {
             StringBuilder sb = new StringBuilder();
 
             if (location != null && location.getFile() != null) {
-                sb.append(location.getFile().getName());
+                // Include parent directory for locations that have alternates, since
+                // frequently the file name is the same across different resource folders
+                // and we want to make sure in the tests that we're indeed passing the
+                // right files in as secondary locations
+                if (location.getSecondary() != null) {
+                    sb.append(location.getFile().getParentFile().getName() + "/"
+                            + location.getFile().getName());
+                } else {
+                    sb.append(location.getFile().getName());
+                }
+
                 sb.append(':');
 
                 Position startPosition = location.getStart();
@@ -282,11 +292,38 @@ abstract class AbstractCheckTest extends TestCase {
                 sb.append(' ');
             }
 
-            Severity severity = context.configuration.getSeverity(issue);
+            Severity severity = context.getConfiguration().getSeverity(issue);
             sb.append(severity.getDescription());
             sb.append(": ");
 
             sb.append(message);
+
+            if (location != null && location.getSecondary() != null) {
+                location = location.getSecondary();
+                while (location != null) {
+                    if (location.getMessage() != null) {
+                        sb.append('\n');
+                        sb.append("=> ");
+                        sb.append(location.getFile().getParentFile().getName() + "/"
+                                + location.getFile().getName());
+                        sb.append(':');
+                        Position startPosition = location.getStart();
+                        if (startPosition != null) {
+                            int line = startPosition.getLine();
+                            if (line >= 0) {
+                                // line is 0-based, should display 1-based
+                                sb.append(Integer.toString(line + 1));
+                                sb.append(':');
+                            }
+                        }
+                        sb.append(' ');
+                        if (location.getMessage() != null) {
+                            sb.append(location.getMessage());
+                        }
+                    }
+                    location = location.getSecondary();
+                }
+            }
             mErrors.add(sb.toString());
         }
 
@@ -306,7 +343,7 @@ abstract class AbstractCheckTest extends TestCase {
         }
 
         @Override
-        public IDomParser getParser() {
+        public IDomParser getDomParser() {
             return new PositionXmlParser();
         }
 

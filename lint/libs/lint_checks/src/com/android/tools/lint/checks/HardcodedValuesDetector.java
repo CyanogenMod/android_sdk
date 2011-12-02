@@ -24,12 +24,12 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_PROMPT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TEXT;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 
@@ -82,7 +82,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(Context context, Attr attribute) {
+    public void visitAttribute(XmlContext context, Attr attribute) {
         String value = attribute.getValue();
         if (value.length() > 0 && (value.charAt(0) != '@' && value.charAt(0) != '?')) {
             // Make sure this is really one of the android: attributes
@@ -90,7 +90,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 return;
             }
 
-            context.client.report(context, ISSUE, context.getLocation(attribute),
+            context.report(ISSUE, context.getLocation(attribute),
                     String.format("[I18N] Hardcoded string \"%1$s\", should use @string resource",
                             value), null);
         }

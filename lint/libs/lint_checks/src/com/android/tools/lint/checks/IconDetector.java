@@ -36,7 +36,6 @@ import static com.android.tools.lint.detector.api.LintUtils.difference;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.tools.lint.detector.api.LintUtils.intersection;
 
-import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -46,6 +45,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -75,7 +75,7 @@ import javax.imageio.stream.ImageInputStream;
  * Checks for common icon problems, such as wrong icon sizes, placing icons in the
  * density independent drawable folder, etc.
  */
-public class IconDetector extends Detector.XmlDetectorAdapter {
+public class IconDetector extends Detector implements Detector.XmlScanner {
 
     private static final boolean INCLUDE_LDPI;
     static {
@@ -271,17 +271,16 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
     @Override
     public void afterCheckProject(Context context) {
         // Make sure no
-        File res = new File(context.project.getDir(), RES_FOLDER);
+        File res = new File(context.getProject().getDir(), RES_FOLDER);
         if (res.isDirectory()) {
             File[] folders = res.listFiles();
             if (folders != null) {
-                Configuration configuration = context.configuration;
-                boolean checkFolders = configuration.isEnabled(ICON_DENSITIES) ||
-                        configuration.isEnabled(ICON_MISSING_FOLDER) ||
-                        configuration.isEnabled(ICON_NODPI);
-                boolean checkDipSizes = configuration.isEnabled(ICON_DIP_SIZE);
-                boolean checkDuplicates = configuration.isEnabled(DUPLICATES_NAMES)
-                         || configuration.isEnabled(DUPLICATES_CONFIGURATIONS);
+                boolean checkFolders = context.isEnabled(ICON_DENSITIES)
+                        || context.isEnabled(ICON_MISSING_FOLDER)
+                        || context.isEnabled(ICON_NODPI);
+                boolean checkDipSizes = context.isEnabled(ICON_DIP_SIZE);
+                boolean checkDuplicates = context.isEnabled(DUPLICATES_NAMES)
+                         || context.isEnabled(DUPLICATES_CONFIGURATIONS);
 
                 Map<File, Dimension> pixelSizes = null;
                 Map<File, Long> fileSizes = null;
@@ -417,7 +416,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                             bits = LintUtils.readBytes(file);
                             fileContents.put(file, bits);
                         } catch (IOException e) {
-                            context.client.log(e, null);
+                            context.log(e, null);
                         }
                     }
                 }
@@ -512,7 +511,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                             lastName = file.getName();
                             // Chain locations together
                             Location linkedLocation = location;
-                            location = new Location(file, null, null);
+                            location = Location.create(file);
                             location.setSecondary(linkedLocation);
                         }
 
@@ -527,11 +526,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                             String message = String.format(
                                 "The %1$s icon has identical contents in the following configuration folders: %2$s",
                                         lastName, sb.toString());
-                                context.client.report(context,
-                                        DUPLICATES_CONFIGURATIONS,
-                                        location,
-                                        message,
-                                        null);
+                                context.report(DUPLICATES_CONFIGURATIONS, location, message, null);
                         } else {
                             StringBuilder sb = new StringBuilder();
                             for (File file : sameFiles) {
@@ -543,11 +538,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                             String message = String.format(
                                 "The following unrelated icon files have identical contents: %1$s",
                                         sb.toString());
-                                context.client.report(context,
-                                        DUPLICATES_NAMES,
-                                        location,
-                                        message,
-                                        null);
+                                context.report(DUPLICATES_NAMES, location, message, null);
                         }
                     }
                 }
@@ -705,7 +696,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
                         // Chain locations together
                         Location linkedLocation = location;
-                        location = new Location(file, null, null);
+                        location = Location.create(file);
                         location.setSecondary(linkedLocation);
                         Dimension dip = entry2.getValue();
                         Dimension px = pixelSizes.get(file);
@@ -718,11 +709,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                         "The image %1$s varies significantly in its density-independent (dip) " +
                         "size across the various density versions: %2$s",
                             name, sb.toString());
-                    context.client.report(context,
-                            ICON_DIP_SIZE,
-                            location,
-                            message,
-                            null);
+                    context.report(ICON_DIP_SIZE, location, message, null);
                 }
             }
         }
@@ -743,7 +730,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
 
         // Look for missing folders -- if you define say drawable-mdpi then you
         // should also define -hdpi and -xhdpi.
-        if (context.configuration.isEnabled(ICON_MISSING_FOLDER)) {
+        if (context.isEnabled(ICON_MISSING_FOLDER)) {
             List<String> missing = new ArrayList<String>();
             for (String density : REQUIRED_DENSITIES) {
                 if (!definedDensities.contains(density)) {
@@ -751,18 +738,17 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                 }
             }
             if (missing.size() > 0 ) {
-                context.client.report(
-                    context,
+                context.report(
                     ICON_MISSING_FOLDER,
                     null /* location */,
                     String.format("Missing density variation folders in %1$s: %2$s",
-                            context.project.getDisplayPath(res),
+                            context.getProject().getDisplayPath(res),
                             LintUtils.formatList(missing, missing.size())),
                     null);
             }
         }
 
-        if (context.configuration.isEnabled(ICON_NODPI)) {
+        if (context.isEnabled(ICON_NODPI)) {
             Set<String> noDpiNames = new HashSet<String>();
             for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
                 if (isNoDpiFolder(entry.getKey())) {
@@ -795,13 +781,11 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                     Location location = null;
                     for (File file : files) {
                         Location linkedLocation = location;
-                        location = new Location(file, null, null);
+                        location = Location.create(file);
                         location.setSecondary(linkedLocation);
                     }
 
-                    context.client.report(context,
-                        ICON_DENSITIES,
-                        location,
+                    context.report(ICON_DENSITIES, location,
                         String.format(
                             "The following images appear in both -nodpi and in a density folder: %1$s",
                             LintUtils.formatList(list, 10)),
@@ -810,7 +794,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             }
         }
 
-        if (context.configuration.isEnabled(ICON_DENSITIES)) {
+        if (context.isEnabled(ICON_DENSITIES)) {
             // Look for folders missing some of the specific assets
             Set<String> allNames = new HashSet<String>();
             for (Entry<File,Set<String>> entry : folderToNames.entrySet()) {
@@ -846,9 +830,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                         }
                     }
 
-                    context.client.report(context,
-                            ICON_DENSITIES,
-                            new Location(file, null, null),
+                    context.report(ICON_DENSITIES, Location.create(file),
                             String.format(
                                     "Missing the following drawables in %1$s: %2$s%3$s",
                                     file.getName(),
@@ -867,7 +849,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
     private void checkDrawableDir(Context context, File folder, File[] files,
             Map<File, Dimension> pixelSizes, Map<File, Long> fileSizes) {
         if (folder.getName().equals(DRAWABLE_FOLDER)
-                && context.configuration.isEnabled(ICON_LOCATION)) {
+                && context.isEnabled(ICON_LOCATION)) {
             for (File file : files) {
                 String name = file.getName();
                 if (name.endsWith(DOT_XML)) {
@@ -875,9 +857,8 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
                 } else if (endsWith(name, DOT_PNG)
                         || endsWith(name, DOT_JPG)
                         || endsWith(name, DOT_GIF)) {
-                    context.client.report(context,
-                        ICON_LOCATION,
-                        new Location(file, null, null),
+                    context.report(ICON_LOCATION,
+                        Location.create(file),
                         String.format("Found bitmap drawable res/drawable/%1$s in " +
                                 "densityless folder",
                                 file.getName()),
@@ -886,13 +867,11 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             }
         }
 
-        if (context.configuration.isEnabled(GIF_USAGE)) {
+        if (context.isEnabled(GIF_USAGE)) {
             for (File file : files) {
                 String name = file.getName();
                 if (endsWith(name, DOT_GIF)) {
-                    context.client.report(context,
-                            GIF_USAGE,
-                            new Location(file, null, null),
+                    context.report(GIF_USAGE, Location.create(file),
                             "Using the .gif format for bitmaps is discouraged",
                             null);
                 }
@@ -900,7 +879,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         }
 
         // Check icon sizes
-        if (context.configuration.isEnabled(ICON_EXPECTED_SIZE)) {
+        if (context.isEnabled(ICON_EXPECTED_SIZE)) {
             checkExpectedSizes(context, folder, files);
         }
 
@@ -1000,7 +979,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
      * manifest is at least 11.
      */
     private boolean isAndroid30(Context context, int folderVersion) {
-        return folderVersion >= 11 || context.project.getMinSdk() >= 11;
+        return folderVersion >= 11 || context.getProject().getMinSdk() >= 11;
     }
 
     /**
@@ -1017,7 +996,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
             return true;
         }
 
-        int minSdk = context.project.getMinSdk();
+        int minSdk = context.getProject().getMinSdk();
 
         return minSdk == 9 || minSdk == 10;
     }
@@ -1073,18 +1052,18 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
         Dimension size = getSize(file);
         if (size != null) {
             if (exactMatch && size.width != width || size.height != height) {
-                context.client.report(context,
+                context.report(
                         ICON_EXPECTED_SIZE,
-                    new Location(file, null, null),
+                    Location.create(file),
                     String.format(
                         "Incorrect icon size for %1$s: expected %2$dx%3$d, but was %4$dx%5$d",
                         folderName + File.separator + file.getName(),
                         width, height, size.width, size.height),
                     null);
             } else if (!exactMatch && size.width > width || size.height > height) {
-                context.client.report(context,
+                context.report(
                         ICON_EXPECTED_SIZE,
-                    new Location(file, null, null),
+                    Location.create(file),
                     String.format(
                         "Incorrect icon size for %1$s: icon size should be at most %2$dx%3$d, but was %4$dx%5$d",
                         folderName + File.separator + file.getName(),
@@ -1142,7 +1121,7 @@ public class IconDetector extends Detector.XmlDetectorAdapter {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         assert element.getTagName().equals(TAG_APPLICATION);
         mApplicationIcon = element.getAttributeNS(ANDROID_URI, ATTR_ICON);
         if (mApplicationIcon.startsWith(DRAWABLE_RESOURCE_PREFIX)) {

@@ -89,6 +89,13 @@ public abstract class LintClient {
     public abstract void log(Throwable exception, String format, Object... args);
 
     /**
+     * Returns a {@link IDomParser} to use to parse XML
+     *
+     * @return a new {@link IDomParser}
+     */
+    public abstract IDomParser getDomParser();
+
+    /**
      * Returns an optimal detector, if applicable. By default, just returns the
      * original detector, but tools can replace detectors using this hook with a version
      * that takes advantage of native capabilities of the tool.
@@ -99,13 +106,6 @@ public abstract class LintClient {
     public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
         return detectorClass;
     }
-
-    /**
-     * Returns a {@link IDomParser} to use to parse XML
-     *
-     * @return a new {@link IDomParser}
-     */
-    public abstract IDomParser getParser();
 
     /**
      * Reads the given text file and returns the content as a string
@@ -133,6 +133,17 @@ public abstract class LintClient {
      */
     public List<File> getJavaClassFolders(Project project) {
         return getEclipseClasspath(project, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    /**
+     * Returns the {@link SdkInfo} to use for the given project.
+     *
+     * @param project the project to look up an {@link SdkInfo} for
+     * @return an {@link SdkInfo} for the project
+     */
+    public SdkInfo getSdkInfo(Project project) {
+        // By default no per-platform SDK info
+        return new DefaultSdkInfo();
     }
 
     /**

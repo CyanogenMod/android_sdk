@@ -46,24 +46,47 @@ public class LintConstants {
 
     // Tags: Layouts
     public static final String VIEW_TAG = "view";                      //$NON-NLS-1$
+    public static final String INCLUDE = "include";                    //$NON-NLS-1$
+    public static final String MERGE = "merge";                        //$NON-NLS-1$
+    public static final String REQUEST_FOCUS = "requestFocus";         //$NON-NLS-1$
+
+    public static final String VIEW = "View";                          //$NON-NLS-1$
+    public static final String VIEW_GROUP = "ViewGroup";               //$NON-NLS-1$
     public static final String FRAME_LAYOUT = "FrameLayout";           //$NON-NLS-1$
     public static final String LINEAR_LAYOUT = "LinearLayout";         //$NON-NLS-1$
     public static final String RELATIVE_LAYOUT = "RelativeLayout";     //$NON-NLS-1$
     public static final String GRID_LAYOUT = "GridLayout";             //$NON-NLS-1$
     public static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
+    public static final String BUTTON = "Button";                      //$NON-NLS-1$
+    public static final String COMPOUND_BUTTON = "CompoundButton";     //$NON-NLS-1$
+    public static final String ADAPTER_VIEW = "AdapterView";           //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                    //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                 //$NON-NLS-1$
+    public static final String TAB_HOST = "TabHost";                   //$NON-NLS-1$
+    public static final String RADIO_GROUP = "RadioGroup";             //$NON-NLS-1$
+    public static final String RADIO_BUTTON = "RadioButton";           //$NON-NLS-1$
     public static final String EDIT_TEXT = "EditText";                 //$NON-NLS-1$
     public static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     public static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
     public static final String IMAGE_VIEW = "ImageView";               //$NON-NLS-1$
+    public static final String SURFACE_VIEW = "SurfaceView";           //$NON-NLS-1$
     public static final String ABSOLUTE_LAYOUT = "AbsoluteLayout";     //$NON-NLS-1$
     public static final String TABLE_LAYOUT = "TableLayout";           //$NON-NLS-1$
     public static final String TABLE_ROW = "TableRow";                 //$NON-NLS-1$
+    public static final String TAB_WIDGET = "TabWidget";               //$NON-NLS-1$
     public static final String IMAGE_BUTTON = "ImageButton";           //$NON-NLS-1$
-    public static final String INCLUDE = "include";                    //$NON-NLS-1$
-    public static final String MERGE = "merge";                        //$NON-NLS-1$
-    public static final String REQUEST_FOCUS = "requestFocus";         //$NON-NLS-1$
+    public static final String SEEK_BAR = "SeekBar";                   //$NON-NLS-1$
+    public static final String VIEW_STUB = "ViewStub";                 //$NON-NLS-1$
+    public static final String SPINNER = "Spinner";                    //$NON-NLS-1$
+    public static final String TOGGLE_BUTTON = "ToggleButton";         //$NON-NLS-1$
+    public static final String CHECK_BOX = "CheckBox";                 //$NON-NLS-1$
+    public static final String ABS_LIST_VIEW = "AbsListView";          //$NON-NLS-1$
+    public static final String PROGRESS_BAR = "ProgressBar";           //$NON-NLS-1$
+    public static final String ABS_SPINNER = "AbsSpinner";             //$NON-NLS-1$
+    public static final String ABS_SEEK_BAR = "AbsSeekBar";            //$NON-NLS-1$
+    public static final String VIEW_ANIMATOR = "ViewAnimator";         //$NON-NLS-1$
+    public static final String VIEW_SWITCHER = "ViewSwitcher";         //$NON-NLS-1$
+    public static final String EXPANDABLE_LIST_VIEW = "ExpandableListView";    //$NON-NLS-1$
     public static final String HORIZONTAL_SCROLL_VIEW = "HorizontalScrollView"; //$NON-NLS-1$
 
     // Tags: Drawables
@@ -183,7 +206,9 @@ public class LintConstants {
     public static final String DRAWABLE_LDPI = "drawable-ldpi";        //$NON-NLS-1$
 
     // Resources
-    public static final String ANDROID_RESOURCE_PREFIX = "@android:";    //$NON-NLS-1$
+    public static final String ANDROID_RESOURCE_PREFIX = "@android:";   //$NON-NLS-1$
+    public static final String ID_RESOURCE_PREFIX = "@id/";             //$NON-NLS-1$
+    public static final String NEW_ID_RESOURCE_PREFIX = "@+id/";        //$NON-NLS-1$
     public static final String DRAWABLE_RESOURCE_PREFIX = "@drawable/"; //$NON-NLS-1$
     public static final String LAYOUT_RESOURCE_PREFIX = "@layout/";     //$NON-NLS-1$
     public static final String STYLE_RESOURCE_PREFIX = "@style/";       //$NON-NLS-1$
@@ -196,4 +221,7 @@ public class LintConstants {
     public static final String TRANSPARENT_COLOR = "@android:color/transparent";      //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/";     //$NON-NLS-1$
 
+    // Packages
+    public static final String WIDGET_PKG_PREFIX = "android.widget.";   //$NON-NLS-1$
+    public static final String VIEW_PKG_PREFIX = "android.view.";       //$NON-NLS-1$
 }

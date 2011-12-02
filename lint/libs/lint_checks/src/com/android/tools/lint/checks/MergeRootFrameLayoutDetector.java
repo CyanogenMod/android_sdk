@@ -23,12 +23,12 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_GRAV
 import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -61,7 +61,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitDocument(Context context, Document document) {
+    public void visitDocument(XmlContext context, Document document) {
         Element root = document.getDocumentElement();
         if (root.getTagName().equals(FRAME_LAYOUT) &&
             ((isWidthFillParent(root) && isHeightFillParent(root)) ||
@@ -69,7 +69,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
                 && !root.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
                 && !hasPadding(root)) {
-            context.client.report(context, ISSUE, context.getLocation(root),
+            context.report(ISSUE, context.getLocation(root),
                     "This <FrameLayout> can be replaced with a <merge> tag", null);
         }
     }

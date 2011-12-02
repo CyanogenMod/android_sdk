@@ -16,10 +16,12 @@
 
 package com.android.tools.lint;
 
-import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -63,8 +65,9 @@ public class PositionXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         Project project = new Project(null, file.getParentFile(), file.getParentFile());
-        Context context = new Context(new Main(), project, file, EnumSet.of(Scope.RESOURCE_FILE));
-        Document document = parser.parse(context);
+        XmlContext context = new XmlContext(new Main(), project, file,
+                EnumSet.of(Scope.RESOURCE_FILE));
+        Document document = parser.parseXml(context);
         assertNotNull(document);
 
         // Basic parsing heart beat tests
@@ -79,8 +82,9 @@ public class PositionXmlParserTest extends TestCase {
         // Check attribute positions
         Attr attr = linearLayout.getAttributeNodeNS(ANDROID_URI, "layout_width");
         assertNotNull(attr);
-        Position start = parser.getStartPosition(context, attr);
-        Position end = parser.getEndPosition(context, attr);
+        Location location = parser.getLocation(context, attr);
+        Position start = location.getStart();
+        Position end = location.getEnd();
         assertEquals(2, start.getLine());
         assertEquals(xml.indexOf("android:layout_width"), start.getOffset());
         assertEquals(2, end.getLine());
@@ -89,24 +93,33 @@ public class PositionXmlParserTest extends TestCase {
 
         // Check element positions
         Element button = (Element) buttons.item(0);
-        start = parser.getStartPosition(context, button);
-        end = parser.getEndPosition(context, button);
+        location = parser.getLocation(context, button);
+        start = location.getStart();
+        end = location.getEnd();
         assertEquals(6, start.getLine());
         assertEquals(xml.indexOf("<Button"), start.getOffset());
         assertEquals(xml.indexOf("/>") + 2, end.getOffset());
         assertEquals(10, end.getLine());
         int button1End = end.getOffset();
 
+        Handle handle = parser.createLocationHandle(context, button);
+        Location location2 = handle.resolve();
+        assertSame(location.getFile(), location.getFile());
+        assertNotNull(location2.getStart());
+        assertNotNull(location2.getEnd());
+        assertEquals(6, location2.getStart().getLine());
+        assertEquals(10, location2.getEnd().getLine());
 
         Element button2 = (Element) buttons.item(1);
-        start = parser.getStartPosition(context, button2);
-        end = parser.getEndPosition(context, button2);
+        location = parser.getLocation(context, button2);
+        start = location.getStart();
+        end = location.getEnd();
         assertEquals(12, start.getLine());
         assertEquals(xml.indexOf("<Button", button1End), start.getOffset());
         assertEquals(xml.indexOf("/>", start.getOffset()) + 2, end.getOffset());
         assertEquals(16, end.getLine());
 
-        parser.dispose(context);
+        parser.dispose(context, document);
 
         file.delete();
     }

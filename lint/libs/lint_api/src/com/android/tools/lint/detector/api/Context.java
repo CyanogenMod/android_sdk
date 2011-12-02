@@ -17,12 +17,8 @@
 package com.android.tools.lint.detector.api;
 
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.LintClient;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import com.android.tools.lint.client.api.SdkInfo;
 
 import java.io.File;
 import java.util.EnumSet;
@@ -33,84 +29,193 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Context passed to the detectors during an analysis run. It provides
  * information about the file being analyzed, it allows shared properties (so
- * the detectors can share results), it contains the current location in the
- * document, etc.
+ * the detectors can share results), etc.
  * <p>
- * TODO: This needs some cleanup. Perhaps we should split up into a FileContext
- * and a ProjectContext.
- * <p/>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
 public class Context {
-    public final Project project;
+    /**
+     * The file being checked. Note that this may not always be to a concrete
+     * file. For example, in the {@link Detector#beforeCheckProject(Context)}
+     * method, the context file is the directory of the project.
+     */
     public final File file;
-    public final LintClient client;
-    public final Configuration configuration;
-    public final EnumSet<Scope> scope;
-    public Document document;
-    public Location location;
-    public Element element;
-    public IDomParser parser;
-    private String contents;
+
+    /** The client requesting a lint check */
+    private final LintClient mClient;
+
+    /** The project containing the file being checked */
+    private final Project mProject;
+
+    /** The current configuration controlling which checks are enabled etc */
+    private final Configuration mConfiguration;
+
+    /** The contents of the file */
+    private String mContents;
+
+    /** The scope of the current lint check */
+    private final EnumSet<Scope> mScope;
+
+    /** The SDK info, if any */
+    private SdkInfo mSdkInfo;
 
     /**
+     * Whether the lint job has been canceled.
+     * <p>
      * Slow-running detectors should check this flag via
      * {@link AtomicBoolean#get()} and abort if canceled
      */
     public final AtomicBoolean canceled = new AtomicBoolean();
 
-    private Map<String, Object> properties;
+    /** Map of properties to share results between detectors */
+    private Map<String, Object> mProperties;
 
+    /**
+     * Construct a new {@link Context}
+     *
+     * @param client the client requesting a lint check
+     * @param project the project containing the file being checked
+     * @param file the file being checked
+     * @param scope the scope for the lint job
+     */
     public Context(LintClient client, Project project, File file,
             EnumSet<Scope> scope) {
-        this.client = client;
-        this.project = project;
         this.file = file;
-        this.scope = scope;
 
-        this.configuration = project.getConfiguration();
+        mClient = client;
+        mProject = project;
+        mScope = scope;
+        mConfiguration = project.getConfiguration();
     }
 
-    public Location getLocation(Node node) {
-        if (parser != null) {
-            return new Location(file,
-                    parser.getStartPosition(this, node),
-                    parser.getEndPosition(this, node));
-        }
-
-        return location;
+    /**
+     * Returns the scope for the lint job
+     *
+     * @return the scope, never null
+     */
+    public EnumSet<Scope> getScope() {
+        return mScope;
     }
 
-    public Location getLocation(Context context) {
-        if (location == null && element != null && parser != null) {
-            return getLocation(element);
-        }
-        return location;
+    /**
+     * Returns the configuration for this project.
+     *
+     * @return the configuration, never null
+     */
+    public Configuration getConfiguration() {
+        return mConfiguration;
     }
 
-    // TODO: This should be delegated to the tool context!
+    /**
+     * Returns the project containing the file being checked
+     *
+     * @return the project, never null
+     */
+    public Project getProject() {
+        return mProject;
+    }
+
+    /**
+     * Returns the lint client requesting the lint check
+     *
+     * @return the client, never null
+     */
+    public LintClient getClient() {
+        return mClient;
+    }
+
+    /**
+     * Returns the contents of the file. This may not be the contents of the
+     * file on disk, since it delegates to the {@link LintClient}, which in turn
+     * may decide to return the current edited contents of the file open in an
+     * editor.
+     *
+     * @return the contents of the given file, or null if an error occurs.
+     */
     public String getContents() {
-        if (contents == null) {
-            contents = client.readFile(file);
+        if (mContents == null) {
+            mContents = mClient.readFile(file);
         }
 
-        return contents;
+        return mContents;
     }
 
+    /**
+     * Returns the value of the given named property, or null.
+     *
+     * @param name the name of the property
+     * @return the corresponding value, or null
+     */
     public Object getProperty(String name) {
-        if (properties == null) {
+        if (mProperties == null) {
             return null;
         }
 
-        return properties.get(name);
+        return mProperties.get(name);
     }
 
+    /**
+     * Sets the value of the given named property.
+     *
+     * @param name the name of the property
+     * @param value the corresponding value
+     */
     public void setProperty(String name, Object value) {
-        if (properties == null) {
-            properties = new HashMap<String, Object>();
+        if (mProperties == null) {
+            mProperties = new HashMap<String, Object>();
         }
 
-        properties.put(name, value);
+        mProperties.put(name, value);
     }
+
+    /**
+     * Gets the SDK info for the current project.
+     *
+     * @return the SDK info for the current project, never null
+     */
+    public SdkInfo getSdkInfo() {
+        if (mSdkInfo == null) {
+            mSdkInfo = mClient.getSdkInfo(mProject);
+        }
+
+        return mSdkInfo;
+    }
+
+    // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)
+
+    /**
+     * Returns false if the given issue has been disabled. Convenience wrapper
+     * around {@link Configuration#getSeverity(Issue)}.
+     *
+     * @param issue the issue to check
+     * @return false if the issue has been disabled
+     */
+    public boolean isEnabled(Issue issue) {
+        return mConfiguration.isEnabled(issue);
+    }
+
+    /**
+     * Reports an issue. Convenience wrapper around {@link LintClient#report}
+     *
+     * @param issue the issue to report
+     * @param location the location of the issue, or null if not known
+     * @param message the message for this warning
+     * @param data any associated data, or null
+     */
+    public void report(Issue issue, Location location, String message, Object data) {
+        mClient.report(this, issue, location, message, data);
+    }
+
+    /**
+     * Send an exception to the log. Convenience wrapper around {@link LintClient#log}.
+     *
+     * @param exception the exception, possibly null
+     * @param format the error message using {@link String#format} syntax
+     * @param args any arguments for the format string
+     */
+    public void log(Throwable exception, String format, Object... args) {
+        mClient.log(exception, format, args);
+    }
+
 }

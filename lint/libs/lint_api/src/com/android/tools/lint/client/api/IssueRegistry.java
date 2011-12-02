@@ -83,35 +83,34 @@ public abstract class IssueRegistry {
                 new HashMap<Class<? extends Detector>, EnumSet<Scope>>();
         for (Issue issue : issues) {
             Class<? extends Detector> detectorClass = issue.getDetectorClass();
-            if (detectorClasses.contains(detectorClass)) {
-                continue;
-            }
+            EnumSet<Scope> issueScope = issue.getScope();
+            if (!detectorClasses.contains(detectorClass)) {
+                // Determine if the issue is enabled
+                if (!configuration.isEnabled(issue)) {
+                    continue;
+                }
 
-            // Determine if the issue is enabled
-            if (!configuration.isEnabled(issue)) {
-                continue;
-            }
+                // Determine if the scope matches
+                if (!scope.containsAll(issueScope)) {
+                    continue;
+                }
 
-            // Determine if the scope matches
-            if (!scope.containsAll(issue.getScope())) {
-                continue;
-            }
+                detectorClass = client.replaceDetector(detectorClass);
 
-            detectorClass = client.replaceDetector(detectorClass);
+                assert detectorClass != null : issue.getId();
+                detectorClasses.add(detectorClass);
+            }
 
             if (scopeToDetectors != null) {
                 EnumSet<Scope> s = detectorToScope.get(detectorClass);
                 if (s == null) {
-                    detectorToScope.put(detectorClass, issue.getScope());
-                } else {
+                    detectorToScope.put(detectorClass, issueScope);
+                } else if (!s.containsAll(issueScope)) {
                     EnumSet<Scope> union = EnumSet.copyOf(s);
-                    union.addAll(issue.getScope());
+                    union.addAll(issueScope);
                     detectorToScope.put(detectorClass, union);
                 }
             }
-
-            assert detectorClass != null : issue.getId();
-            detectorClasses.add(detectorClass);
         }
 
         List<Detector> detectors = new ArrayList<Detector>(detectorClasses.size());

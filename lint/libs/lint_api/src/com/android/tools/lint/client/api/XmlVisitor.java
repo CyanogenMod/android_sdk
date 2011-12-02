@@ -16,10 +16,10 @@
 
 package com.android.tools.lint.client.api;
 
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -112,15 +112,13 @@ class XmlVisitor {
         }
     }
 
-    void visitFile(Context context, File file) {
+    void visitFile(XmlContext context, File file) {
         assert LintUtils.isXmlFile(file);
-
-        context.location = null;
         context.parser = mParser;
 
         try {
             if (context.document == null) {
-                context.document = mParser.parse(context);
+                context.document = mParser.parseXml(context);
                 if (context.document == null) {
                     // No need to log this; the parser should be reporting
                     // a full warning (such as IssueRegistry#PARSER_ERROR)
@@ -150,13 +148,14 @@ class XmlVisitor {
                 check.afterCheckFile(context);
             }
         } finally {
-            mParser.dispose(context);
+            if (context.document != null) {
+                mParser.dispose(context, context.document);
+                context.document = null;
+            }
         }
     }
 
-    private void visitElement(Context context, Element element) {
-        context.element = element;
-
+    private void visitElement(XmlContext context, Element element) {
         List<Detector.XmlScanner> elementChecks = mElementToCheck.get(element.getTagName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;

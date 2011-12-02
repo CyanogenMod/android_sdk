@@ -23,13 +23,13 @@ import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TEXT_VIEW;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -72,7 +72,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         int childCount = LintUtils.getChildCount(element);
         if (childCount == 2) {
             List<Element> children = LintUtils.getChildren(element);
@@ -84,7 +84,7 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                 ((second.getTagName().equals(IMAGE_VIEW) &&
                         first.getTagName().equals(TEXT_VIEW) &&
                         !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
-                context.client.report(context, ISSUE, context.getLocation(element),
+                context.report(ISSUE, context.getLocation(element),
                         "This tag and its children can be replaced by one <TextView/> and " +
                                 "a compound drawable", null);
             }

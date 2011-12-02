@@ -42,13 +42,18 @@ import java.util.List;
  * to adjust your code for the next tools release.</b>
  */
 public abstract class Detector {
-    /** Specialized interface for detectors that scan Java source files */
+    /** Specialized interface for detectors that scan Java source file parse trees */
     public interface JavaScanner  {
+        // TODO: Java scanning support not yet implemented. This
+        // is a placeholder.
         void checkJavaSources(Context context, List<File> sourceFolders);
     }
 
     /** Specialized interface for detectors that scan Java class files */
     public interface ClassScanner  {
+        // TODO: Class file / bytecode scanning support not yet implemented. This
+        // is a placeholder.
+        @SuppressWarnings("javadoc")
         void checkJavaClasses(Context context);
     }
 
@@ -60,28 +65,28 @@ public abstract class Detector {
          * @param context information about the document being analyzed
          * @param document the document to examine
          */
-        void visitDocument(Context context, Document document);
+        void visitDocument(XmlContext context, Document document);
 
         /**
          * Visit the given element.
          * @param context information about the document being analyzed
          * @param element the element to examine
          */
-        void visitElement(Context context, Element element);
+        void visitElement(XmlContext context, Element element);
 
         /**
          * Visit the given element after its children have been analyzed.
          * @param context information about the document being analyzed
          * @param element the element to examine
          */
-        void visitElementAfter(Context context, Element element);
+        void visitElementAfter(XmlContext context, Element element);
 
         /**
          * Visit the given attribute.
          * @param context information about the document being analyzed
          * @param attribute the attribute node to examine
          */
-        void visitAttribute(Context context, Attr attribute);
+        void visitAttribute(XmlContext context, Attr attribute);
 
         /**
          * Returns the list of elements that this detector wants to analyze. If non
@@ -119,83 +124,63 @@ public abstract class Detector {
         public static final List<String> ALL = new ArrayList<String>(0);
     }
 
-    /** Concrete implementation of a detector that is a {@link Detector.XmlScanner} */
-    public static abstract class XmlDetectorAdapter extends Detector
-            implements Detector.XmlScanner {
-
-        @Override
-        public void run(Context context) {
-        }
-
-        @Override
-        public boolean appliesTo(Context context, File file) {
-            return false;
-        }
-
-        public void visitDocument(Context context, Document document) {
-            // This method must be overridden if your detector does
-            // not return something from getApplicableElements or
-            // getApplicableATtributes
-            assert false;
-        }
-
-        public void visitElement(Context context, Element element) {
-            // This method must be overridden if your detector returns
-            // tag names from getApplicableElements
-            assert false;
-        }
-
-        public void visitElementAfter(Context context, Element element) {
-        }
-
-        public void visitAttribute(Context context, Attr attribute) {
-            // This method must be overridden if your detector returns
-            // attribute names from getApplicableAttributes
-            assert false;
-        }
-
-        public Collection<String> getApplicableElements() {
-            return null;
-        }
-
-        public Collection<String> getApplicableAttributes() {
-            return null;
-        }
-    }
-
     /**
-     * Runs the detector
+     * Runs the detector. This method will not be called for certain specialized
+     * detectors, such as {@link XmlScanner} and {@link JavaScanner}, where
+     * there are specialized analysis methods instead such as
+     * {@link XmlScanner#visitElement(XmlContext, Element)}.
      *
      * @param context the context describing the work to be done
      */
-    public abstract void run(Context context);
+    public void run(Context context) {
+    }
 
-    /** Returns true if this detector applies to the given file */
-    public abstract boolean appliesTo(Context context, File file);
+    /**
+     * Returns true if this detector applies to the given file
+     *
+     * @param context the context to check
+     * @param file the file in the context to check
+     * @return true if this detector applies to the given context and file
+     */
+    public boolean appliesTo(Context context, File file) {
+        return false;
+    }
 
     /**
      * Analysis is about to begin, perform any setup steps.
-     * <p>
-     * TODO: Rename "check" to "scan" here? beforeScanProject, beforeScanFile
-     * etc?
+     *
+     * @param context the context for the check referencing the project, lint
+     *            client, etc
      */
     public void beforeCheckProject(Context context) {
     }
 
     /**
      * Analysis has just been finished for the whole project, perform any
-     * cleanup or report issues found
+     * cleanup or report issues that require project-wide analysis.
+     *
+     * @param context the context for the check referencing the project, lint
+     *            client, etc
      */
     public void afterCheckProject(Context context) {
     }
 
-    /** Analysis is about to be performed on a specific file, perform any setup steps. */
+    /**
+     * Analysis is about to be performed on a specific file, perform any setup
+     * steps.
+     *
+     * @param context the context for the check referencing the file to be
+     *            checked, the project, etc.
+     */
     public void beforeCheckFile(Context context) {
     }
 
     /**
      * Analysis has just been finished for a specific file, perform any cleanup
      * or report issues found
+     *
+     * @param context the context for the check referencing the file to be
+     *            checked, the project, etc.
      */
     public void afterCheckFile(Context context) {
     }
@@ -206,4 +191,49 @@ public abstract class Detector {
      * @return the expected speed of this detector
      */
     public abstract Speed getSpeed();
+
+    // ---- Dummy implementations to make implementing XmlScanner easier: ----
+
+    @SuppressWarnings("javadoc")
+    public void visitDocument(XmlContext context, Document document) {
+        // This method must be overridden if your detector does
+        // not return something from getApplicableElements or
+        // getApplicableATtributes
+        assert false;
+    }
+
+    @SuppressWarnings("javadoc")
+    public void visitElement(XmlContext context, Element element) {
+        // This method must be overridden if your detector returns
+        // tag names from getApplicableElements
+        assert false;
+    }
+
+    @SuppressWarnings("javadoc")
+    public void visitElementAfter(XmlContext context, Element element) {
+    }
+
+    @SuppressWarnings("javadoc")
+    public void visitAttribute(XmlContext context, Attr attribute) {
+        // This method must be overridden if your detector returns
+        // attribute names from getApplicableAttributes
+        assert false;
+    }
+
+    @SuppressWarnings("javadoc")
+    public Collection<String> getApplicableElements() {
+        return null;
+    }
+
+    @SuppressWarnings("javadoc")
+    public Collection<String> getApplicableAttributes() {
+        return null;
+    }
+
+    // ---- Dummy implementations to make implementing JavaScanner easier: ----
+
+    @SuppressWarnings("javadoc")
+    public void checkJavaSources(Context context, List<File> sourceFolders) {
+    }
+
 }

@@ -18,14 +18,13 @@ package com.android.tools.lint.client.api;
 
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.XmlContext;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * A wrapper for XML parser. This allows tools integrating lint to map directly
+ * A wrapper for an XML parser. This allows tools integrating lint to map directly
  * to builtin services, such as already-parsed data structures in XML editors.
  * <p/>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
@@ -41,28 +40,7 @@ public interface IDomParser {
      *            editor buffer in the surrounding tool, etc)
      * @return the parsed DOM document, or null if parsing fails
      */
-    public Document parse(Context context);
-
-    /**
-     * Returns the starting position of the given DOM node (which may not be
-     * just an element but can for example also be an {@link Attr} node). The
-     * node will *always* be from the same DOM document that was returned by
-     * this parser.
-     *
-     * @param context information about the file being parsed
-     * @param node the node to look up a starting position for
-     * @return the position of the beginning of the node
-     */
-    public Position getStartPosition(Context context, Node node);
-
-    /**
-     * Returns the ending position of the given DOM node.
-     *
-     * @param context information about the file being parsed
-     * @param node the node to look up a ending position for
-     * @return the position of the end of the node
-     */
-    public Position getEndPosition(Context context, Node node);
+    Document parseXml(XmlContext context);
 
     /**
      * Returns a {@link Location} for the given DOM node
@@ -71,11 +49,24 @@ public interface IDomParser {
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    public Location getLocation(Context context, Node node);
+    Location getLocation(XmlContext context, Node node);
+
+    /**
+     * Creates a light-weight handle to a location for the given node. It can be
+     * turned into a full fledged location by
+     * {@link com.android.tools.lint.detector.api.Location.Handle#resolve()}.
+     *
+     * @param context the context providing the node
+     * @param node the node (element or attribute) to create a location handle
+     *            for
+     * @return a location handle
+     */
+    Location.Handle createLocationHandle(XmlContext context, Node node);
 
     /**
      * Dispose any data structures held for the given context.
      * @param context information about the file previously parsed
+     * @param document the document that was parsed and is now being disposed
      */
-    public void dispose(Context context);
+    void dispose(XmlContext context, Document document);
 }

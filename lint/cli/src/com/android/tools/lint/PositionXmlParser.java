@@ -20,7 +20,9 @@ import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -32,6 +34,7 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +61,7 @@ public class PositionXmlParser implements IDomParser {
 
     // ---- Implements IDomParser ----
 
-    public Document parse(Context context) {
+    public Document parseXml(XmlContext context) {
         return parse(context, context.getContents(), true);
     }
 
@@ -74,7 +77,7 @@ public class PositionXmlParser implements IDomParser {
             parser.parse(input, handler);
             return handler.getDocument();
         } catch (ParserConfigurationException e) {
-            context.client.log(e, null);
+            context.log(e, null);
         } catch (SAXException e) {
             if (checkBom && e.getMessage().contains("Content is not allowed in prolog")) {
                 // Byte order mark in the string? Skip it. There are many markers
@@ -83,22 +86,20 @@ public class PositionXmlParser implements IDomParser {
                 xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
                 return parse(context, xml, false);
             }
-            context.client.report(
-                    context,
+            context.report(
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    IssueRegistry.PARSER_ERROR,
-                    new Location(context.file, null, null),
+                    IssueRegistry.PARSER_ERROR, Location.create(context.file),
                     e.getCause() != null ? e.getCause().getLocalizedMessage() :
                         e.getLocalizedMessage(),
                     null);
         } catch (Throwable t) {
-            context.client.log(t, null);
+            context.log(t, null);
         }
         return null;
     }
 
-    public Position getStartPosition(Context context, Node node) {
+    static Position getPositions(Node node) {
         // Look up the position information stored while parsing for the given node.
         // Note however that we only store position information for elements (because
         // there is no SAX callback for individual attributes).
@@ -155,18 +156,17 @@ public class PositionXmlParser implements IDomParser {
         return (OffsetPosition) node.getUserData(POS_KEY);
     }
 
-    public Position getEndPosition(Context context, Node node) {
-        OffsetPosition pos = (OffsetPosition) getStartPosition(context, node);
-        if (pos != null && pos.next != null) {
-            return pos.next;
+    public Location getLocation(XmlContext context, Node node) {
+        OffsetPosition pos = (OffsetPosition) getPositions(node);
+        if (pos != null) {
+            return Location.create(context.file, pos, pos.next);
         }
 
         return null;
     }
 
-    public Location getLocation(Context context, Node node) {
-        return new Location(context.file, getStartPosition(context, node),
-                getEndPosition(context, node));
+    public Handle createLocationHandle(XmlContext context, Node node) {
+        return new LocationHandle(context.file, node);
     }
 
     /**
@@ -378,6 +378,26 @@ public class PositionXmlParser implements IDomParser {
         }
     }
 
-    public void dispose(Context context) {
+    public void dispose(XmlContext context, Document document) {
+    }
+
+    /* Handle for creating DOM positions cheaply and returning full fledged locations later */
+    private class LocationHandle implements Handle {
+        private File mFile;
+        private Node mNode;
+
+        public LocationHandle(File file, Node node) {
+            mFile = file;
+            mNode = node;
+        }
+
+        public Location resolve() {
+            OffsetPosition pos = (OffsetPosition) getPositions(mNode);
+            if (pos != null) {
+                return Location.create(mFile, pos, pos.next);
+            }
+
+            return null;
+        }
     }
 }

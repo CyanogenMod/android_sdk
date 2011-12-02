@@ -19,6 +19,7 @@ package com.android.tools.lint;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.File;
@@ -34,6 +35,7 @@ class Warning implements Comparable<Warning> {
     public final String message;
     public final Severity severity;
     public final Object data;
+    public final Project project;
     public Location location;
     public File file;
     public String path;
@@ -42,11 +44,11 @@ class Warning implements Comparable<Warning> {
     public String errorLine;
     public String fileContents;
 
-    public Warning(Issue issue, String message, Severity severity, Object data) {
-        super();
+    public Warning(Issue issue, String message, Severity severity, Project project, Object data) {
         this.issue = issue;
         this.message = message;
         this.severity = severity;
+        this.project = project;
         this.data = data;
     }
 

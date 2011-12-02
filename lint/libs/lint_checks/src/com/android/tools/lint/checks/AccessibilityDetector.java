@@ -22,12 +22,12 @@ import static com.android.tools.lint.detector.api.LintConstants.IMAGE_BUTTON;
 import static com.android.tools.lint.detector.api.LintConstants.IMAGE_VIEW;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -75,15 +75,15 @@ public class AccessibilityDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
-            context.client.report(context, ISSUE, context.getLocation(element),
+            context.report(ISSUE, context.getLocation(element),
                     "[Accessibility] Missing contentDescription attribute on image", null);
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
             if (attribute.length() == 0 || attribute.equals("TODO")) { //$NON-NLS-1$
-                context.client.report(context, ISSUE, context.getLocation(attributeNode),
+                context.report(ISSUE, context.getLocation(attributeNode),
                         "[Accessibility] Empty contentDescription attribute on image", null);
             }
         }

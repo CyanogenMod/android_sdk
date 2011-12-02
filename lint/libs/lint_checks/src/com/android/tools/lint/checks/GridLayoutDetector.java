@@ -23,13 +23,13 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ROW_COUNT;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -85,7 +85,7 @@ public class GridLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         int declaredRowCount = getInt(element, ATTR_ROW_COUNT, -1);
         int declaredColumnCount = getInt(element, ATTR_COLUMN_COUNT, -1);
 
@@ -95,7 +95,7 @@ public class GridLayoutDetector extends LayoutDetector {
                     int column = getInt(child, ATTR_LAYOUT_COLUMN, -1);
                     if (column >= declaredColumnCount) {
                         Attr node = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_COLUMN);
-                        context.client.report(context, ISSUE, context.getLocation(node),
+                        context.report(ISSUE, context.getLocation(node),
                                 String.format("Column attribute (%1$d) exceeds declared grid column count (%2$d)",
                                         column, declaredColumnCount), null);
                     }
@@ -104,7 +104,7 @@ public class GridLayoutDetector extends LayoutDetector {
                     int row = getInt(child, ATTR_LAYOUT_ROW, -1);
                     if (row > declaredRowCount) {
                         Attr node = child.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_ROW);
-                        context.client.report(context, ISSUE, context.getLocation(node),
+                        context.report(ISSUE, context.getLocation(node),
                                 String.format("Row attribute (%1$d) exceeds declared grid row count (%2$d)",
                                         row, declaredRowCount), null);
                     }

@@ -16,14 +16,20 @@
 
 package com.android.tools.lint;
 
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
 /** A reporter which emits lint warnings as plain text strings */
 class TextReporter extends Reporter {
-    TextReporter(Writer writer) {
+    private Main mClient;
+
+    TextReporter(Main client, Writer writer) {
         super(writer);
+        mClient = client;
     }
 
     @Override
@@ -63,6 +69,39 @@ class TextReporter extends Reporter {
 
                 if (warning.errorLine != null) {
                     output.append(warning.errorLine);
+                }
+
+                if (warning.location != null && warning.location.getSecondary() != null) {
+                    Location location = warning.location.getSecondary();
+                    int count = 0;
+                    while (location != null) {
+                        if (location.getMessage() != null && location.getMessage().length() > 0) {
+                            String path = mClient.getDisplayPath(warning.project,
+                                    location.getFile());
+                            output.append(path);
+                            output.append(':');
+
+                            Position start = location.getStart();
+                            if (start != null) {
+                                int line = start.getLine();
+                                if (line >= 0) {
+                                    output.append(Integer.toString(line + 1));
+                                    output.append(':');
+                                }
+                            }
+
+                            output.append(' ');
+                            output.append(location.getMessage());
+                            output.append('\n');
+                            count++;
+                            if (count == 5) {
+                                output.append("...");
+                                output.append('\n');
+                            }
+                        }
+
+                        location = location.getSecondary();
+                    }
                 }
             }
 

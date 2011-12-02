@@ -46,8 +46,9 @@ public final class Issue implements Comparable<Issue> {
     private final Class<? extends Detector> mClass;
 
     // Use factory methods
-    private Issue(String id, String description, String explanation, Category category, int priority,
-            Severity severity, Class<? extends Detector> detectorClass, EnumSet<Scope> scope) {
+    private Issue(String id, String description, String explanation, Category category,
+            int priority, Severity severity, Class<? extends Detector> detectorClass,
+            EnumSet<Scope> scope) {
         super();
         mId = id;
         mDescription = description;

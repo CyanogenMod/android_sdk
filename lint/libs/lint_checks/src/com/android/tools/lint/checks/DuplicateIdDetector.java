@@ -16,10 +16,12 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
 import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -30,9 +32,12 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -132,13 +137,10 @@ public class DuplicateIdDetector extends LayoutDetector {
             // First perform a topological sort such such
             checkForIncludeDuplicates(context);
         }
-
-        mFileToIds = null;
-        mIncludes = null;
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         // Record include graph such that we can look for inter-layout duplicates after the
         // project has been fully checked
 
@@ -156,8 +158,8 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     private void checkForIncludeDuplicates(Context context) {
-        if (!context.configuration.isEnabled(CROSS_LAYOUT) ||
-                !context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
+        if (!context.isEnabled(CROSS_LAYOUT) ||
+                !context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             return;
         }
 
@@ -329,7 +331,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     private void reportError(Context context, String id, File first, File second, String includer,
             List<String> chain) {
         String msg = null;
-        if (chain.size() > 2) { // < 2: it's a directly include & obvious
+        if (chain.size() > 2) { // < 2: it's a direct include and therefore obvious
             StringBuilder sb = new StringBuilder();
             for (String layout : chain) {
                 if (sb.length() > 0) {
@@ -346,12 +348,14 @@ public class DuplicateIdDetector extends LayoutDetector {
                 id, includer);
         }
 
-        Location location = new Location(first, null, null);
+        Location location = Location.create(first);
         if (second != null) {
             // Also record the secondary location
-            location.setSecondary(new Location(second, null, null));
+            Location secondLocation = Location.create(second);
+            secondLocation.setMessage(String.format("%1$s originally defined here", id));
+            location.setSecondary(secondLocation);
         }
-        context.client.report(context, CROSS_LAYOUT, location, msg, null);
+        context.report(CROSS_LAYOUT, location, msg, null);
     }
 
     /**
@@ -395,15 +399,45 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(Context context, Attr attribute) {
+    public void visitAttribute(XmlContext context, Attr attribute) {
         assert attribute.getLocalName().equals(ATTR_ID);
         String id = attribute.getValue();
         if (mIds.contains(id)) {
-            context.client.report(context, WITHIN_LAYOUT, context.getLocation(attribute),
+            Location location = context.getLocation(attribute);
+
+            Attr first = findIdAttribute(attribute.getOwnerDocument(), id);
+            if (first != null && first != attribute) {
+                Location secondLocation = context.getLocation(first);
+                secondLocation.setMessage(String.format("%1$s originally defined here", id));
+                location.setSecondary(secondLocation);
+            }
+
+            context.report(WITHIN_LAYOUT, location,
                     String.format("Duplicate id %1$s, already defined earlier in this layout",
                             id), null);
-        } else if (id.startsWith("@+id/")) { //$NON-NLS-1$
+        } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
             mIds.add(id);
         }
+    }
+
+    /** Find the first id attribute with the given value below the given node */
+    private Attr findIdAttribute(Node node, String targetValue) {
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Attr attribute = ((Element) node).getAttributeNodeNS(ANDROID_URI, ATTR_ID);
+            if (attribute != null && attribute.getValue().equals(targetValue)) {
+                return attribute;
+            }
+        }
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0, n = children.getLength(); i < n; i++) {
+            Node child = children.item(i);
+            Attr result = findIdAttribute(child, targetValue);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return null;
     }
 }

@@ -23,12 +23,12 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_INPUT_TYPE;
 import static com.android.tools.lint.detector.api.LintConstants.EDIT_TEXT;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -73,7 +73,7 @@ public class TextFieldDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_INPUT_TYPE) &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
             // Also make sure the EditText does not set an inputMethod in which case
@@ -82,7 +82,7 @@ public class TextFieldDetector extends LayoutDetector {
                 return;
             }
 
-            context.client.report(context, ISSUE, context.getLocation(element),
+            context.report(ISSUE, context.getLocation(element),
                     "This text field does not specify an inputType or a hint", null);
         }
     }

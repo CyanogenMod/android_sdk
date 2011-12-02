@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -102,7 +103,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         boolean vertical = isVerticalScroll(element);
         if (vertical) {
             mVisitingVerticalScroll++;
@@ -122,13 +123,13 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
                             "horizontally scrolling widget (%2$s)";
                 }
                 String msg = String.format(format, parent.getTagName(), element.getTagName());
-                context.client.report(context, ISSUE, context.getLocation(element), msg, null);
+                context.report(ISSUE, context.getLocation(element), msg, null);
             }
         }
     }
 
     @Override
-    public void visitElementAfter(Context context, Element element) {
+    public void visitElementAfter(XmlContext context, Element element) {
         if (isVerticalScroll(element)) {
             mVisitingVerticalScroll--;
             assert mVisitingVerticalScroll >= 0;

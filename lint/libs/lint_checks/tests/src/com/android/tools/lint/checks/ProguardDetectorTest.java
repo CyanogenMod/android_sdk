@@ -27,7 +27,7 @@ public class ProguardDetectorTest extends AbstractCheckTest {
 
     public void testProguard() throws Exception {
         assertEquals(
-                "proguard.cfg: Error: Obsolete proguard file; use -keepclasseswithmembers " +
+                "proguard.cfg:21: Error: Obsolete proguard file; use -keepclasseswithmembers " +
                     "instead of -keepclasseswithmembernames",
                 lintFiles("proguard.cfg"));
     }

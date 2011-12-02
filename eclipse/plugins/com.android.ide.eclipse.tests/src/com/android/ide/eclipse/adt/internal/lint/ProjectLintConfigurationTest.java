@@ -216,7 +216,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
         }
 
         @Override
-        public IDomParser getParser() {
+        public IDomParser getDomParser() {
             return null;
         }
 

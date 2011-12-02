@@ -19,12 +19,12 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -64,8 +64,8 @@ public class DeprecationDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
-        context.client.report(context, ISSUE, context.getLocation(element),
+    public void visitElement(XmlContext context, Element element) {
+        context.report(ISSUE, context.getLocation(element),
                 String.format("%1$s is deprecated", element.getTagName()), null);
     }
 }

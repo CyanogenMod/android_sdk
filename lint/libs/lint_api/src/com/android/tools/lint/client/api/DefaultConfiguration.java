@@ -126,7 +126,7 @@ public class DefaultConfiguration extends Configuration {
         List<String> paths = mSuppressed.get(id);
         if (paths != null && location != null) {
             File file = location.getFile();
-            String relativePath = context.project.getRelativePath(file);
+            String relativePath = context.getProject().getRelativePath(file);
             for (String suppressedPath : paths) {
                 if (suppressedPath.equals(relativePath)) {
                     return true;

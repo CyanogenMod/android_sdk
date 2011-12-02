@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -40,7 +41,7 @@ import java.util.EnumSet;
  * Checks for issues in AndroidManifest files such as declaring elements in the
  * wrong order.
  */
-public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
+public class ManifestOrderDetector extends Detector implements Detector.XmlScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -99,12 +100,12 @@ public class ManifestOrderDetector extends Detector.XmlDetectorAdapter {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         String tag = element.getTagName();
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
         } else if (mSeenApplication) {
-            context.client.report(context, ISSUE, context.getLocation(element),
+            context.report(ISSUE, context.getLocation(element),
                     String.format("<%1$s> tag appears after <application> tag", tag), null);
 
             // Don't complain for *every* element following the <application> tag

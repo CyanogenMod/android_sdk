@@ -68,6 +68,4 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                     "grantpermission.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
-
-
 }

@@ -23,13 +23,13 @@ import static com.android.tools.lint.detector.api.LintConstants.REQUEST_FOCUS;
 import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -90,19 +90,19 @@ public class ChildCountDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         int childCount = LintUtils.getChildCount(element);
         String tagName = element.getTagName();
         if (tagName.equals(SCROLL_VIEW) || tagName.equals(HORIZONTAL_SCROLL_VIEW)) {
             if (childCount > 1 && getAccurateChildCount(element) > 1) {
-                context.client.report(context, SCROLLVIEW_ISSUE,
+                context.report(SCROLLVIEW_ISSUE,
                         context.getLocation(element), "A scroll view can have only one child",
                         null);
             }
         } else {
             // Adapter view
             if (childCount > 0 && getAccurateChildCount(element) > 0) {
-                context.client.report(context, ADAPTERVIEW_ISSUE,
+                context.report(ADAPTERVIEW_ISSUE,
                         context.getLocation(element),
                         "A list/grid should have no children declared in XML", null);
             }

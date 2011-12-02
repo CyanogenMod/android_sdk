@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
 
 import java.io.BufferedWriter;
@@ -55,6 +56,7 @@ class HtmlReporter extends Reporter {
      */
     private static final int SHOWN_COUNT = SPLIT_LIMIT - 3;
 
+    private final Main mClient;
     private final File mOutput;
     private File mResources;
     private boolean mSimpleFormat;
@@ -63,8 +65,9 @@ class HtmlReporter extends Reporter {
     private Map<File, String> mResourceUrl = new HashMap<File, String>();
     private Map<String, File> mNameToFile = new HashMap<String, File>();
 
-    HtmlReporter(File output) throws IOException {
+    HtmlReporter(Main client, File output) throws IOException {
         super(new BufferedWriter(new FileWriter(output)));
+        mClient = client;
         mOutput = output;
     }
 
@@ -118,9 +121,9 @@ class HtmlReporter extends Reporter {
                 "}\n" +                                                  //$NON-NLS-1$
                 ".moreinfo {\n" +                                        //$NON-NLS-1$
                 "}\n" +                                                  //$NON-NLS-1$
-                ".location {\n" +                                        //$NON-NLS-1$
-                "    font-family: monospace;\n" +                        //$NON-NLS-1$
-                "}\n" +
+                //".location {\n" +                                      //$NON-NLS-1$
+                //"    font-family: monospace;\n" +                      //$NON-NLS-1$
+                //"}\n" +
                 // Preview images for icon issues: limit size to at most 200 in one dimension
                 ".embedimage {\n" +                                      //$NON-NLS-1$
                 "    max-width: 200px;\n" +                              //$NON-NLS-1$
@@ -262,25 +265,7 @@ class HtmlReporter extends Reporter {
                     count++;
                     String url = null;
                     if (warning.path != null) {
-                        mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
-
-                        url = getUrl(warning.file);
-                        if (url != null) {
-                            mWriter.write("<a href=\"");                 //$NON-NLS-1$
-                            mWriter.write(url);
-                            mWriter.write("\">");                        //$NON-NLS-1$
-                        }
-                        mWriter.write(warning.path);
-                        if (url != null) {
-                            mWriter.write("</a>");                       //$NON-NLS-1$
-                        }
-                        mWriter.write(':');
-                        if (warning.line >= 0) {
-                            // 0-based line numbers, but display 1-based
-                            mWriter.write(Integer.toString(warning.line + 1) + ':');
-                        }
-                        mWriter.write("</span>"); //$NON-NLS-1$
-                        mWriter.write(' ');
+                        url = writeLocation(warning.file, warning.path, warning.line);
                     }
 
                     // Is the URL for a single image? If so, place it here near the top
@@ -307,6 +292,34 @@ class HtmlReporter extends Reporter {
                         mWriter.write("\n</pre>");                       //$NON-NLS-1$
                     }
                     mWriter.write('\n');
+                    if (warning.location != null && warning.location.getSecondary() != null) {
+                        mWriter.write("<ul>");
+                        Location l = warning.location.getSecondary();
+                        while (l != null) {
+                            if (l.getMessage() != null && l.getMessage().length() > 0) {
+                                Position start = l.getStart();
+                                int line = start != null ? start.getLine() : -1;
+                                int offset = start != null ? start.getOffset() : -1;
+                                String path = mClient.getDisplayPath(warning.project, l.getFile());
+                                writeLocation(l.getFile(), path, line);
+                                mWriter.write("<span class=\"message\">");           //$NON-NLS-1$
+                                appendEscapedText(l.getMessage());
+                                mWriter.write("</span>");                            //$NON-NLS-1$
+                                mWriter.write("<br />");                         //$NON-NLS-1$
+
+                                String s = mClient.readFile(l.getFile());
+                                if (s != null && s.length() > 0) {
+                                    mWriter.write("<pre class=\"errorlines\">\n");   //$NON-NLS-1$
+                                    appendCodeBlock(s, line, offset);
+                                    mWriter.write("\n</pre>");                       //$NON-NLS-1$
+                                }
+                            }
+
+                            l = l.getSecondary();
+                        }
+                        mWriter.write("</ul>");
+
+                    }
 
                     // Place a block of images?
                     if (!addedImage && url != null && warning.location != null
@@ -377,6 +390,30 @@ class HtmlReporter extends Reporter {
 
         String path = mOutput.getAbsolutePath();
         System.out.println(String.format("Wrote HTML report to %1$s", path));
+    }
+
+    private String writeLocation(File file, String path, int line) throws IOException {
+        String url;
+        mWriter.write("<span class=\"location\">");      //$NON-NLS-1$
+
+        url = getUrl(file);
+        if (url != null) {
+            mWriter.write("<a href=\"");                 //$NON-NLS-1$
+            mWriter.write(url);
+            mWriter.write("\">");                        //$NON-NLS-1$
+        }
+        mWriter.write(path);
+        if (url != null) {
+            mWriter.write("</a>");                       //$NON-NLS-1$
+        }
+        mWriter.write(':');
+        if (line >= 0) {
+            // 0-based line numbers, but display 1-based
+            mWriter.write(Integer.toString(line + 1) + ':');
+        }
+        mWriter.write("</span>"); //$NON-NLS-1$
+        mWriter.write(' ');
+        return url;
     }
 
     private boolean addImage(String url, Location location) throws IOException {

@@ -199,10 +199,17 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                     Issue issue1 = registry.getIssue(id1);
                     Issue issue2 = registry.getIssue(id1);
                     if (issue1 == null || issue2 == null) {
-                        // Unknown issue? Can happen if you have used a thirdparty detector
+                        // Unknown issue? Can happen if you have used a third party detector
                         // which is no longer available but which left a persistent marker behind
                         return id1.compareTo(id2);
                     }
+                    // SEVERITY first
+                    int severityDelta = issue1.getDefaultSeverity().ordinal() -
+                            issue2.getDefaultSeverity().ordinal();
+                    if (severityDelta != 0) {
+                        return severityDelta;
+                    }
+
                     // DECREASING priority order
                     int priorityDelta = issue2.getPriority() - issue1.getPriority();
                     if (priorityDelta != 0) {

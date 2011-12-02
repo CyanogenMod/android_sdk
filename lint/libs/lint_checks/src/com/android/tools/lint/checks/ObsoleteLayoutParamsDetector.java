@@ -59,10 +59,11 @@ import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_
 import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.MERGE;
 import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintConstants.TABLE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_TAG;
 
+import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -71,6 +72,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
 
 import org.w3c.dom.Attr;
@@ -112,7 +114,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * Set of layout parameter names that are considered valid no matter what so
      * no other checking is necessary - such as layout_width and layout_height.
      */
-    private static final Set<String> VALID = new HashSet<String>();
+    private static final Set<String> VALID = new HashSet<String>(10);
 
     /**
      * Mapping from a layout parameter name (local name only) to the defining
@@ -123,16 +125,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * every single layout attribute pointing to a list, this is just special
      * cased instead.
      */
-    private static final Map<String, String> PARAM_TO_VIEW = new HashMap<String, String>();
-
-    /**
-     * Mapping from a layout to its parent view layout (in terms of class
-     * inheritance, not view hierarchies). This is used to see whether a layout
-     * parameter is inherited. For example, the "orientation" attribute is valid
-     * on a TableRow because TableRow extends TableLayout which in turn extends
-     * LinearLayout.
-     */
-    private static final Map<String, String> VIEW_PARENTS = new HashMap<String, String>();
+    private static final Map<String, String> PARAM_TO_VIEW = new HashMap<String, String>(28);
 
     static {
         // Available (mostly) everywhere: No check
@@ -195,45 +188,6 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
         PARAM_TO_VIEW.put(ATTR_LAYOUT_TO_LEFT_OF, RELATIVE_LAYOUT);
         PARAM_TO_VIEW.put(ATTR_LAYOUT_BELOW, RELATIVE_LAYOUT);
         PARAM_TO_VIEW.put(ATTR_LAYOUT_ABOVE, RELATIVE_LAYOUT);
-
-        // Ancestry: Need to track which layouts extend which other layouts since params
-        // will be inherited
-
-        // AbsoluteLayout
-        VIEW_PARENTS.put("WebView", ABSOLUTE_LAYOUT);                    //$NON-NLS-1$
-
-        // LinearLayout
-        VIEW_PARENTS.put("NumberPicker", LINEAR_LAYOUT);                 //$NON-NLS-1$
-        VIEW_PARENTS.put("RadioGroup", LINEAR_LAYOUT);                   //$NON-NLS-1$
-        VIEW_PARENTS.put("SearchView", LINEAR_LAYOUT);                   //$NON-NLS-1$
-        VIEW_PARENTS.put("TabWidget", LINEAR_LAYOUT);                    //$NON-NLS-1$
-        VIEW_PARENTS.put(TABLE_LAYOUT, LINEAR_LAYOUT);
-        VIEW_PARENTS.put(TABLE_ROW, LINEAR_LAYOUT);
-        VIEW_PARENTS.put("ZoomControls", LINEAR_LAYOUT);                 //$NON-NLS-1$
-
-        // RelativeLayout
-        VIEW_PARENTS.put("DialerFilter", RELATIVE_LAYOUT);               //$NON-NLS-1$
-        VIEW_PARENTS.put("TwoLineListItem", RELATIVE_LAYOUT);            //$NON-NLS-1$
-
-        // FrameLayout
-        /* We don't actually have any FrameLayout layout params to check since we're not
-         * enforcing layout_gravity, so we don't need to track the ancestry of FrameLayout
-         * subclasses...
-        VIEW_PARENTS.put("AppWidgetHostView", FRAME_LAYOUT);
-        VIEW_PARENTS.put("CalendarView", FRAME_LAYOUT);
-        VIEW_PARENTS.put("DatePicker", FRAME_LAYOUT);
-        VIEW_PARENTS.put("GestureOverlayView", FRAME_LAYOUT);
-        VIEW_PARENTS.put("HorizontalScrollView", FRAME_LAYOUT);
-        VIEW_PARENTS.put("MediaController", FRAME_LAYOUT);
-        VIEW_PARENTS.put("ScrollView", FRAME_LAYOUT);
-        VIEW_PARENTS.put("TabHost", FRAME_LAYOUT);
-        VIEW_PARENTS.put("TimePicker", FRAME_LAYOUT);
-        VIEW_PARENTS.put("ViewAnimator", FRAME_LAYOUT);
-        VIEW_PARENTS.put("ImageSwitcher", FRAME_LAYOUT);
-        VIEW_PARENTS.put("TextSwitcher", FRAME_LAYOUT);
-        VIEW_PARENTS.put("ViewFlipper", FRAME_LAYOUT);
-        VIEW_PARENTS.put("ViewSwitcher", FRAME_LAYOUT);
-         */
     }
 
     /**
@@ -254,7 +208,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * pair is a pair of an attribute name to be checked, and the file that
      * attribute is referenced in.
      */
-    private List<Pair<String, Location>> mPending = new ArrayList<Pair<String,Location>>();
+    private List<Pair<String, Location.Handle>> mPending =
+            new ArrayList<Pair<String,Location.Handle>>();
 
     /** Constructs a new {@link ObsoleteLayoutParamsDetector} */
     public ObsoleteLayoutParamsDetector() {
@@ -276,7 +231,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitAttribute(Context context, Attr attribute) {
+    public void visitAttribute(XmlContext context, Attr attribute) {
         String name = attribute.getLocalName();
         if (name != null && name.startsWith("layout_") &&                //$NON-NLS-1$
                 ANDROID_URI.equals(attribute.getNamespaceURI())) {
@@ -294,9 +249,10 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     // sure at least one included context is valid for this layout_param.
                     // We can't do that yet since we may be processing the include tag to
                     // this layout after the layout itself. Instead, stash a work order...
-                    if (context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
-                        Location location = context.parser.getLocation(context, attribute);
-                        mPending.add(Pair.of(name, location));
+                    if (context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                        IDomParser parser = context.parser;
+                        Location.Handle handle = parser.createLocationHandle(context, attribute);
+                        mPending.add(Pair.of(name, handle));
                     }
 
                     return;
@@ -307,20 +263,21 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     // This is a merge which means we need to check the including contexts,
                     // wherever they are. This has to be done after all the files have been
                     // scanned since we are not processing the files in any particular order.
-                    if (context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
-                        Location location = context.parser.getLocation(context, attribute);
-                        mPending.add(Pair.of(name, location));
+                    if (context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
+                        IDomParser parser = context.parser;
+                        Location.Handle handle = parser.createLocationHandle(context, attribute);
+                        mPending.add(Pair.of(name, handle));
                     }
 
                     return;
                 }
 
-                if (!isValidParamForParent(name, parent, parentTag)) {
+                if (!isValidParamForParent(context, name, parent, parentTag)) {
                     if (name.equals(ATTR_LAYOUT_COLUMN)
-                            && isValidParamForParent(name, TABLE_ROW, parentTag)) {
+                            && isValidParamForParent(context, name, TABLE_ROW, parentTag)) {
                         return;
                     }
-                    context.client.report(context, ISSUE, context.getLocation(attribute),
+                    context.report(ISSUE, context.getLocation(attribute),
                             String.format("Invalid layout param in a %1$s: %2$s", parentTag, name),
                             null);
                 }
@@ -335,7 +292,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         String layout = element.getAttribute(ATTR_LAYOUT);
         if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
             layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
@@ -364,8 +321,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             return;
         }
 
-        for (Pair<String, Location> pending : mPending) {
-            Location location = pending.getSecond();
+        for (Pair<String, Location.Handle> pending : mPending) {
+            Location location = pending.getSecond().resolve();
             File file = location.getFile();
             String layout = file.getName();
             if (layout.endsWith(DOT_XML)) {
@@ -387,11 +344,11 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             boolean isValid = false;
             for (Pair<File, String> include : includes) {
                 String parentTag = include.getSecond();
-                if (isValidParamForParent(name, parent, parentTag)) {
+                if (isValidParamForParent(context, name, parent, parentTag)) {
                     isValid = true;
                     break;
                 } else if (!isValid && name.equals(ATTR_LAYOUT_COLUMN)
-                        && isValidParamForParent(name, TABLE_ROW, parentTag)) {
+                        && isValidParamForParent(context, name, TABLE_ROW, parentTag)) {
                     isValid = true;
                     break;
                 }
@@ -411,7 +368,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 }
                 String message = String.format("Invalid layout param '%1$s' (%2$s)",
                             name, sb.toString());
-                context.client.report(context, ISSUE, location, message, null);
+                context.report(ISSUE, location, message, null);
             }
         }
     }
@@ -420,20 +377,23 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
      * Checks whether the given layout parameter name is valid for the given
      * parent tag assuming it has the given current parent tag
      */
-    private static boolean isValidParamForParent(String name, String parent, String parentTag) {
+    private static boolean isValidParamForParent(Context context, String name, String parent,
+            String parentTag) {
         if (parentTag.indexOf('.') != -1 || parentTag.equals(VIEW_TAG)) {
             // Custom tag: We don't know whether it extends one of the builtin
             // types where the layout param is valid, so don't complain
             return true;
         }
 
+        SdkInfo sdk = context.getSdkInfo();
+
         if (!parentTag.equals(parent)) {
-            String tag = VIEW_PARENTS.get(parentTag);
+            String tag = sdk.getParentViewName(parentTag);
             while (tag != null) {
                 if (tag.equals(parent)) {
                     return true;
                 }
-                tag = VIEW_PARENTS.get(tag);
+                tag = sdk.getParentViewName(tag);
             }
 
             return false;

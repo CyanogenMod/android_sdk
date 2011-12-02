@@ -27,7 +27,6 @@ import static com.android.tools.lint.detector.api.LintConstants.MERGE;
 import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -35,6 +34,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -120,7 +120,7 @@ public class UselessViewDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         int childCount = LintUtils.getChildCount(element);
         if (childCount == 0) {
             // Check to see if this is a leaf layout that can be removed
@@ -132,7 +132,7 @@ public class UselessViewDetector extends LayoutDetector {
     }
 
     // This is the old UselessLayoutCheck from layoutopt
-    private void checkUselessMiddleLayout(Context context, Element element) {
+    private void checkUselessMiddleLayout(XmlContext context, Element element) {
         // Conditions:
         // - The node has children
         // - The node does not have siblings
@@ -191,11 +191,11 @@ public class UselessViewDetector extends LayoutDetector {
             format += "; transfer the background attribute to the other view";
         }
         String message = String.format(format, tag, parentTag);
-        context.client.report(context, USELESS_PARENT, location, message, null);
+        context.report(USELESS_PARENT, location, message, null);
     }
 
     // This is the old UselessView check from layoutopt
-    private void checkUselessLeaf(Context context, Element element) {
+    private void checkUselessLeaf(XmlContext context, Element element) {
         assert LintUtils.getChildCount(element) == 0;
 
         // Conditions:
@@ -216,6 +216,6 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String message = String.format(
                 "This %1$s view is useless (no children, no background, no id)", tag);
-        context.client.report(context, USELESS_LEAF, location, message, null);
+        context.report(USELESS_LEAF, location, message, null);
     }
 }

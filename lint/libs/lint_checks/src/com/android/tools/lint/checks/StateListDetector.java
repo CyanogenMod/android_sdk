@@ -20,13 +20,13 @@ import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -67,7 +67,7 @@ public class StateListDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void visitDocument(Context context, Document document) {
+    public void visitDocument(XmlContext context, Document document) {
         // TODO: Look for views that don't specify
         // Display the error token somewhere so it can be suppressed
         // Emit warning at the end "run with --help to learn how to suppress types of errors/checks";
@@ -98,7 +98,7 @@ public class StateListDetector extends ResourceXmlDetector {
                     }
                 }
                 if (!hasState) {
-                    context.client.report(context, ISSUE, context.getLocation(child),
+                    context.report(ISSUE, context.getLocation(child),
                         String.format("No android:state_ attribute found on <item> %1$d, later states not reachable",
                                 i), null);
                 }

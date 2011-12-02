@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
@@ -117,7 +118,7 @@ public class TooManyViewsDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(Context context, Element element) {
+    public void visitElement(XmlContext context, Element element) {
         mViewCount++;
         mDepth++;
 
@@ -129,17 +130,17 @@ public class TooManyViewsDetector extends LayoutDetector {
             mWarnedAboutDepth = true;
             String msg = String.format("%1$s has more than %2$d levels, bad for performance",
                     context.file.getName(), MAX_DEPTH);
-            context.client.report(context, TOO_DEEP, context.getLocation(element), msg, null);
+            context.report(TOO_DEEP, context.getLocation(element), msg, null);
         }
         if (mViewCount == MAX_VIEW_COUNT) {
             String msg = String.format("%1$s has more than %2$d views, bad for performance",
                     context.file.getName(), MAX_VIEW_COUNT);
-            context.client.report(context, TOO_MANY, context.getLocation(element), msg, null);
+            context.report(TOO_MANY, context.getLocation(element), msg, null);
         }
     }
 
     @Override
-    public void visitElementAfter(Context context, Element element) {
+    public void visitElementAfter(XmlContext context, Element element) {
         mDepth--;
     }
 }

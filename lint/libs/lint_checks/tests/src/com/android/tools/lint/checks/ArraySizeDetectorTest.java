@@ -26,10 +26,10 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
     }
     public void testArraySizes() throws Exception {
         assertEquals(
-            "arrays.xml: Warning: Array security_questions has an inconsistent number of items " +
-                    "(3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml)\n" +
-            "arrays.xml: Warning: Array signal_strength has an inconsistent number of items " +
-                "(5 in values/arrays.xml, 6 in values-land/arrays.xml)",
+            "values-cs/arrays.xml: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml)\n" +
+            "=> values-nl-rNL/arrays.xml: Declaration with conflicting size\n" +
+            "values-land/arrays.xml: Warning: Array signal_strength has an inconsistent number of items (5 in values/arrays.xml, 6 in values-land/arrays.xml)\n" +
+            "=> values/arrays.xml: Declaration with conflicting size",
 
             lintProject(
                  "res/values/arrays.xml",
