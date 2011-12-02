@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
@@ -41,6 +40,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
@@ -68,12 +68,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.ast.AstVisitor;
+import lombok.ast.ClassDeclaration;
+import lombok.ast.CompilationUnit;
+import lombok.ast.Expression;
+import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.MethodInvocation;
+import lombok.ast.Select;
+import lombok.ast.StrictListAccessor;
+import lombok.ast.VariableReference;
+
 /**
  * Check which looks for overdraw problems where view areas are painted and then
  * painted over, meaning that the bottom paint operation is a waste of time.
  */
 public class OverdrawDetector extends LayoutDetector implements Detector.JavaScanner {
-    private static final String R_LAYOUT_PREFIX = "R.layout.";  //$NON-NLS-1$
     private static final String R_STYLE_PREFIX = "R.style.";    //$NON-NLS-1$
     private static final String SET_THEME = "setTheme";         //$NON-NLS-1$
 
@@ -438,121 +447,92 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
     // ---- Implements JavaScanner ----
 
     @Override
-    public void checkJavaSources(Context context, List<File> sourceFolders) {
-        if (mActivities == null) {
-            return;
-        }
-
-        // For right now, this is hacked via String scanning in .java files instead.
-        for (File dir : sourceFolders) {
-            scanJavaFile(context, dir, null);
-        }
+    public List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
+        // This detector does not specify specific node types; this means
+        // that the infrastructure will run the full visitor on the compilation
+        // unit rather than on individual nodes. This is important since this
+        // detector relies on pruning (if it gets to a class declaration that is
+        // not an activity, it skips everything inside).
+        return null;
     }
 
-    // TODO: Use a proper Java AST... Not only does this rely on string pattern
-    // matching, it also does not track inheritance so if you inherit code from another
-    // activity (such as setTheme) calls those won't be reflected in all the children...
-    private void scanJavaFile(Context context, File file, String pkg) {
-        String fileName = file.getName();
-        if (fileName.endsWith(DOT_JAVA) && file.exists()) {
-            String clz = fileName.substring(0, fileName.length() - DOT_JAVA.length());
-            String fqn = pkg + '.' + clz;
+    @Override
+    public AstVisitor createJavaVisitor(JavaContext context) {
+        return new OverdrawVisitor();
+    }
 
-            if (mActivities.contains(fqn) || fqn.endsWith("Activity")) { //$NON-NLS-1$
-                String code = context.getClient().readFile(file);
-                scanLayoutReferences(code, fqn);
-                scanThemeReferences(code, fqn);
-            }
-        } else if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                String subPackage;
-                if (pkg == null) {
-                    subPackage = "";
-                } else if (pkg.length() == 0) {
-                    subPackage = file.getName();
-                } else {
-                    subPackage = pkg + '.' + file.getName();
+    private class OverdrawVisitor extends ForwardingAstVisitor {
+        private static final String ACTIVITY = "Activity"; //$NON-NLS-1$
+        private String mClassFqn;
+
+        @Override
+        public boolean visitClassDeclaration(ClassDeclaration node) {
+            String name = node.getDescription();
+
+            if (mActivities != null && mActivities.contains(mClassFqn) || name.endsWith(ACTIVITY)
+                    || node.astExtending() != null &&
+                        node.astExtending().getDescription().endsWith(ACTIVITY)) {
+                String packageName = "";
+                if (node.getParent() instanceof CompilationUnit) {
+                    CompilationUnit compilationUnit = (CompilationUnit) node.getParent();
+                    packageName = compilationUnit.astPackageDeclaration().getPackageName();
                 }
-                for (File child : children) {
-                    scanJavaFile(context, child, subPackage);
+                mClassFqn = (packageName.length() > 0 ? (packageName + '.') : "") + name;
+
+                return false;
+            }
+
+            return true; // Done: No need to look inside this class
+        }
+
+        // Store R.layout references in activity classes in a map mapping back layouts
+        // to activities
+        @Override
+        public boolean visitSelect(Select node) {
+            if (node.astIdentifier().astValue().equals("layout") //$NON-NLS-1$
+                    && node.astOperand() instanceof VariableReference
+                    && ((VariableReference) node.astOperand()).astIdentifier().astValue()
+                        .equals("R")                             //$NON-NLS-1$
+                    && node.getParent() instanceof Select) {
+                String layout = ((Select) node.getParent()).astIdentifier().astValue();
+                if (mLayoutToActivity == null) {
+                    mLayoutToActivity = new HashMap<String, List<String>>();
+                }
+                List<String> list = mLayoutToActivity.get(layout);
+                if (list == null) {
+                    list = new ArrayList<String>();
+                    mLayoutToActivity.put(layout, list);
+                }
+                list.add(mClassFqn);
+            }
+
+            return false;
+        }
+
+
+        // Look for setTheme(R.style.whatever) and register as a theme registration
+        // for the current activity
+        @Override
+        public boolean visitMethodInvocation(MethodInvocation node) {
+            if (node.astName().astValue().equals(SET_THEME)) {
+                // Look at argument
+                StrictListAccessor<Expression, MethodInvocation> args = node.astArguments();
+                if (args.size() == 1) {
+                    Expression arg = args.first();
+                    if (arg instanceof Select) {
+                        String resource = arg.toString();
+                        if (resource.startsWith(R_STYLE_PREFIX)) {
+                            if (mActivityToTheme == null) {
+                                mActivityToTheme = new HashMap<String, String>();
+                            }
+                            String name = ((Select) arg).astIdentifier().astValue();
+                            mActivityToTheme.put(mClassFqn, STYLE_RESOURCE_PREFIX + name);
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    /** Look for setTheme references in this file and if found store activity-to-theme mapping */
-    private void scanThemeReferences(String code, String fqn) {
-        int index = 0;
-        int length = code.length();
-        // Search for R.layout references based on simple string patterns.
-        // This needs to be replaced with a proper AST search as soon as we
-        // have AST support in lint.
-        while (index < length) {
-            index = code.indexOf(SET_THEME, index);
-            if (index == -1) {
-                break;
-            }
-
-            index += SET_THEME.length();
-            index = code.indexOf(R_STYLE_PREFIX, index);
-            if (index == -1) {
-                break;
-            }
-            int styleStart = index;
-            index += R_STYLE_PREFIX.length();
-
-            int start = index;
-            while (index < length && Character.isJavaIdentifierPart(code.charAt(index))) {
-                index++;
-            }
-            String style = code.substring(start, index);
-
-            String resource;
-            String androidPkgPrefix = "android."; //$NON-NLS-1$
-            if (styleStart > androidPkgPrefix.length() &&
-                    code.regionMatches(styleStart - androidPkgPrefix.length(),
-                            androidPkgPrefix, 0, androidPkgPrefix.length())) {
-                resource = ANDROID_STYLE_RESOURCE_PREFIX + style;
-            } else {
-                resource = STYLE_RESOURCE_PREFIX + style;
-            }
-            if (mActivityToTheme == null) {
-                mActivityToTheme = new HashMap<String, String>();
-            }
-            mActivityToTheme.put(fqn, resource);
-        }
-    }
-
-    /** Look for layout references in this file and if found store layout-to-activity mapping */
-    private void scanLayoutReferences(String code, String fqn) {
-        int index = 0;
-        int length = code.length();
-        // Search for R.layout references based on simple string patterns.
-        // This needs to be replaced with a proper AST search as soon as we
-        // have AST support in lint.
-        while (index < length) {
-            index = code.indexOf(R_LAYOUT_PREFIX, index);
-            if (index == -1) {
-                break;
-            }
-
-            index += R_LAYOUT_PREFIX.length();
-            int start = index;
-            while (index < length && Character.isJavaIdentifierPart(code.charAt(index))) {
-                index++;
-            }
-            String layout = code.substring(start, index);
-
-            if (mLayoutToActivity == null) {
-                mLayoutToActivity = new HashMap<String, List<String>>();
-            }
-            List<String> list = mLayoutToActivity.get(layout);
-            if (list == null) {
-                list = new ArrayList<String>();
-                mLayoutToActivity.put(layout, list);
-            }
-            list.add(fqn);
+            return false;
         }
     }
 }

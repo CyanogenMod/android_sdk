@@ -76,6 +76,7 @@ ADT_PREBUILTS="\
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
     prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
+    prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar \
     prebuilt/common/commons-compress/commons-compress-1.0.jar \
     prebuilt/common/http-client/httpclient-4.1.1.jar \
     prebuilt/common/http-client/httpcore-4.1.jar \

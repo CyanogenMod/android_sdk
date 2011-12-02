@@ -37,6 +37,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
@@ -62,6 +63,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import lombok.ast.AstVisitor;
+import lombok.ast.ClassDeclaration;
+import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.NormalTypeBody;
+import lombok.ast.Select;
+import lombok.ast.VariableDeclaration;
+import lombok.ast.VariableDefinition;
+import lombok.ast.VariableReference;
 
 /**
  * Finds unused resources.
@@ -142,177 +152,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     // ---- Implements JavaScanner ----
-
-    @Override
-    public void checkJavaSources(Context context, List<File> sourceFolders) {
-        // For right now, this is hacked via String scanning in .java files instead.
-        for (File dir : sourceFolders) {
-            scanJavaFile(context, dir);
-        }
-    }
-
-    // TODO: Use a proper Java AST...
-    private void scanJavaFile(Context context, File file) {
-        String fileName = file.getName();
-        if (fileName.endsWith(DOT_JAVA) && file.exists()) {
-            if (fileName.equals("R.java")) { //$NON-NLS-1$
-                addJavaDeclarations(context, file);
-            } else {
-                addJavaReferences(context, file);
-            }
-        } else if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    scanJavaFile(context, child);
-                }
-            }
-        }
-    }
-
-    private static final String CLASS_DECLARATION = "public static final class "; //$NON-NLS-1$
-    private static final String FIELD_CONST_DECLARATION = "public static final int "; //$NON-NLS-1$
-    private static final String FIELD_DECLARATION = "public static int "; //$NON-NLS-1$
-
-    private void addJavaDeclarations(Context context, File file) {
-        // mDeclarations
-        String s = context.getClient().readFile(file);
-        String[] lines = s.split("\n"); //$NON-NLS-1$
-        String currentType = null;
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            for (int j = 0; j < line.length(); j++) {
-                char c = line.charAt(j);
-                if (!Character.isWhitespace(c)) {
-                    // Found beginning of line
-                    boolean startsWithConstField = line.startsWith(FIELD_CONST_DECLARATION, j);
-                    boolean startsWithField = line.startsWith(FIELD_DECLARATION, j);
-                    if (startsWithConstField || startsWithField) {
-                        // Field (constant
-                        int nameBegin = j + (startsWithField
-                                ? FIELD_DECLARATION.length() : FIELD_CONST_DECLARATION.length());
-                        int nameEnd = line.indexOf('=', nameBegin);
-                        assert currentType != null;
-                        if (nameEnd != -1 && currentType != null) {
-                            String name = line.substring(nameBegin, nameEnd);
-                            String r = R_PREFIX + currentType + '.' + name;
-                            mDeclarations.add(r);
-                        }
-                    } else if (line.startsWith(CLASS_DECLARATION, j)) {
-                        // New class
-                        int typeBegin = j + CLASS_DECLARATION.length();
-                        int typeEnd = line.indexOf(' ', typeBegin);
-                        if (typeEnd != -1) {
-                            currentType = line.substring(typeBegin, typeEnd);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /** Adds the resource identifiers found in the given file into the given set */
-    private void addJavaReferences(Context context, File file) {
-        String s = context.getClient().readFile(file);
-        if (s == null || s.length() <= 2) {
-            return;
-        }
-
-        // Scan looking for R.{type}.name identifiers
-        // Extremely simple state machine which just avoids comments, line comments
-        // and strings, and outside of that records any R. identifiers it finds
-        int index = 0;
-        int length = s.length();
-
-        char c = s.charAt(0);
-        char next = s.charAt(1);
-        for (; index < length; index++) {
-            c = s.charAt(index);
-            if (index == length - 1) {
-                break;
-            }
-            next = s.charAt(index + 1);
-            if (Character.isWhitespace(c)) {
-                continue;
-            }
-            if (c == '/') {
-                if (next == '*') {
-                    // Block comment
-                    while (index < length - 2) {
-                        if (s.charAt(index) == '*' && s.charAt(index + 1) == '/') {
-                            break;
-                        }
-                        index++;
-                    }
-                    index++;
-                } else if (next == '/') {
-                    // Line comment
-                    while (index < length && s.charAt(index) != '\n') {
-                        index++;
-                    }
-                }
-            } else if (c == '\'') {
-                // Character
-                if (next == '\\') {
-                    // Skip '\c'
-                    index += 2;
-                } else {
-                    // Skip 'c'
-                    index++;
-                }
-            } else if (c == '\"') {
-                // String: Skip to end
-                index++;
-                while (index < length - 1) {
-                    char t = s.charAt(index);
-                    if (t == '\\') {
-                        index++;
-                    } else if (t == '"') {
-                        break;
-                    }
-                    index++;
-                }
-            } else if (c == 'R' && next == '.') {
-                // This might be a pattern
-                int begin = index;
-                index += 2;
-                while (index < length) {
-                    char t = s.charAt(index);
-                    if (t == '.') {
-                        String typeName = s.substring(begin + 2, index);
-                        ResourceType type = ResourceType.getEnum(typeName);
-                        if (type != null) {
-                            index++;
-                            begin = index;
-                            while (index < length &&
-                                    Character.isJavaIdentifierPart(s.charAt(index))) {
-                                index++;
-                            }
-                            if (index > begin) {
-                                String name = R_PREFIX + typeName + '.'
-                                        + s.substring(begin, index);
-                                mReferences.add(name);
-                            }
-                        }
-                        index--;
-                        break;
-                    } else if (!Character.isJavaIdentifierStart(t)) {
-                        break;
-                    }
-                    index++;
-                }
-            } else if (Character.isJavaIdentifierPart(c)) {
-                // Skip to the end of the identifier
-                while (index < length && Character.isJavaIdentifierPart(s.charAt(index))) {
-                    index++;
-                }
-                // Back up so the next character can be checked to see if it's a " etc
-                index--;
-            } else {
-                // Just punctuation/operators ( ) ;  etc
-            }
-        }
-    }
 
     @Override
     public void beforeCheckFile(Context context) {
@@ -525,5 +364,93 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     @Override
     public Speed getSpeed() {
         return Speed.SLOW;
+    }
+
+    @Override
+    public List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
+        return Collections.<Class<? extends lombok.ast.Node>>singletonList(ClassDeclaration.class);
+    }
+
+    @Override
+    public boolean appliesToResourceRefs() {
+        return true;
+    }
+
+    @Override
+    public void visitResourceReference(JavaContext context, AstVisitor visitor, VariableReference node,
+            String type, String name) {
+        String reference = R_PREFIX + type + '.' + name;
+        mReferences.add(reference);
+    }
+
+    @Override
+    public AstVisitor createJavaVisitor(JavaContext context) {
+        return new UnusedResourceVisitor();
+    }
+
+    // Look for references and declarations
+    private class UnusedResourceVisitor extends ForwardingAstVisitor {
+        // Look for references to field R.<class>.<name>
+        // and store them in mReferences
+        @Override
+        public boolean visitVariableReference(VariableReference node) {
+            if (node.astIdentifier().getDescription().equals("R") &&
+                    node.getParent() instanceof Select &&
+                    node.getParent().getParent() instanceof Select) {
+                String reference = node.getParent().getParent().toString();
+                mReferences.add(reference);
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean visitClassDeclaration(ClassDeclaration node) {
+            // Look for declarations of R class fields and store them in
+            // mDeclarations
+            String description = node.getDescription();
+            if (description.equals("R")) { //$NON-NLS-1$
+                // This is an R class. We can process this class very deliberately.
+                // The R class has a very specific AST format:
+                // ClassDeclaration ("R")
+                //    NormalTypeBody
+                //        ClassDeclaration (e.g. "drawable")
+                //             NormalTypeBody
+                //                 VariableDeclaration
+                //                     VariableDefinition (e.g. "ic_launcher")
+                for (lombok.ast.Node body : node.getChildren()) {
+                    if (body instanceof NormalTypeBody) {
+                        for (lombok.ast.Node subclass : body.getChildren()) {
+                            if (subclass instanceof ClassDeclaration) {
+                                String className = ((ClassDeclaration) subclass).getDescription();
+                                for (lombok.ast.Node innerBody : subclass.getChildren()) {
+                                    if (innerBody instanceof NormalTypeBody) {
+                                        for (lombok.ast.Node field : innerBody.getChildren()) {
+                                            if (field instanceof VariableDeclaration) {
+                                                for (lombok.ast.Node child : field.getChildren()) {
+                                                    if (child instanceof VariableDefinition) {
+                                                        VariableDefinition def =
+                                                                (VariableDefinition) child;
+                                                        String name = def.astVariables().first()
+                                                                .astName().astValue();
+                                                        String resource = R_PREFIX + className + '.'
+                                                                + name;
+                                                        mDeclarations.add(resource);
+                                                    } // Else: It could be a comment node
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }

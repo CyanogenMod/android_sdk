@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.DuplicateIdDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -222,6 +223,11 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
 
         @Override
         public String readFile(File file) {
+            return null;
+        }
+
+        @Override
+        public IJavaParser getJavaParser() {
             return null;
         }
     }

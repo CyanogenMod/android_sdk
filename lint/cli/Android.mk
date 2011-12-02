@@ -12,7 +12,8 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	common \
 	lint_api \
-	lint_checks
+	lint_checks \
+	lombok-ast-0.2
 LOCAL_STATIC_JAVA_LIBRARIES := \
 	asm-tools \
 	asm-tree-tools \

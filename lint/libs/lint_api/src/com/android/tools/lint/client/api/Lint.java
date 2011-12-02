@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -573,14 +574,41 @@ public class Lint {
 
     private void checkJava(Project project, Project main,
             List<File> sourceFolders, List<Detector> checks) {
-        Context context = new Context(mClient, project, main, project.getDir(), mScope);
-        fireEvent(EventType.SCANNING_FILE, context);
+        IJavaParser javaParser = mClient.getJavaParser();
+        if (javaParser == null) {
+            mClient.log(null, "No java parser provided to lint: not running Java checks");
+            return;
+        }
 
-        for (Detector detector : checks) {
-            ((Detector.JavaScanner) detector).checkJavaSources(context, sourceFolders);
+        assert checks.size() > 0;
 
-            if (mCanceled) {
-                return;
+        // Gather all Java source files in a single pass; more efficient.
+        List<File> sources = new ArrayList<File>(100);
+        for (File folder : sourceFolders) {
+            gatherJavaFiles(folder, sources);
+        }
+        if (sources.size() > 0) {
+            JavaVisitor visitor = new JavaVisitor(javaParser, checks);
+            for (File file : sources) {
+                JavaContext context = new JavaContext(mClient, project, main, file, mScope);
+                fireEvent(EventType.SCANNING_FILE, context);
+                visitor.visitFile(context, file);
+                if (mCanceled) {
+                    return;
+                }
+            }
+        }
+    }
+
+    private void gatherJavaFiles(File dir, List<File> result) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".java")) { //$NON-NLS-1$
+                    result.add(file);
+                } else if (file.isDirectory()) {
+                    gatherJavaFiles(file, result);
+                }
             }
         }
     }
@@ -819,6 +847,11 @@ public class Lint {
         @Override
         public Project getProject(File dir, File referenceDir) {
             return mDelegate.getProject(dir, referenceDir);
+        }
+
+        @Override
+        public IJavaParser getJavaParser() {
+            return mDelegate.getJavaParser();
         }
     }
 }

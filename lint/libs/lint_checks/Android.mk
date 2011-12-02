@@ -11,8 +11,9 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 
 # If the dependency list is changed, etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
-        common \
-        androidprefs \
+	common \
+	lombok-ast-0.2 \
+	androidprefs \
 	lint_api
 LOCAL_STATIC_JAVA_LIBRARIES := \
         asm-tools \

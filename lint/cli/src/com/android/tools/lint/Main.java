@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.Lint;
 import com.android.tools.lint.client.api.LintClient;
@@ -720,6 +721,11 @@ public class Main extends LintClient {
         }
 
         return s;
+    }
+
+    @Override
+    public IJavaParser getJavaParser() {
+        return new LombokParser();
     }
 
     @Override

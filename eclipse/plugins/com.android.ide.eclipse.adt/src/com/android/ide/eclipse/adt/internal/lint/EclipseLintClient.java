@@ -25,12 +25,14 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
@@ -48,6 +50,17 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -71,6 +84,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.ast.ecj.EcjTreeConverter;
+import lombok.ast.grammar.ParseProblem;
+import lombok.ast.grammar.Source;
+
 /**
  * Eclipse implementation for running lint on workspace files and projects.
  */
@@ -83,6 +100,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     private boolean mWasFatal;
     private boolean mFatalOnly;
     private Configuration mConfiguration;
+    private EclipseJavaParser mJavaParser;
 
     /**
      * Creates a new {@link EclipseLintClient}.
@@ -114,6 +132,15 @@ public class EclipseLintClient extends LintClient implements IDomParser {
     @Override
     public IDomParser getDomParser() {
         return this;
+    }
+
+    @Override
+    public IJavaParser getJavaParser() {
+        if (mJavaParser == null) {
+            mJavaParser = new EclipseJavaParser();
+        }
+
+        return mJavaParser;
     }
 
     // ----- Implements IDomParser -----
@@ -563,12 +590,6 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     @Override
     public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
-        // Replace the generic UnusedResourceDetector with an Eclipse optimized one
-        // which uses the Java AST
-        if (detectorClass == com.android.tools.lint.checks.UnusedResourceDetector.class) {
-            return UnusedResourceDetector.class;
-        }
-
         return detectorClass;
     }
 
@@ -641,6 +662,153 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         @Override
         public Location resolve() {
             return this;
+        }
+    }
+
+    private static class EclipseJavaParser implements IJavaParser {
+        private static final boolean USE_ECLIPSE_PARSER = true;
+        private final Parser mParser;
+
+        EclipseJavaParser() {
+            if (USE_ECLIPSE_PARSER) {
+                CompilerOptions options = new CompilerOptions();
+                // Read settings from project? Note that this doesn't really matter because
+                // we will only be parsing, not actually compiling.
+                options.complianceLevel = ClassFileConstants.JDK1_6;
+                options.sourceLevel = ClassFileConstants.JDK1_6;
+                options.targetJDK = ClassFileConstants.JDK1_6;
+                options.parseLiteralExpressionsAsConstants = true;
+                ProblemReporter problemReporter = new ProblemReporter(
+                        DefaultErrorHandlingPolicies.exitOnFirstError(),
+                        options,
+                        new DefaultProblemFactory());
+                mParser = new Parser(problemReporter, options.parseLiteralExpressionsAsConstants);
+                mParser.javadocParser.checkDocComment = false;
+            } else {
+                mParser = null;
+            }
+        }
+
+        @Override
+        public lombok.ast.Node parseJava(JavaContext context) {
+            if (USE_ECLIPSE_PARSER) {
+                // Use Eclipse's compiler
+                EcjTreeConverter converter = new EcjTreeConverter();
+                String code = context.getContents();
+
+                CompilationUnit sourceUnit = new CompilationUnit(code.toCharArray(),
+                        context.file.getName(), "UTF-8"); //$NON-NLS-1$
+                CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+                CompilationUnitDeclaration unit = null;
+                try {
+                    unit = mParser.parse(sourceUnit, compilationResult);
+                } catch (AbortCompilation e) {
+
+                    String message;
+                    Location location;
+                    if (e.problem != null) {
+                        CategorizedProblem problem = e.problem;
+                        message = problem.getMessage();
+                        location = Location.create(context.file,
+                                new DefaultPosition(problem.getSourceLineNumber() - 1, -1,
+                                        problem.getSourceStart()),
+                                new DefaultPosition(problem.getSourceLineNumber() - 1, -1,
+                                        problem.getSourceEnd()));
+                    } else {
+                        location = Location.create(context.file);
+                        message = e.getCause() != null ? e.getCause().getLocalizedMessage() :
+                            e.getLocalizedMessage();
+                    }
+
+                    context.report(IssueRegistry.PARSER_ERROR, location, message, null);
+                    return null;
+                }
+                if (unit == null) {
+                    return null;
+                }
+
+                try {
+                    converter.visit(code, unit);
+                    List<? extends lombok.ast.Node> nodes = converter.getAll();
+
+                    // There could be more than one node when there are errors; pick out the
+                    // compilation unit node
+                    for (lombok.ast.Node node : nodes) {
+                        if (node instanceof CompilationUnit) {
+                            return node;
+                        }
+                    }
+
+                    return null;
+                } catch (Throwable t) {
+                    AdtPlugin.log(t, "Failed converting ECJ parse tree to Lombok for file %1$s",
+                            context.file.getPath());
+                    return null;
+                }
+            } else {
+                // Use Lombok for now
+                Source source = new Source(context.getContents(), context.file.getName());
+                List<lombok.ast.Node> nodes = source.getNodes();
+
+                // Don't analyze files containing errors
+                List<ParseProblem> problems = source.getProblems();
+                if (problems != null && problems.size() > 0) {
+                    for (ParseProblem problem : problems) {
+                        lombok.ast.Position position = problem.getPosition();
+                        Location location = Location.create(context.file,
+                                context.getContents(), position.getStart(), position.getEnd());
+                        String message = problem.getMessage();
+                        context.report(
+                                IssueRegistry.PARSER_ERROR, location,
+                                message,
+                                null);
+
+                    }
+                    return null;
+                }
+
+                // There could be more than one node when there are errors; pick out the
+                // compilation unit node
+                for (lombok.ast.Node node : nodes) {
+                    if (node instanceof lombok.ast.CompilationUnit) {
+                        return node;
+                    }
+                }
+                return null;
+            }
+        }
+
+        @Override
+        public Location getLocation(JavaContext context, lombok.ast.Node node) {
+            lombok.ast.Position position = node.getPosition();
+            return Location.create(context.file, context.getContents(),
+                    position.getStart(), position.getEnd());
+        }
+
+        @Override
+        public Handle createLocationHandle(XmlContext context, lombok.ast.Node node) {
+            return new LocationHandle(context.file, node);
+        }
+
+        @Override
+        public void dispose(JavaContext context, lombok.ast.Node compilationUnit) {
+        }
+
+        /* Handle for creating positions cheaply and returning full fledged locations later */
+        private class LocationHandle implements Handle {
+            private File mFile;
+            private lombok.ast.Node mNode;
+
+            public LocationHandle(File file, lombok.ast.Node node) {
+                mFile = file;
+                mNode = node;
+            }
+
+            @Override
+            public Location resolve() {
+                lombok.ast.Position pos = mNode.getPosition();
+                return Location.create(mFile, null /*contents*/, pos.getStart(), pos.getEnd());
+            }
         }
     }
 }

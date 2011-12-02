@@ -20,7 +20,8 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_JAVA_LIBRARIES := \
-        common
+	lombok-ast-0.2 \
+	common
 LOCAL_STATIC_JAVA_LIBRARIES := \
         asm-tools \
         asm-tree-tools \

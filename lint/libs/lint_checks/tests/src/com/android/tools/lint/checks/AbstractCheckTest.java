@@ -18,8 +18,10 @@ package com.android.tools.lint.checks;
 
 import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.Main;
+import com.android.tools.lint.LombokParser;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
+import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.Lint;
 import com.android.tools.lint.detector.api.Context;
@@ -344,6 +346,11 @@ abstract class AbstractCheckTest extends TestCase {
         @Override
         public IDomParser getDomParser() {
             return new LintCliXmlParser();
+        }
+
+        @Override
+        public IJavaParser getJavaParser() {
+            return new LombokParser();
         }
 
         @Override

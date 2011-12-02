@@ -100,6 +100,13 @@ public abstract class LintClient {
     public abstract IDomParser getDomParser();
 
     /**
+     * Returns a {@link IJavaParser} to use to parse Java
+     *
+     * @return a new {@link IJavaParser}
+     */
+    public abstract IJavaParser getJavaParser();
+
+    /**
      * Returns an optimal detector, if applicable. By default, just returns the
      * original detector, but tools can replace detectors using this hook with a version
      * that takes advantage of native capabilities of the tool.
