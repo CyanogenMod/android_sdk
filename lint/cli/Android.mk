@@ -12,6 +12,10 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
 	lint_api \
 	lint_checks
+LOCAL_STATIC_JAVA_LIBRARIES := \
+	asm-tools \
+	asm-tree-tools
+
 LOCAL_MODULE := lint
 LOCAL_MODULE_TAGS := optional
 

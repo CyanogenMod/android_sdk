@@ -22,6 +22,8 @@ Bundle-ClassPath: .,
  libs/httpcore-4.1.jar,
  libs/httpmime-4.1.1.jar,
  libs/httpclient-4.1.1.jar,
+ libs/asm-4.0.jar,
+ libs/asm-tree-4.0.jar,
  libs/commons-logging-1.1.1.jar,
  libs/commons-codec-1.4.jar
 Bundle-Activator: com.android.ide.eclipse.adt.AdtPlugin

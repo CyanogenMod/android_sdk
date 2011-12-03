@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -33,7 +34,11 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -395,7 +400,7 @@ public class Lint {
 
         if (mScope.contains(Scope.CLASS_FILE)) {
             List<Detector> detectors = mScopeDetectors.get(Scope.CLASS_FILE);
-            if (detectors != null) {
+            if (detectors != null && detectors.size() > 0) {
                 List<File> binFolders = project.getJavaClassFolders();
                 checkClasses(project, binFolders, detectors);
             }
@@ -441,13 +446,63 @@ public class Lint {
     }
 
     private void checkClasses(Project project, List<File> binFolders, List<Detector> checks) {
-        Context context = new Context(mClient, project, project.getDir(), mScope);
-        fireEvent(EventType.SCANNING_FILE, context);
-        for (Detector detector : checks) {
-            ((Detector.ClassScanner) detector).checkJavaClasses(context);
+        if (binFolders.size() == 0) {
+            //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
+            //        "output folders found. Does the project need to be built first?");
+        }
 
-            if (mCanceled) {
-                return;
+        for (File binDir : binFolders) {
+            List<File> classFiles = new ArrayList<File>();
+            addClassFiles(binDir, classFiles);
+
+            for (File file : classFiles) {
+                try {
+                    byte[] bytes = LintUtils.readBytes(file);
+                    if (bytes != null) {
+                        ClassReader reader = new ClassReader(bytes);
+                        ClassNode classNode = new ClassNode();
+                        reader.accept(classNode, 0 /*flags*/);
+                        ClassContext context = new ClassContext(mClient, project, file, mScope,
+                                binDir, bytes, classNode);
+
+                        for (Detector detector : checks) {
+                            if (detector.appliesTo(context, file)) {
+                                fireEvent(EventType.SCANNING_FILE, context);
+                                detector.beforeCheckFile(context);
+
+                                Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
+                                scanner.checkClass(context, classNode);
+                                detector.afterCheckFile(context);
+                            }
+
+                            if (mCanceled) {
+                                return;
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    mClient.log(e, null);
+                    continue;
+                }
+
+                if (mCanceled) {
+                    return;
+                }
+            }
+        }
+    }
+
+    private void addClassFiles(File dir, List<File> classFiles) {
+        // Process the resource folder
+        File[] files = dir.listFiles();
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(DOT_CLASS)) {
+                    classFiles.add(file);
+                } else if (file.isDirectory()) {
+                    // Recurse
+                    addClassFiles(file, classFiles);
+                }
             }
         }
     }

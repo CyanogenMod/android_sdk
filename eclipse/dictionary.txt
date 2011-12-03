@@ -157,6 +157,7 @@ markup
 marquee
 mdpi
 metadata
+micro
 min
 mipmap
 monospace

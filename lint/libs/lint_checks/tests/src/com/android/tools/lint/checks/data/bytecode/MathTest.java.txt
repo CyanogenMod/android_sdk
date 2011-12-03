@@ -1,0 +1,30 @@
+package test.bytecode;
+
+//Test data for the MathDetector
+public class MathTest {
+	public float floatResult;
+	public double doubleResult;
+
+	public void floatToFloatTest(float x) {
+		// This forces a cast of the argument
+		// from a float to a double, as well
+		// as a cast of the return code back to a float
+		floatResult = (float) Math.sqrt(x);
+	}
+
+	public void doubleToFloat(double x) {
+		// This forces a cast of the return value
+		// to a float
+		floatResult = (float) Math.sqrt(x);
+	}
+
+	public void floatToDouble(float x) {
+		// This causes a cast of the float argument to a double
+		doubleResult = Math.sqrt(x);
+	}
+
+	public void doubleToDouble(double x) {
+		// No casting
+		doubleResult = Math.sqrt(x);
+	}
+}
