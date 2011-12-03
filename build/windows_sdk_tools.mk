@@ -9,8 +9,7 @@ WIN_SDK_TARGETS := \
 	emulator-arm \
 	emulator-x86 \
 	mksdcard \
-	sdklauncher \
-	win_android
+	sdklauncher
 
 # Add OpenGLES emulation host libraries if needed.
 ifeq (true,$(BUILD_EMULATOR_OPENGL))

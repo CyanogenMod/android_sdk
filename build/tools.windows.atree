@@ -19,9 +19,7 @@
 #
 
 rm tools/android
-#TODO use both android.bat + exe. Remove .bat when the exe is polished enough.
 sdk/sdkmanager/app/etc/android.bat                tools/android.bat
-bin/win_android.exe                         strip tools/android.exe
 
 rm tools/apkbuilder
 sdk/apkbuilder/etc/apkbuilder.bat                 tools/apkbuilder.bat
