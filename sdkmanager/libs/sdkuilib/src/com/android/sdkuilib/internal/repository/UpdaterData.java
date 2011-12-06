@@ -26,6 +26,7 @@ import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.AdbWrapper;
 import com.android.sdklib.internal.repository.AddonPackage;
 import com.android.sdklib.internal.repository.AddonsListFetcher;
+import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.internal.repository.Archive;
 import com.android.sdklib.internal.repository.ArchiveInstaller;
 import com.android.sdklib.internal.repository.ITask;
@@ -41,7 +42,6 @@ import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSourceCategory;
 import com.android.sdklib.internal.repository.SdkSources;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.AddonsListFetcher.Site;
 import com.android.sdklib.repository.SdkAddonConstants;
 import com.android.sdklib.repository.SdkAddonsListConstants;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -717,18 +717,28 @@ public class UpdaterData implements IUpdaterData {
         refreshSources(true);
         loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
 
+        List<ArchiveInfo> archives;
         SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
-        List<ArchiveInfo> archives = ul.computeUpdates(
-                null /*selectedArchives*/,
-                getSources(),
-                getLocalSdkParser().getPackages(),
-                includeObsoletes);
 
-        ul.addNewPlatforms(
-                archives,
-                getSources(),
-                getLocalSdkParser().getPackages(),
-                includeObsoletes);
+        if (includeObsoletes) {
+            archives = ul.getAllRemoteArchives(
+                    getSources(),
+                    getLocalSdkParser().getPackages(),
+                    includeObsoletes);
+
+        } else {
+            archives = ul.computeUpdates(
+                    null /*selectedArchives*/,
+                    getSources(),
+                    getLocalSdkParser().getPackages(),
+                    includeObsoletes);
+
+            ul.addNewPlatforms(
+                    archives,
+                    getSources(),
+                    getLocalSdkParser().getPackages(),
+                    includeObsoletes);
+        }
 
         Collections.sort(archives);
         return archives;
@@ -1025,14 +1035,19 @@ public class UpdaterData implements IUpdaterData {
             url = url.replaceAll("https://", "http://");    //$NON-NLS-1$ //$NON-NLS-2$
         }
 
+        // Hook to bypass loading 3rd party addons lists.
+        boolean fetch3rdParties = System.getenv("SDK_SKIP_3RD_PARTIES") == null;
+
         AddonsListFetcher fetcher = new AddonsListFetcher();
         Site[] sites = fetcher.fetch(monitor, url);
         if (sites != null) {
             mSources.removeAll(SdkSourceCategory.ADDONS_3RD_PARTY);
 
-            for (Site s : sites) {
-                mSources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
-                             new SdkAddonSource(s.getUrl(), s.getUiName()));
+            if (fetch3rdParties) {
+                for (Site s : sites) {
+                    mSources.add(SdkSourceCategory.ADDONS_3RD_PARTY,
+                                 new SdkAddonSource(s.getUrl(), s.getUiName()));
+                }
             }
 
             mStateFetchRemoteAddonsList = 1;

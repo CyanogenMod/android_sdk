@@ -31,13 +31,14 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.MinToolsPackage;
 import com.android.sdklib.internal.repository.Package;
+import com.android.sdklib.internal.repository.Package.UpdateInfo;
 import com.android.sdklib.internal.repository.PlatformPackage;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.SamplePackage;
 import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.SdkSources;
+import com.android.sdklib.internal.repository.SystemImagePackage;
 import com.android.sdklib.internal.repository.ToolPackage;
-import com.android.sdklib.internal.repository.Package.UpdateInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +61,69 @@ class SdkUpdaterLogic {
 
     public SdkUpdaterLogic(IUpdaterData updaterData) {
         mUpdaterData = updaterData;
+    }
+
+    /**
+     * Retrieves an unfiltered list of all remote archives.
+     * The archives are guaranteed to be compatible with the current platform.
+     */
+    public List<ArchiveInfo> getAllRemoteArchives(
+            SdkSources sources,
+            Package[] localPkgs,
+            boolean includeObsoletes) {
+
+        List<Package> remotePkgs = new ArrayList<Package>();
+        SdkSource[] remoteSources = sources.getAllSources();
+        fetchRemotePackages(remotePkgs, remoteSources);
+
+        ArrayList<Archive> archives = new ArrayList<Archive>();
+        for (Package remotePkg : remotePkgs) {
+            // Only look for non-obsolete updates unless requested to include them
+            if (includeObsoletes || !remotePkg.isObsolete()) {
+                // Found a suitable update. Only accept the remote package
+                // if it provides at least one compatible archive
+
+                addArchives:
+                for (Archive a : remotePkg.getArchives()) {
+                    if (a.isCompatible()) {
+
+                        // If we're trying to add a package for revision N,
+                        // make sure we don't also have a package for revision N-1.
+                        for (int i = archives.size() - 1; i >= 0; i--) {
+                            Package pkgFound = archives.get(i).getParentPackage();
+                            if (pkgFound.canBeUpdatedBy(remotePkg) == UpdateInfo.UPDATE) {
+                                // This package can update one we selected earlier.
+                                // Remove the one that can be updated by this new one.
+                                archives.remove(i);
+                            } else if (remotePkg.canBeUpdatedBy(pkgFound) == UpdateInfo.UPDATE) {
+                                // There is a package in the list that is already better
+                                // than the one we want to add, so don't add it.
+                                break addArchives;
+                            }
+                        }
+
+                        archives.add(a);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ArrayList<ArchiveInfo> result = new ArrayList<ArchiveInfo>();
+
+        ArchiveInfo[] localArchives = createLocalArchives(localPkgs);
+
+        for (Archive a : archives) {
+            insertArchive(a,
+                    result,
+                    archives,
+                    remotePkgs,
+                    remoteSources,
+                    localArchives,
+                    false /*automated*/);
+        }
+
+        return result;
     }
 
     /**
@@ -238,6 +302,35 @@ class SdkUpdaterLogic {
                                 remoteSources,
                                 localArchives,
                                 true /*automated*/);
+                    }
+                }
+            }
+
+            if (p instanceof PlatformPackage && (score >= currentPlatformScore)) {
+                // We just added a new platform *or* we are visiting the highest currently
+                // installed platform. In either case we want to make sure it either has
+                // its own system image or that we provide one by default.
+                PlatformPackage pp = (PlatformPackage) p;
+                if (pp.getIncludedAbi() == null) {
+                    for (Package p2 : remotePkgs) {
+                        if (!(p2 instanceof SystemImagePackage) ||
+                             (p2.isObsolete() && !includeObsoletes)) {
+                            continue;
+                        }
+                        SystemImagePackage sip = (SystemImagePackage) p2;
+                        if (sip.getVersion().equals(pp.getVersion())) {
+                            for (Archive a : sip.getArchives()) {
+                                if (a.isCompatible()) {
+                                    insertArchive(a,
+                                            archives,
+                                            null /*selectedArchives*/,
+                                            remotePkgs,
+                                            remoteSources,
+                                            localArchives,
+                                            true /*automated*/);
+                                }
+                            }
+                        }
                     }
                 }
             }
