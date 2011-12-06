@@ -53,6 +53,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -160,7 +161,7 @@ public class PreCompilerBuilder extends BaseBuilder {
                     }
 
                     try {
-                        member.setDerived(true);
+                        member.setDerived(true, new NullProgressMonitor());
                     } catch (CoreException e) {
                         // This really shouldn't happen since we check that the resource
                         // exist.
@@ -587,7 +588,7 @@ public class PreCompilerBuilder extends BaseBuilder {
         if (mGenFolder != null) {
             // gen folder should not be derived, but previous version could set it to derived
             // so we make sure this isn't the case (or it'll get deleted by the clean)
-            mGenFolder.setDerived(false);
+            mGenFolder.setDerived(false, monitor);
 
             removeDerivedResources(mGenFolder, monitor);
         }
