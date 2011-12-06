@@ -23,10 +23,10 @@ import com.android.ide.eclipse.adt.internal.build.AaptExecException;
 import com.android.ide.eclipse.adt.internal.build.AaptParser;
 import com.android.ide.eclipse.adt.internal.build.AaptResultException;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
+import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.Messages;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
-import com.android.ide.eclipse.adt.internal.build.BuildHelper.ResourceMarker;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ApkInstallManager;
@@ -436,7 +436,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     updateCrunchCache(project, helper);
 
                     // refresh recursively bin/res folder
-                    postBuildRefresh(resOutputFolder, IResource.DEPTH_INFINITE);
+                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                 }
 
                 if (mConvertToDex) { // in this case this means some class files changed and
@@ -453,7 +453,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                     // refresh the bin folder content with no recursion to update the library
                     // jar file.
-                    postBuildRefresh(androidOutputFolder, IResource.DEPTH_ONE);
+                    androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
 
                     // Also update the projects. The only way to force recompile them is to
                     // reset the library container.
@@ -587,7 +587,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                     }
 
                     // refresh recursively bin/res folder
-                    postBuildRefresh(resOutputFolder, IResource.DEPTH_INFINITE);
+                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                 }
 
                 // Check if we need to package the resources.
@@ -739,7 +739,7 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // we are done.
 
                 // refresh the bin folder content with no recursion.
-                postBuildRefresh(androidOutputFolder, IResource.DEPTH_ONE);
+                androidOutputFolder.refreshLocal(IResource.DEPTH_ONE, monitor);
 
                 // build has been done. reset the state of the builder
                 mBuildFinalPackage = false;

@@ -38,9 +38,6 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.xml.sax.SAXException;
 
@@ -387,21 +384,5 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
                 rootResource.getLocation().toFile().delete();
             }
         }
-    }
-
-    protected void postBuildRefresh(final IResource resource, final int depth) {
-        new Job("post-build refresh") {
-
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    resource.refreshLocal(depth, monitor);
-                } catch (CoreException e) {
-                    return e.getStatus();
-                }
-                return Status.OK_STATUS;
-            }
-
-        }.schedule();
     }
 }
