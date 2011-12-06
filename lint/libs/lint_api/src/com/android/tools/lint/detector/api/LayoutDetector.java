@@ -28,6 +28,7 @@ import static com.android.tools.lint.detector.api.LintConstants.VALUE_FILL_PAREN
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_MATCH_PARENT;
 
 import com.android.resources.ResourceFolderType;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Element;
 
@@ -38,6 +39,7 @@ import org.w3c.dom.Element;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public abstract class LayoutDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {

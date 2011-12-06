@@ -16,12 +16,15 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Severity of an issue found by lint
  * <p/>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public enum Severity {
     /**
      * Errors: Use sparingly because a warning marked as an error will be

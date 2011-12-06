@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.Sets;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -308,7 +309,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             // defined in other languages, so there's no problem.
             if (stringCount != strings.size()) {
                 if (reportMissing) {
-                    Set<String> difference = LintUtils.difference(defaultStrings, strings);
+                    Set<String> difference = Sets.difference(defaultStrings, strings);
                     if (difference.size() > 0) {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);
@@ -320,7 +321,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                 }
 
                 if (reportExtra) {
-                    Set<String> difference = LintUtils.difference(strings, defaultStrings);
+                    Set<String> difference = Sets.difference(strings, defaultStrings);
                     if (difference.size() > 0) {
                         List<String> sorted = new ArrayList<String>(difference);
                         Collections.sort(sorted);

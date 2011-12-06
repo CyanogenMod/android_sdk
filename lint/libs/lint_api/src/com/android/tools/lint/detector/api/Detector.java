@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.google.common.annotations.Beta;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -42,6 +44,7 @@ import java.util.List;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public abstract class Detector {
     /** Specialized interface for detectors that scan Java source file parse trees */
     public interface JavaScanner  {

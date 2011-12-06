@@ -16,7 +16,14 @@
 
 package com.android.ide.common.api;
 
-/** A segment type describes the different roles or positions a segment can have in a node */
+import com.google.common.annotations.Beta;
+
+/** A segment type describes the different roles or positions a segment can have in a node
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
 public enum SegmentType {
     LEFT, TOP, RIGHT, BOTTOM, BASELINE, CENTER_VERTICAL, CENTER_HORIZONTAL, UNKNOWN;
 

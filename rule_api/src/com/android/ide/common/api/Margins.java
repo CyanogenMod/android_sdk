@@ -16,11 +16,17 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Set of margins - distances to outer left, top, right and bottom edges. These objects
  * can be used for both actual <b>margins</b> as well as insets - and in general any
  * deltas to the bounds of a rectangle.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class Margins {
     /** The left margin */
     public final int left;

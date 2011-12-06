@@ -15,13 +15,19 @@
  */
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 import java.util.List;
 
 /**
  * Default implementation of an {@link IViewRule}. This is a convenience
  * implementation which makes it easier to supply designtime behavior for a
  * custom view and just override the methods you are interested in.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class AbstractViewRule implements IViewRule {
     public boolean onInitialize(String fqcn, IClientRulesEngine engine) {
         return true;

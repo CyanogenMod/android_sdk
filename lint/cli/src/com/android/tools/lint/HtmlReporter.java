@@ -22,10 +22,10 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -651,7 +651,7 @@ class HtmlReporter extends Reporter {
 
             File target = new File(resourceDir, base);
             try {
-                LintUtils.copyFile(file, target);
+                Files.copy(file, target);
             } catch (IOException e) {
                 return null;
             }

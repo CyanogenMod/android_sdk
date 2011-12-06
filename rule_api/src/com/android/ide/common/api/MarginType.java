@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 
 /**
  * A {@link MarginType} indicates whether a {@link Segment} corresponds to the visual edge
@@ -29,7 +31,11 @@ package com.android.ide.common.api;
  * will be offset by the margin on the target node. Therefore, we have to add <b>both</b>
  * edges (the bounds of the target node with and without edges) and check for matches on
  * each edge depending on the constraint being considered.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public enum MarginType {
     /**
      * This margin type is used for nodes that have margins, and this segment includes the

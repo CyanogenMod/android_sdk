@@ -128,6 +128,7 @@ framework/osgi.jar                                            tools/lib/osgi.jar
 framework/swing-worker-1.1.jar                                tools/lib/swing-worker-1.1.jar
 prebuilts/tools/common/asm-tools/asm-4.0.jar                  tools/lib/asm-4.0.jar
 prebuilts/tools/common/asm-tools/asm-tree-4.0.jar             tools/lib/asm-tree-4.0.jar
+prebuilts/tools/common/guava-tools/guava-10.0.1.jar           tools/lib/guava-10.0.1.jar
 
 # Proguard
 external/proguard/docs/license.html                           tools/proguard/license.html

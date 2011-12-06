@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * A color, to be used with {@link IGraphics} draw operations.
  * <p>
@@ -23,6 +25,7 @@ package com.android.ide.common.api;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface IColor {
     // pass
 }

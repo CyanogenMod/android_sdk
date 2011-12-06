@@ -16,14 +16,16 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * An IValidator can validate strings and return custom messages if validation
  * fails.
  * <p>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
- * </p>
  */
+@Beta
 public interface IValidator {
     /**
      * Validates the given input string, and return null if the text is valid,

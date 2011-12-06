@@ -32,9 +32,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_RESOURC
 import static com.android.tools.lint.detector.api.LintConstants.DRAWABLE_XHDPI;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_APPLICATION;
-import static com.android.tools.lint.detector.api.LintUtils.difference;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
-import static com.android.tools.lint.detector.api.LintUtils.intersection;
 
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -46,6 +44,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Element;
 
@@ -413,7 +413,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     byte[] bits = fileContents.get(file);
                     if (bits == null) {
                         try {
-                            bits = LintUtils.readBytes(file);
+                            bits = Files.toByteArray(file);
                             fileContents.put(file, bits);
                         } catch (IOException e) {
                             context.log(e, null);
@@ -764,7 +764,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     String folderName = folder.getName();
                     if (!isNoDpiFolder(folder)) {
                         assert DENSITY_PATTERN.matcher(folderName).matches();
-                        Set<String> overlap = intersection(noDpiNames, entry.getValue());
+                        Set<String> overlap = Sets.intersection(noDpiNames, entry.getValue());
                         inBoth.addAll(overlap);
                         for (String name : overlap) {
                             files.add(new File(folder, name));
@@ -812,7 +812,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 Set<String> names = entry.getValue();
                 if (names.size() != allNames.size()) {
                     List<String> delta =
-                            new ArrayList<String>(difference(allNames, names));
+                            new ArrayList<String>(Sets.difference(allNames,  names));
                     Collections.sort(delta);
                     String foundIn = "";
                     if (delta.size() == 1) {

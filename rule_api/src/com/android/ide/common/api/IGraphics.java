@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 import java.util.List;
 
 /**
@@ -30,6 +32,7 @@ import java.util.List;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface IGraphics {
 
     /**

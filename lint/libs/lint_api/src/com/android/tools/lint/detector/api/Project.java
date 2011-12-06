@@ -17,13 +17,14 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
-import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_MIN_SDK_VERSION;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PACKAGE;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -37,9 +38,10 @@ import java.util.List;
  * A project contains information about an Android project being scanned for
  * Lint errors.
  * <p>
- * TODO: Accumulate more project info here, such as the project package name,
- * the minimum and target SDK API levels, etc.
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class Project {
     /** The associated tool */
     private final LintClient mTool;

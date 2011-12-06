@@ -17,6 +17,7 @@
 package com.android.ide.common.api;
 
 import com.android.util.Pair;
+import com.google.common.annotations.Beta;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import java.util.regex.Pattern;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public class RuleAction implements Comparable<RuleAction> {
     /**
      * Character used to split multiple checked choices.

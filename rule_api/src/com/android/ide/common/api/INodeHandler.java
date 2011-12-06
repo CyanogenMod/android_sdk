@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * A node handler is a callback which operates on a Node, such as for example
  * the implementation of an XML editing operation via
@@ -25,6 +27,7 @@ package com.android.ide.common.api;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface INodeHandler {
     /**
      * Operates on the given node.

@@ -20,7 +20,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under,src)
 LOCAL_JAVA_RESOURCE_DIRS := src
 
 LOCAL_JAVA_LIBRARIES := \
-	common
+	common \
+	guava-tools
 
 LOCAL_MODULE := rule_api
 LOCAL_MODULE_TAGS := optional

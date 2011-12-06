@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Structure returned by onDropEnter/Move and passed to over onDropXyz methods.
  * <p>
@@ -23,6 +25,7 @@ package com.android.ide.common.api;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public class DropFeedback {
     /**
      * User data that the rule can use in any way it wants to carry state from one

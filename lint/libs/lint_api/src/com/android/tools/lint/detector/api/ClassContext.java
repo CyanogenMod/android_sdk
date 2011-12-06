@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
 import com.android.tools.lint.client.api.LintClient;
+import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
@@ -34,6 +35,7 @@ import java.util.List;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class ClassContext extends Context {
     private final File mBinDir;
     private ClassNode mClassNode;

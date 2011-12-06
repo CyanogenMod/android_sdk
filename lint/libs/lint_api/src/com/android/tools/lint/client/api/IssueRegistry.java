@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.annotations.Beta;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Registry which provides a list of checks to be performed on an Android project */
+/** Registry which provides a list of checks to be performed on an Android project
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
 public abstract class IssueRegistry {
     private static List<Category> sCategories;
     private static Map<String, Issue> sIdToIssue;
