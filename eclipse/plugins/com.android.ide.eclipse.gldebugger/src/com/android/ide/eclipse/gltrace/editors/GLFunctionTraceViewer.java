@@ -17,14 +17,14 @@
 package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.GLCallFormatter;
-import com.android.ide.eclipse.gltrace.GLFrame;
-import com.android.ide.eclipse.gltrace.GLTrace;
-import com.android.ide.eclipse.gltrace.GLTraceReader;
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
-import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.android.ide.eclipse.gltrace.TraceFileParserTask;
+import com.android.ide.eclipse.gltrace.model.GLCall;
+import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -58,9 +58,9 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,6 +70,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     private static final String GL_SPECS_FILE = "/entries.in"; //$NON-NLS-1$
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
+
+    // TODO: The thumbnail width & height are constant right now, but should be scaled
+    //       based on the size of the viewport/device.
+    /** Width of thumbnail images of the framebuffer. */
+    private static final int THUMBNAIL_WIDTH = 50;
+
+    /** Height of thumbnail images of the framebuffer. */
+    private static final int THUMBNAIL_HEIGHT = 50;
+
     private final GLCallFormatter mGLCallFormatter =
             new GLCallFormatter(getClass().getResourceAsStream(GL_SPECS_FILE));
 
@@ -78,7 +87,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Spinner mFrameSelectionSpinner;
 
     private GLTrace mTrace;
-    private GLFrame mSelectedFrame;
     private TableViewer mFrameTableViewer;
     private Text mFilterText;
     private GLCallFilter mGLCallFilter;
@@ -127,12 +135,25 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         createFilterBar(c);
         createFrameTraceView(c);
 
-        // this should be done in a separate thread
-        GLTraceReader reader = new GLTraceReader(mFilePath);
-        mTrace = reader.parseTrace();
-
         getSite().setSelectionProvider(mFrameTableViewer);
 
+        ProgressMonitorDialog dlg = new ProgressMonitorDialog(parent.getShell());
+        TraceFileParserTask parser = new TraceFileParserTask(mFilePath, parent.getDisplay(),
+                THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+        try {
+            dlg.run(true, true, parser);
+        } catch (InvocationTargetException e) {
+            // exception while parsing, display error to user
+            MessageDialog.openError(parent.getShell(),
+                    "Error parsing OpenGL Trace File",
+                    e.getCause().getMessage());
+            return;
+        } catch (InterruptedException e) {
+            // operation canceled by user, just return
+            return;
+        }
+
+        mTrace = parser.getTrace();
         refreshUI();
     }
 
@@ -140,7 +161,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         int nFrames = 0;
 
         if (mTrace != null) {
-            nFrames = mTrace.getGLFrames().size();
+            nFrames = mTrace.getFrames().size();
         }
 
         setFrameCount(nFrames);
@@ -195,8 +216,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameSelectionScale.setSelection(selectedFrame);
         mFrameSelectionSpinner.setSelection(selectedFrame);
 
-        mSelectedFrame = mTrace.getGLFrames().get(selectedFrame - 1);
-        mFrameTableViewer.setInput(mSelectedFrame);
+        List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
+        mFrameTableViewer.setInput(glcalls);
     }
 
     private void createFilterBar(Composite parent) {
@@ -274,7 +295,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             return;
         }
 
-        v.displayFB(glCall);
+        v.displayFB(mTrace.getImage(glCall));
     }
 
     private GLFramebufferView displayFBView(IWorkbenchPage page) {
@@ -304,8 +325,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         public Object[] getElements(Object model) {
-            if (model instanceof GLFrame) {
-                return ((GLFrame) model).getGLCalls().toArray();
+            if (model instanceof List<?>) {
+                return ((List<?>) model).toArray();
             }
 
             return null;
@@ -393,19 +414,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
     }
 
-    public IGLProperty getStateAt(GLCall call) {
-        if (mSelectedFrame == null) {
-            return null;
-        }
-
-        return mSelectedFrame.getStateAt(call);
-    }
-
-    public Set<IGLProperty> getChangedProperties(GLCall from, GLCall to, IGLProperty state) {
-        if (mSelectedFrame == null) {
-            return null;
-        }
-
-        return mSelectedFrame.getChangedProperties(from, to, state);
+    public GLTrace getTrace() {
+        return mTrace;
     }
 }

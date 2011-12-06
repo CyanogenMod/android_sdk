@@ -17,9 +17,9 @@
 package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
-import com.android.ide.eclipse.gltrace.Glcall.GLCall.DataType;
-import com.android.ide.eclipse.gltrace.Glcall.GLCall.DataType.Type;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type;
+import com.android.ide.eclipse.gltrace.model.GLCall;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * GLCallFormatter is used to format and create a string representation for a protobuf encoded
- * {@link GLCall}. It reads in the GL API definitions from a file to know about all the GL calls,
+ * GLCallFormatter is used to format and create a string representation for a {@link GLCall}.
+ * It reads in the GL API definitions from a file to know about all the GL calls,
  * their return types and their arguments. Using this information, each GLCall is
  * parsed and formatted appropriately for display.
  */
@@ -135,7 +135,7 @@ public class GLCallFormatter {
             } else {
                 sb.append(argSpec.getArgName());
                 sb.append(" = ");
-                sb.append(formatArgValue(glCall.getArgs(i), typeSpec));
+                sb.append(formatArgValue(glCall.getArg(i), typeSpec));
             }
 
             if (i < argSpecs.size() - 1) {
@@ -154,7 +154,7 @@ public class GLCallFormatter {
         switch (typeSpec) {
             case VOID:
                 return "";
-            case BOOLEAN:
+            case BOOL:
                 return Boolean.toString(arg.getBoolValue(0));
             case FLOAT:
                 return String.format("%f", arg.getFloatValue(0));
@@ -170,7 +170,7 @@ public class GLCallFormatter {
     private String formatPointer(DataType args) {
         // Display as array if possible
         switch (args.getType()) {
-            case BOOLEAN:
+            case BOOL:
                 return args.getBoolValueList().toString();
             case FLOAT:
                 return args.getFloatValueList().toString();
@@ -229,7 +229,7 @@ public class GLCallFormatter {
             // the type name along with qualifiers. e.g. "void", "GLvoid" and "void*" should
             // all be assigned the same type.
             if (type.contains("boolean")) {
-                return Type.BOOLEAN;
+                return Type.BOOL;
             } else if (type.contains("enum")) {
                 return Type.ENUM;
             } else if (type.contains("float") || type.contains("clampf")) {

@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.gltrace.views;
 
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
 import com.android.ide.eclipse.gltrace.editors.GLFunctionTraceViewer;
+import com.android.ide.eclipse.gltrace.model.GLCall;
+import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -120,8 +121,13 @@ public class GLStateView extends ViewPart implements ISelectionListener {
             }
         }
 
+        GLTrace trace = traceViewer.getTrace();
+        if (trace == null) {
+            return;
+        }
+
         if (selectedCall != mCurrentGLCall) {
-            IGLProperty nextState = traceViewer.getStateAt(selectedCall);
+            IGLProperty nextState = trace.getStateAt(selectedCall);
             if (nextState != mState) {
                 mState = nextState;
                 mStateChanged = true;
@@ -129,10 +135,11 @@ public class GLStateView extends ViewPart implements ISelectionListener {
                 mStateChanged = false;
             }
 
-            mChangedProperties = traceViewer.getChangedProperties(mCurrentGLCall, selectedCall,
+            mChangedProperties = trace.getChangedProperties(mCurrentGLCall, selectedCall,
                     mState);
 
             refreshUI();
+            mCurrentGLCall = selectedCall;
         }
     }
 
