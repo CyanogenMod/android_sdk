@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.DataInputStream;
@@ -115,9 +115,9 @@ public class GLTraceWriter {
             }
         }
 
-        GLCall msg = null;
+        GLMessage msg = null;
         try {
-            msg = GLCall.parseFrom(buffer);
+            msg = GLMessage.parseFrom(buffer);
         } catch (InvalidProtocolBufferException e) {
             System.out.println("Invalid protocol buffer: " + e.getMessage());
             return;
@@ -127,7 +127,7 @@ public class GLTraceWriter {
 
         mFileSize += readLen;
 
-        if (msg.getFunction() == GLCall.Function.eglSwapBuffers) {
+        if (msg.getFunction() == GLMessage.Function.eglSwapBuffers) {
             mFrameCount++;
         }
     }

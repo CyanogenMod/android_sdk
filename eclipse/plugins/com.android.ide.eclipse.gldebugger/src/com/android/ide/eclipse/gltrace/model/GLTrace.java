@@ -14,49 +14,81 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace;
+package com.android.ide.eclipse.gltrace.model;
 
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
+import com.android.ide.eclipse.gltrace.ProtoBufUtils;
+import com.android.ide.eclipse.gltrace.TraceFileInfo;
+import com.android.ide.eclipse.gltrace.TraceFileReader;
 import com.android.ide.eclipse.gltrace.state.GLState;
 import com.android.ide.eclipse.gltrace.state.GLStateTransform;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
-import java.util.ArrayList;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** A GLFrame is composed of a set of GL API Calls, ending with eglSwapBuffer. */
-public class GLFrame {
-    private List<GLCall> mGLCalls;
+/** GLTrace is the in memory model of a OpenGL trace file. */
+public class GLTrace {
+    private static final TraceFileReader sTraceFileReader = new TraceFileReader();
+
+    /** Information regarding the trace file. */
+    private final TraceFileInfo mTraceFileInfo;
+
+    /** List of frames in the trace. */
+    private final List<GLFrame> mGLFrames;
+
+    /** List of GL Calls comprising the trace. */
+    private final List<GLCall> mGLCalls;
 
     /** List of state transforms to be applied for each GLCall */
-    private List<List<GLStateTransform>> mStateTransformsPerCall;
+    private final List<List<GLStateTransform>> mStateTransformsPerCall;
 
     /** OpenGL State as of call {@link #mCurrentStateIndex}. */
     private IGLProperty mState;
     private int mCurrentStateIndex;
 
-    public GLFrame() {
-        mGLCalls = new ArrayList<GLCall>();
-        mStateTransformsPerCall = new ArrayList<List<GLStateTransform>>();
+    public GLTrace(TraceFileInfo traceFileInfo, List<GLFrame> glFrames, List<GLCall> glCalls,
+            List<List<GLStateTransform>> stateTransformsPerCall) {
+        mTraceFileInfo = traceFileInfo;
+        mGLFrames = glFrames;
+        mGLCalls = glCalls;
+        mStateTransformsPerCall = stateTransformsPerCall;
 
         mState = GLState.createDefaultState();
         mCurrentStateIndex = -1;
     }
 
-    public void addGLCall(GLCall c) {
-        mGLCalls.add(c);
-        mStateTransformsPerCall.add(GLStateTransform.getTransformFor(c));
+    public List<GLFrame> getFrames() {
+        return mGLFrames;
     }
 
-    public List<GLCall> getGLCalls() {
-        return mGLCalls;
+    public List<GLCall> getGLCallsForFrame(int frameIndex) {
+        if (frameIndex >= mGLFrames.size()) {
+            return Collections.emptyList();
+        }
+
+        GLFrame frame = mGLFrames.get(frameIndex);
+        int start = frame.getStartIndex();
+        int end = frame.getEndIndex();
+
+        return mGLCalls.subList(start, end);
     }
 
     public IGLProperty getStateAt(GLCall call) {
-        int callIndex = mGLCalls.indexOf(call);
+        if (call == null) {
+            return null;
+        }
 
+        int callIndex = call.getIndex();
         if (callIndex == mCurrentStateIndex) {
             return mState;
         }
@@ -64,7 +96,6 @@ public class GLFrame {
         if (callIndex > mCurrentStateIndex) {
             // if the state is needed for a future GLCall, then apply the transformations
             // for all the GLCall's upto and including the required GLCall
-
             for (int i = mCurrentStateIndex + 1; i <= callIndex; i++) {
                 for (GLStateTransform f : mStateTransformsPerCall.get(i)) {
                     f.apply(mState);
@@ -92,8 +123,8 @@ public class GLFrame {
      * changing state from one GL call to another.
      */
     public Set<IGLProperty> getChangedProperties(GLCall from, GLCall to, IGLProperty state) {
-        int fromIndex = mGLCalls.indexOf(from);
-        int toIndex = mGLCalls.indexOf(to);
+        int fromIndex = from == null ? 0 : from.getIndex();
+        int toIndex = to == null ? 0 : to.getIndex();
 
         if (fromIndex == -1 || toIndex == -1) {
             return null;
@@ -118,5 +149,43 @@ public class GLFrame {
         }
 
         return changedProperties;
+    }
+
+    public Image getImage(GLCall c) {
+        if (!c.hasFb()) {
+            return null;
+        }
+
+        if (isTraceFileModified()) {
+            return c.getThumbnailImage();
+        }
+
+        RandomAccessFile file;
+        try {
+            file = new RandomAccessFile(mTraceFileInfo.getPath(), "r"); //$NON-NLS-1$
+        } catch (FileNotFoundException e1) {
+            return c.getThumbnailImage();
+        }
+
+        GLMessage m = null;
+        try {
+            m = sTraceFileReader.getMessageAtOffset(file, c.getOffsetInTraceFile());
+        } catch (Exception e) {
+            return null;
+        } finally {
+            try {
+                file.close();
+            } catch (IOException e) {
+                // ignore exception while closing file
+            }
+        }
+
+        return ProtoBufUtils.getImage(Display.getCurrent(), m);
+    }
+
+    private boolean isTraceFileModified() {
+        File f = new File(mTraceFileInfo.getPath());
+        return f.length() != mTraceFileInfo.getSize()
+                || f.lastModified() != mTraceFileInfo.getLastModificationTime();
     }
 }

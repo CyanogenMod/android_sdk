@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.gltrace.state;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
-import com.android.ide.eclipse.gltrace.Glcall.GLCall;
+import com.android.ide.eclipse.gltrace.model.GLCall;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +70,7 @@ public class GLStateTransform {
     }
 
     /** Construct a list of transformations to be applied for the provided OpenGL call. */
-    public static List<GLStateTransform> getTransformFor(GLCall call) {
+    public static List<GLStateTransform> getTransformsFor(GLCall call) {
         // TODO: currently we only modify state for glVertexAttribPointer() call.
         // Obviously, this will grow to be a long list.
         switch (call.getFunction()) {
@@ -82,13 +82,13 @@ public class GLStateTransform {
     }
 
     private static List<GLStateTransform> transformsForGlVertexAttribPointer(GLCall call) {
-        int index = call.getArgs(0).getIntValue(0);
+        int index = call.getArg(0).getIntValue(0);
 
-        int size = call.getArgs(1).getIntValue(0);
-        int type = call.getArgs(2).getIntValue(0);
-        boolean normalized = call.getArgs(3).getBoolValue(0);
-        int stride = call.getArgs(4).getIntValue(0);
-        int pointer = call.getArgs(5).getIntValue(0);
+        int size = call.getArg(1).getIntValue(0);
+        int type = call.getArg(2).getIntValue(0);
+        boolean normalized = call.getArg(3).getBoolValue(0);
+        int stride = call.getArg(4).getIntValue(0);
+        int pointer = call.getArg(5).getIntValue(0);
 
         List<GLStateTransform> transforms = new ArrayList<GLStateTransform>();
         transforms.add(new GLStateTransform(

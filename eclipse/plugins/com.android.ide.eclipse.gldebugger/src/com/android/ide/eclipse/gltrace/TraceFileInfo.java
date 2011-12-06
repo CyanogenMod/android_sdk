@@ -16,22 +16,26 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import java.util.ArrayList;
-import java.util.List;
+public class TraceFileInfo {
+    private final String mPath;
+    private final long mSize;
+    private final long mLastModified;
 
-/** A GLTrace is an in memory model of the trace file. */
-public class GLTrace {
-    List<GLFrame> mGLFrames;
-
-    public GLTrace() {
-        mGLFrames = new ArrayList<GLFrame>();
+    public TraceFileInfo(String path, long size, long lastModified) {
+        mPath = path;
+        mSize = size;
+        mLastModified = lastModified;
     }
 
-    public void addGLFrame(GLFrame frame) {
-        mGLFrames.add(frame);
+    public String getPath() {
+        return mPath;
     }
 
-    public List<GLFrame> getGLFrames() {
-        return mGLFrames;
+    public long getSize() {
+        return mSize;
+    }
+
+    public long getLastModificationTime() {
+        return mLastModified;
     }
 }
