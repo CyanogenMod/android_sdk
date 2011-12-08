@@ -20,6 +20,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.annotations.Beta;
 
 /**
  * Lint configuration for an Android project such as which specific rules to include,
@@ -28,6 +29,7 @@ import com.android.tools.lint.detector.api.Severity;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public abstract class Configuration {
     /**
      * Checks whether this issue should be ignored because the user has already

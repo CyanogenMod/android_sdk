@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -30,6 +31,7 @@ import org.w3c.dom.Node;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public interface IDomParser {
     /**
      * Parse the file pointed to by the given context and return as a Document

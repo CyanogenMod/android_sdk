@@ -16,11 +16,17 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * A segment is a straight horizontal or vertical line between two points, typically an
  * edge of a node but also possibly some internal segment like a baseline or a center
  * line, and it can be offset by a margin from the node's visible bounds.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class Segment {
     /** For horizontal lines, the y coordinate; for vertical lines the x */
     public final int at;

@@ -16,13 +16,19 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 import java.util.List;
 
 /**
  * Metadata about a particular view. The metadata for a View can be found by asking the
  * {@link IClientRulesEngine} for the metadata for a given class via
  * {@link IClientRulesEngine#getMetadata}.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public interface IViewMetadata {
     /**
      * Returns the display name views of this type (a name suitable to display to the

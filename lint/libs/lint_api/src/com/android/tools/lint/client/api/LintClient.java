@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,6 +44,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public abstract class LintClient {
     /**
      * Returns a configuration for use by the given project. The configuration

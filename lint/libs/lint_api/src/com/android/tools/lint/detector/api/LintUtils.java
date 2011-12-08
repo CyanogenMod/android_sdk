@@ -21,28 +21,24 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 /**
  * Useful utility methods related to lint.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class LintUtils {
     /**
      * Format a list of strings, and cut of the list at {@code maxItems} if the
@@ -68,45 +64,6 @@ public class LintUtils {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Computes the set difference {@code a - b}
-     *
-     * @param a the set to subtract from
-     * @param b the set to subtract
-     * @return the elements that are in {@code a} but not in {@code b}
-     */
-    public static Set<String> difference(Set<String> a, Set<String> b) {
-        HashSet<String> copy = new HashSet<String>(a);
-        copy.removeAll(b);
-        return copy;
-    }
-
-    /**
-     * Computes the set intersection {@code a intersect b}
-     *
-     * @param a the first set to intersect
-     * @param b the second set to intersect
-     * @return the elements that are in {@code a} and in {@code b}
-     */
-    public static Set<String> intersection(Set<String> a, Set<String> b) {
-        HashSet<String> intersection = new HashSet<String>(a);
-        intersection.retainAll(b);
-        return intersection;
-    }
-
-    /**
-     * Computes the set union {@code a union b}
-     *
-     * @param a the first set to add
-     * @param b the second set to add
-     * @return the elements that are in {@code a} or in {@code b}
-     */
-    public static Set<String> union(Set<String> a, Set<String> b) {
-        HashSet<String> union = new HashSet<String>(a);
-        union.addAll(b);
-        return union;
     }
 
     /**
@@ -191,69 +148,5 @@ public class LintUtils {
         }
 
         return childCount;
-    }
-
-    /**
-     * Copies a file
-     *
-     * @param src the file to copy
-     * @param target the filename to write the file into
-     * @throws IOException if an I/O problem occurs
-     */
-    public static void copyFile(File src, File target) throws IOException {
-        InputStream input = null;
-        OutputStream output = null;
-        try {
-            input = new BufferedInputStream(new FileInputStream(src));
-            output = new BufferedOutputStream(new FileOutputStream(target));
-            byte[] buffer = new byte[1024];
-            while (true) {
-                int bytesRead = input.read(buffer);
-                if (bytesRead == -1) {
-                    break;
-                }
-                output.write(buffer, 0, bytesRead);
-            }
-        } finally {
-            if (input != null) {
-                input.close();
-            }
-            if (output != null) {
-                output.close();
-            }
-        }
-    }
-
-    /**
-     * Reads the file contents of the given file and returns it as a byte array.
-     *
-     * @param src the file to be read
-     * @return the contents of the file, or null
-     * @throws IOException if an I/O error occurs
-     */
-    public static byte[] readBytes(File src) throws IOException {
-        InputStream input = null;
-        try {
-            int length = (int) src.length();
-            if (length <= 0) {
-                return null;
-            }
-            byte[] buffer = new byte[length];
-            input = new BufferedInputStream(new FileInputStream(src));
-            int offset = 0;
-            while (offset < length) {
-                int n = input.read(buffer, offset, length - offset);
-                if (n == -1) {
-                    break;
-                }
-                offset += n;
-            }
-
-            return buffer;
-        } finally {
-            if (input != null) {
-                input.close();
-            }
-        }
     }
 }

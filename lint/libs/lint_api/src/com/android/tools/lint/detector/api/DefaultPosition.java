@@ -16,7 +16,15 @@
 
 package com.android.tools.lint.detector.api;
 
-/** A simple offset-based position */
+import com.google.common.annotations.Beta;
+
+/**
+ * A simple offset-based position *
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
 public class DefaultPosition extends Position {
     /** The line number (0-based where the first line is line 0) */
     private final int mLine;

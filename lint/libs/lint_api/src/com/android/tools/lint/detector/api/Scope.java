@@ -16,13 +16,19 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.google.common.annotations.Beta;
+
 import java.util.EnumSet;
 
 /**
  * The scope of a detector is the set of files a detector must consider when
  * performing its analysis. This can be used to determine when issues are
  * potentially obsolete, whether a detector should re-run on a file save, etc.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public enum Scope {
     /**
      * The analysis only considers a single XML resource file at a time.

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.google.common.annotations.Beta;
+
 import java.io.File;
 
 /**
@@ -24,6 +26,7 @@ import java.io.File;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class Location {
     private final File mFile;
     private final Position mStart;

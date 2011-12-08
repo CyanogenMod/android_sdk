@@ -18,6 +18,7 @@
 package com.android.ide.common.api;
 
 import com.android.annotations.Nullable;
+import com.google.common.annotations.Beta;
 
 import java.util.Collection;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.Map;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface IClientRulesEngine {
 
     /**

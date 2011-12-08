@@ -14,7 +14,8 @@ LOCAL_JAVA_LIBRARIES := \
 	lint_checks
 LOCAL_STATIC_JAVA_LIBRARIES := \
 	asm-tools \
-	asm-tree-tools
+	asm-tree-tools \
+	guava-tools
 
 LOCAL_MODULE := lint
 LOCAL_MODULE_TAGS := optional

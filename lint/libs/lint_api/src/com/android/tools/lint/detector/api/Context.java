@@ -19,6 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.SdkInfo;
+import com.google.common.annotations.Beta;
 
 import java.io.File;
 import java.util.EnumSet;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class Context {
     /**
      * The file being checked. Note that this may not always be to a concrete

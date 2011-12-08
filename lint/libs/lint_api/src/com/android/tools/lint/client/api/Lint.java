@@ -33,6 +33,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.annotations.Beta;
+import com.google.common.io.Files;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -50,7 +52,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Analyzes Android projects and files */
+/**
+ * Analyzes Android projects and files
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
 public class Lint {
     private static final String PROGUARD_CFG = "proguard.cfg";                       //$NON-NLS-1$
     private static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml";        //$NON-NLS-1$
@@ -457,7 +465,7 @@ public class Lint {
 
             for (File file : classFiles) {
                 try {
-                    byte[] bytes = LintUtils.readBytes(file);
+                    byte[] bytes = Files.toByteArray(file);
                     if (bytes != null) {
                         ClassReader reader = new ClassReader(bytes);
                         ClassNode classNode = new ClassNode();

@@ -16,10 +16,16 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * An enumerated type of different insertion events, such as an insertion from a
  * copy/paste operation or as the first half of a move operation.
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public enum InsertType {
     /** The view is newly created (by for example a palette drag) */
     CREATE,

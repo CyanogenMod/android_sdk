@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.google.common.annotations.Beta;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -50,11 +51,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 /**
  * Default implementation of a {@link Configuration} which reads and writes
  * configuration data into {@code lint.xml} in the project directory.
- *
  * <p/>
  * <b>NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class DefaultConfiguration extends Configuration {
     private final LintClient mClient;
     private static final String CONFIG_FILE_NAME = "lint.xml"; //$NON-NLS-1$

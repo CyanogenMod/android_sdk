@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Information about an attribute as gathered from the attrs.xml file where
  * the attribute was declared. This must include a format (string, reference, float, etc.),
@@ -25,6 +27,7 @@ package com.android.ide.common.api;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface IAttributeInfo {
 
     /** An attribute format, e.g. string, reference, float, etc. */

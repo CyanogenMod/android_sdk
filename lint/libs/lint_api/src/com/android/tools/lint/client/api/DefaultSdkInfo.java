@@ -56,10 +56,18 @@ import static com.android.tools.lint.detector.api.LintConstants.VIEW_STUB;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_SWITCHER;
 import static com.android.tools.lint.detector.api.LintConstants.WIDGET_PKG_PREFIX;
 
+import com.google.common.annotations.Beta;
+
 import java.util.HashMap;
 import java.util.Map;
 
-/** Default simple implementation of an {@link SdkInfo} */
+/**
+ * Default simple implementation of an {@link SdkInfo}
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
+ */
+@Beta
 class DefaultSdkInfo extends SdkInfo {
     @Override
     public String getParentViewName(String name) {

@@ -64,6 +64,7 @@ ADT_PREBUILTS="\
     prebuilt/common/kxml2/kxml2-2.3.0.jar \
     prebuilts/tools/common/asm-tools/asm-4.0.jar \
     prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
+    prebuilts/tools/common/guava-tools/guava-10.0.1.jar \
     prebuilt/common/commons-compress/commons-compress-1.0.jar \
     prebuilt/common/http-client/httpclient-4.1.1.jar \
     prebuilt/common/http-client/httpcore-4.1.jar \

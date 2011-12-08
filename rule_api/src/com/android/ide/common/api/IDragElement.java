@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Represents an XML element with a name, attributes and inner elements.
  * <p/>
@@ -26,6 +28,7 @@ package com.android.ide.common.api;
  * to adjust your code for the next tools release.</b>
  * </p>
  */
+@Beta
 public interface IDragElement {
 
     /**

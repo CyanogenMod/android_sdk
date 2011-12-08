@@ -15,10 +15,16 @@
  */
 package com.android.ide.common.api;
 
+import com.google.common.annotations.Beta;
+
 /**
  * A {@link ResizePolicy} records state for whether a widget is resizable, and if so, in
  * which directions
+ * <p>
+ * <b>NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.</b>
  */
+@Beta
 public class ResizePolicy {
     private static final int NONE = 0;
     private static final int LEFT_EDGE = 1;
