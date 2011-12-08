@@ -230,10 +230,14 @@ public class UrlOpener {
                     return new FilterInputStream(entity.getContent()) {
                         @Override
                         public void close() throws IOException {
-                            super.close();
+                            // Since Http Client is no longer needed, close it.
 
-                            // since Http Client is no longer needed, close it
+                            // Bug #21167: we need to tell http client to shutdown
+                            // first, otherwise the super.close() would continue
+                            // downloading and not return till complete.
+
                             httpClient.getConnectionManager().shutdown();
+                            super.close();
                         }
                     };
                 }
