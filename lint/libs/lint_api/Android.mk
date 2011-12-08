@@ -21,6 +21,9 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_JAVA_LIBRARIES := \
         common
+LOCAL_STATIC_JAVA_LIBRARIES := \
+        asm-tools \
+        asm-tree-tools
 
 LOCAL_MODULE := lint_api
 LOCAL_MODULE_TAGS := optional

@@ -1,5 +1,8 @@
 Change log for Android SDK Tools.
 
+Revision 17:
+* New lint rules which analyze Java source and class files.
+
 Revision 16:
 * New "lint" tool which scans Android project trees for potential
   problems such as missing translations, duplicate ids between layouts

@@ -14,6 +14,9 @@ LOCAL_JAVA_LIBRARIES := \
         common \
         androidprefs \
 	lint_api
+LOCAL_STATIC_JAVA_LIBRARIES := \
+        asm-tools \
+        asm-tree-tools
 
 LOCAL_MODULE := lint_checks
 LOCAL_MODULE_TAGS := optional

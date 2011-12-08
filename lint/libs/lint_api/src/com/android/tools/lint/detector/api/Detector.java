@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import org.objectweb.asm.tree.ClassNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,10 +52,14 @@ public abstract class Detector {
 
     /** Specialized interface for detectors that scan Java class files */
     public interface ClassScanner  {
-        // TODO: Class file / bytecode scanning support not yet implemented. This
-        // is a placeholder.
-        @SuppressWarnings("javadoc")
-        void checkJavaClasses(Context context);
+        /**
+         * Checks the given class' bytecode for issues.
+         *
+         * @param context the context of the lint check, pointing to for example
+         *            the file
+         * @param classNode the root class node
+         */
+        void checkClass(ClassContext context, ClassNode classNode);
     }
 
     /** Specialized interface for detectors that scan XML files */
@@ -236,4 +241,10 @@ public abstract class Detector {
     public void checkJavaSources(Context context, List<File> sourceFolders) {
     }
 
+    // ---- Dummy implementations to make implementing a ClassScanner easier: ----
+
+    @SuppressWarnings("javadoc")
+    public void checkClass(ClassContext context, ClassNode classNode) {
+
+    }
 }

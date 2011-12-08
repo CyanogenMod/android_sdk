@@ -54,6 +54,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         List<Issue> issues = new ArrayList<Issue>();
 
         issues.add(AccessibilityDetector.ISSUE);
+        issues.add(MathDetector.ISSUE);
+        issues.add(FieldGetterDetector.ISSUE);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(StateListDetector.ISSUE);
