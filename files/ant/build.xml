@@ -872,6 +872,9 @@
         </do-only-if-not-library>
     </target>
 
+    <target name="-post-package" />
+    <target name="-post-build" />
+
     <target name="-set-mode-check">
         <fail if="build.is.mode.set"
                 message="Cannot run two different modes at the same time. If you are running more than one debug/release/instrument type targets, call them from different Ant calls." />
@@ -909,7 +912,7 @@
     </target>
 
     <!-- Builds debug output package -->
-    <target name="-do-debug" depends="-set-debug-mode, -debug-obfuscation-check, -package">
+    <target name="-do-debug" depends="-set-debug-mode, -debug-obfuscation-check, -package, -post-package">
         <!-- only create apk if *not* a library project -->
         <do-only-if-not-library elseText="Library project: do not create apk..." >
             <sequential>
@@ -917,12 +920,12 @@
                 <echo>Debug Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
+        <record-build-info />
     </target>
 
     <!-- Builds debug output package -->
-    <target name="debug" depends="-set-debug-files, -do-debug"
+    <target name="debug" depends="-set-debug-files, -do-debug, -post-build"
                 description="Builds the application and signs it with a debug key.">
-        <record-build-info />
     </target>
 
 
@@ -1006,15 +1009,7 @@
         </if>
     </target>
 
-    <!-- This runs -package-release and -release-nosign first and then runs
-         only if release-sign is true (set in -release-check,
-         called by -release-no-sign)-->
-    <target name="release"
-                depends="-set-release-mode, -release-obfuscation-check, -package, -release-prompt-for-password, -release-nosign"
-                if="has.keystore"
-                description="Builds the application. The generated apk file must be signed before
-                            it is published.">
-
+    <target name="-release-sign" if="has.keystore" >
         <!-- only create apk if *not* a library project -->
         <do-only-if-not-library elseText="Library project: do not create apk..." >
             <sequential>
@@ -1032,12 +1027,21 @@
                         verbose="${verbose}" />
 
                 <!-- Zip aligns the APK -->
-                <zipalign-helper in.package="${out.unaligned.file}"
-                                           out.package="${out.final.file}" />
+                <zipalign-helper
+                        in.package="${out.unaligned.file}"
+                        out.package="${out.final.file}" />
                 <echo>Release Package: ${out.final.file}</echo>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
+    </target>
+
+    <!-- This runs -package-release and -release-nosign first and then runs
+         only if release-sign is true (set in -release-check,
+         called by -release-no-sign)-->
+    <target name="release"
+                depends="-set-release-mode, -release-obfuscation-check, -package, -post-package, -release-prompt-for-password, -release-nosign, -release-sign, -post-build"
+                description="Builds the application in release mode.">
     </target>
 
     <!-- ******************************************************* -->
