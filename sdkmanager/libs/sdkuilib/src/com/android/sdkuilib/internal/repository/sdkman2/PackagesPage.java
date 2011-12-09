@@ -992,22 +992,26 @@ public class PackagesPage extends UpdaterPage
      * Updates the Install and Delete Package buttons.
      */
     private void updateButtonsState() {
-        int numPackages = getArchivesForInstall(null /*archives*/);
+        if (!mButtonInstall.isDisposed()) {
+            int numPackages = getArchivesForInstall(null /*archives*/);
 
-        mButtonInstall.setEnabled((numPackages > 0) && !mOperationPending);
-        mButtonInstall.setText(
-                numPackages == 0 ? "Install packages..." :          // disabled button case
-                    numPackages == 1 ? "Install 1 package..." :
-                        String.format("Install %d packages...", numPackages));
+            mButtonInstall.setEnabled((numPackages > 0) && !mOperationPending);
+            mButtonInstall.setText(
+                    numPackages == 0 ? "Install packages..." :          // disabled button case
+                        numPackages == 1 ? "Install 1 package..." :
+                            String.format("Install %d packages...", numPackages));
+        }
 
-        // We can only delete local archives
-        numPackages = getArchivesToDelete(null /*outMsg*/, null /*outArchives*/);
+        if (!mButtonDelete.isDisposed()) {
+            // We can only delete local archives
+            int numPackages = getArchivesToDelete(null /*outMsg*/, null /*outArchives*/);
 
-        mButtonDelete.setEnabled((numPackages > 0) && !mOperationPending);
-        mButtonDelete.setText(
-                numPackages == 0 ? "Delete packages..." :           // disabled button case
-                    numPackages == 1 ? "Delete 1 package..." :
-                        String.format("Delete %d packages...", numPackages));
+            mButtonDelete.setEnabled((numPackages > 0) && !mOperationPending);
+            mButtonDelete.setText(
+                    numPackages == 0 ? "Delete packages..." :           // disabled button case
+                        numPackages == 1 ? "Delete 1 package..." :
+                            String.format("Delete %d packages...", numPackages));
+        }
     }
 
     /**
