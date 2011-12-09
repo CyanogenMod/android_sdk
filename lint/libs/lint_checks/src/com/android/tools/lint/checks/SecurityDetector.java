@@ -96,10 +96,10 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
             TAG_SERVICE,
             TAG_GRANT_PERMISSION
-        });
+        );
     }
 
     @Override

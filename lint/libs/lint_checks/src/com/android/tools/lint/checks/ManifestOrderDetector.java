@@ -84,7 +84,7 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 TAG_APPLICATION,
                 TAG_USES_PERMISSION,
                 "permission",              //$NON-NLS-1$
@@ -95,8 +95,8 @@ public class ManifestOrderDetector extends Detector implements Detector.XmlScann
                 "uses-feature",            //$NON-NLS-1$
                 "supports-screens",        //$NON-NLS-1$
                 "compatible-screens",      //$NON-NLS-1$
-                "supports-gl-texture",     //$NON-NLS-1$
-        });
+                "supports-gl-texture"      //$NON-NLS-1$
+        );
     }
 
     @Override

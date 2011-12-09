@@ -33,8 +33,8 @@ import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -66,9 +66,9 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Collections.singletonList(
                 LINEAR_LAYOUT
-        });
+        );
     }
 
     @Override

@@ -63,7 +63,6 @@ import java.util.List;
 /**
  * Eclipse View which shows lint warnings for the current project
  */
-@SuppressWarnings("restriction") // DOM model
 public class LintViewPart extends ViewPart implements SelectionListener, IJobChangeListener {
     /** The view id for this view part */
     public static final String ID = "com.android.ide.eclipse.adt.internal.lint.LintViewPart"; //$NON-NLS-1$

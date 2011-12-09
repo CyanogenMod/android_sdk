@@ -213,6 +213,26 @@ public class Location {
      * @return a new location
      */
     public static Location create(File file, String contents, int line) {
+        return create(file, contents, line, null, null);
+    }
+
+    /**
+     * Creates a new location for the given file, with the given contents, for
+     * the given line number.
+     *
+     * @param file the file containing the location
+     * @param contents the current contents of the file
+     * @param line the line number (0-based) for the position
+     * @param patternStart an optional pattern to search for from the line
+     *            match; if found, adjust the column and offsets to begin at the
+     *            pattern start
+     * @param patternEnd an optional pattern to search for behind the start
+     *            pattern; if found, adjust the end offset to match the end of
+     *            the pattern
+     * @return a new location
+     */
+    public static Location create(File file, String contents, int line,
+            String patternStart, String patternEnd) {
         int currentLine = 0;
         int offset = 0;
         while (currentLine < line) {
@@ -225,6 +245,26 @@ public class Location {
         }
 
         if (line == currentLine) {
+            if (patternStart != null) {
+                int index = contents.indexOf(patternStart, offset);
+                if (index != -1) {
+                    int lineStart = contents.lastIndexOf('\n', index);
+                    if (lineStart == -1) {
+                        lineStart = 0;
+                    }
+                    int column = index - lineStart;
+                    if (patternEnd != null) {
+                        int end = contents.indexOf(patternEnd, offset + patternStart.length());
+                        if (end != -1) {
+                            return new Location(file, new DefaultPosition(line, column, index),
+                                    new DefaultPosition(line, -1, end + patternEnd.length()));
+                        }
+                    }
+                    return new Location(file, new DefaultPosition(line, column, index),
+                            new DefaultPosition(line, column, index + patternStart.length()));
+                }
+            }
+
             Position position = new DefaultPosition(line, -1, offset);
             return new Location(file, position, position);
         }
