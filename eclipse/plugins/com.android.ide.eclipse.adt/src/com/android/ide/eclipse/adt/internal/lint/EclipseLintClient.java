@@ -734,7 +734,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                     // There could be more than one node when there are errors; pick out the
                     // compilation unit node
                     for (lombok.ast.Node node : nodes) {
-                        if (node instanceof CompilationUnit) {
+                        if (node instanceof lombok.ast.CompilationUnit) {
                             return node;
                         }
                     }

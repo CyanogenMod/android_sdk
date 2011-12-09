@@ -68,4 +68,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                     "grantpermission.xml=>AndroidManifest.xml",
                     "res/values/strings.xml"));
     }
+
+    public void testWorldWriteable() throws Exception {
+        assertEquals(
+            "WorldWriteableFile.java:20: Warning: Using MODE_WORLD_WRITEABLE with openFileOutput can be risky, review carefully",
+
+            lintProject(
+                // Java files must be renamed in source tree
+                "src/test/pkg/WorldWriteableFile.java.txt=>src/test/pkg/WorldWriteableFile.java"));
+    }
 }

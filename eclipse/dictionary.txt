@@ -235,6 +235,7 @@ scrollable
 scrollbar
 scrollbars
 scrubbing
+sdcard
 sdk
 se
 searchable

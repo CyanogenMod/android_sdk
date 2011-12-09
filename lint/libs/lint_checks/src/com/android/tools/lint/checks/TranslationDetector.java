@@ -79,7 +79,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "subset of the strings and fall back to the standard language strings. " +
             "You can require all regions to provide a full translation by setting the " +
             "environment variable ANDROID_LINT_COMPLETE_REGIONS.",
-            Category.CORRECTNESS,
+            Category.MESSAGES,
             8,
             Severity.ERROR,
             TranslationDetector.class,
@@ -93,7 +93,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "no corresponding string in the default locale, then this string is probably " +
             "unused. (It's technically possible that your application is only intended to " +
             "run in a specific locale, but it's still a good idea to provide a fallback.)",
-            Category.CORRECTNESS,
+            Category.MESSAGES,
             6,
             Severity.WARNING,
             TranslationDetector.class,

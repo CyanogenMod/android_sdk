@@ -32,7 +32,9 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
@@ -45,12 +47,23 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
+
+import lombok.ast.AstVisitor;
+import lombok.ast.Expression;
+import lombok.ast.ForwardingAstVisitor;
+import lombok.ast.Identifier;
+import lombok.ast.MethodInvocation;
+import lombok.ast.StrictListAccessor;
 
 /**
  * Checks that exported services request a permission.
  */
-public class SecurityDetector extends Detector implements Detector.XmlScanner {
+public class SecurityDetector extends Detector implements Detector.XmlScanner,
+        Detector.JavaScanner {
 
     /** Exported services */
     public static final Issue EXPORTED_SERVICE = Issue.create(
@@ -78,6 +91,21 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner {
             Severity.WARNING,
             SecurityDetector.class,
             EnumSet.of(Scope.MANIFEST));
+
+    /** Using the world-writable flag */
+    public static final Issue WORLD_WRITEABLE = Issue.create(
+            "WorldWriteableFiles", //$NON-NLS-1$
+            "Checks for openFileOutput() calls passing MODE_WORLD_WRITEABLE",
+            "There are cases where it is appropriate for an application to write " +
+            "world writeable files, but these should be reviewed carefully to " +
+            "ensure that they contain no private data, and that if the file is " +
+            "modified by a malicious application it does not trick or compromise " +
+            "your application.",
+            Category.SECURITY,
+            4,
+            Severity.WARNING,
+            SecurityDetector.class,
+            Scope.JAVA_FILE_SCOPE);
 
     /** Constructs a new accessibility check */
     public SecurityDetector() {
@@ -163,6 +191,52 @@ public class SecurityDetector extends Detector implements Detector.XmlScanner {
         if (pattern != null && (pattern.getValue().equals("/")  //$NON-NLS-1$
                /* || pattern.getValue().equals(".*")*/)) {
             context.report(OPEN_PROVIDER, context.getLocation(pattern), msg, null);
+        }
+    }
+
+    // ---- Implements Detector.JavaScanner ----
+
+    @Override
+    public List<String> getApplicableMethodNames() {
+        // TBD: Just look for MODE_WORLD_WRITEABLE anywhere? Or just in the openFileOutput
+        // method?
+        return Collections.singletonList("openFileOutput"); //$NON-NLS-1$
+    }
+
+    @Override
+    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+        StrictListAccessor<Expression,MethodInvocation> args = node.astArguments();
+        Iterator<Expression> iterator = args.iterator();
+        while (iterator.hasNext()) {
+            iterator.next().accept(visitor);
+        }
+    }
+
+    @Override
+    public AstVisitor createJavaVisitor(JavaContext context) {
+        return new IdentifierVisitor(context);
+    }
+
+    private static class IdentifierVisitor extends ForwardingAstVisitor {
+        private final JavaContext mContext;
+
+        public IdentifierVisitor(JavaContext context) {
+            super();
+            this.mContext = context;
+        }
+
+        @Override
+        public boolean visitIdentifier(Identifier node) {
+            if ("MODE_WORLD_WRITEABLE".equals(node.getDescription())) { //$NON-NLS-1$
+                Location location = mContext.getLocation(node);
+                mContext.report(WORLD_WRITEABLE,
+                        location,
+                        "Using MODE_WORLD_WRITEABLE with openFileOutput can be " +
+                                "risky, review carefully",
+                        null);
+            }
+
+            return false;
         }
     }
 }

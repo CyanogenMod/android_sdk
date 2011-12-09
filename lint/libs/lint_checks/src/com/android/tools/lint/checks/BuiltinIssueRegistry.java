@@ -57,6 +57,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);
+        issues.add(SdCardDetector.ISSUE);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
         issues.add(WrongIdDetector.UNKNOWN_ID);
@@ -94,6 +95,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestOrderDetector.ISSUE);
         issues.add(SecurityDetector.EXPORTED_SERVICE);
         issues.add(SecurityDetector.OPEN_PROVIDER);
+        issues.add(SecurityDetector.WORLD_WRITEABLE);
         issues.add(IconDetector.GIF_USAGE);
         issues.add(IconDetector.ICON_DENSITIES);
         issues.add(IconDetector.ICON_MISSING_FOLDER);
@@ -110,6 +112,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TypographyDetector.OTHER);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(OverdrawDetector.ISSUE);
+        issues.add(StringFormatDetector.INVALID);
+        issues.add(StringFormatDetector.ARG_COUNT);
+        issues.add(StringFormatDetector.ARG_TYPES);
+        issues.add(ViewTypeDetector.ISSUE);
+        issues.add(WrongImportDetector.ISSUE);
 
         addCustomIssues(issues);
 
