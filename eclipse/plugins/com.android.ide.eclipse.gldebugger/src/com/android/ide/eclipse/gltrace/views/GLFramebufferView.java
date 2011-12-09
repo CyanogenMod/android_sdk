@@ -46,7 +46,7 @@ import org.eclipse.ui.part.ViewPart;
 import java.util.List;
 
 public class GLFramebufferView extends ViewPart implements ISelectionListener {
-    public static final String ID = "com.android.ide.eclipse.gltrace.GLFrameBuffer";
+    public static final String ID = "com.android.ide.eclipse.gltrace.views.GLFrameBuffer"; //$NON-NLS-1$
     private static final boolean FIT_TO_CANVAS_DEFAULT = true;
     private static final int SCROLLBAR_INCREMENT = 20;
     private Point mOrigin;

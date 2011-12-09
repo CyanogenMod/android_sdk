@@ -43,6 +43,7 @@ import java.util.Set;
  * in the Function Trace view, and updates its view to reflect the state as of the selected call.
  */
 public class GLStateView extends ViewPart implements ISelectionListener {
+    public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
     private TreeViewer mTreeViewer;
 
     private IGLProperty mState;
