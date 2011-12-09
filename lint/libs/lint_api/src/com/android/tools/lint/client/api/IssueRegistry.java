@@ -47,9 +47,10 @@ public abstract class IssueRegistry {
      * parse an XML file prior to analysis
      */
     public static final Issue PARSER_ERROR = Issue.create(
-            "XmlParserError", //$NON-NLS-1$
-            "Finds XML files that contain fatal parser errors",
-            "XML files must be parsable.",
+            "ParserError", //$NON-NLS-1$
+            "Finds files that contain fatal parser errors",
+            "Lint will ignore any files that contain fatal parsing errors. These may contain " +
+            "other errors, or contain code which affects issues in other files.",
             Category.CORRECTNESS,
             10,
             Severity.ERROR,
@@ -203,6 +204,8 @@ public abstract class IssueRegistry {
             for (Issue issue : issues) {
                 sIdToIssue.put(issue.getId(), issue);
             }
+
+            sIdToIssue.put(PARSER_ERROR.getId(), PARSER_ERROR);
         }
         return sIdToIssue.get(id);
     }

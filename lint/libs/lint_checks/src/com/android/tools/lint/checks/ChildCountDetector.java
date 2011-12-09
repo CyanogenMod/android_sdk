@@ -80,13 +80,13 @@ public class ChildCountDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 SCROLL_VIEW,
                 HORIZONTAL_SCROLL_VIEW,
                 LIST_VIEW,
                 GRID_VIEW
                 // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
-        });
+        );
     }
 
     @Override

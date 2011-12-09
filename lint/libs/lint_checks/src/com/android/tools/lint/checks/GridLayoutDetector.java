@@ -34,8 +34,8 @@ import com.android.tools.lint.detector.api.XmlContext;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Check which looks for potential errors in declarations of GridLayouts, such as specifying
@@ -66,9 +66,9 @@ public class GridLayoutDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
-                "GridLayout", //$NON-NLS-1$
-        });
+        return Collections.singletonList(
+                "GridLayout" //$NON-NLS-1$
+        );
     }
 
     private static int getInt(Element element, String attribute, int defaultValue) {

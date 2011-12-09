@@ -53,6 +53,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.wst.sse.core.StructuredModelManager;
 import org.eclipse.wst.sse.core.internal.provisional.IModelManager;
@@ -388,7 +389,12 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      */
     public static String describe(IMarker marker) {
         IssueRegistry registry = getRegistry();
-        Issue issue = registry.getIssue(getId(marker));
+        String markerId = getId(marker);
+        Issue issue = registry.getIssue(markerId);
+        if (issue == null) {
+            return "";
+        }
+
         String summary = issue.getDescription();
         String explanation = issue.getExplanation();
 
@@ -441,7 +447,11 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
             IResource resource = marker.getResource();
             if (resource instanceof IFile) {
-                AdtPlugin.openFile((IFile) resource, region, true /* showEditorTab */);
+                IEditorPart editor =
+                        AdtPlugin.openFile((IFile) resource, region, true /* showEditorTab */);
+                if (editor != null) {
+                    IDE.gotoMarker(editor, marker);
+                }
             }
         } catch (PartInitException ex) {
             AdtPlugin.log(ex, null);

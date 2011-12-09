@@ -117,14 +117,12 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
     private static class MyMethodVisitor extends MethodVisitor {
         private final ClassContext mContext;
         private int mCurrentLine;
-        private String mCurrentSource;
         private int mLastInsn;
         private String mPendingMethod;
 
         public MyMethodVisitor(ClassContext context, String currentSource) {
             super(Opcodes.ASM4);
             mContext = context;
-            mCurrentSource = currentSource;
         }
 
         private Location getCurrentLocation() {
@@ -133,13 +131,13 @@ public class MathDetector extends Detector implements Detector.ClassScanner {
             int line = 0;
 
             // Determine package
-            File source = mContext.findSourceFile(mCurrentSource);
+            File source = mContext.getSourceFile();
             if (source != null) {
                 file = source;
                 line = mCurrentLine;
 
                 if (line > 0) {
-                    String contents = mContext.getClient().readFile(file);
+                    String contents = mContext.getSourceContents();
                     if (contents != null) {
                         // bytecode line numbers are 1-based
                         return Location.create(file, contents, line - 1);

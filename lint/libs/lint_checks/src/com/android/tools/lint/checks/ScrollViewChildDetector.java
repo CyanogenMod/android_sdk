@@ -70,10 +70,10 @@ public class ScrollViewChildDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 SCROLL_VIEW,
                 HORIZONTAL_SCROLL_VIEW
-        });
+        );
     }
 
     @Override

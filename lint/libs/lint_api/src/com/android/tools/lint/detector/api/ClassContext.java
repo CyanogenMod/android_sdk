@@ -22,7 +22,6 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import com.android.tools.lint.client.api.LintClient;
 import com.google.common.annotations.Beta;
 
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
@@ -38,8 +37,16 @@ import java.util.List;
 @Beta
 public class ClassContext extends Context {
     private final File mBinDir;
+    /** The class file DOM root node */
     private ClassNode mClassNode;
+    /** The class file byte data */
     private byte[] mBytes;
+    /** The source file, if known/found */
+    private File mSourceFile;
+    /** The contents of the source file, if source file is known/found */
+    private String mSourceContents;
+    /** Whether we've searched for the source file (used to avoid repeated failed searches) */
+    private boolean mSearchedForSource;
 
     /**
      * Construct a new {@link ClassContext}
@@ -72,49 +79,93 @@ public class ClassContext extends Context {
     /**
      * Returns the bytecode object model
      *
-     * @return the bytecode object model
+     * @return the bytecode object model, never null
      */
     public ClassNode getClassNode() {
         return mClassNode;
     }
 
     /**
-     * Finds the corresponding source file for the current class file.
+     * Returns the source file for this class file, if possible.
      *
-     * @param source the name of the source file, if known (which is often
-     *            stored in the bytecode and provided by the
-     *            {@link ClassVisitor#visitSource(String, String)} method). If
-     *            not known, this method will guess by stripping out inner-class
-     *            suffixes like $1.
-     * @return the source file corresponding to the {@link #file} field.
+     * @return the source file, or null
      */
-    public File findSourceFile(String source) {
-        if (source == null) {
-            source = file.getName();
-            if (source.endsWith(DOT_CLASS)) {
-                source = source.substring(0, source.length() - DOT_CLASS.length()) + DOT_JAVA;
+    public File getSourceFile() {
+        if (mSourceFile == null && !mSearchedForSource) {
+            mSearchedForSource = true;
+
+            String source = mClassNode.sourceFile;
+            if (source == null) {
+                source = file.getName();
+                if (source.endsWith(DOT_CLASS)) {
+                    source = source.substring(0, source.length() - DOT_CLASS.length()) + DOT_JAVA;
+                }
+                int index = source.indexOf('$');
+                if (index != -1) {
+                    source = source.substring(0, index) + DOT_JAVA;
+                }
             }
-            int index = source.indexOf('$');
-            if (index != -1) {
-                source = source.substring(0, index) + DOT_JAVA;
-            }
-        }
-        if (source != null) {
-            // Determine package
-            String topPath = mBinDir.getPath();
-            String parentPath = file.getParentFile().getPath();
-            if (parentPath.startsWith(topPath)) {
-                String relative = parentPath.substring(topPath.length() + 1);
-                List<File> sources = getProject().getJavaSourceFolders();
-                for (File dir : sources) {
-                    File sourceFile = new File(dir, relative + File.separator + source);
-                    if (sourceFile.exists()) {
-                        return sourceFile;
+            if (source != null) {
+                // Determine package
+                String topPath = mBinDir.getPath();
+                String parentPath = file.getParentFile().getPath();
+                if (parentPath.startsWith(topPath)) {
+                    String relative = parentPath.substring(topPath.length() + 1);
+                    List<File> sources = getProject().getJavaSourceFolders();
+                    for (File dir : sources) {
+                        File sourceFile = new File(dir, relative + File.separator + source);
+                        if (sourceFile.exists()) {
+                            mSourceFile = sourceFile;
+                            break;
+                        }
                     }
                 }
             }
         }
 
-        return null;
+        return mSourceFile;
+    }
+
+    /**
+     * Returns the contents of the source file for this class file, if found.
+     *
+     * @return the source contents, or ""
+     */
+    public String getSourceContents() {
+        if (mSourceContents == null) {
+            File sourceFile = getSourceFile();
+            if (sourceFile != null) {
+                mSourceContents = getClient().readFile(mSourceFile);
+            }
+
+            if (mSourceContents == null) {
+                mSourceContents = "";
+            }
+        }
+
+        return mSourceContents;
+    }
+
+
+
+    /**
+     * Returns a location for the given source line number in this class file's
+     * source file, if available.
+     *
+     * @param line the line number (1-based, which is what ASM uses)
+     * @param patternStart optional pattern to search for in the source for
+     *            range start
+     * @param patternEnd optional pattern to search for in the source for range
+     *            end
+     * @return a location, never null
+     */
+    public Location getLocationForLine(int line, String patternStart, String patternEnd) {
+        File sourceFile = getSourceFile();
+        if (sourceFile != null) {
+            return Location.create(sourceFile, getSourceContents(), line - 1,
+                    patternStart, patternEnd);
+        }
+
+        return Location.create(file);
     }
 }

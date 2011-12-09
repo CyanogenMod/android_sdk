@@ -94,6 +94,7 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.texteditor.AbstractTextEditor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -1808,6 +1809,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 editor.show(region.getOffset(), region.getLength(), showEditorTab);
             } else if (showEditorTab) {
                 editor.setActivePage(AndroidXmlEditor.TEXT_EDITOR_ID);
+            }
+        } else if (targetEditor instanceof AbstractTextEditor) {
+            AbstractTextEditor editor = (AbstractTextEditor) targetEditor;
+            if (region != null) {
+                editor.setHighlightRange(region.getOffset(), region.getLength(),
+                        true /* moveCursor*/);
             }
         }
 

@@ -94,11 +94,11 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 TAG_ARRAY,
                 TAG_STRING_ARRAY,
                 TAG_INTEGER_ARRAY
-        });
+        );
     }
 
     @Override

@@ -200,10 +200,10 @@ public class TypographyDetector extends ResourceXmlDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 TAG_STRING,
                 TAG_STRING_ARRAY
-        });
+        );
     }
 
     @Override

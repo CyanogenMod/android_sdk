@@ -72,13 +72,13 @@ public class HardcodedValuesDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableAttributes() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 ATTR_TEXT,
                 ATTR_CONTENT_DESCRIPTION,
                 ATTR_HINT,
                 ATTR_LABEL,
                 ATTR_PROMPT
-        });
+        );
     }
 
     @Override

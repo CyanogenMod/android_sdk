@@ -74,14 +74,14 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 SCROLL_VIEW,
                 LIST_VIEW,
                 GRID_VIEW,
                 // Horizontal
                 GALLERY,
                 HORIZONTAL_SCROLL_VIEW
-        });
+        );
     }
 
     private Element findOuterScrollingWidget(Node node, boolean vertical) {

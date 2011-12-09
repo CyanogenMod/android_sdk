@@ -116,11 +116,8 @@ public class FieldGetterDetector extends Detector implements Detector.ClassScann
 
                 List<String> getters = checkMethods(mContext.getClassNode(), names);
                 if (getters.size() > 0) {
-                    File source = mContext.findSourceFile(null);
-                    String contents = null;
-                    if (source != null) {
-                        contents = mContext.getClient().readFile(source);
-                    }
+                    File source = mContext.getSourceFile();
+                    String contents = mContext.getSourceContents();
                     for (String getter : getters) {
                         for (Pair<String, Integer> pair : mPendingCalls) {
                             String name = pair.getFirst();

@@ -28,8 +28,8 @@ import com.android.tools.lint.detector.api.XmlContext;
 
 import org.w3c.dom.Element;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Check which looks for usage of deprecated tags, attributes, etc.
@@ -58,9 +58,9 @@ public class DeprecationDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Collections.singletonList(
                 ABSOLUTE_LAYOUT
-        });
+        );
     }
 
     @Override

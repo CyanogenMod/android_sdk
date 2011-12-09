@@ -68,10 +68,10 @@ public class AccessibilityDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(new String[] {
+        return Arrays.asList(
                 IMAGE_BUTTON,
                 IMAGE_VIEW
-        });
+        );
     }
 
     @Override
