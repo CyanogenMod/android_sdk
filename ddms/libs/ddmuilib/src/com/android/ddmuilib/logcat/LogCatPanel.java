@@ -75,6 +75,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -547,6 +548,9 @@ public final class LogCatPanel extends SelectionDependentPanel
                 if (mReceiver != null) {
                     mReceiver.clearMessages();
                     refreshLogCatTable();
+
+                    // the filters view is not cleared unless the filters are re-applied.
+                    updateAppliedFilters();
                 }
             }
         });
@@ -663,10 +667,21 @@ public final class LogCatPanel extends SelectionDependentPanel
         int[] indices = table.getSelectionIndices();
         Arrays.sort(indices); /* Table.getSelectionIndices() does not specify an order */
 
+        // Get items from the table's input as opposed to getting each table item's data.
+        // Retrieving table item's data can return NULL in case of a virtual table if the item
+        // has not been displayed yet.
+        Object input = mViewer.getInput();
+        if (!(input instanceof LogCatMessageList)) {
+            return Collections.emptyList();
+        }
+        Object []items = ((LogCatMessageList) input).toArray();
+
         List<LogCatMessage> selectedMessages = new ArrayList<LogCatMessage>(indices.length);
         for (int i : indices) {
-            LogCatMessage m = (LogCatMessage) table.getItem(i).getData();
-            selectedMessages.add(m);
+            if (i < items.length) {
+                LogCatMessage m = (LogCatMessage) items[i];
+                selectedMessages.add(m);
+            }
         }
 
         return selectedMessages;
