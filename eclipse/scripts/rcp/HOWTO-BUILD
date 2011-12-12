@@ -1,0 +1,9 @@
+To build the Monitor RCP based application, do:
+
+$ lunch sdk-eng
+$ ./sdk/eclipse/scripts/create_all_symlinks.sh -f
+$ cd sdk/eclipse/scripts/rcp
+$ ant
+
+This will build the RCP in the folder:
+$ANDROID_SRC/out/host/eclipse/rcp/build/I.RcpBuild/

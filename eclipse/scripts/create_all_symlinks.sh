@@ -1,4 +1,8 @@
 #!/bin/bash
+# This script copies the .jar files that each plugin depends on into the plugins libs folder.
+# By default, on Mac & Linux, this script creates symlinks from the libs folder to the jar file.
+# Since Windows does not support symlinks, the jar files are copied.
+# Use option "-f" to copy files rather than creating symlinks on the Mac/Linux platforms.
 
 echo "## Running $0"
 # CD to the top android directory
@@ -6,16 +10,34 @@ PROG_DIR=`dirname "$0"`
 cd "${PROG_DIR}/../../../"
 
 HOST=`uname`
+USE_COPY="" # force copy dependent jar files rather than creating symlinks
 
 function die() {
   echo "Error: $*"
   exit 1
 }
 
-if [ "${HOST:0:6}" == "CYGWIN" ]; then
-  PLATFORM="windows-x86"
+## parse arguments
+while [ $# -gt 0 ]; do
+  if [ "$1" == "-f" ]; then
+    USE_COPY="1"
+  fi
+  shift
+done
 
-  # We can't use symlinks under Cygwin
+if [ "$HOST" == "Linux" ]; then
+  PLATFORM="linux-x86"
+elif [ "$HOST" == "Darwin" ]; then
+  PLATFORM="darwin-x86"
+elif [ "${HOST:0:6}" == "CYGWIN" ]; then
+  USE_COPY="1"      # We can't use symlinks under Cygwin
+  PLATFORM="windows-x86"
+else
+  echo "Unsupported platform ($HOST). Aborting."
+  exit 1
+fi
+
+if [ "$USE_COPY" == "1" ]; then
   function cpfile { # $1=source $2=dest
     cp -fv $1 $2/
   }
@@ -24,17 +46,6 @@ if [ "${HOST:0:6}" == "CYGWIN" ]; then
     rsync -avW --delete-after $1 $2
   }
 else
-  if [ "$HOST" == "Linux" ]; then
-    PLATFORM="linux-x86"
-  elif [ "$HOST" == "Darwin" ]; then
-    PLATFORM="darwin-x86"
-  else
-    echo "Unsupported platform ($HOST). Aborting."
-    exit 1
-  fi
-
-  # For all other systems which support symlinks
-
   # computes the "reverse" path, e.g. "a/b/c" => "../../.."
   function back() {
     echo $1 | sed 's@[^/]*@..@g'
@@ -135,6 +146,13 @@ SDMAN_LIBS="swtmenubar"
 
 LIBS="$LIBS $SDKMAN_LIBS"
 
+### MONITOR ###
+
+MONITOR_DEST="sdk/eclipse/plugins/com.android.ide.eclipse.monitor/libs"
+MONITOR_LIBS="sdklib sdkstats androidprefs"
+
+LIBS="$LIBS $MONITOR_LIBS"
+CP_FILES="$CP_FILES @:$MONITOR_DEST $MONITOR_LIBS"
 
 ### GL DEBUGGER ###
 
@@ -150,9 +168,9 @@ fi
 
 # Make sure we have lunch sdk-<something>
 if [[ ! "$TARGET_PRODUCT" ]]; then
-    echo "## TARGET_PRODUCT is not set, running build/envsetup.sh"
+  echo "## TARGET_PRODUCT is not set, running build/envsetup.sh"
   . build/envsetup.sh
-    echo "## lunch sdk-eng"
+  echo "## lunch sdk-eng"
   lunch sdk-eng
 fi
 
