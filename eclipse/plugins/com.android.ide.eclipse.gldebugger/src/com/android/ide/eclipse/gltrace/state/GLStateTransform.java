@@ -20,6 +20,7 @@ import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -76,6 +77,8 @@ public class GLStateTransform {
         switch (call.getFunction()) {
             case glVertexAttribPointer:
                 return transformsForGlVertexAttribPointer(call);
+            case glBindFramebuffer:
+                return transformsForGlBindFramebuffer(call);
             default:
                 return new ArrayList<GLStateTransform>();
         }
@@ -122,5 +125,14 @@ public class GLStateTransform {
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_POINTER),
                 Integer.valueOf(pointer)));
         return transforms;
+    }
+
+    private static List<GLStateTransform> transformsForGlBindFramebuffer(GLCall call) {
+        // void glBindFramebuffer(GLenum target, GLuint framebuffer);
+        int fb = call.getArg(1).getIntValue(0);
+        return Collections.singletonList(new GLStateTransform(
+                GLPropertyAccessor.makeAccessor(GLStateType.FRAMEBUFFER_STATE,
+                                                GLStateType.FRAMEBUFFER_BINDING),
+                fb));
     }
 }
