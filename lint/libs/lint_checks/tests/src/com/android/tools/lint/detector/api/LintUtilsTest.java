@@ -45,4 +45,18 @@ public class LintUtilsTest extends TestCase {
         assertFalse(LintUtils.isXmlFile(new File("xml")));
         assertFalse(LintUtils.isXmlFile(new File("xml.png")));
     }
+
+    public void testEditDistance() {
+        assertEquals(0, LintUtils.editDistance("kitten", "kitten"));
+
+        // editing kitten to sitting has edit distance 3:
+        //   replace k with s
+        //   replace e with i
+        //   append g
+        assertEquals(3, LintUtils.editDistance("kitten", "sitting"));
+
+        assertEquals(3, LintUtils.editDistance("saturday", "sunday"));
+        assertEquals(1, LintUtils.editDistance("button", "bitton"));
+        assertEquals(6, LintUtils.editDistance("radiobutton", "bitton"));
+    }
 }

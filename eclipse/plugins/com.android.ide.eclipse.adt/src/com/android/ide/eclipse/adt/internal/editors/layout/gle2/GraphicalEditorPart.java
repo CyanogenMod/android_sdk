@@ -39,7 +39,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
@@ -70,6 +69,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.util.Pair;
 
 import org.eclipse.core.resources.IFile;
@@ -1651,19 +1651,20 @@ public class GraphicalEditorPart extends EditorPart
 
         // Look for typos and try to match with custom views and android views
         String actualBase = actual.substring(actual.lastIndexOf('.') + 1);
+        int maxDistance = actualBase.length() >= 4 ? 2 : 1;
+
         if (views.size() > 0) {
             for (String suggested : views) {
                 String suggestedBase = suggested.substring(suggested.lastIndexOf('.') + 1);
 
                 String matchWith = compareWithPackage ? suggested : suggestedBase;
-                int maxDistance = actualBase.length() >= 4 ? 2 : 1;
                 if (Math.abs(actualBase.length() - matchWith.length()) > maxDistance) {
                     // The string lengths differ more than the allowed edit distance;
                     // no point in even attempting to compute the edit distance (requires
                     // O(n*m) storage and O(n*m) speed, where n and m are the string lengths)
                     continue;
                 }
-                if (AdtUtils.editDistance(actualBase, matchWith) <= maxDistance) {
+                if (LintUtils.editDistance(actualBase, matchWith) <= maxDistance) {
                     // Suggest this class as a typo for the given class
                     String labelClass = (suggestedBase.equals(actual) || actual.indexOf('.') != -1)
                         ? suggested : suggestedBase;

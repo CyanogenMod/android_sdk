@@ -58,6 +58,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);
+        issues.add(WrongIdDetector.UNKNOWN_ID);
+        issues.add(WrongIdDetector.UNKNOWN_ID_LAYOUT);
         issues.add(StateListDetector.ISSUE);
         issues.add(InefficientWeightDetector.INEFFICIENT_WEIGHT);
         issues.add(InefficientWeightDetector.NESTED_WEIGHTS);
