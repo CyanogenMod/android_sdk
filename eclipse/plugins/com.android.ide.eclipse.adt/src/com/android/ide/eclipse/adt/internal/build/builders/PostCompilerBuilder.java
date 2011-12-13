@@ -298,9 +298,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             refList.addAll(javaProjects);
             allRefProjects = refList.toArray(new IProject[size]);
 
-            // Top level check to make sure the build can move forward.
-            abortOnBadSetup(javaProject);
-
             // get the android output folder
             IFolder androidOutputFolder = BaseProjectHelper.getAndroidOutputFolder(project);
             IFolder resOutputFolder = androidOutputFolder.getFolder(SdkConstants.FD_RES);
@@ -395,6 +392,10 @@ public class PostCompilerBuilder extends BaseBuilder {
             saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
             saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
             saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
+
+            // Top level check to make sure the build can move forward. Only do this after recording
+            // delta changes.
+            abortOnBadSetup(javaProject);
 
             if (dv != null && dv.mXmlError) {
                 AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, project,
