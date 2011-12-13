@@ -197,7 +197,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                                 marker2.getResource().getName());
                     }
                     Issue issue1 = registry.getIssue(id1);
-                    Issue issue2 = registry.getIssue(id1);
+                    Issue issue2 = registry.getIssue(id2);
                     if (issue1 == null || issue2 == null) {
                         // Unknown issue? Can happen if you have used a third party detector
                         // which is no longer available but which left a persistent marker behind
@@ -220,14 +220,15 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                         return categoryDelta;
                     }
                     int idDelta = id1.compareTo(id2);
-                    if (idDelta != -1) {
+                    if (idDelta != 0) {
                         return idDelta;
                     }
                     int fileDelta = marker1.getResource().getName().compareTo(
                             marker2.getResource().getName());
-                    if (fileDelta != -1) {
+                    if (fileDelta != 0) {
                         return fileDelta;
                     }
+
                     return marker1.getAttribute(IMarker.LINE_NUMBER, 0)
                             - marker2.getAttribute(IMarker.LINE_NUMBER, 0);
                 }
