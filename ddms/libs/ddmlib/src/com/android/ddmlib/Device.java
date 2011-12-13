@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 final class Device implements IDevice {
 
     private final static int INSTALL_TIMEOUT = 2*60*1000; //2min
+    private static final int BATTERY_TIMEOUT = 2*1000; //2 seconds
 
     /** Emulator Serial Number regexp. */
     final static String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
@@ -716,7 +717,7 @@ final class Device implements IDevice {
             return mLastBatteryLevel;
         }
         BatteryReceiver receiver = new BatteryReceiver();
-        executeShellCommand("dumpsys battery", receiver);
+        executeShellCommand("dumpsys battery", receiver, BATTERY_TIMEOUT);
         mLastBatteryLevel = receiver.getBatteryLevel();
         mLastBatteryCheckTime = System.currentTimeMillis();
         return mLastBatteryLevel;
