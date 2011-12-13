@@ -674,17 +674,47 @@ public final class LogCatPanel extends SelectionDependentPanel
         if (!(input instanceof LogCatMessageList)) {
             return Collections.emptyList();
         }
-        Object []items = ((LogCatMessageList) input).toArray();
 
+        List<LogCatMessage> filteredItems = applyCurrentFilters((LogCatMessageList) input);
         List<LogCatMessage> selectedMessages = new ArrayList<LogCatMessage>(indices.length);
         for (int i : indices) {
-            if (i < items.length) {
-                LogCatMessage m = (LogCatMessage) items[i];
+            if (i < filteredItems.size()) {
+                LogCatMessage m = filteredItems.get(i);
                 selectedMessages.add(m);
             }
         }
 
         return selectedMessages;
+    }
+
+    private List<LogCatMessage> applyCurrentFilters(LogCatMessageList msgList) {
+        Object[] items = msgList.toArray();
+        List<LogCatMessage> filteredItems = new ArrayList<LogCatMessage>(items.length);
+        List<LogCatViewerFilter> filters = getFiltersToApply();
+
+        for (Object item : items) {
+            if (!(item instanceof LogCatMessage)) {
+                continue;
+            }
+
+            LogCatMessage msg = (LogCatMessage) item;
+            if (!isMessageFiltered(msg, filters)) {
+                filteredItems.add(msg);
+            }
+        }
+
+        return filteredItems;
+    }
+
+    private boolean isMessageFiltered(LogCatMessage msg, List<LogCatViewerFilter> filters) {
+        for (LogCatViewerFilter f : filters) {
+            if (!f.select(null, null, msg)) {
+                // message does not make it through this filter
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void createLogcatViewTable(Composite parent) {
@@ -912,15 +942,20 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private void updateAppliedFilters() {
-        /* list of filters to apply = saved filter + live filters */
-        List<LogCatViewerFilter> filters = new ArrayList<LogCatViewerFilter>();
-        filters.add(getSelectedSavedFilter());
-        filters.addAll(getCurrentLiveFilters());
+        List<LogCatViewerFilter> filters = getFiltersToApply();
         mViewer.setFilters(filters.toArray(new LogCatViewerFilter[filters.size()]));
 
         /* whenever filters are changed, the number of displayed logs changes
          * drastically. Display the latest log in such a situation. */
         scrollToLatestLog();
+    }
+
+    private List<LogCatViewerFilter> getFiltersToApply() {
+        /* list of filters to apply = saved filter + live filters */
+        List<LogCatViewerFilter> filters = new ArrayList<LogCatViewerFilter>();
+        filters.add(getSelectedSavedFilter());
+        filters.addAll(getCurrentLiveFilters());
+        return filters;
     }
 
     private List<LogCatViewerFilter> getCurrentLiveFilters() {
