@@ -136,6 +136,10 @@ public class GLTrace {
         for (int i = Math.min(fromIndex, toIndex); i <= Math.max(fromIndex, toIndex); i++) {
             for (GLStateTransform f : mStateTransformsPerCall.get(i)) {
                 IGLProperty changedProperty = f.getChangedProperty(state);
+                if (changedProperty == null) {
+                    continue;
+                }
+
                 // add the property that is affected
                 changedProperties.add(changedProperty);
 

@@ -1,4 +1,6 @@
 # com.android.ide.eclipse.gltrace.glentries, v1
+void, eglCreateContext, int version, int context
+void, eglMakeCurrent, int context
 void, glActiveTexture, GLenum texture
 void, glAlphaFunc, GLenum func, GLclampf ref
 void, glAlphaFuncx, GLenum func, GLclampx ref
