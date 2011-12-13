@@ -80,4 +80,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "AndroidManifest.xml",
                 "res/layout/accessibility.xml"));
     }
+
+    public void testArrayReference() throws Exception {
+        assertEquals(
+           "arrayusage.xml:3: Warning: The resource R.array.my_array appears to be unused",
+
+            lintProject(
+                "AndroidManifest.xml",
+                "res/values/arrayusage.xml"));
+    }
 }
