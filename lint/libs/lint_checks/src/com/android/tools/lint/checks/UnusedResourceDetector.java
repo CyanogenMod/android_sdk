@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
@@ -339,7 +340,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         // Remove styles: they may be used
         List<String> styles = new ArrayList<String>();
         for (String resource : unused) {
-            if (resource.startsWith("R.style.")) { //$NON-NLS-1$
+            // R.style.x, R.styleable.x
+            if (resource.startsWith("R.style")) { //$NON-NLS-1$
                 styles.add(resource);
             }
         }
@@ -506,6 +508,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
         } else if (value.startsWith(ATTR_REF_PREFIX)) {
             mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.'
                     + value.substring(ATTR_REF_PREFIX.length()));
+        }
+
+        if (attribute.getNamespaceURI() != null
+                && !ANDROID_URI.equals(attribute.getNamespaceURI())) {
+            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + attribute.getLocalName());
         }
     }
 

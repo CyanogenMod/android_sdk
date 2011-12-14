@@ -89,4 +89,15 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "AndroidManifest.xml",
                 "res/values/arrayusage.xml"));
     }
+
+    public void testAttrs() throws Exception {
+        assertEquals(
+           "customattrlayout.xml: Warning: The resource R.layout.customattrlayout appears to be unused",
+
+            lintProject(
+                "res/values/customattr.xml",
+                "res/layout/customattrlayout.xml",
+                "unusedR.java.txt=>gen/my/pkg/R.java",
+                "AndroidManifest.xml"));
+    }
 }
