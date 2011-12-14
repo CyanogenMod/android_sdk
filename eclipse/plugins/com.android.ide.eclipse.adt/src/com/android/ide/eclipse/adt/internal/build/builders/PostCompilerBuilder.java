@@ -81,7 +81,6 @@ public class PostCompilerBuilder extends BaseBuilder {
     public static final String ID = "com.android.ide.eclipse.adt.ApkBuilder"; //$NON-NLS-1$
 
     private static final String PROPERTY_CONVERT_TO_DEX = "convertToDex"; //$NON-NLS-1$
-    private static final String PROPERTY_UPDATE_CRUNCH_CACHE = "updateCrunchCache"; //$NON-NLS-1$
     private static final String PROPERTY_PACKAGE_RESOURCES = "packageResources"; //$NON-NLS-1$
     private static final String PROPERTY_BUILD_APK = "buildApk"; //$NON-NLS-1$
 
@@ -96,13 +95,6 @@ public class PostCompilerBuilder extends BaseBuilder {
      * flag is true, then we know we'll have to make the "classes.dex" file.
      */
     private boolean mConvertToDex = false;
-
-    /**
-     * PNG Cache update flag. This is set to true if one of the changed/added/removed
-     * files is a .png file. Upon visiting all the delta resources, if this
-     * flag is true, then we know we'll have to update the PNG cache
-     */
-    private boolean mUpdateCrunchCache = false;
 
     /**
      * Package resources flag. This is set to true if one of the changed/added/removed
@@ -320,7 +312,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 }
 
                 // Full build: we do all the steps.
-                mUpdateCrunchCache = true;
                 mPackageResources = true;
                 mConvertToDex = true;
                 mBuildFinalPackage = true;
@@ -332,7 +323,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                 IResourceDelta delta = getDelta(project);
                 if (delta == null) {
                     // no delta? Same as full build: we do all the steps.
-                    mUpdateCrunchCache = true;
                     mPackageResources = true;
                     mConvertToDex = true;
                     mBuildFinalPackage = true;
@@ -341,7 +331,6 @@ public class PostCompilerBuilder extends BaseBuilder {
                     delta.accept(dv);
 
                     // save the state
-                    mUpdateCrunchCache |= dv.getUpdateCrunchCache();
                     mPackageResources |= dv.getPackageResources();
                     mConvertToDex |= dv.getConvertToDex();
                     mBuildFinalPackage |= dv.getMakeFinalPackage();
@@ -389,7 +378,6 @@ public class PostCompilerBuilder extends BaseBuilder {
 
             // store the build status in the persistent storage
             saveProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, mConvertToDex);
-            saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
             saveProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, mPackageResources);
             saveProjectBooleanProperty(PROPERTY_BUILD_APK, mBuildFinalPackage);
 
@@ -425,20 +413,19 @@ public class PostCompilerBuilder extends BaseBuilder {
                     mConvertToDex = true;
                 }
 
-                // also update the crunch cache if needed.
-                if (mUpdateCrunchCache) {
-                    if (DEBUG) {
-                        System.out.println("\trunning crunch!");
-                    }
-                    BuildHelper helper = new BuildHelper(project,
-                            mOutStream, mErrStream,
-                            true /*debugMode*/,
-                            AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
-                    updateCrunchCache(project, helper);
-
-                    // refresh recursively bin/res folder
-                    resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+                // also update the crunch cache always since aapt does it smartly only
+                // on the files that need it.
+                if (DEBUG) {
+                    System.out.println("\trunning crunch!");
                 }
+                BuildHelper helper = new BuildHelper(project,
+                        mOutStream, mErrStream,
+                        true /*debugMode*/,
+                        AdtPrefs.getPrefs().getBuildVerbosity() == BuildVerbosity.VERBOSE);
+                updateCrunchCache(project, helper);
+
+                // refresh recursively bin/res folder
+                resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
 
                 if (mConvertToDex) { // in this case this means some class files changed and
                                      // we need to update the jar file.
@@ -578,8 +565,10 @@ public class PostCompilerBuilder extends BaseBuilder {
                 // notified.
                 finalPackage.delete();
 
-                // Check if we need to update the PNG cache
-                if (mUpdateCrunchCache) {
+                // Check if we need to package the resources.
+                if (mPackageResources) {
+                    // also update the crunch cache always since aapt does it smartly only
+                    // on the files that need it.
                     if (DEBUG) {
                         System.out.println("\trunning crunch!");
                     }
@@ -589,10 +578,7 @@ public class PostCompilerBuilder extends BaseBuilder {
 
                     // refresh recursively bin/res folder
                     resOutputFolder.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-                }
 
-                // Check if we need to package the resources.
-                if (mPackageResources) {
                     if (DEBUG) {
                         System.out.println("\tpackaging resources!");
                     }
@@ -887,12 +873,6 @@ public class PostCompilerBuilder extends BaseBuilder {
             }
         }
 
-        // crunch has been done. Reset state
-        mUpdateCrunchCache = false;
-
-        // and store it
-        saveProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, mUpdateCrunchCache);
-
         return true;
     }
 
@@ -970,7 +950,6 @@ public class PostCompilerBuilder extends BaseBuilder {
         // load the build status. We pass true as the default value to
         // force a recompile in case the property was not found
         mConvertToDex = loadProjectBooleanProperty(PROPERTY_CONVERT_TO_DEX, true);
-        mUpdateCrunchCache = loadProjectBooleanProperty(PROPERTY_UPDATE_CRUNCH_CACHE, true);
         mPackageResources = loadProjectBooleanProperty(PROPERTY_PACKAGE_RESOURCES, true);
         mBuildFinalPackage = loadProjectBooleanProperty(PROPERTY_BUILD_APK, true);
     }
