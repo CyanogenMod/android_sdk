@@ -66,6 +66,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -120,7 +121,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     private static final String IMAGE_SAVE_LOG_TO_FILE = "save.png"; //$NON-NLS-1$
     private static final String IMAGE_CLEAR_LOG = "clear.png"; //$NON-NLS-1$
     private static final String IMAGE_DISPLAY_FILTERS = "displayfilters.png"; //$NON-NLS-1$
-    private static final String IMAGE_SCROLL_TO_LATEST = "scroll_latest.png"; //$NON-NLS-1$
+    private static final String IMAGE_PAUSE_LOGCAT = "pause_logcat.png"; //$NON-NLS-1$
 
     private static final int[] WEIGHTS_SHOW_FILTERS = new int[] {15, 85};
     private static final int[] WEIGHTS_LOGCAT_ONLY = new int[] {0, 100};
@@ -142,7 +143,8 @@ public final class LogCatPanel extends SelectionDependentPanel
     private TableViewer mViewer;
 
     private boolean mShouldScrollToLatestLog = true;
-    private ToolItem mScrollToLastCheckBox;
+    private ToolItem mPauseLogcatCheckBox;
+    private boolean mLastItemPainted = false;
 
     private String mLogFileExportFolder;
     private LogCatMessageLabelProvider mLogCatMessageLabelProvider;
@@ -570,17 +572,17 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         });
 
-        mScrollToLastCheckBox = new ToolItem(toolBar, SWT.CHECK);
-        mScrollToLastCheckBox.setImage(
-                ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_SCROLL_TO_LATEST,
+        mPauseLogcatCheckBox = new ToolItem(toolBar, SWT.CHECK);
+        mPauseLogcatCheckBox.setImage(
+                ImageLoader.getDdmUiLibLoader().loadImage(IMAGE_PAUSE_LOGCAT,
                         toolBar.getDisplay()));
-        mScrollToLastCheckBox.setSelection(true);
-        mScrollToLastCheckBox.setToolTipText("Scroll to display the latest logcat message.");
-        mScrollToLastCheckBox.addSelectionListener(new SelectionAdapter() {
+        mPauseLogcatCheckBox.setSelection(false);
+        mPauseLogcatCheckBox.setToolTipText("Pause receiving new logcat messages.");
+        mPauseLogcatCheckBox.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent event) {
-                boolean shouldScroll = mScrollToLastCheckBox.getSelection();
-                setScrollToLatestLog(shouldScroll, false);
+                boolean pauseLogcat = mPauseLogcatCheckBox.getSelection();
+                setScrollToLatestLog(!pauseLogcat, false);
             }
         });
     }
@@ -792,55 +794,86 @@ public final class LogCatPanel extends SelectionDependentPanel
             }
         });
 
-        setupScrollBehavior();
+        setupAutoScrollLockBehavior();
         initDoubleClickListener();
     }
 
     /**
-     * Update setting that controls if the table should scroll to reveal the latest logcat entry.
-     * Users can impact the scrolling behavior in two ways:
-     * <ul>
-     *   <li> Using the scrollbar: If the scrollbar is moved to the bottom, then auto scroll.</li>
-     *   <li> Selecting an entry in the table: If the selected entry is not currently the last
-     *        entry in the table, then do not scroll, otherwise auto scroll.
+     * Setup to automatically enable or disable scroll lock. From a user's perspective,
+     * the logcat window will: <ul>
+     * <li> Automatically scroll and reveal new entries if the scrollbar is at the bottom. </li>
+     * <li> Not scroll even when new messages are received if the scrollbar is not at the bottom.
+     * </li>
+     * </ul>
+     * This requires that we are able to detect where the scrollbar is and what direction
+     * it is moving. Unfortunately, that proves to be very platform dependent. Here's the behavior
+     * of the scroll events on different platforms: <ul>
+     * <li> On Windows, scroll bar events specify which direction the scrollbar is moving, but
+     * it is not possible to determine if the scrollbar is right at the end. </li>
+     * <li> On Mac/Cocoa, scroll bar events do not specify the direction of movement (it is always
+     * set to SWT.DRAG), and it is not possible to identify where the scrollbar is since
+     * small movements of the scrollbar are not reflected in sb.getSelection(). </li>
+     * <li> On Linux/gtk, we don't get the direction, but we can accurately locate the
+     * scrollbar location using getSelection(), getThumb() and getMaximum().
      * </ul>
      */
-    private void setupScrollBehavior() {
-        mViewer.getTable().getVerticalBar().addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                ScrollBar sb = (ScrollBar) event.getSource();
+    private void setupAutoScrollLockBehavior() {
+        if (DdmConstants.CURRENT_PLATFORM == DdmConstants.PLATFORM_WINDOWS) {
+            // On Windows, it is not possible to detect whether the scrollbar is at the
+            // bottom using the values of ScrollBar.getThumb, getSelection and getMaximum.
+            // Instead we resort to the following workaround: attach to the paint listener
+            // and see if the last item has been painted since the previous scroll event.
+            // If the last item has been painted, then we assume that we are at the bottom.
+            mViewer.getTable().addListener(SWT.PaintItem, new Listener() {
+                public void handleEvent(Event event) {
+                    TableItem item = (TableItem) event.item;
+                    TableItem[] items = mViewer.getTable().getItems();
+                    if (items.length > 0 && items[items.length - 1] == item) {
+                        mLastItemPainted = true;
+                    }
+                }
+            });
+            mViewer.getTable().getVerticalBar().addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent event) {
+                    boolean scrollToLast;
+                    if (event.detail == SWT.ARROW_UP || event.detail == SWT.PAGE_UP
+                            || event.detail == SWT.HOME) {
+                        // if we know that we are moving up, then do not scroll down
+                        scrollToLast = false;
+                    } else {
+                        // otherwise, enable scrollToLast only if the last item was displayed
+                        scrollToLast = mLastItemPainted;
+                    }
 
-                // On Mac & Linux, when the scroll bar is at the bottom,
-                //        sb.getSelection + sb.getThumb = sb.getMaximum
-                // But on Windows 7, the scrollbar never touches the bottom, and as a result
-                //        sb.getSelection + sb.getThumb is slightly less than sb.getMaximum.
-                // So we assume that as long as the thumb is close to the bottom, we want to scroll.
-                boolean shouldScroll =
-                        Math.abs(sb.getSelection() + sb.getThumb() - sb.getMaximum()) < 10;
-                setScrollToLatestLog(shouldScroll, true);
-            }
-        });
-
-        mViewer.getTable().addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                Table table = (Table) event.getSource();
-                int[] indices = table.getSelectionIndices();
-
-                boolean shouldScroll =
-                        indices.length == 1 // only 1 item selected
-                        && indices[0] == table.getItemCount() - 1; // and it is the last entry
-                setScrollToLatestLog(shouldScroll, true);
-            }
-        });
+                    setScrollToLatestLog(scrollToLast, true);
+                    mLastItemPainted = false;
+                }
+            });
+        } else if (DdmConstants.CURRENT_PLATFORM == DdmConstants.PLATFORM_LINUX) {
+            // On Linux/gtk, we do not get any details regarding the scroll event (up/down/etc).
+            // So we completely rely on whether the scrollbar is at the bottom or not.
+            mViewer.getTable().getVerticalBar().addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent event) {
+                    ScrollBar sb = (ScrollBar) event.getSource();
+                    boolean scrollToLast = sb.getSelection() + sb.getThumb() == sb.getMaximum();
+                    setScrollToLatestLog(scrollToLast, true);
+                }
+            });
+        } else {
+            // On Mac, we do not get any details regarding the (trackball) scroll event,
+            // nor can we rely on getSelection() changing for small movements. As a result, we
+            // do not setup any auto scroll lock behavior. Mac users have to manually pause and
+            // unpause if they are looking at a particular item in a high volume stream of events.
+        }
     }
 
     private void setScrollToLatestLog(boolean scroll, boolean updateCheckbox) {
         mShouldScrollToLatestLog = scroll;
 
         if (updateCheckbox) {
-            mScrollToLastCheckBox.setSelection(scroll);
+            mPauseLogcatCheckBox.setSelection(!scroll);
         }
 
         if (scroll) {
