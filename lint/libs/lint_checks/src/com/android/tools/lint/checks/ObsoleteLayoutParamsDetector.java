@@ -43,6 +43,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARG
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_LEFT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_RIGHT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_MARGIN_TOP;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_ROW_SPAN;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_SPAN;
@@ -233,8 +234,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     @Override
     public void visitAttribute(XmlContext context, Attr attribute) {
         String name = attribute.getLocalName();
-        if (name != null && name.startsWith("layout_") &&                //$NON-NLS-1$
-                ANDROID_URI.equals(attribute.getNamespaceURI())) {
+        if (name != null && name.startsWith(ATTR_LAYOUT_PREFIX)
+                && ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (VALID.contains(name)) {
                 return;
             }

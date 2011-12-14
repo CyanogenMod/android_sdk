@@ -112,10 +112,12 @@ public class LintConstants {
 
     // Attributes: Resources
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
+    public static final String ATTR_TYPE = "type";                     //$NON-NLS-1$
     public static final String ATTR_PARENT = "parent";                 //$NON-NLS-1$
     public static final String ATTR_TRANSLATABLE = "translatable";     //$NON-NLS-1$
 
     // Attributes: Layout
+    public static final String ATTR_LAYOUT_PREFIX = "layout_";         //$NON-NLS-1$
     public static final String ATTR_CLASS = "class";                   //$NON-NLS-1$
     public static final String ATTR_STYLE = "style";                   //$NON-NLS-1$
 
@@ -190,6 +192,9 @@ public class LintConstants {
     public static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$
     public static final String VALUE_MATCH_PARENT = "match_parent";     //$NON-NLS-1$
     public static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
+
+    // Values: Resources
+    public static final String VALUE_ID = "id";                        //$NON-NLS-1$
 
     // Values: Drawables
     public static final String VALUE_DISABLED = "disabled";            //$NON-NLS-1$
