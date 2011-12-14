@@ -16,15 +16,21 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
 import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.GRID_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.HORIZONTAL_SCROLL_VIEW;
 import static com.android.tools.lint.detector.api.LintConstants.LINEAR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.MERGE;
+import static com.android.tools.lint.detector.api.LintConstants.RADIO_GROUP;
+import static com.android.tools.lint.detector.api.LintConstants.RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.SCROLL_VIEW;
+import static com.android.tools.lint.detector.api.LintConstants.TABLE_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.TABLE_ROW;
 
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
@@ -82,29 +88,28 @@ public class UselessViewDetector extends LayoutDetector {
         return Speed.FAST;
     }
 
-    private static final List<String> CONTAINERS = new ArrayList<String>(20);
+    private static final List<String> CONTAINERS = new ArrayList<String>(18);
     static {
-        CONTAINERS.add("android.gesture.GestureOverlayView"); //$NON-NLS-1$
-        CONTAINERS.add("AbsoluteLayout");                     //$NON-NLS-1$
+        CONTAINERS.add(ABSOLUTE_LAYOUT);
         CONTAINERS.add(FRAME_LAYOUT);
-        CONTAINERS.add("GridLayout");                         //$NON-NLS-1$
+        CONTAINERS.add(GRID_LAYOUT);
         CONTAINERS.add(GRID_VIEW);
         CONTAINERS.add(HORIZONTAL_SCROLL_VIEW);
         CONTAINERS.add("ImageSwitcher");                      //$NON-NLS-1$
         CONTAINERS.add(LINEAR_LAYOUT);
-        CONTAINERS.add("RadioGroup");                         //$NON-NLS-1$
-        CONTAINERS.add("RelativeLayout");                     //$NON-NLS-1$
+        CONTAINERS.add(RADIO_GROUP);
+        CONTAINERS.add(RELATIVE_LAYOUT);
         CONTAINERS.add(SCROLL_VIEW);
         CONTAINERS.add("SlidingDrawer");                      //$NON-NLS-1$
         CONTAINERS.add("StackView");                          //$NON-NLS-1$
-        CONTAINERS.add("TabHost");                            //$NON-NLS-1$
-        CONTAINERS.add("TableLayout");                        //$NON-NLS-1$
-        CONTAINERS.add("TableRow");                           //$NON-NLS-1$
+        CONTAINERS.add(TABLE_LAYOUT);
+        CONTAINERS.add(TABLE_ROW);
         CONTAINERS.add("TextSwitcher");                       //$NON-NLS-1$
         CONTAINERS.add("ViewAnimator");                       //$NON-NLS-1$
         CONTAINERS.add("ViewFlipper");                        //$NON-NLS-1$
         CONTAINERS.add("ViewSwitcher");                       //$NON-NLS-1$
         // Available ViewGroups that are not included by this check:
+        //  CONTAINERS.add("android.gesture.GestureOverlayView");
         //  CONTAINERS.add("AdapterViewFlipper");
         //  CONTAINERS.add("DialerFilter");
         //  CONTAINERS.add("ExpandableListView");
@@ -113,6 +118,7 @@ public class UselessViewDetector extends LayoutDetector {
         //  CONTAINERS.add("merge");
         //  CONTAINERS.add("SearchView");
         //  CONTAINERS.add("TabWidget");
+        //  CONTAINERS.add("TabHost");
     }
     @Override
     public Collection<String> getApplicableElements() {
@@ -175,6 +181,12 @@ public class UselessViewDetector extends LayoutDetector {
         if (nodeHasBackground && parentHasBackground) {
             // Can't remove because both define a background, and they might both be
             // visible (e.g. through transparency or padding).
+            return;
+        }
+
+        // Certain parents are special - such as the TabHost and the GestureOverlayView -
+        // where we want to leave things alone.
+        if (!CONTAINERS.contains(parentTag)) {
             return;
         }
 

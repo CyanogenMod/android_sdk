@@ -37,4 +37,11 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
                 "no background, no id)",
             lintFiles("res/layout/useless.xml"));
     }
+
+    public void testTabHost() throws Exception {
+        assertEquals(
+            "No warnings.",
+
+            lintFiles("res/layout/useless2.xml"));
+    }
 }
