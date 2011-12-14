@@ -48,5 +48,4 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
 
             lintFiles("wrongid/layout1.xml=>res/layout/layout1.xml"));
     }
-
 }

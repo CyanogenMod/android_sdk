@@ -43,7 +43,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
             boolean ok = dir.mkdirs();
             assertTrue(dir.getPath(), ok);
         }
-        Project project = new Project(client, dir, dir);
+        Project project = client.getProject(dir, dir);
 
         ProjectLintConfiguration config =
                 new ProjectLintConfiguration(client, project, parent, false /*fatalOnly*/);
@@ -72,11 +72,11 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
 
         File dir = getTargetDir();
         assertTrue(dir.mkdirs());
-        Project project = new Project(client, dir, dir);
+        Project project = client.getProject(dir, dir);
 
         File otherDir = new File(dir, "otherConfig");
         assertTrue(otherDir.mkdir());
-        Project otherProject = new Project(client, otherDir, otherDir);
+        Project otherProject = client.getProject(otherDir, otherDir);
 
         ProjectLintConfiguration otherConfig =
                 new ProjectLintConfiguration(client, otherProject, parent, false);
@@ -130,7 +130,7 @@ public class ProjectLintConfigurationTest extends AdtProjectTest {
 
         File dir = getTargetDir();
         assertTrue(dir.mkdirs());
-        Project project = new Project(client, dir, dir);
+        Project project = client.getProject(dir, dir);
 
         ProjectLintConfiguration config =
                 new ProjectLintConfiguration(client, project, parent, false /*fatalOnly*/);

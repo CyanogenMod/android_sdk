@@ -221,4 +221,16 @@ public class LintUtils {
 
         return d[m][n];
     }
+
+    /**
+     * Returns true if assertions are enabled
+     *
+     * @return true if assertions are enabled
+     */
+    @SuppressWarnings("all")
+    public static boolean assertionsEnabled() {
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // Intentional side-effect
+        return assertionsEnabled;
+    }
 }

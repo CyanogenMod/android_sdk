@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Issue;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IMarkerDelta;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -73,19 +74,22 @@ import java.util.List;
 class LintList extends Composite implements IResourceChangeListener, ControlListener {
     private static final int LINE_COLUMN_WIDTH = 50;
     private static final int FILENAME_COLUMN_WIDTH = 150;
+    private static final int PROJECT_COLUMN_WIDTH = 100;
     private static final Object UPDATE_MARKERS_FAMILY = new Object();
 
     private final IWorkbenchPartSite mSite;
     private final TableViewer mTableViewer;
     private final Table mTable;
+    private TableColumn mProjectColumn;
     private TableColumn mFileColumn;
     private TableColumn mLineColumn;
     private TableColumn mMessageColumn;
 
-    private List<IResource> mResources;
+    private List<? extends IResource> mResources;
     private boolean mShowFileNames;
     private int mErrorCount;
     private int mWarningCount;
+    private boolean mShowProjectColumn;
     private final UpdateMarkersJob mUpdateMarkersJob = new UpdateMarkersJob();
 
     LintList(IWorkbenchPartSite site, Composite parent) {
@@ -110,6 +114,11 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
         mFileColumn = fileViewerColumn.getColumn();
         mFileColumn.setWidth(100);
         mFileColumn.setText("File");
+
+        TableViewerColumn projectViewerColumn = new TableViewerColumn(mTableViewer, SWT.NONE);
+        mProjectColumn = projectViewerColumn.getColumn();
+        mProjectColumn.setWidth(100);
+        mProjectColumn.setText("Project");
 
         TableViewerColumn lineViewerColumn = new TableViewerColumn(mTableViewer, SWT.NONE);
         mLineColumn = lineViewerColumn.getColumn();
@@ -147,11 +156,20 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             availableWidth -= 2;
         }
 
+        if (mShowProjectColumn) {
+            mProjectColumn.setWidth(PROJECT_COLUMN_WIDTH);
+            availableWidth -= PROJECT_COLUMN_WIDTH;
+        } else {
+            mProjectColumn.setWidth(0);
+            // Account for a little bit of space required for empty column
+            availableWidth -= 2;
+        }
+
         // Name absorbs everything else
         mMessageColumn.setWidth(availableWidth);
     }
 
-    public void setResources(List<IResource> resources) {
+    public void setResources(List<? extends IResource> resources) {
         mResources = resources;
         List<IMarker> markerList = getMarkers();
         mTableViewer.setInput(markerList);
@@ -162,6 +180,21 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
 
         if (mTable.getItemCount() > 0) {
             mTable.select(0);
+        }
+
+        mShowProjectColumn = false;
+        if (resources != null) {
+            IResource firstProject = null;
+            for (IResource resource : resources) {
+                if (resource instanceof IProject) {
+                    if (firstProject == null) {
+                        firstProject = resource;
+                    } else {
+                        mShowProjectColumn = true;
+                        break;
+                    }
+                }
+            }
         }
 
         updateColumnWidths(); // in case mShowFileNames changed
@@ -336,10 +369,20 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                     case 0:
                         return (String) marker.getAttribute(IMarker.MESSAGE);
                     case 1:
-                        return marker.getResource().getName();
-                    case 2: {
-                        int line = marker.getAttribute(IMarker.LINE_NUMBER, 0);
-                        return Integer.toString(line);
+                        if (marker.getResource() instanceof IFile) {
+                            return marker.getResource().getName();
+                        } else {
+                            return "";
+                        }
+                    case 2:
+                        return marker.getResource().getProject().getName();
+                    case 3: {
+                        if (marker.getResource() instanceof IFile) {
+                            int line = marker.getAttribute(IMarker.LINE_NUMBER, 0);
+                            return Integer.toString(line);
+                        } else {
+                            return "";
+                        }
                     }
                 }
             } catch (CoreException e) {
@@ -463,7 +506,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
      *
      * @return the list of resources being shown in this composite
      */
-    public List<IResource> getResources() {
+    public List<? extends IResource> getResources() {
         return mResources;
     }
 

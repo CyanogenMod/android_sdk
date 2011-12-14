@@ -21,6 +21,8 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IActionDelegate;
 
+import java.util.List;
+
 /** Action which clear lint markers from the current project */
 public class ClearLintMarkersAction implements IActionDelegate {
 
@@ -33,10 +35,10 @@ public class ClearLintMarkersAction implements IActionDelegate {
 
     @Override
     public void run(IAction action) {
-        IProject project = RunLintAction.getSelectedProject(mSelection);
-        if (project != null) {
+        List<IProject> projects = RunLintAction.getProjects(mSelection, false /*warn*/);
+        if (projects != null) {
             LintRunner.cancelCurrentJobs(false);
-            EclipseLintClient.clearMarkers(project);
+            EclipseLintClient.clearMarkers(projects);
         }
     }
 }

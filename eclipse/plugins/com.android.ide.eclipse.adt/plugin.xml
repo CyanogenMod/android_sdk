@@ -847,11 +847,11 @@
             visible="true">
             <action
                 class="com.android.ide.eclipse.adt.internal.lint.RunLintAction"
+                style="pulldown"
                 icon="icons/lintrun.png"
                 id="com.android.ide.eclipse.adt.ui.lintrunner"
                 label="Run Android Lint"
                 menubarPath="Window/additions"
-                style="push"
                 toolbarPath="android_project"
                 tooltip="Runs Android Lint">
             </action>

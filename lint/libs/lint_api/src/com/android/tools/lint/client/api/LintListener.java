@@ -35,6 +35,9 @@ public interface LintListener {
         /** Lint is about to check the given project, see {@link Context#getProject()} */
         SCANNING_PROJECT,
 
+        /** Lint is about to check the given library project, see {@link Context#getProject()} */
+        SCANNING_LIBRARY_PROJECT,
+
         /** Lint is about to check the given file, see {@link Context#file} */
         SCANNING_FILE,
 

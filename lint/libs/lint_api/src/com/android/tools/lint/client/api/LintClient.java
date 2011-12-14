@@ -31,7 +31,9 @@ import org.xml.sax.InputSource;
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -194,5 +196,33 @@ public abstract class LintClient {
         }
 
         return folders;
+    }
+
+    /**
+     * A map from directory to existing projects, or null. Used to ensure that
+     * projects are unique for a directory (in case we process a library project
+     * before its including project for example)
+     */
+    private Map<File, Project> mDirToProject;
+
+    /**
+     * Returns a project for the given directory. This should return the same
+     * project for the same directory if called repeatedly.
+     *
+     * @param dir the directory containing the project
+     * @param referenceDir See {@link Project#getReferenceDir()}.
+     * @return a project, never null
+     */
+    public Project getProject(File dir, File referenceDir) {
+        if (mDirToProject == null) {
+            mDirToProject = new HashMap<File, Project>();
+        }
+        Project project = mDirToProject.get(dir);
+        if (project != null) {
+            return project;
+        }
+        project = Project.create(this, dir, referenceDir);
+        mDirToProject.put(dir, project);
+        return project;
     }
 }

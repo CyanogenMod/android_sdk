@@ -50,6 +50,18 @@ public class Context {
     /** The project containing the file being checked */
     private final Project mProject;
 
+    /**
+     * The "main" project. For normal projects, this is the same as {@link #mProject},
+     * but for library projects, it's the root project that includes (possibly indirectly)
+     * the various library projects and their library projects.
+     * <p>
+     * Note that this is a property on the {@link Context}, not the
+     * {@link Project}, since a library project can be included from multiple
+     * different top level projects, so there isn't <b>one</b> main project,
+     * just one per main project being analyzed with its library projects.
+     */
+    private final Project mMainProject;
+
     /** The current configuration controlling which checks are enabled etc */
     private final Configuration mConfiguration;
 
@@ -78,15 +90,20 @@ public class Context {
      *
      * @param client the client requesting a lint check
      * @param project the project containing the file being checked
+     * @param main the main project if this project is a library project, or
+     *            null if this is not a library project. The main project is
+     *            the root project of all library projects, not necessarily the
+     *            directly including project.
      * @param file the file being checked
      * @param scope the scope for the lint job
      */
-    public Context(LintClient client, Project project, File file,
+    public Context(LintClient client, Project project, Project main, File file,
             EnumSet<Scope> scope) {
         this.file = file;
 
         mClient = client;
         mProject = project;
+        mMainProject = main;
         mScope = scope;
         mConfiguration = project.getConfiguration();
     }
@@ -116,6 +133,17 @@ public class Context {
      */
     public Project getProject() {
         return mProject;
+    }
+
+    /**
+     * Returns the main project if this project is a library project, or self
+     * if this is not a library project. The main project is the root project
+     * of all library projects, not necessarily the directly including project.
+     *
+     * @return the main project, never null
+     */
+    public Project getMainProject() {
+        return mMainProject != null ? mMainProject : mProject;
     }
 
     /**

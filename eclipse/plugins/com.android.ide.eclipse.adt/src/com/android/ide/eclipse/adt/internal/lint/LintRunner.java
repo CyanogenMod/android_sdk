@@ -20,6 +20,8 @@ import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.SdkConstants;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.Lint;
@@ -40,8 +42,12 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Eclipse implementation for running lint on workspace files and projects.
@@ -53,16 +59,24 @@ public class LintRunner {
      * Runs lint and updates the markers, and waits for the result. Returns
      * true if fatal errors were found.
      *
-     * @param resource the resource (project, folder or file) to be analyzed
+     * @param resources the resources (project, folder or file) to be analyzed
      * @param doc the associated document, if known, or null
      * @param fatalOnly if true, only report fatal issues (severity=error)
      * @return true if any fatal errors were encountered.
      */
-    public static boolean runLint(IResource resource, IDocument doc, boolean fatalOnly) {
-        CheckFileJob job = (CheckFileJob) startLint(resource, doc, fatalOnly);
+    private static boolean runLint(List<? extends IResource> resources, IDocument doc,
+            boolean fatalOnly) {
+        resources = addLibraries(resources);
+        CheckFileJob job = (CheckFileJob) startLint(resources, doc, fatalOnly, false /*show*/);
         try {
             job.join();
-            return job.isFatal();
+            boolean fatal = job.isFatal();
+
+            if (fatal) {
+                LintViewPart.show(resources);
+            }
+
+            return fatal;
         } catch (InterruptedException e) {
             AdtPlugin.log(e, null);
         }
@@ -74,17 +88,26 @@ public class LintRunner {
      * Runs lint and updates the markers. Does not wait for the job to
      * finish - just returns immediately.
      *
-     * @param resource the resource (project, folder or file) to be analyzed
+     * @param resources the resources (project, folder or file) to be analyzed
      * @param doc the associated document, if known, or null
      * @param fatalOnly if true, only report fatal issues (severity=error)
+     * @param show if true, show the results in a {@link LintViewPart}
      * @return the job running lint in the background.
      */
-    public static Job startLint(IResource resource, IDocument doc, boolean fatalOnly) {
-        if (resource != null) {
+    public static Job startLint(List<? extends IResource> resources,
+            IDocument doc, boolean fatalOnly, boolean show) {
+        if (resources != null && !resources.isEmpty()) {
+            resources = addLibraries(resources);
+
             cancelCurrentJobs(false);
 
-            CheckFileJob job = new CheckFileJob(resource, doc, fatalOnly);
+            CheckFileJob job = new CheckFileJob(resources, doc, fatalOnly);
             job.schedule();
+
+            if (show) {
+                // Show lint view where the results are listed
+                LintViewPart.show(resources);
+            }
             return job;
         }
 
@@ -102,12 +125,13 @@ public class LintRunner {
      */
     public static boolean runLintOnExport(Shell shell, IProject project) {
         if (AdtPrefs.getPrefs().isLintOnExport()) {
-            boolean fatal = LintRunner.runLint(project, null, true /*fatalOnly*/);
+            boolean fatal = LintRunner.runLint(Collections.singletonList(project), null,
+                    true /*fatalOnly*/);
             if (fatal) {
                 MessageDialog.openWarning(shell,
                         "Export Aborted",
                         "Export aborted because fatal lint errors were found. These " +
-                        "are listed in the Problems view. Either fix these before " +
+                        "are listed in the Lint View. Either fix these before " +
                         "running Export again, or turn off \"Run full error check " +
                         "when exporting app\" in the Android > Lint Error Checking " +
                         "preference page.");
@@ -143,18 +167,59 @@ public class LintRunner {
         }
     }
 
+    /** If the resource list contains projects, add in any library projects as well */
+    private static List<? extends IResource> addLibraries(List<? extends IResource> resources) {
+        if (resources != null && !resources.isEmpty()) {
+            boolean haveProjects = false;
+            for (IResource resource : resources) {
+                if (resource instanceof IProject) {
+                    haveProjects = true;
+                    break;
+                }
+            }
+
+            if (haveProjects) {
+                List<IResource> result = new ArrayList<IResource>();
+                Map<IProject, IProject> allProjects = new IdentityHashMap<IProject, IProject>();
+                List<IProject> projects = new ArrayList<IProject>();
+                for (IResource resource : resources) {
+                    if (resource instanceof IProject) {
+                        IProject project = (IProject) resource;
+                        allProjects.put(project, project);
+                        projects.add(project);
+                    } else {
+                        result.add(resource);
+                    }
+                }
+                for (IProject project : projects) {
+                    ProjectState state = Sdk.getProjectState(project);
+                    for (IProject library : state.getFullLibraryProjects()) {
+                        allProjects.put(library, library);
+                    }
+                }
+                for (IProject project : allProjects.keySet()) {
+                    result.add(project);
+                }
+
+                return result;
+            }
+        }
+
+        return resources;
+    }
+
     private static final class CheckFileJob extends Job {
         /** Job family */
         private static final Object FAMILY_RUN_LINT = new Object();
-        private final IResource mResource;
+        private final List<? extends IResource> mResources;
         private final IDocument mDocument;
         private Lint mLint;
         private boolean mFatal;
         private boolean mFatalOnly;
 
-        private CheckFileJob(IResource resource, IDocument doc, boolean fatalOnly) {
+        private CheckFileJob(List<? extends IResource> resources, IDocument doc, boolean fatalOnly) {
             super("Running Android Lint");
-            mResource = resource;
+            mResources = resources;
             mDocument = doc;
             mFatalOnly = fatalOnly;
         }
@@ -177,38 +242,46 @@ public class LintRunner {
             try {
                 monitor.beginTask("Looking for errors", IProgressMonitor.UNKNOWN);
                 IssueRegistry registry = EclipseLintClient.getRegistry();
-                File file = AdtUtils.getAbsolutePath(mResource).toFile();
-                EnumSet<Scope> scope;
-                if (mResource instanceof IProject) {
-                    scope = Scope.ALL;
-                } else if (mResource instanceof IFile
-                        && AdtUtils.endsWithIgnoreCase(mResource.getName(), DOT_XML)) {
-                    if (mResource.getName().equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
-                        scope = EnumSet.of(Scope.MANIFEST);
+                EnumSet<Scope> scope = Scope.ALL;
+                List<File> files = new ArrayList<File>(mResources.size());
+                for (IResource resource : mResources) {
+                    File file = AdtUtils.getAbsolutePath(resource).toFile();
+                    files.add(file);
+
+                    if (resource instanceof IProject) {
+                        scope = Scope.ALL;
+                    } else if (resource instanceof IFile
+                            && AdtUtils.endsWithIgnoreCase(resource.getName(), DOT_XML)) {
+                        if (resource.getName().equals(SdkConstants.FN_ANDROID_MANIFEST_XML)) {
+                            scope = EnumSet.of(Scope.MANIFEST);
+                        } else {
+                            scope = Scope.RESOURCE_FILE_SCOPE;
+                        }
                     } else {
-                        scope = Scope.RESOURCE_FILE_SCOPE;
+                        return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
+                                "Only XML files are supported for single file lint", null); //$NON-NLS-1$
                     }
-                } else {
-                    return new Status(Status.ERROR, AdtPlugin.PLUGIN_ID, Status.ERROR,
-                            "Only XML files are supported for single file lint", null); //$NON-NLS-1$
                 }
-                if (scope == Scope.RESOURCE_FILE_SCOPE || scope == EnumSet.of(Scope.MANIFEST)) {
-                    IMarker[] markers = EclipseLintClient.getMarkers(mResource);
-                    for (IMarker marker : markers) {
-                        String id = marker.getAttribute(MARKER_CHECKID_PROPERTY, ""); //$NON-NLS-1$
-                        Issue issue = registry.getIssue(id);
-                        if (issue == null || issue.getScope().equals(scope)) {
-                            marker.delete();
+                if (Scope.checkSingleFile(scope)) {
+                    // Delete specific markers
+                    for (IResource resource : mResources) {
+                        IMarker[] markers = EclipseLintClient.getMarkers(resource);
+                        for (IMarker marker : markers) {
+                            String id = marker.getAttribute(MARKER_CHECKID_PROPERTY, ""); //$NON-NLS-1$
+                            Issue issue = registry.getIssue(id);
+                            if (issue == null || issue.getScope().equals(scope)) {
+                                marker.delete();
+                            }
                         }
                     }
                 } else {
-                    EclipseLintClient.clearMarkers(mResource);
+                    EclipseLintClient.clearMarkers(mResources);
                 }
 
-                EclipseLintClient client = new EclipseLintClient(registry, mResource,
+                EclipseLintClient client = new EclipseLintClient(registry, mResources,
                             mDocument, mFatalOnly);
                 mLint = new Lint(registry, client);
-                mLint.analyze(Collections.singletonList(file), scope);
+                mLint.analyze(files, scope);
                 mFatal = client.hasFatalErrors();
                 return Status.OK_STATUS;
             } catch (Exception e) {

@@ -878,6 +878,11 @@ public class Main extends LintClient {
                             "\nScanning %1$s: ",
                             context.getProject().getDir().getName()));
                     break;
+                case SCANNING_LIBRARY_PROJECT:
+                    System.out.print(String.format(
+                            "\n         - %1$s: ",
+                            context.getProject().getDir().getName()));
+                    break;
                 case SCANNING_FILE:
                     System.out.print('.');
                     break;

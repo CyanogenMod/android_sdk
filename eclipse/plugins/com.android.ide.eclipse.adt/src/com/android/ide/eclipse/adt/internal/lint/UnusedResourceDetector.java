@@ -43,7 +43,7 @@ import java.util.List;
  * Finds unused resources, optimized for Eclipse to more effectively and
  * accurately pull out usage information for R fields
  */
-class UnusedResourceDetector extends com.android.tools.lint.checks.UnusedResourceDetector {
+public class UnusedResourceDetector extends com.android.tools.lint.checks.UnusedResourceDetector {
     private static final String R_PREFIX = "R."; //$NON-NLS-1$
 
     public UnusedResourceDetector() {

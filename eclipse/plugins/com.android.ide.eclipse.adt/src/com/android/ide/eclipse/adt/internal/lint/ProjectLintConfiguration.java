@@ -48,8 +48,8 @@ class ProjectLintConfiguration extends DefaultConfiguration {
     private static ProjectLintConfiguration create(LintClient client, IProject project,
             Configuration parent, boolean fatalOnly) {
         File dir = AdtUtils.getAbsolutePath(project).toFile();
-        Project lingProject = new Project(client, dir, dir);
-        return new ProjectLintConfiguration(client, lingProject, parent, fatalOnly);
+        Project lintProject = client.getProject(dir, dir);
+        return new ProjectLintConfiguration(client, lintProject, parent, fatalOnly);
     }
 
     public static ProjectLintConfiguration get(LintClient client, IProject project,

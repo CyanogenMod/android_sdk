@@ -48,7 +48,7 @@ public class ProguardDetector extends Detector {
             8,
             Severity.ERROR,
             ProguardDetector.class,
-            EnumSet.of(Scope.PROGUARD)).setMoreInfo(
+            EnumSet.of(Scope.PROGUARD_FILE)).setMoreInfo(
             "http://http://code.google.com/p/android/issues/detail?id=16384"); //$NON-NLS-1$
 
     @Override

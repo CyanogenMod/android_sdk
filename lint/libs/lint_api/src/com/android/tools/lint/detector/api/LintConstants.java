@@ -192,6 +192,8 @@ public class LintConstants {
     public static final String VALUE_FILL_PARENT = "fill_parent";       //$NON-NLS-1$
     public static final String VALUE_MATCH_PARENT = "match_parent";     //$NON-NLS-1$
     public static final String VALUE_VERTICAL = "vertical";             //$NON-NLS-1$
+    public static final String VALUE_TRUE = "true";                     //$NON-NLS-1$
+
 
     // Values: Resources
     public static final String VALUE_ID = "id";                        //$NON-NLS-1$
@@ -235,4 +237,9 @@ public class LintConstants {
     // Packages
     public static final String WIDGET_PKG_PREFIX = "android.widget.";   //$NON-NLS-1$
     public static final String VIEW_PKG_PREFIX = "android.view.";       //$NON-NLS-1$
+
+    // Project properties
+    public static final String ANDROID_LIBRARY = "android.library";     //$NON-NLS-1$
+    public static final String ANDROID_LIBRARY_REFERENCE_FORMAT = "android.library.reference.%1$d";//$NON-NLS-1$
+    public static final String PROJECT_PROPERTIES = "project.properties";//$NON-NLS-1$
 }

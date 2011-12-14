@@ -49,6 +49,7 @@ import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -186,7 +187,8 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         IssueRegistry registry = EclipseLintClient.getRegistry();
         Issue issue = registry.getIssue(id);
         if (issue != null) {
-            EclipseLintClient mClient = new EclipseLintClient(registry, resource, null, false);
+            EclipseLintClient mClient = new EclipseLintClient(registry,
+                    Collections.singletonList(resource), null, false);
             Configuration configuration = mClient.getConfiguration(null);
             if (thisFileOnly && configuration instanceof DefaultConfiguration) {
                 File file = AdtUtils.getAbsolutePath(resource).toFile();
