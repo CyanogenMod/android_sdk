@@ -19,6 +19,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.lint.LintRunner;
+import com.android.ide.eclipse.adt.internal.lint.LintViewPart;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -311,6 +312,8 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 for (IProject project : projects) {
                     if (project.isOpen() && BaseProjectHelper.isAndroidProject(project)) {
                         LintRunner.startLint(project, null, false);
+                        // Show lint view where the results are listed
+                        LintViewPart.show(project);
                     }
                 }
             }
