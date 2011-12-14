@@ -24,8 +24,10 @@ import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STY
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ATTR;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STRING_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
 
 import com.android.resources.ResourceType;
@@ -420,7 +422,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
                 TAG_STYLE,
-                TAG_RESOURCES
+                TAG_RESOURCES,
+                TAG_ARRAY,
+                TAG_STRING_ARRAY
         );
     }
 
@@ -450,7 +454,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 }
             }
         } else {
-            assert TAG_STYLE.equals(element.getTagName());
+            assert TAG_STYLE.equals(element.getTagName())
+                || TAG_ARRAY.equals(element.getTagName())
+                || TAG_STRING_ARRAY.equals(element.getTagName());
             // Look for ?attr/ and @dimen/foo etc references in the item children
             for (Element item : LintUtils.getChildren(element)) {
                 NodeList childNodes = item.getChildNodes();
