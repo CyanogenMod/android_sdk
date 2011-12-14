@@ -43,13 +43,15 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
             "MergeRootFrame", //$NON-NLS-1$
             "Checks whether a root <FrameLayout> can be replaced with a <merge> tag",
             "If a <FrameLayout> is the root of a layout and does not provide background " +
-            "or padding etc, it can be replaced with a <merge> tag which is slightly " +
-            "more efficient.",
+            "or padding etc, it can often be replaced with a <merge> tag which is slightly " +
+            "more efficient. Note that this depends on context, so make sure you understand " +
+            "how the <merge> tag works before proceeding.",
             Category.PERFORMANCE,
             4,
             Severity.WARNING,
             MergeRootFrameLayoutDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            "http://android-developers.blogspot.com/2009/03/android-layout-tricks-3-optimize-by.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {
