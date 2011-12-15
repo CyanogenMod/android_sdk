@@ -668,6 +668,23 @@ public class Main extends LintClient {
         return new CliConfiguration(mDefaultConfiguration, project);
     }
 
+    /** File content cache */
+    private Map<File, String> mFileContents = new HashMap<File, String>(100);
+
+    /** Read the contents of the given file, possibly cached */
+    private String getContents(File file) {
+        String s = mFileContents.get(file);
+        if (s == null) {
+            s = readFile(file);
+            if (s == null) {
+                s = "";
+            }
+            mFileContents.put(file, s);
+        }
+
+        return s;
+    }
+
     @Override
     public void report(Context context, Issue issue, Location location, String message,
             Object data) {
@@ -705,7 +722,7 @@ public class Main extends LintClient {
                         warning.fileContents = context.getContents();
                     }
                     if (warning.fileContents == null) {
-                        warning.fileContents = readFile(location.getFile());
+                        warning.fileContents = getContents(location.getFile());
                     }
 
                     if (mShowLines) {
