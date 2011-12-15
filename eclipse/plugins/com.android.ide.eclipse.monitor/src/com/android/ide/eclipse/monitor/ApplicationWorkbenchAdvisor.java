@@ -18,6 +18,7 @@ package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.ddms.Perspective;
 
+import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
@@ -26,4 +27,9 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         return Perspective.ID;
     }
 
+    @Override
+    public void preWindowOpen(IWorkbenchWindowConfigurer configurer) {
+        configurer.setShowStatusLine(true);
+        configurer.setShowPerspectiveBar(true);
+    }
 }
