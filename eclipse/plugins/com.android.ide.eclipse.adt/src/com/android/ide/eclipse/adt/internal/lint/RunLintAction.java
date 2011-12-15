@@ -16,10 +16,19 @@
 
 package com.android.ide.eclipse.adt.internal.lint;
 
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
+import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -37,12 +46,56 @@ public class RunLintAction implements IWorkbenchWindowActionDelegate, IObjectAct
     }
 
     public void run(IAction action) {
-        final IProject project = RunLintAction.getSelectedProject(mSelection);
+        IProject project = RunLintAction.getSelectedProject(mSelection);
+
+        if (project == null) {
+            // Try to look at the active editor instead
+            IFile file = AdtUtils.getActiveFile();
+            if (file != null) {
+                project = file.getProject();
+            }
+        }
+
+        if (project == null || !BaseProjectHelper.isAndroidProject(project)) {
+            // If we didn't find a default project based on the selection, check how many
+            // open Android projects we can find in the current workspace. If there's only
+            // one, we'll just select it by default.
+            IJavaProject[] projects = AdtUtils.getOpenAndroidProjects();
+            if (projects.length == 1) {
+                project = projects[0].getProject();
+            } else {
+                // ...or, if there is just one non-library project, choose that one
+                project = null;
+                for (IJavaProject p : projects) {
+                    IProject ip = p.getProject();
+                    ProjectState state = Sdk.getProjectState(ip);
+                    if (state != null && !state.isLibrary()) {
+                        if (project != null) {
+                            // More than one
+                            project = null;
+                            break;
+                        } else {
+                            project = ip;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (project != null && !BaseProjectHelper.isAndroidProject(project)) {
+            MessageDialog.openWarning(AdtPlugin.getDisplay().getActiveShell(), "Lint",
+                    "Select an Android project.");
+            return;
+        }
+
         if (project != null) {
             LintRunner.startLint(project, null, false);
 
             // Show lint view where the results are listed
             LintViewPart.show(project);
+        } else {
+            MessageDialog.openWarning(AdtPlugin.getDisplay().getActiveShell(), "Lint",
+                    "Could not run Lint: Select a project first.");
         }
     }
 

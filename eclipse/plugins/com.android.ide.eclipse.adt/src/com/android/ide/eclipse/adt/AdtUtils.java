@@ -16,8 +16,12 @@
 
 package com.android.ide.eclipse.adt;
 
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
+import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -25,6 +29,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -377,5 +382,18 @@ public class AdtUtils {
         }
 
         return matchingMarkers;
+    }
+
+    /**
+     * Returns the available and open Android projects
+     *
+     * @return the available and open Android projects, never null
+     */
+    public static IJavaProject[] getOpenAndroidProjects() {
+        return BaseProjectHelper.getAndroidProjects(new IProjectFilter() {
+            public boolean accept(IProject project) {
+                return project.isAccessible();
+            }
+        });
     }
 }

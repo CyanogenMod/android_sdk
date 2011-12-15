@@ -39,8 +39,6 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescripto
 import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvider;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectChooserHelper.ProjectCombo;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
@@ -712,13 +710,7 @@ class NewXmlFileCreationPage extends WizardPage {
             // If we didn't find a default project based on the selection, check how many
             // open Android projects we can find in the current workspace. If there's only
             // one, we'll just select it by default.
-
-            IJavaProject[] projects = BaseProjectHelper.getAndroidProjects(new IProjectFilter() {
-                public boolean accept(IProject project) {
-                    return project.isAccessible();
-                }
-            });
-
+            IJavaProject[] projects = AdtUtils.getOpenAndroidProjects();
             if (projects != null && projects.length == 1) {
                 targetScore = 1;
                 targetProject = projects[0].getProject();
