@@ -24,6 +24,7 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 
 import org.eclipse.core.resources.IFile;
@@ -189,7 +190,13 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         if (issue != null) {
             EclipseLintClient mClient = new EclipseLintClient(registry,
                     Collections.singletonList(resource), null, false);
-            Configuration configuration = mClient.getConfiguration(null);
+            Project project = null;
+            IProject eclipseProject = resource.getProject();
+            if (eclipseProject != null) {
+                File dir = AdtUtils.getAbsolutePath(eclipseProject).toFile();
+                project = mClient.getProject(dir, dir);
+            }
+            Configuration configuration = mClient.getConfiguration(project);
             if (thisFileOnly && configuration instanceof DefaultConfiguration) {
                 File file = AdtUtils.getAbsolutePath(resource).toFile();
                 ((DefaultConfiguration) configuration).ignore(issue, file);
