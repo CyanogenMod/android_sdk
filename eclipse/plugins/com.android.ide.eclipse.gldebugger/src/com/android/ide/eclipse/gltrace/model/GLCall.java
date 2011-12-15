@@ -78,6 +78,10 @@ public class GLCall {
         return mMessage.getFunction();
     }
 
+    public int getContextId() {
+        return mMessage.getContextId();
+    }
+
     public List<DataType> getArgsList() {
         return mMessage.getArgsList();
     }

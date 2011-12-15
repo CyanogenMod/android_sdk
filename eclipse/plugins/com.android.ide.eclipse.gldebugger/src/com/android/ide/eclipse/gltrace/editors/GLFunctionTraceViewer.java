@@ -25,6 +25,7 @@ import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -33,6 +34,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -251,14 +253,22 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         table.setLinesVisible(true);
 
         mFrameTableViewer = new TableViewer(table);
+        CellLabelProvider labelProvider = new GLFrameLabelProvider();
 
-        // single column that has a list of function calls
+        // column showing the GL context id
         TableViewerColumn tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        tvc.setLabelProvider(labelProvider);
         TableColumn column = tvc.getColumn();
+        column.setText("Context");
+        column.setWidth(50);
+
+        // column showing the GL function called
+        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        tvc.setLabelProvider(labelProvider);
+        column = tvc.getColumn();
         column.setText("Function");
         column.setWidth(400);
 
-        tvc.setLabelProvider(new GLFrameLabelProvider());
         mFrameTableViewer.setContentProvider(new GLFrameContentProvider());
 
         table.addSelectionListener(new SelectionAdapter() {
@@ -335,11 +345,28 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     private class GLFrameLabelProvider extends ColumnLabelProvider {
         @Override
-        public String getText(Object element) {
-            if (element instanceof GLCall) {
-                return formatGLCall((GLCall) element);
+        public void update(ViewerCell cell) {
+            Object element = cell.getElement();
+            if (!(element instanceof GLCall)) {
+                return;
             }
-            return element.toString();
+
+            GLCall c = (GLCall) element;
+            cell.setText(getColumnText(c, cell.getColumnIndex()));
+        }
+
+        private String getColumnText(GLCall c, int columnIndex) {
+            switch (columnIndex) {
+            case 0:
+                return Integer.toString(c.getContextId());
+            default:
+                try {
+                    return formatGLCall(c);
+                } catch (Exception e) {
+                    // in case of any formatting errors, just return the function name.
+                    return c.getFunction().toString();
+                }
+            }
         }
     }
 
