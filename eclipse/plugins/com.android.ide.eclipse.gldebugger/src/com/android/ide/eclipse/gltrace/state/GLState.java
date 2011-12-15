@@ -75,12 +75,20 @@ public class GLState {
         return vertexArrayData;
     }
 
+    private IGLProperty createFramebufferState() {
+        IGLProperty binding = new GLIntegerProperty(GLStateType.FRAMEBUFFER_BINDING, 0);
+        GLCompositeProperty framebufferState = new GLCompositeProperty(
+                GLStateType.FRAMEBUFFER_STATE,
+                binding);
+        return framebufferState;
+    }
+
     /** Construct the default OpenGL State hierarchy. */
     public static IGLProperty createDefaultState() {
-        // TODO: Currently, this only models a tiny subset of the OpenGL state: the properties for
-        // vertex array data.
+        // TODO: Currently, this only models a tiny subset of the OpenGL state.
         GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE,
-                sGLState.createVertexArrayData());
+                sGLState.createVertexArrayData(),
+                sGLState.createFramebufferState());
         return glState;
     }
 }

@@ -36,7 +36,15 @@ public enum GLStateType {
             ARRAY_BUFFER_BINDING("Current Buffer Binding"),
             ELEMENT_ARRAY_BUFFER_BINDING("Element Array Buffer Binding"),
             VERTEX_ATTRIB_ARRAY_BUFFER_BINDINGS("Attribute Array Buffer Bindings"),
-            VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_PER_INDEX("Attribute Array Buffer Binding");
+            VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_PER_INDEX("Attribute Array Buffer Binding"),
+
+    FRAMEBUFFER_STATE("Framebuffer State"),
+        FRAMEBUFFER_BINDING("Framebuffer Binding"),
+        FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE("Framebuffer object type"),
+        FRAMEBUFFER_ATTACHMENT_OBJECT_NAME("Framebuffer object name"),
+        FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL("Framebuffer texture level"),
+        FRAMEBUFFER_ATTACHEMENT_TEXTURE_CUBE_MAP_FACE("Framebuffer texture cubemap face");
+
 
     private final String mDescription;
 
