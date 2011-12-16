@@ -5,4 +5,5 @@ Bundle-SymbolicName: com.android.ide.eclipse.gldebugger.tests
 Bundle-Version: 16.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.junit4;bundle-version="4.5.0",
- com.android.ide.eclipse.gldebugger
+ com.android.ide.eclipse.gldebugger,
+ org.eclipse.swt

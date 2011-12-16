@@ -190,7 +190,7 @@ void, glGetShaderInfoLog, GLuint shader, GLsizei bufsize, GLsizei* length, GLcha
 void, glGetShaderPrecisionFormat, GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision
 void, glGetShaderSource, GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source
 void, glGetShaderiv, GLuint shader, GLenum pname, GLint* params
-const GLubyte* , glGetString, GLenum name
+const GLchar* , glGetString, GLenum name
 void, glGetTexEnvfv, GLenum env, GLenum pname, GLfloat* params
 void, glGetTexEnviv, GLenum env, GLenum pname, GLint* params
 void, glGetTexEnvxv, GLenum env, GLenum pname, GLfixed* params
