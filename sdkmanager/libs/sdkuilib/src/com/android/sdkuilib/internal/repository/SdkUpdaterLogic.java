@@ -70,7 +70,7 @@ class SdkUpdaterLogic {
     public List<ArchiveInfo> getAllRemoteArchives(
             SdkSources sources,
             Package[] localPkgs,
-            boolean includeObsoletes) {
+            boolean includeAll) {
 
         List<Package> remotePkgs = new ArrayList<Package>();
         SdkSource[] remoteSources = sources.getAllSources();
@@ -79,7 +79,7 @@ class SdkUpdaterLogic {
         ArrayList<Archive> archives = new ArrayList<Archive>();
         for (Package remotePkg : remotePkgs) {
             // Only look for non-obsolete updates unless requested to include them
-            if (includeObsoletes || !remotePkg.isObsolete()) {
+            if (includeAll || !remotePkg.isObsolete()) {
                 // Found a suitable update. Only accept the remote package
                 // if it provides at least one compatible archive
 
@@ -137,7 +137,7 @@ class SdkUpdaterLogic {
             Collection<Archive> selectedArchives,
             SdkSources sources,
             Package[] localPkgs,
-            boolean includeObsoletes) {
+            boolean includeAll) {
 
         List<ArchiveInfo> archives = new ArrayList<ArchiveInfo>();
         List<Package>   remotePkgs = new ArrayList<Package>();
@@ -154,7 +154,7 @@ class SdkUpdaterLogic {
                     localArchives,
                     remotePkgs,
                     remoteSources,
-                    includeObsoletes);
+                    includeAll);
         }
 
         // Once we have a list of packages to install, we try to solve all their
@@ -198,7 +198,7 @@ class SdkUpdaterLogic {
      *  already scheduled for install. This method will add to the list.
      * @param sources The list of all sources, to fetch them as necessary.
      * @param localPkgs The list of all currently installed packages.
-     * @param includeObsoletes When true, this will list all platform
+     * @param includeAll When true, this will list all platforms.
      * (included these lower than the highest installed one) as well as
      * all obsolete packages of these platforms.
      */
@@ -206,7 +206,7 @@ class SdkUpdaterLogic {
             Collection<ArchiveInfo> archives,
             SdkSources sources,
             Package[] localPkgs,
-            boolean includeObsoletes) {
+            boolean includeAll) {
 
         // Create ArchiveInfos out of local (installed) packages.
         ArchiveInfo[] localArchives = createLocalArchives(localPkgs);
@@ -217,7 +217,7 @@ class SdkUpdaterLogic {
         float currentAddonScore = 0;
         float currentDocScore = 0;
         HashMap<String, Float> currentExtraScore = new HashMap<String, Float>();
-        if (!includeObsoletes) {
+        if (!includeAll) {
             if (localPkgs != null) {
                 for (Package p : localPkgs) {
                     int rev = p.getRevision();
@@ -257,7 +257,7 @@ class SdkUpdaterLogic {
 
         for (Package p : remotePkgs) {
             // Skip obsolete packages unless requested to include them.
-            if (p.isObsolete() && !includeObsoletes) {
+            if (p.isObsolete() && !includeAll) {
                 continue;
             }
 
@@ -314,7 +314,7 @@ class SdkUpdaterLogic {
                 if (pp.getIncludedAbi() == null) {
                     for (Package p2 : remotePkgs) {
                         if (!(p2 instanceof SystemImagePackage) ||
-                             (p2.isObsolete() && !includeObsoletes)) {
+                             (p2.isObsolete() && !includeAll)) {
                             continue;
                         }
                         SystemImagePackage sip = (SystemImagePackage) p2;
@@ -395,7 +395,7 @@ class SdkUpdaterLogic {
             ArchiveInfo[] localArchives,
             Collection<Package> remotePkgs,
             SdkSource[] remoteSources,
-            boolean includeObsoletes) {
+            boolean includeAll) {
         ArrayList<Archive> updates = new ArrayList<Archive>();
 
         fetchRemotePackages(remotePkgs, remoteSources);
@@ -409,7 +409,7 @@ class SdkUpdaterLogic {
 
             for (Package remotePkg : remotePkgs) {
                 // Only look for non-obsolete updates unless requested to include them
-                if ((includeObsoletes || !remotePkg.isObsolete()) &&
+                if ((includeAll || !remotePkg.isObsolete()) &&
                         localPkg.canBeUpdatedBy(remotePkg) == UpdateInfo.UPDATE) {
                     // Found a suitable update. Only accept the remote package
                     // if it provides at least one compatible archive

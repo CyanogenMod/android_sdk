@@ -710,34 +710,34 @@ public class UpdaterData implements IUpdaterData {
      * Used by {@link UpdaterData#listRemotePackages_NoGUI} and
      * {@link UpdaterData#updateOrInstallAll_NoGUI}.
      *
-     * @param includeObsoletes True to also list obsolete packages.
+     * @param includeAll True to list and install all packages, including obsolete ones.
      * @return A list of potential {@link ArchiveInfo} to install.
      */
-    private List<ArchiveInfo> getRemoteArchives_NoGUI(boolean includeObsoletes) {
+    private List<ArchiveInfo> getRemoteArchives_NoGUI(boolean includeAll) {
         refreshSources(true);
         loadRemoteAddonsList(new NullTaskMonitor(getSdkLog()));
 
         List<ArchiveInfo> archives;
         SdkUpdaterLogic ul = new SdkUpdaterLogic(this);
 
-        if (includeObsoletes) {
+        if (includeAll) {
             archives = ul.getAllRemoteArchives(
                     getSources(),
                     getLocalSdkParser().getPackages(),
-                    includeObsoletes);
+                    includeAll);
 
         } else {
             archives = ul.computeUpdates(
                     null /*selectedArchives*/,
                     getSources(),
                     getLocalSdkParser().getPackages(),
-                    includeObsoletes);
+                    includeAll);
 
             ul.addNewPlatforms(
                     archives,
                     getSources(),
                     getLocalSdkParser().getPackages(),
-                    includeObsoletes);
+                    includeAll);
         }
 
         Collections.sort(archives);
@@ -748,12 +748,12 @@ public class UpdaterData implements IUpdaterData {
      * Lists remote packages available for install using
      * {@link UpdaterData#updateOrInstallAll_NoGUI}.
      *
-     * @param includeObsoletes True to also list obsolete packages.
+     * @param includeAll True to list and install all packages, including obsolete ones.
      * @param extendedOutput True to display more details on each package.
      */
-    public void listRemotePackages_NoGUI(boolean includeObsoletes, boolean extendedOutput) {
+    public void listRemotePackages_NoGUI(boolean includeAll, boolean extendedOutput) {
 
-        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeObsoletes);
+        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeAll);
 
         mSdkLog.printf("Packages available for installation or update: %1$d\n", archives.size());
 
@@ -790,17 +790,17 @@ public class UpdaterData implements IUpdaterData {
      * @param pkgFilter A list of {@link SdkRepoConstants#NODES} or {@link Package#installId()}
      *   or package indexes to limit the packages we can update or install.
      *   A null or empty list means to update everything possible.
-     * @param includeObsoletes True to also list and install obsolete packages.
+     * @param includeAll True to list and install all packages, including obsolete ones.
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
      * @return A list of archives that have been installed. Can be null if nothing was done.
      */
     public List<Archive> updateOrInstallAll_NoGUI(
             Collection<String> pkgFilter,
-            boolean includeObsoletes,
+            boolean includeAll,
             boolean dryMode) {
 
-        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeObsoletes);
+        List<ArchiveInfo> archives = getRemoteArchives_NoGUI(includeAll);
 
         // Filter the selected archives to only keep the ones matching the filter
         if (pkgFilter != null && pkgFilter.size() > 0 && archives != null && archives.size() > 0) {

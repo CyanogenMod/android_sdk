@@ -79,7 +79,7 @@ class SdkCommandLine extends CommandLineProcessor {
     public static final String KEY_PROXY_PORT   = "proxy-port";                     //$NON-NLS-1$
     public static final String KEY_PROXY_HOST   = "proxy-host";                     //$NON-NLS-1$
     public static final String KEY_DRY_MODE     = "dry-mode";                       //$NON-NLS-1$
-    public static final String KEY_OBSOLETE     = "obsolete";                       //$NON-NLS-1$
+    public static final String KEY_ALL          = "all";                            //$NON-NLS-1$
     public static final String KEY_EXTENDED     = "extended";                       //$NON-NLS-1$
     public static final String KEY_SNAPSHOT     = "snapshot";                       //$NON-NLS-1$
     public static final String KEY_COMPACT      = "compact";                        //$NON-NLS-1$
@@ -259,8 +259,13 @@ class SdkCommandLine extends CommandLineProcessor {
                 null);
 
         define(Mode.BOOLEAN, false,
-                VERB_LIST, OBJECT_SDK, "o", KEY_OBSOLETE,                           //$NON-NLS-1$
-                "Lists all packages (including obsolete and installed ones)",
+                VERB_LIST, OBJECT_SDK, "a", KEY_ALL,                                //$NON-NLS-1$
+                "Lists all available packages (including obsolete and installed ones)",
+                false);
+
+        define(Mode.BOOLEAN, false,
+                VERB_LIST, OBJECT_SDK, "o", "obsolete",                             //$NON-NLS-1$
+                "Deprecated. Please use --all instead.",
                 false);
 
         define(Mode.BOOLEAN, false,
@@ -301,8 +306,13 @@ class SdkCommandLine extends CommandLineProcessor {
                 null);
 
         define(Mode.BOOLEAN, false,
-                VERB_UPDATE, OBJECT_SDK, "o", KEY_OBSOLETE,                         //$NON-NLS-1$
-                "Installs obsolete packages.",
+                VERB_UPDATE, OBJECT_SDK, "a", KEY_ALL,                              //$NON-NLS-1$
+                "Includes all packages (such as obsolete and non-dependent ones.)",
+                false);
+
+        define(Mode.BOOLEAN, false,
+                VERB_UPDATE, OBJECT_SDK, "p", "obsolete",                             //$NON-NLS-1$
+                "Deprecated. Please use --all instead.",
                 false);
 
         define(Mode.BOOLEAN, false,
@@ -533,7 +543,12 @@ class SdkCommandLine extends CommandLineProcessor {
 
     /** Helper to retrieve the --obsolete flag. */
     public boolean getFlagObsolete() {
-        return ((Boolean) getValue(null, null, KEY_OBSOLETE)).booleanValue();
+        return ((Boolean) getValue(null, null, "obsolete")).booleanValue();
+    }
+
+    /** Helper to retrieve the --all flag. */
+    public boolean getFlagAll() {
+        return ((Boolean) getValue(null, null, KEY_ALL)).booleanValue();
     }
 
     /** Helper to retrieve the --extended flag. */

@@ -102,25 +102,25 @@ public class SdkUpdaterNoWindow {
      *
      * @param pkgFilter A list of {@link SdkRepoConstants#NODES} to limit the type of packages
      *   we can update. A null or empty list means to update everything possible.
-     * @param includeObsoletes True to also list and install obsolete packages.
+     * @param includeAll True to list and install all packages, including obsolete ones.
      * @param dryMode True to check what would be updated/installed but do not actually
      *   download or install anything.
      */
     public void updateAll(
             ArrayList<String> pkgFilter,
-            boolean includeObsoletes,
+            boolean includeAll,
             boolean dryMode) {
-        mUpdaterData.updateOrInstallAll_NoGUI(pkgFilter, includeObsoletes, dryMode);
+        mUpdaterData.updateOrInstallAll_NoGUI(pkgFilter, includeAll, dryMode);
     }
 
     /**
      * Lists remote packages available for install using 'android update sdk --no-ui'.
      *
-     * @param includeObsoletes True to also list and install obsolete packages.
+     * @param includeAll True to list and install all packages, including obsolete ones.
      * @param extendedOutput True to display more details on each package.
      */
-    public void listRemotePackages(boolean includeObsoletes, boolean extendedOutput) {
-        mUpdaterData.listRemotePackages_NoGUI(includeObsoletes, extendedOutput);
+    public void listRemotePackages(boolean includeAll, boolean extendedOutput) {
+        mUpdaterData.listRemotePackages_NoGUI(includeAll, extendedOutput);
     }
 
     // -----

@@ -371,28 +371,44 @@ public class Main {
     }
 
     private void displayRemoteSdkListNoUI() {
-        boolean force = mSdkCommandLine.getFlagForce();
-        boolean useHttp = mSdkCommandLine.getFlagNoHttps();
-        boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        boolean force    = mSdkCommandLine.getFlagForce();
+        boolean useHttp  = mSdkCommandLine.getFlagNoHttps();
+        boolean all      = mSdkCommandLine.getFlagAll();
         boolean extended = mSdkCommandLine.getFlagExtended();
         String proxyHost = mSdkCommandLine.getParamProxyHost();
         String proxyPort = mSdkCommandLine.getParamProxyPort();
 
-        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
-                force, useHttp, proxyHost, proxyPort);
-        upd.listRemotePackages(obsolete, extended);
+        boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        all |= obsolete;
+
+        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(
+                mOsSdkFolder,
+                mSdkManager,
+                mSdkLog,
+                force,
+                useHttp,
+                proxyHost,
+                proxyPort);
+        upd.listRemotePackages(all, extended);
+
+        if (obsolete) {
+            mSdkLog.printf("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
+        }
     }
 
     /**
      * Updates the whole SDK without any UI, just using console output.
      */
     private void updateSdkNoUI() {
-        boolean force = mSdkCommandLine.getFlagForce();
-        boolean useHttp = mSdkCommandLine.getFlagNoHttps();
-        boolean dryMode = mSdkCommandLine.getFlagDryMode();
-        boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        boolean force    = mSdkCommandLine.getFlagForce();
+        boolean useHttp  = mSdkCommandLine.getFlagNoHttps();
+        boolean dryMode  = mSdkCommandLine.getFlagDryMode();
+        boolean all      = mSdkCommandLine.getFlagAll();
         String proxyHost = mSdkCommandLine.getParamProxyHost();
         String proxyPort = mSdkCommandLine.getParamProxyPort();
+
+        boolean obsolete = mSdkCommandLine.getFlagObsolete();
+        all |= obsolete;
 
         // Check filter types.
         Pair<String, ArrayList<String>> filterResult =
@@ -402,9 +418,19 @@ public class Main {
             errorAndExit(filterResult.getFirst());
         }
 
-        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(mOsSdkFolder, mSdkManager, mSdkLog,
-                force, useHttp, proxyHost, proxyPort);
-        upd.updateAll(filterResult.getSecond(), obsolete, dryMode);
+        SdkUpdaterNoWindow upd = new SdkUpdaterNoWindow(
+                mOsSdkFolder,
+                mSdkManager,
+                mSdkLog,
+                force,
+                useHttp,
+                proxyHost,
+                proxyPort);
+        upd.updateAll(filterResult.getSecond(), all, dryMode);
+
+        if (obsolete) {
+            mSdkLog.printf("Note: Flag --obsolete is deprecated and will be removed in the next version.\n      Please use --all instead.\n");
+        }
     }
 
     /**
