@@ -48,6 +48,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
+@SuppressWarnings("javadoc")
 public class AndroidContentAssistTest extends AdtProjectTest {
     private static final String CARET = "^"; //$NON-NLS-1$
 
@@ -466,6 +467,16 @@ public class AndroidContentAssistTest extends AdtProjectTest {
         checkManifestCompletion("manifest.xml", "<uses-sdk android:minSdkVersion=\"^11\" />");
     }
 
+    public void testCompletion70() throws Exception {
+        checkResourceCompletion("completionvalues2.xml",
+                "<item name=\"main_layout4\" type=\"layout\">^</item>");
+    }
+
+    public void testCompletion71() throws Exception {
+        checkResourceCompletion("completionvalues2.xml",
+                "<item name=\"main_layout5\" type=\"string\">@string/^app_name</item>");
+    }
+
     // ---- Test *applying* code completion ----
 
 
@@ -751,6 +762,11 @@ public class AndroidContentAssistTest extends AdtProjectTest {
 
     public void testApplyCompletion44() throws Exception {
         checkApplyResourceCompletion("completionvalues1.xml", "[^false]", "true");
+    }
+
+    public void testApplyCompletion45() throws Exception {
+        checkApplyResourceCompletion("completionvalues2.xml",
+                "@string/^app_name", "@string/hello");
     }
 
     // --- Code Completion test infrastructure ----

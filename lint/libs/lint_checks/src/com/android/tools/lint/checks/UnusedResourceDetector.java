@@ -453,34 +453,40 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                     mDeclarationToFile.put(resource, context.file);
                     Handle handle = context.parser.createLocationHandle(context, item);
                     mDeclarationToHandle.put(resource, handle);
+
+                    checkChildRefs(item);
                 }
             }
         } else {
             assert TAG_STYLE.equals(element.getTagName())
                 || TAG_ARRAY.equals(element.getTagName())
                 || TAG_STRING_ARRAY.equals(element.getTagName());
-            // Look for ?attr/ and @dimen/foo etc references in the item children
             for (Element item : LintUtils.getChildren(element)) {
-                NodeList childNodes = item.getChildNodes();
-                for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-                    Node child = childNodes.item(i);
-                    if (child.getNodeType() == Node.TEXT_NODE) {
-                        String text = child.getNodeValue();
+                checkChildRefs(item);
+            }
+        }
+    }
 
-                        int index = text.indexOf(ATTR_REF_PREFIX);
-                        if (index != -1) {
-                            String name = text.substring(index + ATTR_REF_PREFIX.length()).trim();
-                            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + name);
-                        } else {
-                            index = text.indexOf('@');
-                            if (index != -1 && text.indexOf('/', index) != -1
-                                    && !text.startsWith("@android:", index)) {  //$NON-NLS-1$
-                                // Compute R-string, e.g. @string/foo => R.string.foo
-                                String token = text.substring(index + 1).trim().replace('/', '.');
-                                String r = R_PREFIX + token;
-                                mReferences.add(r);
-                            }
-                        }
+    private void checkChildRefs(Element item) {
+        // Look for ?attr/ and @dimen/foo etc references in the item children
+        NodeList childNodes = item.getChildNodes();
+        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+            Node child = childNodes.item(i);
+            if (child.getNodeType() == Node.TEXT_NODE) {
+                String text = child.getNodeValue();
+
+                int index = text.indexOf(ATTR_REF_PREFIX);
+                if (index != -1) {
+                    String name = text.substring(index + ATTR_REF_PREFIX.length()).trim();
+                    mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + name);
+                } else {
+                    index = text.indexOf('@');
+                    if (index != -1 && text.indexOf('/', index) != -1
+                            && !text.startsWith("@android:", index)) {  //$NON-NLS-1$
+                        // Compute R-string, e.g. @string/foo => R.string.foo
+                        String token = text.substring(index + 1).trim().replace('/', '.');
+                        String r = R_PREFIX + token;
+                        mReferences.add(r);
                     }
                 }
             }
