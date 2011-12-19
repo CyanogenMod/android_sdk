@@ -36,6 +36,9 @@ import static com.android.ide.common.layout.LayoutConstants.SPACE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
+import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -687,8 +690,8 @@ public final class DescriptorsUtils {
         ElementDescriptor descriptor = node.getDescriptor();
 
         String name = descriptor.getXmlLocalName();
-        if (name.equals(REQUEST_FOCUS) || name.equals(SPACE)) {
-            // Don't add ids etc to <requestFocus>, or to grid spacers
+        if (name.equals(REQUEST_FOCUS)) {
+            // Don't add ids, widths and heights etc to <requestFocus>
             return;
         }
 
@@ -709,13 +712,15 @@ public final class DescriptorsUtils {
                     false /* override */);
         }
 
-        String freeId = getFreeWidgetId(node);
-        if (freeId != null) {
-            node.setAttributeValue(
-                    ATTR_ID,
-                    SdkConstants.NS_RESOURCES,
-                    freeId,
-                    false /* override */);
+        if (needsDefaultId(node.getDescriptor())) {
+            String freeId = getFreeWidgetId(node);
+            if (freeId != null) {
+                node.setAttributeValue(
+                        ATTR_ID,
+                        SdkConstants.NS_RESOURCES,
+                        freeId,
+                        false /* override */);
+            }
         }
 
         // Set a text attribute on textual widgets -- but only on those that define a text
@@ -750,6 +755,28 @@ public final class DescriptorsUtils {
                 }
             }
         }
+    }
+
+    /**
+     * Determines whether new views of the given type should be assigned a
+     * default id.
+     *
+     * @param descriptor a descriptor describing the view to look up
+     * @return true if new views of the given type should be assigned a default
+     *         id
+     */
+    public static boolean needsDefaultId(ElementDescriptor descriptor) {
+        // By default, layouts do not need ids.
+        String tag = descriptor.getXmlLocalName();
+        if (tag.endsWith("Layout")  //$NON-NLS-1$
+                || tag.equals(VIEW_FRAGMENT)
+                || tag.equals(VIEW_INCLUDE)
+                || tag.equals(VIEW_MERGE)
+                || tag.equals(SPACE)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
