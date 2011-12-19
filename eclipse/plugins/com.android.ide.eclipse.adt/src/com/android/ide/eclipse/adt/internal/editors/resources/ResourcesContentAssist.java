@@ -17,11 +17,14 @@
 package com.android.ide.eclipse.adt.internal.editors.resources;
 
 import static com.android.ide.common.layout.LayoutConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor.ATTRIBUTE_ICON_FILENAME;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ITEM_TAG;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.NAME_ATTR;
 import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
 import static com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData.DESCRIPTOR_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_TYPE;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.AndroidContentAssist;
@@ -33,6 +36,7 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.IDescriptorProvi
 import com.android.ide.eclipse.adt.internal.editors.descriptors.SeparatorAttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 
 import org.eclipse.jface.text.contentassist.CompletionProposal;
@@ -196,6 +200,38 @@ public class ResourcesContentAssist extends AndroidContentAssist {
                         }
                     }
                 }
+            }
+        } else if (parentNode.getNodeName().equals(ITEM_TAG)) {
+            // Completing text content inside an <item> tag: offer @resource completion.
+            if (prefix.startsWith(PREFIX_RESOURCE_REF) || prefix.trim().length() == 0) {
+                String[] choices = UiResourceAttributeNode.computeResourceStringMatches(
+                        mEditor, null /*attributeDescriptor*/, prefix);
+                if (choices == null || choices.length == 0) {
+                    return;
+                }
+
+                // If the parent item tag specifies a type, filter the results
+                Node typeNode = parentNode.getAttributes().getNamedItem(ATTR_TYPE);
+                if (typeNode != null) {
+                    String value = typeNode.getNodeValue();
+                    List<String> filtered = new ArrayList<String>();
+                    for (String s : choices) {
+                        if (s.startsWith(PREFIX_ANDROID_RESOURCE_REF) ||
+                                s.startsWith(PREFIX_RESOURCE_REF+ value)) {
+                            filtered.add(s);
+                        }
+                    }
+                    if (filtered.size() > 0) {
+                        choices = filtered.toArray(new String[filtered.size()]);
+                    }
+                }
+
+                int replaceLength = computeTextReplaceLength(currentNode, offset);
+                addMatchingProposals(proposals, choices, offset, currentNode,
+                        prefix, (char) 0 /*needTag*/, true /* isAttribute */, false /*isNew*/,
+                        false /* skipEndTag*/,
+                        replaceLength);
+
             }
         }
     }
