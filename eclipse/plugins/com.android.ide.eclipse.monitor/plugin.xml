@@ -37,6 +37,10 @@
                name="appName"
                value="monitor">
          </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
       </product>
    </extension>
 
