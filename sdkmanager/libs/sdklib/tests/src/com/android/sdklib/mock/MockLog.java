@@ -16,10 +16,12 @@
 
 package com.android.sdklib.mock;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.ISdkLog;
 
 import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.List;
 
 /**
  * An instance of {@link ISdkLog} that captures all messages to an internal list.
@@ -54,6 +56,11 @@ public class MockLog implements ISdkLog {
     @Override
     public String toString() {
         return mMessages.toString();
+    }
+
+    @NonNull
+    public List<String> getMessages() {
+        return mMessages;
     }
 
     public void clear() {
