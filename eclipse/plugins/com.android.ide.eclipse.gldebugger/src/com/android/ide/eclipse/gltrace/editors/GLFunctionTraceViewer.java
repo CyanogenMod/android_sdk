@@ -16,8 +16,9 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
-import com.android.ide.eclipse.gltrace.GLCallFormatter;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
+import com.android.ide.eclipse.gltrace.format.GLAPISpec;
+import com.android.ide.eclipse.gltrace.format.GLCallFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
@@ -70,7 +71,6 @@ import java.util.regex.Pattern;
 public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvider {
     public static final String ID = "com.android.ide.eclipse.gltrace.GLFunctionTrace"; //$NON-NLS-1$
 
-    private static final String GL_SPECS_FILE = "/entries.in"; //$NON-NLS-1$
     private static final String DEFAULT_FILTER_MESSAGE = "Filter list of OpenGL calls. Accepts Java regexes.";
 
     // TODO: The thumbnail width & height are constant right now, but should be scaled
@@ -81,8 +81,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     /** Height of thumbnail images of the framebuffer. */
     private static final int THUMBNAIL_HEIGHT = 50;
 
-    private final GLCallFormatter mGLCallFormatter =
-            new GLCallFormatter(getClass().getResourceAsStream(GL_SPECS_FILE));
+    private static final GLCallFormatter sGLCallFormatter =
+            new GLCallFormatter(GLAPISpec.getSpecs());
 
     private String mFilePath;
     private Scale mFrameSelectionScale;
@@ -361,22 +361,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                 return Integer.toString(c.getContextId());
             default:
                 try {
-                    return formatGLCall(c);
+                    return sGLCallFormatter.formatGLCall(c);
                 } catch (Exception e) {
                     // in case of any formatting errors, just return the function name.
                     return c.getFunction().toString();
                 }
             }
         }
-    }
-
-    private String formatGLCall(GLCall c) {
-        String result = mGLCallFormatter.formatGLCall(c);
-        if (result == null) {
-            result = c.getFunction().toString();
-        }
-
-        return result;
     }
 
     private static class GLCallFilter extends ViewerFilter {

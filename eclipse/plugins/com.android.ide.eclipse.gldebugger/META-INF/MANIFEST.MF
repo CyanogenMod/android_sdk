@@ -17,4 +17,7 @@ Bundle-ClassPath: libs/host-libprotobuf-java-2.3.0-lite.jar,
  libs/ddmlib.jar,
  .
 Bundle-Vendor: The Android Open Source Project
-Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.eclipse.gldebugger.tests"
+Export-Package: com.android.ide.eclipse.gldebugger;x-friends:="com.android.ide.eclipse.gldebugger.tests",
+ com.android.ide.eclipse.gltrace;x-friends:="com.android.ide.eclipse.gldebugger.tests",
+ com.android.ide.eclipse.gltrace.format;x-friends:="com.android.ide.eclipse.gldebugger.tests",
+ com.android.ide.eclipse.gltrace.model;x-friends:="com.android.ide.eclipse.gldebugger.tests"

@@ -2055,15 +2055,29 @@ public final class GLProtoBuf {
     public boolean hasContextId() { return hasContextId; }
     public int getContextId() { return contextId_; }
 
-    // required .android.gltrace.GLMessage.Function function = 2 [default = invalid];
-    public static final int FUNCTION_FIELD_NUMBER = 2;
+    // required int64 start_time = 2;
+    public static final int START_TIME_FIELD_NUMBER = 2;
+    private boolean hasStartTime;
+    private long startTime_ = 0L;
+    public boolean hasStartTime() { return hasStartTime; }
+    public long getStartTime() { return startTime_; }
+
+    // required int32 duration = 3;
+    public static final int DURATION_FIELD_NUMBER = 3;
+    private boolean hasDuration;
+    private int duration_ = 0;
+    public boolean hasDuration() { return hasDuration; }
+    public int getDuration() { return duration_; }
+
+    // required .android.gltrace.GLMessage.Function function = 4 [default = invalid];
+    public static final int FUNCTION_FIELD_NUMBER = 4;
     private boolean hasFunction;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function function_;
     public boolean hasFunction() { return hasFunction; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function getFunction() { return function_; }
 
-    // repeated .android.gltrace.GLMessage.DataType args = 3;
-    public static final int ARGS_FIELD_NUMBER = 3;
+    // repeated .android.gltrace.GLMessage.DataType args = 5;
+    public static final int ARGS_FIELD_NUMBER = 5;
     private java.util.List<com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType> args_ =
       java.util.Collections.emptyList();
     public java.util.List<com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType> getArgsList() {
@@ -2074,22 +2088,15 @@ public final class GLProtoBuf {
       return args_.get(index);
     }
 
-    // optional .android.gltrace.GLMessage.DataType returnValue = 4;
-    public static final int RETURNVALUE_FIELD_NUMBER = 4;
+    // optional .android.gltrace.GLMessage.DataType returnValue = 6;
+    public static final int RETURNVALUE_FIELD_NUMBER = 6;
     private boolean hasReturnValue;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType returnValue_;
     public boolean hasReturnValue() { return hasReturnValue; }
     public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType getReturnValue() { return returnValue_; }
 
-    // optional float duration = 5;
-    public static final int DURATION_FIELD_NUMBER = 5;
-    private boolean hasDuration;
-    private float duration_ = 0F;
-    public boolean hasDuration() { return hasDuration; }
-    public float getDuration() { return duration_; }
-
-    // optional .android.gltrace.GLMessage.FrameBuffer fb = 6;
-    public static final int FB_FIELD_NUMBER = 6;
+    // optional .android.gltrace.GLMessage.FrameBuffer fb = 7;
+    public static final int FB_FIELD_NUMBER = 7;
     private boolean hasFb;
     private com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer fb_;
     public boolean hasFb() { return hasFb; }
@@ -2102,6 +2109,8 @@ public final class GLProtoBuf {
     }
     public final boolean isInitialized() {
       if (!hasContextId) return false;
+      if (!hasStartTime) return false;
+      if (!hasDuration) return false;
       if (!hasFunction) return false;
       for (com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType element : getArgsList()) {
         if (!element.isInitialized()) return false;
@@ -2121,20 +2130,23 @@ public final class GLProtoBuf {
       if (hasContextId()) {
         output.writeInt32(1, getContextId());
       }
-      if (hasFunction()) {
-        output.writeEnum(2, getFunction().getNumber());
-      }
-      for (com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType element : getArgsList()) {
-        output.writeMessage(3, element);
-      }
-      if (hasReturnValue()) {
-        output.writeMessage(4, getReturnValue());
+      if (hasStartTime()) {
+        output.writeInt64(2, getStartTime());
       }
       if (hasDuration()) {
-        output.writeFloat(5, getDuration());
+        output.writeInt32(3, getDuration());
+      }
+      if (hasFunction()) {
+        output.writeEnum(4, getFunction().getNumber());
+      }
+      for (com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType element : getArgsList()) {
+        output.writeMessage(5, element);
+      }
+      if (hasReturnValue()) {
+        output.writeMessage(6, getReturnValue());
       }
       if (hasFb()) {
-        output.writeMessage(6, getFb());
+        output.writeMessage(7, getFb());
       }
     }
 
@@ -2148,25 +2160,29 @@ public final class GLProtoBuf {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, getContextId());
       }
-      if (hasFunction()) {
+      if (hasStartTime()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(2, getFunction().getNumber());
-      }
-      for (com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType element : getArgsList()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, element);
-      }
-      if (hasReturnValue()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, getReturnValue());
+          .computeInt64Size(2, getStartTime());
       }
       if (hasDuration()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeFloatSize(5, getDuration());
+          .computeInt32Size(3, getDuration());
+      }
+      if (hasFunction()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, getFunction().getNumber());
+      }
+      for (com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType element : getArgsList()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, element);
+      }
+      if (hasReturnValue()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, getReturnValue());
       }
       if (hasFb()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, getFb());
+          .computeMessageSize(7, getFb());
       }
       memoizedSerializedSize = size;
       return size;
@@ -2323,6 +2339,12 @@ public final class GLProtoBuf {
         if (other.hasContextId()) {
           setContextId(other.getContextId());
         }
+        if (other.hasStartTime()) {
+          setStartTime(other.getStartTime());
+        }
+        if (other.hasDuration()) {
+          setDuration(other.getDuration());
+        }
         if (other.hasFunction()) {
           setFunction(other.getFunction());
         }
@@ -2334,9 +2356,6 @@ public final class GLProtoBuf {
         }
         if (other.hasReturnValue()) {
           mergeReturnValue(other.getReturnValue());
-        }
-        if (other.hasDuration()) {
-          setDuration(other.getDuration());
         }
         if (other.hasFb()) {
           mergeFb(other.getFb());
@@ -2365,6 +2384,14 @@ public final class GLProtoBuf {
               break;
             }
             case 16: {
+              setStartTime(input.readInt64());
+              break;
+            }
+            case 24: {
+              setDuration(input.readInt32());
+              break;
+            }
+            case 32: {
               int rawValue = input.readEnum();
               com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function value = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function.valueOf(rawValue);
               if (value != null) {
@@ -2372,13 +2399,13 @@ public final class GLProtoBuf {
               }
               break;
             }
-            case 26: {
+            case 42: {
               com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Builder subBuilder = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addArgs(subBuilder.buildPartial());
               break;
             }
-            case 34: {
+            case 50: {
               com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Builder subBuilder = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.newBuilder();
               if (hasReturnValue()) {
                 subBuilder.mergeFrom(getReturnValue());
@@ -2387,11 +2414,7 @@ public final class GLProtoBuf {
               setReturnValue(subBuilder.buildPartial());
               break;
             }
-            case 45: {
-              setDuration(input.readFloat());
-              break;
-            }
-            case 50: {
+            case 58: {
               com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.Builder subBuilder = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.newBuilder();
               if (hasFb()) {
                 subBuilder.mergeFrom(getFb());
@@ -2423,7 +2446,43 @@ public final class GLProtoBuf {
         return this;
       }
 
-      // required .android.gltrace.GLMessage.Function function = 2 [default = invalid];
+      // required int64 start_time = 2;
+      public boolean hasStartTime() {
+        return result.hasStartTime();
+      }
+      public long getStartTime() {
+        return result.getStartTime();
+      }
+      public Builder setStartTime(long value) {
+        result.hasStartTime = true;
+        result.startTime_ = value;
+        return this;
+      }
+      public Builder clearStartTime() {
+        result.hasStartTime = false;
+        result.startTime_ = 0L;
+        return this;
+      }
+
+      // required int32 duration = 3;
+      public boolean hasDuration() {
+        return result.hasDuration();
+      }
+      public int getDuration() {
+        return result.getDuration();
+      }
+      public Builder setDuration(int value) {
+        result.hasDuration = true;
+        result.duration_ = value;
+        return this;
+      }
+      public Builder clearDuration() {
+        result.hasDuration = false;
+        result.duration_ = 0;
+        return this;
+      }
+
+      // required .android.gltrace.GLMessage.Function function = 4 [default = invalid];
       public boolean hasFunction() {
         return result.hasFunction();
       }
@@ -2444,7 +2503,7 @@ public final class GLProtoBuf {
         return this;
       }
 
-      // repeated .android.gltrace.GLMessage.DataType args = 3;
+      // repeated .android.gltrace.GLMessage.DataType args = 5;
       public java.util.List<com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType> getArgsList() {
         return java.util.Collections.unmodifiableList(result.args_);
       }
@@ -2495,7 +2554,7 @@ public final class GLProtoBuf {
         return this;
       }
 
-      // optional .android.gltrace.GLMessage.DataType returnValue = 4;
+      // optional .android.gltrace.GLMessage.DataType returnValue = 6;
       public boolean hasReturnValue() {
         return result.hasReturnValue();
       }
@@ -2532,25 +2591,7 @@ public final class GLProtoBuf {
         return this;
       }
 
-      // optional float duration = 5;
-      public boolean hasDuration() {
-        return result.hasDuration();
-      }
-      public float getDuration() {
-        return result.getDuration();
-      }
-      public Builder setDuration(float value) {
-        result.hasDuration = true;
-        result.duration_ = value;
-        return this;
-      }
-      public Builder clearDuration() {
-        result.hasDuration = false;
-        result.duration_ = 0F;
-        return this;
-      }
-
-      // optional .android.gltrace.GLMessage.FrameBuffer fb = 6;
+      // optional .android.gltrace.GLMessage.FrameBuffer fb = 7;
       public boolean hasFb() {
         return result.hasFb();
       }
