@@ -759,14 +759,38 @@ public class DomUtilities {
      * @return the structured model
      */
     public static IStructuredModel createStructuredModel(String xml) {
-        IModelManager modelManager = StructuredModelManager.getModelManager();
-        IStructuredModel model = modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
+        IStructuredModel model = createEmptyModel();
         IStructuredDocument document = model.getStructuredDocument();
         model.aboutToChangeModel();
         document.set(xml);
         model.changedModel();
 
         return model;
+    }
+
+    /**
+     * Creates an empty Eclipse XML model
+     *
+     * @return a new Eclipse XML model
+     */
+    public static IStructuredModel createEmptyModel() {
+        IModelManager modelManager = StructuredModelManager.getModelManager();
+        return modelManager.createUnManagedStructuredModelFor(ContentTypeID_XML);
+    }
+
+    /**
+     * Creates an empty Eclipse XML document
+     *
+     * @return an empty Eclipse XML document
+     */
+    public static Document createEmptyDocument() {
+        IStructuredModel model = createEmptyModel();
+        if (model instanceof IDOMModel) {
+            IDOMModel domModel = (IDOMModel) model;
+            return domModel.getDocument();
+        }
+
+        return null;
     }
 
     /**

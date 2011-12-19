@@ -109,10 +109,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 /**
  * A palette control for the {@link GraphicalEditorPart}.
  * <p/>
@@ -892,16 +888,7 @@ public class PaletteControl extends Composite {
             }
 
             // Create blank XML document
-            Document document = null;
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            try {
-                factory.setNamespaceAware(true);
-                factory.setValidating(false);
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                document = builder.newDocument();
-            } catch (ParserConfigurationException e) {
-                return null;
-            }
+            Document document = DomUtilities.createEmptyDocument();
 
             // Insert our target view's XML into it as a node
             GraphicalEditorPart editor = getEditor();
@@ -964,6 +951,9 @@ public class PaletteControl extends Composite {
                 try {
                     canvas.getRulesEngine().callCreateHooks(layoutEditor,
                             null, childNode, InsertType.CREATE_PREVIEW);
+                    childNode.applyPendingChanges();
+                } catch (Throwable t) {
+                    AdtPlugin.log(t, "Failed calling creation hooks for widget %1$s", viewName);
                 } finally {
                     layoutEditor.setIgnoreXmlUpdate(false);
                 }

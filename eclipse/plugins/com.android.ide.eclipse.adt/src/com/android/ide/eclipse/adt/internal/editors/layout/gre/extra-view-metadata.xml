@@ -262,6 +262,7 @@
             render="skip" />
         <view
             class="android.widget.SlidingDrawer"
+            render="skip"
             topAttrs="allowSingleTap,bottomOffset,content,handle,topOffset,visibility" />
         <view
             class="android.widget.TabHost"
