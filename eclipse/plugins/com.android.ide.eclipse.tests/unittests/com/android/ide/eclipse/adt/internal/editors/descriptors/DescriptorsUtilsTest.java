@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 /**
  * Unit tests for DescriptorsUtils in the editors plugin
  */
+@SuppressWarnings("javadoc")
 public class DescriptorsUtilsTest extends TestCase {
 
     @Override
@@ -127,6 +128,20 @@ public class DescriptorsUtilsTest extends TestCase {
         assertEquals("@+id/button1", DescriptorsUtils.getFreeWidgetId(uiRoot, "Button"));
         assertEquals("@+id/linearLayout1",
                 DescriptorsUtils.getFreeWidgetId(uiRoot, "LinearLayout"));
+    }
+
+    public void testNeedsDefaultId() throws Exception {
+        assertTrue(DescriptorsUtils.needsDefaultId(new ElementDescriptor("Button")));
+        assertTrue(DescriptorsUtils.needsDefaultId(new ElementDescriptor("EditText")));
+        assertTrue(DescriptorsUtils.needsDefaultId(new ElementDescriptor("TextView")));
+
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("LinearLayout")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("GridLayout")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("RelativeLayout")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("include")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("merge")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("fragment")));
+        assertFalse(DescriptorsUtils.needsDefaultId(new ElementDescriptor("Space")));
     }
 
     private static ViewElementDescriptor createDesc(String name, String fqn, boolean hasChildren) {

@@ -363,7 +363,9 @@ public class BaseViewRule extends AbstractViewRule {
                     null, 10, true));
         }
 
-        actions.add(RuleAction.createAction(ATTR_ID, "Edit ID...", onChange, null, 20, true));
+        String editIdLabel = selectedNode.getStringAttr(ANDROID_URI, ATTR_ID) != null ?
+                "Edit ID..." : "Assign ID...";
+        actions.add(RuleAction.createAction(ATTR_ID, editIdLabel, onChange, null, 20, true));
 
         addCommonPropertyActions(actions, selectedNode, onChange, 21);
 
