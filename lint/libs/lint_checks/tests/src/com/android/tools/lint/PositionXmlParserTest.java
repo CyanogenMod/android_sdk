@@ -123,4 +123,26 @@ public class PositionXmlParserTest extends TestCase {
 
         file.delete();
     }
+
+    public void testLineEndings() throws Exception {
+        // Test for http://code.google.com/p/android/issues/detail?id=22925
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
+                "<LinearLayout>\r\n" +
+                "\r" +
+                "<LinearLayout></LinearLayout>\r\n" +
+                "</LinearLayout>\r\n";
+        PositionXmlParser parser = new PositionXmlParser();
+        File file = File.createTempFile("parsertest2", ".xml");
+        Writer fw = new BufferedWriter(new FileWriter(file));
+        fw.write(xml);
+        fw.close();
+        Project project = new Project(null, file.getParentFile(), file.getParentFile());
+        XmlContext context = new XmlContext(new Main(), project, file,
+                EnumSet.of(Scope.RESOURCE_FILE));
+        Document document = parser.parseXml(context);
+        assertNotNull(document);
+
+        file.delete();
+    }
 }

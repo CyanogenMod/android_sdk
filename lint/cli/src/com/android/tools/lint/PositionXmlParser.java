@@ -300,7 +300,12 @@ public class PositionXmlParser implements IDomParser {
             // numbers
             while (mCurrentLine < line) {
                 char c = mXml.charAt(mCurrentOffset);
-                if (c == '\n') {
+                if (c == '\r' && mCurrentOffset < mXml.length() - 1) {
+                    if (mXml.charAt(mCurrentOffset + 1) != '\n') {
+                        mCurrentLine++;
+                        mCurrentColumn = 0;
+                    }
+                } else if (c == '\n') {
                     mCurrentLine++;
                     mCurrentColumn = 0;
                 } else {
