@@ -17,8 +17,6 @@
 package com.android.ide.eclipse.adt;
 
 import com.android.AndroidConstants;
-import com.android.ddmuilib.console.DdmConsole;
-import com.android.ddmuilib.console.IDdmConsole;
 import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
@@ -215,22 +213,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         display.asyncExec(new Runnable() {
             public void run() {
                 mAndroidConsoleErrorStream.setColor(mRed);
-            }
-        });
-
-        // set up the ddms console to use this objects
-        DdmConsole.setConsole(new IDdmConsole() {
-            public void printErrorToConsole(String message) {
-                AdtPlugin.printErrorToConsole((String)null, message);
-            }
-            public void printErrorToConsole(String[] messages) {
-                AdtPlugin.printErrorToConsole((String)null, (Object[])messages);
-            }
-            public void printToConsole(String message) {
-                AdtPlugin.printToConsole((String)null, message);
-            }
-            public void printToConsole(String[] messages) {
-                AdtPlugin.printToConsole((String)null, (Object[])messages);
             }
         });
 

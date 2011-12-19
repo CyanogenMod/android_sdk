@@ -27,6 +27,8 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.StackTracePanel;
 import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
+import com.android.ddmuilib.console.DdmConsole;
+import com.android.ddmuilib.console.IDdmConsole;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
@@ -169,7 +171,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
             public void printLog(LogLevel logLevel, String tag, String message) {
                 if (logLevel.getPriority() >= LogLevel.ERROR.getPriority()) {
                     printToStream(errorConsoleStream, tag, message);
-                    ConsolePlugin.getDefault().getConsoleManager().showConsoleView(mDdmsConsole);
+                    showConsoleView(mDdmsConsole);
                 } else {
                     printToStream(consoleStream, tag, message);
                 }
@@ -191,6 +193,28 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                 });
             }
 
+        });
+
+        // set up the ddms console to use this objects
+        DdmConsole.setConsole(new IDdmConsole() {
+            public void printErrorToConsole(String message) {
+                printToStream(errorConsoleStream, null, message);
+                showConsoleView(mDdmsConsole);
+            }
+            public void printErrorToConsole(String[] messages) {
+                for (String m : messages) {
+                    printToStream(errorConsoleStream, null, m);
+                }
+                showConsoleView(mDdmsConsole);
+            }
+            public void printToConsole(String message) {
+                printToStream(consoleStream, null, message);
+            }
+            public void printToConsole(String[] messages) {
+                for (String m : messages) {
+                    printToStream(consoleStream, null, m);
+                }
+            }
         });
 
         // set the listener for the preference change
@@ -308,6 +332,11 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
             }
         }.schedule();
     }
+
+    private void showConsoleView(MessageConsole console) {
+        ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+    }
+
 
     private IConfigurationElement[] findConfigElements(String name) {
 
