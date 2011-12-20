@@ -84,7 +84,6 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * Initialized from an extension point.
      */
     private IDebuggerConnector[] mDebuggerConnectors;
-    private ISourceRevealer[] mSourceRevealers;
     private ITraceviewLauncher[] mTraceviewLaunchers;
 
 
@@ -317,10 +316,6 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
                     // get the available debugger connectors
                     mDebuggerConnectors = instantiateDebuggerConnectors(dcce);
 
-                    // get the available source revealers
-                    elements = findConfigElements("com.android.ide.eclipse.ddms.sourceRevealer"); //$NON-NLS-1$
-                    mSourceRevealers = instantiateSourceRevealers(elements);
-
                     // get the available Traceview Launchers.
                     elements = findConfigElements("com.android.ide.eclipse.ddms.traceviewLauncher"); //$NON-NLS-1$
                     mTraceviewLaunchers = instantiateTraceviewLauncher(elements);
@@ -338,11 +333,11 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
     }
 
 
-    private IConfigurationElement[] findConfigElements(String name) {
-
+    /** Obtain a list of configuration elements that extend the given extension point. */
+    IConfigurationElement[] findConfigElements(String extensionPointId) {
         // get the adb location from an implementation of the ADB Locator extension point.
         IExtensionRegistry extensionRegistry = Platform.getExtensionRegistry();
-        IExtensionPoint extensionPoint = extensionRegistry.getExtensionPoint(name);
+        IExtensionPoint extensionPoint = extensionRegistry.getExtensionPoint(extensionPointId);
         if (extensionPoint != null) {
             return extensionPoint.getConfigurationElements();
         }
@@ -395,29 +390,6 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
         }
 
         return list.toArray(new IDebuggerConnector[list.size()]);
-    }
-
-    /**
-     * Finds if any other plug-in is extending the exposed Extension Point called sourceRevealer.
-     *
-     * @return an array of all locators found, or an empty array if none were found.
-     */
-    private ISourceRevealer[] instantiateSourceRevealers(IConfigurationElement[] configElements)
-            throws CoreException {
-        ArrayList<ISourceRevealer> list = new ArrayList<ISourceRevealer>();
-
-        if (configElements.length > 0) {
-            // only use the first one, ignore the others.
-            IConfigurationElement configElement = configElements[0];
-
-            // instantiate the class
-            Object obj = configElement.createExecutableExtension("class"); //$NON-NLS-1$
-            if (obj instanceof ISourceRevealer) {
-                list.add((ISourceRevealer) obj);
-            }
-        }
-
-        return list.toArray(new ISourceRevealer[list.size()]);
     }
 
     /**
@@ -802,18 +774,7 @@ public final class DdmsPlugin extends AbstractUIPlugin implements IDeviceChangeL
      * Implementation of com.android.ddmuilib.StackTracePanel.ISourceRevealer.
      */
     public void reveal(String applicationName, String className, int line) {
-        // loop on all source revealer till one succeeds
-        if (mSourceRevealers != null) {
-            for (ISourceRevealer revealer : mSourceRevealers) {
-                try {
-                    if (revealer.reveal(applicationName, className, line)) {
-                        break;
-                    }
-                } catch (Throwable t) {
-                    // ignore, we'll just not use this implementation.
-                }
-            }
-        }
+        JavaSourceRevealer.reveal(applicationName, className, line);
     }
 
     public boolean launchTraceview(String osPath) {

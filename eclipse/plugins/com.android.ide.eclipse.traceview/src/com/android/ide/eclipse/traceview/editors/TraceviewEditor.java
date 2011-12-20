@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.traceview.editors;
 
+import com.android.ide.eclipse.ddms.JavaSourceRevealer;
 import com.android.ide.eclipse.traceview.TraceviewPlugin;
 import com.android.traceview.ColorController;
 import com.android.traceview.DmTraceReader;
@@ -37,16 +38,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -311,52 +303,12 @@ public class TraceviewEditor extends EditorPart implements MethodHandler {
         mParent.setFocus();
     }
 
-    private static class TraceSearchRequestor extends SearchRequestor {
-        private MethodData mMethod;
-
-        public TraceSearchRequestor(MethodData method) {
-            mMethod = method;
-        }
-
-        @Override
-        public void acceptSearchMatch(SearchMatch match) throws CoreException {
-            Object element = match.getElement();
-            if (element instanceof IMethod) {
-                IMethod method = (IMethod) element;
-                if (method.getSignature().equals(mMethod.getSignature())) {
-                    JavaUI.openInEditor(method);
-                }
-            }
-        }
-    }
-
     // ---- MethodHandler methods
-
     public void handleMethod(MethodData method) {
-        // it's a bit complicated to convert the signature we have with what the
-        // search engine require, so we'll search by name only and test the signature
-        // when we get the result(s).
         String methodName = method.getMethodName();
         String className = method.getClassName().replaceAll("/", ".");  //$NON-NLS-1$  //$NON-NLS-21$
         String fqmn = className + "." + methodName; //$NON-NLS-1$
 
-        try {
-            SearchEngine se = new SearchEngine();
-            se.search(SearchPattern.createPattern(
-                    fqmn,
-                    IJavaSearchConstants.METHOD,
-                    IJavaSearchConstants.DECLARATIONS,
-                    SearchPattern.R_EXACT_MATCH
-                    | SearchPattern.R_CASE_SENSITIVE),
-                    new SearchParticipant[] { SearchEngine .getDefaultSearchParticipant() },
-                SearchEngine.createWorkspaceScope(),
-                new TraceSearchRequestor(method),
-                new NullProgressMonitor());
-        } catch (CoreException e) {
-
-        }
+        JavaSourceRevealer.revealMethod(fqmn);
     }
-
-    // -----
-
 }
