@@ -115,6 +115,21 @@ public class LintUtils {
     }
 
     /**
+     * Returns the basename of the given filename, unless it's a dot-file such as ".svn".
+     *
+     * @param fileName the file name to extract the basename from
+     * @return the basename (the filename without the file extension)
+     */
+    public static String getBaseName(String fileName) {
+        int extension = fileName.indexOf('.');
+        if (extension > 0) {
+            return fileName.substring(0, extension);
+        } else {
+            return fileName;
+        }
+    }
+
+    /**
      * Returns the children elements of the given node
      *
      * @param node the parent node

@@ -44,7 +44,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.w3c.dom.Element;
@@ -300,7 +299,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                                 Set<String> names = new HashSet<String>(files.length);
                                 for (File f : files) {
                                     String name = f.getName();
-                                    if (hasBitmapExtension(name)) {
+                                    if (isDrawableFile(name)) {
                                         names.add(f.getName());
                                     }
                                 }
@@ -325,9 +324,10 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    private static boolean hasBitmapExtension(String name) {
+    private static boolean isDrawableFile(String name) {
         // endsWith(name, DOT_PNG) is also true for endsWith(name, DOT_9PNG)
-        return endsWith(name, DOT_PNG)|| endsWith(name, DOT_JPG) || endsWith(name, DOT_GIF);
+        return endsWith(name, DOT_PNG)|| endsWith(name, DOT_JPG) || endsWith(name, DOT_GIF) ||
+                endsWith(name, DOT_XML);
     }
 
     // This method looks for duplicates in the assets. This uses two pieces of information
@@ -740,7 +740,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             if (missing.size() > 0 ) {
                 context.report(
                     ICON_MISSING_FOLDER,
-                    null /* location */,
+                    Location.create(res),
                     String.format("Missing density variation folders in %1$s: %2$s",
                             context.getProject().getDisplayPath(res),
                             LintUtils.formatList(missing, missing.size())),
@@ -764,7 +764,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     String folderName = folder.getName();
                     if (!isNoDpiFolder(folder)) {
                         assert DENSITY_PATTERN.matcher(folderName).matches();
-                        Set<String> overlap = Sets.intersection(noDpiNames, entry.getValue());
+                        Set<String> overlap = nameIntersection(noDpiNames, entry.getValue());
                         inBoth.addAll(overlap);
                         for (String name : overlap) {
                             files.add(new File(folder, name));
@@ -811,8 +811,10 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 }
                 Set<String> names = entry.getValue();
                 if (names.size() != allNames.size()) {
-                    List<String> delta =
-                            new ArrayList<String>(Sets.difference(allNames,  names));
+                    List<String> delta = new ArrayList<String>(nameDifferences(allNames,  names));
+                    if (delta.size() == 0) {
+                        continue;
+                    }
                     Collections.sort(delta);
                     String foundIn = "";
                     if (delta.size() == 1) {
@@ -840,6 +842,81 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                 }
             }
         }
+    }
+
+    /**
+     * Compute the difference in names between a and b. This is not just
+     * Sets.difference(a, b) because we want to make the comparisons <b>without
+     * file extensions</b> and return the result <b>with</b>..
+     */
+    private Set<String> nameDifferences(Set<String> a, Set<String> b) {
+        Set<String> names1 = new HashSet<String>(a.size());
+        for (String s : a) {
+            names1.add(LintUtils.getBaseName(s));
+        }
+        Set<String> names2 = new HashSet<String>(b.size());
+        for (String s : b) {
+            names2.add(LintUtils.getBaseName(s));
+        }
+
+        names1.removeAll(names2);
+
+        if (names1.size() > 0) {
+            // Map filenames back to original filenames with extensions
+            Set<String> result = new HashSet<String>(names1.size());
+            for (String s : a) {
+                if (names1.contains(LintUtils.getBaseName(s))) {
+                    result.add(s);
+                }
+            }
+            for (String s : b) {
+                if (names1.contains(LintUtils.getBaseName(s))) {
+                    result.add(s);
+                }
+            }
+
+            return result;
+        }
+
+        return Collections.emptySet();
+    }
+
+    /**
+     * Compute the intersection in names between a and b. This is not just
+     * Sets.intersection(a, b) because we want to make the comparisons <b>without
+     * file extensions</b> and return the result <b>with</b>.
+     */
+    private Set<String> nameIntersection(Set<String> a, Set<String> b) {
+        Set<String> names1 = new HashSet<String>(a.size());
+        for (String s : a) {
+            names1.add(LintUtils.getBaseName(s));
+        }
+        Set<String> names2 = new HashSet<String>(b.size());
+        for (String s : b) {
+            names2.add(LintUtils.getBaseName(s));
+        }
+
+        names1.retainAll(names2);
+
+        if (names1.size() > 0) {
+            // Map filenames back to original filenames with extensions
+            Set<String> result = new HashSet<String>(names1.size());
+            for (String s : a) {
+                if (names1.contains(LintUtils.getBaseName(s))) {
+                    result.add(s);
+                }
+            }
+            for (String s : b) {
+                if (names1.contains(LintUtils.getBaseName(s))) {
+                    result.add(s);
+                }
+            }
+
+            return result;
+        }
+
+
+        return Collections.emptySet();
     }
 
     private static boolean isNoDpiFolder(File file) {
