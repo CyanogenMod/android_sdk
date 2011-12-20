@@ -170,35 +170,34 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
         int severity = getMarkerSeverity(s);
         IMarker marker = null;
-        if (location == null) {
-            marker = BaseProjectHelper.markResource(mResource, MARKER_LINT,
-                    message, 0, severity);
-        } else {
+        if (location != null) {
             Position startPosition = location.getStart();
             if (startPosition == null) {
-                IResource resource = null;
                 if (location.getFile() != null) {
-                    resource = AdtUtils.fileToResource(location.getFile());
+                    IResource resource = AdtUtils.fileToResource(location.getFile());
+                    if (resource != null && resource.isAccessible()) {
+                        marker = BaseProjectHelper.markResource(resource, MARKER_LINT,
+                                message, 0, severity);
+                    }
                 }
-                if (resource == null) {
-                    resource = mResource;
-                }
-                marker = BaseProjectHelper.markResource(resource, MARKER_LINT,
-                        message, 0, severity);
             } else {
                 Position endPosition = location.getEnd();
                 int line = startPosition.getLine() + 1; // Marker API is 1-based
                 IFile file = AdtUtils.fileToIFile(location.getFile());
-                if (file != null) {
+                if (file != null && file.isAccessible()) {
                     Pair<Integer, Integer> r = getRange(file, mDocument,
                             startPosition, endPosition);
                     int startOffset = r.getFirst();
                     int endOffset = r.getSecond();
-
                     marker = BaseProjectHelper.markResource(file, MARKER_LINT,
                             message, line, startOffset, endOffset, severity);
                 }
             }
+        }
+
+        if (marker == null) {
+            marker = BaseProjectHelper.markResource(mResource, MARKER_LINT,
+                        message, 0, severity);
         }
 
         if (marker != null) {
@@ -279,7 +278,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      */
     public static IMarker[] getMarkers(IResource resource) {
         try {
-            return resource.findMarkers(MARKER_LINT, false, IResource.DEPTH_INFINITE);
+            if (resource.isAccessible()) {
+                return resource.findMarkers(MARKER_LINT, false, IResource.DEPTH_INFINITE);
+            }
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
         }
