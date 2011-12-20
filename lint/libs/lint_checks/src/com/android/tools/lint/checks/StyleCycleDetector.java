@@ -1,0 +1,87 @@
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.checks;
+
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_PARENT;
+import static com.android.tools.lint.detector.api.LintConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.TAG_STYLE;
+
+import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
+import com.android.tools.lint.detector.api.Scope;
+import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.Speed;
+import com.android.tools.lint.detector.api.XmlContext;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ * Checks for cycles in style definitions
+ */
+public class StyleCycleDetector extends ResourceXmlDetector {
+    /** The main issue discovered by this detector */
+    public static final Issue ISSUE = Issue.create(
+            "StyleCycle", //$NON-NLS-1$
+            "Looks for cycles in style definitions",
+            "There should be no cycles in style definitions as this can lead to runtime " +
+            "exceptions.",
+            Category.CORRECTNESS,
+            8,
+            Severity.ERROR,
+            StyleCycleDetector.class,
+            Scope.RESOURCE_FILE_SCOPE);
+
+    /** Constructs a new {@link StyleCycleDetector} */
+    public StyleCycleDetector() {
+    }
+
+    @Override
+    public boolean appliesTo(ResourceFolderType folderType) {
+        return folderType == ResourceFolderType.VALUES;
+    }
+
+    @Override
+    public Speed getSpeed() {
+        return Speed.FAST;
+    }
+
+    @Override
+    public Collection<String> getApplicableElements() {
+        return Collections.singleton(TAG_STYLE);
+    }
+
+    @Override
+    public void visitElement(XmlContext context, Element element) {
+        Attr parentNode = element.getAttributeNode(ATTR_PARENT);
+        if (parentNode != null) {
+            String parent = parentNode.getValue();
+            String name = element.getAttribute(ATTR_NAME);
+            if (parent.endsWith(name) &&
+                    parent.equals(STYLE_RESOURCE_PREFIX + name)) {
+                context.report(ISSUE, context.getLocation(parentNode),
+                        String.format("Style %1$s should not extend itself", name), null);
+            }
+        }
+    }
+}
