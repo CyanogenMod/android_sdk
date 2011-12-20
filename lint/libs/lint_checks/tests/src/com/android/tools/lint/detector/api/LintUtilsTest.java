@@ -46,6 +46,12 @@ public class LintUtilsTest extends TestCase {
         assertFalse(LintUtils.isXmlFile(new File("xml.png")));
     }
 
+    public void testGetBasename() throws Exception {
+        assertEquals("foo", LintUtils.getBaseName("foo.png"));
+        assertEquals("foo", LintUtils.getBaseName("foo.9.png"));
+        assertEquals(".foo", LintUtils.getBaseName(".foo"));
+    }
+
     public void testEditDistance() {
         assertEquals(0, LintUtils.editDistance("kitten", "kitten"));
 
