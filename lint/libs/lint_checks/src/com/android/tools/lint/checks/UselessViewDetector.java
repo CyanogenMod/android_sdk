@@ -20,6 +20,7 @@ import static com.android.tools.lint.detector.api.LintConstants.ABSOLUTE_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_ID;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_STYLE;
 import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.GRID_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.GRID_VIEW;
@@ -215,6 +216,7 @@ public class UselessViewDetector extends LayoutDetector {
         // - The node has no id
         // - The node has no background
         // - The node has no children
+        // - The node has no style
 
         if (element.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             return;
@@ -224,10 +226,14 @@ public class UselessViewDetector extends LayoutDetector {
             return;
         }
 
+        if (element.hasAttribute(ATTR_STYLE)) {
+            return;
+        }
+
         Location location = context.getLocation(element);
         String tag = element.getTagName();
         String message = String.format(
-                "This %1$s view is useless (no children, no background, no id)", tag);
+                "This %1$s view is useless (no children, no background, no id, no style)", tag);
         context.report(USELESS_LEAF, location, message, null);
     }
 }
