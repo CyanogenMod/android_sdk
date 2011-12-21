@@ -37,14 +37,17 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  */
 public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObjectActionDelegate {
 
+    @Override
     public void dispose() {
         // nothing to dispose.
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
         // no init
     }
 
+    @Override
     public void run(IAction action) {
         final Sdk sdk = Sdk.getCurrent();
         if (sdk != null) {
@@ -58,6 +61,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                     SdkInvocationContext.IDE);
 
             ISdkChangeListener listener = new ISdkChangeListener() {
+                @Override
                 public void onSdkLoaded() {
                     // Ignore initial load of the SDK.
                 }
@@ -69,6 +73,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                  * <p/>
                  * {@inheritDoc}
                  */
+                @Override
                 public void preInstallHook() {
 
                     // TODO we need to unload as much of as SDK as possible. Otherwise
@@ -103,6 +108,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                  * <p/>
                  * {@inheritDoc}
                  */
+                @Override
                 public void postInstallHook() {
                 }
 
@@ -111,6 +117,7 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
                  * <p/>
                  * {@inheritDoc}
                  */
+                @Override
                 public void onSdkReload() {
                     AdtPlugin.getDefault().reparseSdk();
                 }
@@ -124,10 +131,12 @@ public class SdkManagerAction implements IWorkbenchWindowActionDelegate, IObject
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         // nothing related to the current selection.
     }
 
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         // nothing to do.
     }

@@ -821,6 +821,7 @@ public class DomUtilities {
 
     /** Can be used to sort attributes by name */
     private static final Comparator<Attr> ATTRIBUTE_COMPARATOR = new Comparator<Attr>() {
+        @Override
         public int compare(Attr a1, Attr a2) {
             return a1.getName().compareTo(a2.getName());
         }

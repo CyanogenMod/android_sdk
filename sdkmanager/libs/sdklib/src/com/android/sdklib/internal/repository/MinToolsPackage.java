@@ -87,6 +87,7 @@ public abstract class MinToolsPackage extends Package implements IMinToolsDepend
      * The minimal revision of the tools package required by this extra package, if > 0,
      * or {@link #MIN_TOOLS_REV_NOT_SPECIFIED} if there is no such requirement.
      */
+    @Override
     public int getMinToolsRevision() {
         return mMinToolsRevision;
     }

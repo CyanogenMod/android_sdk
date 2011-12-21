@@ -56,6 +56,7 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
      *
      * @param parent parent to create page into
      */
+    @Override
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
 
@@ -106,6 +107,7 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
         return mYesRadio.getSelection();
     }
 
+    @Override
     public void widgetSelected(SelectionEvent event) {
         if (event.getSource() == mLink) {
             try {
@@ -124,6 +126,7 @@ public class UsagePermissionPage extends WizardPage implements SelectionListener
         }
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 

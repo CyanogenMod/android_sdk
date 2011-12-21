@@ -53,10 +53,12 @@ public class HierarchyViewerPluginDirector extends HierarchyViewerDirector {
     }
 
     private ISchedulingRule mSchedulingRule = new ISchedulingRule() {
+        @Override
         public boolean contains(ISchedulingRule rule) {
             return rule == this;
         }
 
+        @Override
         public boolean isConflicting(ISchedulingRule rule) {
             return rule == this;
         }

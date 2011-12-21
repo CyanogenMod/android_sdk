@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.layout;
 import com.android.ide.common.rendering.api.ILayoutPullParser;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
+import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.sdklib.SdkConstants;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -47,6 +48,7 @@ public class WidgetPullParser extends BasePullParser {
         mAttributes[0][1] = segments[segments.length-1];
     }
 
+    @Override
     public Object getViewCookie() {
         // we need a viewKey or the ILayoutResult will not contain any ILayoutViewInfo
         return mDescriptor;
@@ -55,19 +57,23 @@ public class WidgetPullParser extends BasePullParser {
     /**
      * Legacy method required by {@link com.android.layoutlib.api.IXmlPullParser}
      */
+    @Override
     public Object getViewKey() {
         return getViewCookie();
     }
 
+    @Override
     public ILayoutPullParser getParser(String layoutName) {
         // there's no embedded layout for a single widget.
         return null;
     }
 
+    @Override
     public int getAttributeCount() {
         return mAttributes.length; // text attribute
     }
 
+    @Override
     public String getAttributeName(int index) {
         if (index < mAttributes.length) {
             return mAttributes[index][0];
@@ -76,15 +82,18 @@ public class WidgetPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public String getAttributeNamespace(int index) {
         return SdkConstants.NS_RESOURCES;
     }
 
+    @Override
     public String getAttributePrefix(int index) {
         // pass
         return null;
     }
 
+    @Override
     public String getAttributeValue(int index) {
         if (index < mAttributes.length) {
             return mAttributes[index][1];
@@ -93,6 +102,7 @@ public class WidgetPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public String getAttributeValue(String ns, String name) {
         if (SdkConstants.NS_RESOURCES.equals(ns)) {
             for (String[] attribute : mAttributes) {
@@ -105,30 +115,36 @@ public class WidgetPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public int getDepth() {
         // pass
         return 0;
     }
 
+    @Override
     public String getName() {
         return mDescriptor.getXmlLocalName();
     }
 
+    @Override
     public String getNamespace() {
         // pass
         return null;
     }
 
+    @Override
     public String getPositionDescription() {
         // pass
         return null;
     }
 
+    @Override
     public String getPrefix() {
         // pass
         return null;
     }
 
+    @Override
     public boolean isEmptyElementTag() throws XmlPullParserException {
         if (mParsingState == START_TAG) {
             return true;

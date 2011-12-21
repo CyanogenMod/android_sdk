@@ -16,9 +16,9 @@
 
 package com.android.ddmuilib;
 
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -98,6 +98,7 @@ public class InfoPanel extends TablePanel {
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if (client == getCurrentClient()) {
             if ((changeMask & Client.CHANGE_INFO) == Client.CHANGE_INFO) {
@@ -105,6 +106,7 @@ public class InfoPanel extends TablePanel {
                     return;
 
                 mTable.getDisplay().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         clientSelected();
                     }

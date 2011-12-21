@@ -73,9 +73,11 @@ public final class TableHelper {
         // listener to catch column resize to put store the new width value.
         if (prefs != null && pref_name != null) {
             col.addControlListener(new ControlListener() {
+                @Override
                 public void controlMoved(ControlEvent e) {
                 }
 
+                @Override
                 public void controlResized(ControlEvent e) {
                     // get the new width
                     int w = ((TableColumn)e.widget).getWidth();
@@ -132,9 +134,11 @@ public final class TableHelper {
         // listener to catch column resize to put store the new width value.
         if (prefs != null && pref_name != null) {
             col.addControlListener(new ControlListener() {
+                @Override
                 public void controlMoved(ControlEvent e) {
                 }
 
+                @Override
                 public void controlResized(ControlEvent e) {
                     // get the new width
                     int w = ((TreeColumn)e.widget).getWidth();
@@ -187,9 +191,11 @@ public final class TableHelper {
         // listener to catch column resize to put store the new width value.
         if (prefs != null && pref_name != null) {
             col.addControlListener(new ControlListener() {
+                @Override
                 public void controlMoved(ControlEvent e) {
                 }
 
+                @Override
                 public void controlResized(ControlEvent e) {
                     // get the new width
                     int w = ((TreeColumn)e.widget).getWidth();

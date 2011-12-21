@@ -22,16 +22,20 @@ import org.eclipse.jface.viewers.Viewer;
 import java.util.List;
 
 public class NativeStackContentProvider implements ITreeContentProvider {
+    @Override
     public Object[] getElements(Object arg0) {
         return getChildren(arg0);
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
     }
 
+    @Override
     public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof List<?>) {
             return ((List<?>) parentElement).toArray();
@@ -40,10 +44,12 @@ public class NativeStackContentProvider implements ITreeContentProvider {
         return null;
     }
 
+    @Override
     public Object getParent(Object element) {
         return null;
     }
 
+    @Override
     public boolean hasChildren(Object element) {
         return false;
     }

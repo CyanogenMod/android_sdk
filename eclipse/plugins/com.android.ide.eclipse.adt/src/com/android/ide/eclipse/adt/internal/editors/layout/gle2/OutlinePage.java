@@ -217,6 +217,7 @@ public class OutlinePage extends ContentOutlinePage
         // change each time the canvas is reloaded. OTOH layoutlib gives us
         // constant UiView keys which we can use to perform tree item comparisons.
         tv.setComparer(new IElementComparer() {
+            @Override
             public int hashCode(Object element) {
                 if (element instanceof CanvasViewInfo) {
                     UiViewElementNode key = ((CanvasViewInfo) element).getUiViewNode();
@@ -230,6 +231,7 @@ public class OutlinePage extends ContentOutlinePage
                 return 0;
             }
 
+            @Override
             public boolean equals(Object a, Object b) {
                 if (a instanceof CanvasViewInfo && b instanceof CanvasViewInfo) {
                     UiViewElementNode keyA = ((CanvasViewInfo) a).getUiViewNode();
@@ -245,6 +247,7 @@ public class OutlinePage extends ContentOutlinePage
             }
         });
         tv.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 // Front properties panel; its selection is already linked
                 IWorkbenchPage page = getSite().getPage();
@@ -262,6 +265,7 @@ public class OutlinePage extends ContentOutlinePage
         getSite().getPage().addSelectionListener(this);
         getControl().addDisposeListener(new DisposeListener() {
 
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 dispose();
             }
@@ -270,6 +274,7 @@ public class OutlinePage extends ContentOutlinePage
         Tree tree = tv.getTree();
         tree.addKeyListener(new KeyListener() {
 
+            @Override
             public void keyPressed(KeyEvent e) {
                 if (e.character == '-') {
                     if (mMoveUpAction.isEnabled()) {
@@ -282,6 +287,7 @@ public class OutlinePage extends ContentOutlinePage
                 }
             }
 
+            @Override
             public void keyReleased(KeyEvent e) {
             }
         });
@@ -354,6 +360,7 @@ public class OutlinePage extends ContentOutlinePage
      * Only listen on selection coming from {@link LayoutEditor}, which avoid
      * picking up our own selections.
      */
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (part instanceof LayoutEditor) {
             setSelection(selection);
@@ -406,6 +413,7 @@ public class OutlinePage extends ContentOutlinePage
      */
     private static class ContentProvider implements ITreeContentProvider {
 
+        @Override
         public Object[] getChildren(Object element) {
             if (element instanceof RootWrapper) {
                 CanvasViewInfo root = ((RootWrapper)element).getRoot();
@@ -422,6 +430,7 @@ public class OutlinePage extends ContentOutlinePage
             return new Object[0];
         }
 
+        @Override
         public Object getParent(Object element) {
             if (element instanceof CanvasViewInfo) {
                 return ((CanvasViewInfo) element).getParent();
@@ -429,6 +438,7 @@ public class OutlinePage extends ContentOutlinePage
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             if (element instanceof CanvasViewInfo) {
                 List<CanvasViewInfo> children = ((CanvasViewInfo) element).getChildren();
@@ -443,14 +453,17 @@ public class OutlinePage extends ContentOutlinePage
          * Returns the root element.
          * Semantically, the root element is the single top-level XML element of the XML layout.
          */
+        @Override
         public Object[] getElements(Object inputElement) {
             return getChildren(inputElement);
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
@@ -657,6 +670,7 @@ public class OutlinePage extends ContentOutlinePage
         mMenuManager.add(new DelegateAction(prefix + ActionFactory.DELETE.getId()));
 
         mMenuManager.addMenuListener(new IMenuListener() {
+            @Override
             public void menuAboutToShow(IMenuManager manager) {
                 // Update all actions to match their LayoutCanvas counterparts
                 for (IContributionItem contrib : manager.getItems()) {
@@ -679,6 +693,7 @@ public class OutlinePage extends ContentOutlinePage
 
         // Update Move Up/Move Down state only when the menu is opened
         getControl().addMenuDetectListener(new MenuDetectListener() {
+            @Override
             public void menuDetected(MenuDetectEvent e) {
                 mMenuManager.update(IAction.ENABLED);
             }
@@ -830,6 +845,7 @@ public class OutlinePage extends ContentOutlinePage
                     String label = MoveGesture.computeUndoLabel(targetNode,
                             elements, DND.DROP_MOVE);
                     canvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+                        @Override
                         public void run() {
                             InsertType insertType = InsertType.MOVE_INTO;
                             if (dragSelection.get(0).getNode().getParent() == targetNode) {

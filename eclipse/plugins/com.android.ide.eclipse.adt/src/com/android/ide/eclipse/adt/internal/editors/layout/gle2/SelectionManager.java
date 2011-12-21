@@ -106,10 +106,12 @@ public class SelectionManager implements ISelectionProvider {
         this.mCanvas = layoutCanvas;
     }
 
+    @Override
     public void addSelectionChangedListener(ISelectionChangedListener listener) {
         mSelectionListeners.add(listener);
     }
 
+    @Override
     public void removeSelectionChangedListener(ISelectionChangedListener listener) {
         mSelectionListeners.remove(listener);
     }
@@ -137,6 +139,7 @@ public class SelectionManager implements ISelectionProvider {
      * Returns a {@link TreeSelection} where each {@link TreePath} item is
      * actually a {@link CanvasViewInfo}.
      */
+    @Override
     public ISelection getSelection() {
         if (mSelections.isEmpty()) {
             return TreeSelection.EMPTY;
@@ -180,6 +183,7 @@ public class SelectionManager implements ISelectionProvider {
      * changed. Typically it means the outline selection has changed and we're
      * synchronizing ours to match.
      */
+    @Override
     public void setSelection(ISelection selection) {
         if (mInsideUpdateSelection) {
             return;
@@ -732,6 +736,7 @@ public class SelectionManager implements ISelectionProvider {
             final SelectionChangedEvent event = new SelectionChangedEvent(this, getSelection());
 
             SafeRunnable.run(new SafeRunnable() {
+                @Override
                 public void run() {
                     for (Object listener : mSelectionListeners.getListeners()) {
                         ((ISelectionChangedListener) listener).selectionChanged(event);
@@ -888,6 +893,7 @@ public class SelectionManager implements ISelectionProvider {
      */
     public void setOutlineSelection(final List<INode> nodes) {
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 selectDropped(nodes, null /* indices */);
                 syncOutlineSelection();

@@ -58,6 +58,7 @@ public class SettingsPage extends UpdaterPage implements ISettingsPage {
     };
 
     private ModifyListener mApplyOnModified = new ModifyListener() {
+        @Override
         public void modifyText(ModifyEvent e) {
             applyNewSettings(); //$hide$
         }
@@ -149,6 +150,7 @@ public class SettingsPage extends UpdaterPage implements ISettingsPage {
     }
 
     /** Loads settings from the given {@link Properties} container and update the page UI. */
+    @Override
     public void loadSettings(Properties in_settings) {
         mProxyServerText.setText(in_settings.getProperty(KEY_HTTP_PROXY_HOST, ""));  //$NON-NLS-1$
         mProxyPortText.setText(  in_settings.getProperty(KEY_HTTP_PROXY_PORT, ""));  //$NON-NLS-1$
@@ -158,6 +160,7 @@ public class SettingsPage extends UpdaterPage implements ISettingsPage {
 
     /** Called by the application to retrieve settings from the UI and store them in
      * the given {@link Properties} container. */
+    @Override
     public void retrieveSettings(Properties out_settings) {
         out_settings.setProperty(KEY_HTTP_PROXY_HOST, mProxyServerText.getText());
         out_settings.setProperty(KEY_HTTP_PROXY_PORT, mProxyPortText.getText());
@@ -172,6 +175,7 @@ public class SettingsPage extends UpdaterPage implements ISettingsPage {
      * settings must be applied. The page does not apply the settings itself, instead
      * it notifies the application.
      */
+    @Override
     public void setOnSettingsChanged(SettingsChangedCallback settingsChangedCallback) {
         mSettingsChangedCallback = settingsChangedCallback;
     }

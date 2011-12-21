@@ -40,10 +40,12 @@ public class ExportWizardAction implements IObjectActionDelegate {
     /**
      * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
      */
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         mWorkbench = targetPart.getSite().getWorkbenchWindow().getWorkbench();
     }
 
+    @Override
     public void run(IAction action) {
         if (mSelection instanceof IStructuredSelection) {
             IStructuredSelection selection = (IStructuredSelection)mSelection;
@@ -85,6 +87,7 @@ public class ExportWizardAction implements IObjectActionDelegate {
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }

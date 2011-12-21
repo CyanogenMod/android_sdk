@@ -17,9 +17,9 @@
 package com.android.ddmlib.testrunner;
 
 
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 
@@ -93,6 +93,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPackageName() {
         return mPackageName;
     }
@@ -100,6 +101,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getRunnerName() {
         if (mRunnerName == null) {
             return DEFAULT_RUNNER_NAME;
@@ -117,6 +119,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setClassName(String className) {
         addInstrumentationArg(CLASS_ARG_NAME, className);
     }
@@ -124,6 +127,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setClassNames(String[] classNames) {
         StringBuilder classArgBuilder = new StringBuilder();
 
@@ -139,6 +143,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setMethodName(String className, String testName) {
         setClassName(className + METHOD_SEPARATOR + testName);
     }
@@ -146,6 +151,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setTestPackageName(String packageName) {
         addInstrumentationArg(PACKAGE_ARG_NAME, packageName);
     }
@@ -153,6 +159,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addInstrumentationArg(String name, String value) {
         if (name == null || value == null) {
             throw new IllegalArgumentException("name or value arguments cannot be null");
@@ -163,6 +170,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeInstrumentationArg(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name argument cannot be null");
@@ -173,6 +181,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addBooleanArg(String name, boolean value) {
         addInstrumentationArg(name, Boolean.toString(value));
     }
@@ -180,6 +189,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setLogOnly(boolean logOnly) {
         addBooleanArg(LOG_ARG_NAME, logOnly);
     }
@@ -187,6 +197,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setDebug(boolean debug) {
         addBooleanArg(DEBUG_ARG_NAME, debug);
     }
@@ -194,6 +205,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setCoverage(boolean coverage) {
         addBooleanArg(COVERAGE_ARG_NAME, coverage);
     }
@@ -201,6 +213,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setTestSize(TestSize size) {
         addInstrumentationArg(SIZE_ARG_NAME, size.getRunnerValue());
     }
@@ -208,6 +221,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setMaxtimeToOutputResponse(int maxTimeToOutputResponse) {
         mMaxTimeToOutputResponse = maxTimeToOutputResponse;
     }
@@ -215,6 +229,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setRunName(String runName) {
         mRunName = runName;
     }
@@ -222,6 +237,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run(ITestRunListener... listeners)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
@@ -231,6 +247,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run(Collection<ITestRunListener> listeners)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
@@ -276,6 +293,7 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void cancel() {
         if (mParser != null) {
             mParser.cancel();

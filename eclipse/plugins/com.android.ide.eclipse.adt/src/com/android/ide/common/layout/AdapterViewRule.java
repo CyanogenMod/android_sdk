@@ -31,6 +31,7 @@ public class AdapterViewRule extends BaseLayoutRule {
         // You are not allowed to insert children into AdapterViews; you must
         // use the dedicated addView methods etc dynamically
         DropFeedback dropFeedback = new DropFeedback(null,  new IFeedbackPainter() {
+            @Override
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 Rect b = node.getBounds();
                 if (b.isValid()) {

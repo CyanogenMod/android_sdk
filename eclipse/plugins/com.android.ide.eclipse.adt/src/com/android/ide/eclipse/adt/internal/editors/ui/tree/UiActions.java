@@ -46,6 +46,7 @@ public abstract class UiActions implements ICommitXml {
     abstract protected UiElementNode getRootNode();
 
     /** Commits pending data before the XML model is modified. */
+    @Override
     abstract public void commitPendingXmlChanges();
 
     /**
@@ -157,6 +158,7 @@ public abstract class UiActions implements ICommitXml {
                 String.format("Do you really want to remove %1$s?", sb.toString()))) {
             commitPendingXmlChanges();
             getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
+                @Override
                 public void run() {
                     UiElementNode previous = null;
                     UiElementNode parent = null;
@@ -200,6 +202,7 @@ public abstract class UiActions implements ICommitXml {
 
         commitPendingXmlChanges();
         getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
+            @Override
             public void run() {
                 for (int i = 0; i < uiNodes.size(); i++) {
                     UiElementNode uiNode = uiLastNode[0] = uiNodes.get(i);
@@ -380,6 +383,7 @@ public abstract class UiActions implements ICommitXml {
 
         commitPendingXmlChanges();
         getRootNode().getEditor().wrapEditXmlModel(new Runnable() {
+            @Override
             public void run() {
                 for (int i = nodes.size() - 1; i >= 0; i--) {
                     final UiElementNode node = uiLastNode[0] = nodes.get(i);
@@ -583,6 +587,7 @@ public abstract class UiActions implements ICommitXml {
         UiElementNode rootNode = getRootNode();
 
         rootNode.getEditor().wrapEditXmlModel(new Runnable() {
+            @Override
             public void run() {
                 DescriptorsUtils.setDefaultLayoutAttributes(uiNew, updateLayout);
                 uiNew.createXmlNode();

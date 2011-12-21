@@ -133,6 +133,7 @@ public final class LogCatFilterSettingsDialog extends TitleAreaDialog {
 
         /* call validateDialog() whenever user modifies any text field */
         ModifyListener m = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 DialogStatus status = validateDialog();
                 mOkButton.setEnabled(status.valid);

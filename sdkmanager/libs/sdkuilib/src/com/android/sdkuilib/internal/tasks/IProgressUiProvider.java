@@ -37,6 +37,7 @@ interface IProgressUiProvider extends ILogUiProvider {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public abstract void setDescription(String description);
 
     /**

@@ -21,11 +21,11 @@ import com.android.traceview.ColorController;
 import com.android.traceview.DmTraceReader;
 import com.android.traceview.MethodData;
 import com.android.traceview.ProfileView;
+import com.android.traceview.ProfileView.MethodHandler;
 import com.android.traceview.SelectionController;
 import com.android.traceview.TimeLineView;
 import com.android.traceview.TraceReader;
 import com.android.traceview.TraceUnits;
-import com.android.traceview.ProfileView.MethodHandler;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -304,9 +304,11 @@ public class TraceviewEditor extends EditorPart implements MethodHandler {
     }
 
     // ---- MethodHandler methods
+
+    @Override
     public void handleMethod(MethodData method) {
         String methodName = method.getMethodName();
-        String className = method.getClassName().replaceAll("/", ".");  //$NON-NLS-1$  //$NON-NLS-21$
+        String className = method.getClassName().replaceAll("/", ".");  //$NON-NLS-1$ //$NON-NLS-2$
         String fqmn = className + "." + methodName; //$NON-NLS-1$
 
         JavaSourceRevealer.revealMethod(fqmn);

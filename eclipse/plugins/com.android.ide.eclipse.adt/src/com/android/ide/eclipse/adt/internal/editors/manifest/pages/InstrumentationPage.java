@@ -47,6 +47,7 @@ public final class InstrumentationPage extends FormPage implements IPageImagePro
         mEditor = editor;
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon(getTitle(),
                                                  IconFactory.COLOR_GREEN,

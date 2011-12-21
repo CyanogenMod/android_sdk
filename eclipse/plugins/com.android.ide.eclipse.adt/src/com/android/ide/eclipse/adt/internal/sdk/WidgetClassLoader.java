@@ -61,14 +61,17 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
             mSimpleName = getSimpleName(fqcn);
         }
 
+        @Override
         public String getFullClassName() {
             return mFqcn;
         }
 
+        @Override
         public String getSimpleName() {
             return mSimpleName;
         }
 
+        @Override
         public IClassDescriptor[] getDeclaredClasses() {
             return mDeclaredClasses.toArray(new IClassDescriptor[mDeclaredClasses.size()]);
         }
@@ -77,6 +80,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
             mDeclaredClasses.add(declaredClass);
         }
 
+        @Override
         public IClassDescriptor getEnclosingClass() {
             return mEnclosingClass;
         }
@@ -93,6 +97,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
             mFqcn = enclosingClass.mFqcn + "$" + mFqcn.substring(enclosingClass.mFqcn.length() + 1);
         }
 
+        @Override
         public IClassDescriptor getSuperclass() {
             return mSuperClass;
         }
@@ -114,6 +119,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
             return mFqcn.hashCode();
         }
 
+        @Override
         public boolean isInstantiable() {
             return mIsInstantiable;
         }
@@ -152,6 +158,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
         mReader = new BufferedReader(new FileReader(osFilePath));
     }
 
+    @Override
     public String getSource() {
         return mOsFilePath;
     }
@@ -301,6 +308,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
      * @throws InvalidAttributeValueException
      * @throws ClassFormatError
      */
+    @Override
     public HashMap<String, ArrayList<IClassDescriptor>> findClassesDerivingFrom(String rootPackage,
             String[] superClasses) throws IOException, InvalidAttributeValueException,
             ClassFormatError {
@@ -327,6 +335,7 @@ public final class WidgetClassLoader implements IAndroidClassLoader {
      * @param className the fully-qualified name of the class to return.
      * @throws ClassNotFoundException
      */
+    @Override
     public IClassDescriptor getClass(String className) throws ClassNotFoundException {
         return mMap.get(className);
     }

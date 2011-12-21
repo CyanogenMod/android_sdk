@@ -137,10 +137,12 @@ abstract class LintFix implements ICompletionProposal {
 
     // ---- Implements ICompletionProposal ----
 
+    @Override
     public String getDisplayString() {
         return null;
     }
 
+    @Override
     public String getAdditionalProposalInfo() {
         Issue issue = EclipseLintClient.getRegistry().getIssue(mId);
         if (issue != null) {
@@ -160,15 +162,18 @@ abstract class LintFix implements ICompletionProposal {
         }
     }
 
+    @Override
     public Point getSelection(IDocument document) {
         return null;
     }
 
+    @Override
     public Image getImage() {
         ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
         return sharedImages.getImage(ISharedImages.IMG_OBJS_WARN_TSK);
     }
 
+    @Override
     public IContextInformation getContextInformation() {
         return null;
     }
@@ -234,6 +239,7 @@ abstract class LintFix implements ICompletionProposal {
         protected abstract void apply(IDocument document, IStructuredModel model, Node node,
                 int start, int end);
 
+        @Override
         public void apply(IDocument document) {
             if (!(document instanceof IStructuredDocument)) {
                 AdtPlugin.log(null, "Unexpected document type: %1$s. Can't fix.",
@@ -773,6 +779,7 @@ abstract class LintFix implements ICompletionProposal {
 
         // ---- Implements IInputValidator ----
 
+        @Override
         public String isValid(String input) {
             if (input == null || input.length() == 0)
                 return " "; //$NON-NLS-1$

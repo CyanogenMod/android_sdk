@@ -57,16 +57,19 @@ public class SimpleAttribute implements IAttribute {
      * Returns the namespace URI of the attribute.
      * Can be empty for an attribute without a namespace but is never null.
      */
+    @Override
     public String getUri() {
         return mUri;
     }
 
     /** Returns the XML local name of the attribute. Cannot be null nor empty. */
+    @Override
     public String getName() {
         return mName;
     }
 
     /** Returns the value of the attribute. Cannot be null. Can be empty. */
+    @Override
     public String getValue() {
         return mValue;
     }

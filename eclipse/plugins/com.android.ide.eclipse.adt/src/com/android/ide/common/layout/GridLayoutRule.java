@@ -170,9 +170,11 @@ public class GridLayoutRule extends BaseLayoutRule {
         }
 
         IMenuCallback actionCallback = new IMenuCallback() {
+            @Override
             public void action(final RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, final Boolean newValue) {
                 parentNode.editXml("Add/Remove Row/Column", new INodeHandler() {
+                    @Override
                     public void handle(INode n) {
                         String id = action.getId();
                         if (id.equals(ACTION_SHOW_STRUCTURE)) {

@@ -75,6 +75,7 @@ public class NdkPreferencePage extends FieldEditorPreferencePage implements
 
     }
 
+    @Override
     public void init(IWorkbench workbench) {
         // Nothing to do herea
     }

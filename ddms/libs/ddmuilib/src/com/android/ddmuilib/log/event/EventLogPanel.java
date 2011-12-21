@@ -128,6 +128,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             ICommonAction saveAction, ICommonAction loadAction, ICommonAction importAction) {
         mOptionsAction = optionsAction;
         mOptionsAction.setRunnable(new Runnable() {
+            @Override
             public void run() {
                 openOptionPanel();
             }
@@ -135,6 +136,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         mClearAction = clearAction;
         mClearAction.setRunnable(new Runnable() {
+            @Override
             public void run() {
                 clearLog();
             }
@@ -142,6 +144,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         mSaveAction = saveAction;
         mSaveAction.setRunnable(new Runnable() {
+            @Override
             public void run() {
                 try {
                     FileDialog fileDialog = new FileDialog(mParent.getShell(), SWT.SAVE);
@@ -160,6 +163,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         mLoadAction = loadAction;
         mLoadAction.setRunnable(new Runnable() {
+            @Override
             public void run() {
                 FileDialog fileDialog = new FileDialog(mParent.getShell(), SWT.OPEN);
 
@@ -174,6 +178,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
         mImportAction = importAction;
         mImportAction.setRunnable(new Runnable() {
+            @Override
             public void run() {
                 FileDialog fileDialog = new FileDialog(mParent.getShell(), SWT.OPEN);
 
@@ -325,6 +330,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
      * (non-Javadoc)
      * @see com.android.ddmlib.AndroidDebugBridge.IClientChangeListener#clientChanged(com.android.ddmlib.Client, int)
      */
+    @Override
     public void clientChanged(Client client, int changeMask) {
         // pass
     }
@@ -336,6 +342,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
     protected Control createControl(Composite parent) {
         mParent = parent;
         mParent.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 synchronized (mLock) {
                     if (mCurrentLogReceiver != null) {
@@ -578,6 +585,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
 
                 // run sync as we need to update right now.
                 d.syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (mBottomParentPanel.isDisposed() == false) {
                             resetUiFromUiThread();
@@ -680,6 +688,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
      * @param entry The new log entry
      * @see LogReceiver.ILogListener#newEntry(LogEntry)
      */
+    @Override
     @WorkerThread
     public void newEntry(LogEntry entry) {
         synchronized (mLock) {
@@ -724,6 +733,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         try  {
             Display d = mBottomParentPanel.getDisplay();
             d.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (mBottomParentPanel.isDisposed() == false) {
                         if (mCurrentEventLogParser != null) {
@@ -741,6 +751,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
      * Processes raw data coming from the log service.
      * @see LogReceiver.ILogListener#newData(byte[], int, int)
      */
+    @Override
     public void newData(byte[] data, int offset, int length) {
         if (mTempFile != null) {
             try {
@@ -861,6 +872,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
             Display d = mBottomParentPanel.getDisplay();
 
             d.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (mBottomParentPanel.isDisposed() == false) {
                         for (EventDisplay eventDisplay : mEventDisplays) {
@@ -882,6 +894,7 @@ public class EventLogPanel extends TablePanel implements ILogListener,
         }
     }
 
+    @Override
     @UiThread
     public void columnResized(int index, TableColumn sourceColumn) {
         for (EventDisplay eventDisplay : mEventDisplays) {

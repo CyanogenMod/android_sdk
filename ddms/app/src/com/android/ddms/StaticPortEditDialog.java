@@ -149,6 +149,7 @@ public class StaticPortEditDialog extends Dialog {
         mShell.setLayout(new GridLayout(1, false));
 
         mShell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
             }
         });
@@ -167,6 +168,7 @@ public class StaticPortEditDialog extends Dialog {
             deviceSNText.setText(mDeviceSn);
         }
         deviceSNText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mDeviceSn = deviceSNText.getText().trim();
                 validate();
@@ -182,6 +184,7 @@ public class StaticPortEditDialog extends Dialog {
         }
         appNameText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         appNameText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mAppName = appNameText.getText().trim();
                 validate();
@@ -197,6 +200,7 @@ public class StaticPortEditDialog extends Dialog {
         }
         debugPortText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         debugPortText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mPortNumber = debugPortText.getText().trim();
                 validate();

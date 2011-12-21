@@ -16,7 +16,6 @@
 package com.android.ide.eclipse.adt.internal.resources.manager;
 
 import static com.android.ide.eclipse.adt.AdtConstants.MARKER_AAPT_COMPILE;
-
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
@@ -107,6 +106,7 @@ public class IdeScanningContext extends ScanningContext {
         // marker will throw a org.eclipse.core.internal.resources.ResourceException.
         if (async) {
             AdtPlugin.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     updateMarkers(false);
                 }

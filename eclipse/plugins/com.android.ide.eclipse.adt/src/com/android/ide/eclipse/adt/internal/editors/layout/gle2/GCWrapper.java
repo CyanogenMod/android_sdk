@@ -134,6 +134,7 @@ public class GCWrapper implements IGraphics {
 
     //-------------
 
+    @Override
     public IColor registerColor(int rgb) {
         checkGC();
 
@@ -151,6 +152,7 @@ public class GCWrapper implements IGraphics {
     }
 
     /** Returns the (cached) pixel height of the current font. */
+    @Override
     public int getFontHeight() {
         if (mFontHeight < 1) {
             checkGC();
@@ -160,30 +162,36 @@ public class GCWrapper implements IGraphics {
         return mFontHeight;
     }
 
+    @Override
     public IColor getForeground() {
         Color c = getGc().getForeground();
         return new ColorWrapper(c);
     }
 
+    @Override
     public IColor getBackground() {
         Color c = getGc().getBackground();
         return new ColorWrapper(c);
     }
 
+    @Override
     public int getAlpha() {
         return getGc().getAlpha();
     }
 
+    @Override
     public void setForeground(IColor color) {
         checkGC();
         getGc().setForeground(((ColorWrapper) color).getColor());
     }
 
+    @Override
     public void setBackground(IColor color) {
         checkGC();
         getGc().setBackground(((ColorWrapper) color).getColor());
     }
 
+    @Override
     public void setAlpha(int alpha) {
         checkGC();
         try {
@@ -194,6 +202,7 @@ public class GCWrapper implements IGraphics {
         }
     }
 
+    @Override
     public void setLineStyle(LineStyle style) {
         int swtStyle = 0;
         switch (style) {
@@ -223,6 +232,7 @@ public class GCWrapper implements IGraphics {
         }
     }
 
+    @Override
     public void setLineWidth(int width) {
         checkGC();
         if (width > 0) {
@@ -232,6 +242,7 @@ public class GCWrapper implements IGraphics {
 
     // lines
 
+    @Override
     public void drawLine(int x1, int y1, int x2, int y2) {
         checkGC();
         useStrokeAlpha();
@@ -242,12 +253,14 @@ public class GCWrapper implements IGraphics {
         getGc().drawLine(x1, y1, x2, y2);
     }
 
+    @Override
     public void drawLine(Point p1, Point p2) {
         drawLine(p1.x, p1.y, p2.x, p2.y);
     }
 
     // rectangles
 
+    @Override
     public void drawRect(int x1, int y1, int x2, int y2) {
         checkGC();
         useStrokeAlpha();
@@ -258,10 +271,12 @@ public class GCWrapper implements IGraphics {
         getGc().drawRectangle(x, y, w, h);
     }
 
+    @Override
     public void drawRect(Point p1, Point p2) {
         drawRect(p1.x, p1.y, p2.x, p2.y);
     }
 
+    @Override
     public void drawRect(Rect r) {
         checkGC();
         useStrokeAlpha();
@@ -272,6 +287,7 @@ public class GCWrapper implements IGraphics {
         getGc().drawRectangle(x, y, w, h);
     }
 
+    @Override
     public void fillRect(int x1, int y1, int x2, int y2) {
         checkGC();
         useFillAlpha();
@@ -282,10 +298,12 @@ public class GCWrapper implements IGraphics {
         getGc().fillRectangle(x, y, w, h);
     }
 
+    @Override
     public void fillRect(Point p1, Point p2) {
         fillRect(p1.x, p1.y, p2.x, p2.y);
     }
 
+    @Override
     public void fillRect(Rect r) {
         checkGC();
         useFillAlpha();
@@ -349,6 +367,7 @@ public class GCWrapper implements IGraphics {
 
     // strings
 
+    @Override
     public void drawString(String string, int x, int y) {
         checkGC();
         useStrokeAlpha();
@@ -362,6 +381,7 @@ public class GCWrapper implements IGraphics {
         getGc().drawString(string, x, y, true /*isTransparent*/);
     }
 
+    @Override
     public void drawBoxedStrings(int x, int y, List<?> strings) {
         checkGC();
 
@@ -393,12 +413,14 @@ public class GCWrapper implements IGraphics {
         }
     }
 
+    @Override
     public void drawString(String string, Point topLeft) {
         drawString(string, topLeft.x, topLeft.y);
     }
 
     // Styles
 
+    @Override
     public void useStyle(DrawingStyle style) {
         checkGC();
 
@@ -490,6 +512,7 @@ public class GCWrapper implements IGraphics {
 
     // dots
 
+    @Override
     public void drawPoint(int x, int y) {
         checkGC();
         useStrokeAlpha();
@@ -504,6 +527,7 @@ public class GCWrapper implements IGraphics {
     private static final int MIN_LENGTH = 10;
 
 
+    @Override
     public void drawArrow(int x1, int y1, int x2, int y2, int size) {
         int arrowWidth = size;
         int arrowHeight = size;

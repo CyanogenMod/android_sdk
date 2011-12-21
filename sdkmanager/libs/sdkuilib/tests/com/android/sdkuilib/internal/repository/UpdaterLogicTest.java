@@ -44,30 +44,37 @@ public class UpdaterLogicTest extends TestCase {
 
     private static class NullUpdaterData implements IUpdaterData {
 
+        @Override
         public AvdManager getAvdManager() {
             return null;
         }
 
+        @Override
         public ImageFactory getImageFactory() {
             return null;
         }
 
+        @Override
         public ISdkLog getSdkLog() {
             return null;
         }
 
+        @Override
         public SdkManager getSdkManager() {
             return null;
         }
 
+        @Override
         public SettingsController getSettingsController() {
             return null;
         }
 
+        @Override
         public ITaskFactory getTaskFactory() {
             return null;
         }
 
+        @Override
         public Shell getWindowShell() {
             return null;
         }

@@ -174,6 +174,7 @@ public abstract class UiAttributeNode implements Comparable<UiAttributeNode> {
     public abstract void commit();
 
     // ---- Implements Comparable ----
+    @Override
     public int compareTo(UiAttributeNode o) {
         return compareAttributes(mDescriptor.getXmlLocalName(), o.mDescriptor.getXmlLocalName());
     }

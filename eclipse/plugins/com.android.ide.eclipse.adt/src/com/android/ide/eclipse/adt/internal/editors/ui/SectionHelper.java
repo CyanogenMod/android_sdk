@@ -303,19 +303,23 @@ public final class SectionHelper {
         ic.setVisible(false); // initially hidden
 
         control.addMouseTrackListener(new MouseTrackListener() {
+            @Override
             public void mouseEnter(MouseEvent e) {
             }
 
+            @Override
             public void mouseExit(MouseEvent e) {
                 ic.setVisible(false);
             }
 
+            @Override
             public void mouseHover(MouseEvent e) {
                 ic.setLocation(control.toDisplay(10, 25));  // same offset as in PDETextHover
                 ic.setVisible(true);
             }
         });
         control.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 ic.dispose();
             }

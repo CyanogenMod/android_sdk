@@ -150,6 +150,7 @@ class ArchiveInfo extends ArchiveReplacement implements Comparable<ArchiveInfo> 
      *
      * @see Archive#compareTo(Archive)
      */
+    @Override
     public int compareTo(ArchiveInfo rhs) {
         if (getNewArchive() != null && rhs != null) {
             return getNewArchive().compareTo(rhs.getNewArchive());

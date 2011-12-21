@@ -38,7 +38,7 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
  * <p/>
  * The XML attribute has no default value. When unset, the text field is blank.
  * When updating the XML, if the field is empty, the attribute will be removed
- * from the XML element.  
+ * from the XML element.
  * <p/>
  * See {@link UiAttributeNode} for more information.
  */
@@ -52,7 +52,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
     public UiTextAttributeNode(AttributeDescriptor attributeDescriptor, UiElementNode uiParent) {
         super(attributeDescriptor, uiParent);
     }
-    
+
     /* (non-java doc)
      * Creates a label widget and an associated text field.
      * <p/>
@@ -72,14 +72,14 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
 
     /**
      * No completion values for this UI attribute.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String[] getPossibleValues(String prefix) {
         return null;
     }
-    
+
     /**
      * Sets the internal managed form.
      * This is usually set by createUiControl.
@@ -87,14 +87,14 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
     protected void setManagedForm(IManagedForm managedForm) {
          mManagedForm = managedForm;
     }
-    
+
     /**
      * @return The managed form, set only once createUiControl has been called.
      */
     protected IManagedForm getManagedForm() {
         return mManagedForm;
     }
-    
+
     /* (non-java doc)
      * Returns if the attribute node is valid, and its UI has been created.
      */
@@ -108,7 +108,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
         if (mText != null) {
             return mText.getText();
         }
-        
+
         return null;
     }
 
@@ -126,7 +126,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
      */
     protected final void setTextWidget(Text textWidget) {
         mText = textWidget;
- 
+
         if (textWidget != null) {
             // Sets the with hint for the text field. Derived classes can always override it.
             // This helps the grid layout to resize correctly on smaller screen sizes.
@@ -137,7 +137,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
             } else if (data instanceof TableWrapData) {
                 ((TableWrapData)data).maxWidth = 100;
             }
-            
+
             mText.addModifyListener(new ModifyListener() {
                 /**
                  * Sent when the text is modified, whether by the user via manual
@@ -146,6 +146,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
                  * Simply mark the attribute as dirty if it really changed.
                  * The container SectionPart will collect these flag and manage them.
                  */
+                @Override
                 public void modifyText(ModifyEvent e) {
                     if (!isInInternalTextModification() &&
                             !isDirty() &&
@@ -154,17 +155,18 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
                             !mText.getText().equals(getCurrentValue())) {
                         setDirty(true);
                     }
-                }            
+                }
             });
-            
+
             // Remove self-reference when the widget is disposed
             mText.addDisposeListener(new DisposeListener() {
+                @Override
                 public void widgetDisposed(DisposeEvent e) {
                     mText = null;
                 }
             });
         }
-        
+
         onAddValidators(mText);
     }
 
@@ -179,7 +181,7 @@ public class UiTextAttributeNode extends UiAbstractTextAttributeNode {
      * <li> Call the validator once to setup the initial messages as needed.
      * <p/>
      * The base implementation does nothing.
-     * 
+     *
      * @param text The {@link Text} widget to validate.
      */
     protected void onAddValidators(Text text) {

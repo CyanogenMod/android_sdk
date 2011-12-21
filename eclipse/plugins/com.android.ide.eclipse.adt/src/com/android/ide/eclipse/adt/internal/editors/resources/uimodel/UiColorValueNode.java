@@ -40,19 +40,20 @@ public class UiColorValueNode extends UiTextValueNode {
     /** Accepted RGBA formats are one of #RGB, #ARGB, #RRGGBB or #AARRGGBB. */
     private static final Pattern RGBA_REGEXP = Pattern.compile(
             "#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"); //$NON-NLS-1$
-    
+
     public UiColorValueNode(TextValueDescriptor attributeDescriptor, UiElementNode uiParent) {
         super(attributeDescriptor, uiParent);
     }
 
     /* (non-java doc)
-     * 
+     *
      * Add a modify listener that will check colors have the proper format,
      * that is one of #RGB, #ARGB, #RRGGBB or #AARRGGBB.
      */
     @Override
     protected void onAddValidators(final Text text) {
         ModifyListener listener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String color = text.getText();
                 if (RGBA_REGEXP.matcher(color).matches()) {
@@ -69,6 +70,7 @@ public class UiColorValueNode extends UiTextValueNode {
 
         // Make sure the validator removes its message(s) when the widget is disposed
         text.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 getManagedForm().getMessageManager().removeMessage(text, text);
             }

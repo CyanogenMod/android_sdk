@@ -50,6 +50,7 @@ public class ColorDescriptors implements IDescriptorProvider {
             null /*children: added later*/, true /*mandatory*/);
 
     /** @return the root descriptor. */
+    @Override
     public ElementDescriptor getDescriptor() {
         if (mDescriptor == null) {
             mDescriptor = new ElementDescriptor("", getRootElementDescriptors()); //$NON-NLS-1$
@@ -58,6 +59,7 @@ public class ColorDescriptors implements IDescriptorProvider {
         return mDescriptor;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return new ElementDescriptor[] { mDescriptor };
     }

@@ -50,102 +50,126 @@ public class TestGraphics implements IGraphics {
 
     // ==== IGraphics ====
 
+    @Override
     public void drawBoxedStrings(int x, int y, List<?> strings) {
         mDrawn.add("drawBoxedStrings(" + x + "," + y + "," + strings + ")");
     }
 
+    @Override
     public void drawLine(int x1, int y1, int x2, int y2) {
         mDrawn.add("drawLine(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")");
     }
 
+    @Override
     public void drawLine(Point p1, Point p2) {
         mDrawn.add("drawLine(" + p1 + "," + p2 + ")");
     }
 
+    @Override
     public void drawRect(int x1, int y1, int x2, int y2) {
         mDrawn.add("drawRect(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")");
     }
 
+    @Override
     public void drawRect(Point p1, Point p2) {
         mDrawn.add("drawRect(" + p1 + "," + p2 + ")");
     }
 
+    @Override
     public void drawRect(Rect r) {
         mDrawn.add("drawRect(" + rectToString(r) + ")");
     }
 
+    @Override
     public void drawString(String string, int x, int y) {
         mDrawn.add("drawString(" + x + "," + y + "," + string + ")");
     }
 
+    @Override
     public void drawString(String string, Point topLeft) {
         mDrawn.add("drawString(" + string + "," + topLeft + ")");
     }
 
+    @Override
     public void fillRect(int x1, int y1, int x2, int y2) {
         mDrawn.add("fillRect(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")");
     }
 
+    @Override
     public void fillRect(Point p1, Point p2) {
         mDrawn.add("fillRect(" + p1 + "," + p2 + ")");
     }
 
+    @Override
     public void fillRect(Rect r) {
         mDrawn.add("fillRect(" + rectToString(r) + ")");
     }
 
+    @Override
     public int getAlpha() {
         return mAlpha;
     }
 
+    @Override
     public IColor getBackground() {
         return mBackground;
     }
 
+    @Override
     public int getFontHeight() {
         return 12;
     }
 
+    @Override
     public IColor getForeground() {
         return mForeground;
     }
 
+    @Override
     public IColor registerColor(int rgb) {
         mDrawn.add("registerColor(" + Integer.toHexString(rgb) + ")");
         return new TestColor(rgb);
     }
 
+    @Override
     public void setAlpha(int alpha) {
         mAlpha = alpha;
         mDrawn.add("setAlpha(" + alpha + ")");
     }
 
+    @Override
     public void setBackground(IColor color) {
         mDrawn.add("setBackground(" + color + ")");
         mBackground = color;
     }
 
+    @Override
     public void setForeground(IColor color) {
         mDrawn.add("setForeground(" + color + ")");
         mForeground = color;
     }
 
+    @Override
     public void setLineStyle(LineStyle style) {
         mDrawn.add("setLineStyle(" + style + ")");
     }
 
+    @Override
     public void setLineWidth(int width) {
         mDrawn.add("setLineWidth(" + width + ")");
     }
 
+    @Override
     public void useStyle(DrawingStyle style) {
         mDrawn.add("useStyle(" + style + ")");
     }
 
+    @Override
     public void drawArrow(int x1, int y1, int x2, int y2, int size) {
         mDrawn.add("drawArrow(" + x1 + "," + y1 + "," + x2 + "," + y2 + ")");
     }
 
+    @Override
     public void drawPoint(int x, int y) {
         mDrawn.add("drawPoint(" + x + "," + y + ")");
     }

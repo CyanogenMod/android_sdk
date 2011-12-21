@@ -70,9 +70,11 @@ public class AddNativeWizard extends Wizard {
         mAddNativeWizardPage.updateArgs(mTemplateArgs);
 
         IRunnableWithProgress op = new IRunnableWithProgress() {
+            @Override
             public void run(IProgressMonitor monitor) throws InvocationTargetException,
                     InterruptedException {
                 IWorkspaceRunnable op1 = new IWorkspaceRunnable() {
+                    @Override
                     public void run(IProgressMonitor monitor1) throws CoreException {
                         // Convert to CDT project
                         CCorePlugin.getDefault().convertProjectToCC(mProject, monitor1,

@@ -26,6 +26,7 @@ import junit.framework.Assert;
  */
 public class TestLogger implements ILogger {
 
+    @Override
     public void error(Throwable t, String errorFormat, Object... args) {
         String message = String.format(errorFormat, args);
         if (t != null) {
@@ -34,10 +35,12 @@ public class TestLogger implements ILogger {
         Assert.fail(message);
     }
 
+    @Override
     public void printf(String msgFormat, Object... args) {
         System.out.println(String.format(msgFormat, args));
     }
 
+    @Override
     public void warning(String warningFormat, Object... args) {
         System.err.println(String.format(warningFormat, args));
     }

@@ -126,6 +126,7 @@ public class ImageUtils {
      */
     public static BufferedImage cropBlank(BufferedImage image, Rect initialCrop) {
         CropFilter filter = new CropFilter() {
+            @Override
             public boolean crop(BufferedImage bufferedImage, int x, int y) {
                 int rgb = bufferedImage.getRGB(x, y);
                 return (rgb & 0xFF000000) == 0x00000000;
@@ -152,6 +153,7 @@ public class ImageUtils {
     public static BufferedImage cropColor(BufferedImage image,
             final int blankArgb, Rect initialCrop) {
         CropFilter filter = new CropFilter() {
+            @Override
             public boolean crop(BufferedImage bufferedImage, int x, int y) {
                 return blankArgb == bufferedImage.getRGB(x, y);
             }

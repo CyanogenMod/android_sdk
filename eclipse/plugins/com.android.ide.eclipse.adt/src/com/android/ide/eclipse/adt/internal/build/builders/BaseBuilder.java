@@ -122,6 +122,7 @@ public abstract class BaseBuilder extends IncrementalProjectBuilder {
          * Sent when an XML error is detected.
          * @see XmlErrorListener
          */
+        @Override
         public void errorFound() {
             mXmlError = true;
         }

@@ -54,6 +54,7 @@ public class MethodProfilingHandler extends BaseFileHandler
         return "Method Profiling Error";
     }
 
+    @Override
     public void onStartFailure(final Client client, final String message) {
         displayErrorInUiThread(
                 "Unable to create Method Profiling file for application '%1$s'\n\n%2$s" +
@@ -62,6 +63,7 @@ public class MethodProfilingHandler extends BaseFileHandler
                 message != null ? message + "\n\n" : "");
     }
 
+    @Override
     public void onEndFailure(final Client client, final String message) {
         displayErrorInUiThread(
                 "Unable to finish Method Profiling for application '%1$s'\n\n%2$s" +
@@ -70,8 +72,10 @@ public class MethodProfilingHandler extends BaseFileHandler
                 message != null ? message + "\n\n" : "");
     }
 
+    @Override
     public void onSuccess(final String remoteFilePath, final Client client) {
         mParentShell.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 if (remoteFilePath == null) {
                     displayErrorFromUiThread(
@@ -100,6 +104,7 @@ public class MethodProfilingHandler extends BaseFileHandler
         });
     }
 
+    @Override
     public void onSuccess(byte[] data, final Client client) {
         try {
             File tempFile = saveTempFile(data, DdmConstants.DOT_TRACE);
@@ -124,11 +129,13 @@ public class MethodProfilingHandler extends BaseFileHandler
         // pull the file
         try {
             SyncProgressHelper.run(new SyncRunnable() {
+                    @Override
                     public void run(ISyncProgressMonitor monitor)
                             throws SyncException, IOException, TimeoutException {
                         sync.pullFile(remoteFilePath, tempPath, monitor);
                     }
 
+                    @Override
                     public void close() {
                         sync.close();
                     }

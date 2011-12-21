@@ -45,6 +45,7 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
     /* (non-java doc)
      * Returns all the UI node children of the given element or null if not the right kind
      * of object. */
+    @Override
     public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof UiElementNode) {
             UiElementNode node = (UiElementNode) parentElement;
@@ -56,6 +57,7 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
     /* (non-java doc)
      * Returns the parent of a given UI node or null if it's a root node or it's not the
      * right kind of node. */
+    @Override
     public Object getParent(Object element) {
         if (element instanceof UiElementNode) {
             UiElementNode node = (UiElementNode) element;
@@ -66,6 +68,7 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
 
     /* (non-java doc)
      * Returns true if the UI node has any UI children nodes. */
+    @Override
     public boolean hasChildren(Object element) {
         if (element instanceof UiElementNode) {
             UiElementNode node = (UiElementNode) element;
@@ -84,6 +87,7 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
      * inputElement is not currently used. The root node and the filter are given
      * by the enclosing class.
      */
+    @Override
     public Object[] getElements(Object inputElement) {
         ArrayList<UiElementNode> roots = new ArrayList<UiElementNode>();
         if (mUiRootNode != null) {
@@ -103,10 +107,12 @@ class UiModelTreeContentProvider implements ITreeContentProvider {
         return roots.toArray();
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         // pass
     }

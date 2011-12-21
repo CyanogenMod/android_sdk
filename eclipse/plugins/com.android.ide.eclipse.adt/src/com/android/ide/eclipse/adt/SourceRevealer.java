@@ -41,6 +41,7 @@ import org.eclipse.ui.ide.IDE;
  * Note that this code is duplicated in the PDT plugin's SourceRevealer as well.
  */
 public class SourceRevealer implements ISourceRevealer {
+    @Override
     public boolean reveal(String applicationName, String className, int line) {
         IProject project = ProjectHelper.findAndroidProjectByAppName(applicationName);
         if (project != null) {
@@ -50,6 +51,7 @@ public class SourceRevealer implements ISourceRevealer {
         return false;
     }
 
+    @Override
     public boolean revealLine(String fileName, int lineNumber) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
@@ -72,6 +74,7 @@ public class SourceRevealer implements ISourceRevealer {
         return requestor.didMatch();
     }
 
+    @Override
     public boolean revealMethod(String fqmn) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(

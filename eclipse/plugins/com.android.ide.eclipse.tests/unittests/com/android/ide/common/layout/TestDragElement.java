@@ -99,6 +99,7 @@ public class TestDragElement implements IDragElement {
 
     // ==== IDragElement ====
 
+    @Override
     public IDragAttribute getAttribute(String uri, String localName) {
         if (mAttributes == null) {
             return new TestAttribute(uri, localName, "");
@@ -107,18 +108,22 @@ public class TestDragElement implements IDragElement {
         return mAttributes.get(uri + localName);
     }
 
+    @Override
     public IDragAttribute[] getAttributes() {
         return mAttributes.values().toArray(new IDragAttribute[mAttributes.size()]);
     }
 
+    @Override
     public Rect getBounds() {
         return mRect;
     }
 
+    @Override
     public String getFqcn() {
         return mFqcn;
     }
 
+    @Override
     public IDragElement[] getInnerElements() {
         if (mChildren == null) {
             return new IDragElement[0];
@@ -127,10 +132,12 @@ public class TestDragElement implements IDragElement {
         return mChildren.toArray(new IDragElement[mChildren.size()]);
     }
 
+    @Override
     public Rect getParentBounds() {
         return mParent != null ? mParent.getBounds() : null;
     }
 
+    @Override
     public String getParentFqcn() {
         return mParent != null ? mParent.getFqcn() : null;
     }

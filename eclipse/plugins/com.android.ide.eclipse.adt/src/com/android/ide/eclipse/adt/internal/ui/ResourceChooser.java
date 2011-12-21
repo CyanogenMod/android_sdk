@@ -547,6 +547,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             return mValue;
         }
 
+        @Override
         public void handleEvent(Event event) {
             validate();
         }

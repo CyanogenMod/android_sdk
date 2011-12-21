@@ -343,6 +343,7 @@ public class Archive implements IDescription, Comparable<Archive> {
     /**
      * Generates a short description for this archive.
      */
+    @Override
     public String getShortDescription() {
         return String.format("Archive for %1$s", getOsDescription());
     }
@@ -350,6 +351,7 @@ public class Archive implements IDescription, Comparable<Archive> {
     /**
      * Generates a longer description for this archive.
      */
+    @Override
     public String getLongDescription() {
         long size = getSize();
         String sizeStr;
@@ -390,6 +392,7 @@ public class Archive implements IDescription, Comparable<Archive> {
      *
      * @see Package#compareTo(Package)
      */
+    @Override
     public int compareTo(Archive rhs) {
         if (mPackage != null && rhs != null) {
             return mPackage.compareTo(rhs.getParentPackage());

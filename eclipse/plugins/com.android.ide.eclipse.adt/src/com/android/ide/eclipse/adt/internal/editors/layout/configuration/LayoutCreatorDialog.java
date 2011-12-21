@@ -82,6 +82,7 @@ public final class LayoutCreatorDialog extends GridDialog {
         // add a listener to check on the validity of the FolderConfiguration as
         // they are built.
         mSelector.setOnChangeListener(new Runnable() {
+            @Override
             public void run() {
                 ConfigurationState state = mSelector.getState();
 

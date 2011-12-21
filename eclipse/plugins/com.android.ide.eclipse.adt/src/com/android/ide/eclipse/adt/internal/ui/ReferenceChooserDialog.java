@@ -171,10 +171,12 @@ public class ReferenceChooserDialog extends SelectionStatusDialog {
         Tree tree = mTreeViewer.getTree();
 
         tree.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 handleDoubleClick();
             }
 
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 handleSelection();
             }

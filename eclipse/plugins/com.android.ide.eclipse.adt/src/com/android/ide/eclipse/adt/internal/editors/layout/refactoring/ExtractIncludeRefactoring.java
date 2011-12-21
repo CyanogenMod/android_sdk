@@ -447,6 +447,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             public Change perform(IProgressMonitor pm) throws CoreException {
                 Display display = AdtPlugin.getDisplay();
                 display.asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         openFile(file);
                         mEditor.getGraphicalEditor().refreshProjectResources();

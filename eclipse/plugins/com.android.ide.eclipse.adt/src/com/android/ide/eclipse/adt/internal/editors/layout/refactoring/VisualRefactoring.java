@@ -548,6 +548,7 @@ public abstract class VisualRefactoring extends Refactoring {
             if (skip.size() > 0) {
                 Collections.sort(skip, new Comparator<IndexedRegion>() {
                     // Sort in start order
+                    @Override
                     public int compare(IndexedRegion r1, IndexedRegion r2) {
                         return r1.getStartOffset() - r2.getStartOffset();
                     }

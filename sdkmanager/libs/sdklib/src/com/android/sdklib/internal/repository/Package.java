@@ -447,12 +447,14 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * Returns a short description for an {@link IDescription}.
      * Can be empty but not null.
      */
+    @Override
     public abstract String getShortDescription();
 
     /**
      * Returns a long description for an {@link IDescription}.
      * Can be empty but not null.
      */
+    @Override
     public String getLongDescription() {
         StringBuilder sb = new StringBuilder();
 
@@ -622,6 +624,7 @@ public abstract class Package implements IDescription, Comparable<Package> {
      * <em>Important</em>: Derived classes should consider overriding {@link #comparisonKey()}
      * instead of this method.
      */
+    @Override
     public int compareTo(Package other) {
         String s1 = this.comparisonKey();
         String s2 = other.comparisonKey();

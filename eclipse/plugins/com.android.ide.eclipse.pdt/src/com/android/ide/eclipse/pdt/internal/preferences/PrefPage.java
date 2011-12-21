@@ -46,6 +46,7 @@ public class PrefPage extends FieldEditorPreferencePage implements
         addField(mDirectoryField);
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

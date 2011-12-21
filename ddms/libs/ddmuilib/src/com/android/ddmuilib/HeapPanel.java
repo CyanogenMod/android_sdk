@@ -16,11 +16,11 @@
 
 package com.android.ddmuilib;
 
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.Log;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.HeapSegment.HeapSegmentElement;
+import com.android.ddmlib.Log;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -223,12 +223,14 @@ public final class HeapPanel extends BaseHeapPanel {
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if (client == getCurrentClient()) {
             if ((changeMask & Client.CHANGE_HEAP_MODE) == Client.CHANGE_HEAP_MODE ||
                     (changeMask & Client.CHANGE_HEAP_DATA) == Client.CHANGE_HEAP_DATA) {
                 try {
                     mTop.getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             clientSelected();
                         }
@@ -628,6 +630,7 @@ public final class HeapPanel extends BaseHeapPanel {
 
             CategoryItemRenderer renderer = categoryPlot.getRenderer();
             renderer.setBaseToolTipGenerator(new CategoryToolTipGenerator() {
+                @Override
                 public String generateToolTip(CategoryDataset dataset, int row, int column) {
                     // get the key for the size of the allocation
                     ByteLong columnKey = (ByteLong)dataset.getColumnKey(column);
@@ -871,6 +874,7 @@ public final class HeapPanel extends BaseHeapPanel {
             return approximateByteCount(mValue);
         }
 
+        @Override
         public int compareTo(ByteLong other) {
             if (mValue != other.mValue) {
                 return mValue < other.mValue ? -1 : 1;
@@ -1168,7 +1172,7 @@ public final class HeapPanel extends BaseHeapPanel {
         int w, h;
 
         // Pick an image size that the largest of heaps will fit into.
-        w = (int)Math.sqrt((double)((16 * 1024 * 1024)/8));
+        w = (int)Math.sqrt(((16 * 1024 * 1024)/8));
 
         // Space-filling curves require a power-of-2 width.
         w = nextPow2(w);

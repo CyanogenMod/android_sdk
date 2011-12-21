@@ -75,10 +75,12 @@ public enum SdkSourceCategory implements IDescription {
         return mAlwaysDisplay;
     }
 
+    @Override
     public String getLongDescription() {
         return getUiName();
     }
 
+    @Override
     public String getShortDescription() {
         return getUiName();
     }

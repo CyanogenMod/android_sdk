@@ -739,14 +739,17 @@ final class SdkUpdaterChooserDialog extends GridDialog {
 
     private class NewArchivesContentProvider implements IStructuredContentProvider {
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // Ignore. The input is always mArchives
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             return mArchives.toArray();
         }

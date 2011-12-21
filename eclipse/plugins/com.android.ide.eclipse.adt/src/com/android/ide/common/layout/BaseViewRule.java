@@ -147,6 +147,7 @@ public class BaseViewRule extends AbstractViewRule {
         final String newHeight = height;
 
         final IMenuCallback onChange = new IMenuCallback() {
+            @Override
             public void action(
                     final RuleAction action,
                     final List<? extends INode> selectedNodes,
@@ -416,12 +417,14 @@ public class BaseViewRule extends AbstractViewRule {
         RuleAction properties = RuleAction.createChoices("properties", "Other Properties", //$NON-NLS-1$
                 onChange /*callback*/, null /*icon*/, 50,
                 true /*supportsMultipleNodes*/, new ActionProvider() {
+            @Override
             public List<RuleAction> getNestedActions(INode node) {
                 List<RuleAction> propertyActionTypes = new ArrayList<RuleAction>();
                 propertyActionTypes.add(RuleAction.createChoices(
                         "recent", "Recent", //$NON-NLS-1$
                         onChange /*callback*/, null /*icon*/, 10,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
+                            @Override
                             public List<RuleAction> getNestedActions(INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addRecentPropertyActions(propertyActions, n, onChange);
@@ -438,6 +441,7 @@ public class BaseViewRule extends AbstractViewRule {
                         "layoutparams", "Layout Parameters", //$NON-NLS-1$
                         onChange /*callback*/, null /*icon*/, 60,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
+                            @Override
                             public List<RuleAction> getNestedActions(INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addPropertyActions(propertyActions, n, onChange, null, true);
@@ -451,6 +455,7 @@ public class BaseViewRule extends AbstractViewRule {
                         "allprops", "All By Name", //$NON-NLS-1$
                         onChange /*callback*/, null /*icon*/, 80,
                         true /*supportsMultipleNodes*/, new ActionProvider() {
+                            @Override
                             public List<RuleAction> getNestedActions(INode n) {
                                 List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                                 addPropertyActions(propertyActions, n, onChange, null, false);
@@ -514,6 +519,7 @@ public class BaseViewRule extends AbstractViewRule {
                     label,
                     onChange /*callback*/, null /*icon*/, sortPriority++,
                     true /*supportsMultipleNodes*/, new ActionProvider() {
+                        @Override
                         public List<RuleAction> getNestedActions(INode n) {
                             List<RuleAction> propertyActions = new ArrayList<RuleAction>();
                             addPropertyActions(propertyActions, n, onChange, definedBy, false);
@@ -624,6 +630,7 @@ public class BaseViewRule extends AbstractViewRule {
         // The properties are coming out of map key order which isn't right, so sort
         // alphabetically instead
         Collections.sort(actions, new Comparator<RuleAction>() {
+            @Override
             public int compare(RuleAction action1, RuleAction action2) {
                 return action1.getTitle().compareTo(action2.getTitle());
             }
@@ -728,6 +735,7 @@ public class BaseViewRule extends AbstractViewRule {
      * values for a boolean property: true, false, or "default".
      */
     private static ChoiceProvider BOOLEAN_CHOICE_PROVIDER = new ChoiceProvider() {
+        @Override
         public void addChoices(List<String> titles, List<URL> iconUrls, List<String> ids) {
             titles.add("True");
             ids.add(TRUE_ID);
@@ -755,6 +763,7 @@ public class BaseViewRule extends AbstractViewRule {
             this.mProperty = property;
         }
 
+        @Override
         public void addChoices(List<String> titles, List<URL> iconUrls, List<String> ids) {
             for (Entry<String, String> entry : mProperty.getChoices().entrySet()) {
                 ids.add(entry.getKey());

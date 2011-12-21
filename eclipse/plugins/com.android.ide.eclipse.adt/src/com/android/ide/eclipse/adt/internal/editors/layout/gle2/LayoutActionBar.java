@@ -328,6 +328,7 @@ public class LayoutActionBar extends Composite {
         }
 
         Listener menuListener = new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 // if (event.detail == SWT.ARROW) {
                 Point point = new Point(event.x, event.y);
@@ -483,6 +484,7 @@ public class LayoutActionBar extends Composite {
         Display display = getDisplay();
         if (display.getThread() != Thread.currentThread()) {
             display.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!isDisposed()) {
                         updateErrorIndicator(hasLintWarnings);

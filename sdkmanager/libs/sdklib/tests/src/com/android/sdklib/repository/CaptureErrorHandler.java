@@ -56,6 +56,7 @@ class CaptureErrorHandler implements ErrorHandler {
     /**
      * @throws SAXException
      */
+    @Override
     public void error(SAXParseException ex) throws SAXException {
         mErrors += "Error: " + ex.getMessage() + "\n";
     }
@@ -63,6 +64,7 @@ class CaptureErrorHandler implements ErrorHandler {
     /**
      * @throws SAXException
      */
+    @Override
     public void fatalError(SAXParseException ex) throws SAXException {
         mErrors += "Fatal Error: " + ex.getMessage() + "\n";
     }
@@ -70,6 +72,7 @@ class CaptureErrorHandler implements ErrorHandler {
     /**
      * @throws SAXException
      */
+    @Override
     public void warning(SAXParseException ex) throws SAXException {
         mWarnings += "Warning: " + ex.getMessage() + "\n";
     }

@@ -354,6 +354,7 @@ public class MoveGesture extends DropGesture {
         // List of "index within parent" for each node
         final List<Integer> indices = new ArrayList<Integer>();
         NodeCreationListener listener = new NodeCreationListener() {
+            @Override
             public void nodeCreated(UiElementNode parent, UiElementNode child, int index) {
                 if (parent == mTargetNode.getNode()) {
                     added.add(child);
@@ -370,6 +371,7 @@ public class MoveGesture extends DropGesture {
                 }
             }
 
+            @Override
             public void nodeDeleted(UiElementNode parent, UiElementNode child, int previousIndex) {
                 if (parent == mTargetNode.getNode()) {
                     // Adjust existing indices
@@ -389,6 +391,7 @@ public class MoveGesture extends DropGesture {
         try {
             UiElementNode.addNodeCreationListener(listener);
             mCanvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+                @Override
                 public void run() {
                     InsertType insertType = getInsertType(event, mTargetNode);
                     mCanvas.getRulesEngine().callOnDropped(mTargetNode,
@@ -432,6 +435,7 @@ public class MoveGesture extends DropGesture {
             // defer selection briefly until the view hierarchy etc is up to
             // date.
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     selectionManager.selectDropped(nodes, indices);
                 }

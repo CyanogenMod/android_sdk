@@ -44,57 +44,72 @@ public class MockMonitor implements ITaskMonitor {
         return mCapturedDescriptions;
     }
 
+    @Override
     public void log(String format, Object... args) {
         mCapturedLog += String.format(format, args) + "\n";             //$NON-NLS-1$
     }
 
+    @Override
     public void logError(String format, Object... args) {
         mCapturedErrorLog += String.format(format, args) + "\n";        //$NON-NLS-1$
     }
 
+    @Override
     public void logVerbose(String format, Object... args) {
         mCapturedVerboseLog += String.format(format, args) + "\n";      //$NON-NLS-1$
     }
 
+    @Override
     public void setProgressMax(int max) {
     }
 
+    @Override
     public int getProgressMax() {
         return 0;
     }
 
+    @Override
     public void setDescription(String format, Object... args) {
         mCapturedDescriptions += String.format(format, args) + "\n";    //$NON-NLS-1$
     }
 
+    @Override
     public boolean isCancelRequested() {
         return false;
     }
 
+    @Override
     public void incProgress(int delta) {
     }
 
+    @Override
     public int getProgress() {
         return 0;
     }
 
+    @Override
     public boolean displayPrompt(String title, String message) {
         return false;
     }
 
+    @Override
     public ITaskMonitor createSubMonitor(int tickCount) {
         return null;
     }
 
+    @Override
     public void error(Throwable t, String errorFormat, Object... args) {
     }
 
+    @Override
     public void printf(String msgFormat, Object... args) {
     }
 
+    @Override
     public void warning(String warningFormat, Object... args) {
     }
 
+    @Override
     public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
         return null;
     }

@@ -47,6 +47,7 @@ public class DrawableDescriptors implements IDescriptorProvider {
     private Map<String, ElementDescriptor> nameToDescriptor;
 
     /** @return the root descriptor. */
+    @Override
     public ElementDescriptor getDescriptor() {
         if (mDescriptor == null) {
             mDescriptor = new ElementDescriptor("", getRootElementDescriptors()); //$NON-NLS-1$
@@ -55,6 +56,7 @@ public class DrawableDescriptors implements IDescriptorProvider {
         return mDescriptor;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return mRootDescriptors;
     }

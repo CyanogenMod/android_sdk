@@ -51,10 +51,12 @@ public class XmlQuickAssistManager implements IQuickAssistProcessor {
         };
     }
 
+    @Override
     public String getErrorMessage() {
         return null;
     }
 
+    @Override
     public boolean canFix(Annotation annotation) {
         for (IQuickAssistProcessor processor : mProcessors) {
             if (processor.canFix(annotation)) {
@@ -65,6 +67,7 @@ public class XmlQuickAssistManager implements IQuickAssistProcessor {
         return false;
     }
 
+    @Override
     public boolean canAssist(IQuickAssistInvocationContext invocationContext) {
         for (IQuickAssistProcessor processor : mProcessors) {
             if (processor.canAssist(invocationContext)) {
@@ -75,6 +78,7 @@ public class XmlQuickAssistManager implements IQuickAssistProcessor {
         return false;
     }
 
+    @Override
     public ICompletionProposal[] computeQuickAssistProposals(
             IQuickAssistInvocationContext invocationContext) {
         List<ICompletionProposal> allProposals = null;

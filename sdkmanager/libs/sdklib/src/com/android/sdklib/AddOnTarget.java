@@ -47,18 +47,22 @@ final class AddOnTarget implements IAndroidTarget {
             mDescription = description;
         }
 
+        @Override
         public String getJarName() {
             return mJarName;
         }
 
+        @Override
         public String getJarPath() {
             return mJarPath;
         }
 
+        @Override
         public String getName() {
             return mName;
         }
 
+        @Override
         public String getDescription() {
             return mDescription;
         }
@@ -136,14 +140,17 @@ final class AddOnTarget implements IAndroidTarget {
         }
     }
 
+    @Override
     public String getLocation() {
         return mLocation;
     }
 
+    @Override
     public String getName() {
         return mName;
     }
 
+    @Override
     public ISystemImage getSystemImage(String abiType) {
         for (ISystemImage sysImg : mSystemImages) {
             if (sysImg.getAbiType().equals(abiType)) {
@@ -153,51 +160,63 @@ final class AddOnTarget implements IAndroidTarget {
         return null;
     }
 
+    @Override
     public ISystemImage[] getSystemImages() {
         return mSystemImages;
     }
 
+    @Override
     public String getVendor() {
         return mVendor;
     }
 
+    @Override
     public String getFullName() {
         return String.format("%1$s (%2$s)", mName, mVendor);
     }
 
+    @Override
     public String getClasspathName() {
         return String.format("%1$s [%2$s]", mName, mBasePlatform.getClasspathName());
     }
 
+    @Override
     public String getShortClasspathName() {
         return String.format("%1$s [%2$s]", mName, mBasePlatform.getVersionName());
     }
 
+    @Override
     public String getDescription() {
         return mDescription;
     }
 
+    @Override
     public AndroidVersion getVersion() {
         // this is always defined by the base platform
         return mBasePlatform.getVersion();
     }
 
+    @Override
     public String getVersionName() {
         return mBasePlatform.getVersionName();
     }
 
+    @Override
     public int getRevision() {
         return mRevision;
     }
 
+    @Override
     public boolean isPlatform() {
         return false;
     }
 
+    @Override
     public IAndroidTarget getParent() {
         return mBasePlatform;
     }
 
+    @Override
     public String getPath(int pathId) {
         switch (pathId) {
             case SKINS:
@@ -232,6 +251,7 @@ final class AddOnTarget implements IAndroidTarget {
                 File sampleLoc = new File(mLocation, SdkConstants.FD_SAMPLES);
                 if (sampleLoc.isDirectory()) {
                     File[] files = sampleLoc.listFiles(new FileFilter() {
+                        @Override
                         public boolean accept(File pathname) {
                             return pathname.isDirectory();
                         }
@@ -247,18 +267,22 @@ final class AddOnTarget implements IAndroidTarget {
         }
     }
 
+    @Override
     public boolean hasRenderingLibrary() {
         return mHasRenderingLibrary || mHasRenderingResources;
     }
 
+    @Override
     public String[] getSkins() {
         return mSkins;
     }
 
+    @Override
     public String getDefaultSkin() {
         return mDefaultSkin;
     }
 
+    @Override
     public IOptionalLibrary[] getOptionalLibraries() {
         return mLibraries;
     }
@@ -268,30 +292,37 @@ final class AddOnTarget implements IAndroidTarget {
      *
      * {@inheritDoc}
      */
+    @Override
     public String[] getPlatformLibraries() {
         return mBasePlatform.getPlatformLibraries();
     }
 
+    @Override
     public String getProperty(String name) {
         return mBasePlatform.getProperty(name);
     }
 
+    @Override
     public Integer getProperty(String name, Integer defaultValue) {
         return mBasePlatform.getProperty(name, defaultValue);
     }
 
+    @Override
     public Boolean getProperty(String name, Boolean defaultValue) {
         return mBasePlatform.getProperty(name, defaultValue);
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return mBasePlatform.getProperties();
     }
 
+    @Override
     public int getUsbVendorId() {
         return mVendorId;
     }
 
+    @Override
     public boolean canRunOn(IAndroidTarget target) {
         // basic test
         if (target == this) {
@@ -326,6 +357,7 @@ final class AddOnTarget implements IAndroidTarget {
 
     }
 
+    @Override
     public String hashString() {
         return String.format(ADD_ON_FORMAT, mVendor, mName,
                 mBasePlatform.getVersion().getApiString());
@@ -354,6 +386,7 @@ final class AddOnTarget implements IAndroidTarget {
      * (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(IAndroidTarget target) {
         // quick check.
         if (this == target) {

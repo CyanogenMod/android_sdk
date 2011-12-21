@@ -56,6 +56,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
  */
 public class SourceRevealer extends DevTreeProjectProvider implements ISourceRevealer {
 
+    @Override
     public boolean reveal(String applicationName, String className, int line) {
         IProject project = getProject();
 
@@ -113,6 +114,7 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         return false;
     }
 
+    @Override
     public boolean revealLine(String fileName, int lineNumber) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(
@@ -134,6 +136,7 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         return requestor.didMatch();
     }
 
+    @Override
     public boolean revealMethod(String fqmn) {
         SearchEngine se = new SearchEngine();
         SearchPattern searchPattern = SearchPattern.createPattern(

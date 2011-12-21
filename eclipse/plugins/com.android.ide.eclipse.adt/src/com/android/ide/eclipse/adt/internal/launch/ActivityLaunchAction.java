@@ -51,6 +51,7 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
      *
      * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
      */
+    @Override
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         String command = "am start" //$NON-NLS-1$
             + (info.isDebugMode() ? " -D" //$NON-NLS-1$
@@ -106,6 +107,7 @@ public class ActivityLaunchAction implements IAndroidLaunchAction {
      *
      * @see IAndroidLaunchAction#getLaunchDescription()
      */
+    @Override
     public String getLaunchDescription() {
        return String.format("%1$s activity launch", mActivity);
     }

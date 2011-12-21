@@ -61,6 +61,7 @@ public class PositionXmlParser implements IDomParser {
 
     // ---- Implements IDomParser ----
 
+    @Override
     public Document parseXml(XmlContext context) {
         return parse(context, context.getContents(), true);
     }
@@ -156,6 +157,7 @@ public class PositionXmlParser implements IDomParser {
         return (OffsetPosition) node.getUserData(POS_KEY);
     }
 
+    @Override
     public Location getLocation(XmlContext context, Node node) {
         OffsetPosition pos = (OffsetPosition) getPositions(node);
         if (pos != null) {
@@ -165,6 +167,7 @@ public class PositionXmlParser implements IDomParser {
         return null;
     }
 
+    @Override
     public Handle createLocationHandle(XmlContext context, Node node) {
         return new LocationHandle(context.file, node);
     }
@@ -383,6 +386,7 @@ public class PositionXmlParser implements IDomParser {
         }
     }
 
+    @Override
     public void dispose(XmlContext context, Document document) {
     }
 
@@ -396,6 +400,7 @@ public class PositionXmlParser implements IDomParser {
             mNode = node;
         }
 
+        @Override
         public Location resolve() {
             OffsetPosition pos = (OffsetPosition) getPositions(mNode);
             if (pos != null) {

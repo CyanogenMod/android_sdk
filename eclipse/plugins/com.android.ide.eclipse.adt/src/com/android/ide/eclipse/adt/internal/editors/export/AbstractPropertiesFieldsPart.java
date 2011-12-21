@@ -79,6 +79,7 @@ abstract class AbstractPropertiesFieldsPart extends ManifestSectionPart {
      */
     protected void addModifyListenerToFields() {
         ModifyListener markDirtyListener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 // Mark the part as dirty if a field has been changed.
                 // This will force a commit() operation to store the data in the model.
@@ -126,6 +127,7 @@ abstract class AbstractPropertiesFieldsPart extends ManifestSectionPart {
 
         if (isDirty()) {
             mEditor.wrapRewriteSession(new Runnable() {
+                @Override
                 public void run() {
                     saveFieldsToModel();
                 }

@@ -17,22 +17,22 @@
 package com.android.ide.eclipse.ddms.views;
 
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
+import com.android.ddmlib.ClientData.IHprofDumpHandler;
+import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.ClientData.IHprofDumpHandler;
-import com.android.ddmlib.ClientData.MethodProfilingStatus;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmuilib.DevicePanel;
+import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.ScreenShotDialog;
 import com.android.ddmuilib.SyncProgressHelper;
-import com.android.ddmuilib.DevicePanel.IUiSelectionListener;
 import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
 import com.android.ddmuilib.handler.BaseFileHandler;
 import com.android.ddmuilib.handler.MethodProfilingHandler;
@@ -110,8 +110,10 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             return Messages.DeviceView_HPROF_Error;
         }
 
+        @Override
         public void onEndFailure(final Client client, final String message) {
             mParentShell.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     try {
                         displayErrorFromUiThread(
@@ -129,8 +131,10 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             });
         }
 
+        @Override
         public void onSuccess(final String remoteFilePath, final Client client) {
             mParentShell.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     final IDevice device = client.getDevice();
                     try {
@@ -146,12 +150,14 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
                                 final String tempPath = temp.getAbsolutePath();
                                 SyncProgressHelper.run(new SyncRunnable() {
 
+                                    @Override
                                     public void run(ISyncProgressMonitor monitor)
                                                 throws SyncException, IOException,
                                                 TimeoutException {
                                         sync.pullFile(remoteFilePath, tempPath, monitor);
                                     }
 
+                                    @Override
                                     public void close() {
                                         sync.close();
                                     }
@@ -195,8 +201,10 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
             });
         }
 
+        @Override
         public void onSuccess(final byte[] data, final Client client) {
             mParentShell.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     // get from the preference what action to take
                     IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
@@ -311,6 +319,7 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
                         // dialog box only run in ui thread..
                         display.asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 Shell shell = display.getActiveShell();
                                 MessageDialog.openError(shell, Messages.DeviceView_ADB_Error,
@@ -481,12 +490,13 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
 
     /**
      * Sent when a new {@link IDevice} and {@link Client} are selected.
-     * 
+     *
      * @param selectedDevice the selected device. If null, no devices are
      *            selected.
      * @param selectedClient The selected client. If null, no clients are
      *            selected.
      */
+    @Override
     public void selectionChanged(IDevice selectedDevice, Client selectedClient) {
         // update the buttons
         doSelectionChanged(selectedClient);
@@ -615,10 +625,12 @@ public class DeviceView extends ViewPart implements IUiSelectionListener, IClien
         toolBarManager.add(mCaptureAction);
     }
 
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if ((changeMask & Client.CHANGE_METHOD_PROFILING_STATUS) == Client.CHANGE_METHOD_PROFILING_STATUS) {
             if (mDeviceList.getSelectedClient() == client) {
                 mParentShell.getDisplay().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         // force refresh of the button enabled state.
                         doSelectionChanged(client);

@@ -254,6 +254,7 @@ public class ExtraPackage extends MinToolsPackage
      * Returns the minimal API level required by this extra package, if > 0,
      * or {@link #MIN_API_LEVEL_NOT_SPECIFIED} if there is no such requirement.
      */
+    @Override
     public int getMinApiLevel() {
         return mMinApiLevel;
     }
@@ -381,7 +382,7 @@ public class ExtraPackage extends MinToolsPackage
         if (name != null) {
             name = name.replaceAll("[ _\t\f-]+", " ").trim();   //$NON-NLS-1$ //$NON-NLS-2$
         }
-        if (name == null || name.length() == 0) {   //$NON-NLS-1$
+        if (name == null || name.length() == 0) {
             name = "Unkown Extra";
         }
 

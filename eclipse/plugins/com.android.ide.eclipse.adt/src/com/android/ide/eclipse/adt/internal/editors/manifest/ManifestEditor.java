@@ -235,6 +235,7 @@ public final class ManifestEditor extends AndroidXmlEditor {
             updateFromExistingMarkers(inputFile);
 
             mMarkerMonitor = new IFileListener() {
+                @Override
                 public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
                     if (file.equals(inputFile)) {
                         processMarkerChanges(markerDeltas);

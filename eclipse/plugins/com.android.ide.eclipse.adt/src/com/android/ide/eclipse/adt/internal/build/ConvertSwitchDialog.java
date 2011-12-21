@@ -131,12 +131,14 @@ class ConvertSwitchDialog extends TitleAreaDialog implements SelectionListener {
 
     // ---- Implements SelectionListener ----
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (e.getSource() == mLink) {
             showWebPage();
         }
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 }

@@ -47,6 +47,7 @@ class PostReceiverCreationAction implements IPostTypeCreationAction {
      * Processes a newly created Activity.
      *
      */
+    @Override
     public void processNewType(IType newType) {
         try {
             String methodContent =

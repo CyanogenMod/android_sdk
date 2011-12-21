@@ -18,8 +18,8 @@ package com.android.ddmuilib;
 
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
+import com.android.ddmlib.TimeoutException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -63,6 +63,7 @@ public class SyncProgressHelper {
 
         final Exception[] result = new Exception[1];
         new ProgressMonitorDialog(parentShell).run(true, true, new IRunnableWithProgress() {
+            @Override
             public void run(IProgressMonitor monitor) {
                 try {
                     runnable.run(new SyncProgressMonitor(monitor, progressMessage));

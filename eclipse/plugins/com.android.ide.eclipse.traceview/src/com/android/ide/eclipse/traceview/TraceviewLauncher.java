@@ -34,6 +34,7 @@ import org.eclipse.ui.ide.IDE;
 
 public class TraceviewLauncher implements ITraceviewLauncher {
 
+    @Override
     public boolean openFile(String osPath) {
         final IFileStore fileStore =  EFS.getLocalFileSystem().getStore(new Path(osPath));
         if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
@@ -43,6 +44,7 @@ public class TraceviewLauncher implements ITraceviewLauncher {
             Display display = workbench.getDisplay();
             final boolean[] result = new boolean[] { false };
             display.syncExec(new Runnable() {
+                @Override
                 public void run() {
                     IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
                     IWorkbenchPage page = window.getActivePage();

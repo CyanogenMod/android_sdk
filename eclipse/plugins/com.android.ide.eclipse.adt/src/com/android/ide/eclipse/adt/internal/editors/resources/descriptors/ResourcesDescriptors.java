@@ -61,10 +61,12 @@ public final class ResourcesDescriptors implements IDescriptorProvider {
     /*
      * @see com.android.ide.eclipse.editors.descriptors.IDescriptorProvider#getRootElementDescriptors()
      */
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return new ElementDescriptor[] { mResourcesElement };
     }
 
+    @Override
     public ElementDescriptor getDescriptor() {
         return mResourcesElement;
     }

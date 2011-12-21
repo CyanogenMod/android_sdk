@@ -80,6 +80,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
      *
      * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
      */
+    @Override
     public void init(IWorkbench workbench) {
     }
 
@@ -220,6 +221,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
         }
 
         private class TargetChangedListener implements ITargetChangeListener {
+            @Override
             public void onSdkLoaded() {
                 if (mTargetSelector != null) {
                     // We may not have an sdk if the sdk path pref is empty or not valid.
@@ -230,10 +232,12 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
                 }
             }
 
+            @Override
             public void onProjectTargetChange(IProject changedProject) {
                 // do nothing.
             }
 
+            @Override
             public void onTargetLoaded(IAndroidTarget target) {
                 // do nothing.
             }

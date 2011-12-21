@@ -92,6 +92,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
     /**
      * Create contents of the wizard.
      */
+    @Override
     @SuppressWarnings("unused") // Eclipse marks SWT constructors with side effects as unused
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
@@ -293,6 +294,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
         return super.isPageComplete();
     }
 
+    @Override
     public void modifyText(ModifyEvent e) {
         if (mIgnore) {
             return;
@@ -366,6 +368,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
         validatePage();
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (mIgnore) {
             return;
@@ -430,6 +433,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
         validatePage();
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
@@ -568,6 +572,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
 
         File projectDir = mValues.projectLocation;
         File[] allDirs = projectDir.listFiles(new FileFilter() {
+            @Override
             public boolean accept(File pathname) {
                 return pathname.isDirectory();
             }
@@ -725,6 +730,7 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
 
     // ---- Implement ITargetChangeListener ----
 
+    @Override
     public void onSdkLoaded() {
         if (mSdkCombo == null) {
             return;
@@ -740,10 +746,12 @@ class ApplicationInfoPage extends WizardPage implements SelectionListener, Modif
         setSdkTargets(targets, mValues.target);
     }
 
+    @Override
     public void onProjectTargetChange(IProject changedProject) {
         // Ignore
     }
 
+    @Override
     public void onTargetLoaded(IAndroidTarget target) {
         // Ignore
     }

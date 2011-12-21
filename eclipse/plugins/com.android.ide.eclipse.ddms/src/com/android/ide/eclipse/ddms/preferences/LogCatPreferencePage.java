@@ -16,6 +16,13 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
+import com.android.ddmuilib.logcat.LogCatMessageList;
+import com.android.ddmuilib.logcat.LogCatPanel;
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.LogCatMonitor;
+import com.android.ide.eclipse.ddms.i18n.Messages;
+import com.android.ide.eclipse.ddms.views.LogCatView;
+
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -26,13 +33,6 @@ import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
-
-import com.android.ddmuilib.logcat.LogCatMessageList;
-import com.android.ddmuilib.logcat.LogCatPanel;
-import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.LogCatMonitor;
-import com.android.ide.eclipse.ddms.i18n.Messages;
-import com.android.ide.eclipse.ddms.views.LogCatView;
 
 /**
  * Preference Pane for LogCat.
@@ -101,6 +101,7 @@ public class LogCatPreferencePage extends FieldEditorPreferencePage implements
         addField(mAutoMonitorLogcat);
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

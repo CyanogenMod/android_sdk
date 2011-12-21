@@ -91,6 +91,7 @@ public class FileOp implements IFileOp {
      * Files that cannot be deleted right away are marked for deletion on exit.
      * The argument can be null.
      */
+    @Override
     public void deleteFileOrFolder(File fileOrFolder) {
         if (fileOrFolder != null) {
             if (isDirectory(fileOrFolder)) {
@@ -147,6 +148,7 @@ public class FileOp implements IFileOp {
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
+    @Override
     public void setExecutablePermission(File file) throws IOException {
 
         if (sFileSetExecutable != null) {
@@ -175,6 +177,7 @@ public class FileOp implements IFileOp {
      * @throws FileNotFoundException if the source file doesn't exist.
      * @throws IOException if there's a problem reading or writing the file.
      */
+    @Override
     public void copyFile(File source, File dest) throws IOException {
         byte[] buffer = new byte[8192];
 
@@ -215,6 +218,7 @@ public class FileOp implements IFileOp {
      * @throws FileNotFoundException if the source files don't exist.
      * @throws IOException if there's a problem reading the files.
      */
+    @Override
     public boolean isSameFile(File source, File destination) throws IOException {
 
         if (source.length() != destination.length()) {
@@ -270,21 +274,25 @@ public class FileOp implements IFileOp {
     }
 
     /** Invokes {@link File#isFile()} on the given {@code file}. */
+    @Override
     public boolean isFile(File file) {
         return file.isFile();
     }
 
     /** Invokes {@link File#isDirectory()} on the given {@code file}. */
+    @Override
     public boolean isDirectory(File file) {
         return file.isDirectory();
     }
 
     /** Invokes {@link File#exists()} on the given {@code file}. */
+    @Override
     public boolean exists(File file) {
         return file.exists();
     }
 
     /** Invokes {@link File#length()} on the given {@code file}. */
+    @Override
     public long length(File file) {
         return file.length();
     }
@@ -293,26 +301,31 @@ public class FileOp implements IFileOp {
      * Invokes {@link File#delete()} on the given {@code file}.
      * Note: for a recursive folder version, consider {@link #deleteFileOrFolder(File)}.
      */
+    @Override
     public boolean delete(File file) {
         return file.delete();
     }
 
     /** Invokes {@link File#mkdirs()} on the given {@code file}. */
+    @Override
     public boolean mkdirs(File file) {
         return file.mkdirs();
     }
 
     /** Invokes {@link File#listFiles()} on the given {@code file}. */
+    @Override
     public File[] listFiles(File file) {
         return file.listFiles();
     }
 
     /** Invokes {@link File#renameTo(File)} on the given files. */
+    @Override
     public boolean renameTo(File oldFile, File newFile) {
         return oldFile.renameTo(newFile);
     }
 
     /** Creates a new {@link FileOutputStream} for the given {@code file}. */
+    @Override
     public OutputStream newFileOutputStream(File file) throws FileNotFoundException {
         return new FileOutputStream(file);
     }

@@ -43,9 +43,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
  * First Export Wizard Page. Display warning/errors.
  */
@@ -71,6 +68,7 @@ final class ProjectCheckPage extends ExportWizardPage {
         setDescription("Performs a set of checks to make sure the application can be exported.");
     }
 
+    @Override
     public void createControl(Composite parent) {
         mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(),
                 new NonLibraryProjectOnlyFilter());
@@ -97,6 +95,7 @@ final class ProjectCheckPage extends ExportWizardPage {
         mProjectText = new Text(projectComposite, SWT.BORDER);
         mProjectText.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         mProjectText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 handleProjectNameChange();
             }

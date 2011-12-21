@@ -68,6 +68,7 @@ class GridMatch implements Comparable<GridMatch> {
     }
 
     // Implements Comparable<GridMatch>
+    @Override
     public int compareTo(GridMatch o) {
         // Pick closest matches first
         if (distance != o.distance) {

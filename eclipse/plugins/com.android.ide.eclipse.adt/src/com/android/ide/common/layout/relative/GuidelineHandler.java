@@ -727,6 +727,7 @@ public class GuidelineHandler {
      * </ul>
      */
     private final class MatchComparator implements Comparator<Match> {
+        @Override
         public int compare(Match m1, Match m2) {
             // Always prefer matching parent bounds
             int parent1 = m1.edge.node == layout ? -1 : 1;

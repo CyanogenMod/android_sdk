@@ -41,10 +41,12 @@ public class RunLintAction implements IWorkbenchWindowActionDelegate, IObjectAct
 
     private ISelection mSelection;
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
 
+    @Override
     public void run(IAction action) {
         IProject project = RunLintAction.getSelectedProject(mSelection);
 
@@ -134,13 +136,16 @@ public class RunLintAction implements IWorkbenchWindowActionDelegate, IObjectAct
         return null;
     }
 
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
     }
 
+    @Override
     public void dispose() {
         // Nothing to dispose
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
     }
 }

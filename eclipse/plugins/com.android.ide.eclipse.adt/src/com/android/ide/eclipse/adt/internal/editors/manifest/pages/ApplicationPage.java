@@ -60,6 +60,7 @@ public final class ApplicationPage extends FormPage implements IPageImageProvide
         mEditor = editor;
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon(getTitle(),
                                                  IconFactory.COLOR_BLUE,

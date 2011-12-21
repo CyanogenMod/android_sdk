@@ -242,6 +242,7 @@ public final class PrefsDialog {
      * a preference (e.g. not when the prefs file is loaded).
      */
     private static class ChangeListener implements IPropertyChangeListener {
+        @Override
         public void propertyChange(PropertyChangeEvent event) {
             String changed = event.getProperty();
             PreferenceStore prefStore = mStore.getPreferenceStore();

@@ -16,11 +16,11 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +55,7 @@ public class LogCatPidToNameMapper {
 
     private IClientChangeListener constructClientChangeListener() {
         return new IClientChangeListener() {
+            @Override
             public void clientChanged(Client client, int changeMask) {
                 if ((changeMask & Client.CHANGE_NAME) == Client.CHANGE_NAME) {
                     ClientData cd = client.getClientData();
@@ -76,12 +77,15 @@ public class LogCatPidToNameMapper {
 
     private IDeviceChangeListener constructDeviceChangeListener() {
         return new IDeviceChangeListener() {
+            @Override
             public void deviceDisconnected(IDevice device) {
             }
 
+            @Override
             public void deviceConnected(IDevice device) {
             }
 
+            @Override
             public void deviceChanged(IDevice device, int changeMask) {
                 if (changeMask == IDevice.CHANGE_CLIENT_LIST) {
                     updateClientList(device);

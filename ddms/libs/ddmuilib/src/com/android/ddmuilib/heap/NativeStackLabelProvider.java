@@ -23,10 +23,12 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 
 public class NativeStackLabelProvider extends LabelProvider implements ITableLabelProvider {
+    @Override
     public Image getColumnImage(Object arg0, int arg1) {
         return null;
     }
 
+    @Override
     public String getColumnText(Object element, int index) {
         if (element instanceof NativeStackCallInfo) {
             return getResolvedStackTraceColumnText((NativeStackCallInfo) element, index);

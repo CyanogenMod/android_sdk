@@ -161,6 +161,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
      *
      * @param parent the parent widget
      */
+    @Override
     @SuppressWarnings("unused") // Don't warn about unassigned "new Label(.)": has side-effect
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
@@ -566,6 +567,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
     // ---- Implements ModifyListener ----
 
+    @Override
     public void modifyText(ModifyEvent e) {
         if (e.getSource() == mImagePathText) {
             requestUpdatePreview(false);
@@ -578,10 +580,12 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
 
     // ---- Implements SelectionListener ----
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         // Nothing to do
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
         boolean updateQuickly = true;
@@ -855,6 +859,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         mTimerPending = true;
 
         final Runnable timer = new Runnable() {
+            @Override
             public void run() {
                 mTimerPending = false;
                 updatePreview();
@@ -1037,6 +1042,7 @@ public class ConfigureAssetSetPage extends WizardPage implements SelectionListen
         }
     }
 
+    @Override
     public BufferedImage loadImageResource(String relativeName) {
         return getImage(relativeName, true);
     }

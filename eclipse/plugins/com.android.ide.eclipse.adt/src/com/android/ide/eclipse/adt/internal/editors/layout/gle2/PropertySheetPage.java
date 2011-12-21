@@ -124,6 +124,7 @@ public class PropertySheetPage extends org.eclipse.ui.views.properties.PropertyS
         // for earlier releases. This just paints a solid color under the current line in
         // the left column.
         tree.addListener(SWT.EraseItem, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 if ((event.detail & SWT.SELECTED) != 0 && event.index == 0) {
                     GC gc = event.gc;
@@ -155,6 +156,7 @@ public class PropertySheetPage extends org.eclipse.ui.views.properties.PropertyS
             Shell tip = null;
             Label label  = null;
 
+            @Override
             public void handleEvent(Event event) {
                 switch(event.type) {
                 case SWT.Dispose:

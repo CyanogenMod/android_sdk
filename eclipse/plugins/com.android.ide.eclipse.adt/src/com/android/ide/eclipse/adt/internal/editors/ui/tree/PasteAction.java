@@ -67,6 +67,7 @@ public class PasteAction extends Action {
         final String data = (String) mClipboard.getContents(TextTransfer.getInstance());
         if (data != null) {
             mEditor.wrapEditXmlModel(new Runnable() {
+                @Override
                 public void run() {
                     try {
                         IStructuredDocument sse_doc = mEditor.getStructuredDocument();

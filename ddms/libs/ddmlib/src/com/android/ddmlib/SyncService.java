@@ -113,16 +113,21 @@ public final class SyncService {
      * A Sync progress monitor that does nothing
      */
     private static class NullSyncProgresMonitor implements ISyncProgressMonitor {
+        @Override
         public void advance(int work) {
         }
+        @Override
         public boolean isCanceled() {
             return false;
         }
 
+        @Override
         public void start(int totalWork) {
         }
+        @Override
         public void startSubTask(String name) {
         }
+        @Override
         public void stop() {
         }
     }

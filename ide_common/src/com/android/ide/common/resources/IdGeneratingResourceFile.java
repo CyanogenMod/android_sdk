@@ -220,6 +220,7 @@ public final class IdGeneratingResourceFile extends ResourceFile
         return name;
     }
 
+    @Override
     public void addResourceValue(ResourceValue value) {
         // Just overwrite collisions. We're only interested in the unique
         // IDs declared

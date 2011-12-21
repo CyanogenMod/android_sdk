@@ -259,6 +259,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
      * @return a negative integer, zero, or a positive integer as this object is
      *         less than, equal to, or greater than the specified object.
      */
+    @Override
     public int compareTo(AndroidVersion o) {
         return compareTo(o.mApiLevel, o.mCodename);
     }

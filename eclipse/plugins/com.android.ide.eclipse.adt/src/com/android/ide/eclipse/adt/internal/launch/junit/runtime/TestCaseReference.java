@@ -31,7 +31,7 @@ class TestCaseReference extends AndroidTestReference {
 
     private final String mClassName;
     private final String mTestName;
-    
+
     /**
      * Creates a TestCaseReference from a class and method name
      */
@@ -52,15 +52,17 @@ class TestCaseReference extends AndroidTestReference {
     /**
      * Returns a count of the number of test cases referenced. Is always one for this class.
      */
+    @Override
     public int countTestCases() {
         return 1;
     }
 
     /**
      * Sends test identifier and test count information for this test
-     * 
+     *
      * @param notified the {@link IVisitsTestTrees} to send test info to
      */
+    @Override
     public void sendTree(IVisitsTestTrees notified) {
         notified.visitTreeEntry(getIdentifier(), false, countTestCases());
     }
@@ -68,8 +70,9 @@ class TestCaseReference extends AndroidTestReference {
     /**
      * Returns the identifier of this test, in a format expected by JDT JUnit
      */
+    @Override
     public String getName() {
-        return MessageFormat.format(MessageIds.TEST_IDENTIFIER_MESSAGE_FORMAT, 
+        return MessageFormat.format(MessageIds.TEST_IDENTIFIER_MESSAGE_FORMAT,
                 new Object[] { mTestName, mClassName});
     }
 }

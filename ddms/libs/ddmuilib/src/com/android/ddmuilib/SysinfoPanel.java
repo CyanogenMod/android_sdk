@@ -184,6 +184,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
      * Adds output to the temp file. IShellOutputReceiver method. Called by
      * executeShellCommand().
      */
+    @Override
     public void addOutput(byte[] data, int offset, int length) {
         try {
             mTempStream.write(data, offset, length);
@@ -198,6 +199,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
      * output is passed to generateDataset(). Called by executeShellCommand() on
      * completion.
      */
+    @Override
     public void flush() {
         if (mTempStream != null) {
             try {
@@ -216,6 +218,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
      *
      * @return false - don't cancel
      */
+    @Override
     public boolean isCancelled() {
         return false;
     }
@@ -302,6 +305,7 @@ public class SysinfoPanel extends TablePanel implements IShellOutputReceiver {
         return top;
     }
 
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         // Don't care
     }

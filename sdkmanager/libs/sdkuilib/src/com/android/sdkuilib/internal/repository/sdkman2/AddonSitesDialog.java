@@ -108,6 +108,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
 
         mTableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION);
         mTableViewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 on_TableViewer_selectionChanged(event);
             }
@@ -224,6 +225,7 @@ public class AddonSitesDialog extends SwtBaseDialog {
                 msg,
                 initialValue,
                 new IInputValidator() {
+            @Override
             public String isValid(String newText) {
 
                 newText = newText == null ? null : newText.trim();
@@ -360,14 +362,17 @@ public class AddonSitesDialog extends SwtBaseDialog {
 
     private static class SourcesContentProvider implements IStructuredContentProvider {
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof SdkSource[]) {
                 return (Object[]) inputElement;

@@ -308,6 +308,7 @@ public class Location {
             mEndOffset = endOffset;
         }
 
+        @Override
         public Location resolve() {
             return Location.create(mFile, mContents, mStartOffset, mEndOffset);
         }

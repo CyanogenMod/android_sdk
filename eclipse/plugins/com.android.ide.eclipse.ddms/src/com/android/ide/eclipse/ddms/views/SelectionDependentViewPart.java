@@ -53,6 +53,7 @@ public abstract class SelectionDependentViewPart extends ViewPart implements ISe
      *
      * @see ISelectionListener
      */
+    @Override
     public final void selectionChanged(Client selectedClient) {
         mPanel.clientSelected(selectedClient);
     }
@@ -63,6 +64,7 @@ public abstract class SelectionDependentViewPart extends ViewPart implements ISe
      *
      * @see ISelectionListener
      */
+    @Override
     public final void selectionChanged(IDevice selectedDevice) {
         mPanel.deviceSelected(selectedDevice);
     }

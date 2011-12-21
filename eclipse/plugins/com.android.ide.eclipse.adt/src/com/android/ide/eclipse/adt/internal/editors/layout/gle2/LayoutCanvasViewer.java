@@ -59,6 +59,7 @@ class LayoutCanvasViewer extends Viewer implements IPostSelectionProvider {
     }
 
     private ISelectionChangedListener mSelectionListener = new ISelectionChangedListener() {
+        @Override
         public void selectionChanged(SelectionChangedEvent event) {
             fireSelectionChanged(event);
             firePostSelectionChanged(event);
@@ -136,10 +137,12 @@ class LayoutCanvasViewer extends Viewer implements IPostSelectionProvider {
 
     private ListenerList mPostChangedListeners = new ListenerList();
 
+    @Override
     public void addPostSelectionChangedListener(ISelectionChangedListener listener) {
         mPostChangedListeners.add(listener);
     }
 
+    @Override
     public void removePostSelectionChangedListener(ISelectionChangedListener listener) {
         mPostChangedListeners.remove(listener);
     }
@@ -149,6 +152,7 @@ class LayoutCanvasViewer extends Viewer implements IPostSelectionProvider {
         for (int i = 0; i < listeners.length; i++) {
             final ISelectionChangedListener l = (ISelectionChangedListener) listeners[i];
             SafeRunnable.run(new SafeRunnable() {
+                @Override
                 public void run() {
                     l.selectionChanged(event);
                 }

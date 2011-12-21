@@ -1401,6 +1401,7 @@ class RelativeLayoutConversionHelper {
                 mRowSort = rowSort;
             }
 
+            @Override
             public int compare(View view1, View view2) {
                 if (mRowSort) {
                     return view1.mRow - view2.mRow;

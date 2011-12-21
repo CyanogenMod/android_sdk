@@ -122,6 +122,7 @@ public abstract class SwtBaseDialog extends Dialog {
             mShell.setText(getText());
         }
         mShell.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 saveSize();
             }

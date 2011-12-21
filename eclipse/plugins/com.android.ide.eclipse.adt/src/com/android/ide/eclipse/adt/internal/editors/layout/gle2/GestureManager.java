@@ -437,6 +437,7 @@ public class GestureManager {
 
         // --- MouseMoveListener ---
 
+        @Override
         public void mouseMove(MouseEvent e) {
             mLastMouseX = e.x;
             mLastMouseY = e.y;
@@ -456,6 +457,7 @@ public class GestureManager {
 
         // --- MouseListener ---
 
+        @Override
         public void mouseUp(MouseEvent e) {
             ControlPoint mousePos = ControlPoint.create(mCanvas, e);
             if (mCurrentGesture == null) {
@@ -480,6 +482,7 @@ public class GestureManager {
             mCanvas.redraw();
         }
 
+        @Override
         public void mouseDown(MouseEvent e) {
             mLastMouseX = e.x;
             mLastMouseY = e.y;
@@ -488,6 +491,7 @@ public class GestureManager {
             // Not yet used. Should be, for Mac and Linux.
         }
 
+        @Override
         public void mouseDoubleClick(MouseEvent e) {
             // SWT delivers a double click event even if you click two different buttons
             // in rapid succession. In any case, we only want to let you double click the
@@ -505,6 +509,7 @@ public class GestureManager {
 
         // --- KeyListener ---
 
+        @Override
         public void keyPressed(KeyEvent e) {
             mLastStateMask = e.stateMask;
             // Workaround for the fact that in keyPressed the current state
@@ -541,6 +546,7 @@ public class GestureManager {
             mCanvas.handleKeyPressed(e);
         }
 
+        @Override
         public void keyReleased(KeyEvent e) {
             mLastStateMask = e.stateMask;
             // Workaround for the fact that in keyPressed the current state
@@ -572,6 +578,7 @@ public class GestureManager {
         /**
          * The cursor has entered the drop target boundaries. {@inheritDoc}
          */
+        @Override
         public void dragEnter(DropTargetEvent event) {
             mCanvas.showInvisibleViews(true);
 
@@ -594,6 +601,7 @@ public class GestureManager {
         /**
          * The cursor is moving over the drop target. {@inheritDoc}
          */
+        @Override
         public void dragOver(DropTargetEvent event) {
             if (mCurrentGesture instanceof DropGesture) {
                 ((DropGesture) mCurrentGesture).dragOver(event);
@@ -604,6 +612,7 @@ public class GestureManager {
          * The cursor has left the drop target boundaries OR data is about to be
          * dropped. {@inheritDoc}
          */
+        @Override
         public void dragLeave(DropTargetEvent event) {
             if (mCurrentGesture instanceof DropGesture) {
                 DropGesture dropGesture = (DropGesture) mCurrentGesture;
@@ -619,6 +628,7 @@ public class GestureManager {
          * The drop is about to be performed. The drop target is given a last
          * chance to change the nature of the drop. {@inheritDoc}
          */
+        @Override
         public void dropAccept(DropTargetEvent event) {
             Gesture gesture = mCurrentGesture != null ? mCurrentGesture : mZombieGesture;
             if (gesture instanceof DropGesture) {
@@ -629,6 +639,7 @@ public class GestureManager {
         /**
          * The data is being dropped. {@inheritDoc}
          */
+        @Override
         public void drop(final DropTargetEvent event) {
             // See if we had a gesture just prior to the drop (we receive a dragLeave
             // right before the drop which we don't know whether means the cursor has
@@ -647,6 +658,7 @@ public class GestureManager {
          * The operation being performed has changed (e.g. modifier key).
          * {@inheritDoc}
          */
+        @Override
         public void dragOperationChanged(DropTargetEvent event) {
             if (mCurrentGesture instanceof DropGesture) {
                 ((DropGesture) mCurrentGesture).dragOperationChanged(event);
@@ -676,6 +688,7 @@ public class GestureManager {
          * there's none, try to auto-select the one under the cursor.
          * {@inheritDoc}
          */
+        @Override
         public void dragStart(DragSourceEvent e) {
             LayoutPoint p = LayoutPoint.create(mCanvas, e);
             ControlPoint controlPoint = ControlPoint.create(mCanvas, e);
@@ -763,6 +776,7 @@ public class GestureManager {
                 GlobalCanvasDragInfo.getInstance().startDrag(mDragElements,
                         mDragSelection.toArray(new SelectionItem[imageCount]),
                         mCanvas, new Runnable() {
+                            @Override
                             public void run() {
                                 mCanvas.getClipboardSupport().deleteSelection("Remove",
                                         mDragSelection);
@@ -848,6 +862,7 @@ public class GestureManager {
          * before drop. The drop side decides what type of transfer to use and
          * this side must now provide the adequate data. {@inheritDoc}
          */
+        @Override
         public void dragSetData(DragSourceEvent e) {
             if (TextTransfer.getInstance().isSupportedType(e.dataType)) {
                 e.data = SelectionItem.getAsText(mCanvas, mDragSelection);
@@ -868,6 +883,7 @@ public class GestureManager {
          * Callback invoked when the drop has been finished either way. On a
          * successful move, remove the originating elements.
          */
+        @Override
         public void dragFinished(DragSourceEvent e) {
             // Clear the selection
             mDragSelection.clear();

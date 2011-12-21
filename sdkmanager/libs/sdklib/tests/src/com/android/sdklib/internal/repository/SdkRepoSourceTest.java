@@ -57,14 +57,17 @@ public class SdkRepoSourceTest extends TestCase {
 
             final StringBuilder output = new StringBuilder();
             Document doc = super.findAlternateToolsXml(xml, new ErrorHandler() {
+                @Override
                 public void warning(SAXParseException exception) throws SAXException {
                     output.append("WARN: " + exception.getMessage()).append('\n');
                 }
 
+                @Override
                 public void fatalError(SAXParseException exception) throws SAXException {
                     output.append("FATAL: " + exception.getMessage()).append('\n');
                 }
 
+                @Override
                 public void error(SAXParseException exception) throws SAXException {
                     output.append("ERROR: " + exception.getMessage()).append('\n');
                 }

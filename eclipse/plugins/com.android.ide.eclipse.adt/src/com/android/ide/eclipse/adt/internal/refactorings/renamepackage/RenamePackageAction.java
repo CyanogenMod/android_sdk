@@ -66,10 +66,12 @@ public class RenamePackageAction implements IObjectActionDelegate {
     /**
      * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
      */
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         mTargetPart = targetPart;
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
@@ -81,6 +83,7 @@ public class RenamePackageAction implements IObjectActionDelegate {
         // pass
     }
 
+    @Override
     public void run(IAction action) {
 
         // Prompt for refactoring on the selected project
@@ -124,6 +127,7 @@ public class RenamePackageAction implements IObjectActionDelegate {
 
         IInputValidator validator = new IInputValidator() {
 
+            @Override
             public String isValid(String newText) {
                 try {
                     astValidator.newName(newText);

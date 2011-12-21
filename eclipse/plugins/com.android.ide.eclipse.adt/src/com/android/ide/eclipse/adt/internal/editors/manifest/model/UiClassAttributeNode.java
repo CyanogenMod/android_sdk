@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest.model;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextAttributeDescriptor;
@@ -112,6 +112,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
         @Override
         public ITypeInfoFilterExtension getFilterExtension() {
             return new ITypeInfoFilterExtension() {
+                @Override
                 public boolean select(ITypeInfoRequestor typeInfoRequestor) {
 
                     boolean projectOnly = mUseProjectOnly;
@@ -291,6 +292,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
     @Override
     protected void onAddValidators(final Text text) {
         ModifyListener listener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 try {
                     String textValue = text.getText().trim();
@@ -327,6 +329,7 @@ public class UiClassAttributeNode extends UiTextAttributeNode {
 
         // Make sure the validator removes its message(s) when the widget is disposed
         text.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 // we don't want to use setErrorMessage, because we don't want to reset
                 // the error flag in the UiAttributeNode

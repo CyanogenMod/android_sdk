@@ -47,6 +47,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
      * @see com.android.ddmlib.adb.IShellOutputReceiver#addOutput(
      *      byte[], int, int)
      */
+    @Override
     public final void addOutput(byte[] data, int offset, int length) {
         if (isCancelled() == false) {
             String s = null;
@@ -105,6 +106,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
     /* (non-Javadoc)
      * @see com.android.ddmlib.adb.IShellOutputReceiver#flush()
      */
+    @Override
     public final void flush() {
         if (mUnfinishedLine != null) {
             processNewLines(new String[] { mUnfinishedLine });

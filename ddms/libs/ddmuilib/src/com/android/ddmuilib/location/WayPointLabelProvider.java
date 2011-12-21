@@ -26,10 +26,12 @@ import org.eclipse.swt.widgets.Table;
  */
 public class WayPointLabelProvider implements ITableLabelProvider {
 
+    @Override
     public Image getColumnImage(Object element, int columnIndex) {
         return null;
     }
 
+    @Override
     public String getColumnText(Object element, int columnIndex) {
         if (element instanceof WayPoint) {
             WayPoint wayPoint = (WayPoint)element;
@@ -54,19 +56,23 @@ public class WayPointLabelProvider implements ITableLabelProvider {
         return null;
     }
 
+    @Override
     public void addListener(ILabelProviderListener listener) {
         // pass
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         // pass
         return false;
     }
 
+    @Override
     public void removeListener(ILabelProviderListener listener) {
         // pass
     }

@@ -69,6 +69,7 @@ public class ProjectChooserHelper {
      * An implementation of {@link IProjectChooserFilter} that only displays non-library projects.
      */
     public final static class NonLibraryProjectOnlyFilter implements IProjectChooserFilter {
+        @Override
         public boolean accept(IProject project) {
             ProjectState state = Sdk.getProjectState(project);
             if (state != null) {
@@ -78,6 +79,7 @@ public class ProjectChooserHelper {
             return false;
         }
 
+        @Override
         public boolean useCache() {
             return true;
         }
@@ -87,6 +89,7 @@ public class ProjectChooserHelper {
      * An implementation of {@link IProjectChooserFilter} that only displays library projects.
      */
     public final static class LibraryProjectOnlyFilter implements IProjectChooserFilter {
+        @Override
         public boolean accept(IProject project) {
             ProjectState state = Sdk.getProjectState(project);
             if (state != null ) {
@@ -96,6 +99,7 @@ public class ProjectChooserHelper {
             return false;
         }
 
+        @Override
         public boolean useCache() {
             return true;
         }
@@ -275,6 +279,7 @@ public class ProjectChooserHelper {
          * Click handler for the button: Open the {@link ProjectChooserHelper}
          * dialog for selecting a new project.
          */
+        @Override
         public void widgetSelected(SelectionEvent e) {
             int selectionIndex = getSelectionIndex();
             if (selectionIndex > 0 && mAvailableProjects != null
@@ -287,6 +292,7 @@ public class ProjectChooserHelper {
             }
         }
 
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {
         }
 

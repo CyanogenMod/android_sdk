@@ -70,9 +70,11 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
     /**
      * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
      */
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
     }
 
+    @Override
     public void run(IAction action) {
         if (mSelection instanceof IStructuredSelection) {
 
@@ -93,6 +95,7 @@ public class AddCompatibilityJarAction implements IObjectActionDelegate {
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }

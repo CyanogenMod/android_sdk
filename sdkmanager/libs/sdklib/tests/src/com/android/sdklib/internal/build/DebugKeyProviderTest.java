@@ -105,10 +105,12 @@ public class DebugKeyProviderTest extends TestCase {
         private String mOut = "";               //$NON-NLS-1$
         private String mErr = "";               //$NON-NLS-1$
 
+        @Override
         public void out(String message) {
             mOut += message + "\n";             //$NON-NLS-1$
         }
 
+        @Override
         public void err(String message) {
             mErr += message + "\n";             //$NON-NLS-1$
         }

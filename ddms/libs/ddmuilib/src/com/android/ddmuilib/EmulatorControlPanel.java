@@ -16,13 +16,14 @@
 
 package com.android.ddmuilib;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.EmulatorConsole.GsmMode;
 import com.android.ddmlib.EmulatorConsole.GsmStatus;
 import com.android.ddmlib.EmulatorConsole.NetworkStatus;
+import com.android.ddmlib.IDevice;
 import com.android.ddmuilib.location.CoordinateControls;
 import com.android.ddmuilib.location.GpxParser;
+import com.android.ddmuilib.location.GpxParser.Track;
 import com.android.ddmuilib.location.KmlParser;
 import com.android.ddmuilib.location.TrackContentProvider;
 import com.android.ddmuilib.location.TrackLabelProvider;
@@ -30,7 +31,6 @@ import com.android.ddmuilib.location.TrackPoint;
 import com.android.ddmuilib.location.WayPoint;
 import com.android.ddmuilib.location.WayPointContentProvider;
 import com.android.ddmuilib.location.WayPointLabelProvider;
-import com.android.ddmuilib.location.GpxParser.Track;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -401,6 +401,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         mPhoneNumber = new Text(phoneComp, SWT.BORDER | SWT.LEFT | SWT.SINGLE);
         mPhoneNumber.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mPhoneNumber.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 // Reenable the widgets based on the content of the text.
                 // doEnable checks the validity of the phone number to enable/disable some
@@ -484,13 +485,13 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                         // delimited. For this reason, we'll replace is several steps
 
                         // replace the dual CR-LF
-                        message = message.replaceAll("\r\n", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-1$
+                        message = message.replaceAll("\r\n", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-2$
 
                         // replace remaining stand alone \n
-                        message = message.replaceAll("\n", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-1$
+                        message = message.replaceAll("\n", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-2$
 
                         // replace remaining stand alone \r
-                        message = message.replaceAll("\r", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-1$
+                        message = message.replaceAll("\r", "\\\\n"); //$NON-NLS-1$ //$NON-NLS-2$
 
                         processCommandResult(mEmulatorConsole.sendSms(mPhoneNumber.getText().trim(),
                                 message));
@@ -701,6 +702,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         gpxWayPointViewer.setLabelProvider(new WayPointLabelProvider());
 
         gpxWayPointViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
                 if (selection instanceof IStructuredSelection) {
@@ -748,6 +750,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         gpxTrackViewer.setLabelProvider(new TrackLabelProvider());
 
         gpxTrackViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
                 if (selection instanceof IStructuredSelection) {
@@ -921,6 +924,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         });
 
         kmlWayPointViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
                 if (selection instanceof IStructuredSelection) {
@@ -1075,6 +1079,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                         final NetworkStatus f_netstatus = netstatus;
 
                         d.asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 if (f_gsm.voice != GsmMode.UNKNOWN) {
                                     mVoiceMode.select(getGsmComboIndex(f_gsm.voice));
@@ -1122,6 +1127,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         try {
             Display d = mParent.getDisplay();
             d.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (mParent.isDisposed() == false) {
                         doEnable(enabled);
@@ -1230,6 +1236,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
         if (result != EmulatorConsole.RESULT_OK) {
             try {
                 mParent.getDisplay().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (mParent.isDisposed() == false) {
                             MessageDialog.openError(mParent.getShell(), "Emulator Console",
@@ -1334,6 +1341,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                         mPlayingTrack = false;
                         try {
                             mParent.getDisplay().asyncExec(new Runnable() {
+                                @Override
                                 public void run() {
                                     if (mPlayGpxButton.isDisposed() == false) {
                                         mPlayGpxButton.setImage(mPlayImage);
@@ -1434,6 +1442,7 @@ public class EmulatorControlPanel extends SelectionDependentPanel {
                         mPlayingTrack = false;
                         try {
                             mParent.getDisplay().asyncExec(new Runnable() {
+                                @Override
                                 public void run() {
                                     if (mPlayGpxButton.isDisposed() == false) {
                                         mPlayGpxButton.setImage(mPlayImage);

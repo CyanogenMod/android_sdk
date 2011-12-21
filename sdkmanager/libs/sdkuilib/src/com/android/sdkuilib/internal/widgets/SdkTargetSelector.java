@@ -153,6 +153,7 @@ public class SdkTargetSelector {
         mTargets = targets;
         if (mTargets != null) {
             Arrays.sort(mTargets, new Comparator<IAndroidTarget>() {
+                @Override
                 public int compare(IAndroidTarget o1, IAndroidTarget o2) {
                     return o1.compareTo(o2);
                 }
@@ -282,6 +283,7 @@ public class SdkTargetSelector {
         // Add a selection listener that will check/uncheck items when they are double-clicked
         table.addSelectionListener(new SelectionListener() {
             /** Default selection means double-click on "most" platforms */
+            @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -295,6 +297,7 @@ public class SdkTargetSelector {
                 }
             }
 
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -382,6 +385,7 @@ public class SdkTargetSelector {
          */
 
         final Listener listener = new Listener() {
+            @Override
             public void handleEvent(Event event) {
 
                 switch(event.type) {

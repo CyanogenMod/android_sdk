@@ -74,6 +74,7 @@ public class LogCatView extends SelectionDependentViewPart {
         setSelectionDependentPanel(mLogCatPanel);
 
         mLogCatPanel.addLogCatMessageSelectionListener(new ILogCatMessageSelectionListener() {
+            @Override
             public void messageDoubleClicked(LogCatMessage m) {
                 onDoubleClick(m);
             }

@@ -106,6 +106,7 @@ public class WelcomeWizard extends Wizard {
 
         // Perform installation asynchronously since it takes a while.
         getShell().getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 if (createNew) {
                     try {

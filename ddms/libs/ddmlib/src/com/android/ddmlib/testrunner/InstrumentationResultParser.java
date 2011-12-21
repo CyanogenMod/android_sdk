@@ -419,6 +419,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      *
      * @see IShellOutputReceiver#isCancelled()
      */
+    @Override
     public boolean isCancelled() {
         return mIsCancelled;
     }

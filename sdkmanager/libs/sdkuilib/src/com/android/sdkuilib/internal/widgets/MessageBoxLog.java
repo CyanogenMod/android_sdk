@@ -62,6 +62,7 @@ public final class MessageBoxLog implements ISdkLog {
         mLogErrorsOnly = logErrorsOnly;
     }
 
+    @Override
     public void error(Throwable throwable, String errorFormat, Object... arg) {
         if (errorFormat != null) {
             logMessages.add(String.format("Error: " + errorFormat, arg));
@@ -72,12 +73,14 @@ public final class MessageBoxLog implements ISdkLog {
         }
     }
 
+    @Override
     public void warning(String warningFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format("Warning: " + warningFormat, arg));
         }
     }
 
+    @Override
     public void printf(String msgFormat, Object... arg) {
         if (!mLogErrorsOnly) {
             logMessages.add(String.format(msgFormat, arg));
@@ -110,6 +113,7 @@ public final class MessageBoxLog implements ISdkLog {
             // dialog box only run in ui thread..
             if (mDisplay != null && !mDisplay.isDisposed()) {
                 mDisplay.asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         // This is typically displayed at the end, so make sure the UI
                         // instances are not disposed.

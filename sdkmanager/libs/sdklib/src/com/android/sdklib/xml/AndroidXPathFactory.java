@@ -60,6 +60,7 @@ public class AndroidXPathFactory {
             mAndroidPrefixes.add(mAndroidPrefix);
         }
 
+        @Override
         public String getNamespaceURI(String prefix) {
             if (prefix != null) {
                 if (prefix.equals(mAndroidPrefix)) {
@@ -70,6 +71,7 @@ public class AndroidXPathFactory {
             return XMLConstants.NULL_NS_URI;
         }
 
+        @Override
         public String getPrefix(String namespaceURI) {
             if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
                 return mAndroidPrefix;
@@ -78,6 +80,7 @@ public class AndroidXPathFactory {
             return null;
         }
 
+        @Override
         public Iterator<?> getPrefixes(String namespaceURI) {
             if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
                 return mAndroidPrefixes.iterator();

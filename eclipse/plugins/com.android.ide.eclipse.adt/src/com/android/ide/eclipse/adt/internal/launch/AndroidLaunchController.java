@@ -18,17 +18,17 @@ package com.android.ide.eclipse.adt.internal.launch;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
+import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
 import com.android.ddmlib.CanceledException;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
+import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
-import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
-import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.actions.AvdManagerAction;
 import com.android.ide.eclipse.adt.internal.launch.AndroidLaunchConfiguration.TargetMode;
@@ -509,6 +509,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
                     final boolean[] searchAgain = new boolean[] { false };
                     // ask the user to create a new one.
                     display.syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             Shell shell = display.getActiveShell();
                             if (MessageDialog.openQuestion(shell, "Android AVD Error",
@@ -572,6 +573,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
         // bring up the device chooser.
         final IAndroidTarget desiredProjectTarget = projectTarget;
         AdtPlugin.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 try {
                     // open the chooser dialog. It'll fill 'response' with the device to use
@@ -1187,6 +1189,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      * @param info the {@link DelayedLaunchInfo} that indicates the launch action
      * @param device the device or emulator to launch the application on
      */
+    @Override
     public void launchApp(final DelayedLaunchInfo info, IDevice device) {
         if (info.isDebugMode()) {
             synchronized (sListLock) {
@@ -1388,6 +1391,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *
      * @see IDebugBridgeChangeListener#bridgeChanged(AndroidDebugBridge)
      */
+    @Override
     public void bridgeChanged(AndroidDebugBridge bridge) {
         // The adb server has changed. We cancel any pending launches.
         String message = "adb server change: cancelling '%1$s'!";
@@ -1417,6 +1421,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *
      * @see IDeviceChangeListener#deviceConnected(IDevice)
      */
+    @Override
     public void deviceConnected(IDevice device) {
         synchronized (sListLock) {
             // look if there's an app waiting for a device
@@ -1451,6 +1456,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *
      * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void deviceDisconnected(IDevice device) {
         // any pending launch on this device must be canceled.
@@ -1487,6 +1493,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *
      * @see IDeviceChangeListener#deviceChanged(IDevice, int)
      */
+    @Override
     public void deviceChanged(IDevice device, int changeMask) {
         // We could check if any starting device we care about is now ready, but we can wait for
         // its home app to show up, so...
@@ -1505,6 +1512,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         boolean connectDebugger = false;
         if ((changeMask & Client.CHANGE_NAME) == Client.CHANGE_NAME) {
@@ -1712,6 +1720,7 @@ public final class AndroidLaunchController implements IDebugBridgeChangeListener
     /* (non-Javadoc)
      * @see com.android.ide.eclipse.adt.launch.ILaunchController#stopLaunch(com.android.ide.eclipse.adt.launch.AndroidLaunchController.DelayedLaunchInfo)
      */
+    @Override
     public void stopLaunch(DelayedLaunchInfo launchInfo) {
         launchInfo.getLaunch().stopLaunch();
         synchronized (sListLock) {

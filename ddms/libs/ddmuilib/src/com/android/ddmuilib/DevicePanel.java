@@ -17,14 +17,14 @@
 package com.android.ddmuilib;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Client;
-import com.android.ddmlib.ClientData;
-import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.IDevice;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
+import com.android.ddmlib.Client;
+import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientData.DebuggerStatus;
+import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -108,6 +108,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      * and second level elements are {@link Client} object.
      */
     private class ContentProvider implements ITreeContentProvider {
+        @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement instanceof IDevice) {
                 return ((IDevice)parentElement).getClients();
@@ -115,6 +116,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return new Object[0];
         }
 
+        @Override
         public Object getParent(Object element) {
             if (element instanceof Client) {
                 return ((Client)element).getDevice();
@@ -122,6 +124,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             if (element instanceof IDevice) {
                 return ((IDevice)element).hasClients();
@@ -131,6 +134,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return false;
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof AndroidDebugBridge) {
                 return ((AndroidDebugBridge)inputElement).getDevices();
@@ -138,10 +142,12 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return new Object[0];
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
@@ -155,6 +161,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
         private static final String DEVICE_MODEL_PROPERTY = "ro.product.model"; //$NON-NLS-1$
         private static final String DEVICE_MANUFACTURER_PROPERTY = "ro.product.manufacturer"; //$NON-NLS-1$
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex == DEVICE_COL_SERIAL && element instanceof IDevice) {
                 IDevice device = (IDevice)element;
@@ -195,6 +202,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return null;
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof IDevice) {
                 IDevice device = (IDevice)element;
@@ -311,19 +319,23 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
             return sb.toString();
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -506,9 +518,11 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      *
      * @see IDebugBridgeChangeListener#serverChanged(AndroidDebugBridge)
      */
+    @Override
     public void bridgeChanged(final AndroidDebugBridge bridge) {
         if (mTree.isDisposed() == false) {
             exec(new Runnable() {
+                @Override
                 public void run() {
                     if (mTree.isDisposed() == false) {
                         // set up the data source.
@@ -541,8 +555,10 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      *
      * @see IDeviceChangeListener#deviceConnected(IDevice)
      */
+    @Override
     public void deviceConnected(IDevice device) {
         exec(new Runnable() {
+            @Override
             public void run() {
                 if (mTree.isDisposed() == false) {
                     // refresh all
@@ -576,6 +592,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      *
      * @see IDeviceChangeListener#deviceDisconnected(IDevice)
      */
+    @Override
     public void deviceDisconnected(IDevice device) {
         deviceConnected(device);
 
@@ -594,6 +611,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      *
      * @see IDeviceChangeListener#deviceChanged(IDevice)
      */
+    @Override
     public void deviceChanged(final IDevice device, int changeMask) {
         boolean expand = false;
         synchronized (mDevicesToExpand) {
@@ -607,6 +625,7 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
         final boolean finalExpand = expand;
 
         exec(new Runnable() {
+            @Override
             public void run() {
                 if (mTree.isDisposed() == false) {
                     // look if the current device is selected. This is done in case the current
@@ -655,8 +674,10 @@ public final class DevicePanel extends Panel implements IDebugBridgeChangeListen
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, final int changeMask) {
         exec(new Runnable() {
+            @Override
             public void run() {
                 if (mTree.isDisposed() == false) {
                     // refresh the client

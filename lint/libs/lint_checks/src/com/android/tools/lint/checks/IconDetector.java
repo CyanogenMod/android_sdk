@@ -495,6 +495,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     }
                     // Sort overall partitions by the first item in each list
                     Collections.sort(lists, new Comparator<List<File>>() {
+                        @Override
                         public int compare(List<File> list1, List<File> list2) {
                             return list1.get(0).compareTo(list2.get(0));
                         }
@@ -677,6 +678,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
                     }
                     Collections.sort(entries,
                             new Comparator<Map.Entry<File, Dimension>>() {
+                        @Override
                         public int compare(Entry<File, Dimension> e1,
                                 Entry<File, Dimension> e2) {
                             Dimension d1 = e1.getValue();

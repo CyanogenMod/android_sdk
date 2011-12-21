@@ -162,20 +162,20 @@ public final class HeapSegment implements Comparable<HeapSegment> {
              *       so that they can be examined independently.
              */
             ByteBuffer data = hs.mUsageData;
-            int eState = (int)data.get() & 0x000000ff;
-            int eLen = ((int)data.get() & 0x000000ff) + 1;
+            int eState = data.get() & 0x000000ff;
+            int eLen = (data.get() & 0x000000ff) + 1;
 
             while ((eState & PARTIAL_MASK) != 0) {
 
                 /* If the partial bit was set, the next byte should describe
                  * the same object as the current one.
                  */
-                int nextState = (int)data.get() & 0x000000ff;
+                int nextState = data.get() & 0x000000ff;
                 if ((nextState & ~PARTIAL_MASK) != (eState & ~PARTIAL_MASK)) {
                     throw new ParseException("State mismatch", data.position());
                 }
                 eState = nextState;
-                eLen += ((int)data.get() & 0x000000ff) + 1;
+                eLen += (data.get() & 0x000000ff) + 1;
             }
 
             setSolidity(eState & 0x7);
@@ -209,6 +209,7 @@ public final class HeapSegment implements Comparable<HeapSegment> {
             this.mLength = length;
         }
 
+        @Override
         public int compareTo(HeapSegmentElement other) {
             if (mLength != other.mLength) {
                 return mLength < other.mLength ? -1 : 1;
@@ -253,8 +254,8 @@ public final class HeapSegment implements Comparable<HeapSegment> {
          */
         hpsgData.order(ByteOrder.BIG_ENDIAN);
         mHeapId = hpsgData.getInt();
-        mAllocationUnitSize = (int) hpsgData.get();
-        mStartAddress = (long) hpsgData.getInt() & 0x00000000ffffffffL;
+        mAllocationUnitSize = hpsgData.get();
+        mStartAddress = hpsgData.getInt() & 0x00000000ffffffffL;
         mOffset = hpsgData.getInt();
         mAllocationUnitCount = hpsgData.getInt();
 
@@ -411,6 +412,7 @@ public final class HeapSegment implements Comparable<HeapSegment> {
         return str.toString();
     }
 
+    @Override
     public int compareTo(HeapSegment other) {
         if (mHeapId != other.mHeapId) {
             return mHeapId < other.mHeapId ? -1 : 1;

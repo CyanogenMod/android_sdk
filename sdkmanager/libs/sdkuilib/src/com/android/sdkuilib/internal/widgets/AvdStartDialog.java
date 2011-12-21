@@ -154,6 +154,7 @@ final class AvdStartDialog extends GridDialog {
         mScreenSize.setText(getScreenSize());
         mScreenSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mScreenSize.addVerifyListener(new VerifyListener() {
+            @Override
             public void verifyText(VerifyEvent event) {
                 // combine the current content and the new text
                 String text = mScreenSize.getText();
@@ -164,6 +165,7 @@ final class AvdStartDialog extends GridDialog {
             }
         });
         mScreenSize.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent event) {
                 onScaleChange();
             }
@@ -180,6 +182,7 @@ final class AvdStartDialog extends GridDialog {
         mMonitorDpi.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.widthHint = 50;
         mMonitorDpi.addVerifyListener(new VerifyListener() {
+            @Override
             public void verifyText(VerifyEvent event) {
                 // check for digit only.
                 for (int i = 0 ; i < event.text.length(); i++) {
@@ -192,6 +195,7 @@ final class AvdStartDialog extends GridDialog {
             }
         });
         mMonitorDpi.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent event) {
                 onScaleChange();
             }

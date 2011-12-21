@@ -26,8 +26,8 @@ import java.util.regex.Pattern;
 
 /**
  * Output receiver for am process (Activity Manager)
- * 
- * Monitors adb output for am errors, and retries launch as appropriate. 
+ *
+ * Monitors adb output for am errors, and retries launch as appropriate.
  */
 public class AMReceiver extends MultiLineReceiver {
 
@@ -40,12 +40,12 @@ public class AMReceiver extends MultiLineReceiver {
 
     /**
      * Basic constructor.
-     * 
+     *
      * @param launchInfo the {@link DelayedLaunchInfo} associated with the am process.
      * @param device the Android device on which the launch is done.
      * @param launchController the {@link ILaunchController} that is managing the launch
      */
-    public AMReceiver(DelayedLaunchInfo launchInfo, IDevice device, 
+    public AMReceiver(DelayedLaunchInfo launchInfo, IDevice device,
             ILaunchController launchController) {
         mLaunchInfo = launchInfo;
         mDevice = device;
@@ -55,9 +55,9 @@ public class AMReceiver extends MultiLineReceiver {
     /**
      * Monitors the am process for error messages. If an error occurs, will reattempt launch up to
      * <code>MAX_ATTEMPT_COUNT</code> times.
-     * 
+     *
      * @param lines a portion of the am output
-     * 
+     *
      * @see MultiLineReceiver#processNewLines(String[])
      */
     @Override
@@ -154,6 +154,7 @@ public class AMReceiver extends MultiLineReceiver {
     /**
      * Returns true if launch has been cancelled
      */
+    @Override
     public boolean isCancelled() {
         return mLaunchInfo.isCancelled();
     }

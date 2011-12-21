@@ -39,6 +39,7 @@ import java.util.ArrayList;
         mTreeViewer = treeViewer;
     }
 
+    @Override
     public void dragStart(DragSourceEvent e) {
         Tree tree = mTreeViewer.getTree();
 
@@ -78,6 +79,7 @@ import java.util.ArrayList;
             GlobalCanvasDragInfo.getInstance().startDrag(mDragElements,
                     mDragSelection.toArray(new SelectionItem[imageCount]),
                     canvas, new Runnable() {
+                        @Override
                         public void run() {
                             canvas.getClipboardSupport().deleteSelection("Remove",
                                     mDragSelection);
@@ -89,6 +91,7 @@ import java.util.ArrayList;
         e.detail = DND.DROP_NONE;
     }
 
+    @Override
     public void dragSetData(DragSourceEvent e) {
         if (TextTransfer.getInstance().isSupportedType(e.dataType)) {
             LayoutCanvas canvas = mOutlinePage.getEditor().getCanvasControl();
@@ -106,6 +109,7 @@ import java.util.ArrayList;
         e.doit = false;
     }
 
+    @Override
     public void dragFinished(DragSourceEvent e) {
         // Unregister the dragged data.
         // Clear the selection

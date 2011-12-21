@@ -18,11 +18,11 @@ package com.android.ide.eclipse.adt.internal.ui;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
-import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
 import com.android.io.IAbstractFile;
 
@@ -119,6 +119,7 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
 
         // add support for double click.
         mTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 ISelection sel = event.getSelection();
 
@@ -182,6 +183,7 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
     /**
      * Processes a new selection.
      */
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         // first we test if the part is an editor.
         if (part instanceof IEditorPart) {
@@ -302,9 +304,11 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
             // listener to catch column resize to put the new width value into the store.
             if (prefs != null && pref_name != null) {
                 col.addControlListener(new ControlListener() {
+                    @Override
                     public void controlMoved(ControlEvent e) {
                     }
 
+                    @Override
                     public void controlResized(ControlEvent e) {
                         // get the new width
                         int w = ((TreeColumn)e.widget).getWidth();
@@ -323,6 +327,7 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
     /**
      * Processes a start in a resource event change.
      */
+    @Override
     public void resourceChangeEventStart() {
         // pass
     }
@@ -330,9 +335,11 @@ public class ResourceExplorerView extends ViewPart implements ISelectionListener
     /**
      * Processes the end of a resource change event.
      */
+    @Override
     public void resourceChangeEventEnd() {
         try {
             mTree.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (mTree.isDisposed() == false) {
                         mTreeViewer.refresh();

@@ -84,10 +84,12 @@ public class NodeProxy implements INode {
         }
     }
 
+    @Override
     public Rect getBounds() {
         return mBounds;
     }
 
+    @Override
     public Margins getMargins() {
         ViewHierarchy viewHierarchy = mFactory.getCanvas().getViewHierarchy();
         CanvasViewInfo view = viewHierarchy.findViewInfoFor(this);
@@ -99,6 +101,7 @@ public class NodeProxy implements INode {
     }
 
 
+    @Override
     public int getBaseline() {
         ViewHierarchy viewHierarchy = mFactory.getCanvas().getViewHierarchy();
         CanvasViewInfo view = viewHierarchy.findViewInfoFor(this);
@@ -128,6 +131,7 @@ public class NodeProxy implements INode {
         return mNode;
     }
 
+    @Override
     public String getFqcn() {
         if (mNode != null) {
             ElementDescriptor desc = mNode.getDescriptor();
@@ -142,6 +146,7 @@ public class NodeProxy implements INode {
     // ---- Hierarchy handling ----
 
 
+    @Override
     public INode getRoot() {
         if (mNode != null) {
             UiElementNode p = mNode.getUiRoot();
@@ -170,6 +175,7 @@ public class NodeProxy implements INode {
         return null;
     }
 
+    @Override
     public INode getParent() {
         if (mNode != null) {
             UiElementNode p = mNode.getUiParent();
@@ -181,6 +187,7 @@ public class NodeProxy implements INode {
         return null;
     }
 
+    @Override
     public INode[] getChildren() {
         if (mNode != null) {
             ArrayList<INode> nodes = new ArrayList<INode>();
@@ -199,6 +206,7 @@ public class NodeProxy implements INode {
 
     // ---- XML Editing ---
 
+    @Override
     public void editXml(String undoName, final INodeHandler c) {
         final AndroidXmlEditor editor = mNode.getEditor();
 
@@ -207,6 +215,7 @@ public class NodeProxy implements INode {
             ((LayoutEditor) editor).wrapUndoEditXmlModel(
                     undoName,
                     new Runnable() {
+                        @Override
                         public void run() {
                             // Here editor.isEditXmlModelPending returns true and it
                             // is safe to edit the model using any method from INode.
@@ -226,14 +235,17 @@ public class NodeProxy implements INode {
         }
     }
 
+    @Override
     public INode appendChild(String viewFqcn) {
         return insertOrAppend(viewFqcn, -1);
     }
 
+    @Override
     public INode insertChildAt(String viewFqcn, int index) {
         return insertOrAppend(viewFqcn, index);
     }
 
+    @Override
     public void removeChild(INode node) {
         checkEditOK();
 
@@ -299,6 +311,7 @@ public class NodeProxy implements INode {
         return newNode;
     }
 
+    @Override
     public boolean setAttribute(String uri, String name, String value) {
         checkEditOK();
         UiAttributeNode attr = mNode.setAttributeValue(name, uri, value, true /* override */);
@@ -323,6 +336,7 @@ public class NodeProxy implements INode {
         return attr != null;
     }
 
+    @Override
     public String getStringAttr(String uri, String attrName) {
         UiElementNode uiNode = mNode;
 
@@ -355,6 +369,7 @@ public class NodeProxy implements INode {
         return null;
     }
 
+    @Override
     public IAttributeInfo getAttributeInfo(String uri, String attrName) {
         UiElementNode uiNode = mNode;
 
@@ -375,6 +390,7 @@ public class NodeProxy implements INode {
         return null;
     }
 
+    @Override
     public IAttributeInfo[] getDeclaredAttributes() {
 
         AttributeDescriptor[] descs = mNode.getAttributeDescriptors();
@@ -388,6 +404,7 @@ public class NodeProxy implements INode {
         return infos;
     }
 
+    @Override
     public List<String> getAttributeSources() {
         ElementDescriptor descriptor = mNode.getDescriptor();
         if (descriptor instanceof ViewElementDescriptor) {
@@ -397,6 +414,7 @@ public class NodeProxy implements INode {
         }
     }
 
+    @Override
     public IAttribute[] getLiveAttributes() {
         UiElementNode uiNode = mNode;
 

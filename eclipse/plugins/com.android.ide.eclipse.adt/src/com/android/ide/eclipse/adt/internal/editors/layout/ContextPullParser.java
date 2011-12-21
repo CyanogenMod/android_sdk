@@ -63,6 +63,7 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
 
     // --- Layout lib API methods
 
+    @Override
     /**
      * this is deprecated but must still be implemented for older layout libraries.
      * @deprecated use {@link IProjectCallback#getParser(String)}.
@@ -72,6 +73,7 @@ public class ContextPullParser extends KXmlParser implements ILayoutPullParser {
         return mProjectCallback.getParser(layoutName);
     }
 
+    @Override
     public Object getViewCookie() {
         return null; // never any key to return
     }

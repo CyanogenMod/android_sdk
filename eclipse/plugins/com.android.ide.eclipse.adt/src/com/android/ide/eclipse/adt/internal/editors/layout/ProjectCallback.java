@@ -131,6 +131,7 @@ public final class ProjectCallback extends LegacyCallback {
      * This implementation goes through the output directory of the Eclipse project and loads the
      * <code>.class</code> file directly.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Object loadView(String className, Class[] constructorSignature,
             Object[] constructorParameters)
@@ -254,6 +255,7 @@ public final class ProjectCallback extends LegacyCallback {
      *
      * @return The package namespace of the project or null in case of error.
      */
+    @Override
     public String getNamespace() {
         if (mNamespace == null) {
             ManifestData manifestData = AndroidManifestHelper.parseForData(mProject);
@@ -266,6 +268,7 @@ public final class ProjectCallback extends LegacyCallback {
         return mNamespace;
     }
 
+    @Override
     public Pair<ResourceType, String> resolveResourceId(int id) {
         if (mProjectRes != null) {
             return mProjectRes.resolveResourceId(id);
@@ -274,6 +277,7 @@ public final class ProjectCallback extends LegacyCallback {
         return null;
     }
 
+    @Override
     public String resolveResourceId(int[] id) {
         if (mProjectRes != null) {
             return mProjectRes.resolveStyleable(id);
@@ -282,6 +286,7 @@ public final class ProjectCallback extends LegacyCallback {
         return null;
     }
 
+    @Override
     public Integer getResourceId(ResourceType type, String name) {
         if (mProjectRes != null) {
             return mProjectRes.getResourceId(type, name);
@@ -402,6 +407,7 @@ public final class ProjectCallback extends LegacyCallback {
         mLayoutEmbeddedParser = layoutParser;
     }
 
+    @Override
     public ILayoutPullParser getParser(String layoutName) {
         // Try to compute the ResourceValue for this layout since layoutlib
         // must be an older version which doesn't pass the value:
@@ -416,6 +422,7 @@ public final class ProjectCallback extends LegacyCallback {
         return getParser(layoutName, null);
     }
 
+    @Override
     public ILayoutPullParser getParser(ResourceValue layoutResource) {
         return getParser(layoutResource.getName(),
                 new File(layoutResource.getValue()));
@@ -450,6 +457,7 @@ public final class ProjectCallback extends LegacyCallback {
         return null;
     }
 
+    @Override
     public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
             ResourceReference itemRef,
             int fullPosition, int typePosition, int fullChildPosition, int typeChildPosition,
@@ -542,8 +550,9 @@ public final class ProjectCallback extends LegacyCallback {
         return false;
     }
 
-    public AdapterBinding getAdapterBinding(ResourceReference adapterView, Object adapterCookie,
-            Object viewObject) {
+    @Override
+    public AdapterBinding getAdapterBinding(final ResourceReference adapterView, final Object adapterCookie,
+            final Object viewObject) {
         // Look for user-recorded preference for layout to be used for previews
         if (adapterCookie instanceof UiViewElementNode) {
             UiViewElementNode uiNode = (UiViewElementNode) adapterCookie;

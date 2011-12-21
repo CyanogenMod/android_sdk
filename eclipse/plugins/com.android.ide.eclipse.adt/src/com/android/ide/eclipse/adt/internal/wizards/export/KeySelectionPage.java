@@ -45,7 +45,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 /**
- * Key Selection Page. This is used when an existing keystore is used. 
+ * Key Selection Page. This is used when an existing keystore is used.
  */
 final class KeySelectionPage extends ExportWizardPage {
 
@@ -66,6 +66,7 @@ final class KeySelectionPage extends ExportWizardPage {
         setDescription(""); // TODO
     }
 
+    @Override
     public void createControl(Composite parent) {
         Composite composite = new Composite(parent, SWT.NULL);
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -87,7 +88,7 @@ final class KeySelectionPage extends ExportWizardPage {
         mKeyAliasesLabel.setText("Alias:");
         mKeyAliases = new Combo(composite, SWT.READ_ONLY);
         mKeyAliases.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         new Composite(composite, SWT.NONE).setLayoutData(gd = new GridData());
         gd.heightHint = 0;
         gd.widthHint = 50;
@@ -105,7 +106,7 @@ final class KeySelectionPage extends ExportWizardPage {
         setErrorMessage(null);
         setMessage(null);
         setControl(composite);
-        
+
         mUseExistingKey.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -114,7 +115,7 @@ final class KeySelectionPage extends ExportWizardPage {
                 onChange();
             }
         });
-        
+
         mKeyAliases.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -122,15 +123,16 @@ final class KeySelectionPage extends ExportWizardPage {
                 onChange();
             }
         });
-        
+
         mKeyPassword.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mWizard.setKeyPassword(mKeyPassword.getText());
                 onChange();
             }
         });
     }
-    
+
     @Override
     void onShow() {
         // fill the texts with information loaded from the project.
@@ -155,7 +157,7 @@ final class KeySelectionPage extends ExportWizardPage {
                 FileInputStream fis = new FileInputStream(mWizard.getKeystore());
                 keyStore.load(fis, mWizard.getKeystorePassword().toCharArray());
                 fis.close();
-                
+
                 Enumeration<String> aliases = keyStore.aliases();
 
                 // get the alias from the project previous export, and look for a match as
@@ -164,7 +166,7 @@ final class KeySelectionPage extends ExportWizardPage {
 
                 String keyAlias = ProjectHelper.loadStringProperty(project,
                         ExportWizard.PROPERTY_ALIAS);
-                
+
                 ArrayList<String> aliasList = new ArrayList<String>();
 
                 int selection = -1;
@@ -178,7 +180,7 @@ final class KeySelectionPage extends ExportWizardPage {
                     }
                     count++;
                 }
-                
+
                 mWizard.setExistingAliases(aliasList);
 
                 if (selection != -1) {
@@ -213,7 +215,7 @@ final class KeySelectionPage extends ExportWizardPage {
             }
         }
     }
-    
+
     @Override
     public IWizardPage getPreviousPage() {
         return mWizard.getKeystoreSelectionPage();
@@ -224,7 +226,7 @@ final class KeySelectionPage extends ExportWizardPage {
         if (mWizard.getKeyCreationMode()) {
             return mWizard.getKeyCreationPage();
         }
-        
+
         return mWizard.getKeyCheckPage();
     }
 
@@ -245,7 +247,7 @@ final class KeySelectionPage extends ExportWizardPage {
                 setPageComplete(false);
                 return;
             }
-    
+
             if (mKeyPassword.getText().trim().length() == 0) {
                 setErrorMessage("Enter key password.");
                 setPageComplete(false);
@@ -255,7 +257,7 @@ final class KeySelectionPage extends ExportWizardPage {
 
         setPageComplete(true);
     }
-    
+
     private void enableWidgets() {
         boolean useKey = !mWizard.getKeyCreationMode();
         mKeyAliasesLabel.setEnabled(useKey);

@@ -26,10 +26,12 @@ public class ClearLintMarkersAction implements IActionDelegate {
 
     private ISelection mSelection;
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
 
+    @Override
     public void run(IAction action) {
         IProject project = RunLintAction.getSelectedProject(mSelection);
         if (project != null) {

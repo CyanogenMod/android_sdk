@@ -44,6 +44,7 @@ public class LaunchPreferencePage extends FieldEditorPreferencePage implements
                 Messages.LaunchPreferencePage_Default_HOME_Package, getFieldEditorParent()));
     }
 
+    @Override
     public void init(IWorkbench workbench) {
         // pass
     }

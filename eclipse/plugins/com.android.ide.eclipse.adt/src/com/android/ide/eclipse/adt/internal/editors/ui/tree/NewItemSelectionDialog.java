@@ -41,8 +41,8 @@ import org.eclipse.ui.part.FileEditorInput;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * A selection dialog to select the type of the new element node to
@@ -105,6 +105,7 @@ public class NewItemSelectionDialog extends AbstractElementListSelectionDialog {
         setMultipleSelection(false);
 
         setValidator(new ISelectionStatusValidator() {
+            @Override
             public IStatus validate(Object[] selection) {
                 if (selection.length == 1 && selection[0] instanceof ViewElementDescriptor) {
                     return new Status(IStatus.OK, // severity

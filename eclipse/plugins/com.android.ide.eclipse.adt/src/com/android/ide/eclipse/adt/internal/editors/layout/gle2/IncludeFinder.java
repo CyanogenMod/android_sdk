@@ -682,6 +682,7 @@ public class IncludeFinder {
 
     /** Listener of resource file saves, used to update layout inclusion data structures */
     private static class ResourceListener implements IResourceListener {
+        @Override
         public void fileChanged(IProject project, ResourceFile file, int eventType) {
             if (sRefreshing) {
                 return;
@@ -699,6 +700,7 @@ public class IncludeFinder {
             }
         }
 
+        @Override
         public void folderChanged(IProject project, ResourceFolder folder, int eventType) {
             // We only care about layout resource files
         }
@@ -758,6 +760,7 @@ public class IncludeFinder {
                     if (tmpMsg == null || tmpMsg.startsWith(MESSAGE)) {
                         // Remove
                         runLater(new Runnable() {
+                            @Override
                             public void run() {
                                 try {
                                     sRefreshing = true;
@@ -823,6 +826,7 @@ public class IncludeFinder {
 
             if (!markerAlreadyExists) {
                 runLater(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             sRefreshing = true;

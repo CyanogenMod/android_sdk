@@ -45,8 +45,8 @@ import org.eclipse.swt.widgets.Shell;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * This is a private implementation of UpdateWindow for ADT,
@@ -229,6 +229,7 @@ public class AdtUpdateDialog extends SwtBaseDialog {
         mPackageMananger.loadPackagesWithInstallTask(
                 mPackageFilter.installFlags(),
                 new IAutoInstallTask() {
+            @Override
             public Package[] filterLoadedSource(SdkSource source, Package[] packages) {
                 for (Package pkg : packages) {
                     mPackageFilter.visit(pkg);
@@ -236,17 +237,20 @@ public class AdtUpdateDialog extends SwtBaseDialog {
                 return packages;
             }
 
+            @Override
             public boolean acceptPackage(Package pkg) {
                 // Is this the package we want to install?
                 return mPackageFilter.accept(pkg);
             }
 
+            @Override
             public void setResult(boolean success, Map<Package, File> installPaths) {
                 // Capture the result from the installation.
                 mResultCode = Boolean.valueOf(success);
                 mResultPaths = installPaths;
             }
 
+            @Override
             public void taskCompleted() {
                 // We can close that window now.
                 close();

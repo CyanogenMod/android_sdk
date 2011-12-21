@@ -121,11 +121,13 @@ public class SystemImage implements ISystemImage {
     }
 
     /** Returns the actual location of an installed system image. */
+    @Override
     public File getLocation() {
         return mLocation;
     }
 
     /** Indicates the location strategy for this system image in the SDK. */
+    @Override
     public LocationType getLocationType() {
         return mLocationtype;
     }
@@ -135,10 +137,12 @@ public class SystemImage implements ISystemImage {
      * {@link SdkConstants#ABI_ARMEABI_V7A} or  {@link SdkConstants#ABI_INTEL_ATOM}.
      * Cannot be null nor empty.
      */
+    @Override
     public String getAbiType() {
         return mAbiType;
     }
 
+    @Override
     public int compareTo(ISystemImage other) {
         // Sort by ABI name only. This is what matters from a user point of view.
         return this.getAbiType().compareToIgnoreCase(other.getAbiType());

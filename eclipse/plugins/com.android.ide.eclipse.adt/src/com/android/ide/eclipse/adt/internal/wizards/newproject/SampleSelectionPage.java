@@ -68,6 +68,7 @@ class SampleSelectionPage extends WizardPage implements SelectionListener, Modif
     /**
      * Create contents of the wizard.
      */
+    @Override
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
         container.setLayout(new GridLayout(2, false));
@@ -169,6 +170,7 @@ class SampleSelectionPage extends WizardPage implements SelectionListener, Modif
         }
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (mIgnore) {
             return;
@@ -190,9 +192,11 @@ class SampleSelectionPage extends WizardPage implements SelectionListener, Modif
         validatePage();
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
+    @Override
     public void modifyText(ModifyEvent e) {
         if (mIgnore) {
             return;

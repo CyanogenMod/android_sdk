@@ -48,6 +48,7 @@ public class Main {
      * thing down.
      */
     private static class UncaughtHandler implements Thread.UncaughtExceptionHandler {
+        @Override
         public void uncaughtException(Thread t, Throwable e) {
             Log.e("ddms", "shutting down due to uncaught exception");
             Log.e("ddms", e);

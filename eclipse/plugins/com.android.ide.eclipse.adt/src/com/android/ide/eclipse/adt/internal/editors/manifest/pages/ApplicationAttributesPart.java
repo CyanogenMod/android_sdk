@@ -42,7 +42,7 @@ final class ApplicationAttributesPart extends UiElementPart {
 
     /** Listen to changes to the UI node for <application> and updates the UI */
     private AppNodeUpdateListener mAppNodeUpdateListener;
-    /** ManagedForm needed to create the UI controls */ 
+    /** ManagedForm needed to create the UI controls */
     private IManagedForm mManagedForm;
 
     public ApplicationAttributesPart(Composite body, FormToolkit toolkit, ManifestEditor editor,
@@ -52,7 +52,7 @@ final class ApplicationAttributesPart extends UiElementPart {
                 "Defines the attributes specific to the application.", // section description
                 Section.TWISTIE | Section.EXPANDED);
     }
-    
+
     /**
      * Changes and refreshes the Application UI node handle by the this part.
      */
@@ -70,12 +70,12 @@ final class ApplicationAttributesPart extends UiElementPart {
      * <code>initialize</code> (i.e. right after the form part is added to the managed form.)
      * <p/>
      * Derived classes can override this if necessary.
-     * 
+     *
      * @param managedForm The owner managed form
      */
     @Override
     protected void createFormControls(final IManagedForm managedForm) {
-        mManagedForm = managedForm; 
+        mManagedForm = managedForm;
         setTable(createTableLayout(managedForm.getToolkit(), 4 /* numColumns */));
 
         mAppNodeUpdateListener = new AppNodeUpdateListener();
@@ -83,7 +83,7 @@ final class ApplicationAttributesPart extends UiElementPart {
 
         createUiAttributes(mManagedForm);
     }
-    
+
     @Override
     public void dispose() {
         super.dispose();
@@ -99,17 +99,17 @@ final class ApplicationAttributesPart extends UiElementPart {
         if (table == null || managedForm == null) {
             return;
         }
-        
-        // Remove any old UI controls 
+
+        // Remove any old UI controls
         for (Control c : table.getChildren()) {
             c.dispose();
         }
-        
-        UiElementNode uiElementNode = getUiElementNode(); 
+
+        UiElementNode uiElementNode = getUiElementNode();
         AttributeDescriptor[] attr_desc_list = uiElementNode.getAttributeDescriptors();
 
         // Display the attributes in 2 columns:
-        // attr 0 | attr 4 
+        // attr 0 | attr 4
         // attr 1 | attr 5
         // attr 2 | attr 6
         // attr 3 | attr 7
@@ -136,7 +136,7 @@ final class ApplicationAttributesPart extends UiElementPart {
                         uiElementNode.getDescriptor().getXmlName());
             }
         }
-        
+
         if (n == 0) {
             createLabel(table, managedForm.getToolkit(),
                     "No attributes to display, waiting for SDK to finish loading...",
@@ -147,7 +147,7 @@ final class ApplicationAttributesPart extends UiElementPart {
         if (mAppNodeUpdateListener != null) {
             mAppNodeUpdateListener.uiElementNodeUpdated(uiElementNode, null /* state, not used */);
         }
-        
+
         // Tell the section that the layout has changed.
         layoutChanged();
     }
@@ -155,7 +155,8 @@ final class ApplicationAttributesPart extends UiElementPart {
     /**
      * This listener synchronizes the UI with the actual presence of the application XML node.
      */
-    private class AppNodeUpdateListener implements IUiUpdateListener {        
+    private class AppNodeUpdateListener implements IUiUpdateListener {
+        @Override
         public void uiElementNodeUpdated(UiElementNode ui_node, UiUpdateState state) {
             // The UiElementNode for the application XML node always exists, even
             // if there is no corresponding XML node in the XML file.

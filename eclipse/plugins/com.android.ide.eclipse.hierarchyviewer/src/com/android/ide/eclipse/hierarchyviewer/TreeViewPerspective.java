@@ -31,6 +31,7 @@ public class TreeViewPerspective implements IPerspectiveFactory {
 
     public static final String ID = "com.android.ide.eclipse.hierarchyviewer.TreeViewPerspective"; //$NON-NLS-1$
 
+    @Override
     public void createInitialLayout(IPageLayout layout) {
         layout.setEditorAreaVisible(false);
 

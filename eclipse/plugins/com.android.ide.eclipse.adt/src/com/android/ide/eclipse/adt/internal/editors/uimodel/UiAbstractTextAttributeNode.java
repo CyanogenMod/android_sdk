@@ -26,7 +26,7 @@ import org.w3c.dom.Node;
  * <p/>
  * The XML attribute has no default value. When unset, the text field is blank.
  * When updating the XML, if the field is empty, the attribute will be removed
- * from the XML element.  
+ * from the XML element.
  * <p/>
  * See {@link UiAttributeNode} for more information.
  */
@@ -44,27 +44,28 @@ public abstract class UiAbstractTextAttributeNode extends UiAttributeNode
             UiElementNode uiParent) {
         super(attributeDescriptor, uiParent);
     }
-    
+
     /** Returns the current value of the node. */
     @Override
     public final String getCurrentValue() {
         return mCurrentValue;
     }
-    
+
     /** Sets the current value of the node. Cannot be null (use an empty string). */
+    @Override
     public final void setCurrentValue(String value) {
         mCurrentValue = value;
     }
-    
+
     /** Returns if the attribute node is valid, and its UI has been created. */
     public abstract boolean isValid();
 
     /** Returns the text value present in the UI. */
     public abstract String getTextWidgetValue();
-    
+
     /** Sets the text value to be displayed in the UI. */
     public abstract void setTextWidgetValue(String value);
-    
+
 
     /**
      * Updates the current text field's value when the XML has changed.
@@ -108,11 +109,11 @@ public abstract class UiAbstractTextAttributeNode extends UiAttributeNode
             }
         }
     }
-    
+
     protected final boolean isInInternalTextModification() {
         return mInternalTextModification;
     }
-    
+
     protected final void setInInternalTextModification(boolean internalTextModification) {
         mInternalTextModification = internalTextModification;
     }

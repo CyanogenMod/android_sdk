@@ -136,9 +136,11 @@ public class PreCompilerBuilder extends BaseBuilder {
             mDone = false;
         }
 
+        @Override
         public void beginTask(String name, int totalWork) {
         }
 
+        @Override
         public void done() {
             if (mDone == false) {
                 mDone = true;
@@ -171,23 +173,29 @@ public class PreCompilerBuilder extends BaseBuilder {
             }
         }
 
+        @Override
         public void internalWorked(double work) {
         }
 
+        @Override
         public boolean isCanceled() {
             return mCancelled;
         }
 
+        @Override
         public void setCanceled(boolean value) {
             mCancelled = value;
         }
 
+        @Override
         public void setTaskName(String name) {
         }
 
+        @Override
         public void subTask(String name) {
         }
 
+        @Override
         public void worked(int work) {
         }
     }

@@ -33,6 +33,7 @@ import org.eclipse.ui.part.FileEditorInput;
  */
 public class MatchingStrategy implements IEditorMatchingStrategy {
 
+    @Override
     public boolean matches(IEditorReference editorRef, IEditorInput input) {
         // first check that the file being opened is a layout file.
         if (input instanceof FileEditorInput) {

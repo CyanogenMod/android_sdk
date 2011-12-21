@@ -41,6 +41,7 @@ public abstract class ResourceFile implements Configurable {
     protected abstract void update(ScanningContext context);
     protected abstract void dispose(ScanningContext context);
 
+    @Override
     public FolderConfiguration getConfiguration() {
         return mFolder.getConfiguration();
     }

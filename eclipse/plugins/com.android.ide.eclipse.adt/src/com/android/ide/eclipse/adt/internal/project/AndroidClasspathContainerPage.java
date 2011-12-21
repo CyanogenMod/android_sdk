@@ -62,6 +62,7 @@ public class AndroidClasspathContainerPage extends WizardPage implements IClassp
         setDescription("This container manages classpath entries for Android container");
     }
 
+    @Override
     public IClasspathEntry getSelection() {
         IPath path = new Path(AdtConstants.CONTAINER_FRAMEWORK);
 
@@ -78,6 +79,7 @@ public class AndroidClasspathContainerPage extends WizardPage implements IClassp
         return JavaCore.newContainerEntry(path);
     }
 
+    @Override
     public void setSelection(final IClasspathEntry cpentry) {
         final IPath path = cpentry == null ? null : cpentry.getPath();
 
@@ -90,6 +92,7 @@ public class AndroidClasspathContainerPage extends WizardPage implements IClassp
         }
     }
 
+    @Override
     public void createControl(final Composite parent) {
         final Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(new GridLayout(2, false));
@@ -127,6 +130,7 @@ public class AndroidClasspathContainerPage extends WizardPage implements IClassp
         setControl(composite);
     }
 
+    @Override
     public boolean finish() {
         return true;
     }
@@ -169,6 +173,7 @@ public class AndroidClasspathContainerPage extends WizardPage implements IClassp
         updateStatus(StatusUtil.getMostSevere(status));
     }
 
+    @Override
     public void initialize(final IJavaProject project, final IClasspathEntry[] currentEntries) {
         this.mOwnerProject = (project == null ? null : project.getProject());
     }

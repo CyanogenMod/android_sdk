@@ -16,9 +16,6 @@
 
 package com.android.sdklib.internal.repository;
 
-import com.android.sdklib.internal.repository.Archive;
-import com.android.sdklib.internal.repository.IDescription;
-import com.android.sdklib.internal.repository.Package;
 
 /**
  * Represents an archive that we want to install and the archive that it is
@@ -66,6 +63,7 @@ public class ArchiveReplacement implements IDescription {
      * Returns the long description of the parent package of the new archive, if not null.
      * Otherwise returns an empty string.
      */
+    @Override
     public String getLongDescription() {
         if (mNewArchive != null) {
             Package p = mNewArchive.getParentPackage();
@@ -80,6 +78,7 @@ public class ArchiveReplacement implements IDescription {
      * Returns the short description of the parent package of the new archive, if not null.
      * Otherwise returns an empty string.
      */
+    @Override
     public String getShortDescription() {
         if (mNewArchive != null) {
             Package p = mNewArchive.getParentPackage();

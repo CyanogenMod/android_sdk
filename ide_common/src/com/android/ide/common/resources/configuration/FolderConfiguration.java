@@ -641,6 +641,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return result == null ? null : result.toString();
     }
 
+    @Override
     public int compareTo(FolderConfiguration folderConfig) {
         // default are always at the top.
         if (isDefault()) {

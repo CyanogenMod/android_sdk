@@ -560,6 +560,7 @@ abstract class EventDisplay {
         xyPlot.setDomainCrosshairLockedOnData(true);
 
         mChart.addChangeListener(new ChartChangeListener() {
+            @Override
             public void chartChanged(ChartChangeEvent event) {
                 ChartChangeEventType type = event.getType();
                 if (type == ChartChangeEventType.GENERAL) {
@@ -567,6 +568,7 @@ abstract class EventDisplay {
                     // updated on the draw, but the notification happens before the draw,
                     // we process the click in a future runnable!
                     parent.getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             processClick(xyPlot);
                         }
@@ -590,6 +592,7 @@ abstract class EventDisplay {
                 true);   // tooltips
 
         mChartComposite.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 mValueTypeDataSetMap.clear();
                 mDataSetCount = 0;

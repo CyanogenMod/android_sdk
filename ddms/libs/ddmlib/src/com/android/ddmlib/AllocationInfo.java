@@ -56,6 +56,7 @@ public class AllocationInfo implements IStackTraceInfo {
             return mDescending;
         }
 
+        @Override
         public int compare(AllocationInfo o1, AllocationInfo o2) {
             int diff = 0;
             switch (mSortMode) {
@@ -159,6 +160,7 @@ public class AllocationInfo implements IStackTraceInfo {
      * (non-Javadoc)
      * @see com.android.ddmlib.IStackTraceInfo#getStackTrace()
      */
+    @Override
     public StackTraceElement[] getStackTrace() {
         return mStackTrace;
     }

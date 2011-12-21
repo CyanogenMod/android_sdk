@@ -123,6 +123,7 @@ import java.util.Set;
         String label = MoveGesture.computeUndoLabel(targetNode, elements, event.detail);
         final int indexFinal = index;
         canvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+            @Override
             public void run() {
                 InsertType insertType = MoveGesture.getInsertType(event, targetNode);
                 canvas.getRulesEngine().setInsertType(insertType);

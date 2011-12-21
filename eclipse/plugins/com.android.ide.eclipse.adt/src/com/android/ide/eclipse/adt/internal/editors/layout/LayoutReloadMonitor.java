@@ -21,9 +21,9 @@ import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IFileListener;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IResourceEventListener;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager.IResourceListener;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
@@ -42,8 +42,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Monitor for file changes that could trigger a layout redraw, or a UI update
@@ -171,6 +171,7 @@ public final class LayoutReloadMonitor {
          * Callback for IFileListener. Called when a file changed.
          * This records the changes for each project, but does not notify listeners.
          */
+        @Override
         public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
             // get the file's project
             IProject project = file.getProject();
@@ -264,6 +265,7 @@ public final class LayoutReloadMonitor {
          * called several times.
          *
          */
+        @Override
         public void resourceChangeEventStart() {
             // nothing to be done here, it all happens in the resourceChangeEventEnd
         }
@@ -272,6 +274,7 @@ public final class LayoutReloadMonitor {
          * Callback for ResourceMonitor.IResourceEventListener. Called at the end of a resource
          * change event. This is where we notify the listeners.
          */
+        @Override
         public void resourceChangeEventEnd() {
             // for each IProject that was changed, we notify all the listeners.
             for (Entry<IProject, ChangeFlags> entry : mProjectFlags.entrySet()) {
@@ -327,6 +330,7 @@ public final class LayoutReloadMonitor {
      */
     private IResourceListener mResourceListener = new IResourceListener() {
 
+        @Override
         public void folderChanged(IProject project, ResourceFolder folder, int eventType) {
             // if this project has already been marked as modified, we do nothing.
             ChangeFlags changeFlags = mProjectFlags.get(project);
@@ -344,6 +348,7 @@ public final class LayoutReloadMonitor {
             changeFlags.localeList = true;
         }
 
+        @Override
         public void fileChanged(IProject project, ResourceFile file, int eventType) {
             // if this project has already been marked as modified, we do nothing.
             ChangeFlags changeFlags = mProjectFlags.get(project);

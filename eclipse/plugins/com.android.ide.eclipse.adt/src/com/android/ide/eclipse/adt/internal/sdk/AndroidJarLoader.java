@@ -35,7 +35,7 @@ import javax.management.InvalidAttributeValueException;
  * Custom class loader able to load a class from the SDK jar file.
  */
 public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader {
-    
+
     /**
      * Wrapper around a {@link Class} to provide the methods of
      * {@link IAndroidClassLoader.IClassDescriptor}.
@@ -47,10 +47,12 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             mClass = clazz;
         }
 
+        @Override
         public String getFullClassName() {
             return mClass.getCanonicalName();
         }
 
+        @Override
         public IClassDescriptor[] getDeclaredClasses() {
             Class<?>[] classes = mClass.getDeclaredClasses();
             IClassDescriptor[] iclasses = new IClassDescriptor[classes.length];
@@ -61,18 +63,21 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             return iclasses;
         }
 
+        @Override
         public IClassDescriptor getEnclosingClass() {
             return new ClassWrapper(mClass.getEnclosingClass());
         }
 
+        @Override
         public String getSimpleName() {
             return mClass.getSimpleName();
         }
 
+        @Override
         public IClassDescriptor getSuperclass() {
             return new ClassWrapper(mClass.getSuperclass());
         }
-        
+
         @Override
         public boolean equals(Object clazz) {
             if (clazz instanceof ClassWrapper) {
@@ -80,13 +85,14 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             }
             return super.equals(clazz);
         }
-        
+
         @Override
         public int hashCode() {
             return mClass.hashCode();
         }
 
 
+        @Override
         public boolean isInstantiable() {
             int modifiers = mClass.getModifiers();
             return Modifier.isAbstract(modifiers) == false && Modifier.isPublic(modifiers) == true;
@@ -97,28 +103,29 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         }
 
     }
-    
+
     private String mOsFrameworkLocation;
-    
+
     /** A cache for binary data extracted from the zip */
     private final HashMap<String, byte[]> mEntryCache = new HashMap<String, byte[]>();
     /** A cache for already defined Classes */
     private final HashMap<String, Class<?> > mClassCache = new HashMap<String, Class<?> >();
-    
+
     /**
      * Creates the class loader by providing the os path to the framework jar archive
-     * 
+     *
      * @param osFrameworkLocation OS Path of the framework JAR file
      */
     public AndroidJarLoader(String osFrameworkLocation) {
         super();
         mOsFrameworkLocation = osFrameworkLocation;
     }
-    
+
+    @Override
     public String getSource() {
         return mOsFrameworkLocation;
     }
-    
+
     /**
      * Pre-loads all class binary data that belong to the given package by reading the archive
      * once and caching them internally.
@@ -130,7 +137,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
      * found later.
      * <p/>
      * May throw some exceptions if the framework JAR cannot be read.
-     * 
+     *
      * @param packageFilter The package that contains all the class data to preload, using a fully
      *                    qualified binary name (.e.g "com.my.package."). The matching algorithm
      *                    is simple "startsWith". Use an empty string to include everything.
@@ -144,17 +151,17 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         throws IOException, InvalidAttributeValueException, ClassFormatError {
         // Transform the package name into a zip entry path
         String pathFilter = packageFilter.replaceAll("\\.", "/"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         SubMonitor progress = SubMonitor.convert(monitor, taskLabel == null ? "" : taskLabel, 100);
-        
+
         // create streams to read the intermediary archive
         FileInputStream fis = new FileInputStream(mOsFrameworkLocation);
         ZipInputStream zis = new ZipInputStream(fis);
-        ZipEntry entry;       
+        ZipEntry entry;
         while ((entry = zis.getNextEntry()) != null) {
             // get the name of the entry.
             String entryPath = entry.getName();
-            
+
             if (!entryPath.endsWith(AdtConstants.DOT_CLASS)) {
                 // only accept class files
                 continue;
@@ -186,18 +193,19 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
      * Finds and loads all classes that derive from a given set of super classes.
      * <p/>
      * As a side-effect this will load and cache most, if not all, classes in the input JAR file.
-     * 
+     *
      * @param packageFilter Base name of package of classes to find.
      *                      Use an empty string to find everyting.
-     * @param superClasses The super classes of all the classes to find. 
+     * @param superClasses The super classes of all the classes to find.
      * @return An hash map which keys are the super classes looked for and which values are
      *         ArrayList of the classes found. The array lists are always created for all the
      *         valid keys, they are simply empty if no deriving class is found for a given
-     *         super class. 
+     *         super class.
      * @throws IOException
      * @throws InvalidAttributeValueException
      * @throws ClassFormatError
      */
+    @Override
     public HashMap<String, ArrayList<IClassDescriptor>> findClassesDerivingFrom(
             String packageFilter,
             String[] superClasses)
@@ -228,11 +236,11 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
                 continue;
             }
             String className = entryPathToClassName(entryPath);
-      
+
             Class<?> loaded_class = mClassCache.get(className);
             if (loaded_class == null) {
                 byte[] data = mEntryCache.get(className);
-                if (data == null) {    
+                if (data == null) {
                     // Get the class and cache it
                     long entrySize = entry.getSize();
                     if (entrySize > Integer.MAX_VALUE) {
@@ -268,7 +276,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
 
     /**
      * Finds the class with the specified binary name.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -282,7 +290,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             } else if (cached_class != null) {
                 return cached_class;
             }
-            
+
             // if not found, look it up and cache it
             byte[] data = loadClassData(name);
             if (data != null) {
@@ -296,13 +304,13 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         } catch (ClassNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new ClassNotFoundException(e.getMessage()); 
+            throw new ClassNotFoundException(e.getMessage());
         }
     }
 
     /**
      * Defines a class based on its binary data and caches the resulting class object.
-     * 
+     *
      * @param name The binary name of the class (i.e. package.class1$class2)
      * @param data The binary data from the loader.
      * @return The class defined
@@ -319,17 +327,17 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         }
         return cached_class;
     }
-    
+
     /**
      * Loads a class data from its binary name.
      * <p/>
      * This uses the class binary data that has been preloaded earlier by the preLoadClasses()
      * method if possible.
-     * 
+     *
      * @param className the binary name
      * @return an array of bytes representing the class data or null if not found
-     * @throws InvalidAttributeValueException 
-     * @throws IOException 
+     * @throws InvalidAttributeValueException
+     * @throws IOException
      */
     private synchronized byte[] loadClassData(String className)
             throws InvalidAttributeValueException, IOException {
@@ -338,7 +346,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
         if (data != null) {
             return data;
         }
-        
+
         // The name is a binary name. Something like "android.R", or "android.R$id".
         // Make a path out of it.
         String entryName = className.replaceAll("\\.", "/") + AdtConstants.DOT_CLASS; //$NON-NLS-1$ //$NON-NLS-2$
@@ -346,14 +354,14 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
        // create streams to read the intermediary archive
         FileInputStream fis = new FileInputStream(mOsFrameworkLocation);
         ZipInputStream zis = new ZipInputStream(fis);
-        
+
         // loop on the entries of the intermediary package and put them in the final package.
         ZipEntry entry;
 
         while ((entry = zis.getNextEntry()) != null) {
             // get the name of the entry.
             String currEntryName = entry.getName();
-            
+
             if (currEntryName.equals(entryName)) {
                 long entrySize = entry.getSize();
                 if (entrySize > Integer.MAX_VALUE) {
@@ -370,7 +378,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
 
     /**
      * Reads data for the <em>current</em> entry from the zip input stream.
-     * 
+     *
      * @param zis The Zip input stream
      * @param entrySize The entry size. -1 if unknown.
      * @return The new data for the <em>current</em> entry.
@@ -378,17 +386,17 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
      */
     private byte[] readZipData(ZipInputStream zis, int entrySize) throws IOException {
         int block_size = 1024;
-        int data_size = entrySize < 1 ? block_size : entrySize; 
+        int data_size = entrySize < 1 ? block_size : entrySize;
         int offset = 0;
         byte[] data = new byte[data_size];
-        
+
         while(zis.available() != 0) {
             int count = zis.read(data, offset, data_size - offset);
             if (count < 0) {  // read data is done
                 break;
             }
             offset += count;
-            
+
             if (entrySize >= 1 && offset >= entrySize) {  // we know the size and we're done
                 break;
             }
@@ -403,7 +411,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
                 block_size *= 2;
             }
         }
-        
+
         if (offset < data_size) {
             // buffer was allocated too large, trim it
             byte[] temp = new byte[offset];
@@ -412,7 +420,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
             }
             data = temp;
         }
-        
+
         return data;
     }
 
@@ -421,6 +429,7 @@ public class AndroidJarLoader extends ClassLoader implements IAndroidClassLoader
      * @param className the fully-qualified name of the class to return.
      * @throws ClassNotFoundException
      */
+    @Override
     public IClassDescriptor getClass(String className) throws ClassNotFoundException {
         try {
             return new ClassWrapper(loadClass(className));

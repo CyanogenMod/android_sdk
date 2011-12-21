@@ -288,6 +288,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @return a negative integer, zero, or a positive integer as this object is
      *         less than, equal to, or greater than the specified object.
      */
+    @Override
     public int compareTo(AvdInfo o) {
         // first handle possible missing targets (if the AVD failed to load for unresolved targets)
         if (mTarget == null && o != null && o.mTarget == null) {

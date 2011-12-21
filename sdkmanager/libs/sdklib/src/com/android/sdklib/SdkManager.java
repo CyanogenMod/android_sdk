@@ -111,6 +111,7 @@ public class SdkManager {
             return mRevision;
         }
 
+        @Override
         public int compareTo(LayoutlibVersion rhs) {
             boolean useRev = this.mRevision > NOT_SPECIFIED && rhs.mRevision > NOT_SPECIFIED;
             int lhsValue = (this.mApi << 16) + (useRev ? this.mRevision : 0);

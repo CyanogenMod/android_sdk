@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.hierarchyviewer;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.hierarchyviewerlib.HierarchyViewerDirector;
@@ -78,6 +78,7 @@ public class HierarchyViewerPlugin extends AbstractUIPlugin {
         // change
         // in the UI thread.
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 errorConsoleStream.setColor(mRedColor);
             }
@@ -85,6 +86,7 @@ public class HierarchyViewerPlugin extends AbstractUIPlugin {
 
         // set up the ddms log to use the ddms console.
         Log.setLogOutput(new ILogOutput() {
+            @Override
             public void printLog(LogLevel logLevel, String tag, String message) {
                 if (logLevel.getPriority() >= LogLevel.ERROR.getPriority()) {
                     printToStream(errorConsoleStream, tag, message);
@@ -94,11 +96,13 @@ public class HierarchyViewerPlugin extends AbstractUIPlugin {
                 }
             }
 
+            @Override
             public void printAndPromptLog(final LogLevel logLevel, final String tag,
                     final String message) {
                 printLog(logLevel, tag, message);
                 // dialog box only run in UI thread..
                 Display.getDefault().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         Shell shell = Display.getDefault().getActiveShell();
                         if (logLevel == LogLevel.ERROR) {
@@ -117,6 +121,7 @@ public class HierarchyViewerPlugin extends AbstractUIPlugin {
 
         // make the director receive change in ADB.
         AndroidDebugBridge.addDebugBridgeChangeListener(new IDebugBridgeChangeListener() {
+            @Override
             public void bridgeChanged(AndroidDebugBridge bridge) {
                 director.acquireBridge(bridge);
             }

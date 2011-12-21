@@ -477,6 +477,7 @@ public class NewProjectCreator  {
                     final IJavaProject javaProject = JavaCore.create(mainProject);
                     Display.getDefault().syncExec(new Runnable() {
 
+                        @Override
                         public void run() {
                             IWorkingSet[] workingSets = mValues.workingSets;
                             if (workingSets.length > 0 && javaProject != null
@@ -506,6 +507,7 @@ public class NewProjectCreator  {
                     final IJavaProject javaProject = JavaCore.create(testProject);
                     Display.getDefault().syncExec(new Runnable() {
 
+                        @Override
                         public void run() {
                             IWorkingSet[] workingSets = mValues.workingSets;
                             if (workingSets.length > 0 && javaProject != null

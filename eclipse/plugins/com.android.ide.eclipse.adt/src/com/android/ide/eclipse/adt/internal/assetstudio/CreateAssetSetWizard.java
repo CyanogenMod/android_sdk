@@ -17,9 +17,9 @@ package com.android.ide.eclipse.adt.internal.assetstudio;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
-import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper.IProjectFilter;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.util.Pair;
 
@@ -260,6 +260,7 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
         return mChooseAssetPage.getAssetType();
     }
 
+    @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         setHelpAvailable(false);
 
@@ -314,12 +315,7 @@ public class CreateAssetSetWizard extends Wizard implements INewWizard {
             }
         }
 
-        IJavaProject[] projects = BaseProjectHelper.getAndroidProjects(new IProjectFilter() {
-            public boolean accept(IProject project) {
-                return project.isAccessible();
-            }
-        });
-
+        IJavaProject[] projects = AdtUtils.getOpenAndroidProjects();
         if (projects != null && projects.length == 1) {
             return projects[0].getProject();
         }

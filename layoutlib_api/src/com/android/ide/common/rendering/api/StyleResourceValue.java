@@ -44,6 +44,7 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
     /**
      * Returns the parent style name or <code>null</code> if unknown.
      */
+    @Override
     public String getParentStyle() {
         return mParentStyle;
     }
@@ -75,6 +76,7 @@ public final class StyleResourceValue extends ResourceValue implements IStyleRes
      * Legacy method.
      * @deprecated use {@link #getValue()}
      */
+    @Override
     @Deprecated
     public IResourceValue findItem(String name) {
         return mItems.get(name);

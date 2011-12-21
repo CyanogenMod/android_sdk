@@ -45,10 +45,12 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
     /**
      * Keep track of the current workbench window.
      */
+    @Override
     public void init(IWorkbenchWindow window) {
         mWindow = window;
     }
 
+    @Override
     public void dispose() {
     }
 
@@ -57,6 +59,7 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
      * <p/>
      * Keep a link to the relevant selection structure
      */
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         // Look for selections in XML and in the layout UI editor
 
@@ -98,6 +101,7 @@ abstract class VisualRefactoringAction implements IWorkbenchWindowActionDelegate
     /**
      * Create a new instance of our refactoring and a wizard to configure it.
      */
+    @Override
     public abstract void run(IAction action);
 
     /**

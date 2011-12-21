@@ -128,6 +128,7 @@ public class ConfigurationSelector extends Composite {
      * Basic of {@link VerifyListener} to only accept digits.
      */
     private static class DigitVerifier implements VerifyListener {
+        @Override
         public void verifyText(VerifyEvent e) {
             // check for digit only.
             for (int i = 0 ; i < e.text.length(); i++) {
@@ -163,6 +164,7 @@ public class ConfigurationSelector extends Composite {
      * Implementation of {@link VerifyListener} for the Language and Region qualifiers.
      */
     public static class LanguageRegionVerifier implements VerifyListener {
+        @Override
         public void verifyText(VerifyEvent e) {
             // check for length
             if (e.text.length() - e.end + e.start + ((Combo)e.getSource()).getText().length() > 2) {
@@ -274,6 +276,7 @@ public class ConfigurationSelector extends Composite {
                 mMode == SelectorMode.CONFIG_ONLY));
         mFullTableViewer.setInput(mBaseConfiguration);
         mFullTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection selection = event.getSelection();
                 if (selection instanceof IStructuredSelection) {
@@ -372,6 +375,7 @@ public class ConfigurationSelector extends Composite {
                 true /* showQualifierValue */));
         mSelectionTableViewer.setInput(mSelectedConfiguration);
         mSelectionTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 // ignore selection changes during resfreshes in some cases.
                 if (mOnRefresh) {
@@ -602,10 +606,12 @@ public class ConfigurationSelector extends Composite {
         public QualifierContentProvider() {
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             // default easy case
             if (mQualifierFilter == null) {
@@ -623,6 +629,7 @@ public class ConfigurationSelector extends Composite {
             return list.toArray();
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             mInput = null;
             if (newInput instanceof FolderConfiguration) {
@@ -642,6 +649,7 @@ public class ConfigurationSelector extends Composite {
             mShowQualifierValue = showQualifierValue;
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             // only one column, so we can ignore columnIndex
             if (element instanceof ResourceQualifier) {
@@ -662,6 +670,7 @@ public class ConfigurationSelector extends Composite {
             return null;
         }
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             // only one column, so we can ignore columnIndex
             if (element instanceof ResourceQualifier) {
@@ -671,19 +680,23 @@ public class ConfigurationSelector extends Composite {
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -718,6 +731,7 @@ public class ConfigurationSelector extends Composite {
             mText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mText.addVerifyListener(new MobileCodeVerifier());
             mText.addModifyListener(new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onTextChange();
                 }
@@ -784,6 +798,7 @@ public class ConfigurationSelector extends Composite {
             mText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mText.addVerifyListener(new MobileCodeVerifier());
             mText.addModifyListener(new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onTextChange();
                 }
@@ -849,14 +864,17 @@ public class ConfigurationSelector extends Composite {
             mLanguage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mLanguage.addVerifyListener(new LanguageRegionVerifier());
             mLanguage.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onLanguageChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onLanguageChange();
                 }
             });
             mLanguage.addModifyListener(new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onLanguageChange();
                 }
@@ -917,14 +935,17 @@ public class ConfigurationSelector extends Composite {
             mRegion.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mRegion.addVerifyListener(new LanguageRegionVerifier());
             mRegion.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onRegionChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onRegionChange();
                 }
             });
             mRegion.addModifyListener(new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onRegionChange();
                 }
@@ -983,6 +1004,7 @@ public class ConfigurationSelector extends Composite {
             super(parent, SmallestScreenWidthQualifier.NAME);
 
             ModifyListener modifyListener = new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onSizeChange();
                 }
@@ -1050,6 +1072,7 @@ public class ConfigurationSelector extends Composite {
             super(parent, ScreenWidthQualifier.NAME);
 
             ModifyListener modifyListener = new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onSizeChange();
                 }
@@ -1115,6 +1138,7 @@ public class ConfigurationSelector extends Composite {
             super(parent, ScreenHeightQualifier.NAME);
 
             ModifyListener modifyListener = new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onSizeChange();
                 }
@@ -1185,9 +1209,11 @@ public class ConfigurationSelector extends Composite {
 
             mSize.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mSize.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onScreenSizeChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onScreenSizeChange();
                 }
@@ -1241,9 +1267,11 @@ public class ConfigurationSelector extends Composite {
 
             mRatio.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mRatio.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onScreenRatioChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onScreenRatioChange();
                 }
@@ -1297,9 +1325,11 @@ public class ConfigurationSelector extends Composite {
 
             mOrientation.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mOrientation.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onOrientationChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onOrientationChange();
                 }
@@ -1353,9 +1383,11 @@ public class ConfigurationSelector extends Composite {
 
             mUiMode.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mUiMode.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onDockModeChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onDockModeChange();
                 }
@@ -1408,9 +1440,11 @@ public class ConfigurationSelector extends Composite {
 
             mNightMode.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mNightMode.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onNightModeChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onNightModeChange();
                 }
@@ -1463,9 +1497,11 @@ public class ConfigurationSelector extends Composite {
 
             mDensity.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mDensity.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onDensityChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onDensityChange();
                 }
@@ -1519,9 +1555,11 @@ public class ConfigurationSelector extends Composite {
 
             mTouchScreen.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mTouchScreen.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onTouchChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onTouchChange();
                 }
@@ -1574,9 +1612,11 @@ public class ConfigurationSelector extends Composite {
 
             mKeyboardState.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mKeyboardState.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onKeyboardChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onKeyboardChange();
                 }
@@ -1630,9 +1670,11 @@ public class ConfigurationSelector extends Composite {
 
             mTextInput.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mTextInput.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onTextInputChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onTextInputChange();
                 }
@@ -1686,9 +1728,11 @@ public class ConfigurationSelector extends Composite {
 
             mNavigationState.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mNavigationState.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onNavigationChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onNavigationChange();
                 }
@@ -1742,9 +1786,11 @@ public class ConfigurationSelector extends Composite {
 
             mNavigation.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mNavigation.addSelectionListener(new SelectionListener() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     onNavigationChange();
                 }
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     onNavigationChange();
                 }
@@ -1795,6 +1841,7 @@ public class ConfigurationSelector extends Composite {
             super(parent, ScreenDimensionQualifier.NAME);
 
             ModifyListener modifyListener = new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onSizeChange();
                 }
@@ -1871,6 +1918,7 @@ public class ConfigurationSelector extends Composite {
             mText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             mText.addVerifyListener(new MobileCodeVerifier());
             mText.addModifyListener(new ModifyListener() {
+                @Override
                 public void modifyText(ModifyEvent e) {
                     onVersionChange();
                 }

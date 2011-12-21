@@ -41,6 +41,7 @@ public class LaunchShortcut implements ILaunchShortcut {
      * @see org.eclipse.debug.ui.ILaunchShortcut#launch(
      * org.eclipse.jface.viewers.ISelection, java.lang.String)
      */
+    @Override
     public void launch(ISelection selection, String mode) {
         if (selection instanceof IStructuredSelection) {
 
@@ -78,6 +79,7 @@ public class LaunchShortcut implements ILaunchShortcut {
      * @see org.eclipse.debug.ui.ILaunchShortcut#launch(
      * org.eclipse.ui.IEditorPart, java.lang.String)
      */
+    @Override
     public void launch(IEditorPart editor, String mode) {
         // since we force the shortcut to only work on selection in the
         // package explorer, this will never be called.

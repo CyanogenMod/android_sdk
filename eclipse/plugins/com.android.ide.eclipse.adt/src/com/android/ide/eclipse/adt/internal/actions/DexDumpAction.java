@@ -58,10 +58,12 @@ public class DexDumpAction implements IObjectActionDelegate {
 
     private ISelection mSelection;
 
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         // pass
     }
 
+    @Override
     public void run(IAction action) {
         if (mSelection instanceof IStructuredSelection) {
             for (Iterator<?> it = ((IStructuredSelection)mSelection).iterator(); it.hasNext();) {
@@ -79,6 +81,7 @@ public class DexDumpAction implements IObjectActionDelegate {
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
@@ -178,6 +181,7 @@ public class DexDumpAction implements IObjectActionDelegate {
 
             final String dstPath = dstFile.getAbsolutePath();
             AdtPlugin.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     IFileStore fileStore =
                         EFS.getLocalFileSystem().getStore(new Path(dstPath));

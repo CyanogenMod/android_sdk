@@ -51,13 +51,14 @@ public final class StackTracePanel {
     private TableViewer mStackTraceViewer;
 
     private Client mCurrentClient;
-    
-    
+
+
     /**
      * Content Provider to display the stack trace of a thread.
      * Expected input is a {@link IStackTraceInfo} object.
      */
     private static class StackTraceContentProvider implements IStructuredContentProvider {
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof IStackTraceInfo) {
                 // getElement cannot return null, so we return an empty array
@@ -71,15 +72,17 @@ public final class StackTracePanel {
             return new Object[0];
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
     }
-    
+
 
     /**
      * A Label Provider to use with {@link StackTraceContentProvider}. It expects the elements to be
@@ -87,10 +90,12 @@ public final class StackTracePanel {
      */
     private static class StackTraceLabelProvider implements ITableLabelProvider {
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             return null;
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof StackTraceElement) {
                 StackTraceElement traceElement = (StackTraceElement)element;
@@ -111,24 +116,28 @@ public final class StackTracePanel {
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
     }
-    
+
     /**
      * Classes which implement this interface provide a method that is able to reveal a method
      * in a source editor
@@ -142,8 +151,8 @@ public final class StackTracePanel {
          */
         public void reveal(String applicationName, String className, int line);
     }
-    
-    
+
+
     /**
      * Sets the {@link ISourceRevealer} object able to reveal source code in a source editor.
      * @param revealer
@@ -151,27 +160,27 @@ public final class StackTracePanel {
     public static void setSourceRevealer(ISourceRevealer revealer) {
         sSourceRevealer = revealer;
     }
-    
+
     /**
      * Creates the controls for the StrackTrace display.
      * <p/>This method will set the parent {@link Composite} to use a {@link GridLayout} with
      * 2 columns.
      * @param parent the parent composite.
-     * @param prefs_stack_col_class 
-     * @param prefs_stack_col_method 
-     * @param prefs_stack_col_file 
-     * @param prefs_stack_col_line 
-     * @param prefs_stack_col_native 
+     * @param prefs_stack_col_class
+     * @param prefs_stack_col_method
+     * @param prefs_stack_col_file
+     * @param prefs_stack_col_line
+     * @param prefs_stack_col_native
      * @param store
      */
     public Table createPanel(Composite parent, String prefs_stack_col_class,
             String prefs_stack_col_method, String prefs_stack_col_file, String prefs_stack_col_line,
             String prefs_stack_col_native, IPreferenceStore store) {
-        
+
         mStackTraceTable = new Table(parent, SWT.MULTI | SWT.FULL_SELECTION);
         mStackTraceTable.setHeaderVisible(true);
         mStackTraceTable.setLinesVisible(true);
-        
+
         TableHelper.createTableColumn(
                 mStackTraceTable,
                 "Class",
@@ -206,26 +215,27 @@ public final class StackTracePanel {
                 SWT.LEFT,
                 "Native", //$NON-NLS-1$
                 prefs_stack_col_native, store);
-        
+
         mStackTraceViewer = new TableViewer(mStackTraceTable);
         mStackTraceViewer.setContentProvider(new StackTraceContentProvider());
         mStackTraceViewer.setLabelProvider(new StackTraceLabelProvider());
-        
+
         mStackTraceViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 if (sSourceRevealer != null && mCurrentClient != null) {
                     // get the selected stack trace element
                     ISelection selection = mStackTraceViewer.getSelection();
-                    
+
                     if (selection instanceof IStructuredSelection) {
                         IStructuredSelection structuredSelection = (IStructuredSelection)selection;
                         Object object = structuredSelection.getFirstElement();
                         if (object instanceof StackTraceElement) {
                             StackTraceElement traceElement = (StackTraceElement)object;
-                            
+
                             if (traceElement.isNativeMethod() == false) {
                                 sSourceRevealer.reveal(
-                                        mCurrentClient.getClientData().getClientDescription(), 
+                                        mCurrentClient.getClientData().getClientDescription(),
                                         traceElement.getClassName(),
                                         traceElement.getLineNumber());
                             }
@@ -237,7 +247,7 @@ public final class StackTracePanel {
 
         return mStackTraceTable;
     }
-    
+
     /**
      * Sets the input for the {@link TableViewer}.
      * @param input the {@link IStackTraceInfo} that will provide the viewer with the list of
@@ -247,7 +257,7 @@ public final class StackTracePanel {
         mStackTraceViewer.setInput(input);
         mStackTraceViewer.refresh();
     }
-    
+
     /**
      * Sets the current client running the stack trace.
      * @param currentClient the {@link Client}.

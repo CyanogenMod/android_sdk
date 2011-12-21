@@ -92,6 +92,7 @@ public class AuthenticationDialog extends GridDialog {
         mTxtLogin.setFocus();
         mTxtLogin.setText(sLogin);
         mTxtLogin.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 sLogin = mTxtLogin.getText().trim();
             }
@@ -108,6 +109,7 @@ public class AuthenticationDialog extends GridDialog {
         mTxtPassword.setLayoutData(data);
         mTxtPassword.setText(sPassword);
         mTxtPassword.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 sPassword = mTxtPassword.getText();
             }
@@ -131,6 +133,7 @@ public class AuthenticationDialog extends GridDialog {
         mTxtWorkstation.setLayoutData(data);
         mTxtWorkstation.setText(sWorkstation);
         mTxtWorkstation.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 sWorkstation = mTxtWorkstation.getText().trim();
             }
@@ -147,6 +150,7 @@ public class AuthenticationDialog extends GridDialog {
         mTxtDomain.setLayoutData(data);
         mTxtDomain.setText(sDomain);
         mTxtDomain.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 sDomain = mTxtDomain.getText().trim();
             }

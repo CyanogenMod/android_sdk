@@ -66,6 +66,7 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
     /**
      * Create contents of the wizard.
      */
+    @Override
     public void createControl(Composite parent) {
         Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
         // Layout has 1 column
@@ -279,6 +280,7 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
     }
 
     // ---- Implements ITargetChangeListener ----
+    @Override
     public void onSdkLoaded() {
         if (mSdkTargetSelector == null) {
             return;
@@ -327,10 +329,12 @@ class SdkSelectionPage extends WizardPage implements ITargetChangeListener {
         validatePage();
     }
 
+    @Override
     public void onProjectTargetChange(IProject changedProject) {
         // Ignore
     }
 
+    @Override
     public void onTargetLoaded(IAndroidTarget target) {
         // Ignore
     }

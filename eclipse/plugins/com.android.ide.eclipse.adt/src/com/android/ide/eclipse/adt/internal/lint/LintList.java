@@ -187,6 +187,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             final IssueRegistry registry = EclipseLintClient.getRegistry();
             Collections.sort(markerList, new Comparator<IMarker>() {
 
+                @Override
                 public int compare(IMarker marker1, IMarker marker2) {
                     // Sort by priority, then by category, then by id,
                     // then by file, then by line
@@ -279,6 +280,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
     }
 
     private class ContentProvider implements IStructuredContentProvider {
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement == null) {
                 return new IMarker[0];
@@ -289,14 +291,17 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             return list.toArray(new IMarker[list.size()]);
         }
 
+        @Override
         public void dispose() {
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         }
     }
 
     private class LabelProvider implements ITableLabelProvider {
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex != 0) {
                 return null;
@@ -323,6 +328,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             }
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             IMarker marker = (IMarker) element;
             try {
@@ -343,16 +349,20 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             return ""; //$NON-NLS-1$
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             return false;
         }
 
+        @Override
         public void dispose() {
         }
     }
@@ -363,6 +373,7 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
 
     // ---- Implements IResourceChangeListener ----
 
+    @Override
     public void resourceChanged(IResourceChangeEvent event) {
         if (mResources == null) {
             return;
@@ -458,9 +469,11 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
 
     // ---- Implements ControlListener
 
+    @Override
     public void controlMoved(ControlEvent e) {
     }
 
+    @Override
     public void controlResized(ControlEvent e) {
         updateColumnWidths();
     }

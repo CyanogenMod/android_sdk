@@ -31,7 +31,7 @@ public class MockNodeList implements NodeList {
 
     /**
     * Constructs a node list from a given children list.
-    * 
+    *
     * @param children The children list. Can be null.
      */
     public MockNodeList(MockXmlNode[] children) {
@@ -43,10 +43,12 @@ public class MockNodeList implements NodeList {
         }
     }
 
+    @Override
     public int getLength() {
         return mChildren.size();
     }
 
+    @Override
     public Node item(int index) {
         if (index >= 0 && index < mChildren.size()) {
             return mChildren.get(index);

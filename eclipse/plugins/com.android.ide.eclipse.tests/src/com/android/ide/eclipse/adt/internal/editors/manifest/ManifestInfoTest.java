@@ -222,114 +222,142 @@ public class ManifestInfoTest extends AdtProjectTest {
             mApiLevel = apiLevel;
         }
 
+        @Override
         public boolean canRunOn(IAndroidTarget target) {
             return false;
         }
 
+        @Override
         public String getClasspathName() {
             return null;
         }
 
+        @Override
         public String getDefaultSkin() {
             return null;
         }
 
+        @Override
         public String getDescription() {
             return null;
         }
 
+        @Override
         public String getFullName() {
             return null;
         }
 
+        @Override
         public ISystemImage getSystemImage(String abiType) {
             return null;
         }
 
+        @Override
         public ISystemImage[] getSystemImages() {
             return new ISystemImage[0];
         }
 
+        @Override
         public String getLocation() {
             return null;
         }
 
+        @Override
         public String getName() {
             return null;
         }
 
+        @Override
         public IOptionalLibrary[] getOptionalLibraries() {
             return null;
         }
 
+        @Override
         public IAndroidTarget getParent() {
             return null;
         }
 
+        @Override
         public String getPath(int pathId) {
             return null;
         }
 
+        @Override
         public String[] getPlatformLibraries() {
             return null;
         }
 
+        @Override
         public Map<String, String> getProperties() {
             return null;
         }
 
+        @Override
         public String getProperty(String name) {
             return null;
         }
 
+        @Override
         public Integer getProperty(String name, Integer defaultValue) {
             return null;
         }
 
+        @Override
         public Boolean getProperty(String name, Boolean defaultValue) {
             return null;
         }
 
+        @Override
         public int getRevision() {
             return 0;
         }
 
+        @Override
         public String[] getSkins() {
             return null;
         }
 
+        @Override
         public int getUsbVendorId() {
             return 0;
         }
 
+        @Override
         public String getVendor() {
             return null;
         }
 
+        @Override
         public AndroidVersion getVersion() {
             return new AndroidVersion(mApiLevel, null);
         }
 
+        @Override
         public String getVersionName() {
             return null;
         }
 
+        @Override
         public String hashString() {
             return null;
         }
 
+        @Override
         public boolean isPlatform() {
             return false;
         }
 
+        @Override
         public int compareTo(IAndroidTarget o) {
             return 0;
         }
 
+        @Override
         public boolean hasRenderingLibrary() {
             return false;
         }
 
+        @Override
         public String getShortClasspathName() {
             return null;
         }

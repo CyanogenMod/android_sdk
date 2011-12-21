@@ -89,6 +89,7 @@ public class DataBindingItem implements Iterable<DataBindingItem> {
         return Collections.emptyList();
     }
 
+    @Override
     public Iterator<DataBindingItem> iterator() {
         List<DataBindingItem> list = getChildren();
         return list.iterator();

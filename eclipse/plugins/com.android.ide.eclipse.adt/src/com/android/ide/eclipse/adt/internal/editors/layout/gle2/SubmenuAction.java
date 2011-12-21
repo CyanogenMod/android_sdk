@@ -26,6 +26,7 @@ abstract class SubmenuAction extends Action implements MenuListener, IMenuCreato
         return this;
     }
 
+    @Override
     public void dispose() {
         if (mMenu != null) {
             mMenu.dispose();
@@ -33,21 +34,25 @@ abstract class SubmenuAction extends Action implements MenuListener, IMenuCreato
         }
     }
 
+    @Override
     public Menu getMenu(Control parent) {
         return null;
     }
 
+    @Override
     public Menu getMenu(Menu parent) {
         mMenu = new Menu(parent);
         mMenu.addMenuListener(this);
         return mMenu;
     }
 
+    @Override
     public void menuHidden(MenuEvent e) {
     }
 
     protected abstract void addMenuItems(Menu menu);
 
+    @Override
     public void menuShown(MenuEvent e) {
         // TODO: Replace this stuff with manager.setRemoveAllWhenShown(true);
         MenuItem[] menuItems = mMenu.getItems();

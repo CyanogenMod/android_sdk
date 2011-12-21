@@ -185,6 +185,7 @@ public class GestureToolTip {
             if (!mTimerPending) {
                 mTimerPending = true;
                 final Runnable timer = new Runnable() {
+                    @Override
                     public void run() {
                         mTimerPending = false;
                         // Check whether the alignment is still different than the target

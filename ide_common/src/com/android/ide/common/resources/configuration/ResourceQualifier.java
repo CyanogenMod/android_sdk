@@ -115,6 +115,7 @@ public abstract class ResourceQualifier implements Comparable<ResourceQualifier>
     @Override
     public abstract int hashCode();
 
+    @Override
     public final int compareTo(ResourceQualifier o) {
         return toString().compareTo(o.toString());
     }

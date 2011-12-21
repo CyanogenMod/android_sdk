@@ -153,18 +153,20 @@ public class FileExplorerView extends ViewPart implements ISelectionListener {
 
     /**
      * Sent when a new {@link Client} is selected.
-     * 
+     *
      * @param selectedClient The selected client.
      */
+    @Override
     public void selectionChanged(Client selectedClient) {
         // pass
     }
 
     /**
      * Sent when a new {@link Device} is selected.
-     * 
+     *
      * @param selectedDevice the selected device.
      */
+    @Override
     public void selectionChanged(IDevice selectedDevice) {
         mExplorer.switchDevice(selectedDevice);
     }

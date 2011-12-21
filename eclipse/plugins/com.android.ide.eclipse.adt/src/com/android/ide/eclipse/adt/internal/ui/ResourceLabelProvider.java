@@ -61,6 +61,7 @@ public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvide
     /**
      * @see #getColumnImage(Object, int)
      */
+    @Override
     public Image getImage(Object element) {
         // pass
         return null;
@@ -69,26 +70,32 @@ public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvide
     /**
      * @see #getColumnText(Object, int)
      */
+    @Override
     public String getText(Object element) {
         return getColumnText(element, 0);
     }
 
+    @Override
     public void addListener(ILabelProviderListener listener) {
         // pass
     }
 
+    @Override
     public void dispose() {
         mWarningImage.dispose();
     }
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         return false;
     }
 
+    @Override
     public void removeListener(ILabelProviderListener listener) {
         // pass
     }
 
+    @Override
     public Image getColumnImage(Object element, int columnIndex) {
         if (columnIndex == 1) {
             if (element instanceof ResourceItem) {
@@ -101,6 +108,7 @@ public class ResourceLabelProvider implements ILabelProvider, ITableLabelProvide
         return null;
     }
 
+    @Override
     public String getColumnText(Object element, int columnIndex) {
         switch (columnIndex) {
             case 0:

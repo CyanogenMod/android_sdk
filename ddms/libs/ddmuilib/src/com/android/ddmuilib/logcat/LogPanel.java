@@ -19,15 +19,15 @@ package com.android.ddmuilib.logcat;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.ITableFocusListener;
+import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
-import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 import com.android.ddmuilib.actions.ICommonAction;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -233,6 +233,7 @@ public class LogPanel extends SelectionDependentPanel {
             }
         }
 
+        @Override
         public boolean isCancelled() {
             return isCancelled;
         }
@@ -261,6 +262,7 @@ public class LogPanel extends SelectionDependentPanel {
             mTabItem = tabItem;
         }
 
+        @Override
         public boolean isCancelled() {
             return mDone;
         }
@@ -301,7 +303,8 @@ public class LogPanel extends SelectionDependentPanel {
                     // update the tab
                     Display d = mFolders.getDisplay();
                     d.asyncExec(new Runnable() {
-                       public void run() {
+                       @Override
+                    public void run() {
                            mTabItem.setText(name);
                        }
                     });
@@ -437,6 +440,7 @@ public class LogPanel extends SelectionDependentPanel {
         final Text filterText = new Text(bottom, SWT.SINGLE | SWT.BORDER);
         filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         filterText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 updateFilteringWith(filterText.getText());
             }
@@ -824,10 +828,12 @@ public class LogPanel extends SelectionDependentPanel {
     private void addTableToFocusListener(final Table table) {
         // create the activator for this table
         final IFocusedTableActivator activator = new IFocusedTableActivator() {
+            @Override
             public void copy(Clipboard clipboard) {
                 copyTable(clipboard, table);
             }
 
+            @Override
             public void selectAll() {
                 table.selectAll();
             }
@@ -835,10 +841,12 @@ public class LogPanel extends SelectionDependentPanel {
 
         // add the focus listener on the table to notify the global listener
         table.addFocusListener(new FocusListener() {
+            @Override
             public void focusGained(FocusEvent e) {
                 mGlobalListener.focusGained(activator);
             }
 
+            @Override
             public void focusLost(FocusEvent e) {
                 mGlobalListener.focusLost(activator);
             }
@@ -946,9 +954,11 @@ public class LogPanel extends SelectionDependentPanel {
             ControlListener listener = null;
             if (mColumnMode == COLUMN_MODE_AUTO) {
                 listener = new ControlListener() {
+                    @Override
                     public void controlMoved(ControlEvent e) {
                     }
 
+                    @Override
                     public void controlResized(ControlEvent e) {
                         Rectangle r = t.getClientArea();
 
@@ -1045,6 +1055,7 @@ public class LogPanel extends SelectionDependentPanel {
 
                 // run sync as we need to update right now.
                 d.syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         mFolders.dispose();
                         mParent.pack(true);
@@ -1062,6 +1073,7 @@ public class LogPanel extends SelectionDependentPanel {
 
                     // run sync as we need to update right now.
                     d.syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (mFolders.isDisposed() == false) {
                                 emptyTables();
@@ -1149,6 +1161,7 @@ public class LogPanel extends SelectionDependentPanel {
 
                     // run in sync because this will update the buffer start/end indices
                     display.asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             asyncRefresh();
                         }

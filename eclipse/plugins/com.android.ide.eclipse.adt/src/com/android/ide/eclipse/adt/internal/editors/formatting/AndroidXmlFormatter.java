@@ -35,6 +35,7 @@ import org.eclipse.wst.xml.core.text.IXMLPartitions;
  * off {@link AdtPrefs#getUseCustomXmlFormatter()}
  */
 public class AndroidXmlFormatter implements IContentFormatter, IContentFormatterExtension {
+    @Override
     public final void format(IDocument document, IRegion region) {
         /**
          * This method is probably not going to be called. It is part of the
@@ -51,10 +52,12 @@ public class AndroidXmlFormatter implements IContentFormatter, IContentFormatter
         format(document, context);
     }
 
+    @Override
     public IFormattingStrategy getFormattingStrategy(String contentType) {
         return new AndroidXmlFormattingStrategy();
     }
 
+    @Override
     public void format(IDocument document, IFormattingContext context) {
         context.setProperty(FormattingContextProperties.CONTEXT_MEDIUM, document);
         formatMaster(context, document, 0, document.getLength());

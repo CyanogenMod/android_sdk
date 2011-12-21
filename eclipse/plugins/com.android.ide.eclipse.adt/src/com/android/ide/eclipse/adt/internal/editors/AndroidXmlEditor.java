@@ -256,6 +256,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         if (result != null && adapter.equals(IGotoMarker.class) ) {
             final IGotoMarker gotoMarker = (IGotoMarker) result;
             return new IGotoMarker() {
+                @Override
                 public void gotoMarker(IMarker marker) {
                     gotoMarker.gotoMarker(marker);
                     try {
@@ -452,12 +453,14 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * Closes all project files on project close.
      * @see IResourceChangeListener
      */
+    @Override
     public void resourceChanged(final IResourceChangeEvent event) {
         if (event.getType() == IResourceChangeEvent.PRE_CLOSE) {
             IFile file = getInputFile();
             if (file != null && file.getProject().equals(event.getResource())) {
                 final IEditorInput input = getEditorInput();
                 Display.getDefault().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         // FIXME understand why this code is accessing the current window's pages,
                         // if that's *this* instance, we have a local pages member from the super
@@ -1493,6 +1496,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * <p/>
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelAboutToBeChanged(IStructuredModel model) {
             // pass
         }
@@ -1504,6 +1508,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * <p/>
          * This AndroidXmlEditor implementation calls the xmlModelChanged callback.
          */
+        @Override
         public void modelChanged(IStructuredModel model) {
             if (mIgnoreXmlUpdate) {
                 return;
@@ -1518,6 +1523,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * <p/>
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelDirtyStateChanged(IStructuredModel model, boolean isDirty) {
             // pass
         }
@@ -1530,6 +1536,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * <p/>
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelResourceDeleted(IStructuredModel model) {
             // pass
         }
@@ -1541,6 +1548,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
          * <p/>
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelResourceMoved(IStructuredModel oldModel, IStructuredModel newModel) {
             // pass
         }
@@ -1548,6 +1556,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         /**
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelAboutToBeReinitialized(IStructuredModel structuredModel) {
             // pass
         }
@@ -1555,6 +1564,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         /**
          * This AndroidXmlEditor implementation of IModelChangedListener is empty.
          */
+        @Override
         public void modelReinitialized(IStructuredModel structuredModel) {
             // pass
         }

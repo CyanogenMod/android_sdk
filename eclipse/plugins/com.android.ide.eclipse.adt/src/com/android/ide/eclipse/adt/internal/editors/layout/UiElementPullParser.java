@@ -192,6 +192,7 @@ public class UiElementPullParser extends BasePullParser {
      * - private method GraphicalLayoutEditor#updateNodeWithBounds(ILayoutViewInfo).
      * - private constructor of LayoutCanvas.CanvasViewInfo.
      */
+    @Override
     public Object getViewCookie() {
         return getCurrentNode();
     }
@@ -199,6 +200,7 @@ public class UiElementPullParser extends BasePullParser {
     /**
      * Legacy method required by {@link com.android.layoutlib.api.IXmlPullParser}
      */
+    @Override
     public Object getViewKey() {
         return getViewCookie();
     }
@@ -207,12 +209,14 @@ public class UiElementPullParser extends BasePullParser {
      * This implementation does nothing for now as all the embedded XML will use a normal KXML
      * parser.
      */
+    @Override
     public ILayoutPullParser getParser(String layoutName) {
         return null;
     }
 
     // ------------- XmlPullParser --------
 
+    @Override
     public String getPositionDescription() {
         return "XML DOM element depth:" + mNodeStack.size();
     }
@@ -221,6 +225,7 @@ public class UiElementPullParser extends BasePullParser {
      * This does not seem to be called by the layoutlib, but we keep this (and maintain
      * it) just in case.
      */
+    @Override
     public int getAttributeCount() {
         UiElementNode node = getCurrentNode();
 
@@ -238,6 +243,7 @@ public class UiElementPullParser extends BasePullParser {
      * This does not seem to be called by the layoutlib, but we keep this (and maintain
      * it) just in case.
      */
+    @Override
     public String getAttributeName(int i) {
         if (mZeroAttributeIsPadding) {
             if (i == 0) {
@@ -259,6 +265,7 @@ public class UiElementPullParser extends BasePullParser {
      * This does not seem to be called by the layoutlib, but we keep this (and maintain
      * it) just in case.
      */
+    @Override
     public String getAttributeNamespace(int i) {
         if (mZeroAttributeIsPadding) {
             if (i == 0) {
@@ -279,6 +286,7 @@ public class UiElementPullParser extends BasePullParser {
      * This does not seem to be called by the layoutlib, but we keep this (and maintain
      * it) just in case.
      */
+    @Override
     public String getAttributePrefix(int i) {
         if (mZeroAttributeIsPadding) {
             if (i == 0) {
@@ -301,6 +309,7 @@ public class UiElementPullParser extends BasePullParser {
      * This does not seem to be called by the layoutlib, but we keep this (and maintain
      * it) just in case.
      */
+    @Override
     public String getAttributeValue(int i) {
         if (mZeroAttributeIsPadding) {
             if (i == 0) {
@@ -327,6 +336,7 @@ public class UiElementPullParser extends BasePullParser {
     /*
      * This is the main method used by the LayoutInflater to query for attributes.
      */
+    @Override
     public String getAttributeValue(String namespace, String localName) {
         if (mExplodeNodes != null && ATTR_PADDING.equals(localName) &&
                 SdkConstants.NS_RESOURCES.equals(namespace)) {
@@ -380,10 +390,12 @@ public class UiElementPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public int getDepth() {
         return mNodeStack.size();
     }
 
+    @Override
     public String getName() {
         if (mParsingState == START_TAG || mParsingState == END_TAG) {
             String name = getCurrentNode().getDescriptor().getXmlLocalName();
@@ -404,6 +416,7 @@ public class UiElementPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public String getNamespace() {
         if (mParsingState == START_TAG || mParsingState == END_TAG) {
             return getCurrentNode().getDescriptor().getNamespace();
@@ -412,6 +425,7 @@ public class UiElementPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public String getPrefix() {
         if (mParsingState == START_TAG || mParsingState == END_TAG) {
             Document doc = mRoot.getXmlDocument();
@@ -421,6 +435,7 @@ public class UiElementPullParser extends BasePullParser {
         return null;
     }
 
+    @Override
     public boolean isEmptyElementTag() throws XmlPullParserException {
         if (mParsingState == START_TAG) {
             return getCurrentNode().getUiChildren().size() == 0;

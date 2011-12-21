@@ -53,6 +53,7 @@ public class PropertyCallback implements IMenuCallback {
     }
 
     // ---- Implements IMenuCallback ----
+    @Override
     public void action(RuleAction action, List<? extends INode> selectedNodes,
             final String valueId, final Boolean newValue) {
         if (mTargetNodes != null && mTargetNodes.size() > 0) {
@@ -63,6 +64,7 @@ public class PropertyCallback implements IMenuCallback {
         }
         final List<? extends INode> nodes = selectedNodes;
         selectedNodes.get(0).editXml(mUndoLabel, new INodeHandler() {
+            @Override
             public void handle(INode n) {
                 for (INode targetNode : nodes) {
                     if (valueId != null) {

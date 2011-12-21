@@ -52,6 +52,7 @@ public class BinaryXMLDescriber implements IContentDescriber {
      * @see org.eclipse.core.runtime.content.IContentDescriber#describe(java.io.
      * InputStream, org.eclipse.core.runtime.content.IContentDescription)
      */
+    @Override
     public int describe(InputStream contents, IContentDescription description) throws IOException {
         int status = INVALID;
         int length = 8;
@@ -82,6 +83,7 @@ public class BinaryXMLDescriber implements IContentDescriber {
      * @see
      * org.eclipse.core.runtime.content.IContentDescriber#getSupportedOptions()
      */
+    @Override
     public QualifiedName[] getSupportedOptions() {
         return new QualifiedName[0];
     }

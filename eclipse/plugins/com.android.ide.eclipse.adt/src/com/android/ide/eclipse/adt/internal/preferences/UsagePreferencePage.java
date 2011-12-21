@@ -18,11 +18,9 @@ package com.android.ide.eclipse.adt.internal.preferences;
 
 import com.android.sdkstats.DdmsPreferenceStore;
 import com.android.sdkstats.SdkStatsPermissionDialog;
-import com.android.sdkstats.SdkStatsService;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -35,8 +33,6 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import java.io.IOException;
-
 public class UsagePreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
     private static final int WRAP_WIDTH_PX = 200;
 
@@ -46,6 +42,7 @@ public class UsagePreferencePage extends PreferencePage implements IWorkbenchPre
     public UsagePreferencePage() {
     }
 
+    @Override
     public void init(IWorkbench workbench) {
         // pass
     }

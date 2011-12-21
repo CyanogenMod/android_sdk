@@ -42,6 +42,7 @@ public class AndroidExportNature implements IProjectNature {
      * @see org.eclipse.core.resources.IProjectNature#configure()
      * @throws CoreException if configuration fails.
      */
+    @Override
     public void configure() throws CoreException {
         // nothing to do.
     }
@@ -62,6 +63,7 @@ public class AndroidExportNature implements IProjectNature {
      * @see org.eclipse.core.resources.IProjectNature#deconfigure()
      * @throws CoreException if configuration fails.
      */
+    @Override
     public void deconfigure() throws CoreException {
         // nothing to do
     }
@@ -72,6 +74,7 @@ public class AndroidExportNature implements IProjectNature {
      * @return the project handle
      * @see org.eclipse.core.resources.IProjectNature#getProject()
      */
+    @Override
     public IProject getProject() {
         return mProject;
     }
@@ -86,6 +89,7 @@ public class AndroidExportNature implements IProjectNature {
      * @param project the project to which this nature applies
      * @see org.eclipse.core.resources.IProjectNature#setProject(org.eclipse.core.resources.IProject)
      */
+    @Override
     public void setProject(IProject project) {
         mProject = project;
     }

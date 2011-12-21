@@ -325,6 +325,7 @@ public class ImageOverlay extends Overlay implements IImageFactory {
     /**
      * Implementation of {@link IImageFactory#getImage(int, int)}.
      */
+    @Override
     public BufferedImage getImage(int w, int h) {
         if (mAwtImage == null ||
                 mAwtImage.getWidth() != w ||

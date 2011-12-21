@@ -65,6 +65,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         this.mImage = image;
 
         addPaintListener(new PaintListener() {
+            @Override
             public void paintControl(PaintEvent event) {
                 onPaint(event);
             }
@@ -190,6 +191,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
 
     // ---- Implements MouseTrackListener ----
 
+    @Override
     public void mouseEnter(MouseEvent e) {
         mMouseIn = true;
         if (mHoverColor != null) {
@@ -197,6 +199,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         }
     }
 
+    @Override
     public void mouseExit(MouseEvent e) {
         mMouseIn = false;
         if (mHoverColor != null) {
@@ -204,6 +207,7 @@ public class ImageControl extends Canvas implements MouseTrackListener {
         }
     }
 
+    @Override
     public void mouseHover(MouseEvent e) {
     }
 }

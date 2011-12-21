@@ -55,6 +55,7 @@ public class AndroidNature implements IProjectNature {
      * @see org.eclipse.core.resources.IProjectNature#configure()
      * @throws CoreException if configuration fails.
      */
+    @Override
     public void configure() throws CoreException {
         configureResourceManagerBuilder(mProject);
         configurePreBuilder(mProject);
@@ -77,6 +78,7 @@ public class AndroidNature implements IProjectNature {
      * @see org.eclipse.core.resources.IProjectNature#deconfigure()
      * @throws CoreException if configuration fails.
      */
+    @Override
     public void deconfigure() throws CoreException {
         // remove the android builders
         removeBuilder(mProject, ResourceManagerBuilder.ID);
@@ -90,6 +92,7 @@ public class AndroidNature implements IProjectNature {
      * @return the project handle
      * @see org.eclipse.core.resources.IProjectNature#getProject()
      */
+    @Override
     public IProject getProject() {
         return mProject;
     }
@@ -104,6 +107,7 @@ public class AndroidNature implements IProjectNature {
      * @param project the project to which this nature applies
      * @see org.eclipse.core.resources.IProjectNature#setProject(org.eclipse.core.resources.IProject)
      */
+    @Override
     public void setProject(IProject project) {
         mProject = project;
     }

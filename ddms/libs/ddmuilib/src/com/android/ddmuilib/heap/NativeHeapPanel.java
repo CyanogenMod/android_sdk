@@ -24,9 +24,9 @@ import com.android.ddmlib.NativeStackCallInfo;
 import com.android.ddmuilib.Addr2Line;
 import com.android.ddmuilib.BaseHeapPanel;
 import com.android.ddmuilib.ITableFocusListener;
+import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.TableHelper;
-import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -165,6 +165,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if (client != getCurrentClient()) {
             return;
@@ -195,6 +196,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
             t.start();
         } else {
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     resolveSymbols();
                     mDetailsTreeViewer.refresh();
@@ -361,6 +363,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private void updateDisplay() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 updateSnapshotIndexCombo();
                 updateToolbars();
@@ -374,6 +377,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
     private void displaySelectedSnapshot() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 int idx = mSnapshotIndexCombo.getSelectionIndex();
                 displaySnapshot(idx);
@@ -654,6 +658,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         mSymbolSearchPathText.setMessage(SYMBOL_SEARCH_PATH_TEXT_MESSAGE);
         mSymbolSearchPathText.setToolTipText(SYMBOL_SEARCH_PATH_TOOLTIP_TEXT);
         mSymbolSearchPathText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 String path = mSymbolSearchPathText.getText();
                 updateSearchPath(path);
@@ -743,6 +748,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
         stackTraceTree.setLayoutData(data);
 
         sash.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 Rectangle sashRect = sash.getBounds();
                 Rectangle panelRect = c.getClientArea();
@@ -826,6 +832,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         final NativeHeapSnapshot snapshot = mNativeHeapSnapshots.get(idx);
         Thread t = new Thread(new Runnable() {
+            @Override
             public void run() {
                 PrintWriter out;
                 try {
@@ -843,6 +850,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
             private void displayErrorMessage(final String message) {
                 Display.getDefault().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         MessageDialog.openError(Display.getDefault().getActiveShell(),
                                 "Failed to export heap data", message);
@@ -992,21 +1000,25 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         final Tree heapSitesTree = mDetailsTreeViewer.getTree();
         final IFocusedTableActivator heapSitesActivator = new IFocusedTableActivator() {
+            @Override
             public void copy(Clipboard clipboard) {
                 TreeItem[] items = heapSitesTree.getSelection();
                 copyToClipboard(items, clipboard);
             }
 
+            @Override
             public void selectAll() {
                 heapSitesTree.selectAll();
             }
         };
 
         heapSitesTree.addFocusListener(new FocusListener() {
+            @Override
             public void focusLost(FocusEvent arg0) {
                 mTableFocusListener.focusLost(heapSitesActivator);
             }
 
+            @Override
             public void focusGained(FocusEvent arg0) {
                 mTableFocusListener.focusGained(heapSitesActivator);
             }
@@ -1014,21 +1026,25 @@ public class NativeHeapPanel extends BaseHeapPanel {
 
         final Tree stackTraceTree = mStackTraceTreeViewer.getTree();
         final IFocusedTableActivator stackTraceActivator = new IFocusedTableActivator() {
+            @Override
             public void copy(Clipboard clipboard) {
                 TreeItem[] items = stackTraceTree.getSelection();
                 copyToClipboard(items, clipboard);
             }
 
+            @Override
             public void selectAll() {
                 stackTraceTree.selectAll();
             }
         };
 
         stackTraceTree.addFocusListener(new FocusListener() {
+            @Override
             public void focusLost(FocusEvent arg0) {
                 mTableFocusListener.focusLost(stackTraceActivator);
             }
 
+            @Override
             public void focusGained(FocusEvent arg0) {
                 mTableFocusListener.focusGained(stackTraceActivator);
             }
@@ -1068,6 +1084,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
             mResolvedSymbolCache = new HashMap<Long, NativeStackCallInfo>();
         }
 
+        @Override
         public void run() {
             for (NativeAllocationInfo callSite : mCallSites) {
                 if (callSite.isStackCallResolved()) {
@@ -1094,6 +1111,7 @@ public class NativeHeapPanel extends BaseHeapPanel {
             }
 
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     mDetailsTreeViewer.refresh();
                     mStackTraceTreeViewer.refresh();

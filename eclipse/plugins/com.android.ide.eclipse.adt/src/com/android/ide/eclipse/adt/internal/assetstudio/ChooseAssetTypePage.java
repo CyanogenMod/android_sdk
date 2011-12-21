@@ -69,6 +69,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
      *
      * @param parent the parent composite
      */
+    @Override
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
 
@@ -123,6 +124,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         updateAssetType();
         validatePage();
         parent.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 mNameText.setFocus();
             }
@@ -165,6 +167,7 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         return mProject != null;
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mProjectButton) {
@@ -187,9 +190,11 @@ public class ChooseAssetTypePage extends WizardPage implements SelectionListener
         }
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
+    @Override
     public void modifyText(ModifyEvent e) {
         Object source = e.getSource();
         if (source == mNameText) {

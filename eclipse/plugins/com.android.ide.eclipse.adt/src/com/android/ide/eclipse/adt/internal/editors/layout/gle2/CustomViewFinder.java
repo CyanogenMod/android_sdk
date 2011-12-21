@@ -374,6 +374,7 @@ public class CustomViewFinder {
 
             // Notify listeners on SWT's UI thread
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     Collection<String> customViews =
                         Collections.unmodifiableCollection(mCustomViews);

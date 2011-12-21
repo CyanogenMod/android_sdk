@@ -53,6 +53,7 @@ public class XmlErrorHandler extends DefaultHandler implements ManifestErrorHand
     public static class BasicXmlErrorListener implements XmlErrorListener {
         public boolean mHasXmlError = false;
 
+        @Override
         public void errorFound() {
             mHasXmlError = true;
         }
@@ -113,6 +114,7 @@ public class XmlErrorHandler extends DefaultHandler implements ManifestErrorHand
      * @param exception
      * @param lineNumber
      */
+    @Override
     public void handleError(Exception exception, int lineNumber) {
         if (mErrorListener != null) {
             mErrorListener.errorFound();
@@ -142,6 +144,7 @@ public class XmlErrorHandler extends DefaultHandler implements ManifestErrorHand
      * @param testVisibility if <code>true</code>, the method will check the visibility of
      * the class or of its constructors.
      */
+    @Override
     public void checkClass(Locator locator, String className, String superClassName,
             boolean testVisibility) {
         if (mJavaProject == null) {

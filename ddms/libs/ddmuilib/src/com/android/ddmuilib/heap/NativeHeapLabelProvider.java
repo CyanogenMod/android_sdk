@@ -29,10 +29,12 @@ import org.eclipse.swt.graphics.Image;
 public class NativeHeapLabelProvider extends LabelProvider implements ITableLabelProvider {
     private long mTotalSize;
 
+    @Override
     public Image getColumnImage(Object arg0, int arg1) {
         return null;
     }
 
+    @Override
     public String getColumnText(Object element, int index) {
         if (element instanceof NativeAllocationInfo) {
             return getColumnTextForNativeAllocation((NativeAllocationInfo) element, index);

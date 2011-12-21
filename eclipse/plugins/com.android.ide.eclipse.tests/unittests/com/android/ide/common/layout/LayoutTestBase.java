@@ -197,120 +197,146 @@ public class LayoutTestBase extends TestCase {
             mFqn = fqn;
         }
 
+        @Override
         public void debugPrintf(String msg, Object... params) {
             fail("Not supported in tests yet");
         }
 
+        @Override
         public void displayAlert(String message) {
             fail("Not supported in tests yet");
         }
 
+        @Override
         public String displayInput(String message, String value, IValidator filter) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public String getFqcn() {
             return mFqn;
         }
 
+        @Override
         public IViewMetadata getMetadata(final String fqcn) {
             return new IViewMetadata() {
+                @Override
                 public String getDisplayName() {
                     // This also works when there is no "."
                     return fqcn.substring(fqcn.lastIndexOf('.') + 1);
                 }
 
+                @Override
                 public FillPreference getFillPreference() {
                     return ViewMetadataRepository.get().getFillPreference(fqcn);
                 }
 
+                @Override
                 public Margins getInsets() {
                     return null;
                 }
 
+                @Override
                 public List<String> getTopAttributes() {
                     return ViewMetadataRepository.get().getTopAttributes(fqcn);
                 }
             };
         }
 
+        @Override
         public int getMinApiLevel() {
             return 8;
         }
 
+        @Override
         public IViewRule loadRule(String fqcn) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public String displayReferenceInput(String currentValue) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public IValidator getResourceValidator() {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public String displayResourceInput(String resourceTypeName, String currentValue) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public String[] displayMarginInput(String all, String left, String right, String top,
                 String bottom) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public String displayIncludeSourceInput() {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public void select(Collection<INode> nodes) {
             fail("Not supported in tests yet");
         }
 
+        @Override
         public String displayFragmentSourceInput() {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public void layout() {
             fail("Not supported in tests yet");
         }
 
+        @Override
         public void redraw() {
             fail("Not supported in tests yet");
         }
 
+        @Override
         public Map<INode, Rect> measureChildren(INode parent, AttributeFilter filter) {
             return null;
         }
 
+        @Override
         public int pxToDp(int px) {
             fail("Not supported in tests yet");
             return px;
         }
 
+        @Override
         public String getUniqueId(String prefix) {
             fail("Not supported in tests yet");
             return null;
         }
 
+        @Override
         public int screenToLayout(int pixels) {
             fail("Not supported in tests yet");
             return 0;
         }
 
+        @Override
         public int dpToPx(int dp) {
             fail("Not supported in tests yet");
             return 0;
         }
 
+        @Override
         public String getAppNameSpace() {
             fail("Not supported in tests yet");
             return null;

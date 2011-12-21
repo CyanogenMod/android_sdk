@@ -211,6 +211,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // changing the console properties update the ui, we need to make this change
         // in the ui thread.
         display.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 mAndroidConsoleErrorStream.setColor(mRed);
             }
@@ -222,6 +223,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         // set the listener for the preference change
         eclipseStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent event) {
                 // load the new preferences
                 AdtPrefs.getPrefs().loadValues(event);
@@ -817,6 +819,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         // dialog box only run in ui thread..
         display.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 Shell shell = display.getActiveShell();
                 MessageDialog.openError(shell, title, message);
@@ -836,6 +839,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
         // dialog box only run in ui thread..
         display.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 Shell shell = display.getActiveShell();
                 MessageDialog.openWarning(shell, title, message);
@@ -857,6 +861,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         // we need to ask the user what he wants to do.
         final boolean[] result = new boolean[1];
         display.syncExec(new Runnable() {
+            @Override
             public void run() {
                 Shell shell = display.getActiveShell();
                 result[0] = MessageDialog.openQuestion(shell, title, message);
@@ -1249,6 +1254,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                         (List<ITargetChangeListener>)mTargetChangeListeners.clone();
                     final SubMonitor progress2 = progress;
                     AdtPlugin.getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             for (ITargetChangeListener listener : listeners) {
                                 try {
@@ -1378,6 +1384,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
              *
              * @see IFileListener#fileChanged
              */
+            @Override
             public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
                 if (AdtConstants.EXT_XML.equals(file.getFileExtension())) {
                     // The resources files must have a file path similar to
@@ -1524,6 +1531,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             (List<ITargetChangeListener>)mTargetChangeListeners.clone();
 
         AdtPlugin.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 for (ITargetChangeListener listener : listeners) {
                     try {
@@ -1546,6 +1554,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
             (List<ITargetChangeListener>)mTargetChangeListeners.clone();
 
         AdtPlugin.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 for (ITargetChangeListener listener : listeners) {
                     try {
@@ -1640,6 +1649,7 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
     // --------- ILogger methods -----------
 
+    @Override
     public void error(Throwable t, String format, Object... args) {
         if (t != null) {
             log(t, format, args);
@@ -1648,10 +1658,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         }
     }
 
+    @Override
     public void printf(String format, Object... args) {
         log(IStatus.INFO, format, args);
     }
 
+    @Override
     public void warning(String format, Object... args) {
         log(IStatus.WARNING, format, args);
     }

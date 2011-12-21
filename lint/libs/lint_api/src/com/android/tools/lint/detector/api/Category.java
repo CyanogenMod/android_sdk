@@ -112,6 +112,7 @@ public final class Category implements Comparable<Category> {
         }
     }
 
+    @Override
     public int compareTo(Category other) {
         if (other.mPriority == mPriority) {
             if (mParent == other) {

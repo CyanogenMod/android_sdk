@@ -24,14 +24,17 @@ import com.android.ide.eclipse.pdt.PdtPlugin;
  */
 public class ToolsLocator implements IToolsLocator {
 
+    @Override
     public String getAdbLocation() {
         return PdtPlugin.getAdbLocation();
     }
 
+    @Override
     public String getHprofConvLocation() {
         return PdtPlugin.getHprofConvLocation();
     }
 
+    @Override
     public String getTraceViewLocation() {
         return PdtPlugin.getTraceViewLocation();
     }

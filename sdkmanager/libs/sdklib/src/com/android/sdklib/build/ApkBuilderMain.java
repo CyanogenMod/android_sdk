@@ -143,6 +143,7 @@ public final class ApkBuilderMain {
             for (File jarFile : jarFiles) {
                 if (jarFile.isDirectory()) {
                     String[] filenames = jarFile.list(new FilenameFilter() {
+                        @Override
                         public boolean accept(File dir, String name) {
                             return PATTERN_JAR_EXT.matcher(name).matches();
                         }

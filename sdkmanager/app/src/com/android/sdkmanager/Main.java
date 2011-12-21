@@ -22,19 +22,19 @@ import com.android.io.FileWrapper;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.build.MakeIdentity;
 import com.android.sdklib.internal.project.ProjectCreator;
-import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectCreator.OutputLevel;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectProperties.PropertyType;
 import com.android.sdklib.internal.repository.PlatformToolPackage;
 import com.android.sdklib.internal.repository.ToolPackage;
@@ -48,8 +48,8 @@ import com.android.sdkuilib.internal.repository.UpdaterPage;
 import com.android.sdkuilib.internal.repository.sdkman2.PackagesPage;
 import com.android.sdkuilib.internal.widgets.MessageBoxLog;
 import com.android.sdkuilib.repository.AvdManagerWindow;
-import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.AvdManagerWindow.AvdInvocationContext;
+import com.android.sdkuilib.repository.SdkUpdaterWindow;
 import com.android.sdkuilib.repository.SdkUpdaterWindow.SdkInvocationContext;
 import com.android.util.Pair;
 
@@ -127,6 +127,7 @@ public class Main {
      */
     private void createLogger() {
         mSdkLog = new ISdkLog() {
+            @Override
             public void error(Throwable t, String errorFormat, Object... args) {
                 if (errorFormat != null) {
                     System.err.printf("Error: " + errorFormat, args);
@@ -139,6 +140,7 @@ public class Main {
                 }
             }
 
+            @Override
             public void warning(String warningFormat, Object... args) {
                 if (mSdkCommandLine.isVerbose()) {
                     System.out.printf("Warning: " + warningFormat, args);
@@ -148,6 +150,7 @@ public class Main {
                 }
             }
 
+            @Override
             public void printf(String msgFormat, Object... args) {
                 System.out.printf(msgFormat, args);
             }
@@ -1500,6 +1503,7 @@ public class Main {
         final AtomicBoolean keepErasing = new AtomicBoolean(true);
 
         Thread eraser = new Thread(new Runnable() {
+            @Override
             public void run() {
                 while (keepErasing.get()) {
                     System.err.print("\b ");    //$NON-NLS-1$. \b=Backspace

@@ -195,6 +195,7 @@ public abstract class GeneratorTest extends TestCase implements GraphicGenerator
         return new File(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
     }
 
+    @Override
     public BufferedImage loadImageResource(String path) {
         try {
             return GraphicGenerator.getStencilImage(path);

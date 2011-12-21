@@ -42,6 +42,7 @@ public class DebuggerConnector implements IDebuggerConnector {
         GlobalProjectMonitor.getMonitor().addProjectListener(mWorkspaceAppCache);
     }
 
+    @Override
     public boolean connectDebugger(String appName, int appPort, int selectedPort) {
         // search for an android project matching the process name
         IProject project = ProjectHelper.findAndroidProjectByAppName(appName);
@@ -54,6 +55,7 @@ public class DebuggerConnector implements IDebuggerConnector {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isWorkspaceApp(String appName) {
         return mWorkspaceAppCache.isWorkspaceApp(appName);
     }
@@ -103,6 +105,7 @@ public class DebuggerConnector implements IDebuggerConnector {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // when a project is renamed, ideally we should just update the current
             // known mapping of app name -> project name. However, the projectRenamed
@@ -111,11 +114,13 @@ public class DebuggerConnector implements IDebuggerConnector {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void projectOpenedWithWorkspace(IProject project) {
             // don't do anything as the cache is lazily initialized
         }
 
         /** {@inheritDoc} */
+        @Override
         public void projectOpened(IProject project) {
             // A newly opened project could contribute some Android application.
             // So we invalidate the set of apps that are known to be not in the workspace, as
@@ -124,12 +129,14 @@ public class DebuggerConnector implements IDebuggerConnector {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void projectDeleted(IProject project) {
             // Deletion is effectively the same as closing
             projectClosed(project);
         }
 
         /** {@inheritDoc} */
+        @Override
         public void projectClosed(IProject project) {
             // When a project is closed, remove all mappings contributed by the project.
             Map<String, String> updatedCache = new HashMap<String, String>();

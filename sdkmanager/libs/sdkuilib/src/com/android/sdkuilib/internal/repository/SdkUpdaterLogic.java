@@ -1270,6 +1270,7 @@ class SdkUpdaterLogic {
         final boolean forceHttp = mUpdaterData.getSettingsController().getForceHttp();
 
         mUpdaterData.getTaskFactory().start("Refresh Sources", new ITask() {
+            @Override
             public void run(ITaskMonitor monitor) {
                 for (SdkSource remoteSrc : remoteSources) {
                     Package[] pkgs = remoteSrc.getPackages();

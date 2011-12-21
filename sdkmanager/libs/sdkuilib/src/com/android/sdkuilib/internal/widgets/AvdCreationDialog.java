@@ -25,8 +25,8 @@ import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.AvdManager.AvdConflict;
+import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.internal.avd.HardwareProperties.HardwareProperty;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdkuilib.internal.repository.icons.ImageFactory;
@@ -75,8 +75,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 
 /**
@@ -141,6 +141,7 @@ final class AvdCreationDialog extends GridDialog {
      * {@link VerifyListener} for {@link Text} widgets that should only contains numbers.
      */
     private final VerifyListener mDigitVerifier = new VerifyListener() {
+        @Override
         public void verifyText(VerifyEvent event) {
             int count = event.text.length();
             for (int i = 0 ; i < count ; i++) {
@@ -159,6 +160,7 @@ final class AvdCreationDialog extends GridDialog {
      * When editing an existing AVD, it's OK for the name to match the existing AVD.
      */
     private class CreateNameModifyListener implements ModifyListener {
+        @Override
         public void modifyText(ModifyEvent e) {
             String name = mAvdName.getText().trim();
             if (mEditAvdInfo == null || !name.equals(mEditAvdInfo.getName())) {
@@ -193,6 +195,7 @@ final class AvdCreationDialog extends GridDialog {
      * {@link ModifyListener} used for live-validation of the fields content.
      */
     private class ValidateListener extends SelectionAdapter implements ModifyListener {
+        @Override
         public void modifyText(ModifyEvent e) {
             validatePage();
         }
@@ -553,6 +556,7 @@ final class AvdCreationDialog extends GridDialog {
         // -- Table viewer
         mHardwareViewer = new TableViewer(hardwareTable);
         mHardwareViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 // it's a single selection mode, we can just access the selection index
                 // from the table directly.
@@ -562,14 +566,17 @@ final class AvdCreationDialog extends GridDialog {
 
         // only a content provider. Use viewers per column below (for editing support)
         mHardwareViewer.setContentProvider(new IStructuredContentProvider() {
+            @Override
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
                 // we can just ignore this. we just use mProperties directly.
             }
 
+            @Override
             public Object[] getElements(Object arg0) {
                 return mProperties.keySet().toArray();
             }
 
+            @Override
             public void dispose() {
                 // pass
             }

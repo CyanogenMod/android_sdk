@@ -25,7 +25,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
  * ICommonAction.
  */
 public class CommonAction extends Action implements ICommonAction {
-    
+
     private Runnable mRunnable;
 
     public CommonAction() {
@@ -51,18 +51,19 @@ public class CommonAction extends Action implements ICommonAction {
     public CommonAction(String text, int style) {
         super(text, style);
     }
-    
+
     @Override
     public void run() {
         if (mRunnable != null) {
             mRunnable.run();
         }
     }
-    
+
     /**
      * Sets the {@link Runnable}.
      * @see ICommonAction#setRunnable(Runnable)
      */
+    @Override
     public void setRunnable(Runnable runnable) {
         mRunnable = runnable;
     }

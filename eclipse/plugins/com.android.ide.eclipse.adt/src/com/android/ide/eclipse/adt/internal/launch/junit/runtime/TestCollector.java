@@ -41,6 +41,7 @@ class TestCollector implements ITestRunListener {
         mTestTree = new HashMap<String, TestSuiteReference>();
     }
 
+    @Override
     public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {
         // ignore
     }
@@ -48,6 +49,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testFailed(com.android.ddmlib.testrunner.ITestRunListener.TestFailure, com.android.ddmlib.testrunner.TestIdentifier, java.lang.String)
      */
+    @Override
     public void testFailed(TestFailure status, TestIdentifier test, String trace) {
         // ignore - should be impossible since this is only collecting test information
     }
@@ -55,6 +57,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunEnded(long, Map<String, String>)
      */
+    @Override
     public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
         // ignore
     }
@@ -62,6 +65,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunFailed(java.lang.String)
      */
+    @Override
     public void testRunFailed(String errorMessage) {
         mErrorMessage = errorMessage;
     }
@@ -69,6 +73,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStarted(int)
      */
+    @Override
     public void testRunStarted(String ignoredRunName, int testCount) {
         mTotalTestCount = testCount;
     }
@@ -76,6 +81,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testRunStopped(long)
      */
+    @Override
     public void testRunStopped(long elapsedTime) {
         // ignore
     }
@@ -83,6 +89,7 @@ class TestCollector implements ITestRunListener {
     /* (non-Javadoc)
      * @see com.android.ddmlib.testrunner.ITestRunListener#testStarted(com.android.ddmlib.testrunner.TestIdentifier)
      */
+    @Override
     public void testStarted(TestIdentifier test) {
         TestSuiteReference suiteRef = mTestTree.get(test.getClassName());
         if (suiteRef == null) {

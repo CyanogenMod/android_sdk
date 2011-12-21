@@ -29,14 +29,17 @@ public class NullSdkLog implements ISdkLog {
         return sThis;
     }
 
+    @Override
     public void error(Throwable t, String errorFormat, Object... args) {
         // ignore
     }
 
+    @Override
     public void printf(String msgFormat, Object... args) {
         // ignore
     }
 
+    @Override
     public void warning(String warningFormat, Object... args) {
         // ignore
     }

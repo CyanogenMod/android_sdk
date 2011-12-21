@@ -96,6 +96,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         }
     }
 
+    @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         setHelpAvailable(false); // TODO have help
         ImageDescriptor desc = AdtPlugin.getImageDescriptor(PROJECT_LOGO_LARGE);

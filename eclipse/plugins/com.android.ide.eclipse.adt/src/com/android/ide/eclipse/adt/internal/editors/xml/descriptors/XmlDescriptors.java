@@ -58,10 +58,12 @@ public final class XmlDescriptors implements IDescriptorProvider {
     private DocumentDescriptor mAppWidgetDescriptor = new DocumentDescriptor("xml_doc", null /* children */); //$NON-NLS-1$
 
     /** @return the root descriptor for both searchable and preferences. */
+    @Override
     public DocumentDescriptor getDescriptor() {
         return mDescriptor;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return mDescriptor.getChildren();
     }
@@ -83,10 +85,12 @@ public final class XmlDescriptors implements IDescriptorProvider {
 
     public IDescriptorProvider getSearchableProvider() {
         return new IDescriptorProvider() {
+            @Override
             public ElementDescriptor getDescriptor() {
                 return mSearchDescriptor;
             }
 
+            @Override
             public ElementDescriptor[] getRootElementDescriptors() {
                 return mSearchDescriptor.getChildren();
             }
@@ -95,10 +99,12 @@ public final class XmlDescriptors implements IDescriptorProvider {
 
     public IDescriptorProvider getPreferencesProvider() {
         return new IDescriptorProvider() {
+            @Override
             public ElementDescriptor getDescriptor() {
                 return mPrefDescriptor;
             }
 
+            @Override
             public ElementDescriptor[] getRootElementDescriptors() {
                 return mPrefDescriptor.getChildren();
             }
@@ -107,10 +113,12 @@ public final class XmlDescriptors implements IDescriptorProvider {
 
     public IDescriptorProvider getAppWidgetProvider() {
         return new IDescriptorProvider() {
+            @Override
             public ElementDescriptor getDescriptor() {
                 return mAppWidgetDescriptor;
             }
 
+            @Override
             public ElementDescriptor[] getRootElementDescriptors() {
                 return mAppWidgetDescriptor.getChildren();
             }

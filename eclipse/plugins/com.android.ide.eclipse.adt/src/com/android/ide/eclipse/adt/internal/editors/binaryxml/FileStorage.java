@@ -55,6 +55,7 @@ public class FileStorage implements IStorage {
     /* (non-Javadoc)
      * @see org.eclipse.core.resources.IStorage#getContents()
      */
+    @Override
     public InputStream getContents() throws CoreException {
         InputStream stream = null;
         try {
@@ -69,6 +70,7 @@ public class FileStorage implements IStorage {
     /* (non-Javadoc)
      * @see org.eclipse.core.resources.IStorage#getFullPath()
      */
+    @Override
     public IPath getFullPath() {
         return new Path(mFile.getAbsolutePath());
     }
@@ -76,6 +78,7 @@ public class FileStorage implements IStorage {
     /* (non-Javadoc)
      * @see org.eclipse.core.resources.IStorage#getName()
      */
+    @Override
     public String getName() {
         return mFile.getName();
     }
@@ -83,6 +86,7 @@ public class FileStorage implements IStorage {
     /* (non-Javadoc)
      * @see org.eclipse.core.resources.IStorage#isReadOnly()
      */
+    @Override
     public boolean isReadOnly() {
         return true;
     }
@@ -90,6 +94,7 @@ public class FileStorage implements IStorage {
     /* (non-Javadoc)
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(Class)
      */
+    @Override
     public Object getAdapter(Class adapter) {
         return null;
     }

@@ -33,22 +33,27 @@ public class SyncProgressMonitor implements ISyncProgressMonitor {
         mName = name;
     }
 
+    @Override
     public void start(int totalWork) {
         mMonitor.beginTask(mName, totalWork);
     }
 
+    @Override
     public void stop() {
         mMonitor.done();
     }
 
+    @Override
     public void advance(int work) {
         mMonitor.worked(work);
     }
 
+    @Override
     public boolean isCanceled() {
         return mMonitor.isCanceled();
     }
 
+    @Override
     public void startSubTask(String name) {
         mMonitor.subTask(name);
     }

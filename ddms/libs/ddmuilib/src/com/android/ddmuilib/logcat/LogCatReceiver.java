@@ -17,6 +17,7 @@
 package com.android.ddmuilib.logcat;
 
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 
@@ -86,6 +87,7 @@ public final class LogCatReceiver {
         mCurrentLogCatOutputReceiver = new LogCatOutputReceiver();
 
         Thread t = new Thread(new Runnable() {
+            @Override
             public void run() {
                 /* wait while the device comes online */
                 while (!mCurrentDevice.isOnline()) {
@@ -131,6 +133,7 @@ public final class LogCatReceiver {
         }
 
         /** Implements {@link IShellOutputReceiver#isCancelled() }. */
+        @Override
         public boolean isCancelled() {
             return mIsCancelled;
         }

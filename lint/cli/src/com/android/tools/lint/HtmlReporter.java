@@ -433,6 +433,7 @@ class HtmlReporter extends Reporter {
                 if (urls.size() > 0) {
                     // Sort in order
                     Collections.sort(urls, new Comparator<String>() {
+                        @Override
                         public int compare(String s1, String s2) {
                             return getDpiRank(s1) - getDpiRank(s2);
                         }

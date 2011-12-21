@@ -16,9 +16,9 @@
 
 package com.android.ddmuilib;
 
+import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ThreadInfo;
-import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -61,14 +61,14 @@ import java.util.Date;
  * Base class for our information panels.
  */
 public class ThreadPanel extends TablePanel {
-    
+
     private final static String PREFS_THREAD_COL_ID = "threadPanel.Col0"; //$NON-NLS-1$
     private final static String PREFS_THREAD_COL_TID = "threadPanel.Col1"; //$NON-NLS-1$
     private final static String PREFS_THREAD_COL_STATUS = "threadPanel.Col2"; //$NON-NLS-1$
     private final static String PREFS_THREAD_COL_UTIME = "threadPanel.Col3"; //$NON-NLS-1$
     private final static String PREFS_THREAD_COL_STIME = "threadPanel.Col4"; //$NON-NLS-1$
     private final static String PREFS_THREAD_COL_NAME = "threadPanel.Col5"; //$NON-NLS-1$
-    
+
     private final static String PREFS_THREAD_SASH = "threadPanel.sash"; //$NON-NLS-1$
 
     private static final String PREFS_STACK_COL_CLASS = "threadPanel.stack.col0"; //$NON-NLS-1$
@@ -76,12 +76,12 @@ public class ThreadPanel extends TablePanel {
     private static final String PREFS_STACK_COL_FILE = "threadPanel.stack.col2"; //$NON-NLS-1$
     private static final String PREFS_STACK_COL_LINE = "threadPanel.stack.col3"; //$NON-NLS-1$
     private static final String PREFS_STACK_COL_NATIVE = "threadPanel.stack.col4"; //$NON-NLS-1$
-    
+
     private Display mDisplay;
     private Composite mBase;
     private Label mNotEnabled;
     private Label mNotSelected;
-    
+
     private Composite mThreadBase;
     private Table mThreadTable;
     private TableViewer mThreadViewer;
@@ -104,12 +104,13 @@ public class ThreadPanel extends TablePanel {
         "wait", "init", "start", "native", "vmwait",
         "suspended"
     };
-    
+
     /**
      * Content Provider to display the threads of a client.
      * Expected input is a {@link Client} object.
      */
     private static class ThreadContentProvider implements IStructuredContentProvider {
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof Client) {
                 return ((Client)inputElement).getClientData().getThreads();
@@ -118,15 +119,17 @@ public class ThreadPanel extends TablePanel {
             return new Object[0];
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             // pass
         }
     }
-    
+
 
     /**
      * A Label Provider to use with {@link ThreadContentProvider}. It expects the elements to be
@@ -134,10 +137,12 @@ public class ThreadPanel extends TablePanel {
      */
     private static class ThreadLabelProvider implements ITableLabelProvider {
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             return null;
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof ThreadInfo) {
                 ThreadInfo thread = (ThreadInfo)element;
@@ -163,19 +168,23 @@ public class ThreadPanel extends TablePanel {
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // pass
         }
 
+        @Override
         public void dispose() {
             // pass
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             // pass
             return false;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // pass
         }
@@ -205,7 +214,7 @@ public class ThreadPanel extends TablePanel {
         // base composite for selected client with enabled thread update.
         mThreadBase = new Composite(mBase, SWT.NONE);
         mThreadBase.setLayout(new FormLayout());
-        
+
         // table above the sash
         mThreadTable = new Table(mThreadBase, SWT.MULTI | SWT.FULL_SELECTION);
         mThreadTable.setHeaderVisible(true);
@@ -252,35 +261,37 @@ public class ThreadPanel extends TablePanel {
                 SWT.LEFT,
                 "android.class.ReallyLongClassName.MethodName", //$NON-NLS-1$
                 PREFS_THREAD_COL_NAME, store);
-        
+
         mThreadViewer = new TableViewer(mThreadTable);
         mThreadViewer.setContentProvider(new ThreadContentProvider());
         mThreadViewer.setLabelProvider(new ThreadLabelProvider());
 
         mThreadViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ThreadInfo selectedThread = getThreadSelection(event.getSelection());
                 updateThreadStackTrace(selectedThread);
             }
         });
         mThreadViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 ThreadInfo selectedThread = getThreadSelection(event.getSelection());
                 if (selectedThread != null) {
                     Client client = (Client)mThreadViewer.getInput();
-                    
+
                     if (client != null) {
                         client.requestThreadStackTrace(selectedThread.getThreadId());
                     }
                 }
             }
         });
-        
+
         // the separating sash
         final Sash sash = new Sash(mThreadBase, SWT.HORIZONTAL);
         Color darkGray = parent.getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
         sash.setBackground(darkGray);
-        
+
         // the UI below the sash
         mStackTraceBase = new Composite(mThreadBase, SWT.NONE);
         mStackTraceBase.setLayout(new GridLayout(2, false));
@@ -299,7 +310,7 @@ public class ThreadPanel extends TablePanel {
                 }
             }
         });
-        
+
         mStackTraceTimeLabel = new Label(mStackTraceBase, SWT.NONE);
         mStackTraceTimeLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -311,11 +322,11 @@ public class ThreadPanel extends TablePanel {
                 PREFS_STACK_COL_LINE,
                 PREFS_STACK_COL_NATIVE,
                 store);
-        
+
         GridData gd;
         mStackTraceTable.setLayoutData(gd = new GridData(GridData.FILL_BOTH));
         gd.horizontalSpan = 2;
-        
+
         // now setup the sash.
         // form layout data
         FormData data = new FormData();
@@ -344,6 +355,7 @@ public class ThreadPanel extends TablePanel {
 
         // allow resizes, but cap at minPanelWidth
         sash.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 Rectangle sashRect = sash.getBounds();
                 Rectangle panelRect = mThreadBase.getClientArea();
@@ -361,7 +373,7 @@ public class ThreadPanel extends TablePanel {
 
         return mBase;
     }
-    
+
     /**
      * Sets the focus to the proper control inside the panel.
      */
@@ -383,12 +395,14 @@ public class ThreadPanel extends TablePanel {
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if (client == getCurrentClient()) {
             if ((changeMask & Client.CHANGE_THREAD_MODE) != 0 ||
                     (changeMask & Client.CHANGE_THREAD_DATA) != 0) {
                 try {
                     mThreadTable.getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             clientSelected();
                         }
@@ -399,6 +413,7 @@ public class ThreadPanel extends TablePanel {
             } else if ((changeMask & Client.CHANGE_THREAD_STACKTRACE) != 0) {
                 try {
                     mThreadTable.getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             updateThreadStackCall();
                         }
@@ -430,7 +445,7 @@ public class ThreadPanel extends TablePanel {
         }
 
         Client client = getCurrentClient();
-        
+
         mStackTracePanel.setCurrentClient(client);
 
         if (client != null) {
@@ -462,7 +477,7 @@ public class ThreadPanel extends TablePanel {
 
         mBase.layout();
     }
-    
+
     /**
      * Updates the stack call of the currently selected thread.
      * <p/>
@@ -473,7 +488,7 @@ public class ThreadPanel extends TablePanel {
         if (client != null) {
             // get the current selection in the ThreadTable
             ThreadInfo selectedThread = getThreadSelection(null);
-            
+
             if (selectedThread != null) {
                 updateThreadStackTrace(selectedThread);
             } else {
@@ -481,7 +496,7 @@ public class ThreadPanel extends TablePanel {
             }
         }
     }
-    
+
     /**
      * updates the stackcall of the specified thread. If <code>null</code> the UI is emptied
      * of current data.
@@ -489,7 +504,7 @@ public class ThreadPanel extends TablePanel {
      */
     private void updateThreadStackTrace(ThreadInfo thread) {
         mStackTracePanel.setViewerInput(thread);
-        
+
         if (thread != null) {
             mRefreshStackTraceButton.setEnabled(true);
             long stackcallTime = thread.getStackCallTime();
@@ -521,6 +536,7 @@ public class ThreadPanel extends TablePanel {
         int initialWait = 1000;
 
         mDisplay.timerExec(initialWait, new Runnable() {
+            @Override
             public void run() {
                 synchronized (mLock) {
                     // lets check we still want updates.
@@ -545,7 +561,7 @@ public class ThreadPanel extends TablePanel {
             }
         });
     }
-    
+
     /**
      * Returns the current thread selection or <code>null</code> if none is found.
      * If a {@link ISelection} object is specified, the first {@link ThreadInfo} from this selection
@@ -557,7 +573,7 @@ public class ThreadPanel extends TablePanel {
         if (selection == null) {
             selection = mThreadViewer.getSelection();
         }
-        
+
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection structuredSelection = (IStructuredSelection)selection;
             Object object = structuredSelection.getFirstElement();
@@ -565,7 +581,7 @@ public class ThreadPanel extends TablePanel {
                 return (ThreadInfo)object;
             }
         }
-        
+
         return null;
     }
 

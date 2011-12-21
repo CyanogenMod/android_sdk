@@ -113,6 +113,7 @@ class DynamicContextMenu {
         // them at the beginning of the menu.
         final int numStaticActions = mMenuManager.getSize();
         mMenuManager.addMenuListener(new IMenuListener() {
+            @Override
             public void menuAboutToShow(IMenuManager manager) {
 
                 // Remove any previous dynamic contributions to keep only the
@@ -379,6 +380,7 @@ class DynamicContextMenu {
             public void run() {
                 String label = createActionLabel(action, nodes);
                 mEditor.wrapUndoEditXmlModel(label, new Runnable() {
+                    @Override
                     public void run() {
                         action.getCallback().action(action, nodes,
                                 null/* no valueId for a toggle */, !isChecked);
@@ -398,6 +400,7 @@ class DynamicContextMenu {
             public void run() {
                 String label = createActionLabel(action, nodes);
                 mEditor.wrapUndoEditXmlModel(label, new Runnable() {
+                    @Override
                     public void run() {
                         action.getCallback().action(action, nodes, null,
                                 Boolean.TRUE);
@@ -566,6 +569,7 @@ class DynamicContextMenu {
                     public void run() {
                         String label = createActionLabel(mParentAction, mNodes);
                         mEditor.wrapUndoEditXmlModel(label, new Runnable() {
+                            @Override
                             public void run() {
                                 mParentAction.getCallback().action(mParentAction, mNodes, id,
                                         Boolean.TRUE);

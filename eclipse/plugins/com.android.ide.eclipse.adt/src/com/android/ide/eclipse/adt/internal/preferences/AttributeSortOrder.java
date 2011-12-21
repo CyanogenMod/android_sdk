@@ -51,6 +51,7 @@ public enum AttributeSortOrder {
 
     /** Comparator which can be used to sort attributes in the coding style priority order */
     private static final Comparator<Attr> SORTED_ORDER_COMPARATOR = new Comparator<Attr>() {
+        @Override
         public int compare(Attr attr1, Attr attr2) {
             // Namespace declarations should always go first
             if (XMLNS.equals(attr1.getPrefix())) {
@@ -73,6 +74,7 @@ public enum AttributeSortOrder {
      * (which is not the same as the node map iteration order in the DOM model)
      */
     private static final Comparator<Attr> EXISTING_ORDER_COMPARATOR = new Comparator<Attr>() {
+        @Override
         public int compare(Attr attr1, Attr attr2) {
             IndexedRegion region1 = (IndexedRegion) attr1;
             IndexedRegion region2 = (IndexedRegion) attr2;
@@ -86,6 +88,7 @@ public enum AttributeSortOrder {
      * is always first)
      */
     private static final Comparator<Attr> ALPHABETICAL_COMPARATOR = new Comparator<Attr>() {
+        @Override
         public int compare(Attr attr1, Attr attr2) {
             // Namespace declarations should always go first
             if (XMLNS.equals(attr1.getPrefix())) {

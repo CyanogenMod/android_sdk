@@ -67,6 +67,7 @@ public class ResourceContentProvider implements ITreeContentProvider {
         mFullLevels = fullLevels;
     }
 
+    @Override
     public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof ResourceType) {
             Object[] array = mResources.getResourceItemsOfType(
@@ -79,11 +80,13 @@ public class ResourceContentProvider implements ITreeContentProvider {
         return null;
     }
 
+    @Override
     public Object getParent(Object element) {
         // pass
         return null;
     }
 
+    @Override
     public boolean hasChildren(Object element) {
         if (element instanceof ResourceType) {
             return mResources.hasResourcesOfType((ResourceType)element);
@@ -93,6 +96,7 @@ public class ResourceContentProvider implements ITreeContentProvider {
         return false;
     }
 
+    @Override
     public Object[] getElements(Object inputElement) {
         if (inputElement instanceof ResourceRepository) {
             if ((ResourceRepository)inputElement == mResources) {
@@ -106,10 +110,12 @@ public class ResourceContentProvider implements ITreeContentProvider {
         return new Object[0];
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         if (newInput instanceof ResourceRepository) {
              mResources = (ResourceRepository)newInput;

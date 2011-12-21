@@ -131,6 +131,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *
      * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
      */
+    @Override
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
         String wordPrefix = extractElementPrefix(viewer, offset);
 
@@ -360,6 +361,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
             System.arraycopy(elements, 0, copy, 0, elements.length);
 
             Arrays.sort(copy, new Comparator<ElementDescriptor>() {
+                @Override
                 public int compare(ElementDescriptor e1, ElementDescriptor e2) {
                     return e1.getXmlLocalName().compareTo(e2.getXmlLocalName());
                 }
@@ -845,6 +847,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
         return getRootDescriptor().findChildrenDescriptor(nodeName, true /* recursive */);
     }
 
+    @Override
     public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
         return null;
     }
@@ -858,18 +861,22 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      * @return the auto activation characters for completion proposal or <code>null</code>
      *      if no auto activation is desired
      */
+    @Override
     public char[] getCompletionProposalAutoActivationCharacters() {
         return new char[]{ '<', ':', '=' };
     }
 
+    @Override
     public char[] getContextInformationAutoActivationCharacters() {
         return null;
     }
 
+    @Override
     public IContextInformationValidator getContextInformationValidator() {
         return null;
     }
 
+    @Override
     public String getErrorMessage() {
         return null;
     }

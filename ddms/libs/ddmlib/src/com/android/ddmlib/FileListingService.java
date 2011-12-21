@@ -116,10 +116,11 @@ public final class FileListingService {
          * Comparator object for FileEntry
          */
         private static Comparator<FileEntry> sEntryComparator = new Comparator<FileEntry>() {
+            @Override
             public int compare(FileEntry o1, FileEntry o2) {
                 if (o1 instanceof FileEntry && o2 instanceof FileEntry) {
-                    FileEntry fe1 = (FileEntry)o1;
-                    FileEntry fe2 = (FileEntry)o2;
+                    FileEntry fe1 = o1;
+                    FileEntry fe2 = o2;
                     return fe1.name.compareTo(fe2.name);
                 }
                 return 0;
@@ -569,6 +570,7 @@ public final class FileListingService {
             return null;
         }
 
+        @Override
         public boolean isCancelled() {
             return false;
         }
@@ -696,6 +698,7 @@ public final class FileListingService {
                                     }
                                 }
                             }
+                            @Override
                             public boolean isCancelled() {
                                 return false;
                             }

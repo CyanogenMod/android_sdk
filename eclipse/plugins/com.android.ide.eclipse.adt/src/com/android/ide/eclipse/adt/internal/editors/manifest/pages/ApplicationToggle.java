@@ -21,8 +21,8 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils
 import com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor;
 import com.android.ide.eclipse.adt.internal.editors.ui.UiElementPart;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.UiUpdateState;
+import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 
 import org.eclipse.swt.SWT;
@@ -161,6 +161,7 @@ final class ApplicationToggle extends UiElementPart {
                             ? "Create or restore Application node"
                             : "Remove Application node",
                         new Runnable() {
+                            @Override
                             public void run() {
                                 if (mCheckbox.getSelection()) {
                                     // The user wants an <application> node.
@@ -288,6 +289,7 @@ final class ApplicationToggle extends UiElementPart {
      * actual presence of the application XML node.
      */
     private class AppNodeUpdateListener implements IUiUpdateListener {
+        @Override
         public void uiElementNodeUpdated(UiElementNode ui_node, UiUpdateState state) {
             // The UiElementNode for the application XML node always exists, even
             // if there is no corresponding XML node in the XML file.

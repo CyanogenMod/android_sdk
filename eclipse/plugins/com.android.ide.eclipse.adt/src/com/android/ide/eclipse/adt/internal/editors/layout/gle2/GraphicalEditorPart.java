@@ -282,6 +282,7 @@ public class GraphicalEditorPart extends EditorPart
         }
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon("editor_page_design");  //$NON-NLS-1$
     }
@@ -375,6 +376,7 @@ public class GraphicalEditorPart extends EditorPart
      * Selection can be null, as indicated by this class implementing
      * {@link INullSelectionListener}.
      */
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (!(part instanceof LayoutEditor)) {
             if (part instanceof PageBookView) {
@@ -434,6 +436,7 @@ public class GraphicalEditorPart extends EditorPart
          * Looks for a file matching the new {@link FolderConfiguration} and attempts to open it.
          * <p/>If there is no match, notify the user.
          */
+        @Override
         public void onConfigurationChange() {
             mConfiguredFrameworkRes = mConfiguredProjectRes = null;
             mResourceResolver = null;
@@ -509,6 +512,7 @@ public class GraphicalEditorPart extends EditorPart
             reloadPalette();
         }
 
+        @Override
         public void onThemeChange() {
             // Store the state in the current file
             mConfigComposite.storeState();
@@ -519,6 +523,7 @@ public class GraphicalEditorPart extends EditorPart
             reloadPalette();
         }
 
+        @Override
         public void onCreate() {
             LayoutCreatorDialog dialog = new LayoutCreatorDialog(mConfigComposite.getShell(),
                     mEditedFile.getName(), mConfigComposite.getCurrentConfig());
@@ -530,10 +535,12 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
+        @Override
         public void onRenderingTargetPreChange(IAndroidTarget oldTarget) {
             preRenderingTargetChangeCleanUp(oldTarget);
         }
 
+        @Override
         public void onRenderingTargetPostChange(IAndroidTarget target) {
             AndroidTargetData targetData = Sdk.getCurrent().getTargetData(target);
             updateCapabilities(targetData);
@@ -541,6 +548,7 @@ public class GraphicalEditorPart extends EditorPart
             mPalette.reloadPalette(target);
         }
 
+        @Override
         public Map<ResourceType, Map<String, ResourceValue>> getConfiguredFrameworkResources() {
             if (mConfiguredFrameworkRes == null && mConfigComposite != null) {
                 ResourceRepository frameworkRes = getFrameworkResources();
@@ -557,6 +565,7 @@ public class GraphicalEditorPart extends EditorPart
             return mConfiguredFrameworkRes;
         }
 
+        @Override
         public Map<ResourceType, Map<String, ResourceValue>> getConfiguredProjectResources() {
             if (mConfiguredProjectRes == null && mConfigComposite != null) {
                 ProjectResources project = getProjectResources();
@@ -574,6 +583,7 @@ public class GraphicalEditorPart extends EditorPart
          * configuration selection.
          * @return the framework resources or null if not found.
          */
+        @Override
         public ResourceRepository getFrameworkResources() {
             return getFrameworkResources(getRenderingTarget());
         }
@@ -584,6 +594,7 @@ public class GraphicalEditorPart extends EditorPart
          * @param target the target for which to return the framework resources.
          * @return the framework resources or null if not found.
          */
+        @Override
         public ResourceRepository getFrameworkResources(IAndroidTarget target) {
             if (target != null) {
                 AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
@@ -596,6 +607,7 @@ public class GraphicalEditorPart extends EditorPart
             return null;
         }
 
+        @Override
         public ProjectResources getProjectResources() {
             if (mEditedFile != null) {
                 ResourceManager manager = ResourceManager.getInstance();
@@ -661,39 +673,48 @@ public class GraphicalEditorPart extends EditorPart
                         // We use a progress monitor to catch the end of the refresh
                         // to trigger the edit of the new file.
                         res.refreshLocal(IResource.DEPTH_INFINITE, new IProgressMonitor() {
+                            @Override
                             public void done() {
                                 mConfigComposite.getDisplay().asyncExec(new Runnable() {
+                                    @Override
                                     public void run() {
                                         onConfigurationChange();
                                     }
                                 });
                             }
 
+                            @Override
                             public void beginTask(String name, int totalWork) {
                                 // pass
                             }
 
+                            @Override
                             public void internalWorked(double work) {
                                 // pass
                             }
 
+                            @Override
                             public boolean isCanceled() {
                                 // pass
                                 return false;
                             }
 
+                            @Override
                             public void setCanceled(boolean value) {
                                 // pass
                             }
 
+                            @Override
                             public void setTaskName(String name) {
                                 // pass
                             }
 
+                            @Override
                             public void subTask(String name) {
                                 // pass
                             }
 
+                            @Override
                             public void worked(int work) {
                                 // pass
                             }
@@ -728,12 +749,14 @@ public class GraphicalEditorPart extends EditorPart
          * out to fit the content, or zoom back in if we were zoomed out more from the
          * previous view, but only up to 100% such that we never blow up pixels
          */
+        @Override
         public void onDevicePostChange() {
             if (mActionBar.isZoomingAllowed()) {
                 getCanvasControl().setFitScale(true);
             }
         }
 
+        @Override
         public String getIncludedWithin() {
             return mIncludedWithin != null ? mIncludedWithin.getName() : null;
         }
@@ -744,12 +767,14 @@ public class GraphicalEditorPart extends EditorPart
      */
     private class TargetListener implements ITargetChangeListener {
 
+        @Override
         public void onProjectTargetChange(IProject changedProject) {
             if (changedProject != null && changedProject.equals(getProject())) {
                 updateEditor();
             }
         }
 
+        @Override
         public void onTargetLoaded(IAndroidTarget loadedTarget) {
             IAndroidTarget target = getRenderingTarget();
             if (target != null && target.equals(loadedTarget)) {
@@ -757,6 +782,7 @@ public class GraphicalEditorPart extends EditorPart
             }
         }
 
+        @Override
         public void onSdkLoaded() {
             // get the current rendering target to unload it
             IAndroidTarget oldTarget = getRenderingTarget();
@@ -1461,12 +1487,14 @@ public class GraphicalEditorPart extends EditorPart
         /**
          * Called when the file changes triggered a redraw of the layout
          */
+        @Override
         public void reloadLayout(final ChangeFlags flags, final boolean libraryChanged) {
             if (mConfigComposite.isDisposed()) {
                 return;
             }
             Display display = mConfigComposite.getDisplay();
             display.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     reloadLayoutSwt(flags, libraryChanged);
                 }

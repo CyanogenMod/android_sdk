@@ -16,7 +16,6 @@
 
 package com.android.ide.eclipse.ddms;
 
-import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.AllocTrackerView;
 import com.android.ide.eclipse.ddms.views.DeviceView;
 import com.android.ide.eclipse.ddms.views.EmulatorControlView;
@@ -33,6 +32,7 @@ public class Perspective implements IPerspectiveFactory {
 
     public static String ID = "com.android.ide.eclipse.ddms.Perspective"; //$NON-NLS-1$
 
+    @Override
     public void createInitialLayout(IPageLayout layout) {
         // create a default layout that looks like the stand alone DDMS.
 

@@ -16,12 +16,12 @@
 
 package com.android.ddmuilib.handler;
 
-import com.android.ddmlib.SyncException;
-import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.ClientData.IHprofDumpHandler;
 import com.android.ddmlib.ClientData.IMethodProfilingHandler;
+import com.android.ddmlib.SyncException;
+import com.android.ddmlib.SyncService;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmuilib.SyncProgressHelper;
 import com.android.ddmuilib.SyncProgressHelper.SyncRunnable;
 
@@ -78,11 +78,13 @@ public abstract class BaseFileHandler {
         final String localFilePath = fileDialog.open();
         if (localFilePath != null) {
             SyncProgressHelper.run(new SyncRunnable() {
+                @Override
                 public void run(ISyncProgressMonitor monitor) throws SyncException, IOException,
                         TimeoutException {
                     sync.pullFile(remoteFilePath, localFilePath, monitor);
                 }
 
+                @Override
                 public void close() {
                     sync.close();
                 }
@@ -131,6 +133,7 @@ public abstract class BaseFileHandler {
      */
     protected void displayErrorInUiThread(final String format, final Object... args) {
         mParentShell.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 MessageDialog.openError(mParentShell, getDialogTitle(),
                         String.format(format, args));

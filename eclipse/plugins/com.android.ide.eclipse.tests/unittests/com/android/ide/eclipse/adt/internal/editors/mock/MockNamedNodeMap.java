@@ -55,10 +55,12 @@ class MockNamedNodeMap implements NamedNodeMap {
 
     // --------- NamedNodeMap -------
 
+    @Override
     public int getLength() {
         return mNodeList.size();
     }
 
+    @Override
     public Node getNamedItem(String name) {
         HashMap<String, Node> map = mNodeMap.get(""); // no namespace
         if (map != null) {
@@ -68,6 +70,7 @@ class MockNamedNodeMap implements NamedNodeMap {
         return null;
     }
 
+    @Override
     public Node getNamedItemNS(String namespaceURI, String localName) throws DOMException {
         if (namespaceURI == null) {
             namespaceURI = ""; //no namespace
@@ -81,22 +84,27 @@ class MockNamedNodeMap implements NamedNodeMap {
         return null;
     }
 
+    @Override
     public Node item(int index) {
         return mNodeList.get(index);
     }
 
+    @Override
     public Node removeNamedItem(String name) throws DOMException {
         throw new UnsupportedOperationException("Operation not implemented.");  //$NON-NLS-1$
     }
 
+    @Override
     public Node removeNamedItemNS(String namespaceURI, String localName) throws DOMException {
         throw new UnsupportedOperationException("Operation not implemented.");  //$NON-NLS-1$
     }
 
+    @Override
     public Node setNamedItem(Node arg) throws DOMException {
         throw new UnsupportedOperationException("Operation not implemented.");  //$NON-NLS-1$
     }
 
+    @Override
     public Node setNamedItemNS(Node arg) throws DOMException {
         throw new UnsupportedOperationException("Operation not implemented.");  //$NON-NLS-1$
     }

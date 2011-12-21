@@ -129,6 +129,7 @@ public class StaticPortConfigDialog extends Dialog {
         mShell.setLayout(new GridLayout(1, true));
 
         mShell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 event.doit = true;
             }

@@ -283,9 +283,11 @@ public abstract class AndroidTextEditor extends FormEditor implements IResourceC
      * Closes all project files on project close.
      * @see IResourceChangeListener
      */
+    @Override
     public void resourceChanged(final IResourceChangeEvent event) {
         if (event.getType() == IResourceChangeEvent.PRE_CLOSE) {
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     IWorkbenchPage[] pages = getSite().getWorkbenchWindow()
                             .getPages();
@@ -502,10 +504,12 @@ public abstract class AndroidTextEditor extends FormEditor implements IResourceC
             mDocument = provider.getDocument(getEditorInput());
 
             mDocument.addDocumentListener(new IDocumentListener() {
+                @Override
                 public void documentChanged(DocumentEvent event) {
                     onDocumentChanged(event);
                 }
 
+                @Override
                 public void documentAboutToBeChanged(DocumentEvent event) {
                     // ignore
                 }

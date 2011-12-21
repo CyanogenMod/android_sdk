@@ -85,10 +85,12 @@ public class ApiDemosRenderingTest extends SdkTestCase {
          * Since we're not going to go through the result of the rendering/layout, we can return
          * null for the View Key.
          */
+        @Override
         public Object getViewCookie() {
             return null;
         }
 
+        @Override
         public ILayoutPullParser getParser(String layoutName) {
             return null;
         }
@@ -108,11 +110,13 @@ public class ApiDemosRenderingTest extends SdkTestCase {
 
         private boolean mCustomViewAttempt = false;
 
+        @Override
         public String getNamespace() {
             // TODO: read from the ApiDemos manifest.
             return "com.example.android.apis";
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public Object loadView(String name, Class[] constructorSignature, Object[] constructorArgs)
                 throws ClassNotFoundException, Exception {
@@ -120,24 +124,29 @@ public class ApiDemosRenderingTest extends SdkTestCase {
             return null;
         }
 
+        @Override
         public Integer getResourceId(ResourceType type, String name) {
             Integer result = ++mIdCounter;
             mResourceMap.put(result, Pair.of(type, name));
             return result;
         }
 
+        @Override
         public Pair<ResourceType, String> resolveResourceId(int id) {
             return mResourceMap.get(id);
         }
 
+        @Override
         public String resolveResourceId(int[] id) {
             return null;
         }
 
+        @Override
         public ILayoutPullParser getParser(String layoutName) {
             return null;
         }
 
+        @Override
         public Object getAdapterItemValue(ResourceReference adapterView, Object adapterCookie,
                 ResourceReference itemRef, int fullPosition, int typePosition,
                 int fullChildPosition, int typeChildPosition,
@@ -145,11 +154,13 @@ public class ApiDemosRenderingTest extends SdkTestCase {
             return null;
         }
 
+        @Override
         public AdapterBinding getAdapterBinding(ResourceReference adapterView,
                 Object adapterCookie, Object viewObject) {
             return null;
         }
 
+        @Override
         public ILayoutPullParser getParser(ResourceValue layoutResource) {
             return null;
         }

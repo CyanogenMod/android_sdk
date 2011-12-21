@@ -30,10 +30,12 @@ import java.util.Date;
  */
 public class TrackLabelProvider implements ITableLabelProvider {
 
+    @Override
     public Image getColumnImage(Object element, int columnIndex) {
         return null;
     }
 
+    @Override
     public String getColumnText(Object element, int columnIndex) {
         if (element instanceof Track) {
             Track track = (Track)element;
@@ -62,19 +64,23 @@ public class TrackLabelProvider implements ITableLabelProvider {
         return null;
     }
 
+    @Override
     public void addListener(ILabelProviderListener listener) {
         // pass
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         // pass
         return false;
     }
 
+    @Override
     public void removeListener(ILabelProviderListener listener) {
         // pass
     }

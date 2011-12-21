@@ -57,7 +57,7 @@ public final class ThreadInfo implements IStackTraceInfo {
         mStime = stime;
         mIsDaemon = isDaemon;
     }
-    
+
     /**
      * Sets the stack call of the thread.
      * @param trace stackcall information.
@@ -80,7 +80,7 @@ public final class ThreadInfo implements IStackTraceInfo {
     public String getThreadName() {
         return mThreadName;
     }
-    
+
     void setThreadName(String name) {
         mThreadName = name;
     }
@@ -124,6 +124,7 @@ public final class ThreadInfo implements IStackTraceInfo {
      * (non-Javadoc)
      * @see com.android.ddmlib.IStackTraceInfo#getStackTrace()
      */
+    @Override
     public StackTraceElement[] getStackTrace() {
         return mTrace;
     }

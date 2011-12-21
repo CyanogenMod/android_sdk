@@ -43,6 +43,7 @@ public class LibraryDeltaVisitor implements IResourceDeltaVisitor {
         return mLibChange;
     }
 
+    @Override
     public boolean visit(IResourceDelta delta) throws CoreException {
         // we are only going to look for changes in res/
         // Since the delta visitor goes through the main

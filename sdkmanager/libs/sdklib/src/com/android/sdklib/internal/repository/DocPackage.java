@@ -121,6 +121,7 @@ public class DocPackage extends Package implements IPackageVersion {
      * Returns the version, for platform, add-on and doc packages.
      * Can be 0 if this is a local package of unknown api-level.
      */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }

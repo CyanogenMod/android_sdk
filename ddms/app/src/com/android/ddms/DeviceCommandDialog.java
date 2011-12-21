@@ -139,6 +139,7 @@ public class DeviceCommandDialog extends Dialog {
         shell.setLayout(new GridLayout(2, true));
 
         shell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 if (!mFinished) {
                     Log.d("ddms", "NOT closing - cancelling command");
@@ -272,6 +273,7 @@ public class DeviceCommandDialog extends Dialog {
             }
 
             mShell.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     updateForResult(mResult);
                 }
@@ -281,6 +283,7 @@ public class DeviceCommandDialog extends Dialog {
         /**
          * Called by executeRemoteCommand().
          */
+        @Override
         public void addOutput(byte[] data, int offset, int length) {
 
             Log.v("ddms", "received " + length + " bytes");
@@ -290,6 +293,7 @@ public class DeviceCommandDialog extends Dialog {
 
                 // add to text widget; must do in UI thread
                 mText.getDisplay().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         mText.append(text);
                     }
@@ -300,6 +304,7 @@ public class DeviceCommandDialog extends Dialog {
             }
         }
 
+        @Override
         public void flush() {
             // nothing to flush.
         }
@@ -307,6 +312,7 @@ public class DeviceCommandDialog extends Dialog {
         /**
          * Called by executeRemoteCommand().
          */
+        @Override
         public boolean isCancelled() {
             return mCancel;
         }

@@ -98,6 +98,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             mSuggestedName = suggestedName;
         }
 
+        @Override
         public void createControl(Composite parent) {
             initialize();
 
@@ -160,6 +161,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             mCheckedView.setCheckedElements(initialSelection);
 
             mCheckedView.addCheckStateListener(new ICheckStateListener() {
+                @Override
                 public void checkStateChanged(CheckStateChangedEvent event) {
                     // Try to disable other elements that conflict with this
                     boolean isChecked = event.getChecked();
@@ -238,6 +240,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             // Sort the items by attribute name -- the attribute name is the key
             // in the entry set above.
             Collections.sort(mRoot, new Comparator<Map.Entry<String, List<Attr>>>() {
+                @Override
                 public int compare(Map.Entry<String, List<Attr>> e1,
                         Map.Entry<String, List<Attr>> e2) {
                     return e1.getKey().compareTo(e2.getKey());
@@ -267,6 +270,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 // wizard.
                 List<Attr> attrList = entry.getValue();
                 Collections.sort(attrList, new Comparator<Attr>() {
+                    @Override
                     public int compare(Attr a1, Attr a2) {
                         return a1.getValue().compareTo(a2.getValue());
                     }
@@ -299,6 +303,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 // Sort the values by frequency (and for equal frequencies, alphabetically
                 // by value)
                 Collections.sort(uniqueValueAttrs, new Comparator<Attr>() {
+                    @Override
                     public int compare(Attr a1, Attr a2) {
                         Integer f1 = mFrequencyCount.get(a1);
                         Integer f2 = mFrequencyCount.get(a2);
@@ -406,6 +411,7 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
             public ArgumentContentProvider() {
             }
 
+            @Override
             public Object[] getElements(Object inputElement) {
                 if (inputElement == mRoot) {
                     return mAllAttributes.toArray();
@@ -414,9 +420,11 @@ class ExtractStyleWizard extends VisualRefactoringWizard {
                 return new Object[0];
             }
 
+            @Override
             public void dispose() {
             }
 
+            @Override
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             }
         }

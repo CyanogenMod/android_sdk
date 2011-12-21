@@ -314,6 +314,7 @@ public class UiResourceAttributeNode extends UiTextAttributeNode {
             List<String> choices) {
         final IAttributeInfo attributeInfo = descriptor.getAttributeInfo();
         Collections.sort(choices, new Comparator<String>() {
+            @Override
             public int compare(String s1, String s2) {
                 int compare = score(attributeInfo, s1) - score(attributeInfo, s2);
                 if (compare == 0) {

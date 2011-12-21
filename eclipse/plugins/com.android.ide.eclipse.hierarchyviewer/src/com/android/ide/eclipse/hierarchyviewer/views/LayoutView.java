@@ -131,12 +131,15 @@ public class LayoutView extends ViewPart implements ITreeChangeListener {
         mLayoutViewer.setFocus();
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mLoadAllViewsAction.setEnabled(TreeViewModel.getModel().getTree() != null);
                 mShowExtrasAction.setEnabled(TreeViewModel.getModel().getTree() != null);
@@ -144,10 +147,12 @@ public class LayoutView extends ViewPart implements ITreeChangeListener {
         });
     }
 
+    @Override
     public void viewportChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

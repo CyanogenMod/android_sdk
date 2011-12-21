@@ -48,14 +48,17 @@ public class IFolderWrapper implements IAbstractFolder {
         mContainer = container;
     }
 
+    @Override
     public String getName() {
         return mContainer.getName();
     }
 
+    @Override
     public boolean exists() {
         return mContainer.exists();
     }
 
+    @Override
     public boolean delete() {
         try {
             mContainer.delete(true /*force*/, new NullProgressMonitor());
@@ -66,6 +69,7 @@ public class IFolderWrapper implements IAbstractFolder {
     }
 
 
+    @Override
     public IAbstractResource[] listMembers() {
         try {
             IResource[] members = mContainer.members();
@@ -89,6 +93,7 @@ public class IFolderWrapper implements IAbstractFolder {
         return new IAbstractResource[0];
     }
 
+    @Override
     public boolean hasFile(String name) {
         try {
             IResource[] files = mContainer.members();
@@ -104,6 +109,7 @@ public class IFolderWrapper implements IAbstractFolder {
         return false;
     }
 
+    @Override
     public IAbstractFile getFile(String name) {
         if (mFolder != null) {
             IFile file = mFolder.getFile(name);
@@ -140,6 +146,7 @@ public class IFolderWrapper implements IAbstractFolder {
         return mContainer.hashCode();
     }
 
+    @Override
     public IAbstractFolder getFolder(String name) {
         if (mFolder != null) {
             IFolder folder = mFolder.getFolder(name);
@@ -150,10 +157,12 @@ public class IFolderWrapper implements IAbstractFolder {
         return new IFolderWrapper(folder);
     }
 
+    @Override
     public String getOsLocation() {
         return mContainer.getLocation().toOSString();
     }
 
+    @Override
     public String[] list(FilenameFilter filter) {
         try {
             IResource[] members = mContainer.members();
@@ -174,6 +183,7 @@ public class IFolderWrapper implements IAbstractFolder {
         return new String[0];
     }
 
+    @Override
     public IAbstractFolder getParentFolder() {
         IContainer p = mContainer.getParent();
         if (p != null) {

@@ -133,6 +133,7 @@ public class SelectionHandles implements Iterable<SelectionHandle> {
     }
 
     // Implements Iterable<SelectionHandle>
+    @Override
     public Iterator<SelectionHandle> iterator() {
         return mHandles.iterator();
     }

@@ -81,6 +81,7 @@ class UiElementDetail implements IDetailsPage {
     /* (non-java doc)
      * Initializes the part.
      */
+    @Override
     public void initialize(IManagedForm form) {
         mManagedForm = form;
     }
@@ -88,6 +89,7 @@ class UiElementDetail implements IDetailsPage {
     /* (non-java doc)
      * Creates the contents of the page in the provided parent.
      */
+    @Override
     public void createContents(Composite parent) {
         mMasterSection = createMasterSection(parent);
     }
@@ -97,6 +99,7 @@ class UiElementDetail implements IDetailsPage {
      * <p/>
      * Only reply when our master part originates the selection.
      */
+    @Override
     public void selectionChanged(IFormPart part, ISelection selection) {
         if (part == mMasterPart &&
                 !selection.isEmpty() &&
@@ -114,9 +117,11 @@ class UiElementDetail implements IDetailsPage {
     /* (non-java doc)
      * Instructs it to commit the new (modified) data back into the model.
      */
+    @Override
     public void commit(boolean onSave) {
 
         mTree.getEditor().wrapEditXmlModel(new Runnable() {
+            @Override
             public void run() {
                 try {
                     if (mCurrentUiElementNode != null) {
@@ -132,6 +137,7 @@ class UiElementDetail implements IDetailsPage {
         });
     }
 
+    @Override
     public void dispose() {
         // pass
     }
@@ -141,6 +147,7 @@ class UiElementDetail implements IDetailsPage {
      * Returns true if the part has been modified with respect to the data
      * loaded from the model.
      */
+    @Override
     public boolean isDirty() {
         if (mCurrentUiElementNode != null && mCurrentUiElementNode.isDirty()) {
             markDirty();
@@ -148,6 +155,7 @@ class UiElementDetail implements IDetailsPage {
         return mIsDirty;
     }
 
+    @Override
     public boolean isStale() {
         // pass
         return false;
@@ -157,6 +165,7 @@ class UiElementDetail implements IDetailsPage {
      * Called by the master part when the tree is refreshed after the framework resources
      * have been reloaded.
      */
+    @Override
     public void refresh() {
         if (mCurrentTable != null) {
             mCurrentTable.dispose();
@@ -166,10 +175,12 @@ class UiElementDetail implements IDetailsPage {
         mMasterSection.getParent().pack(true /* changed */);
     }
 
+    @Override
     public void setFocus() {
         // pass
     }
 
+    @Override
     public boolean setFormInput(Object input) {
         // pass
         return false;
@@ -334,6 +345,7 @@ class UiElementDetail implements IDetailsPage {
             final HashSet<UiAttributeNode> reference = new HashSet<UiAttributeNode>();
 
             final IUiUpdateListener updateListener = new IUiUpdateListener() {
+                @Override
                 public void uiElementNodeUpdated(UiElementNode ui_node, UiUpdateState state) {
                     if (state == UiUpdateState.ATTR_UPDATED) {
                         updateUnknownAttributesSection(ui_node, unknownTable, managedForm,
@@ -345,6 +357,7 @@ class UiElementDetail implements IDetailsPage {
 
             // remove the listener when the UI is disposed
             unknownTable.addDisposeListener(new DisposeListener() {
+                @Override
                 public void widgetDisposed(DisposeEvent e) {
                     ui_node.removeUpdateListener(updateListener);
                 }
@@ -383,10 +396,12 @@ class UiElementDetail implements IDetailsPage {
         // ScrolledPageBook (which is actually a SharedScrolledComposite). This will
         // recompute the correct size and adjust the scrollbar as needed.
         section.addExpansionListener(new IExpansionListener() {
+            @Override
             public void expansionStateChanged(ExpansionEvent e) {
                 reflowMasterSection();
             }
 
+            @Override
             public void expansionStateChanging(ExpansionEvent e) {
                 // pass
             }

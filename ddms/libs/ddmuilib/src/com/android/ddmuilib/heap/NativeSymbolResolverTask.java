@@ -100,6 +100,7 @@ public class NativeSymbolResolverTask implements IRunnableWithProgress {
         mNotFoundLibraries = new HashSet<String>();
     }
 
+    @Override
     public void run(IProgressMonitor monitor)
             throws InvocationTargetException, InterruptedException {
         monitor.beginTask("Resolving symbols", IProgressMonitor.UNKNOWN);

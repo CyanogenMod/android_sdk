@@ -32,6 +32,7 @@ public class AddNativeAction implements IObjectActionDelegate {
     private IWorkbenchPart mPart;
     private ISelection mSelection;
 
+    @Override
     public void run(IAction action) {
         IProject project = null;
         if (mSelection instanceof IStructuredSelection) {
@@ -55,10 +56,12 @@ public class AddNativeAction implements IObjectActionDelegate {
 
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
 
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         mPart = targetPart;
     }

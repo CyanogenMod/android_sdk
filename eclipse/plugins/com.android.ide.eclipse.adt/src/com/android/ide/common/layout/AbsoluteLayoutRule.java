@@ -64,6 +64,7 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
         }
 
         DropFeedback df = new DropFeedback(null, new IFeedbackPainter() {
+            @Override
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 // Paint callback for the AbsoluteLayout.
                 // This is called by the canvas when a draw is needed.
@@ -156,6 +157,7 @@ public class AbsoluteLayoutRule extends BaseLayoutRule {
                 feedback.isCopy || !feedback.sameCanvas);
 
         targetNode.editXml("Add elements to AbsoluteLayout", new INodeHandler() {
+            @Override
             public void handle(INode node) {
                 boolean first = true;
                 Point offset = null;

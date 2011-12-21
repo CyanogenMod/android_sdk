@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Text;
 import java.util.List;
 
 /**
- * Key creation page. 
+ * Key creation page.
  */
 final class KeyCreationPage extends ExportWizardPage {
 
@@ -54,7 +54,7 @@ final class KeyCreationPage extends ExportWizardPage {
     private int mValidity = 0;
     private List<String> mExistingAliases;
 
-    
+
     protected KeyCreationPage(ExportWizard wizard, String pageName) {
         super(pageName);
         mWizard = wizard;
@@ -63,12 +63,13 @@ final class KeyCreationPage extends ExportWizardPage {
         setDescription(""); // TODO?
     }
 
+    @Override
     public void createControl(Composite parent) {
         Composite composite = new Composite(parent, SWT.NULL);
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
         GridLayout gl = new GridLayout(2, false);
         composite.setLayout(gl);
-        
+
         GridData gd;
 
         new Label(composite, SWT.NONE).setText("Alias:");
@@ -89,6 +90,7 @@ final class KeyCreationPage extends ExportWizardPage {
         final Text validityText = new Text(composite, SWT.BORDER);
         validityText.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         validityText.addVerifyListener(new VerifyListener() {
+            @Override
             public void verifyText(VerifyEvent e) {
                 // check for digit only.
                 for (int i = 0 ; i < e.text.length(); i++) {
@@ -104,7 +106,7 @@ final class KeyCreationPage extends ExportWizardPage {
         new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(
                 gd = new GridData(GridData.FILL_HORIZONTAL));
         gd.horizontalSpan = 2;
-        
+
         new Label(composite, SWT.NONE).setText("First and Last Name:");
         mCnField = new Text(composite, SWT.BORDER);
         mCnField.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
@@ -124,7 +126,7 @@ final class KeyCreationPage extends ExportWizardPage {
         new Label(composite, SWT.NONE).setText("State or Province:");
         mStField = new Text(composite, SWT.BORDER);
         mStField.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
-        
+
         new Label(composite, SWT.NONE).setText("Country Code (XX):");
         mCField = new Text(composite, SWT.BORDER);
         mCField.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
@@ -133,26 +135,30 @@ final class KeyCreationPage extends ExportWizardPage {
         setErrorMessage(null);
         setMessage(null);
         setControl(composite);
-        
+
         mAlias.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mWizard.setKeyAlias(mAlias.getText().trim());
                 onChange();
             }
         });
         mKeyPassword.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mWizard.setKeyPassword(mKeyPassword.getText());
                 onChange();
             }
         });
         mKeyPassword2.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 onChange();
             }
         });
-        
+
         validityText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 try {
                     mValidity = Integer.parseInt(validityText.getText());
@@ -166,11 +172,12 @@ final class KeyCreationPage extends ExportWizardPage {
         });
 
         ModifyListener dNameListener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 onDNameChange();
             }
         };
-        
+
         mCnField.addModifyListener(dNameListener);
         mOuField.addModifyListener(dNameListener);
         mOField.addModifyListener(dNameListener);
@@ -178,33 +185,33 @@ final class KeyCreationPage extends ExportWizardPage {
         mStField.addModifyListener(dNameListener);
         mCField.addModifyListener(dNameListener);
     }
-    
+
     @Override
     void onShow() {
         // fill the texts with information loaded from the project.
         if ((mProjectDataChanged & (DATA_PROJECT | DATA_KEYSTORE)) != 0) {
             // reset the keystore/alias from the content of the project
             IProject project = mWizard.getProject();
-            
+
             // disable onChange for now. we'll call it once at the end.
             mDisableOnChange = true;
-            
+
             String alias = ProjectHelper.loadStringProperty(project, ExportWizard.PROPERTY_ALIAS);
             if (alias != null) {
                 mAlias.setText(alias);
             }
-            
+
             // get the existing list of keys if applicable
             if (mWizard.getKeyCreationMode()) {
                 mExistingAliases = mWizard.getExistingAliases();
             } else {
                 mExistingAliases = null;
             }
-            
+
             // reset the passwords
             mKeyPassword.setText(""); //$NON-NLS-1$
             mKeyPassword2.setText(""); //$NON-NLS-1$
-            
+
             // enable onChange, and call it to display errors and enable/disable pageCompleted.
             mDisableOnChange = false;
             onChange();
@@ -216,7 +223,7 @@ final class KeyCreationPage extends ExportWizardPage {
         if (mWizard.getKeyCreationMode()) { // this means we create a key from an existing store
             return mWizard.getKeySelectionPage();
         }
-        
+
         return mWizard.getKeystoreSelectionPage();
     }
 
@@ -289,26 +296,26 @@ final class KeyCreationPage extends ExportWizardPage {
 
         setPageComplete(true);
     }
-    
+
     /**
      * Handles changes in the DName fields.
      */
     private void onDNameChange() {
         StringBuilder sb = new StringBuilder();
-        
+
         buildDName("CN", mCnField, sb);
         buildDName("OU", mOuField, sb);
         buildDName("O", mOField, sb);
         buildDName("L", mLField, sb);
         buildDName("ST", mStField, sb);
         buildDName("C", mCField, sb);
-        
+
         mDName = sb.toString();
         mWizard.setDName(mDName);
 
         onChange();
     }
-    
+
     /**
      * Builds the distinguished name string with the provided {@link StringBuilder}.
      * @param prefix the prefix of the entry.
@@ -322,7 +329,7 @@ final class KeyCreationPage extends ExportWizardPage {
                 if (sb.length() > 0) {
                     sb.append(",");
                 }
-                
+
                 sb.append(prefix);
                 sb.append('=');
                 sb.append(value);

@@ -39,10 +39,12 @@ public class ExportAction implements IObjectActionDelegate {
     /**
      * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
      */
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         mShell = targetPart.getSite().getShell();
     }
 
+    @Override
     public void run(IAction action) {
         if (mSelection instanceof IStructuredSelection) {
             IStructuredSelection selection = (IStructuredSelection)mSelection;
@@ -76,6 +78,7 @@ public class ExportAction implements IObjectActionDelegate {
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }

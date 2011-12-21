@@ -51,6 +51,7 @@ public final class PermissionPage extends FormPage implements IPageImageProvider
         mEditor = editor;
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon(getTitle(),
                                                  IconFactory.COLOR_RED,

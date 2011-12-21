@@ -23,10 +23,11 @@ import org.eclipse.jface.viewers.Viewer;
 
 /**
  * Content provider to display {@link Track} objects in a Table.
- * <p/>The expected type for the input is {@link Track}<code>[]</code>. 
+ * <p/>The expected type for the input is {@link Track}<code>[]</code>.
  */
 public class TrackContentProvider implements IStructuredContentProvider {
 
+    @Override
     public Object[] getElements(Object inputElement) {
         if (inputElement instanceof Track[]) {
             return (Track[])inputElement;
@@ -35,10 +36,12 @@ public class TrackContentProvider implements IStructuredContentProvider {
         return new Object[0];
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         // pass
     }

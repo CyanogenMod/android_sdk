@@ -41,6 +41,7 @@ public class DensityBasedResourceValue extends ResourceValue implements IDensity
     /** Legacy method, do not call
      * @deprecated use {@link #getResourceDensity()} instead.
      */
+    @Override
     @Deprecated
     public Density getDensity() {
         return Density.getEnum(mDensity.getDpiValue());

@@ -172,6 +172,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
 
     // ---- Implements SelectionListener ----
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mList.getTableViewer().getControl()) {
@@ -236,6 +237,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         mFixButton.setEnabled(canFix);
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mList.getTableViewer().getControl()) {

@@ -998,6 +998,7 @@ public class ConfigurationComposite extends Composite {
      * Note: this comparator imposes orderings that are inconsistent with equals.
      */
     private static class TabletConfigComparator implements Comparator<ConfigMatch> {
+        @Override
         public int compare(ConfigMatch o1, ConfigMatch o2) {
             ScreenSize ss1 = o1.testConfig.getScreenSizeQualifier().getValue();
             ScreenSize ss2 = o2.testConfig.getScreenSizeQualifier().getValue();
@@ -1049,6 +1050,7 @@ public class ConfigurationComposite extends Composite {
             mDensitySort.put(Density.LOW.getDpiValue(),    4);
         }
 
+        @Override
         public int compare(ConfigMatch o1, ConfigMatch o2) {
             int dpi1 = Density.DEFAULT_DENSITY;
             if (o1.testConfig.getDensityQualifier() != null) {
@@ -1533,6 +1535,7 @@ public class ConfigurationComposite extends Composite {
                 List<String> themeList = new ArrayList<String>(themeSet);
                 final String first = preferred;
                 Collections.sort(themeList, new Comparator<String>() {
+                    @Override
                     public int compare(String s1, String s2) {
                         if (s1 == first) {
                             return -1;

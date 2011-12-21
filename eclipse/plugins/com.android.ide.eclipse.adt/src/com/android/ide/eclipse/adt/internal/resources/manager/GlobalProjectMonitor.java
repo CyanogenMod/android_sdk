@@ -193,6 +193,7 @@ public final class GlobalProjectMonitor {
      */
     private final class DeltaVisitor implements IResourceDeltaVisitor {
 
+        @Override
         public boolean visit(IResourceDelta delta) {
             // Find the other resource listeners to notify
             IResource r = delta.getResource();
@@ -453,6 +454,7 @@ public final class GlobalProjectMonitor {
          *
          * @see IResourceChangeListener#resourceChanged(IResourceChangeEvent)
          */
+        @Override
         public synchronized void resourceChanged(IResourceChangeEvent event) {
             // notify the event listeners of a start.
             notifyResourceEventStart();

@@ -225,6 +225,7 @@ public class AdtProjectTest extends SdkTestCase {
 
 
         IRunnableContext context = new IRunnableContext() {
+            @Override
             public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable)
                     throws InvocationTargetException, InterruptedException {
                 runnable.run(new NullProgressMonitor());

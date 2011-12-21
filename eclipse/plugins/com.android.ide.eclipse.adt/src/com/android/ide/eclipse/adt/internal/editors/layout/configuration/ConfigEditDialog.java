@@ -152,6 +152,7 @@ public class ConfigEditDialog extends GridDialog {
             deviceNameText.setText(mDeviceName);
         }
         deviceNameText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mDeviceName = deviceNameText.getText().trim();
                 validateOk();
@@ -160,6 +161,7 @@ public class ConfigEditDialog extends GridDialog {
 
 
         VerifyListener floatVerifier = new VerifyListener() {
+            @Override
             public void verifyText(VerifyEvent event) {
                 // combine the current content and the new text
                 String text = ((Text)event.widget).getText();
@@ -180,6 +182,7 @@ public class ConfigEditDialog extends GridDialog {
         }
         deviceXDpiText.addVerifyListener(floatVerifier);
         deviceXDpiText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String value = deviceXDpiText.getText();
                 if (value.length() == 0) {
@@ -204,6 +207,7 @@ public class ConfigEditDialog extends GridDialog {
         }
         deviceYDpiText.addVerifyListener(floatVerifier);
         deviceYDpiText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String value = deviceYDpiText.getText();
                 if (value.length() == 0) {
@@ -232,6 +236,7 @@ public class ConfigEditDialog extends GridDialog {
             configNameText.setText(mConfigName);
         }
         configNameText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mConfigName = configNameText.getText().trim();
                 validateOk();
@@ -243,6 +248,7 @@ public class ConfigEditDialog extends GridDialog {
         // since those are selected from a different combo
         // FIXME: add version combo.
         mConfigSelector.setQualifierFilter(new IQualifierFilter() {
+            @Override
             public boolean accept(ResourceQualifier qualifier) {
                 if (qualifier instanceof LanguageQualifier ||
                         qualifier instanceof RegionQualifier ||
@@ -265,6 +271,7 @@ public class ConfigEditDialog extends GridDialog {
         // add a listener to check on the validity of the FolderConfiguration as
         // they are built.
         mConfigSelector.setOnChangeListener(new Runnable() {
+            @Override
             public void run() {
                 if (mConfigSelector.getState() == ConfigurationState.OK) {
                     mConfigSelector.getConfiguration(mConfig);

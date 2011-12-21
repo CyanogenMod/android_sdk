@@ -39,10 +39,12 @@ public class DebuggerConnector extends DevTreeProjectProvider implements IDebugg
     private final static String ATTR_CONNECT_MAP_PORT = "port"; //$NON-NLS-1$
     private final static String ATTR_CONNECT_MAP_HOSTNAME = "hostname"; //$NON-NLS-1$
 
+    @Override
     public boolean isWorkspaceApp(String appName) {
         return getProject() != null;
     }
 
+    @Override
     public boolean connectDebugger(String appName, int appPort, int selectedPort) {
         IProject project = getProject();
 

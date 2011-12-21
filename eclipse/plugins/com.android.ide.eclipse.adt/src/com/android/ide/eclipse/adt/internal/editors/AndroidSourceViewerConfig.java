@@ -169,6 +169,7 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
             mDelegate = delegate;
         }
 
+        @Override
         public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
             ICompletionProposal[] result = mDelegate.computeCompletionProposals(viewer, offset);
             if (result == null) {
@@ -203,22 +204,27 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
             }
         }
 
+        @Override
         public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
             return mDelegate.computeContextInformation(viewer, offset);
         }
 
+        @Override
         public char[] getCompletionProposalAutoActivationCharacters() {
             return mDelegate.getCompletionProposalAutoActivationCharacters();
         }
 
+        @Override
         public char[] getContextInformationAutoActivationCharacters() {
             return mDelegate.getContextInformationAutoActivationCharacters();
         }
 
+        @Override
         public IContextInformationValidator getContextInformationValidator() {
             return mDelegate.getContextInformationValidator();
         }
 
+        @Override
         public String getErrorMessage() {
             return mDelegate.getErrorMessage();
         }

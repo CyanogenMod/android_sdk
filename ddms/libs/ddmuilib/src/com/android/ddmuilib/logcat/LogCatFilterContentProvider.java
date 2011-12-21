@@ -24,9 +24,11 @@ import java.util.List;
  * A JFace content provider for logcat filter list, used in {@link LogCatPanel}.
  */
 public final class LogCatFilterContentProvider implements IStructuredContentProvider {
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
     }
 
@@ -35,6 +37,7 @@ public final class LogCatFilterContentProvider implements IStructuredContentProv
      * @param model list of {@link LogCatFilter}'s
      * @return array of {@link LogCatFilter} objects, or null.
      */
+    @Override
     public Object[] getElements(Object model) {
         if (model instanceof List<?>) {
             return ((List<?>) model).toArray();

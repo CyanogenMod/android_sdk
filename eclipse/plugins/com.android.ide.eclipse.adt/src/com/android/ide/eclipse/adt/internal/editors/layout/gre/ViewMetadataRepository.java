@@ -440,11 +440,13 @@ public class ViewMetadataRepository {
 
         // Implements Iterable<ViewData> such that we can use for-each on the category to
         // enumerate its views
+        @Override
         public Iterator<ViewData> iterator() {
             return mViews.iterator();
         }
 
         // Implements Comparable<CategoryData> such that categories can be naturally sorted
+        @Override
         public int compareTo(CategoryData other) {
             return mOrdinal - other.mOrdinal;
         }
@@ -514,6 +516,7 @@ public class ViewMetadataRepository {
         }
 
         // Implements Comparable<ViewData> such that views can be sorted naturally
+        @Override
         public int compareTo(ViewData other) {
             return mOrdinal - other.mOrdinal;
         }

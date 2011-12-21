@@ -173,6 +173,7 @@ public class PackagesPage extends UpdaterPage
         postCreate();  //$hide$
     }
 
+    @Override
     public void onPageSelected() {
         List<PkgCategory> cats = mDiffLogic.getCategories(isSortByApi());
         if (cats == null || cats.isEmpty()) {
@@ -210,12 +211,14 @@ public class PackagesPage extends UpdaterPage
         });
 
         mTreeViewer.addCheckStateListener(new ICheckStateListener() {
+            @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
                 onTreeCheckStateChanged(event); //$hide$
             }
         });
 
         mTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 onTreeDoubleClick(event); //$hide$
             }
@@ -539,6 +542,7 @@ public class PackagesPage extends UpdaterPage
         mTreeFontItalic = new Font(mTree.getDisplay(), fontData);
 
         mTree.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 mTreeFontItalic.dispose();
                 mTreeFontItalic = null;
@@ -593,6 +597,7 @@ public class PackagesPage extends UpdaterPage
 
         mDiffLogic.updateStart();
         mDiffLogic.getPackageLoader().loadPackages(new ISourceLoadedCallback() {
+            @Override
             public boolean onUpdateSource(SdkSource source, Package[] newPackages) {
                 // This runs in a thread and must not access UI directly.
                 final boolean changed = mDiffLogic.updateSourcePackages(
@@ -600,6 +605,7 @@ public class PackagesPage extends UpdaterPage
 
                 if (!mGroupPackages.isDisposed()) {
                     mGroupPackages.getDisplay().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (changed ||
                                 mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
@@ -615,12 +621,14 @@ public class PackagesPage extends UpdaterPage
                 return !mGroupPackages.isDisposed();
             }
 
+            @Override
             public void onLoadCompleted() {
                 // This runs in a thread and must not access UI directly.
                 final boolean changed = mDiffLogic.updateEnd(displaySortByApi);
 
                 if (!mGroupPackages.isDisposed()) {
                     mGroupPackages.getDisplay().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (changed ||
                                 mTreeViewer.getInput() != mDiffLogic.getCategories(isSortByApi())) {
@@ -1152,6 +1160,7 @@ public class PackagesPage extends UpdaterPage
                     beginOperationPending();
 
                     mUpdaterData.getTaskFactory().start("Delete Package", new ITask() {
+                        @Override
                         public void run(ITaskMonitor monitor) {
                             monitor.setProgressMax(archives.size() + 1);
                             for (Archive a : archives) {
@@ -1532,6 +1541,7 @@ public class PackagesPage extends UpdaterPage
 
         // -- ITableFontProvider
 
+        @Override
         public Font getFont(Object element, int columnIndex) {
             if (element instanceof PkgItem) {
                 if (((PkgItem) element).getState() == PkgState.NEW) {
@@ -1586,6 +1596,7 @@ public class PackagesPage extends UpdaterPage
 
     private class PkgContentProvider implements ITreeContentProvider {
 
+        @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement instanceof ArrayList<?>) {
                 return ((ArrayList<?>) parentElement).toArray();
@@ -1616,6 +1627,7 @@ public class PackagesPage extends UpdaterPage
             return new Object[0];
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public Object getParent(Object element) {
             // This operation is expensive, so we do the minimum
@@ -1635,6 +1647,7 @@ public class PackagesPage extends UpdaterPage
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object parentElement) {
             if (parentElement instanceof ArrayList<?>) {
                 return true;
@@ -1663,15 +1676,18 @@ public class PackagesPage extends UpdaterPage
             return false;
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             return getChildren(inputElement);
         }
 
+        @Override
         public void dispose() {
             // unused
 
         }
 
+        @Override
         public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
             // unused
         }
@@ -1679,20 +1695,24 @@ public class PackagesPage extends UpdaterPage
 
     // --- Implementation of ISdkChangeListener ---
 
+    @Override
     public void onSdkLoaded() {
         onSdkReload();
     }
 
+    @Override
     public void onSdkReload() {
         // The sdkmanager finished reloading its data. We must not call localReload() from here
         // since we don't want to alter the sdkmanager's data that just finished loading.
         loadPackages();
     }
 
+    @Override
     public void preInstallHook() {
         // nothing to be done for now.
     }
 
+    @Override
     public void postInstallHook() {
         // nothing to be done for now.
     }

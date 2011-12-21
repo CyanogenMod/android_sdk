@@ -17,8 +17,8 @@
 package com.android.ide.eclipse.ddms.views;
 
 import com.android.ddmuilib.ITableFocusListener;
-import com.android.ddmuilib.TablePanel;
 import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
+import com.android.ddmuilib.TablePanel;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 
 import org.eclipse.jface.action.Action;
@@ -44,18 +44,20 @@ public abstract class TableView extends SelectionDependentViewPart {
     /**
      * Setup the listener for the Table objects of <code>Panel</code>, and setup
      * the copy and select all actions.
-     * 
+     *
      * @param panel The panel to setup
      * @param parent The parent composite of the Panel's content.
      */
     void setupTableFocusListener(TablePanel panel, Composite parent) {
         panel.setTableFocusListener(new ITableFocusListener() {
+            @Override
             public void focusGained(IFocusedTableActivator activator) {
                 mActivator = activator;
                 mCopyAction.setEnabled(true);
                 mSelectAllAction.setEnabled(true);
             }
 
+            @Override
             public void focusLost(IFocusedTableActivator activator) {
                 if (activator == mActivator) {
                     mActivator = null;

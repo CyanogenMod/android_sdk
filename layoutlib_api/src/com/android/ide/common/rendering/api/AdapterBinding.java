@@ -75,6 +75,7 @@ public class AdapterBinding implements Iterable<DataBindingItem> {
         return mFooters.get(index);
     }
 
+    @Override
     public Iterator<DataBindingItem> iterator() {
         return mItems.iterator();
     }

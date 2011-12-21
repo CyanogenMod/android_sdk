@@ -77,6 +77,7 @@ public class ChooseConfigurationPage extends WizardPage {
         }
     }
 
+    @Override
     public void createControl(Composite parent) {
         // This UI is maintained with WindowBuilder.
 
@@ -114,6 +115,7 @@ public class ChooseConfigurationPage extends WizardPage {
         mWsFolderPathTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mWsFolderPathTextField.setToolTipText(tooltip);
         mWsFolderPathTextField.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 onWsFolderPathUpdated();
             }
@@ -184,6 +186,7 @@ public class ChooseConfigurationPage extends WizardPage {
      * Callback called when the configuration has changed in the {@link ConfigurationSelector}.
      */
     private class ConfigurationChangeListener implements Runnable {
+        @Override
         public void run() {
             if (mInternalConfigSelectorUpdate) {
                 return;

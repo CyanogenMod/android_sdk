@@ -52,10 +52,12 @@ public class ToggleButton extends CLabel {
         updateImageAndTooltip();
 
         addMouseListener(new MouseListener() {
+            @Override
             public void mouseDown(MouseEvent e) {
                 // pass
             }
 
+            @Override
             public void mouseUp(MouseEvent e) {
                 // We select on mouse-up, as it should be properly done since this is the
                 // only way a user can cancel a button click by moving out of the button.
@@ -64,6 +66,7 @@ public class ToggleButton extends CLabel {
                 }
             }
 
+            @Override
             public void mouseDoubleClick(MouseEvent e) {
                 if (mMouseIn && e.button == 1) {
                     notifyListeners(SWT.DefaultSelection, new Event());
@@ -72,6 +75,7 @@ public class ToggleButton extends CLabel {
         });
 
         addMouseTrackListener(new MouseTrackListener() {
+            @Override
             public void mouseExit(MouseEvent e) {
                 if (mMouseIn) {
                     mMouseIn = false;
@@ -79,6 +83,7 @@ public class ToggleButton extends CLabel {
                 }
             }
 
+            @Override
             public void mouseEnter(MouseEvent e) {
                 if (!mMouseIn) {
                     mMouseIn = true;
@@ -86,6 +91,7 @@ public class ToggleButton extends CLabel {
                 }
             }
 
+            @Override
             public void mouseHover(MouseEvent e) {
                 // pass
             }

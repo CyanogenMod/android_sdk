@@ -36,12 +36,14 @@ class DeviceContentProvider implements ITreeContentProvider {
     private FileEntry mRootEntry;
 
     private IListingReceiver sListingReceiver = new IListingReceiver() {
+        @Override
         public void setChildren(final FileEntry entry, FileEntry[] children) {
             final Tree t = mViewer.getTree();
             if (t != null && t.isDisposed() == false) {
                 Display display = t.getDisplay();
                 if (display.isDisposed() == false) {
                     display.asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (t.isDisposed() == false) {
                                 // refresh the entry.
@@ -58,12 +60,14 @@ class DeviceContentProvider implements ITreeContentProvider {
             }
         }
 
+        @Override
         public void refreshEntry(final FileEntry entry) {
             final Tree t = mViewer.getTree();
             if (t != null && t.isDisposed() == false) {
                 Display display = t.getDisplay();
                 if (display.isDisposed() == false) {
                     display.asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (t.isDisposed() == false) {
                                 // refresh the entry.
@@ -89,6 +93,7 @@ class DeviceContentProvider implements ITreeContentProvider {
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
      */
+    @Override
     public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof FileEntry) {
             FileEntry parentEntry = (FileEntry)parentElement;
@@ -112,6 +117,7 @@ class DeviceContentProvider implements ITreeContentProvider {
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
      */
+    @Override
     public Object getParent(Object element) {
         if (element instanceof FileEntry) {
             FileEntry entry = (FileEntry)element;
@@ -124,6 +130,7 @@ class DeviceContentProvider implements ITreeContentProvider {
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
      */
+    @Override
     public boolean hasChildren(Object element) {
         if (element instanceof FileEntry) {
             FileEntry entry = (FileEntry)element;
@@ -136,6 +143,7 @@ class DeviceContentProvider implements ITreeContentProvider {
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
      */
+    @Override
     public Object[] getElements(Object inputElement) {
         if (inputElement instanceof FileEntry) {
             FileEntry entry = (FileEntry)inputElement;
@@ -150,12 +158,14 @@ class DeviceContentProvider implements ITreeContentProvider {
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.IContentProvider#dispose()
      */
+    @Override
     public void dispose() {
     }
 
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
      */
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         if (viewer instanceof TreeViewer) {
             mViewer = (TreeViewer)viewer;

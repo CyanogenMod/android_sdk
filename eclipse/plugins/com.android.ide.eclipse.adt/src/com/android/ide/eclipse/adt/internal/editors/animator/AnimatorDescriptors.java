@@ -41,6 +41,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
     private Map<String, ElementDescriptor> nameToDescriptor;
 
     /** @return the root descriptor. */
+    @Override
     public ElementDescriptor getDescriptor() {
         if (mDescriptor == null) {
             mDescriptor = new ElementDescriptor("", getRootElementDescriptors()); //$NON-NLS-1$
@@ -49,6 +50,7 @@ public class AnimatorDescriptors implements IDescriptorProvider {
         return mDescriptor;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return mRootDescriptors;
     }

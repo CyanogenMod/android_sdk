@@ -37,13 +37,16 @@ public class LogCatReceiverFactory {
     /** Private constructor: cannot instantiate. */
     private LogCatReceiverFactory() {
         AndroidDebugBridge.addDeviceChangeListener(new IDeviceChangeListener() {
+            @Override
             public void deviceDisconnected(IDevice device) {
                 removeReceiverFor(device);
             }
 
+            @Override
             public void deviceConnected(IDevice device) {
             }
 
+            @Override
             public void deviceChanged(IDevice device, int changeMask) {
             }
         });

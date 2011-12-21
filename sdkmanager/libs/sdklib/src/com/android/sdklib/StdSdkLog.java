@@ -26,6 +26,7 @@ package com.android.sdklib;
  */
 public class StdSdkLog implements ISdkLog {
 
+    @Override
     public void error(Throwable t, String errorFormat, Object... args) {
         if (errorFormat != null) {
             String msg = String.format("Error: " + errorFormat, args);
@@ -48,6 +49,7 @@ public class StdSdkLog implements ISdkLog {
         }
     }
 
+    @Override
     public void warning(String warningFormat, Object... args) {
         String msg = String.format("Warning: " + warningFormat, args);
 
@@ -65,6 +67,7 @@ public class StdSdkLog implements ISdkLog {
         }
     }
 
+    @Override
     public void printf(String msgFormat, Object... args) {
         String msg = String.format(msgFormat, args);
 

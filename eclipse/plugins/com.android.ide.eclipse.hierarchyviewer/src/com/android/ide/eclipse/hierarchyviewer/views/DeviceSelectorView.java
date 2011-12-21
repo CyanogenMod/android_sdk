@@ -96,6 +96,7 @@ public class DeviceSelectorView extends ViewPart implements IPerspectiveListener
         mDeviceSelector.setFocus();
     }
 
+    @Override
     public void perspectiveActivated(IWorkbenchPage page, IPerspectiveDescriptor perspective) {
         if (perspective.getId().equals(PixelPerfectPespective.ID)) {
             mDeviceSelector.setMode(false, true);
@@ -109,6 +110,7 @@ public class DeviceSelectorView extends ViewPart implements IPerspectiveListener
         }
     }
 
+    @Override
     public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective,
             String changeId) {
         // pass

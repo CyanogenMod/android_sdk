@@ -108,6 +108,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
      * Create contents of the wizard.
      * @param parent the parent to add the page to
      */
+    @Override
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
         container.setLayout(new GridLayout(3, false));
@@ -193,6 +194,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         validatePage();
     }
 
+    @Override
     public void modifyText(ModifyEvent e) {
         if (mIgnore) {
             return;
@@ -241,6 +243,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         updateLocationPathField(null);
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (mIgnore) {
             return;
@@ -338,6 +341,7 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
         }
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 

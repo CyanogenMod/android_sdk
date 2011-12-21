@@ -80,6 +80,7 @@ public class LayoutDeviceManager {
         /**
          * @throws SAXException
          */
+        @Override
         public void error(SAXParseException ex) throws SAXException {
             mFoundError = true;
             AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
@@ -88,6 +89,7 @@ public class LayoutDeviceManager {
         /**
          * @throws SAXException
          */
+        @Override
         public void fatalError(SAXParseException ex) throws SAXException {
             mFoundError = true;
             AdtPlugin.log(ex, "Error validating %1$s", mSourceLocation);
@@ -96,6 +98,7 @@ public class LayoutDeviceManager {
         /**
          * @throws SAXException
          */
+        @Override
         public void warning(SAXParseException ex) throws SAXException {
             // ignore those for now.
         }

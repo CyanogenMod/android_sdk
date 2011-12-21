@@ -16,10 +16,10 @@
 
 package com.android.ddmuilib.log.event;
 
-import com.android.ddmlib.log.EventLogParser;
-import com.android.ddmlib.log.EventValueDescription;
 import com.android.ddmlib.log.EventContainer.CompareMethod;
 import com.android.ddmlib.log.EventContainer.EventValueType;
+import com.android.ddmlib.log.EventLogParser;
+import com.android.ddmlib.log.EventValueDescription;
 import com.android.ddmuilib.log.event.EventDisplay.OccurrenceDisplayDescriptor;
 import com.android.ddmuilib.log.event.EventDisplay.ValueDisplayDescriptor;
 
@@ -64,16 +64,16 @@ final class EventValueSelector extends Dialog {
 
     private EventLogParser mLogParser;
     private OccurrenceDisplayDescriptor mDescriptor;
-    
+
     /** list of event integer in the order of the combo. */
     private Integer[] mEventTags;
-    
+
     /** list of indices in the {@link EventValueDescription} array of the current event
      * that are of type string. This lets us get back the {@link EventValueDescription} from the
      * index in the Series {@link Combo}.
      */
     private final ArrayList<Integer> mSeriesIndices = new ArrayList<Integer>();
-    
+
     public EventValueSelector(Shell parent) {
         super(parent, SWT.DIALOG_TRIM | SWT.BORDER | SWT.APPLICATION_MODAL);
     }
@@ -123,11 +123,11 @@ final class EventValueSelector extends Dialog {
         }
 
         loadValueDescriptor();
-        
+
         checkValidity();
 
         // Set the dialog size.
-        try { 
+        try {
             mShell.setMinimumSize(DLG_WIDTH, DLG_HEIGHT);
             Rectangle r = mParent.getBounds();
             // get the center new top left.
@@ -151,14 +151,14 @@ final class EventValueSelector extends Dialog {
             if (!display.readAndDispatch())
                 display.sleep();
         }
-        
+
         return mEditStatus;
     }
-    
+
     OccurrenceDisplayDescriptor getDescriptor() {
         return mDescriptor;
     }
-    
+
     private void createUI() {
         GridData gd;
 
@@ -167,10 +167,10 @@ final class EventValueSelector extends Dialog {
         mShell.setText("Event Display Configuration");
 
         mShell.setLayout(new GridLayout(2, false));
-        
+
         Label l = new Label(mShell, SWT.NONE);
         l.setText("Event:");
-        
+
         mEventCombo = new Combo(mShell, SWT.DROP_DOWN | SWT.READ_ONLY);
         mEventCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -183,12 +183,12 @@ final class EventValueSelector extends Dialog {
             if (eventInfoMap.get(i) != null) {
                 String eventName = eventTagMap.get(i);
                 mEventCombo.add(eventName);
-                
+
                 list.add(i);
             }
         }
         mEventTags = list.toArray(new Integer[list.size()]);
-        
+
         mEventCombo.addSelectionListener(new SelectionAdapter() {
             /* (non-Javadoc)
              * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
@@ -202,7 +202,7 @@ final class EventValueSelector extends Dialog {
 
         l = new Label(mShell, SWT.NONE);
         l.setText("Value:");
-        
+
         mValueCombo = new Combo(mShell, SWT.DROP_DOWN | SWT.READ_ONLY);
         mValueCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mValueCombo.addSelectionListener(new SelectionAdapter() {
@@ -288,24 +288,25 @@ final class EventValueSelector extends Dialog {
 
         l = new Label(mShell, SWT.NONE);
         l.setText("Filter Value:");
-        
+
         mFilterValue = new Text(mShell, SWT.BORDER | SWT.SINGLE);
         mFilterValue.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mFilterValue.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 if (mDescriptor.filterValueIndex != -1) {
                     // get the current selection in the event combo
                     int index = mEventCombo.getSelectionIndex();
-    
+
                     if (index != -1) {
                         // match it to an event
                         int eventTag = mEventTags[index];
                         mDescriptor.eventTag = eventTag;
-                        
+
                         // get the EventValueDescription for this tag
                         EventValueDescription valueDesc = mLogParser.getEventInfoMap()
                             .get(eventTag)[mDescriptor.filterValueIndex];
-                        
+
                         // let the EventValueDescription convert the String value into an object
                         // of the proper type.
                         mDescriptor.filterValue = valueDesc.getObjectFromString(
@@ -315,14 +316,14 @@ final class EventValueSelector extends Dialog {
                 }
             }
         });
-        
+
         // add a separator spanning the 2 columns
-        
+
         l = new Label(mShell, SWT.SEPARATOR | SWT.HORIZONTAL);
         gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 2;
         l.setLayoutData(gd);
-        
+
         // add a composite to hold the ok/cancel button, no matter what the columns size are.
         Composite buttonComp = new Composite(mShell, SWT.NONE);
         gd = new GridData(GridData.FILL_HORIZONTAL);
@@ -353,7 +354,7 @@ final class EventValueSelector extends Dialog {
 
         padding = new Composite(mShell, SWT.NONE);
         padding.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         Button cancelButton = new Button(buttonComp, SWT.PUSH);
         cancelButton.setText("Cancel");
         cancelButton.setLayoutData(new GridData(GridData.CENTER));
@@ -371,8 +372,9 @@ final class EventValueSelector extends Dialog {
 
         padding = new Composite(mShell, SWT.NONE);
         padding.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
+
         mShell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 event.doit = true;
             }
@@ -391,21 +393,21 @@ final class EventValueSelector extends Dialog {
             // match it to an event
             int eventTag = mEventTags[index];
             mDescriptor.eventTag = eventTag;
-            
+
             // get the EventValueDescription for this tag
             EventValueDescription[] values = mLogParser.getEventInfoMap().get(eventTag);
-            
+
             // fill the combo for the values
             mValueCombo.removeAll();
             if (values != null) {
                 if (mDescriptor instanceof ValueDisplayDescriptor) {
                     ValueDisplayDescriptor valueDescriptor = (ValueDisplayDescriptor)mDescriptor;
-    
+
                     mValueCombo.setEnabled(true);
                     for (EventValueDescription value : values) {
                         mValueCombo.add(value.toString());
                     }
-                    
+
                     if (valueDescriptor.valueIndex != -1) {
                         mValueCombo.select(valueDescriptor.valueIndex);
                     } else {
@@ -426,7 +428,7 @@ final class EventValueSelector extends Dialog {
                         mSeriesCombo.add(value.getName());
                         mSeriesCombo.setEnabled(true);
                         mSeriesIndices.add(axisIndex);
-                        
+
                         if (mDescriptor.seriesValueIndex != -1 &&
                                 mDescriptor.seriesValueIndex == axisIndex) {
                             selectionIndex = axisIndex;
@@ -441,7 +443,7 @@ final class EventValueSelector extends Dialog {
 
                     // +1 because we added another item at index 0
                     mSeriesCombo.select(selectionIndex + 1);
-                    
+
                     if (selectionIndex >= 0) {
                         mDisplayPidCheckBox.setSelection(mDescriptor.includePid);
                         mDisplayPidCheckBox.setEnabled(true);
@@ -453,7 +455,7 @@ final class EventValueSelector extends Dialog {
                     mDisplayPidCheckBox.setSelection(false);
                     mDisplayPidCheckBox.setEnabled(false);
                 }
-                
+
                 // fill the filter combo
                 mFilterCombo.setEnabled(true);
                 mFilterCombo.removeAll();
@@ -461,7 +463,7 @@ final class EventValueSelector extends Dialog {
                 for (EventValueDescription value : values) {
                     mFilterCombo.add(value.toString());
                 }
-                
+
                 // select the current filter
                 mFilterCombo.select(mDescriptor.filterValueIndex + 1);
                 mFilterMethodCombo.select(getFilterMethodIndex(mDescriptor.filterCompareMethod));
@@ -483,12 +485,12 @@ final class EventValueSelector extends Dialog {
         } else {
             disableSubCombos();
         }
-        
+
         checkValidity();
     }
 
     /**
-     * 
+     *
      */
     private void disableSubCombos() {
         mValueCombo.removeAll();
@@ -498,14 +500,14 @@ final class EventValueSelector extends Dialog {
         mSeriesCombo.removeAll();
         mSeriesCombo.clearSelection();
         mSeriesCombo.setEnabled(false);
-        
+
         mDisplayPidCheckBox.setEnabled(false);
         mDisplayPidCheckBox.setSelection(false);
-        
+
         mFilterCombo.removeAll();
         mFilterCombo.clearSelection();
         mFilterCombo.setEnabled(false);
-        
+
         mFilterValue.setEnabled(false);
         mFilterValue.setText("");
         mFilterMethodCombo.setEnabled(false);
@@ -517,32 +519,32 @@ final class EventValueSelector extends Dialog {
         // get the current selection in the value combo
         int index = mValueCombo.getSelectionIndex();
         valueDescriptor.valueIndex = index;
-        
+
         // for now set the built-in name
 
         // get the current selection in the event combo
         int eventIndex = mEventCombo.getSelectionIndex();
-        
+
         // match it to an event
         int eventTag = mEventTags[eventIndex];
-        
+
         // get the EventValueDescription for this tag
         EventValueDescription[] values = mLogParser.getEventInfoMap().get(eventTag);
 
         valueDescriptor.valueName = values[index].getName();
-        
+
         checkValidity();
     }
 
     private void handleSeriesComboSelection() {
         // get the current selection in the axis combo
         int index = mSeriesCombo.getSelectionIndex();
-        
+
         // get the actual value index from the list.
         int valueIndex = mSeriesIndices.get(index);
-        
+
         mDescriptor.seriesValueIndex = valueIndex;
-        
+
         if (index > 0) {
             mDisplayPidCheckBox.setEnabled(true);
             mDisplayPidCheckBox.setSelection(mDescriptor.includePid);
@@ -555,13 +557,13 @@ final class EventValueSelector extends Dialog {
     private void handleFilterComboSelection() {
         // get the current selection in the axis combo
         int index = mFilterCombo.getSelectionIndex();
-        
+
         // decrement index by 1 since the item 0 means
         // no filter (index = -1), and the rest is offset by 1
         index--;
 
         mDescriptor.filterValueIndex = index;
-        
+
         if (index != -1) {
             mFilterValue.setEnabled(true);
             mFilterMethodCombo.setEnabled(true);
@@ -574,12 +576,12 @@ final class EventValueSelector extends Dialog {
             mFilterMethodCombo.setEnabled(false);
         }
     }
-    
+
     private void handleFilterMethodComboSelection() {
         // get the current selection in the axis combo
         int index = mFilterMethodCombo.getSelectionIndex();
         CompareMethod method = CompareMethod.values()[index];
-        
+
         mDescriptor.filterCompareMethod = method;
     }
 
@@ -609,7 +611,7 @@ final class EventValueSelector extends Dialog {
             }
             eventIndex++;
         }
-        
+
         if (comboIndex == -1) {
             mEventCombo.clearSelection();
         } else {
@@ -619,7 +621,7 @@ final class EventValueSelector extends Dialog {
         // get the event from the descriptor
         handleEventComboSelection();
     }
-    
+
     private void checkValidity() {
         mOkButton.setEnabled(mEventCombo.getSelectionIndex() != -1 &&
                 (((mDescriptor instanceof ValueDisplayDescriptor) == false) ||

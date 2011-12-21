@@ -124,6 +124,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         new HashMap<String, ViewElementDescriptor>(80);
 
     /** Returns the document descriptor. Contains all layouts and views linked together. */
+    @Override
     public DocumentDescriptor getDescriptor() {
         return mRootDescriptor;
     }
@@ -138,6 +139,7 @@ public final class LayoutDescriptors implements IDescriptorProvider {
         return mROViewDescriptors;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return mRootDescriptor.getChildren();
     }

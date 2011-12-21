@@ -42,10 +42,12 @@ public final class MenuDescriptors implements IDescriptorProvider {
     private ElementDescriptor mDescriptor = null;
 
     /** @return the root descriptor. */
+    @Override
     public ElementDescriptor getDescriptor() {
         return mDescriptor;
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return mDescriptor.getChildren();
     }
@@ -98,7 +100,7 @@ public final class MenuDescriptors implements IDescriptorProvider {
                 false /* mandatory */);
 
         ElementDescriptor sub_menu = createElement(styleMap,
-                MENU_ROOT_ELEMENT, // xmlName //$NON-NLS-1$
+                MENU_ROOT_ELEMENT, // xmlName
                 "Sub-Menu", // uiName,
                 null, // TODO SDK URL
                 null, // extraAttribute

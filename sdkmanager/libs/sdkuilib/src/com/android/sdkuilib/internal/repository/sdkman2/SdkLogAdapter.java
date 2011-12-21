@@ -41,6 +41,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setDescription(final String description) {
         if (acceptLog(description)) {
             mSdkLog.printf("%1$s", description);    //$NON-NLS-1$
@@ -51,6 +52,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void log(String log) {
         if (acceptLog(log)) {
             mSdkLog.printf("  %1$s", log);          //$NON-NLS-1$
@@ -61,6 +63,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      * Logs an "error" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logError(String log) {
         if (acceptLog(log)) {
             mSdkLog.error(null, "  %1$s", log);     //$NON-NLS-1$
@@ -72,6 +75,7 @@ public final class SdkLogAdapter implements ILogUiProvider {
      * not that useful for the end-user and might be hidden until explicitly shown.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logVerbose(String log) {
         if (acceptLog(log)) {
             mSdkLog.printf("    %1$s", log);        //$NON-NLS-1$

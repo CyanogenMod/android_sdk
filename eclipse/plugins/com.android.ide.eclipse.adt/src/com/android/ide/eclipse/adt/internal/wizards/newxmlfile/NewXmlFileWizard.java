@@ -73,6 +73,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
     private ChooseConfigurationPage mConfigPage;
     private Values mValues;
 
+    @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         setHelpAvailable(false); // TODO have help
         setWindowTitle("New Android XML File");
@@ -132,6 +133,7 @@ public class NewXmlFileWizard extends Wizard implements INewWizard {
             // Open the file
             // This has to be delayed in order for focus handling to work correctly
             AdtPlugin.getDisplay().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     IFile file = created.getFirst();
                     IRegion region = created.getSecond();

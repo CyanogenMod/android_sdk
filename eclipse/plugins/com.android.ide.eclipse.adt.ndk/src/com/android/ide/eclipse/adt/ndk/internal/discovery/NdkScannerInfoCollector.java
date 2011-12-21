@@ -35,57 +35,70 @@ public class NdkScannerInfoCollector implements IScannerInfoCollector3,
 
     private NdkDiscoveredPathInfo mPathInfo;
 
+    @Override
     public void contributeToScannerConfig(Object resource, @SuppressWarnings("rawtypes")
     Map scannerInfo) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public @SuppressWarnings("rawtypes")
     List getCollectedScannerInfo(Object resource, ScannerInfoTypes type) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void setProject(IProject project) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void updateScannerConfiguration(IProgressMonitor monitor) throws CoreException {
         mPathInfo.update(monitor);
     }
 
+    @Override
     public IDiscoveredPathInfo createPathInfoObject() {
         return mPathInfo;
     }
 
+    @Override
     public Map<String, String> getDefinedSymbols() {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public @SuppressWarnings("rawtypes")
     List getIncludePaths() {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void setInfoContext(InfoContext context) {
         mPathInfo = new NdkDiscoveredPathInfo(context.getProject());
     }
 
+    @Override
     public void deleteAllPaths(IResource resource) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void deleteAllSymbols(IResource resource) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void deletePath(IResource resource, String path) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void deleteSymbol(IResource resource, String symbol) {
         throw new Error("Not implemented"); //$NON-NLS-1$
     }
 
+    @Override
     public void deleteAll(IResource resource) {
         mPathInfo.delete();
     }

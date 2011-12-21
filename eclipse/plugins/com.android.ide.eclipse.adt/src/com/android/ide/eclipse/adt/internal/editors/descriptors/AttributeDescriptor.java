@@ -114,6 +114,7 @@ public abstract class AttributeDescriptor implements Comparable<AttributeDescrip
     public abstract UiAttributeNode createUiNode(UiElementNode uiParent);
 
     // Implements Comparable<AttributeDescriptor>
+    @Override
     public int compareTo(AttributeDescriptor other) {
         return mXmlLocalName.compareTo(other.mXmlLocalName);
     }

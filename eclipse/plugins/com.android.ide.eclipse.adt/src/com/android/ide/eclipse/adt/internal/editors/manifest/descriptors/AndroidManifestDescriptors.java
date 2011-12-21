@@ -121,10 +121,12 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
                 new AttributeInfo(PACKAGE_ATTR, new Format[] { Format.REFERENCE }) );
     }
 
+    @Override
     public ElementDescriptor[] getRootElementDescriptors() {
         return new ElementDescriptor[] { MANIFEST_ELEMENT };
     }
 
+    @Override
     public ElementDescriptor getDescriptor() {
         return getManifestElement();
     }
@@ -245,6 +247,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
             final String className) {
         overrides.put(elementName + "/" + ANDROID_NAME_ATTR,
                 new ITextAttributeCreator() {
+            @Override
             public TextAttributeDescriptor create(String xmlName, String uiName, String nsUri,
                     String tooltip, IAttributeInfo attrInfo) {
                 uiName += "*";  //$NON-NLS-1$

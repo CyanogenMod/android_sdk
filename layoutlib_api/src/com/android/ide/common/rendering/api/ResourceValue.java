@@ -46,6 +46,7 @@ public class ResourceValue extends ResourceReference implements IResourceValue {
      * Returns the type of the resource. For instance "drawable", "color", etc...
      * @deprecated use {@link #getResourceType()} instead.
      */
+    @Override
     @Deprecated
     public String getType() {
         return mType.getName();
@@ -54,6 +55,7 @@ public class ResourceValue extends ResourceReference implements IResourceValue {
     /**
      * Returns the value of the resource, as defined in the XML. This can be <code>null</code>
      */
+    @Override
     public final String getValue() {
         return mValue;
     }

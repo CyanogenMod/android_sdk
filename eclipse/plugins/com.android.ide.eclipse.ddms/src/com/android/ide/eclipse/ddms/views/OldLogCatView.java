@@ -112,6 +112,7 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
      */
     private final class FilterStorage implements ILogFilterStorageManager {
 
+        @Override
         public LogFilter[] getFilterFromStore() {
             String filterPrefs = DdmsPlugin.getDefault().getPreferenceStore().getString(
                     PREFS_FILTERS);
@@ -134,6 +135,7 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
             return list.toArray(new LogFilter[list.size()]);
         }
 
+        @Override
         public void saveFilters(LogFilter[] filters) {
             StringBuilder sb = new StringBuilder();
             for (LogFilter f : filters) {
@@ -145,6 +147,7 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
             DdmsPlugin.getDefault().getPreferenceStore().setValue(PREFS_FILTERS, sb.toString());
         }
 
+        @Override
         public boolean requiresDefaultFilter() {
             return true;
         }
@@ -376,6 +379,7 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
         }
     }
 
+    @Override
     public void onDoubleClick() {
     }
 }

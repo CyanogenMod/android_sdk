@@ -43,11 +43,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.KeyStore;
+import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
-import java.security.KeyStore.PrivateKeyEntry;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
@@ -76,6 +76,7 @@ final class KeyCheckPage extends ExportWizardPage {
         setDescription(""); // TODO
     }
 
+    @Override
     public void createControl(Composite parent) {
         setErrorMessage(null);
         setMessage(null);
@@ -93,6 +94,7 @@ final class KeyCheckPage extends ExportWizardPage {
         mDestination = new Text(composite, SWT.BORDER);
         mDestination.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
         mDestination.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 onDestinationChange(false /*forceDetailUpdate*/);
             }

@@ -26,12 +26,13 @@ import org.eclipse.jdt.internal.junit.runner.TestExecution;
  * <p/>
  * Provides generic equality/hashcode services
  */
-@SuppressWarnings("restriction")  //$NON-NLS-1$
+@SuppressWarnings("restriction")
 abstract class AndroidTestReference implements ITestReference, ITestIdentifier {
 
     /**
      * Gets the {@link ITestIdentifier} for this test reference.
      */
+    @Override
     public ITestIdentifier getIdentifier() {
         // this class serves as its own test identifier
         return this;
@@ -40,6 +41,7 @@ abstract class AndroidTestReference implements ITestReference, ITestIdentifier {
     /**
      * Not supported.
      */
+    @Override
     public void run(TestExecution execution) {
         throw new UnsupportedOperationException();
     }

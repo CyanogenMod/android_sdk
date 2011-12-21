@@ -95,6 +95,7 @@ public class LayoutlibVersionMixin implements ILayoutlibVersion {
      *
      * @since sdk-repository-4.xsd and sdk-addon-2.xsd
      */
+    @Override
     public Pair<Integer, Integer> getLayoutlibVersion() {
         return mLayoutlibVersion;
     }

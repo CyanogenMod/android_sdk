@@ -42,6 +42,7 @@ public class FolderDecorator implements ILightweightLabelDecorator {
         mDescriptor = AdtPlugin.getImageDescriptor("/icons/android_project.png"); //$NON-NLS-1$
     }
 
+    @Override
     public void decorate(Object element, IDecoration decoration) {
         if (element instanceof IFolder) {
             IFolder folder = (IFolder)element;
@@ -85,19 +86,23 @@ public class FolderDecorator implements ILightweightLabelDecorator {
         }
     }
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         // Property change do not affect the label
         return false;
     }
 
+    @Override
     public void addListener(ILabelProviderListener listener) {
         // No state change will affect the rendering.
     }
 
+    @Override
     public void removeListener(ILabelProviderListener listener) {
         // No state change will affect the rendering.
     }
 
+    @Override
     public void dispose() {
         // nothing to dispose
     }

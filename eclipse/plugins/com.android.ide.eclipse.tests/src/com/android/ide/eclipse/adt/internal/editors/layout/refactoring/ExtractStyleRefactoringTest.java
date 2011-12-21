@@ -196,6 +196,7 @@ public class ExtractStyleRefactoringTest extends RefactoringTest {
         List<Attr> chosenAttributes = new ArrayList<Attr>();
         for (List<Attr> list : availableAttributes.values()) {
             Collections.sort(list, new Comparator<Attr>() {
+                @Override
                 public int compare(Attr a1, Attr a2) {
                     return a1.getValue().compareTo(a2.getValue());
                 }

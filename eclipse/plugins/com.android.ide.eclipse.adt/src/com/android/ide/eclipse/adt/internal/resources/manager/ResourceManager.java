@@ -339,26 +339,31 @@ public final class ResourceManager {
      * do not appear in the public API of {@link ResourceManager}.
      */
     private final IProjectListener mProjectListener = new IProjectListener() {
+        @Override
         public void projectClosed(IProject project) {
             synchronized (mMap) {
                 mMap.remove(project);
             }
         }
 
+        @Override
         public void projectDeleted(IProject project) {
             synchronized (mMap) {
                 mMap.remove(project);
             }
         }
 
+        @Override
         public void projectOpened(IProject project) {
             createProject(project);
         }
 
+        @Override
         public void projectOpenedWithWorkspace(IProject project) {
             createProject(project);
         }
 
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // renamed project get a delete/open event too, so this can be ignored.
         }
@@ -370,6 +375,7 @@ public final class ResourceManager {
      * accessed through the {@link ResourceManager#visitDelta(IResourceDelta delta)} method.
      */
     private final IRawDeltaListener mRawDeltaListener = new IRawDeltaListener() {
+        @Override
         public void visitDelta(IResourceDelta workspaceDelta) {
             // If we're auto-building, then PreCompilerBuilder will pass us deltas and
             // they will be processed as part of the build.

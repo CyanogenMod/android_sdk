@@ -98,10 +98,12 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
 
     // ------- IPropertyDescriptor Methods
 
+    @Override
     public CellEditor createPropertyEditor(Composite parent) {
         return new TextValueCellEditor(parent);
     }
 
+    @Override
     public String getCategory() {
         if (isDeprecated()) {
             return DEPRECATED_CATEGORY;
@@ -115,30 +117,37 @@ public class TextAttributeDescriptor extends AttributeDescriptor implements IPro
         return null;
     }
 
+    @Override
     public String getDescription() {
         return mTooltip;
     }
 
+    @Override
     public String getDisplayName() {
         return mUiName;
     }
 
+    @Override
     public String[] getFilterFlags() {
         return null;
     }
 
+    @Override
     public Object getHelpContextIds() {
         return null;
     }
 
+    @Override
     public Object getId() {
         return this;
     }
 
+    @Override
     public ILabelProvider getLabelProvider() {
         return AttributeDescriptorLabelProvider.getProvider();
     }
 
+    @Override
     public boolean isCompatibleWith(IPropertyDescriptor anotherProperty) {
         return anotherProperty == this;
     }

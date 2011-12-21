@@ -65,6 +65,7 @@ public class ResourceNameValidator implements IInputValidator {
         mIsImageType = isImageType;
     }
 
+    @Override
     public String isValid(String newText) {
         // IValidator has the same interface as SWT's IInputValidator
         try {

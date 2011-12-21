@@ -264,6 +264,7 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
      * <p/>This is used when {@link MatchingStrategy} returned <code>true</code> which means we're
      * opening a different configuration of the same layout.
      */
+    @Override
     public void showEditorInput(IEditorInput editorInput) {
         if (getEditorInput().equals(editorInput)) {
             return;
@@ -405,6 +406,7 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
 
     // ----- IPartListener Methods ----
 
+    @Override
     public void partActivated(IWorkbenchPart part) {
         if (part == this) {
             if (mGraphicalEditor != null) {
@@ -417,14 +419,17 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
         }
     }
 
+    @Override
     public void partBroughtToTop(IWorkbenchPart part) {
         partActivated(part);
     }
 
+    @Override
     public void partClosed(IWorkbenchPart part) {
         // pass
     }
 
+    @Override
     public void partDeactivated(IWorkbenchPart part) {
         if (part == this) {
             if (mGraphicalEditor != null && getActivePage() == mGraphicalEditorIndex) {
@@ -433,6 +438,7 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
         }
     }
 
+    @Override
     public void partOpened(IWorkbenchPart part) {
         /*
          * We used to automatically bring the outline and the property sheet to view
@@ -489,6 +495,7 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
 
             mUiRootNode.setUnknownDescriptorProvider(new IUnknownDescriptorProvider() {
 
+                @Override
                 public ElementDescriptor getDescriptor(String xmlLocalName) {
 
                     ElementDescriptor desc = mUnknownDescriptorMap.get(xmlLocalName);

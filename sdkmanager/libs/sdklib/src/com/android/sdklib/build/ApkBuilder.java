@@ -18,9 +18,9 @@ package com.android.sdklib.build;
 
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.build.DebugKeyProvider;
-import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.internal.build.SignedJarBuilder.IZipEntryFilter;
 
 import java.io.File;
@@ -63,6 +63,7 @@ public final class ApkBuilder implements IArchiveBuilder {
             mInputFile = inputFile;
         }
 
+        @Override
         public boolean checkEntry(String archivePath) throws ZipAbortException {
             verbosePrintln("=> %s", archivePath);
 
@@ -88,6 +89,7 @@ public final class ApkBuilder implements IArchiveBuilder {
         private boolean mNativeLibsConflict = false;
         private File mInputFile;
 
+        @Override
         public boolean checkEntry(String archivePath) throws ZipAbortException {
             // split the path into segments.
             String[] segments = archivePath.split("/");
@@ -193,10 +195,12 @@ public final class ApkBuilder implements IArchiveBuilder {
             mNativeLibsConflict = nativeLibsConflict;
         }
 
+        @Override
         public List<String> getNativeLibs() {
             return mLibs;
         }
 
+        @Override
         public boolean hasNativeLibsConflicts() {
             return mNativeLibsConflict;
         }
@@ -251,10 +255,12 @@ public final class ApkBuilder implements IArchiveBuilder {
                 IKeyGenOutput keygenOutput = null;
                 if (verboseStream != null) {
                     keygenOutput = new IKeyGenOutput() {
+                        @Override
                         public void out(String message) {
                             verboseStream.println(message);
                         }
 
+                        @Override
                         public void err(String message) {
                             verboseStream.println(message);
                         }
@@ -482,6 +488,7 @@ public final class ApkBuilder implements IArchiveBuilder {
      * @throws DuplicateFileException if a file conflicts with another already added to the APK
      *                                   at the same location inside the APK archive.
      */
+    @Override
     public void addFile(File file, String archivePath) throws ApkCreationException,
             SealedApkException, DuplicateFileException {
         if (mIsSealed) {

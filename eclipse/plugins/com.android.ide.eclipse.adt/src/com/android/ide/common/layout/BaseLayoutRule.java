@@ -115,9 +115,11 @@ public class BaseLayoutRule extends BaseViewRule {
         final INode first = targets.get(0);
 
         IMenuCallback actionCallback = new IMenuCallback() {
+            @Override
             public void action(RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, final Boolean newValue) {
                 parentNode.editXml("Change Margins", new INodeHandler() {
+                    @Override
                     public void handle(INode n) {
                         String uri = ANDROID_URI;
                         String all = first.getStringAttr(uri, ATTR_LAYOUT_MARGIN);
@@ -153,6 +155,7 @@ public class BaseLayoutRule extends BaseViewRule {
         if (targets != null && targets.size() > 0) {
             final INode first = targets.get(0);
             ChoiceProvider provider = new ChoiceProvider() {
+                @Override
                 public void addChoices(List<String> titles, List<URL> iconUrls,
                         List<String> ids) {
                     IAttributeInfo info = first.getAttributeInfo(ANDROID_URI, attributeName);
@@ -190,6 +193,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
         // Shared action callback
         IMenuCallback actionCallback = new IMenuCallback() {
+            @Override
             public void action(RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, final Boolean newValue) {
                 final String actionId = action.getId();
@@ -202,6 +206,7 @@ public class BaseLayoutRule extends BaseViewRule {
                     return;
                 }
                 parentNode.editXml(undoLabel, new INodeHandler() {
+                    @Override
                     public void handle(INode n) {
                         String attribute = actionId.equals(ACTION_FILL_WIDTH)
                                 ? ATTR_LAYOUT_WIDTH : ATTR_LAYOUT_HEIGHT;
@@ -490,6 +495,7 @@ public class BaseLayoutRule extends BaseViewRule {
     public static final AttributeFilter DEFAULT_ATTR_FILTER = new AttributeFilter() {
         Set<String> mExcludes;
 
+        @Override
         public String replace(String uri, String name, String value) {
             if (!ANDROID_URI.equals(uri)) {
                 return value;
@@ -600,6 +606,7 @@ public class BaseLayoutRule extends BaseViewRule {
 
         targetNode.editXml("Insert Elements", new INodeHandler() {
 
+            @Override
             public void handle(INode node) {
                 // Now write the new elements.
                 int insertPos = initialInsertPos;
@@ -641,6 +648,7 @@ public class BaseLayoutRule extends BaseViewRule {
         // snap to the preferred size
         Map<INode, Rect> sizes = mRulesEngine.measureChildren(parent,
                 new IClientRulesEngine.AttributeFilter() {
+                    @Override
                     public String getAttribute(INode node, String namespace, String localName) {
                         // Change attributes to wrap_content
                         if (ATTR_LAYOUT_WIDTH.equals(localName)
@@ -660,6 +668,7 @@ public class BaseLayoutRule extends BaseViewRule {
         }
 
         return new DropFeedback(state, new IFeedbackPainter() {
+            @Override
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 ResizeState resizeState = (ResizeState) feedback.userData;
                 if (resizeState != null && resizeState.bounds != null) {
@@ -827,6 +836,7 @@ public class BaseLayoutRule extends BaseViewRule {
         if (oldBounds.w != newBounds.w || oldBounds.h != newBounds.h) {
             final ResizeState state = (ResizeState) feedback.userData;
             child.editXml("Resize", new INodeHandler() {
+                @Override
                 public void handle(INode n) {
                     setNewSizeBounds(state, n, parent, oldBounds, newBounds,
                             state.horizontalEdgeType, state.verticalEdgeType);

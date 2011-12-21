@@ -20,10 +20,10 @@ import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmuilib.ITableFocusListener;
+import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.SelectionDependentPanel;
 import com.android.ddmuilib.TableHelper;
-import com.android.ddmuilib.ITableFocusListener.IFocusedTableActivator;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -190,6 +190,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void initializePreferenceUpdateListeners() {
         mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent event) {
                 String changedProperty = event.getProperty();
 
@@ -248,6 +249,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         // Run this in a separate async thread to give the table some time to update after the
         // setInput above.
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 scrollToLatestLog();
             }
@@ -511,6 +513,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         mLiveFilterText.setMessage(DEFAULT_SEARCH_MESSAGE);
         mLiveFilterText.setToolTipText(DEFAULT_SEARCH_TOOLTIP);
         mLiveFilterText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 updateAppliedFilters();
             }
@@ -610,6 +613,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         /* save messages to file in a different (non UI) thread */
         Thread t = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     BufferedWriter w = new BufferedWriter(new FileWriter(fName));
@@ -620,6 +624,7 @@ public final class LogCatPanel extends SelectionDependentPanel
                     w.close();
                 } catch (final IOException e) {
                     Display.getDefault().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             MessageDialog.openError(Display.getCurrent().getActiveShell(),
                                     "Unable to export selection to file.",
@@ -772,6 +777,7 @@ public final class LogCatPanel extends SelectionDependentPanel
         // This is not strictly necessary, except that on WinXP, the rows showed up clipped. So
         // we explicitly set it to be sure.
         mViewer.getTable().addListener(SWT.MeasureItem, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 event.height = event.gc.getFontMetrics().getHeight();
             }
@@ -825,6 +831,7 @@ public final class LogCatPanel extends SelectionDependentPanel
             // and see if the last item has been painted since the previous scroll event.
             // If the last item has been painted, then we assume that we are at the bottom.
             mViewer.getTable().addListener(SWT.PaintItem, new Listener() {
+                @Override
                 public void handleEvent(Event event) {
                     TableItem item = (TableItem) event.item;
                     TableItem[] items = mViewer.getTable().getItems();
@@ -1019,6 +1026,7 @@ public final class LogCatPanel extends SelectionDependentPanel
      * @param receivedMessages list of messages from logcat
      * Implements {@link ILogCatMessageEventListener#messageReceived()}.
      */
+    @Override
     public void messageReceived(List<LogCatMessage> receivedMessages) {
         refreshLogCatTable();
 
@@ -1043,6 +1051,7 @@ public final class LogCatPanel extends SelectionDependentPanel
 
     private void refreshFiltersTable() {
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 if (mFiltersTableViewer.getTable().isDisposed()) {
                     return;
@@ -1071,6 +1080,7 @@ public final class LogCatPanel extends SelectionDependentPanel
     }
 
     private class LogCatTableRefresherTask implements Runnable {
+        @Override
         public void run() {
             if (mViewer.getTable().isDisposed()) {
                 return;
@@ -1127,20 +1137,24 @@ public final class LogCatPanel extends SelectionDependentPanel
 
         final Table table = mViewer.getTable();
         final IFocusedTableActivator activator = new IFocusedTableActivator() {
+            @Override
             public void copy(Clipboard clipboard) {
                 copySelectionToClipboard(clipboard);
             }
 
+            @Override
             public void selectAll() {
                 table.selectAll();
             }
         };
 
         table.addFocusListener(new FocusListener() {
+            @Override
             public void focusGained(FocusEvent e) {
                 mTableFocusListener.focusGained(activator);
             }
 
+            @Override
             public void focusLost(FocusEvent e) {
                 mTableFocusListener.focusLost(activator);
             }

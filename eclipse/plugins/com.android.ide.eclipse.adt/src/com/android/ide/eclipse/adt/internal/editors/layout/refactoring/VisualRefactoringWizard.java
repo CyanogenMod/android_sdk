@@ -54,6 +54,7 @@ public abstract class VisualRefactoringWizard extends RefactoringWizard {
          * modifications of the associated widget to validate the page again
          */
         protected ModifyListener mModifyValidateListener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 validatePage();
             }

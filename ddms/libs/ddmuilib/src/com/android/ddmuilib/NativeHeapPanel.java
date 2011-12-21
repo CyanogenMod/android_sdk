@@ -353,6 +353,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
         private boolean updateNHAllocationStackCalls(final ClientData clientData, final int count) {
             if (mDisplay.isDisposed() == false) {
                 mDisplay.asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         updateAllocationStackCalls(clientData, count);
                     }
@@ -392,6 +393,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
                 final int start, final int end) {
             if (mDisplay.isDisposed() == false) {
                 mDisplay.asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         updateLibraryAllocationTable(libAlloc, start, end);
                     }
@@ -465,6 +467,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
                 mSize += info.getAllocationCount() * info.getSize();
             }
             Collections.sort(mLibAllocations, new Comparator<NativeAllocationInfo>() {
+                @Override
                 public int compare(NativeAllocationInfo o1, NativeAllocationInfo o2) {
                     return o2.getAllocationCount() * o2.getSize() -
                         o1.getAllocationCount() * o1.getSize();
@@ -673,6 +676,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
      *
      * @see IClientChangeListener#clientChanged(Client, int)
      */
+    @Override
     public void clientChanged(final Client client, int changeMask) {
         if (client == getCurrentClient()) {
             if ((changeMask & Client.CHANGE_NATIVE_HEAP_DATA) == Client.CHANGE_NATIVE_HEAP_DATA) {
@@ -680,6 +684,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
                     return;
 
                 mBase.getDisplay().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         clientSelected();
                     }
@@ -1268,6 +1273,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
 
         // allow resizes, but cap at minPanelWidth
         sash.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 Rectangle sashRect = sash.getBounds();
                 Rectangle panelRect = sash_composite.getClientArea();
@@ -1478,6 +1484,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
 
         // allow resizes, but cap at minPanelWidth
         sash.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 Rectangle sashRect = sash.getBounds();
                 Rectangle panelRect = top.getClientArea();
@@ -1540,6 +1547,7 @@ public final class NativeHeapPanel extends BaseHeapPanel {
             // now we sort it
             Collections.sort(mLibraryAllocations,
                     new Comparator<LibraryAllocations>() {
+                @Override
                 public int compare(LibraryAllocations o1,
                         LibraryAllocations o2) {
                     return o2.getSize() - o1.getSize();

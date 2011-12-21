@@ -144,6 +144,7 @@ public class UiManifestPkgAttrNode extends UiTextAttributeNode {
     @Override
     protected void onAddValidators(final Text text) {
         ModifyListener listener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String package_name = text.getText();
                 if (package_name.indexOf('.') < 1) {
@@ -160,6 +161,7 @@ public class UiManifestPkgAttrNode extends UiTextAttributeNode {
 
         // Make sure the validator removes its message(s) when the widget is disposed
         text.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 getManagedForm().getMessageManager().removeMessage(text, text);
             }
@@ -178,24 +180,30 @@ public class UiManifestPkgAttrNode extends UiTextAttributeNode {
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(
                 getTextWidget().getShell(),
                 new ILabelProvider() {
+                    @Override
                     public Image getImage(Object element) {
                         return null;
                     }
 
+                    @Override
                     public String getText(Object element) {
                         return element.toString();
                     }
 
+                    @Override
                     public void addListener(ILabelProviderListener listener) {
                     }
 
+                    @Override
                     public void dispose() {
                     }
 
+                    @Override
                     public boolean isLabelProperty(Object element, String property) {
                         return false;
                     }
 
+                    @Override
                     public void removeListener(ILabelProviderListener listener) {
                     }
                 });

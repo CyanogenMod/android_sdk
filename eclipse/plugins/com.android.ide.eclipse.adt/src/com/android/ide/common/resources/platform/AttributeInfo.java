@@ -73,27 +73,33 @@ public class AttributeInfo implements IAttributeInfo {
     }
 
     /** Returns the XML Name of the attribute */
+    @Override
     public String getName() {
         return mName;
     }
     /** Returns the formats of the attribute. Cannot be null.
      *  Should have at least one format. */
+    @Override
     public Format[] getFormats() {
         return mFormats;
     }
     /** Returns the values for enums. null for other types. */
+    @Override
     public String[] getEnumValues() {
         return mEnumValues;
     }
     /** Returns the values for flags. null for other types. */
+    @Override
     public String[] getFlagValues() {
         return mFlagValues;
     }
     /** Returns a short javadoc, .i.e. the first sentence. */
+    @Override
     public String getJavaDoc() {
         return mJavaDoc;
     }
     /** Returns the documentation for deprecated attributes. Null if not deprecated. */
+    @Override
     public String getDeprecatedDoc() {
         return mDeprecatedDoc;
     }
@@ -138,6 +144,7 @@ public class AttributeInfo implements IAttributeInfo {
      * @return the name of the class (fully qualified class name) which defined
      *         this attribute
      */
+    @Override
     public String getDefinedBy() {
         return mDefinedBy;
     }

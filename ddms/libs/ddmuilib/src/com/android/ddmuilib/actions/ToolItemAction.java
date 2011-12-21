@@ -38,6 +38,7 @@ public class ToolItemAction implements ICommonAction {
      *   <code>false</code> to disable
      * @see ICommonAction#setChecked(boolean)
      */
+    @Override
     public void setChecked(boolean checked) {
         item.setSelection(checked);
     }
@@ -48,6 +49,7 @@ public class ToolItemAction implements ICommonAction {
      *   <code>false</code> to disable
      * @see ICommonAction#setEnabled(boolean)
      */
+    @Override
     public void setEnabled(boolean enabled) {
         item.setEnabled(enabled);
     }
@@ -57,6 +59,7 @@ public class ToolItemAction implements ICommonAction {
      * {@link SelectionListener#widgetSelected(SelectionEvent)} on the wrapped {@link ToolItem}).
      * @see ICommonAction#setRunnable(Runnable)
      */
+    @Override
     public void setRunnable(final Runnable runnable) {
         item.addSelectionListener(new SelectionAdapter() {
             @Override

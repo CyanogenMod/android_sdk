@@ -58,19 +58,23 @@ public class LogCatMonitor {
         mMonitoredDevices = new HashMap<String, DeviceData>();
 
         AndroidDebugBridge.addDeviceChangeListener(new IDeviceChangeListener() {
+            @Override
             public void deviceDisconnected(IDevice device) {
                 unmonitorDevice(device.getSerialNumber());
                 mMonitoredDevices.remove(device.getSerialNumber());
             }
 
+            @Override
             public void deviceConnected(IDevice device) {
             }
 
+            @Override
             public void deviceChanged(IDevice device, int changeMask) {
             }
         });
 
         mPrefStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent event) {
                 if (AUTO_MONITOR_PREFKEY.equals(event.getProperty())
                         && event.getNewValue().equals(false)) {
@@ -110,6 +114,7 @@ public class LogCatMonitor {
 
         LogCatReceiver r = LogCatReceiverFactory.INSTANCE.newReceiver(device, mPrefStore);
         ILogCatMessageEventListener l = new ILogCatMessageEventListener() {
+            @Override
             public void messageReceived(List<LogCatMessage> receivedMessages) {
                 checkMessages(receivedMessages, device);
             }
@@ -152,6 +157,7 @@ public class LogCatMonitor {
 
     private void focusLogCatView(final IDevice device, final String appName) {
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                 if (window == null) {

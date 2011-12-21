@@ -16,8 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.refactorings.renamepackage;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.xml.AndroidManifest;
@@ -413,6 +413,7 @@ class ApplicationPackageNameRefactoring extends Refactoring {
             return change;
         }
 
+        @Override
         @SuppressWarnings("unused")
         public boolean visit(IResource resource) throws CoreException {
             if (resource instanceof IFile) {

@@ -58,9 +58,11 @@ public class EditTextRule extends BaseViewRule {
         final String label = hasFocus ? "Clear Focus" : "Request Focus";
 
         IMenuCallback onChange = new IMenuCallback() {
+            @Override
             public void action(RuleAction menuAction, List<? extends INode> selectedNodes,
                     String valueId, Boolean newValue) {
                 selectedNode.editXml(label, new INodeHandler() {
+                    @Override
                     public void handle(INode node) {
                         INode focus = findFocus(findRoot(node));
                         if (focus != null && focus.getParent() != null) {

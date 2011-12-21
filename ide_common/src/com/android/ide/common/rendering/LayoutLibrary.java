@@ -27,10 +27,10 @@ import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.Result;
-import com.android.ide.common.rendering.api.SessionParams;
-import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.api.Result.Status;
+import com.android.ide.common.rendering.api.SessionParams;
 import com.android.ide.common.rendering.api.SessionParams.RenderingMode;
+import com.android.ide.common.rendering.api.ViewInfo;
 import com.android.ide.common.rendering.legacy.ILegacyPullParser;
 import com.android.ide.common.rendering.legacy.LegacyCallback;
 import com.android.ide.common.resources.ResourceResolver;
@@ -38,10 +38,10 @@ import com.android.ide.common.sdk.LoadStatus;
 import com.android.layoutlib.api.ILayoutBridge;
 import com.android.layoutlib.api.ILayoutLog;
 import com.android.layoutlib.api.ILayoutResult;
+import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.layoutlib.api.IProjectCallback;
 import com.android.layoutlib.api.IResourceValue;
 import com.android.layoutlib.api.IXmlPullParser;
-import com.android.layoutlib.api.ILayoutResult.ILayoutViewInfo;
 import com.android.resources.ResourceType;
 
 import java.awt.image.BufferedImage;
@@ -467,14 +467,17 @@ public class LayoutLibrary {
         final LayoutLog log = params.getLog();
         ILayoutLog logWrapper = new ILayoutLog() {
 
+            @Override
             public void warning(String message) {
                 log.warning(null, message, null /*data*/);
             }
 
+            @Override
             public void error(Throwable t) {
                 log.error(null, "error!", t, null /*data*/);
             }
 
+            @Override
             public void error(String message) {
                 log.error(null, message, null /*data*/);
             }

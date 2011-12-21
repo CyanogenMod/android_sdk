@@ -135,6 +135,7 @@ public class PostCompilerDeltaVisitor extends BaseDeltaVisitor
      * @see org.eclipse.core.resources.IResourceDeltaVisitor
      *      #visit(org.eclipse.core.resources.IResourceDelta)
      */
+    @Override
     public boolean visit(IResourceDelta delta) throws CoreException {
         // if all flags are true, we can stop going through the resource delta.
         if (mConvertToDex && mPackageResources && mMakeFinalPackage) {

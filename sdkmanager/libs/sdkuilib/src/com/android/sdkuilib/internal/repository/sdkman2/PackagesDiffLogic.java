@@ -686,6 +686,7 @@ class PackagesDiffLogic {
 
             synchronized (getCategories()) {
                 Collections.sort(getCategories(), new Comparator<PkgCategory>() {
+                    @Override
                     public int compare(PkgCategory cat1, PkgCategory cat2) {
                         assert cat1 instanceof PkgCategoryApi;
                         assert cat2 instanceof PkgCategoryApi;
@@ -781,6 +782,7 @@ class PackagesDiffLogic {
 
             synchronized (getCategories()) {
                 Collections.sort(getCategories(), new Comparator<PkgCategory>() {
+                    @Override
                     public int compare(PkgCategory cat1, PkgCategory cat2) {
                         assert cat1 instanceof PkgCategorySource;
                         assert cat2 instanceof PkgCategorySource;

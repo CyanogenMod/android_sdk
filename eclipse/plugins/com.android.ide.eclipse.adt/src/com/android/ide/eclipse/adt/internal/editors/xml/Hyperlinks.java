@@ -1104,6 +1104,7 @@ public class Hyperlinks {
             if (matches.size() > 0) {
                 final ResourceFile fBest = best;
                 Collections.sort(matches, new Comparator<ResourceFile>() {
+                    @Override
                     public int compare(ResourceFile rf1, ResourceFile rf2) {
                         // Sort best item to the front
                         if (rf1 == fBest) {
@@ -1155,6 +1156,7 @@ public class Hyperlinks {
     /** Detector for finding Android references in XML files */
    public static class XmlResolver extends AbstractHyperlinkDetector {
 
+        @Override
         public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region,
                 boolean canShowMultipleHyperlinks) {
 
@@ -1269,6 +1271,7 @@ public class Hyperlinks {
     /** Detector for finding Android references in Java files */
     public static class JavaResolver extends AbstractHyperlinkDetector {
 
+        @Override
         public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region,
                 boolean canShowMultipleHyperlinks) {
             // Most of this is identical to the builtin JavaElementHyperlinkDetector --
@@ -1385,18 +1388,22 @@ public class Hyperlinks {
             this.mRegion = mRegion;
         }
 
+        @Override
         public IRegion getHyperlinkRegion() {
             return mRegion;
         }
 
+        @Override
         public String getHyperlinkText() {
             return "Open XML Declaration";
         }
 
+        @Override
         public String getTypeLabel() {
             return null;
         }
 
+        @Override
         public void open() {
             // Lazily compute the location to open
             if (mXmlContext != null && !Hyperlinks.open(mXmlContext)) {
@@ -1438,19 +1445,23 @@ public class Hyperlinks {
             mFile = file;
         }
 
+        @Override
         public IRegion getHyperlinkRegion() {
             return mLinkRegion;
         }
 
+        @Override
         public String getHyperlinkText() {
             // return "Open XML Declaration";
             return mLinkText;
         }
 
+        @Override
         public String getTypeLabel() {
             return null;
         }
 
+        @Override
         public void open() {
             // We have to defer computation of ids until the link is clicked since we
             // don't have a fast map lookup for these

@@ -49,6 +49,7 @@ public class PdtPlugin extends AbstractUIPlugin {
 
         // set the listener for the preference change
         getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent event) {
                 // if the SDK changed, we have to do some extra work
                 if (PrefPage.PREFS_DEVTREE_DIR.equals(event.getProperty())) {

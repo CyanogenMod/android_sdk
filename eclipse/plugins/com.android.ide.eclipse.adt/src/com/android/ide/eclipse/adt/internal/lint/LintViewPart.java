@@ -219,6 +219,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
 
     // ---- Implements SelectionListener ----
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         List<IMarker> markers = mLintView.getSelectedMarkers();
         if (markers.size() != 1) {
@@ -260,6 +261,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         }
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object source = e.getSource();
         if (source == mLintView.getTableViewer().getControl()) {
@@ -273,12 +275,14 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
 
     // --- Implements IJobChangeListener ----
 
+    @Override
     public void done(IJobChangeEvent event) {
         mRefreshAction.setImageDescriptor(
                 IconFactory.getInstance().getImageDescriptor(REFRESH_ICON));
 
         if (!mLintView.isDisposed()) {
             mLintView.getDisplay().asyncExec(new Runnable()  {
+                @Override
                 public void run() {
                     if (!mLintView.isDisposed()) {
                         updateIssueCount();
@@ -294,18 +298,23 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         mErrorLabel.setText(String.format("%1$d errors, %2$d warnings", errors, warnings));
     }
 
+    @Override
     public void aboutToRun(IJobChangeEvent event) {
     }
 
+    @Override
     public void awake(IJobChangeEvent event) {
     }
 
+    @Override
     public void running(IJobChangeEvent event) {
     }
 
+    @Override
     public void scheduled(IJobChangeEvent event) {
     }
 
+    @Override
     public void sleeping(IJobChangeEvent event) {
     }
 

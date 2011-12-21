@@ -66,14 +66,17 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
     public RefactoringAssistant() {
     }
 
+    @Override
     public boolean canAssist(IQuickAssistInvocationContext invocationContext) {
         return true;
     }
 
+    @Override
     public boolean canFix(Annotation annotation) {
         return true;
     }
 
+    @Override
     public ICompletionProposal[] computeQuickAssistProposals(
             IQuickAssistInvocationContext invocationContext) {
 
@@ -214,6 +217,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
         }
     }
 
+    @Override
     public String getErrorMessage() {
         return null;
     }
@@ -229,6 +233,7 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             mRefactoring = refactoring;
         }
 
+        @Override
         public void apply(IDocument document) {
             RefactoringWizard wizard = null;
             if (mRefactoring instanceof VisualRefactoring) {
@@ -248,22 +253,27 @@ public class RefactoringAssistant implements IQuickAssistProcessor {
             }
         }
 
+        @Override
         public String getAdditionalProposalInfo() {
             return String.format("Initiates the \"%1$s\" refactoring", mRefactoring.getName());
         }
 
+        @Override
         public IContextInformation getContextInformation() {
             return null;
         }
 
+        @Override
         public String getDisplayString() {
             return mRefactoring.getName();
         }
 
+        @Override
         public Image getImage() {
             return AdtPlugin.getAndroidLogo();
         }
 
+        @Override
         public Point getSelection(IDocument document) {
             return null;
         }

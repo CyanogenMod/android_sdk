@@ -20,12 +20,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A receiver able to parse the result of the execution of 
+ * A receiver able to parse the result of the execution of
  * {@link #GETPROP_COMMAND} on a device.
  */
 final class GetPropReceiver extends MultiLineReceiver {
     final static String GETPROP_COMMAND = "getprop"; //$NON-NLS-1$
-    
+
     private final static Pattern GETPROP_PATTERN = Pattern.compile("^\\[([^]]+)\\]\\:\\s*\\[(.*)\\]$"); //$NON-NLS-1$
 
     /** indicates if we need to read the first */
@@ -50,23 +50,24 @@ final class GetPropReceiver extends MultiLineReceiver {
             if (line.length() == 0 || line.startsWith("#")) {
                 continue;
             }
-            
+
             Matcher m = GETPROP_PATTERN.matcher(line);
             if (m.matches()) {
                 String label = m.group(1);
                 String value = m.group(2);
-                
+
                 if (label.length() > 0) {
                     mDevice.addProperty(label, value);
                 }
             }
         }
     }
-    
+
+    @Override
     public boolean isCancelled() {
         return false;
     }
-    
+
     @Override
     public void done() {
         mDevice.update(Device.CHANGE_BUILD_INFO);

@@ -15,8 +15,8 @@
  */
 package com.android.ide.eclipse.adt.internal.launch.junit;
 
-import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtConstants;
+import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.launch.LaunchMessages;
 import com.android.ide.eclipse.adt.internal.launch.MainLaunchConfigTab;
@@ -129,6 +129,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     public void createControl(Composite parent) {
         mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(), null /*filter*/);
 
@@ -187,6 +188,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         mProjText = new Text(comp, SWT.SINGLE | SWT.BORDER);
         mProjText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mProjText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent evt) {
                 validatePage();
                 updateLaunchConfigurationDialog();
@@ -215,6 +217,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         mTestText = new Text(comp, SWT.SINGLE | SWT.BORDER);
         mTestText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mTestText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent evt) {
                 validatePage();
                 updateLaunchConfigurationDialog();
@@ -263,6 +266,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
         gd.horizontalSpan = 2;
         mContainerText.setLayoutData(gd);
         mContainerText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent evt) {
                 updateLaunchConfigurationDialog();
             }
@@ -315,6 +319,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
+    @Override
     public void initializeFrom(ILaunchConfiguration config) {
         String projectName = updateProjectFromConfig(config);
         String containerHandle = EMPTY_STRING;
@@ -432,6 +437,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
      * (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
+    @Override
     public void performApply(ILaunchConfigurationWorkingCopy config) {
         if (mTestContainerRadioButton.getSelection() && mContainerElement != null) {
             config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
@@ -729,6 +735,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
+    @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy config) {
         IJavaElement javaElement = getContext();
         if (javaElement != null) {
@@ -814,6 +821,7 @@ public class AndroidJUnitLaunchConfigurationTab extends AbstractLaunchConfigurat
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
      */
+    @Override
     public String getName() {
         return JUnitMessages.JUnitLaunchConfigurationTab_tab_label;
     }

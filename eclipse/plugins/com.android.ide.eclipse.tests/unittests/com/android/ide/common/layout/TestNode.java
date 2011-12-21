@@ -93,10 +93,12 @@ public class TestNode implements INode {
 
     // ==== INODE ====
 
+    @Override
     public INode appendChild(String viewFqcn) {
         return insertChildAt(viewFqcn, mChildren.size());
     }
 
+    @Override
     public void editXml(String undoName, INodeHandler callback) {
         callback.handle(this);
     }
@@ -105,34 +107,42 @@ public class TestNode implements INode {
         mAttributeInfos.put(uri + attrName, info);
     }
 
+    @Override
     public IAttributeInfo getAttributeInfo(String uri, String attrName) {
         return mAttributeInfos.get(uri + attrName);
     }
 
+    @Override
     public Rect getBounds() {
         return mBounds;
     }
 
+    @Override
     public INode[] getChildren() {
         return mChildren.toArray(new INode[mChildren.size()]);
     }
 
+    @Override
     public IAttributeInfo[] getDeclaredAttributes() {
         return mAttributeInfos.values().toArray(new IAttributeInfo[mAttributeInfos.size()]);
     }
 
+    @Override
     public String getFqcn() {
         return mFqcn;
     }
 
+    @Override
     public IAttribute[] getLiveAttributes() {
         return mAttributes.values().toArray(new IAttribute[mAttributes.size()]);
     }
 
+    @Override
     public INode getParent() {
         return mParent;
     }
 
+    @Override
     public INode getRoot() {
         TestNode curr = this;
         while (curr.mParent != null) {
@@ -142,6 +152,7 @@ public class TestNode implements INode {
         return curr;
     }
 
+    @Override
     public String getStringAttr(String uri, String attrName) {
         IAttribute attr = mAttributes.get(uri + attrName);
         if (attr == null) {
@@ -151,6 +162,7 @@ public class TestNode implements INode {
         return attr.getValue();
     }
 
+    @Override
     public INode insertChildAt(String viewFqcn, int index) {
         TestNode child = new TestNode(viewFqcn);
         if (index == -1) {
@@ -162,6 +174,7 @@ public class TestNode implements INode {
         return child;
     }
 
+    @Override
     public void removeChild(INode node) {
         int index = mChildren.indexOf(node);
         if (index != -1) {
@@ -169,6 +182,7 @@ public class TestNode implements INode {
         }
     }
 
+    @Override
     public boolean setAttribute(String uri, String localName, String value) {
         mAttributes.put(uri + localName, new TestAttribute(uri, localName, value));
         return true;
@@ -180,14 +194,17 @@ public class TestNode implements INode {
                 + ", attributes=" + mAttributes + ", bounds=" + mBounds + "]";
     }
 
+    @Override
     public int getBaseline() {
         return -1;
     }
 
+    @Override
     public Margins getMargins() {
         return null;
     }
 
+    @Override
     public List<String> getAttributeSources() {
         return mAttributeSources != null ? mAttributeSources : Collections.<String>emptyList();
     }

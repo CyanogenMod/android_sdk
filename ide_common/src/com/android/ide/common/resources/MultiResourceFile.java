@@ -179,6 +179,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
      * Adds a resource item to the list
      * @param value The value of the resource.
      */
+    @Override
     public void addResourceValue(ResourceValue value) {
         ResourceType resType = value.getResourceType();
 

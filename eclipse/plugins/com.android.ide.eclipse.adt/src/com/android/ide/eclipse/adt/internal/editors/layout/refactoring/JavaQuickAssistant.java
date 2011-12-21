@@ -33,10 +33,12 @@ public class JavaQuickAssistant implements org.eclipse.jdt.ui.text.java.IQuickAs
     public JavaQuickAssistant() {
     }
 
+    @Override
     public boolean hasAssists(IInvocationContext context) throws CoreException {
         return true;
     }
 
+    @Override
     public IJavaCompletionProposal[] getAssists(IInvocationContext context,
             IProblemLocation[] locations) throws CoreException {
         // We should only offer Android quick assists within Android projects.

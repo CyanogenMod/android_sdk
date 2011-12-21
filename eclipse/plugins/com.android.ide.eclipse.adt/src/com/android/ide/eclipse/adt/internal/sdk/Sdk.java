@@ -174,12 +174,14 @@ public final class Sdk  {
          */
         public abstract void reload();
 
+        @Override
         public void onProjectTargetChange(IProject changedProject) {
             if (changedProject != null && changedProject.equals(getProject())) {
                 reload();
             }
         }
 
+        @Override
         public void onTargetLoaded(IAndroidTarget target) {
             IProject project = getProject();
             if (target != null && target.equals(Sdk.getCurrent().getTarget(project))) {
@@ -187,6 +189,7 @@ public final class Sdk  {
             }
         }
 
+        @Override
         public void onSdkLoaded() {
             // do nothing;
         }
@@ -214,6 +217,7 @@ public final class Sdk  {
 
             final ArrayList<String> logMessages = new ArrayList<String>();
             ISdkLog log = new ISdkLog() {
+                @Override
                 public void error(Throwable throwable, String errorFormat, Object... arg) {
                     if (errorFormat != null) {
                         logMessages.add(String.format("Error: " + errorFormat, arg));
@@ -224,10 +228,12 @@ public final class Sdk  {
                     }
                 }
 
+                @Override
                 public void warning(String warningFormat, Object... arg) {
                     logMessages.add(String.format("Warning: " + warningFormat, arg));
                 }
 
+                @Override
                 public void printf(String msgFormat, Object... arg) {
                     logMessages.add(String.format(msgFormat, arg));
                 }
@@ -804,10 +810,12 @@ public final class Sdk  {
      * Delegate listener for project changes.
      */
     private IProjectListener mProjectListener = new IProjectListener() {
+        @Override
         public void projectClosed(IProject project) {
             onProjectRemoved(project, false /*deleted*/);
         }
 
+        @Override
         public void projectDeleted(IProject project) {
             onProjectRemoved(project, true /*deleted*/);
         }
@@ -878,10 +886,12 @@ public final class Sdk  {
             }
         }
 
+        @Override
         public void projectOpened(IProject project) {
             onProjectOpened(project);
         }
 
+        @Override
         public void projectOpenedWithWorkspace(IProject project) {
             // no need to force recompilation when projects are opened with the workspace.
             onProjectOpened(project);
@@ -965,6 +975,7 @@ public final class Sdk  {
             }
         }
 
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // we don't actually care about this anymore.
         }
@@ -974,6 +985,7 @@ public final class Sdk  {
      * Delegate listener for file changes.
      */
     private IFileListener mFileListener = new IFileListener() {
+        @Override
         public void fileChanged(final IFile file, IMarkerDelta[] markerDeltas, int kind) {
             if (SdkConstants.FN_PROJECT_PROPERTIES.equals(file.getName()) &&
                     file.getParent() == file.getProject()) {
@@ -1072,11 +1084,13 @@ public final class Sdk  {
      * project and file listeners (for a given resource change event).
      */
     private IResourceEventListener mResourceEventListener = new IResourceEventListener() {
+        @Override
         public void resourceChangeEventStart() {
             mModifiedProjects.clear();
             mModifiedChildProjects.clear();
         }
 
+        @Override
         public void resourceChangeEventEnd() {
             if (mModifiedProjects.size() == 0) {
                 return;

@@ -19,9 +19,9 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.SdkRepoConstants;
@@ -177,6 +177,7 @@ public class SourcePackage extends Package implements IPackageVersion {
     /**
      * Returns the android version of this package.
      */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }

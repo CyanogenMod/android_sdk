@@ -331,6 +331,7 @@ public class CanvasViewInfo implements IPropertySource {
 
     // ---- Implementation of IPropertySource
 
+    @Override
     public Object getEditableValue() {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -339,6 +340,7 @@ public class CanvasViewInfo implements IPropertySource {
         return null;
     }
 
+    @Override
     public IPropertyDescriptor[] getPropertyDescriptors() {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -347,6 +349,7 @@ public class CanvasViewInfo implements IPropertySource {
         return null;
     }
 
+    @Override
     public Object getPropertyValue(Object id) {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -355,6 +358,7 @@ public class CanvasViewInfo implements IPropertySource {
         return null;
     }
 
+    @Override
     public boolean isPropertySet(Object id) {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -363,6 +367,7 @@ public class CanvasViewInfo implements IPropertySource {
         return false;
     }
 
+    @Override
     public void resetPropertyValue(Object id) {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {
@@ -370,6 +375,7 @@ public class CanvasViewInfo implements IPropertySource {
         }
     }
 
+    @Override
     public void setPropertyValue(Object id, Object value) {
         UiViewElementNode uiView = getUiViewNode();
         if (uiView != null) {

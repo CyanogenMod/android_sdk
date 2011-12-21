@@ -272,6 +272,7 @@ public class LayoutCanvas extends Canvas {
 
         // --- Set up listeners
         addPaintListener(new PaintListener() {
+            @Override
             public void paintControl(PaintEvent e) {
                 onPaint(e);
             }
@@ -576,6 +577,7 @@ public class LayoutCanvas extends Canvas {
                     // Must be run asynchronously because getClientArea() returns 0 bounds
                     // when the editor is being initialized
                     getDisplay().asyncExec(new Runnable() {
+                        @Override
                         public void run() {
                             setFitScale(true);
                         }
@@ -1238,6 +1240,7 @@ public class LayoutCanvas extends Canvas {
         // in the canvas which is NOT selected, and the context menu will show items related
         // to the selection, NOT the item you clicked on!!
         addMenuDetectListener(new MenuDetectListener() {
+            @Override
             public void menuDetected(MenuDetectEvent e) {
                 mSelectionManager.menuClick(e);
             }
@@ -1329,6 +1332,7 @@ public class LayoutCanvas extends Canvas {
         title = String.format("Create root %1$s in document", title);
 
         mLayoutEditor.wrapUndoEditXmlModel(title, new Runnable() {
+            @Override
             public void run() {
                 UiElementNode uiNew = uiDoc.appendNewUiChild(viewDesc);
 

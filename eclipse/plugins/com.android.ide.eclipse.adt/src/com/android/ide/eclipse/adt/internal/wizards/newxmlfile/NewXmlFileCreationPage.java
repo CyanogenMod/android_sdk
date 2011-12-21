@@ -435,6 +435,7 @@ class NewXmlFileCreationPage extends WizardPage {
      *
      * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     @SuppressWarnings("unused") // SWT constructors have side effects, they aren't unused
     public void createControl(Composite parent) {
         // This UI is maintained with WindowBuilder.
@@ -501,6 +502,7 @@ class NewXmlFileCreationPage extends WizardPage {
         mFileNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mFileNameTextField.setToolTipText(tooltip);
         mFileNameTextField.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mValues.name = mFileNameTextField.getText();
                 validatePage();

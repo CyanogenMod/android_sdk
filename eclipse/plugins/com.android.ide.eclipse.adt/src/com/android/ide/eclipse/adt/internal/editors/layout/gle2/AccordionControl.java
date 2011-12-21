@@ -235,14 +235,17 @@ public abstract class AccordionControl extends Composite {
                 }
             });
             label.addMouseTrackListener(new MouseTrackListener() {
+                @Override
                 public void mouseEnter(MouseEvent e) {
                     updateBackground(label, true);
                 }
 
+                @Override
                 public void mouseExit(MouseEvent e) {
                     updateBackground(label, false);
                 }
 
+                @Override
                 public void mouseHover(MouseEvent e) {
                 }
             });

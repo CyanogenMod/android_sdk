@@ -126,6 +126,7 @@ public class GridLayoutPainter {
         }
 
         // Implements IFeedbackPainter
+        @Override
         public void paint(IGraphics gc, INode node, DropFeedback feedback) {
             Rect b = node.getBounds();
             if (!b.isValid()) {

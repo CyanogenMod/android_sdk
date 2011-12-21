@@ -95,6 +95,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
     private final OnConfigSelectorUpdated mOnConfigSelectorUpdated = new OnConfigSelectorUpdated();
 
     private ModifyListener mValidateOnModify = new ModifyListener() {
+        @Override
         public void modifyText(ModifyEvent e) {
             validatePage();
         }
@@ -122,6 +123,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
      * Note: the special tag below defines this as the entry point for the WindowsDesigner Editor.
      * @wbp.parser.entryPoint
      */
+    @Override
     public void createControl(Composite parent) {
         Composite content = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
@@ -170,6 +172,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
         ref.setNewStringValue(mStringValueField.getText());
 
         mStringValueField.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 validatePage();
             }
@@ -448,6 +451,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
          * <li> Re-populate the file combo with all the choices.
          * <li> Select the original XML file.
          */
+        @Override
         public void run() {
             if (mInternalConfigChange) {
                 return;
@@ -545,6 +549,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
          * Callback invoked when {@link ExtractStringInputPage#mResFileCombo} has been
          * modified.
          */
+        @Override
         public void modifyText(ModifyEvent e) {
             if (mInternalFileComboChange) {
                 return;

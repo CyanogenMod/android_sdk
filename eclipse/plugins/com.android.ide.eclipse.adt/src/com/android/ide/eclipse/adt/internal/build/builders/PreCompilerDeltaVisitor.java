@@ -162,6 +162,7 @@ class PreCompilerDeltaVisitor extends BaseDeltaVisitor implements IResourceDelta
      * @see org.eclipse.core.resources.IResourceDeltaVisitor
      *      #visit(org.eclipse.core.resources.IResourceDelta)
      */
+    @Override
     public boolean visit(IResourceDelta delta) throws CoreException {
         // we are only going to look for changes in res/, source folders and in
         // AndroidManifest.xml since the delta visitor goes through the main

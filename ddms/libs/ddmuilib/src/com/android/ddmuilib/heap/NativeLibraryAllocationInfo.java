@@ -112,6 +112,7 @@ public final class NativeLibraryAllocationInfo {
 
         // finally, sort by total size
         Collections.sort(libraryAllocations, new Comparator<NativeLibraryAllocationInfo>() {
+                    @Override
                     public int compare(NativeLibraryAllocationInfo o1,
                             NativeLibraryAllocationInfo o2) {
                         return (int) (o2.getTotalSize() - o1.getTotalSize());

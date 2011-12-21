@@ -81,14 +81,17 @@ public class RefactoringAssistantTest extends AdtProjectTest {
         final ISourceViewer viewer = layoutEditor.getStructuredSourceViewer();
 
         IQuickAssistInvocationContext invocationContext = new IQuickAssistInvocationContext() {
+            @Override
             public int getLength() {
                 return 0;
             }
 
+            @Override
             public int getOffset() {
                 return offset;
             }
 
+            @Override
             public ISourceViewer getSourceViewer() {
                 return viewer;
             }

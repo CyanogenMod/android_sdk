@@ -64,6 +64,7 @@ public final class OverviewPage extends FormPage implements IPageImageProvider {
         mEditor = editor;
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon("editor_page_design");  //$NON-NLS-1$
     }

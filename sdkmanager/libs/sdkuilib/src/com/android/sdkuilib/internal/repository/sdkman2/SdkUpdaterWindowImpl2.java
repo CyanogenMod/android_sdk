@@ -139,6 +139,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * Opens the window.
      * @wbp.parser.entryPoint
      */
+    @Override
     public void open() {
         if (mParentShell == null) {
             Display.setAppName(APP_NAME); //$hide$ (hide from SWT designer)
@@ -174,6 +175,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
 
         mShell = new Shell(mParentShell, style);
         mShell.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 ShellSizeAndPos.saveSizeAndPos(mShell, SIZE_POS_PREFIX);
                 onAndroidSdkUpdaterDispose();    //$hide$ (hide from SWT designer)
@@ -219,6 +221,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 "Click to abort the current task",
                 "");                                //$NON-NLS-1$ nothing to abort
         mButtonStop.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 onStopSelected();
             }
@@ -230,6 +233,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 "Click to show the log window",     // tooltip for state hidden=>shown
                 "Click to hide the log window");    // tooltip for state shown=>hidden
         mButtonShowLog.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 onToggleLogWindow();
             }
@@ -400,6 +404,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * @param pageClass The {@link Composite}-derived class that will implement the page.
      * @param purpose The purpose of this page, e.g. an about box, settings page or generic.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void registerPage(Class<? extends UpdaterPage> pageClass,
             Purpose purpose) {
@@ -415,6 +420,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * This must be called before the call to {@link #open()}.
      * If null or if the page class is not found, the first page will be selected.
      */
+    @Override
     public void setInitialPage(Class<? extends Composite> pageClass) {
         // Unused in this case. This window display only one page.
     }
@@ -424,6 +430,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * <p/>
      * This must be called before the call to {@link #open()}.
      */
+    @Override
     public void setRequestAutoUpdate(boolean requestAutoUpdate) {
         mRequestAutoUpdate = requestAutoUpdate;
     }
@@ -431,6 +438,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
     /**
      * Adds a new listener to be notified when a change is made to the content of the SDK.
      */
+    @Override
     public void addListener(ISdkChangeListener listener) {
         mUpdaterData.addListeners(listener);
     }
@@ -439,6 +447,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
      * Removes a new listener to be notified anymore when a change is made to the content of
      * the SDK.
      */
+    @Override
     public void removeListener(ISdkChangeListener listener) {
         mUpdaterData.removeListener(listener);
     }
@@ -469,18 +478,22 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
         // and filters errors to make sure the window is visible when
         // an error is logged.
         ILogUiProvider logAdapter = new ILogUiProvider() {
+            @Override
             public void setDescription(String description) {
                 mLogWindow.setDescription(description);
             }
 
+            @Override
             public void log(String log) {
                 mLogWindow.log(log);
             }
 
+            @Override
             public void logVerbose(String log) {
                 mLogWindow.logVerbose(log);
             }
 
+            @Override
             public void logError(String log) {
                 mLogWindow.logError(log);
 
@@ -490,6 +503,7 @@ public class SdkUpdaterWindowImpl2 implements ISdkUpdaterWindow {
                 // have a lot of error logging, so this should be acceptable. If not, we could
                 // cache the visibility state.
                 mShell.getDisplay().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (!mLogWindow.isVisible()) {
                             // Don't toggle the window visibility directly.

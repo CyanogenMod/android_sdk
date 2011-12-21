@@ -68,6 +68,7 @@ public abstract class TablePanel extends ClientDisplayPanel {
             final int colStart, final int colEnd) {
         // create the activator for this table
         final IFocusedTableActivator activator = new IFocusedTableActivator() {
+            @Override
             public void copy(Clipboard clipboard) {
                 int[] selection = table.getSelectionIndices();
 
@@ -96,6 +97,7 @@ public abstract class TablePanel extends ClientDisplayPanel {
                 }
             }
 
+            @Override
             public void selectAll() {
                 table.selectAll();
             }
@@ -103,10 +105,12 @@ public abstract class TablePanel extends ClientDisplayPanel {
 
         // add the focus listener on the table to notify the global listener
         table.addFocusListener(new FocusListener() {
+            @Override
             public void focusGained(FocusEvent e) {
                 mGlobalListener.focusGained(activator);
             }
 
+            @Override
             public void focusLost(FocusEvent e) {
                 mGlobalListener.focusLost(activator);
             }

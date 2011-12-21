@@ -187,6 +187,7 @@ public class BaseLayoutRuleTest extends LayoutTestBase {
                 "hidden", "hiddenvalue");
         AttributeFilter filter = new AttributeFilter() {
 
+            @Override
             public String replace(String attributeUri, String attributeName,
                     String attributeValue) {
                 if (attributeName.equals("hidden")) {

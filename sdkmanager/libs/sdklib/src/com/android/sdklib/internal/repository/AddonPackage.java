@@ -20,9 +20,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
@@ -218,6 +218,7 @@ public class AddonPackage extends Package
                 archiveOsPath);
     }
 
+    @Override
     public int getExactApiLevel() {
         return mVersion.getApiLevel();
     }
@@ -287,6 +288,7 @@ public class AddonPackage extends Package
      * <p/>
      * An add-on has the same {@link AndroidVersion} as the platform it depends on.
      */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }
@@ -308,6 +310,7 @@ public class AddonPackage extends Package
      *
      * @since sdk-addon-2.xsd
      */
+    @Override
     public Pair<Integer, Integer> getLayoutlibVersion() {
         return mLayoutlibVersion.getLayoutlibVersion();
     }

@@ -391,6 +391,7 @@ public class AdtUtils {
      */
     public static IJavaProject[] getOpenAndroidProjects() {
         return BaseProjectHelper.getAndroidProjects(new IProjectFilter() {
+            @Override
             public boolean accept(IProject project) {
                 return project.isAccessible();
             }

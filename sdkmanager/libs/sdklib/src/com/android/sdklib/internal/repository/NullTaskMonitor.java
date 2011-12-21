@@ -45,68 +45,83 @@ public class NullTaskMonitor implements ITaskMonitor {
         mLog = log;
     }
 
+    @Override
     public void setDescription(String format, Object...args) {
         // pass
     }
 
+    @Override
     public void log(String format, Object...args) {
         mLog.printf(format, args);
     }
 
+    @Override
     public void logError(String format, Object...args) {
         mLog.error(null /*throwable*/, format, args);
     }
 
+    @Override
     public void logVerbose(String format, Object...args) {
         mLog.printf(format, args);
     }
 
+    @Override
     public void setProgressMax(int max) {
         // pass
     }
 
+    @Override
     public int getProgressMax() {
         return 0;
     }
 
+    @Override
     public void incProgress(int delta) {
         // pass
     }
 
     /** Always return 1. */
+    @Override
     public int getProgress() {
         return 1;
     }
 
     /** Always return false. */
+    @Override
     public boolean isCancelRequested() {
         return false;
     }
 
+    @Override
     public ITaskMonitor createSubMonitor(int tickCount) {
         return this;
     }
 
     /** Always return false. */
+    @Override
     public boolean displayPrompt(final String title, final String message) {
         return false;
     }
 
     /** Always return null. */
+    @Override
     public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
         return null;
     }
 
     // --- ISdkLog ---
 
+    @Override
     public void error(Throwable t, String errorFormat, Object... args) {
         mLog.error(t, errorFormat, args);
     }
 
+    @Override
     public void warning(String warningFormat, Object... args) {
         mLog.warning(warningFormat, args);
     }
 
+    @Override
     public void printf(String msgFormat, Object... args) {
         mLog.printf(msgFormat, args);
     }

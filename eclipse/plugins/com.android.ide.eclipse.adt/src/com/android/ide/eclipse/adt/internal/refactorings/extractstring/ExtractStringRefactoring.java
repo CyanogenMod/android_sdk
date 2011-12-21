@@ -999,6 +999,7 @@ public class ExtractStringRefactoring extends Refactoring {
      */
     private Iterable<IFile> findAllResXmlFiles() {
         return new Iterable<IFile>() {
+            @Override
             public Iterator<IFile> iterator() {
                 return new Iterator<IFile>() {
                     final Queue<IFile> mFiles = new LinkedList<IFile>();
@@ -1036,6 +1037,7 @@ public class ExtractStringRefactoring extends Refactoring {
                         }
                     }
 
+                    @Override
                     public boolean hasNext() {
                         if (!mFiles.isEmpty()) {
                             return true;
@@ -1077,12 +1079,14 @@ public class ExtractStringRefactoring extends Refactoring {
                         }
                     }
 
+                    @Override
                     public IFile next() {
                         IFile file = mFiles.poll();
                         hasNext();
                         return file;
                     }
 
+                    @Override
                     public void remove() {
                         throw new UnsupportedOperationException(
                             "This iterator does not support removal");  //$NON-NLS-1$
@@ -1752,6 +1756,7 @@ public class ExtractStringRefactoring extends Refactoring {
         final IJavaProject javaProject = JavaCore.create(mProject);
 
         return new Iterable<ICompilationUnit>() {
+            @Override
             public Iterator<ICompilationUnit> iterator() {
                 return new Iterator<ICompilationUnit>() {
                     final Queue<ICompilationUnit> mUnits = new LinkedList<ICompilationUnit>();
@@ -1767,6 +1772,7 @@ public class ExtractStringRefactoring extends Refactoring {
                         }
                     }
 
+                    @Override
                     public boolean hasNext() {
                         if (!mUnits.isEmpty()) {
                             return true;
@@ -1789,12 +1795,14 @@ public class ExtractStringRefactoring extends Refactoring {
                         return false;
                     }
 
+                    @Override
                     public ICompilationUnit next() {
                         ICompilationUnit unit = mUnits.poll();
                         hasNext();
                         return unit;
                     }
 
+                    @Override
                     public void remove() {
                         throw new UnsupportedOperationException(
                                 "This iterator does not support removal");  //$NON-NLS-1$

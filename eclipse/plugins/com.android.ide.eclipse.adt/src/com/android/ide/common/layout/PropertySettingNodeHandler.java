@@ -34,6 +34,7 @@ class PropertySettingNodeHandler implements INodeHandler {
         mValue = value;
     }
 
+    @Override
     public void handle(INode node) {
         node.setAttribute(mNamespaceUri, mAttribute, mValue);
     }

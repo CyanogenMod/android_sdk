@@ -57,6 +57,7 @@ public class FrameLayoutRule extends BaseLayoutRule {
         }
 
         return new DropFeedback(null, new IFeedbackPainter() {
+            @Override
             public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                 drawFeedback(gc, node, elements, feedback);
             }
@@ -139,6 +140,7 @@ public class FrameLayoutRule extends BaseLayoutRule {
 
         targetNode.editXml("Add elements to FrameLayout", new INodeHandler() {
 
+            @Override
             public void handle(INode node) {
 
                 // Now write the new elements.

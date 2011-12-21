@@ -151,6 +151,7 @@ public class MockFileOp implements IFileOp {
      * Files that cannot be deleted right away are marked for deletion on exit.
      * The argument can be null.
      */
+    @Override
     public void deleteFileOrFolder(File fileOrFolder) {
         if (fileOrFolder != null) {
             if (isDirectory(fileOrFolder)) {
@@ -176,6 +177,7 @@ public class MockFileOp implements IFileOp {
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
+    @Override
     public void setExecutablePermission(File file) throws IOException {
         // pass
     }
@@ -188,6 +190,7 @@ public class MockFileOp implements IFileOp {
      * @throws FileNotFoundException if the source file doesn't exist.
      * @throws IOException if there's a problem reading or writing the file.
      */
+    @Override
     public void copyFile(File source, File dest) throws IOException {
         // pass
     }
@@ -200,17 +203,20 @@ public class MockFileOp implements IFileOp {
      * @throws FileNotFoundException if the source files don't exist.
      * @throws IOException if there's a problem reading the files.
      */
+    @Override
     public boolean isSameFile(File source, File destination) throws IOException {
         throw new UnsupportedOperationException("MockFileUtils.isSameFile is not supported."); //$NON-NLS-1$
     }
 
     /** Invokes {@link File#isFile()} on the given {@code file}. */
+    @Override
     public boolean isFile(File file) {
         String path = getAgnosticAbsPath(file);
         return mExistinfFiles.contains(path);
     }
 
     /** Invokes {@link File#isDirectory()} on the given {@code file}. */
+    @Override
     public boolean isDirectory(File file) {
         String path = getAgnosticAbsPath(file);
         if (mExistinfFolders.contains(path)) {
@@ -238,15 +244,18 @@ public class MockFileOp implements IFileOp {
     }
 
     /** Invokes {@link File#exists()} on the given {@code file}. */
+    @Override
     public boolean exists(File file) {
         return isFile(file) || isDirectory(file);
     }
 
     /** Invokes {@link File#length()} on the given {@code file}. */
+    @Override
     public long length(File file) {
         throw new UnsupportedOperationException("MockFileUtils.length is not supported."); //$NON-NLS-1$
     }
 
+    @Override
     public boolean delete(File file) {
         String path = getAgnosticAbsPath(file);
 
@@ -276,6 +285,7 @@ public class MockFileOp implements IFileOp {
     }
 
     /** Invokes {@link File#mkdirs()} on the given {@code file}. */
+    @Override
     public boolean mkdirs(File file) {
         for (; file != null; file = file.getParentFile()) {
             String path = getAgnosticAbsPath(file);
@@ -288,6 +298,7 @@ public class MockFileOp implements IFileOp {
      * Invokes {@link File#listFiles()} on the given {@code file}.
      * The returned list is sorted by alphabetic absolute path string.
      */
+    @Override
     public File[] listFiles(File file) {
         TreeSet<File> files = new TreeSet<File>();
 
@@ -310,6 +321,7 @@ public class MockFileOp implements IFileOp {
     }
 
     /** Invokes {@link File#renameTo(File)} on the given files. */
+    @Override
     public boolean renameTo(File oldFile, File newFile) {
         boolean renamed = false;
 
@@ -352,6 +364,7 @@ public class MockFileOp implements IFileOp {
      * Returns an OutputStream that will capture the bytes written and associate
      * them with the given file.
      */
+    @Override
     public OutputStream newFileOutputStream(File file) throws FileNotFoundException {
         StringOutputStream os = new StringOutputStream(file);
         mOutputStreams.add(os);

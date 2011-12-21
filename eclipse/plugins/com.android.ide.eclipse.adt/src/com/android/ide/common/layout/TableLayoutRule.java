@@ -73,6 +73,7 @@ public class TableLayoutRule extends LinearLayoutRule {
         super.addContextMenuActions(actions, selectedNode);
 
         IMenuCallback addTab = new IMenuCallback() {
+            @Override
             public void action(RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, Boolean newValue) {
                 final INode node = selectedNode;
@@ -97,9 +98,11 @@ public class TableLayoutRule extends LinearLayoutRule {
             List<RuleAction> actions, final INode parentNode,
             final List<? extends INode> children) {
         IMenuCallback actionCallback = new IMenuCallback() {
+            @Override
             public void action(final RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, final Boolean newValue) {
                 parentNode.editXml("Add/Remove Table Row", new INodeHandler() {
+                    @Override
                     public void handle(INode n) {
                         if (action.getId().equals(ACTION_ADD_ROW)) {
                             // Determine the index of the selection, if any; if there is

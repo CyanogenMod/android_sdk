@@ -465,6 +465,7 @@ public class ElementDescriptor implements Comparable<ElementDescriptor> {
     }
 
     // Implements Comparable<ElementDescriptor>:
+    @Override
     public int compareTo(ElementDescriptor o) {
         return mUiName.compareToIgnoreCase(o.mUiName);
     }

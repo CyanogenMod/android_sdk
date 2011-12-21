@@ -19,7 +19,6 @@ package com.android.ide.eclipse.adt.internal.editors.binaryxml;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IStorageEditorInput;
 
@@ -45,6 +44,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IStorageEditorInput#getStorage()
      */
+    @Override
     public IStorage getStorage() throws CoreException {
         return mStorage;
     }
@@ -52,6 +52,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IInput#getStorage()
      */
+    @Override
     public boolean exists() {
         return mStorage != null;
     }
@@ -59,6 +60,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IEditorInput#getImageDescriptor()
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return null;
     }
@@ -66,6 +68,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IEditorInput#getName()
      */
+    @Override
     public String getName() {
         return mStorage.getName();
     }
@@ -73,6 +76,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IEditorInput#getPersistable()
      */
+    @Override
     public IPersistableElement getPersistable() {
         return null;
     }
@@ -80,6 +84,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see IEditorInput#getToolTipText()
      */
+    @Override
     public String getToolTipText() {
         return mStorage.getFullPath() != null ? mStorage.getFullPath().toString() : mStorage
                 .getName();
@@ -88,6 +93,7 @@ public class XmlStorageEditorInput implements IStorageEditorInput {
     /* (non-Javadoc)
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(Class)
      */
+    @Override
     public Object getAdapter(Class adapter) {
         return null;
     }

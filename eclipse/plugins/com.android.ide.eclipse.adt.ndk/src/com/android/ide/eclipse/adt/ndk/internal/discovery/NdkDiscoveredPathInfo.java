@@ -57,10 +57,12 @@ public class NdkDiscoveredPathInfo implements IDiscoveredPathInfo {
         load();
     }
 
+    @Override
     public IProject getProject() {
         return mProject;
     }
 
+    @Override
     public IPath[] getIncludePaths() {
         if (mNeedReindexing) {
             // Call for a reindex
@@ -82,6 +84,7 @@ public class NdkDiscoveredPathInfo implements IDiscoveredPathInfo {
         mNeedReindexing = true;
     }
 
+    @Override
     public Map<String, String> getSymbols() {
         if (mSymbols == null)
             mSymbols = new HashMap<String, String>();
@@ -92,6 +95,7 @@ public class NdkDiscoveredPathInfo implements IDiscoveredPathInfo {
         this.mSymbols = symbols;
     }
 
+    @Override
     public IDiscoveredScannerInfoSerializable getSerializable() {
         return null;
     }
@@ -111,11 +115,11 @@ public class NdkDiscoveredPathInfo implements IDiscoveredPathInfo {
     private boolean needUpdating() {
         if (mLastUpdate == IFile.NULL_STAMP)
             return true;
-        return mProject.getFile(ANDROID_MK).getLocalTimeStamp() > mLastUpdate; //$NON-NLS-1$
+        return mProject.getFile(ANDROID_MK).getLocalTimeStamp() > mLastUpdate;
     }
 
     private void recordUpdate() {
-        mLastUpdate = mProject.getFile(ANDROID_MK).getLocalTimeStamp(); //$NON-NLS-1$
+        mLastUpdate = mProject.getFile(ANDROID_MK).getLocalTimeStamp();
     }
 
     public void delete() {

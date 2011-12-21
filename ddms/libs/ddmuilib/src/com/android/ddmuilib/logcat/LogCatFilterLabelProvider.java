@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
  * {@link LogCatFilter}.
  */
 public final class LogCatFilterLabelProvider extends LabelProvider implements ITableLabelProvider {
+    @Override
     public Image getColumnImage(Object arg0, int arg1) {
         return null;
     }
@@ -34,6 +35,7 @@ public final class LogCatFilterLabelProvider extends LabelProvider implements IT
      * @param index index of the column
      * @return text to use in the column
      */
+    @Override
     public String getColumnText(Object element, int index) {
         if (!(element instanceof LogCatFilter)) {
             return null;

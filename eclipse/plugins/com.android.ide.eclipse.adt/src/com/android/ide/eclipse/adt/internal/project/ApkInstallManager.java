@@ -17,10 +17,10 @@
 package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.AndroidDebugBridge.IDebugBridgeChangeListener;
 import com.android.ddmlib.AndroidDebugBridge.IDeviceChangeListener;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.MultiLineReceiver;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor;
 import com.android.ide.eclipse.adt.internal.resources.manager.GlobalProjectMonitor.IProjectListener;
 
@@ -97,6 +97,7 @@ public final class ApkInstallManager {
             }
         }
 
+        @Override
         public boolean isCancelled() {
             return false;
         }
@@ -190,6 +191,7 @@ public final class ApkInstallManager {
          *
          * @see IDebugBridgeChangeListener#bridgeChanged(AndroidDebugBridge)
          */
+        @Override
         public void bridgeChanged(AndroidDebugBridge bridge) {
             // the bridge changed, there is no way to know which IDevice will be which.
             // We reset everything
@@ -206,6 +208,7 @@ public final class ApkInstallManager {
          *
          * @see IDeviceChangeListener#deviceDisconnected(IDevice)
          */
+        @Override
         public void deviceDisconnected(IDevice device) {
             synchronized (mInstallList) {
                 Iterator<ApkInstall> iterator = mInstallList.iterator();
@@ -218,10 +221,12 @@ public final class ApkInstallManager {
             }
         }
 
+        @Override
         public void deviceChanged(IDevice device, int changeMask) {
             // nothing to do.
         }
 
+        @Override
         public void deviceConnected(IDevice device) {
             // nothing to do.
         }
@@ -233,6 +238,7 @@ public final class ApkInstallManager {
          *
          * @see IProjectListener#projectClosed(IProject)
          */
+        @Override
         public void projectClosed(IProject project) {
             resetInstallationFor(project);
         }
@@ -242,18 +248,22 @@ public final class ApkInstallManager {
          *
          * @see IProjectListener#projectDeleted(IProject)
          */
+        @Override
         public void projectDeleted(IProject project) {
             resetInstallationFor(project);
         }
 
+        @Override
         public void projectOpened(IProject project) {
             // nothing to do.
         }
 
+        @Override
         public void projectOpenedWithWorkspace(IProject project) {
             // nothing to do.
         }
 
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // project renaming also triggers delete/open events so
             // there's nothing to do here (since delete will remove

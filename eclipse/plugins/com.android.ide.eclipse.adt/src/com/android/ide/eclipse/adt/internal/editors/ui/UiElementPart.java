@@ -71,7 +71,7 @@ public class UiElementPart extends ManifestSectionPart {
     public ManifestEditor getEditor() {
         return mEditor;
     }
-    
+
     /**
      * Returns the {@link UiElementNode} associated with this part.
      */
@@ -81,13 +81,13 @@ public class UiElementPart extends ManifestSectionPart {
 
     /**
      * Changes the element node handled by this part.
-     * 
-     * @param uiElementNode The new element node for the part. 
+     *
+     * @param uiElementNode The new element node for the part.
      */
     public void setUiElementNode(UiElementNode uiElementNode) {
         mUiElementNode = uiElementNode;
     }
-    
+
     /**
      * Initializes the form part.
      * <p/>
@@ -108,7 +108,7 @@ public class UiElementPart extends ManifestSectionPart {
      * <br/>
      * Derived class override this if needed, however in most cases the default
      * implementation should be enough.
-     * 
+     *
      * @param sectionTitle The section part's title
      * @param sectionDescription The section part's description
      */
@@ -125,7 +125,7 @@ public class UiElementPart extends ManifestSectionPart {
      * <code>initialize</code> (i.e. right after the form part is added to the managed form.)
      * <p/>
      * Derived classes can override this if necessary.
-     * 
+     *
      * @param managedForm The owner managed form
      */
     protected void createFormControls(IManagedForm managedForm) {
@@ -150,7 +150,7 @@ public class UiElementPart extends ManifestSectionPart {
 
     /**
      * Add all the attribute UI widgets into the underlying table layout.
-     * 
+     *
      * @param managedForm The owner managed form
      */
     protected void createUiAttributes(IManagedForm managedForm) {
@@ -159,7 +159,7 @@ public class UiElementPart extends ManifestSectionPart {
             return;
         }
 
-        // Remove any old UI controls 
+        // Remove any old UI controls
         for (Control c : table.getChildren()) {
             c.dispose();
         }
@@ -171,20 +171,20 @@ public class UiElementPart extends ManifestSectionPart {
     }
 
     /**
-     * Actually fills the table. 
+     * Actually fills the table.
      * This is called by {@link #createUiAttributes(IManagedForm)} to populate the new
      * table. The default implementation is to use
      * {@link #insertUiAttributes(UiElementNode, Composite, IManagedForm)} to actually
      * place the attributes of the default {@link UiElementNode} in the table.
      * <p/>
      * Derived classes can override this to add controls in the table before or after.
-     * 
+     *
      * @param table The table to fill. It must have 2 columns.
      * @param managedForm The managed form for new controls.
      */
     protected void fillTable(Composite table, IManagedForm managedForm) {
         int inserted = insertUiAttributes(mUiElementNode, table, managedForm);
-        
+
         if (inserted == 0) {
             createLabel(table, managedForm.getToolkit(),
                     "No attributes to display, waiting for SDK to finish loading...",
@@ -194,7 +194,7 @@ public class UiElementPart extends ManifestSectionPart {
 
     /**
      * Insert the UI attributes of the given {@link UiElementNode} in the given table.
-     * 
+     *
      * @param uiNode The {@link UiElementNode} that contains the attributes to display.
      *               Must not be null.
      * @param table The table to fill. It must have 2 columns.
@@ -237,7 +237,7 @@ public class UiElementPart extends ManifestSectionPart {
      * <p/>
      * This is done by iterating over all attributes and updating the super's
      * internal dirty flag. Stop once at least one attribute is dirty.
-     * 
+     *
      * @return <code>true</code> if the part is dirty, <code>false</code>
      *         otherwise.
      */
@@ -253,11 +253,11 @@ public class UiElementPart extends ManifestSectionPart {
         }
         return super.isDirty();
     }
-    
+
     /**
      * If part is displaying information loaded from a model, this method
      * instructs it to commit the new (modified) data back into the model.
-     * 
+     *
      * @param onSave
      *            indicates if commit is called during 'save' operation or for
      *            some other reason (for example, if form is contained in a
@@ -268,6 +268,7 @@ public class UiElementPart extends ManifestSectionPart {
     public void commit(boolean onSave) {
         if (mUiElementNode != null) {
             mEditor.wrapEditXmlModel(new Runnable() {
+                @Override
                 public void run() {
                     for (UiAttributeNode ui_attr : mUiElementNode.getAllUiAttributes()) {
                         ui_attr.commit();

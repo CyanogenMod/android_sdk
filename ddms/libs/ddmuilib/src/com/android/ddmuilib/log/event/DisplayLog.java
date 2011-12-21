@@ -22,6 +22,7 @@ import com.android.ddmlib.log.EventValueDescription;
 import com.android.ddmlib.log.InvalidTypeException;
 import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.TableHelper;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -93,7 +94,7 @@ public class DisplayLog extends EventDisplay {
 
         // get the date.
         Calendar c = Calendar.getInstance();
-        long msec = (long) event.sec * 1000L;
+        long msec = event.sec * 1000L;
         c.setTimeInMillis(msec);
 
         // convert the time into a string
@@ -147,7 +148,7 @@ public class DisplayLog extends EventDisplay {
 
         // get the date.
         Calendar c = Calendar.getInstance();
-        long msec = (long) event.sec * 1000L;
+        long msec = event.sec * 1000L;
         c.setTimeInMillis(msec);
 
         // convert the time into a string
@@ -247,6 +248,7 @@ public class DisplayLog extends EventDisplay {
         mainComp.setLayout(gl = new GridLayout(1, false));
         gl.marginHeight = gl.marginWidth = 0;
         mainComp.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 mLogTable = null;
             }

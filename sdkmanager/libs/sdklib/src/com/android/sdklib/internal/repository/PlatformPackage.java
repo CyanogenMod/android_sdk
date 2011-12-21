@@ -142,6 +142,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
     }
 
     /** Returns the package version, for platform, add-on and doc packages. */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }
@@ -168,6 +169,7 @@ public class PlatformPackage extends MinToolsPackage implements IPackageVersion,
      *
      * @since sdk-repository-4.xsd
      */
+    @Override
     public Pair<Integer, Integer> getLayoutlibVersion() {
         return mLayoutlibVersion.getLayoutlibVersion();
     }

@@ -135,6 +135,7 @@ public class PostCompilerBuilder extends BaseBuilder {
          * {@inheritDoc}
          * @throws CoreException
          */
+        @Override
         public boolean visit(IResourceDelta delta) throws CoreException {
             //  no need to keep looking if we already know we need to convert
             // to dex and make the final package.
@@ -193,6 +194,7 @@ public class PostCompilerBuilder extends BaseBuilder {
     }
 
     private ResourceMarker mResourceMarker = new ResourceMarker() {
+        @Override
         public void setWarning(IResource resource, String message) {
             BaseProjectHelper.markResource(resource, AdtConstants.MARKER_PACKAGING,
                     message, IMarker.SEVERITY_WARNING);
@@ -812,6 +814,7 @@ public class PostCompilerBuilder extends BaseBuilder {
             }
         }
 
+        @Override
         public void addFile(File file, String archivePath) throws ApkCreationException,
                 SealedApkException, DuplicateFileException {
             try {

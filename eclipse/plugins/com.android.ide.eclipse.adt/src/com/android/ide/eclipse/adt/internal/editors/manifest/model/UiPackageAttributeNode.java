@@ -109,7 +109,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
         });
         formText.setLayoutData(new TableWrapData(TableWrapData.LEFT, TableWrapData.MIDDLE));
         SectionHelper.addControlTooltip(formText, desc.getTooltip());
-        
+
         Composite composite = toolkit.createComposite(parent);
         composite.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB, TableWrapData.MIDDLE));
         GridLayout gl = new GridLayout(2, false);
@@ -118,7 +118,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
         // Fixes missing text borders under GTK... also requires adding a 1-pixel margin
         // for the text field below
         toolkit.paintBordersFor(composite);
-        
+
         final Text text = toolkit.createText(composite, getCurrentValue());
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalIndent = 1;  // Needed by the fixed composite borders under GTK
@@ -127,7 +127,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
         setTextWidget(text);
 
         Button browseButton = toolkit.createButton(composite, "Browse...", SWT.PUSH);
-        
+
         browseButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -135,15 +135,16 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
                 doBrowseClick();
             }
         });
-        
+
     }
-    
+
     /* (non-java doc)
      * Adds a validator to the text field that calls managedForm.getMessageManager().
      */
     @Override
     protected void onAddValidators(final Text text) {
         ModifyListener listener = new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String package_name = text.getText();
                 if (package_name.indexOf('.') < 1) {
@@ -160,6 +161,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
 
         // Make sure the validator removes its message(s) when the widget is disposed
         text.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 getManagedForm().getMessageManager().removeMessage(text, text);
             }
@@ -174,11 +176,11 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
      * */
     private void doBrowseClick() {
         Text text = getTextWidget();
-        
+
         // we need to get the project of the manifest.
         IProject project = getProject();
         if (project != null) {
-            
+
             try {
                 SelectionDialog dlg = JavaUI.createPackageDialog(text.getShell(),
                         JavaCore.create(project), 0);
@@ -203,7 +205,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
     private void doLabelClick() {
         // get the current package name
         String package_name = getTextWidget().getText().trim();
-        
+
         if (package_name.length() == 0) {
             createNewPackage();
         } else {
@@ -237,7 +239,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
 
     /**
      * Utility method that returns the project for the current file being edited.
-     * 
+     *
      * @return The IProject for the current file being edited or null.
      */
     private IProject getProject() {
@@ -249,14 +251,14 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
             IFile file = ((IFileEditorInput)input).getFile();
             return file.getProject();
         }
-        
+
         return null;
     }
 
     /**
      * Utility method that computes and returns the list of {@link IPackageFragmentRoot}
      * corresponding to the source folder of the specified project.
-     * 
+     *
      * @param project the project
      * @return an array of IPackageFragmentRoot. Can be empty but not null.
      */
@@ -276,7 +278,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
 
         return result.toArray(new IPackageFragmentRoot[result.size()]);
     }
-    
+
     /**
      * Utility method that sets the package's text field to the package fragment's name.
      * */
@@ -284,16 +286,16 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
         Text text = getTextWidget();
 
         String name = type.getElementName();
-        
+
         text.setText(name);
     }
-    
+
 
     /**
      * Displays and handles a "Create Package Wizard".
-     * 
+     *
      * This is invoked by doLabelClick() when clicking on the hyperlink label with an
-     * empty package text field.  
+     * empty package text field.
      */
     private void createNewPackage() {
         OpenNewPackageWizardAction action = new OpenNewPackageWizardAction();
@@ -309,7 +311,7 @@ public class UiPackageAttributeNode extends UiTextAttributeNode {
             setPackageTextField((IPackageFragment) element);
         }
     }
-    
+
     @Override
     public String[] getPossibleValues(String prefix) {
         // TODO: compute a list of existing packages for content assist completion

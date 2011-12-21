@@ -79,6 +79,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
      *
      * @see IFileListener#fileChanged
      */
+    @Override
     public void fileChanged(IFile file, IMarkerDelta[] markerDeltas, int kind) {
         IProject project = file.getProject();
 
@@ -134,6 +135,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     /**
      * Processes project close event.
      */
+    @Override
     public void projectClosed(IProject project) {
         // the ProjectResources object will be removed by the ResourceManager.
     }
@@ -141,6 +143,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     /**
      * Processes project delete event.
      */
+    @Override
     public void projectDeleted(IProject project) {
         // the ProjectResources object will be removed by the ResourceManager.
     }
@@ -148,11 +151,13 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     /**
      * Processes project open event.
      */
+    @Override
     public void projectOpened(IProject project) {
         // when the project is opened, we get an ADDED event for each file, so we don't
         // need to do anything here.
     }
 
+    @Override
     public void projectRenamed(IProject project, IPath from) {
         // renamed projects also trigger delete/open event,
         // so nothing to be done here.
@@ -161,6 +166,7 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
     /**
      * Processes existing project at init time.
      */
+    @Override
     public void projectOpenedWithWorkspace(IProject project) {
         try {
             // check this is an android project

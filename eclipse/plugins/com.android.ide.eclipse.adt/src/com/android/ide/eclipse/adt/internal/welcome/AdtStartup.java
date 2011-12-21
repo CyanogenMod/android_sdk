@@ -55,6 +55,7 @@ public class AdtStartup implements IStartup {
 
     private DdmsPreferenceStore mStore = new DdmsPreferenceStore();
 
+    @Override
     public void earlyStartup() {
         if (isFirstTime()) {
             showWelcomeWizard();
@@ -107,6 +108,7 @@ public class AdtStartup implements IStartup {
     private void showWelcomeWizard() {
         final IWorkbench workbench = PlatformUI.getWorkbench();
         workbench.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
                 if (window != null) {

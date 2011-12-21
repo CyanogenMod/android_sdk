@@ -86,6 +86,7 @@ public final class ProgressView implements IProgressUiProvider {
         mStopButton = stopButton;
         if (mStopButton != null) {
             mStopButton.addListener(SWT.Selection, new Listener() {
+                @Override
                 public void handleEvent(Event event) {
                     if (mState == State.ACTIVE) {
                         changeState(State.STOP_PENDING);
@@ -113,6 +114,7 @@ public final class ProgressView implements IProgressUiProvider {
                 }
 
                 Runnable r = new Runnable() {
+                    @Override
                     public void run() {
                         if (parentMonitor == null) {
                             task.run(new TaskMonitorImpl(ProgressView.this));
@@ -179,6 +181,7 @@ public final class ProgressView implements IProgressUiProvider {
     private void syncExec(final Widget widget, final Runnable runnable) {
         if (widget != null && !widget.isDisposed()) {
             widget.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     // Check again whether the widget got disposed between the time where
                     // we requested the syncExec and the time it actually happened.
@@ -196,6 +199,7 @@ public final class ProgressView implements IProgressUiProvider {
         }
 
         syncExec(mStopButton, new Runnable() {
+            @Override
             public void run() {
                 mStopButton.setEnabled(mState == State.ACTIVE);
             }
@@ -205,6 +209,7 @@ public final class ProgressView implements IProgressUiProvider {
 
     // --- Implementation of ITaskUiProvider ---
 
+    @Override
     public boolean isCancelRequested() {
         return mState != State.ACTIVE;
     }
@@ -213,8 +218,10 @@ public final class ProgressView implements IProgressUiProvider {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setDescription(final String description) {
         syncExec(mLabel, new Runnable() {
+            @Override
             public void run() {
                 mLabel.setText(description);
             }
@@ -227,6 +234,7 @@ public final class ProgressView implements IProgressUiProvider {
      * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void log(String log) {
         mLog.log(log);
     }
@@ -235,6 +243,7 @@ public final class ProgressView implements IProgressUiProvider {
      * Logs an "error" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logError(String log) {
         mLog.logError(log);
     }
@@ -244,6 +253,7 @@ public final class ProgressView implements IProgressUiProvider {
      * not that useful for the end-user and might be hidden until explicitly shown.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logVerbose(String log) {
         mLog.logVerbose(log);
     }
@@ -254,8 +264,10 @@ public final class ProgressView implements IProgressUiProvider {
      *
      * @see ProgressBar#setMaximum(int)
      */
+    @Override
     public void setProgressMax(final int max) {
         syncExec(mProgressBar, new Runnable() {
+            @Override
             public void run() {
                 mProgressBar.setMaximum(max);
             }
@@ -266,8 +278,10 @@ public final class ProgressView implements IProgressUiProvider {
      * Sets the current value of the progress bar.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setProgress(final int value) {
         syncExec(mProgressBar, new Runnable() {
+            @Override
             public void run() {
                 mProgressBar.setSelection(value);
             }
@@ -279,11 +293,13 @@ public final class ProgressView implements IProgressUiProvider {
      * between 0 and up to {@link #setProgressMax(int)} - 1.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public int getProgress() {
         final int[] result = new int[] { 0 };
 
         if (!mProgressBar.isDisposed()) {
             mProgressBar.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!mProgressBar.isDisposed()) {
                         result[0] = mProgressBar.getSelection();
@@ -295,10 +311,12 @@ public final class ProgressView implements IProgressUiProvider {
         return result[0];
     }
 
+    @Override
     public boolean displayPrompt(final String title, final String message) {
         final boolean[] result = new boolean[] { false };
 
         syncExec(mProgressBar, new Runnable() {
+            @Override
             public void run() {
                 Shell shell = mProgressBar.getShell();
                 result[0] = MessageDialog.openQuestion(shell, title, message);
@@ -317,11 +335,13 @@ public final class ProgressView implements IProgressUiProvider {
      *         If operation is <b>canceled</b> by user the return value must be <b>null</b>.
      * @see ITaskMonitor#displayLoginCredentialsPrompt(String, String)
      */
+    @Override
     public UserCredentials
             displayLoginCredentialsPrompt(final String title, final String message) {
         final String[] resultArray = new String[] {"", "", "", ""};
         // open dialog and request login and password
         syncExec(mProgressBar, new Runnable() {
+            @Override
             public void run() {
                 Shell shell = mProgressBar.getShell();
                 AuthenticationDialog authenticationDialog = new AuthenticationDialog(shell,

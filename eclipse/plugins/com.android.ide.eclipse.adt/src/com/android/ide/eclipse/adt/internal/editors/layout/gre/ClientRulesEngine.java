@@ -105,10 +105,12 @@ class ClientRulesEngine implements IClientRulesEngine {
         mFqcn = fqcn;
     }
 
+    @Override
     public String getFqcn() {
         return mFqcn;
     }
 
+    @Override
     public void debugPrintf(String msg, Object... params) {
         AdtPlugin.printToConsole(
                 mFqcn == null ? "<unknown>" : mFqcn,
@@ -116,10 +118,12 @@ class ClientRulesEngine implements IClientRulesEngine {
                 );
     }
 
+    @Override
     public IViewRule loadRule(String fqcn) {
         return mRulesEngine.loadRule(fqcn, fqcn);
     }
 
+    @Override
     public void displayAlert(String message) {
         MessageDialog.openInformation(
                 AdtPlugin.getDisplay().getActiveShell(),
@@ -127,10 +131,12 @@ class ClientRulesEngine implements IClientRulesEngine {
                 message);
     }
 
+    @Override
     public String displayInput(String message, String value, final IValidator filter) {
         IInputValidator validator = null;
         if (filter != null) {
             validator = new IInputValidator() {
+                @Override
                 public String isValid(String newText) {
                     // IValidator has the same interface as SWT's IInputValidator
                     try {
@@ -155,27 +161,33 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public IViewMetadata getMetadata(final String fqcn) {
         return new IViewMetadata() {
+            @Override
             public String getDisplayName() {
                 // This also works when there is no "."
                 return fqcn.substring(fqcn.lastIndexOf('.') + 1);
             }
 
+            @Override
             public FillPreference getFillPreference() {
                 return ViewMetadataRepository.get().getFillPreference(fqcn);
             }
 
+            @Override
             public Margins getInsets() {
                 return mRulesEngine.getEditor().getCanvasControl().getInsets(fqcn);
             }
 
+            @Override
             public List<String> getTopAttributes() {
                 return ViewMetadataRepository.get().getTopAttributes(fqcn);
             }
         };
     }
 
+    @Override
     public int getMinApiLevel() {
         Sdk currentSdk = Sdk.getCurrent();
         if (currentSdk != null) {
@@ -186,6 +198,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         return -1;
     }
 
+    @Override
     public IValidator getResourceValidator() {
         // When https://review.source.android.com/#change,20168 is integrated,
         // change this to
@@ -193,6 +206,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public String displayReferenceInput(String currentValue) {
         GraphicalEditorPart graphicalEditor = mRulesEngine.getEditor();
         AndroidXmlEditor editor = graphicalEditor.getLayoutEditor();
@@ -221,6 +235,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public String displayResourceInput(String resourceTypeName, String currentValue) {
         return displayResourceInput(resourceTypeName, currentValue, null);
     }
@@ -267,6 +282,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public String[] displayMarginInput(String all, String left, String right, String top,
             String bottom) {
         AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
@@ -287,12 +303,14 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public String displayIncludeSourceInput() {
         AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
         IInputValidator validator = CyclicDependencyValidator.create(editor.getInputFile());
         return displayResourceInput(ResourceType.LAYOUT.getName(), null, validator);
     }
 
+    @Override
     public void select(final Collection<INode> nodes) {
         LayoutCanvas layoutCanvas = mRulesEngine.getEditor().getCanvasControl();
         final SelectionManager selectionManager = layoutCanvas.getSelectionManager();
@@ -301,12 +319,14 @@ class ClientRulesEngine implements IClientRulesEngine {
         // may not be selectable. We can't ONLY run an async exec since
         // code may depend on operating on the selection.
         layoutCanvas.getDisplay().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 selectionManager.select(nodes);
             }
         });
     }
 
+    @Override
     public String displayFragmentSourceInput() {
         try {
             // Compute a search scope: We need to merge all the subclasses
@@ -402,6 +422,7 @@ class ClientRulesEngine implements IClientRulesEngine {
                         @Override
                         public ITypeInfoFilterExtension getFilterExtension() {
                             return new ITypeInfoFilterExtension() {
+                                @Override
                                 public boolean select(ITypeInfoRequestor typeInfoRequestor) {
                                     int modifiers = typeInfoRequestor.getModifiers();
                                     if (!Flags.isPublic(modifiers)
@@ -437,14 +458,17 @@ class ClientRulesEngine implements IClientRulesEngine {
         return null;
     }
 
+    @Override
     public void redraw() {
         mRulesEngine.getEditor().getCanvasControl().redraw();
     }
 
+    @Override
     public void layout() {
         mRulesEngine.getEditor().recomputeLayout();
     }
 
+    @Override
     public Map<INode, Rect> measureChildren(INode parent,
             IClientRulesEngine.AttributeFilter filter) {
         RenderService renderService = RenderService.create(mRulesEngine.getEditor());
@@ -455,18 +479,21 @@ class ClientRulesEngine implements IClientRulesEngine {
         return map;
     }
 
+    @Override
     public int pxToDp(int px) {
         ConfigurationComposite config = mRulesEngine.getEditor().getConfigurationComposite();
         float dpi = config.getDensity().getDpiValue();
         return (int) (px * 160 / dpi);
     }
 
+    @Override
     public int dpToPx(int dp) {
         ConfigurationComposite config = mRulesEngine.getEditor().getConfigurationComposite();
         float dpi = config.getDensity().getDpiValue();
         return (int) (dp * dpi / 160);
     }
 
+    @Override
     public int screenToLayout(int pixels) {
         return (int) (pixels / mRulesEngine.getEditor().getCanvasControl().getScale());
     }
@@ -503,6 +530,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         }
     }
 
+    @Override
     public String getUniqueId(String fqcn) {
         UiDocumentNode root = mRulesEngine.getEditor().getModel();
         String prefix = fqcn.substring(fqcn.lastIndexOf('.') + 1);
@@ -510,6 +538,7 @@ class ClientRulesEngine implements IClientRulesEngine {
         return DescriptorsUtils.getFreeWidgetId(root, prefix);
     }
 
+    @Override
     public String getAppNameSpace() {
         ManifestInfo info = ManifestInfo.get(mRulesEngine.getEditor().getProject());
         return info.getPackage();

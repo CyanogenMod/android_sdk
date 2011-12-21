@@ -23,6 +23,7 @@ import com.android.ddmuilib.DdmUiPreferences;
 import com.android.ddmuilib.ImageLoader;
 import com.android.ddmuilib.log.event.EventDisplay.OccurrenceDisplayDescriptor;
 import com.android.ddmuilib.log.event.EventDisplay.ValueDisplayDescriptor;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -197,6 +198,7 @@ class EventDisplayOptions  extends Dialog {
         createRightPanel(rightPanel);
 
         mShell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
                 event.doit = true;
             }
@@ -365,6 +367,7 @@ class EventDisplayOptions  extends Dialog {
         mDisplayWidthText.setText(Integer.toString(
                 store.getInt(EventLogPanel.PREFS_DISPLAY_WIDTH)));
         mDisplayWidthText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String text = mDisplayWidthText.getText().trim();
                 try {
@@ -384,6 +387,7 @@ class EventDisplayOptions  extends Dialog {
         mDisplayHeightText.setText(Integer.toString(
                 store.getInt(EventLogPanel.PREFS_DISPLAY_HEIGHT)));
         mDisplayHeightText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 String text = mDisplayHeightText.getText().trim();
                 try {
@@ -410,6 +414,7 @@ class EventDisplayOptions  extends Dialog {
         mDisplayNameText = new Text(mInfoGroup, SWT.BORDER | SWT.LEFT | SWT.SINGLE);
         mDisplayNameText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mDisplayNameText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 if (mProcessTextChanges) {
                     EventDisplay eventDisplay = getCurrentEventDisplay();
@@ -466,6 +471,7 @@ class EventDisplayOptions  extends Dialog {
         mTimeLimitText = new Text(mChartOptions, SWT.BORDER);
         mTimeLimitText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mTimeLimitText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 String text = mTimeLimitText.getText().trim();
                 EventDisplay eventDisplay = getCurrentEventDisplay();
@@ -498,6 +504,7 @@ class EventDisplayOptions  extends Dialog {
         mHistWidthText = new Text(mHistOptions, SWT.BORDER);
         mHistWidthText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mHistWidthText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent arg0) {
                 String text = mHistWidthText.getText().trim();
                 EventDisplay eventDisplay = getCurrentEventDisplay();
@@ -540,6 +547,7 @@ class EventDisplayOptions  extends Dialog {
         mPidText = new Text(mInfoGroup, SWT.BORDER);
         mPidText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mPidText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 if (mProcessTextChanges) {
                     EventDisplay eventDisplay = getCurrentEventDisplay();

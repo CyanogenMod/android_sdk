@@ -21,8 +21,8 @@ import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdklib.internal.repository.NullTaskMonitor;
 import com.android.sdklib.internal.repository.Package;
-import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdklib.internal.repository.Package.UpdateInfo;
+import com.android.sdklib.internal.repository.SdkSource;
 import com.android.sdkuilib.internal.repository.UpdaterData;
 
 import org.eclipse.swt.widgets.Display;
@@ -151,6 +151,7 @@ class PackageLoader {
             }
 
             mUpdaterData.getTaskFactory().start("Loading Sources", new ITask() {
+                @Override
                 public void run(ITaskMonitor monitor) {
                     monitor.setProgressMax(10);
 
@@ -239,6 +240,7 @@ class PackageLoader {
             List<Archive> mArchivesToInstall = new ArrayList<Archive>();
             Map<Package, File> mInstallPaths = new HashMap<Package, File>();
 
+            @Override
             public boolean onUpdateSource(SdkSource source, Package[] packages) {
                 packages = installTask.filterLoadedSource(source, packages);
                 if (packages == null || packages.length == 0) {
@@ -277,6 +279,7 @@ class PackageLoader {
                 return true;
             }
 
+            @Override
             public void onLoadCompleted() {
                 if (!mArchivesToInstall.isEmpty()) {
                     installArchives(mArchivesToInstall);
@@ -306,6 +309,7 @@ class PackageLoader {
                 Shell shell = mUpdaterData.getWindowShell();
                 if (shell != null && !shell.isDisposed()) {
                     shell.getDisplay().syncExec(new Runnable() {;
+                        @Override
                         public void run() {
                             List<Archive> archives =
                                 mUpdaterData.updateOrInstallAll_WithGUI(

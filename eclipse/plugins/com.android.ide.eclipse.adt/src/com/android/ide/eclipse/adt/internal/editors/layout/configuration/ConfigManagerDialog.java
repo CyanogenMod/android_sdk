@@ -20,9 +20,9 @@ import com.android.ddmuilib.TableHelper;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice;
+import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.ide.eclipse.adt.internal.sdk.LayoutDeviceManager;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
-import com.android.ide.eclipse.adt.internal.sdk.LayoutDevice.DeviceConfig;
 import com.android.sdkuilib.ui.GridDialog;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -118,10 +118,12 @@ public class ConfigManagerDialog extends GridDialog {
         public DeviceContentProvider() {
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             return sCategory;
         }
 
+        @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement instanceof DeviceType) {
                 if (DeviceType.DEFAULT.equals(parentElement)) {
@@ -139,11 +141,13 @@ public class ConfigManagerDialog extends GridDialog {
             return null;
         }
 
+        @Override
         public Object getParent(Object element) {
             // parent cannot be computed. this is fine.
             return null;
         }
 
+        @Override
         public boolean hasChildren(Object element) {
             if (element instanceof DeviceType) {
                 if (DeviceType.DEFAULT.equals(element)) {
@@ -162,10 +166,12 @@ public class ConfigManagerDialog extends GridDialog {
         }
 
 
+        @Override
         public void dispose() {
             // nothing to dispose
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             if (newInput instanceof LayoutDeviceManager) {
                 mLayoutDeviceManager = (LayoutDeviceManager)newInput;
@@ -187,6 +193,7 @@ public class ConfigManagerDialog extends GridDialog {
      */
     private final static class DeviceLabelProvider implements ITableLabelProvider {
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof DeviceType) {
                 if (columnIndex == 0) {
@@ -206,23 +213,28 @@ public class ConfigManagerDialog extends GridDialog {
             return null;
         }
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             // no image
             return null;
         }
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
             // no listener
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
             // no listener
         }
 
+        @Override
         public void dispose() {
             // nothing to dispose
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             return false;
         }
@@ -265,6 +277,7 @@ public class ConfigManagerDialog extends GridDialog {
         mTreeViewer.setLabelProvider(new DeviceLabelProvider());
         mTreeViewer.setAutoExpandLevel(TreeViewer.ALL_LEVELS);
         mTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 setEnabled(getSelection());
             }

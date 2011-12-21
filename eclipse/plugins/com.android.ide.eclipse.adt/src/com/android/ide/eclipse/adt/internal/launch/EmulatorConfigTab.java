@@ -131,6 +131,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
      */
+    @Override
     public void createControl(Composite parent) {
         Font font = parent.getFont();
 
@@ -291,6 +292,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
         gd.horizontalSpan = 2;
         mEmulatorCLOptions.setLayoutData(gd);
         mEmulatorCLOptions.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 updateLaunchConfigurationDialog();
             }
@@ -300,6 +302,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
      */
+    @Override
     public String getName() {
         return "Target";
     }
@@ -322,6 +325,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
      */
+    @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
         AvdManager avdManager = Sdk.getCurrent().getAvdManager();
 
@@ -440,6 +444,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
+    @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 mAutoTargetButton.getSelection());
@@ -464,6 +469,7 @@ public class EmulatorConfigTab extends AbstractLaunchConfigurationTab {
     /* (non-Javadoc)
      * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
      */
+    @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_TARGET_MODE,
                 LaunchConfigDelegate.DEFAULT_TARGET_MODE.getValue());

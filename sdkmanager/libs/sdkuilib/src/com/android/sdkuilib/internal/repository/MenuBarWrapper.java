@@ -35,14 +35,17 @@ public abstract class MenuBarWrapper {
 
     public MenuBarWrapper(String appName, Menu menu) {
         MenuBarEnhancer.setupMenu(appName, menu, new IMenuBarCallback() {
+            @Override
             public void onPreferencesMenuSelected() {
                 MenuBarWrapper.this.onPreferencesMenuSelected();
             }
 
+            @Override
             public void onAboutMenuSelected() {
                 MenuBarWrapper.this.onAboutMenuSelected();
             }
 
+            @Override
             public void printError(String format, Object... args) {
                 MenuBarWrapper.this.printError(format, args);
             }

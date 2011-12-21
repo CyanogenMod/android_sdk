@@ -47,6 +47,7 @@ public final class ResourcesTreePage extends FormPage implements IPageImageProvi
         mEditor = editor;
     }
 
+    @Override
     public Image getPageImage() {
         return IconFactory.getInstance().getIcon("editor_page_design");  //$NON-NLS-1$
     }

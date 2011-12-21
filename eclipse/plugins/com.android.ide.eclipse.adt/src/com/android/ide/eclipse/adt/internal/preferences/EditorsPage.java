@@ -53,6 +53,7 @@ public class EditorsPage extends FieldEditorPreferencePage implements IWorkbench
         setPreferenceStore(AdtPlugin.getDefault().getPreferenceStore());
     }
 
+    @Override
     public void init(IWorkbench workbench) {
         // pass
     }

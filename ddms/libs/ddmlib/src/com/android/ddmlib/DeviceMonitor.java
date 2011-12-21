@@ -486,6 +486,7 @@ final class DeviceMonitor {
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
         device.executeShellCommand("echo $" + name, new MultiLineReceiver() { //$NON-NLS-1$
+            @Override
             public boolean isCancelled() {
                 return false;
             }

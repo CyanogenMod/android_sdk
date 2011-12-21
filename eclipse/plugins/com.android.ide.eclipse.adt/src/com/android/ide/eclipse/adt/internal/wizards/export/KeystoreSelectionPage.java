@@ -38,7 +38,7 @@ import java.io.File;
 
 /**
  * Keystore selection page. This page allows to choose to create a new keystore or use an
- * existing one. 
+ * existing one.
  */
 final class KeystoreSelectionPage extends ExportWizardPage {
 
@@ -59,14 +59,15 @@ final class KeystoreSelectionPage extends ExportWizardPage {
         setDescription(""); //TODO
     }
 
+    @Override
     public void createControl(Composite parent) {
         Composite composite = new Composite(parent, SWT.NULL);
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
         GridLayout gl = new GridLayout(3, false);
         composite.setLayout(gl);
-        
+
         GridData gd;
-        
+
         mUseExistingKeystore = new Button(composite, SWT.RADIO);
         mUseExistingKeystore.setText("Use existing keystore");
         mUseExistingKeystore.setLayoutData(gd = new GridData(GridData.FILL_HORIZONTAL));
@@ -122,7 +123,7 @@ final class KeystoreSelectionPage extends ExportWizardPage {
         setErrorMessage(null);
         setMessage(null);
         setControl(composite);
-        
+
         mUseExistingKeystore.addSelectionListener(new SelectionAdapter() {
            @Override
            public void widgetSelected(SelectionEvent e) {
@@ -133,8 +134,9 @@ final class KeystoreSelectionPage extends ExportWizardPage {
                onChange();
             }
         });
-        
+
         mKeystore.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mWizard.setKeystore(mKeystore.getText().trim());
                 onChange();
@@ -142,6 +144,7 @@ final class KeystoreSelectionPage extends ExportWizardPage {
         });
 
         mKeystorePassword.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mWizard.setKeystorePassword(mKeystorePassword.getText());
                 onChange();
@@ -149,41 +152,42 @@ final class KeystoreSelectionPage extends ExportWizardPage {
         });
 
         mKeystorePassword2.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 onChange();
             }
         });
     }
-    
+
     @Override
     public IWizardPage getNextPage() {
         if (mUseExistingKeystore.getSelection()) {
             return mWizard.getKeySelectionPage();
         }
-        
+
         return mWizard.getKeyCreationPage();
     }
-    
+
     @Override
     void onShow() {
         // fill the texts with information loaded from the project.
         if ((mProjectDataChanged & DATA_PROJECT) != 0) {
             // reset the keystore/alias from the content of the project
             IProject project = mWizard.getProject();
-            
+
             // disable onChange for now. we'll call it once at the end.
             mDisableOnChange = true;
-            
+
             String keystore = ProjectHelper.loadStringProperty(project,
                     ExportWizard.PROPERTY_KEYSTORE);
             if (keystore != null) {
                 mKeystore.setText(keystore);
             }
-            
+
             // reset the passwords
             mKeystorePassword.setText(""); //$NON-NLS-1$
             mKeystorePassword2.setText(""); //$NON-NLS-1$
-            
+
             // enable onChange, and call it to display errors and enable/disable pageCompleted.
             mDisableOnChange = false;
             onChange();
@@ -229,7 +233,7 @@ final class KeystoreSelectionPage extends ExportWizardPage {
                 }
             }
         }
-        
+
         String value = mKeystorePassword.getText();
         if (value.length() == 0) {
             setErrorMessage("Enter keystore password.");
@@ -247,7 +251,7 @@ final class KeystoreSelectionPage extends ExportWizardPage {
                 setPageComplete(false);
                 return;
             }
-            
+
             if (mKeystorePassword.getText().equals(mKeystorePassword2.getText()) == false) {
                 setErrorMessage("Keystore passwords do not match.");
                 setPageComplete(false);

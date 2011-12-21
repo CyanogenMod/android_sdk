@@ -113,21 +113,26 @@ public class PixelPerfectLoupeView extends ViewPart implements IImageChangeListe
     public void setFocus() {
         mPixelPerfectLoupe.setFocus();
     }
-    
+
+    @Override
     public void crosshairMoved() {
         // pass
     }
 
+    @Override
     public void treeChanged() {
         // pass
     }
 
+    @Override
     public void imageChanged() {
         // pass
     }
 
+    @Override
     public void imageLoaded() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 Image overlayImage = PixelPerfectModel.getModel().getOverlayImage();
                 mShowInLoupeAction.setEnabled(overlayImage != null);
@@ -135,8 +140,10 @@ public class PixelPerfectLoupeView extends ViewPart implements IImageChangeListe
         });
     }
 
+    @Override
     public void overlayChanged() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 mShowInLoupeAction
                         .setEnabled(PixelPerfectModel.getModel().getOverlayImage() != null);
@@ -144,14 +151,17 @@ public class PixelPerfectLoupeView extends ViewPart implements IImageChangeListe
         });
     }
 
+    @Override
     public void overlayTransparencyChanged() {
         // pass
     }
 
+    @Override
     public void selectionChanged() {
         // pass
     }
 
+    @Override
     public void zoomChanged() {
         // pass
     }

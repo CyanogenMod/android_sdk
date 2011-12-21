@@ -397,6 +397,7 @@ public class RuleAction implements Comparable<RuleAction> {
     }
 
     // Implements Comparable<MenuAciton>
+    @Override
     public int compareTo(RuleAction other) {
         if (mSortPriority != other.mSortPriority) {
             return mSortPriority - other.mSortPriority;

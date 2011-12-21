@@ -52,10 +52,12 @@ public class ConvertSwitchQuickFixProcessor implements IQuickFixProcessor {
     public ConvertSwitchQuickFixProcessor() {
     }
 
+    @Override
     public boolean hasCorrections(ICompilationUnit cu, int problemId) {
         return problemId == IProblem.NonConstantExpression;
     }
 
+    @Override
     public IJavaCompletionProposal[] getCorrections(IInvocationContext context,
             IProblemLocation[] location) throws CoreException {
         if (location == null || location.length == 0) {
@@ -181,33 +183,40 @@ public class ConvertSwitchQuickFixProcessor implements IQuickFixProcessor {
             mExpression = expression;
         }
 
+        @Override
         public void apply(IDocument document) {
             Shell shell = AdtPlugin.getDisplay().getActiveShell();
             ConvertSwitchDialog dialog = new ConvertSwitchDialog(shell, mExpression);
             dialog.open();
         }
 
+        @Override
         public Point getSelection(IDocument document) {
             return null;
         }
 
+        @Override
         public String getAdditionalProposalInfo() {
             return "As of ADT 14, resource fields cannot be used as switch cases. Invoke this " +
                     "fix to get more information.";
         }
 
+        @Override
         public String getDisplayString() {
             return "Migrate Android Code";
         }
 
+        @Override
         public Image getImage() {
             return AdtPlugin.getAndroidLogo();
         }
 
+        @Override
         public IContextInformation getContextInformation() {
             return null;
         }
 
+        @Override
         public int getRelevance() {
             return 50;
         }

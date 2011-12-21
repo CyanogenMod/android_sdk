@@ -46,6 +46,7 @@ public class ExtractStringProposal implements IJavaCompletionProposal {
         mContext = context;
     }
 
+    @Override
     public void apply(IDocument document) {
         IEditorPart editor = AdtUtils.getActiveEditor();
         IFile file = AdtUtils.getActiveFile();
@@ -70,10 +71,12 @@ public class ExtractStringProposal implements IJavaCompletionProposal {
         }
     }
 
+    @Override
     public Point getSelection(IDocument document) {
         return null;
     }
 
+    @Override
     public String getAdditionalProposalInfo() {
         try {
             ASTNode coveringNode = mContext.getCoveringNode();
@@ -160,18 +163,22 @@ public class ExtractStringProposal implements IJavaCompletionProposal {
         return "Initiates the Extract String refactoring operation";
     }
 
+    @Override
     public String getDisplayString() {
         return "Extract String";
     }
 
+    @Override
     public Image getImage() {
         return AdtPlugin.getAndroidLogo();
     }
 
+    @Override
     public IContextInformation getContextInformation() {
         return null;
     }
 
+    @Override
     public int getRelevance() {
         return 80;
     }

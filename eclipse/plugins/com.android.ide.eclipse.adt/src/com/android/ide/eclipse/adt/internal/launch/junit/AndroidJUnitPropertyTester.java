@@ -39,12 +39,13 @@ import org.eclipse.jdt.internal.junit.util.TestSearchEngine;
 @SuppressWarnings("restriction")
 public class AndroidJUnitPropertyTester extends PropertyTester {
     private static final String PROPERTY_IS_TEST = "isTest";  //$NON-NLS-1$
-    
+
     private static final String PROPERTY_CAN_LAUNCH_AS_JUNIT_TEST = "canLaunchAsJUnit"; //$NON-NLS-1$
 
     /* (non-Javadoc)
      * @see org.eclipse.jdt.internal.corext.refactoring.participants.properties.IPropertyEvaluator#test(java.lang.Object, java.lang.String, java.lang.String)
      */
+    @Override
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         if (!(receiver instanceof IAdaptable)) {
             final String elementName = (receiver == null ? "null" : //$NON-NLS-1$
@@ -73,7 +74,7 @@ public class AndroidJUnitPropertyTester extends PropertyTester {
                 }
             }
         }
-        if (PROPERTY_IS_TEST.equals(property)) { 
+        if (PROPERTY_IS_TEST.equals(property)) {
             return isJUnitTest(element);
         } else if (PROPERTY_CAN_LAUNCH_AS_JUNIT_TEST.equals(property)) {
             return canLaunchAsJUnitTest(element);
@@ -81,7 +82,7 @@ public class AndroidJUnitPropertyTester extends PropertyTester {
         throw new IllegalArgumentException(
                 String.format("Unknown test property '%s'", property)); //$NON-NLS-1$
     }
-    
+
     private boolean canLaunchAsJUnitTest(IJavaElement element) {
         try {
             switch (element.getElementType()) {
@@ -90,7 +91,7 @@ public class AndroidJUnitPropertyTester extends PropertyTester {
                 case IJavaElement.PACKAGE_FRAGMENT_ROOT:
                     return false; // not supported by Android test runner
                 case IJavaElement.PACKAGE_FRAGMENT:
-                    return ((IPackageFragment) element).hasChildren(); 
+                    return ((IPackageFragment) element).hasChildren();
                 case IJavaElement.COMPILATION_UNIT:
                 case IJavaElement.CLASS_FILE:
                 case IJavaElement.TYPE:

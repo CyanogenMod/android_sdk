@@ -68,6 +68,7 @@ public class SimpleElement implements IDragElement {
      * Returns the element name, which must match a fully qualified class name of
      * a View to inflate.
      */
+    @Override
     public String getFqcn() {
         return mFqcn;
     }
@@ -77,6 +78,7 @@ public class SimpleElement implements IDragElement {
      * canvas. The rectangle is invalid and non-null when the element originated
      * from the object palette (unless it successfully rendered a preview)
      */
+    @Override
     public Rect getBounds() {
         return mBounds;
     }
@@ -86,6 +88,7 @@ public class SimpleElement implements IDragElement {
      * from an existing canvas. Returns null if the element has no parent, such as a top
      * level element or an element originating from the object palette.
      */
+    @Override
     public String getParentFqcn() {
         return mParentFqcn;
     }
@@ -94,10 +97,12 @@ public class SimpleElement implements IDragElement {
      * Returns the bounds of the element's parent, absolute for the canvas, or null if there
      * is no suitable parent. This is null when {@link #getParentFqcn()} is null.
      */
+    @Override
     public Rect getParentBounds() {
         return mParentBounds;
     }
 
+    @Override
     public IDragAttribute[] getAttributes() {
         if (mCachedAttributes == null) {
             mCachedAttributes = mAttributes.toArray(new IDragAttribute[mAttributes.size()]);
@@ -105,6 +110,7 @@ public class SimpleElement implements IDragElement {
         return mCachedAttributes;
     }
 
+    @Override
     public IDragAttribute getAttribute(String uri, String localName) {
         for (IDragAttribute attr : mAttributes) {
             if (attr.getUri().equals(uri) && attr.getName().equals(localName)) {
@@ -115,6 +121,7 @@ public class SimpleElement implements IDragElement {
         return null;
     }
 
+    @Override
     public IDragElement[] getInnerElements() {
         if (mCachedElements == null) {
             mCachedElements = mElements.toArray(new IDragElement[mElements.size()]);

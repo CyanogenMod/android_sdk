@@ -216,6 +216,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     /**
      * Initialize the preference page.
      */
+    @Override
     public void init(IWorkbench workbench) {
         // Initialize the preference page
     }
@@ -322,6 +323,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
     // ---- Implements SelectionListener ----
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (mIgnoreEvent) {
             return;
@@ -390,6 +392,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         return mConfiguration.getSeverity(issue);
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         if (e.getSource() == mTree) {
             widgetSelected(e);
@@ -398,9 +401,11 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
     // ---- Implements ControlListener ----
 
+    @Override
     public void controlMoved(ControlEvent e) {
     }
 
+    @Override
     public void controlResized(ControlEvent e) {
         Rectangle r = mTree.getClientArea();
         int availableWidth = r.width;
@@ -451,19 +456,24 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
     private class LabelProvider implements ITableLabelProvider, IColorProvider {
 
+        @Override
         public void addListener(ILabelProviderListener listener) {
         }
 
+        @Override
         public void dispose() {
         }
 
+        @Override
         public boolean isLabelProperty(Object element, String property) {
             return true;
         }
 
+        @Override
         public void removeListener(ILabelProviderListener listener) {
         }
 
+        @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (element instanceof Category) {
                 return null;
@@ -491,6 +501,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             return null;
         }
 
+        @Override
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof Category) {
                 if (columnIndex == 0) {
@@ -513,6 +524,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
         // ---- IColorProvider ----
 
+        @Override
         public Color getForeground(Object element) {
             if (element instanceof Category) {
                 return mTree.getDisplay().getSystemColor(SWT.COLOR_INFO_FOREGROUND);
@@ -529,6 +541,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             return null;
         }
 
+        @Override
         public Color getBackground(Object element) {
             if (element instanceof Category) {
                 return mTree.getDisplay().getSystemColor(SWT.COLOR_INFO_BACKGROUND);

@@ -197,8 +197,10 @@ class LogWindow implements ILogUiProvider {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setDescription(final String description) {
         syncExec(mLogDescription, new Runnable() {
+            @Override
             public void run() {
                 mLogDescription.setText(description);
 
@@ -217,9 +219,11 @@ class LogWindow implements ILogUiProvider {
      * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void log(final String log) {
         if (acceptLog(log, false /*isDescription*/)) {
             syncExec(mLogDescription, new Runnable() {
+                @Override
                 public void run() {
                     appendLine(TextStyle.DEFAULT, log);
                 }
@@ -235,9 +239,11 @@ class LogWindow implements ILogUiProvider {
      * Logs an "error" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logError(final String log) {
         if (acceptLog(log, false /*isDescription*/)) {
             syncExec(mLogDescription, new Runnable() {
+                @Override
                 public void run() {
                     appendLine(TextStyle.ERROR, log);
                 }
@@ -254,9 +260,11 @@ class LogWindow implements ILogUiProvider {
      * not that useful for the end-user and might be hidden until explicitly shown.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logVerbose(final String log) {
         if (acceptLog(log, false /*isDescription*/)) {
             syncExec(mLogDescription, new Runnable() {
+                @Override
                 public void run() {
                     appendLine(TextStyle.DEFAULT, "  " + log);      //$NON-NLS-1$
                 }

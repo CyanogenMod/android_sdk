@@ -137,22 +137,27 @@ public class PaletteControl extends Composite {
             mEditorPart = editor;
         }
 
+        @Override
         public String getTitle() {
             return "Palette";
         }
 
+        @Override
         public Image getImage() {
             return IconFactory.getInstance().getIcon("editor_palette");  //$NON-NLS-1$
         }
 
+        @Override
         public void createControl(Composite parent) {
             mControl = new PaletteControl(parent, mEditorPart);
         }
 
+        @Override
         public Control getControl() {
             return mControl;
         }
 
+        @Override
         public void createToolbarItems(final ToolBar toolbar) {
             final ToolItem popupMenuItem = new ToolItem(toolbar, SWT.PUSH);
             popupMenuItem.setToolTipText("View Menu");
@@ -659,6 +664,7 @@ public class PaletteControl extends Composite {
         source.setTransfer(new Transfer[] { SimpleXmlTransfer.getInstance() });
         source.addDragListener(new DescDragSourceListener(desc));
         item.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 source.dispose();
             }
@@ -695,6 +701,7 @@ public class PaletteControl extends Composite {
             return style;
         }
 
+        @Override
         public void mouseEnter(MouseEvent e) {
             if (!mMouseIn) {
                 mMouseIn = true;
@@ -702,6 +709,7 @@ public class PaletteControl extends Composite {
             }
         }
 
+        @Override
         public void mouseExit(MouseEvent e) {
             if (mMouseIn) {
                 mMouseIn = false;
@@ -709,6 +717,7 @@ public class PaletteControl extends Composite {
             }
         }
 
+        @Override
         public void mouseHover(MouseEvent e) {
             // pass
         }
@@ -726,6 +735,7 @@ public class PaletteControl extends Composite {
             mDesc = desc;
         }
 
+        @Override
         public void dragStart(DragSourceEvent e) {
             // See if we can find out the bounds of this element from a preview image.
             // Preview images are created before the drag source listener is notified
@@ -773,6 +783,7 @@ public class PaletteControl extends Composite {
             e.doit = true;
         }
 
+        @Override
         public void dragSetData(DragSourceEvent e) {
             // Provide the data for the drop when requested by the other side.
             if (SimpleXmlTransfer.getInstance().isSupportedType(e.dataType)) {
@@ -780,6 +791,7 @@ public class PaletteControl extends Composite {
             }
         }
 
+        @Override
         public void dragFinished(DragSourceEvent e) {
             // Unregister the dragged data.
             GlobalCanvasDragInfo.getInstance().stopDrag();
@@ -1179,6 +1191,7 @@ public class PaletteControl extends Composite {
 
     private void addMenu(Control control) {
         control.addMenuDetectListener(new MenuDetectListener() {
+            @Override
             public void menuDetected(MenuDetectEvent e) {
                 showMenu(e.x, e.y);
             }
@@ -1233,6 +1246,7 @@ public class PaletteControl extends Composite {
             this.mParent = parent;
         }
 
+        @Override
         public void viewsUpdated(Collection<String> customViews,
                 Collection<String> thirdPartyViews) {
             addCustomItems(mParent);

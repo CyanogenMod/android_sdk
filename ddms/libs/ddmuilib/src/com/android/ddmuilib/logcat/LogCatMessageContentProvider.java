@@ -23,12 +23,15 @@ import org.eclipse.jface.viewers.Viewer;
  * A JFace content provider for the LogCat log messages, used in the {@link LogCatPanel}.
  */
 public final class LogCatMessageContentProvider implements IStructuredContentProvider {
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
     }
 
+    @Override
     public Object[] getElements(Object model) {
         if (model instanceof LogCatMessageList) {
             Object[] e = ((LogCatMessageList) model).toArray();

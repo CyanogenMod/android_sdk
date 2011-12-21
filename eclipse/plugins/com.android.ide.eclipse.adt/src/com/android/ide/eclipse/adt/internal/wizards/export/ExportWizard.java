@@ -20,8 +20,8 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.ExportHelper;
 import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
-import com.android.sdklib.internal.build.KeystoreHelper;
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
+import com.android.sdklib.internal.build.KeystoreHelper;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -48,8 +48,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.security.KeyStore.PrivateKeyEntry;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,6 +88,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
         protected static final int DATA_KEY = 0x004;
 
         protected static final VerifyListener sPasswordVerifier = new VerifyListener() {
+            @Override
             public void verifyText(VerifyEvent e) {
                 // verify the characters are valid for password.
                 int len = e.text.length();
@@ -208,6 +209,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                  * @throws InvocationTargetException
                  * @throws InterruptedException
                  */
+                @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
                         InterruptedException {
                     try {
@@ -240,9 +242,11 @@ public final class ExportWizard extends Wizard implements IExportWizard {
                         mDName,
                         mValidity,
                         new IKeyGenOutput() {
+                            @Override
                             public void err(String message) {
                                 output.add(message);
                             }
+                            @Override
                             public void out(String message) {
                                 output.add(message);
                             }
@@ -330,6 +334,7 @@ public final class ExportWizard extends Wizard implements IExportWizard {
      * (non-Javadoc)
      * @see org.eclipse.ui.IWorkbenchWizard#init(org.eclipse.ui.IWorkbench, org.eclipse.jface.viewers.IStructuredSelection)
      */
+    @Override
     public void init(IWorkbench workbench, IStructuredSelection selection) {
         // get the project from the selection
         Object selected = selection.getFirstElement();

@@ -147,6 +147,7 @@ public class SettingsController {
             settingsPage.loadSettings(mProperties);
 
             settingsPage.setOnSettingsChanged(new ISettingsPage.SettingsChangedCallback() {
+                @Override
                 public void onSettingsChanged(ISettingsPage page) {
                     SettingsController.this.onSettingsChanged();
                 }

@@ -166,9 +166,11 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
             // Weights
             IMenuCallback actionCallback = new IMenuCallback() {
+                @Override
                 public void action(final RuleAction action, List<? extends INode> selectedNodes,
                         final String valueId, final Boolean newValue) {
                     parentNode.editXml("Change Weight", new INodeHandler() {
+                        @Override
                         public void handle(INode n) {
                             String id = action.getId();
                             if (id.equals(ACTION_WEIGHT)) {
@@ -342,6 +344,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
         return new DropFeedback(new LinearDropData(indexes, posCount, isVertical, selfPos),
                 new IFeedbackPainter() {
 
+                    @Override
                     public void paint(IGraphics gc, INode node, DropFeedback feedback) {
                         // Paint callback for the LinearLayout. This is called
                         // by the canvas when a draw is needed.
@@ -771,6 +774,7 @@ public class LinearLayoutRule extends BaseLayoutRule {
 
             unweightedSizes = mRulesEngine.measureChildren(layout,
                     new IClientRulesEngine.AttributeFilter() {
+                        @Override
                         public String getAttribute(INode n, String namespace, String localName) {
                             // Clear out layout weights; we need to measure the unweighted sizes
                             // of the children

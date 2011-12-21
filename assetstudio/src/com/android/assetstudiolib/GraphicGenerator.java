@@ -151,6 +151,7 @@ public abstract class GraphicGenerator {
         Density[] densityValues = Density.values();
         // Sort density values into ascending order
         Arrays.sort(densityValues, new Comparator<Density>() {
+            @Override
             public int compare(Density d1, Density d2) {
                 return d1.getDpiValue() - d2.getDpiValue();
             }

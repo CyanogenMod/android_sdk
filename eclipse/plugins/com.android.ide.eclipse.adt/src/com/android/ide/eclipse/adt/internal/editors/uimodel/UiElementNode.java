@@ -691,6 +691,7 @@ public class UiElementNode implements IPropertySource {
                  * The default is to create a new ElementDescriptor wrapping
                  * the unknown XML local name and reuse previously created descriptors.
                  */
+                @Override
                 public ElementDescriptor getDescriptor(String xmlLocalName) {
 
                     ElementDescriptor desc = mMap.get(xmlLocalName);
@@ -1924,6 +1925,7 @@ public class UiElementNode implements IPropertySource {
 
     // ------ IPropertySource methods
 
+    @Override
     public Object getEditableValue() {
         return null;
     }
@@ -1935,6 +1937,7 @@ public class UiElementNode implements IPropertySource {
      * Returns the property descriptor for this node. Since the descriptors are not linked to the
      * data, the AttributeDescriptor are used directly.
      */
+    @Override
     public IPropertyDescriptor[] getPropertyDescriptors() {
         List<IPropertyDescriptor> propDescs = new ArrayList<IPropertyDescriptor>();
 
@@ -1968,6 +1971,7 @@ public class UiElementNode implements IPropertySource {
      * Returns the value of a given property. The id is the result of IPropertyDescriptor.getId(),
      * which return the AttributeDescriptor itself.
      */
+    @Override
     public Object getPropertyValue(Object id) {
         HashMap<AttributeDescriptor, UiAttributeNode> attributeMap = getInternalUiAttributes();
 
@@ -1991,6 +1995,7 @@ public class UiElementNode implements IPropertySource {
      *
      * Returns whether the property is set. In our case this is if the string is non empty.
      */
+    @Override
     public boolean isPropertySet(Object id) {
         HashMap<AttributeDescriptor, UiAttributeNode> attributeMap = getInternalUiAttributes();
 
@@ -2016,6 +2021,7 @@ public class UiElementNode implements IPropertySource {
      *
      * Reset the property to its default value. For now we simply empty it.
      */
+    @Override
     public void resetPropertyValue(Object id) {
         HashMap<AttributeDescriptor, UiAttributeNode> attributeMap = getInternalUiAttributes();
 
@@ -2043,6 +2049,7 @@ public class UiElementNode implements IPropertySource {
      * Set the property value. id is the result of IPropertyDescriptor.getId(), which is the
      * AttributeDescriptor itself. Value should be a String.
      */
+    @Override
     public void setPropertyValue(Object id, Object value) {
         HashMap<AttributeDescriptor, UiAttributeNode> attributeMap = getInternalUiAttributes();
 
@@ -2071,6 +2078,7 @@ public class UiElementNode implements IPropertySource {
             final UiAttributeNode fAttribute = attribute;
             AndroidXmlEditor editor = getEditor();
             editor.wrapEditXmlModel(new Runnable() {
+                @Override
                 public void run() {
                     commitAttributeToXml(fAttribute, newValue);
                 }

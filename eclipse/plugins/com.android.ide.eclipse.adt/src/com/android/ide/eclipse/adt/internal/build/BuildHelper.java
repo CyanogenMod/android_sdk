@@ -26,18 +26,18 @@ import com.android.ide.eclipse.adt.internal.project.ProjectHelper;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.SdkConstants;
 import com.android.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkBuilder.JarStatus;
+import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
-import com.android.sdklib.build.ApkBuilder.JarStatus;
-import com.android.sdklib.build.ApkBuilder.SigningInfo;
 import com.android.sdklib.internal.build.DebugKeyProvider;
-import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
+import com.android.sdklib.internal.build.SignedJarBuilder;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -971,6 +971,7 @@ public class BuildHelper {
             ApkCreationException, SealedApkException, DuplicateFileException {
         final List<IPath> pathsToPackage = new ArrayList<IPath>();
         root.accept(new IResourceProxyVisitor() {
+            @Override
             public boolean visit(IResourceProxy proxy) throws CoreException {
                 if (proxy.getType() == IResource.FOLDER) {
                     // If this folder isn't wanted, don't traverse into it.

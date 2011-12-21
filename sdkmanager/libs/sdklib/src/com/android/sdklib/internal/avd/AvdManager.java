@@ -899,6 +899,7 @@ public class AvdManager {
 
         if (folder.isDirectory()) {
             String[] list = folder.list(new FilenameFilter() {
+                @Override
                 public boolean accept(File dir, String name) {
                     return IMAGE_NAME_PATTERN.matcher(name).matches();
                 }
@@ -1217,6 +1218,7 @@ public class AvdManager {
         }
 
         File[] avds = folder.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File parent, String name) {
                 if (INI_NAME_PATTERN.matcher(name).matches()) {
                     // check it's a file and not a folder

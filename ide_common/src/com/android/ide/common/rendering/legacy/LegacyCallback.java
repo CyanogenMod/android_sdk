@@ -35,10 +35,12 @@ public abstract class LegacyCallback implements
 
     // ------ implementation of the old interface using the new interface.
 
+    @Override
     public final Integer getResourceValue(String type, String name) {
         return getResourceId(ResourceType.getEnum(type), name);
     }
 
+    @Override
     public final String[] resolveResourceValue(int id) {
         Pair<ResourceType, String> info = resolveResourceId(id);
         if (info != null) {
@@ -48,6 +50,7 @@ public abstract class LegacyCallback implements
         return null;
     }
 
+    @Override
     public final String resolveResourceValue(int[] id) {
         return resolveResourceId(id);
     }

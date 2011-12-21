@@ -19,10 +19,10 @@ package com.android.sdklib.internal.repository;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.SystemImage;
-import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
@@ -212,6 +212,7 @@ public class SystemImagePackage extends Package
      * <p/>
      * A system-image has the same {@link AndroidVersion} as the platform it depends on.
      */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }

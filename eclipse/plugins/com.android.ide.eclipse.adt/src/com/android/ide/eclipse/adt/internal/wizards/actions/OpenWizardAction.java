@@ -79,6 +79,7 @@ import org.eclipse.ui.internal.util.Util;
     /* (non-Javadoc)
      * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
      */
+    @Override
     public void dispose() {
         // pass
     }
@@ -86,6 +87,7 @@ import org.eclipse.ui.internal.util.Util;
     /* (non-Javadoc)
      * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
      */
+    @Override
     public void init(IWorkbenchWindow window) {
         // pass
     }
@@ -98,6 +100,7 @@ import org.eclipse.ui.internal.util.Util;
      * @param action The action that got us here. Can be null when used internally.
      * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
      */
+    @Override
     public void run(IAction action) {
 
         // get the workbench and the current window
@@ -165,6 +168,7 @@ import org.eclipse.ui.internal.util.Util;
     /* (non-Javadoc)
      * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
      */
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         mSelection = selection;
     }
@@ -172,6 +176,7 @@ import org.eclipse.ui.internal.util.Util;
     /* (non-Javadoc)
      * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
      */
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         mWorkbench = targetPart.getSite().getWorkbenchWindow().getWorkbench();
     }

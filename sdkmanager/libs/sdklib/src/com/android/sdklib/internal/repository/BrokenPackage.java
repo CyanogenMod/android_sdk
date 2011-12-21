@@ -89,6 +89,7 @@ public class BrokenPackage extends Package
      * Returns the minimal API level required by this package, if > 0,
      * or {@link #MIN_API_LEVEL_NOT_SPECIFIED} if there is no such requirement.
      */
+    @Override
     public int getMinApiLevel() {
         return mMinApiLevel;
     }
@@ -97,6 +98,7 @@ public class BrokenPackage extends Package
      * Returns the exact API level required by this package, if > 0,
      * or {@link #API_LEVEL_INVALID} if the value was missing.
      */
+    @Override
     public int getExactApiLevel() {
         return mExactApiLevel;
     }

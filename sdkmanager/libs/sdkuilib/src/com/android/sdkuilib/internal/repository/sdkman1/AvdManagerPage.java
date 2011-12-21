@@ -100,18 +100,22 @@ public class AvdManagerPage extends UpdaterPage implements ISdkChangeListener {
 
     // --- Implementation of ISdkChangeListener ---
 
+    @Override
     public void onSdkLoaded() {
         onSdkReload();
     }
 
+    @Override
     public void onSdkReload() {
         mAvdSelector.refresh(false /*reload*/);
     }
 
+    @Override
     public void preInstallHook() {
         // nothing to be done for now.
     }
 
+    @Override
     public void postInstallHook() {
         // nothing to be done for now.
     }

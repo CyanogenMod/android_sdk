@@ -181,6 +181,7 @@ public final class ResourceFolder implements Configurable {
         return list;
     }
 
+    @Override
     public FolderConfiguration getConfiguration() {
         return mConfiguration;
     }

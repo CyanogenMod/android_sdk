@@ -44,6 +44,7 @@ public class NativeHeapDataImporter implements IRunnableWithProgress {
         mReader.setLineNumber(1); // start numbering at 1
     }
 
+    @Override
     public void run(IProgressMonitor monitor)
             throws InvocationTargetException, InterruptedException {
         monitor.beginTask("Importing Heap Data", IProgressMonitor.UNKNOWN);

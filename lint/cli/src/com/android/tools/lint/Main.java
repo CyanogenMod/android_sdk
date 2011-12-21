@@ -460,6 +460,7 @@ public class Main extends LintClient {
         List<Issue> issues = registry.getIssues();
         List<Issue> sorted = new ArrayList<Issue>(issues);
         Collections.sort(sorted, new Comparator<Issue>() {
+            @Override
             public int compare(Issue issue1, Issue issue2) {
                 int d = issue1.getCategory().compareTo(issue2.getCategory());
                 if (d != 0) {
@@ -882,6 +883,7 @@ public class Main extends LintClient {
     }
 
     private class ProgressPrinter implements LintListener {
+        @Override
         public void update(EventType type, Context context) {
             switch (type) {
                 case SCANNING_PROJECT:

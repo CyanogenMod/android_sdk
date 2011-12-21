@@ -482,6 +482,7 @@ public class RulesEngine {
         // fill the parent.)
         if (!editor.isEditXmlModelPending()) {
             editor.wrapEditXmlModel(new Runnable() {
+                @Override
                 public void run() {
                     callCreateHooks(editor, insertType,
                             parentRule, parentNode, childRule, newNode);

@@ -203,6 +203,7 @@ public class ClipboardSupport {
         // which will trigger a recompute of the layout, thus reloading the model thus
         // resetting the selection.
         mCanvas.getLayoutEditor().wrapUndoEditXmlModel(title, new Runnable() {
+            @Override
             public void run() {
                 // Segment the deleted nodes into clusters of siblings
                 Map<NodeProxy, List<INode>> clusters =
@@ -283,6 +284,7 @@ public class ClipboardSupport {
 
         final NodeProxy targetNode = mCanvas.getNodeFactory().create(target);
         mCanvas.getLayoutEditor().wrapUndoEditXmlModel("Paste", new Runnable() {
+            @Override
             public void run() {
                 mCanvas.getRulesEngine().callOnPaste(targetNode, target.getViewObject(), pasted);
                 targetNode.applyPendingChanges();
@@ -328,6 +330,7 @@ public class ClipboardSupport {
         title = String.format("Paste root %1$s in document", title);
 
         layoutEditor.wrapUndoEditXmlModel(title, new Runnable() {
+            @Override
             public void run() {
                 UiElementNode uiNew = uiDoc.appendNewUiChild(viewDesc);
 

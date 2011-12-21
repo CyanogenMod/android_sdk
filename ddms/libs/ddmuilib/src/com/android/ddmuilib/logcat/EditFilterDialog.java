@@ -149,6 +149,7 @@ public class EditFilterDialog extends Dialog {
         mShell.setLayout(new GridLayout(1, false));
 
         mShell.addListener(SWT.Close, new Listener() {
+            @Override
             public void handleEvent(Event event) {
             }
         });
@@ -171,6 +172,7 @@ public class EditFilterDialog extends Dialog {
         }
         filterNameText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         filterNameText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mName = filterNameText.getText().trim();
                 validate();
@@ -204,6 +206,7 @@ public class EditFilterDialog extends Dialog {
 
         tagText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         tagText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mTag = tagText.getText().trim();
                 validate();
@@ -228,6 +231,7 @@ public class EditFilterDialog extends Dialog {
         }
         pidText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         pidText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 mPid = pidText.getText().trim();
                 validate();

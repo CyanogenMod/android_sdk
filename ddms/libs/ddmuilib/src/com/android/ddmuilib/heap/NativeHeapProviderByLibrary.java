@@ -36,16 +36,20 @@ public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
         mDisplayZygoteMemory = displayZygotes;
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
     }
 
+    @Override
     public Object getParent(Object element) {
         return null;
     }
 
+    @Override
     public void updateChildCount(Object element, int currentChildCount) {
         int childCount = 0;
 
@@ -57,6 +61,7 @@ public class NativeHeapProviderByLibrary implements ILazyTreeContentProvider {
         mViewer.setChildCount(element, childCount);
     }
 
+    @Override
     public void updateElement(Object parent, int index) {
         Object item = null;
         int childCount = 0;

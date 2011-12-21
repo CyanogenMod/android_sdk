@@ -34,14 +34,17 @@ public class TestAttribute implements IAttribute, IDragAttribute {
         this.mValue = mValue;
     }
 
+    @Override
     public String getName() {
         return mName;
     }
 
+    @Override
     public String getUri() {
         return mUri;
     }
 
+    @Override
     public String getValue() {
         return mValue;
     }

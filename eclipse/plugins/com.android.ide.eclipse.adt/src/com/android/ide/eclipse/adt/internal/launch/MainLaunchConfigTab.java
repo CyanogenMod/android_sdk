@@ -87,15 +87,18 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
      */
     private class WidgetListener implements ModifyListener, SelectionListener {
 
+        @Override
         public void modifyText(ModifyEvent e) {
             IProject project = checkParameters();
             loadActivities(project);
             setDirty(true);
         }
 
+        @Override
         public void widgetDefaultSelected(SelectionEvent e) {/* do nothing */
         }
 
+        @Override
         public void widgetSelected(SelectionEvent e) {
             Object source = e.getSource();
             if (source == mProjButton) {
@@ -109,6 +112,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
     public MainLaunchConfigTab() {
     }
 
+    @Override
     public void createControl(Composite parent) {
         mProjectChooserHelper = new ProjectChooserHelper(parent.getShell(),
                 new NonLibraryProjectOnlyFilter());
@@ -198,6 +202,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
 
     }
 
+    @Override
     public String getName() {
         return "Android";
     }
@@ -207,6 +212,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         return IconFactory.getInstance().getIcon(LAUNCH_TAB_IMAGE);
     }
 
+    @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(
                 IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, mProjText.getText());
@@ -227,6 +233,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
         mapResources(configuration);
     }
 
+    @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(LaunchConfigDelegate.ATTR_LAUNCH_ACTION,
                 LaunchConfigDelegate.DEFAULT_LAUNCH_ACTION);
@@ -311,6 +318,7 @@ public class MainLaunchConfigTab extends AbstractLaunchConfigurationTab {
      *
      * @see ILaunchConfigurationTab
      */
+    @Override
     public void initializeFrom(ILaunchConfiguration config) {
         String projectName = EMPTY_STRING;
         try {

@@ -17,10 +17,10 @@
 package com.android.sdklib.internal.repository;
 
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SdkManager;
-import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.internal.repository.Archive.Arch;
 import com.android.sdklib.internal.repository.Archive.Os;
 import com.android.sdklib.repository.PkgProps;
@@ -169,11 +169,13 @@ public class SamplePackage extends MinToolsPackage
      * Returns the minimal API level required by this extra package, if > 0,
      * or {@link #MIN_API_LEVEL_NOT_SPECIFIED} if there is no such requirement.
      */
+    @Override
     public int getMinApiLevel() {
         return mMinApiLevel;
     }
 
     /** Returns the matching platform version. */
+    @Override
     public AndroidVersion getVersion() {
         return mVersion;
     }

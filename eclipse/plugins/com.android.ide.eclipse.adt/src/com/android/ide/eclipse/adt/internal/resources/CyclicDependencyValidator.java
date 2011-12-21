@@ -31,6 +31,7 @@ public class CyclicDependencyValidator implements IInputValidator {
         this.mInvalidIds = invalid;
     }
 
+    @Override
     public String isValid(String newText) {
         if (mInvalidIds.contains(newText)) {
             return "Cyclic include, not valid";

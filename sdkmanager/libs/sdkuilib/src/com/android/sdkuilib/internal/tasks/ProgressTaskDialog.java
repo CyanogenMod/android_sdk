@@ -168,6 +168,7 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
     // Hide everything down-below from SWT designer
     //$hide>>$
 
+    @Override
     public boolean isCancelRequested() {
         return mCancelMode != CancelMode.ACTIVE;
     }
@@ -183,6 +184,7 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
             // and lock on the cancel button mode.
             mDialogShell.getDisplay().syncExec(new Runnable() {
 
+                @Override
                 public void run() {
                     synchronized (mCancelMode) {
                         if (mCancelMode == CancelMode.ACTIVE) {
@@ -213,6 +215,7 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
             // and lock on the cancel button mode.
             mDialogShell.getDisplay().syncExec(new Runnable() {
 
+                @Override
                 public void run() {
                     synchronized (mCancelMode) {
                         if (mCancelMode != CancelMode.CLOSE_MANUAL &&
@@ -277,8 +280,10 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setDescription(final String description) {
         mDialogShell.getDisplay().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (!mLabel.isDisposed()) {
                     mLabel.setText(description);
@@ -291,9 +296,11 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      * Adds to the log in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void log(final String info) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!mResultText.isDisposed()) {
                         mResultText.setVisible(true);
@@ -311,10 +318,12 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
         }
     }
 
+    @Override
     public void logError(String info) {
         log(info);
     }
 
+    @Override
     public void logVerbose(String info) {
         log(info);
     }
@@ -325,9 +334,11 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      *
      * @see ProgressBar#setMaximum(int)
      */
+    @Override
     public void setProgressMax(final int max) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!mProgressBar.isDisposed()) {
                         mProgressBar.setMaximum(max);
@@ -341,9 +352,11 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      * Sets the current value of the progress bar.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setProgress(final int value) {
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!mProgressBar.isDisposed()) {
                         mProgressBar.setSelection(value);
@@ -358,11 +371,13 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      * between 0 and up to {@link #setProgressMax(int)} - 1.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public int getProgress() {
         final int[] result = new int[] { 0 };
 
         if (!mDialogShell.isDisposed()) {
             mDialogShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!mProgressBar.isDisposed()) {
                         result[0] = mProgressBar.getSelection();
@@ -384,12 +399,14 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      * @param message The error message
      * @return true if YES was clicked.
      */
+    @Override
     public boolean displayPrompt(final String title, final String message) {
         Display display = mDialogShell.getDisplay();
 
         // we need to ask the user what he wants to do.
         final boolean[] result = new boolean[] { false };
         display.syncExec(new Runnable() {
+            @Override
             public void run() {
                 result[0] = MessageDialog.openQuestion(mDialogShell, title, message);
             }
@@ -411,6 +428,7 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
      *         If operation is <b>canceled</b> by user the return value must be <b>null</b>.
      * @see ITaskMonitor#displayLoginCredentialsPrompt(String, String)
      */
+    @Override
     public UserCredentials displayLoginCredentialsPrompt(
             final String title, final String message) {
         Display display = mDialogShell.getDisplay();
@@ -438,6 +456,7 @@ final class ProgressTaskDialog extends Dialog implements IProgressUiProvider {
             mMessage = message;
         }
 
+        @Override
         public void run() {
             AuthenticationDialog authenticationDialog = new AuthenticationDialog(mShell,
                         mTitle, mMessage);

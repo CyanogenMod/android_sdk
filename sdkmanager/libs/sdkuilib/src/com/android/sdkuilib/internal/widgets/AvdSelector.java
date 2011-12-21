@@ -22,8 +22,8 @@ import com.android.sdklib.ISdkLog;
 import com.android.sdklib.NullSdkLog;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.internal.avd.AvdInfo;
-import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.AvdInfo.AvdStatus;
+import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.repository.ITask;
 import com.android.sdklib.internal.repository.ITaskMonitor;
 import com.android.sdkuilib.internal.repository.SettingsController;
@@ -170,10 +170,12 @@ public final class AvdSelector {
             mTarget = target;
         }
 
+        @Override
         public void prepare() {
             // nothing to prepare
         }
 
+        @Override
         public boolean accept(AvdInfo avd) {
             if (avd != null) {
                 return mTarget.canRunOn(avd.getTarget());
@@ -182,6 +184,7 @@ public final class AvdSelector {
             return false;
         }
 
+        @Override
         public void cleanup() {
             // nothing to clean up
         }
@@ -227,6 +230,7 @@ public final class AvdSelector {
         group.setLayoutData(new GridData(GridData.FILL_BOTH));
         group.setFont(parent.getFont());
         group.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent arg0) {
                 mImageFactory.dispose();
             }
@@ -664,6 +668,7 @@ public final class AvdSelector {
              * Handles single-click selection on the table.
              * {@inheritDoc}
              */
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -685,6 +690,7 @@ public final class AvdSelector {
              *
              * {@inheritDoc}
              */
+            @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 if (e.item instanceof TableItem) {
                     TableItem i = (TableItem) e.item;
@@ -756,6 +762,7 @@ public final class AvdSelector {
 
         if (avds != null && avds.length > 0) {
             Arrays.sort(avds, new Comparator<AvdInfo>() {
+                @Override
                 public int compare(AvdInfo o1, AvdInfo o2) {
                     return o1.compareTo(o2);
                 }
@@ -904,6 +911,7 @@ public final class AvdSelector {
         // check if the AVD is running
         if (avdInfo.isRunning()) {
             display.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     Shell shell = display.getActiveShell();
                     MessageDialog.openError(shell,
@@ -919,6 +927,7 @@ public final class AvdSelector {
         // Confirm you want to delete this AVD
         final boolean[] result = new boolean[1];
         display.syncExec(new Runnable() {
+            @Override
             public void run() {
                 Shell shell = display.getActiveShell();
                 result[0] = MessageDialog.openQuestion(shell,
@@ -1075,6 +1084,7 @@ public final class AvdSelector {
             new ProgressTask(mTable.getShell(),
                     "Starting Android Emulator",
                     new ITask() {
+                        @Override
                         public void run(ITaskMonitor monitor) {
                             try {
                                 monitor.setDescription(

@@ -23,8 +23,8 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
+import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -253,18 +253,22 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                 // It'll be replaced by the real when if/when the target is resolved if/when the
                 // SDK finishes loading.
                 return new IClasspathContainer() {
+                    @Override
                     public IClasspathEntry[] getClasspathEntries() {
                         return new IClasspathEntry[0];
                     }
 
+                    @Override
                     public String getDescription() {
                         return "Unable to get system library for the project";
                     }
 
+                    @Override
                     public int getKind() {
                         return IClasspathContainer.K_DEFAULT_SYSTEM;
                     }
 
+                    @Override
                     public IPath getPath() {
                         return null;
                     }

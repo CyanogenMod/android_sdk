@@ -164,6 +164,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
      * Implementation of the {@link Comparable} interface.
      * Simply compares the URL using the string's default ordering.
      */
+    @Override
     public int compareTo(SdkSource rhs) {
         return this.getUrl().compareTo(rhs.getUrl());
     }
@@ -222,6 +223,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         return super.toString();
     }
 
+    @Override
     public String getShortDescription() {
 
         if (mUiName != null && mUiName.length() > 0) {
@@ -240,6 +242,7 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
         return mUrl;
     }
 
+    @Override
     public String getLongDescription() {
         // Note: in a normal workflow, mDescription is filled by setDefaultDescription().
         // However for packages made by unit tests or such, this can be null.
@@ -664,12 +667,15 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
             // We don't want the default handler which prints errors to stderr.
             builder.setErrorHandler(new ErrorHandler() {
+                @Override
                 public void warning(SAXParseException e) throws SAXException {
                     // pass
                 }
+                @Override
                 public void fatalError(SAXParseException e) throws SAXException {
                     throw e;
                 }
+                @Override
                 public void error(SAXParseException e) throws SAXException {
                     throw e;
                 }
@@ -761,12 +767,15 @@ public abstract class SdkSource implements IDescription, Comparable<SdkSource> {
 
         // We don't want the default handler, which by default dumps errors to stderr.
         validator.setErrorHandler(new ErrorHandler() {
+            @Override
             public void warning(SAXParseException e) throws SAXException {
                 // pass
             }
+            @Override
             public void fatalError(SAXParseException e) throws SAXException {
                 throw e;
             }
+            @Override
             public void error(SAXParseException e) throws SAXException {
                 throw e;
             }

@@ -52,6 +52,7 @@ public final class CoordinateControls {
      * ModifyListener for the 3 {@link Text} controls of the sexagesimal mode.
      */
     private ModifyListener mSexagesimalListener = new ModifyListener() {
+        @Override
         public void modifyText(ModifyEvent event) {
             if (mManualTextChange > 0) {
                 return;
@@ -75,6 +76,7 @@ public final class CoordinateControls {
      */
     public void createDecimalText(Composite parent) {
         mDecimalText = createTextControl(parent, "-199.999999", new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent event) {
                 if (mManualTextChange > 0) {
                     return;

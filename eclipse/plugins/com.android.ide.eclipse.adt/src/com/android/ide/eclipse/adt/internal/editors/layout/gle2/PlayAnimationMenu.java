@@ -154,6 +154,7 @@ public class PlayAnimationMenu extends SubmenuAction {
                         new IAnimationListener() {
                             private boolean mPendingDrawing = false;
 
+                            @Override
                             public void onNewFrame(RenderSession s) {
                                 SelectionOverlay selectionOverlay = mCanvas.getSelectionOverlay();
                                 if (!selectionOverlay.isHiding()) {
@@ -169,6 +170,7 @@ public class PlayAnimationMenu extends SubmenuAction {
                                 synchronized (this) {
                                     if (mPendingDrawing == false) {
                                         mCanvas.getDisplay().asyncExec(new Runnable() {
+                                            @Override
                                             public void run() {
                                                 synchronized (this) {
                                                     mPendingDrawing = false;
@@ -181,10 +183,12 @@ public class PlayAnimationMenu extends SubmenuAction {
                                 }
                             }
 
+                            @Override
                             public boolean isCanceled() {
                                 return false;
                             }
 
+                            @Override
                             public void done(Result result) {
                                 SelectionOverlay selectionOverlay = mCanvas.getSelectionOverlay();
                                 selectionOverlay.setHiding(false);
@@ -195,6 +199,7 @@ public class PlayAnimationMenu extends SubmenuAction {
                                 // their original positions in case animations have left
                                 // them elsewhere
                                 mCanvas.getDisplay().asyncExec(new Runnable() {
+                                    @Override
                                     public void run() {
                                         GraphicalEditorPart graphicalEditor = mCanvas
                                                 .getLayoutEditor().getGraphicalEditor();

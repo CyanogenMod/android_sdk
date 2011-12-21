@@ -170,6 +170,7 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
         return mMargins;
     }
 
+    @Override
     public void handleEvent(Event event) {
         if (event.type == SWT.Modify) {
             // Text field modification -- warn about non-dip numbers

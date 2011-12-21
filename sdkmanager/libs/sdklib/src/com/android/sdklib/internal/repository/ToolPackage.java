@@ -150,6 +150,7 @@ public class ToolPackage extends Package implements IMinPlatformToolsDependency 
     * <p/>
     * This attribute is mandatory and should not be normally missing.
      */
+    @Override
     public int getMinPlatformToolsRevision() {
         return mMinPlatformToolsRevision;
     }

@@ -36,6 +36,7 @@ public final class ThemeAttributeDescriptor extends TextAttributeDescriptor {
      * Used by {@link DescriptorsUtils} to create instances of this descriptor.
      */
     public static final ITextAttributeCreator CREATOR = new ITextAttributeCreator() {
+        @Override
         public TextAttributeDescriptor create(String xmlLocalName,
                 String uiName, String nsUri, String tooltip,
                 IAttributeInfo attrInfo) {

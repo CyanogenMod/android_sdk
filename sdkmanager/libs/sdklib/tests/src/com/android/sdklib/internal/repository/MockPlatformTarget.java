@@ -19,9 +19,9 @@ package com.android.sdklib.internal.repository;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.SdkConstants;
 import com.android.sdklib.SystemImage;
-import com.android.sdklib.ISystemImage.LocationType;
 import com.android.sdklib.io.FileOp;
 
 import java.util.Map;
@@ -41,26 +41,32 @@ class MockPlatformTarget implements IAndroidTarget {
         mRevision = revision;
     }
 
+    @Override
     public String getClasspathName() {
         return getName();
     }
 
+    @Override
     public String getShortClasspathName() {
         return getName();
     }
 
+    @Override
     public String getDefaultSkin() {
         return null;
     }
 
+    @Override
     public String getDescription() {
         return getName();
     }
 
+    @Override
     public String getFullName() {
         return getName();
     }
 
+    @Override
     public ISystemImage[] getSystemImages() {
         if (mSystemImages == null) {
             SystemImage si = new SystemImage(
@@ -72,6 +78,7 @@ class MockPlatformTarget implements IAndroidTarget {
         return mSystemImages;
     }
 
+    @Override
     public ISystemImage getSystemImage(String abiType) {
         if (SdkConstants.ABI_ARMEABI.equals(abiType)) {
             return getSystemImages()[0];
@@ -79,50 +86,62 @@ class MockPlatformTarget implements IAndroidTarget {
         return null;
     }
 
+    @Override
     public String getLocation() {
         return "/sdk/platforms/android-" + getVersion().getApiString();
     }
 
+    @Override
     public IOptionalLibrary[] getOptionalLibraries() {
         return null;
     }
 
+    @Override
     public IAndroidTarget getParent() {
         return null;
     }
 
+    @Override
     public String getPath(int pathId) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
+    @Override
     public String[] getPlatformLibraries() {
         return null;
     }
 
+    @Override
     public String getProperty(String name) {
         return null;
     }
 
+    @Override
     public Integer getProperty(String name, Integer defaultValue) {
         return defaultValue;
     }
 
+    @Override
     public Boolean getProperty(String name, Boolean defaultValue) {
         return defaultValue;
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return null;
     }
 
+    @Override
     public int getRevision() {
         return mRevision;
     }
 
+    @Override
     public String[] getSkins() {
         return null;
     }
 
+    @Override
     public int getUsbVendorId() {
         return 0;
     }
@@ -132,6 +151,7 @@ class MockPlatformTarget implements IAndroidTarget {
      * This works well in Unit Tests where we'll typically have different
      * platforms as unique identifiers.
      */
+    @Override
     public String getVendor() {
         return "vendor " + Integer.toString(mApiLevel);
     }
@@ -139,35 +159,43 @@ class MockPlatformTarget implements IAndroidTarget {
     /**
      * Create a synthetic name using the target API level.
      */
+    @Override
     public String getName() {
         return "platform r" + Integer.toString(mApiLevel);
     }
 
+    @Override
     public AndroidVersion getVersion() {
         return new AndroidVersion(mApiLevel, null /*codename*/);
     }
 
+    @Override
     public String getVersionName() {
         return String.format("android-%1$d", mApiLevel);
     }
 
+    @Override
     public String hashString() {
         return getVersionName();
     }
 
     /** Returns true for a platform. */
+    @Override
     public boolean isPlatform() {
         return true;
     }
 
+    @Override
     public boolean canRunOn(IAndroidTarget target) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
+    @Override
     public int compareTo(IAndroidTarget o) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
+    @Override
     public boolean hasRenderingLibrary() {
         return false;
     }

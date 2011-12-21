@@ -29,13 +29,16 @@ import java.util.List;
  */
 @Beta
 public class AbstractViewRule implements IViewRule {
+    @Override
     public boolean onInitialize(String fqcn, IClientRulesEngine engine) {
         return true;
     }
 
+    @Override
     public void onDispose() {
     }
 
+    @Override
     public String getDisplayName() {
         // Default is to not override the selection display name.
         return null;
@@ -43,17 +46,21 @@ public class AbstractViewRule implements IViewRule {
 
     // ==== Selection ====
 
+    @Override
     public List<String> getSelectionHint(INode parentNode, INode childNode) {
         return null;
     }
 
+    @Override
     public void addLayoutActions(List<RuleAction> actions, INode parentNode,
             List<? extends INode> children) {
     }
 
+    @Override
     public void addContextMenuActions(List<RuleAction> actions, INode node) {
     }
 
+    @Override
     public void paintSelectionFeedback(IGraphics graphics, INode parentNode,
             List<? extends INode> childNodes, Object view) {
     }
@@ -61,19 +68,23 @@ public class AbstractViewRule implements IViewRule {
     // ==== Drag & drop support ====
 
     // By default Views do not accept drag'n'drop.
+    @Override
     public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         return null;
     }
 
+    @Override
     public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
             DropFeedback feedback, Point p) {
         return null;
     }
 
+    @Override
     public void onDropLeave(INode targetNode, IDragElement[] elements, DropFeedback feedback) {
         // ignore
     }
 
+    @Override
     public void onDropped(
             INode targetNode,
             IDragElement[] elements,
@@ -83,31 +94,38 @@ public class AbstractViewRule implements IViewRule {
     }
 
 
+    @Override
     public void onPaste(INode targetNode, Object targetView, IDragElement[] pastedElements) {
     }
 
     // ==== Create/Remove hooks ====
 
+    @Override
     public void onCreate(INode node, INode parent, InsertType insertType) {
     }
 
+    @Override
     public void onChildInserted(INode child, INode parent, InsertType insertType) {
     }
 
+    @Override
     public void onRemovingChildren(List<INode> deleted, INode parent) {
     }
 
     // ==== Resizing ====
 
+    @Override
     public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
             SegmentType verticalEdge, Object childView, Object parentView) {
         return null;
     }
 
+    @Override
     public void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
             int modifierMask) {
     }
 
+    @Override
     public void onResizeEnd(DropFeedback feedback, INode child, final INode parent,
             final Rect newBounds) {
     }

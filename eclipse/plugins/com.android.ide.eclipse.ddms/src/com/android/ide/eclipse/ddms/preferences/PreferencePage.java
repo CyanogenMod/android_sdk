@@ -16,11 +16,11 @@
 
 package com.android.ide.eclipse.ddms.preferences;
 
+import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmuilib.PortFieldEditor;
 import com.android.ide.eclipse.ddms.DdmsPlugin;
 import com.android.ide.eclipse.ddms.i18n.Messages;
 import com.android.ide.eclipse.ddms.views.DeviceView.HProfHandler;
-import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.PortFieldEditor;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
@@ -120,6 +120,7 @@ public class PreferencePage extends FieldEditorPreferencePage implements
         addField(mAdbHostValue);
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

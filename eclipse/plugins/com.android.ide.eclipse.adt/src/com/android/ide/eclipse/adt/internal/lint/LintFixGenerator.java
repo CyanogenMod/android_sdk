@@ -93,6 +93,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
     // ---- Implements IMarkerResolutionGenerator2 ----
 
+    @Override
     public boolean hasResolutions(IMarker marker) {
         try {
             assert marker.getType().equals(AdtConstants.MARKER_LINT);
@@ -102,6 +103,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
         return true;
     }
 
+    @Override
     public IMarkerResolution[] getResolutions(IMarker marker) {
         String id = marker.getAttribute(LintRunner.MARKER_CHECKID_PROPERTY,
                 ""); //$NON-NLS-1$
@@ -117,18 +119,22 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
     // ---- Implements IQuickAssistProcessor ----
 
+    @Override
     public String getErrorMessage() {
         return "Disable Lint Error";
     }
 
+    @Override
     public boolean canFix(Annotation annotation) {
         return true;
     }
 
+    @Override
     public boolean canAssist(IQuickAssistInvocationContext invocationContext) {
         return true;
     }
 
+    @Override
     public ICompletionProposal[] computeQuickAssistProposals(
             IQuickAssistInvocationContext invocationContext) {
         ISourceViewer sourceViewer = invocationContext.getSourceViewer();
@@ -210,6 +216,7 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             suppressDetector(mId, true, mResource, !mGlobal);
         }
 
+        @Override
         public String getDisplayString() {
             if (mResource instanceof IProject) {
                 return "Disable Check in This Project";
@@ -222,28 +229,34 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
 
         // ---- Implements MarkerResolution2 ----
 
+        @Override
         public String getLabel() {
             return getDisplayString();
         }
 
+        @Override
         public void run(IMarker marker) {
             perform();
         }
 
+        @Override
         public String getDescription() {
             return getAdditionalProposalInfo();
         }
 
         // ---- Implements ICompletionProposal ----
 
+        @Override
         public void apply(IDocument document) {
             perform();
         }
 
+        @Override
         public Point getSelection(IDocument document) {
             return null;
         }
 
+        @Override
         public String getAdditionalProposalInfo() {
             StringBuilder sb = new StringBuilder(200);
             if (mResource instanceof IProject) {
@@ -259,11 +272,13 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             return sb.toString();
         }
 
+        @Override
         public Image getImage() {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             return sharedImages.getImage(ISharedImages.IMG_OBJS_WARN_TSK);
         }
 
+        @Override
         public IContextInformation getContextInformation() {
             return null;
         }
@@ -283,34 +298,41 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             EclipseLintClient.clearMarkers(resource);
         }
 
+        @Override
         public String getDisplayString() {
             return mGlobal ? "Clear All Lint Markers" : "Clear Markers in This File Only";
         }
 
         // ---- Implements MarkerResolution2 ----
 
+        @Override
         public String getLabel() {
             return getDisplayString();
         }
 
+        @Override
         public void run(IMarker marker) {
             perform();
         }
 
+        @Override
         public String getDescription() {
             return getAdditionalProposalInfo();
         }
 
         // ---- Implements ICompletionProposal ----
 
+        @Override
         public void apply(IDocument document) {
             perform();
         }
 
+        @Override
         public Point getSelection(IDocument document) {
             return null;
         }
 
+        @Override
         public String getAdditionalProposalInfo() {
             StringBuilder sb = new StringBuilder(200);
             if (mGlobal) {
@@ -331,11 +353,13 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
             return sb.toString();
         }
 
+        @Override
         public Image getImage() {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             return sharedImages.getImage(ISharedImages.IMG_ELCL_REMOVE);
         }
 
+        @Override
         public IContextInformation getContextInformation() {
             return null;
         }
@@ -376,43 +400,52 @@ public class LintFixGenerator implements IMarkerResolutionGenerator2, IQuickAssi
                     sb.toString());
         }
 
+        @Override
         public String getDisplayString() {
             return "Explain Issue";
         }
 
         // ---- Implements MarkerResolution2 ----
 
+        @Override
         public String getLabel() {
             return getDisplayString();
         }
 
+        @Override
         public void run(IMarker marker) {
             perform();
         }
 
+        @Override
         public String getDescription() {
             return getAdditionalProposalInfo();
         }
 
         // ---- Implements ICompletionProposal ----
 
+        @Override
         public void apply(IDocument document) {
             perform();
         }
 
+        @Override
         public Point getSelection(IDocument document) {
             return null;
         }
 
+        @Override
         public String getAdditionalProposalInfo() {
             return "Provides more information about this issue";
         }
 
+        @Override
         public Image getImage() {
             ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
             return sharedImages.getImage(ISharedImages.IMG_OBJS_INFO_TSK);
         }
 
+        @Override
         public IContextInformation getContextInformation() {
             return null;
         }

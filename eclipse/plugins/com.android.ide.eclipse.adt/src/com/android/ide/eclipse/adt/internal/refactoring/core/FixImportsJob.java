@@ -104,6 +104,7 @@ public class FixImportsJob extends WorkspaceJob {
                                 false
                             };
                             IChooseImportQuery query = new IChooseImportQuery() {
+                                @Override
                                 public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices,
                                         ISourceRange[] ranges) {
                                     hasAmbiguity[0] = true;
@@ -115,6 +116,7 @@ public class FixImportsJob extends WorkspaceJob {
                                     true, query);
                             Display.getDefault().asyncExec(new Runnable() {
 
+                                @Override
                                 public void run() {
                                     try {
                                         IProgressService progressService = PlatformUI

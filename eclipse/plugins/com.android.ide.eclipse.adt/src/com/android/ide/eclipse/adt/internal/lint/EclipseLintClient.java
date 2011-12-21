@@ -116,6 +116,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     // ----- Implements IDomParser -----
 
+    @Override
     public Document parseXml(XmlContext context) {
         // Map File to IFile
         IFile file = AdtUtils.fileToIFile(context.file);
@@ -530,12 +531,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return ""; //$NON-NLS-1$
     }
 
+    @Override
     public Location getLocation(XmlContext context, Node node) {
         IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
         return new LazyLocation(context.file, doc, (IndexedRegion) node);
     }
 
-    public Handle createLocationHandle(XmlContext context, Node node) {
+    @Override
+    public Handle createLocationHandle(final XmlContext context, final Node node) {
         IStructuredDocument doc = (IStructuredDocument) context.getProperty(DOCUMENT_PROPERTY);
         return new LazyLocation(context.file, doc, (IndexedRegion) node);
     }
@@ -560,6 +563,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return detectorClass;
     }
 
+    @Override
     public void dispose(XmlContext context, Document document) {
         // TODO: Consider leaving read-lock on the document in parse() and freeing it here.
     }
@@ -609,6 +613,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             return mEnd;
         }
 
+        @Override
         public Location resolve() {
             return this;
         }

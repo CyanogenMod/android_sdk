@@ -74,6 +74,7 @@ import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegionList;
 @SuppressWarnings("restriction") // XML model
 public class AndroidXmlAutoEditStrategy implements IAutoEditStrategy {
 
+    @Override
     public void customizeDocumentCommand(IDocument document, DocumentCommand c) {
         if (!isSmartInsertMode()) {
             return;

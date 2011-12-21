@@ -42,35 +42,36 @@ import org.eclipse.swt.widgets.Display;
 class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
 
     private final AndroidJUnitLaunchInfo mLaunchInfo;
-    
+
     /**
      * Creates a AndroidJUnitLaunchAction.
-     * 
-     * @param launchInfo the {@link AndroidJUnitLaunchInfo} for the JUnit run 
+     *
+     * @param launchInfo the {@link AndroidJUnitLaunchInfo} for the JUnit run
      */
     public AndroidJUnitLaunchAction(AndroidJUnitLaunchInfo launchInfo) {
         mLaunchInfo = launchInfo;
     }
-    
+
     /**
-     * Launch a instrumentation test run on given Android device. 
+     * Launch a instrumentation test run on given Android device.
      * Reuses JDT JUnit launch delegate so results can be communicated back to JDT JUnit UI.
      * <p/>
      * Note: Must be executed on non-UI thread.
-     * 
+     *
      * @see IAndroidLaunchAction#doLaunchAction(DelayedLaunchInfo, IDevice)
      */
+    @Override
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         String msg = String.format(LaunchMessages.AndroidJUnitLaunchAction_LaunchInstr_2s,
                 mLaunchInfo.getRunner(), device.getSerialNumber());
         AdtPlugin.printToConsole(info.getProject(), msg);
-        
+
         try {
            mLaunchInfo.setDebugMode(info.isDebugMode());
            mLaunchInfo.setDevice(info.getDevice());
            JUnitLaunchDelegate junitDelegate = new JUnitLaunchDelegate(mLaunchInfo);
-           final String mode = info.isDebugMode() ? ILaunchManager.DEBUG_MODE : 
-               ILaunchManager.RUN_MODE; 
+           final String mode = info.isDebugMode() ? ILaunchManager.DEBUG_MODE :
+               ILaunchManager.RUN_MODE;
 
            junitDelegate.launch(info.getLaunch().getLaunchConfiguration(), mode, info.getLaunch(),
                    info.getMonitor());
@@ -86,16 +87,17 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getLaunchDescription() {
         return String.format(LaunchMessages.AndroidJUnitLaunchAction_LaunchDesc_s,
                 mLaunchInfo.getRunner());
     }
 
     /**
-     * Extends the JDT JUnit launch delegate to allow for JUnit UI reuse. 
+     * Extends the JDT JUnit launch delegate to allow for JUnit UI reuse.
      */
     private static class JUnitLaunchDelegate extends JUnitLaunchConfigurationDelegate {
-        
+
         private AndroidJUnitLaunchInfo mLaunchInfo;
 
         public JUnitLaunchDelegate(AndroidJUnitLaunchInfo launchInfo) {
@@ -137,16 +139,16 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         @Override
         public ILaunch getLaunch(ILaunchConfiguration configuration, String mode) {
             return mLaunchInfo.getLaunch();
-        }     
+        }
     }
 
     /**
      * Provides a VM runner implementation which starts a inline implementation of a launch process
      */
     private static class VMTestRunner implements IVMRunner {
-        
+
         private final AndroidJUnitLaunchInfo mJUnitInfo;
-        
+
         VMTestRunner(AndroidJUnitLaunchInfo info) {
             mJUnitInfo = info;
         }
@@ -155,10 +157,11 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          * {@inheritDoc}
          * @throws CoreException
          */
+        @Override
         public void run(final VMRunnerConfiguration config, ILaunch launch,
                 IProgressMonitor monitor) throws CoreException {
-            
-            TestRunnerProcess runnerProcess = 
+
+            TestRunnerProcess runnerProcess =
                 new TestRunnerProcess(config, mJUnitInfo);
             launch.addProcess(runnerProcess);
             runnerProcess.run();
@@ -174,15 +177,16 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         private final AndroidJUnitLaunchInfo mJUnitInfo;
         private RemoteAdtTestRunner mTestRunner = null;
         private boolean mIsTerminated = false;
-        
+
         TestRunnerProcess(VMRunnerConfiguration runConfig, AndroidJUnitLaunchInfo info) {
             mRunConfig = runConfig;
             mJUnitInfo = info;
         }
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.IProcess#getAttribute(java.lang.String)
          */
+        @Override
         public String getAttribute(String key) {
             return null;
         }
@@ -191,6 +195,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          * {@inheritDoc}
          * @see org.eclipse.debug.core.model.IProcess#getExitValue()
          */
+        @Override
         public int getExitValue() {
             return 0;
         }
@@ -198,6 +203,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.IProcess#getLabel()
          */
+        @Override
         public String getLabel() {
             return mJUnitInfo.getLaunch().getLaunchMode();
         }
@@ -205,6 +211,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.IProcess#getLaunch()
          */
+        @Override
         public ILaunch getLaunch() {
             return mJUnitInfo.getLaunch();
         }
@@ -212,21 +219,24 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.IProcess#getStreamsProxy()
          */
+        @Override
         public IStreamsProxy getStreamsProxy() {
             return null;
         }
 
         /* (non-Javadoc)
-         * @see org.eclipse.debug.core.model.IProcess#setAttribute(java.lang.String, 
+         * @see org.eclipse.debug.core.model.IProcess#setAttribute(java.lang.String,
          * java.lang.String)
          */
+        @Override
         public void setAttribute(String key, String value) {
-            // ignore           
+            // ignore
         }
 
         /* (non-Javadoc)
          * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
          */
+        @Override
         @SuppressWarnings("unchecked")
         public Object getAdapter(Class adapter) {
             return null;
@@ -235,6 +245,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.ITerminate#canTerminate()
          */
+        @Override
         public boolean canTerminate() {
             return true;
         }
@@ -242,6 +253,7 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
         /* (non-Javadoc)
          * @see org.eclipse.debug.core.model.ITerminate#isTerminated()
          */
+        @Override
         public boolean isTerminated() {
             return mIsTerminated;
         }
@@ -250,12 +262,13 @@ class AndroidJUnitLaunchAction implements IAndroidLaunchAction {
          * {@inheritDoc}
          * @see org.eclipse.debug.core.model.ITerminate#terminate()
          */
+        @Override
         public void terminate() {
             if (mTestRunner != null) {
                 mTestRunner.terminate();
-            }    
+            }
             mIsTerminated = true;
-        } 
+        }
 
         /**
          * Launches a test runner that will communicate results back to JDT JUnit UI.

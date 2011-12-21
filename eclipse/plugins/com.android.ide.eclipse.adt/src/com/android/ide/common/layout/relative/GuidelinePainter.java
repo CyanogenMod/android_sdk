@@ -44,6 +44,7 @@ import java.util.Set;
  */
 public final class GuidelinePainter implements IFeedbackPainter {
     // ---- Implements IFeedbackPainter ----
+    @Override
     public void paint(IGraphics gc, INode node, DropFeedback feedback) {
         GuidelineHandler state = (GuidelineHandler) feedback.userData;
 

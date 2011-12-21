@@ -35,10 +35,12 @@ public final class ProgressViewFactory implements ITaskFactory {
         mProgressView = progressView;
     }
 
+    @Override
     public void start(String title, ITask task) {
         start(title, null /*monitor*/, task);
     }
 
+    @Override
     public void start(String title, ITaskMonitor parentMonitor, ITask task) {
         assert mProgressView != null;
         mProgressView.startTask(title, parentMonitor, task);

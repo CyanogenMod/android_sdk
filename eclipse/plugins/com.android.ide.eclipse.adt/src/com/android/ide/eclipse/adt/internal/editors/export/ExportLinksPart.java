@@ -77,14 +77,17 @@ final class ExportLinksPart extends ManifestSectionPart {
         mFormText.addHyperlinkListener(editor.createHyperlinkListener());
 
         mFormText.addHyperlinkListener(new IHyperlinkListener() {
+            @Override
             public void linkExited(HyperlinkEvent e) {
                 // pass
             }
 
+            @Override
             public void linkEntered(HyperlinkEvent e) {
                 // pass
             }
 
+            @Override
             public void linkActivated(HyperlinkEvent e) {
                 String link = e.data.toString();
                 if ("action_dosomething".equals(link)) {

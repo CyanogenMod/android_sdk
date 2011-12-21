@@ -47,18 +47,22 @@ class AndroidClasspathContainer implements IClasspathContainer {
         mKind = kind;
     }
 
+    @Override
     public IClasspathEntry[] getClasspathEntries() {
         return mClasspathEntry;
     }
 
+    @Override
     public String getDescription() {
         return mName;
     }
 
+    @Override
     public int getKind() {
         return mKind;
     }
 
+    @Override
     public IPath getPath() {
         return mContainerPath;
     }

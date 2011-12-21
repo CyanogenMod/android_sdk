@@ -24,14 +24,17 @@ import com.android.ide.eclipse.ddms.IToolsLocator;
  */
 public class ToolsLocator implements IToolsLocator {
 
+    @Override
     public String getAdbLocation() {
         return AdtPlugin.getOsAbsoluteAdb();
     }
 
+    @Override
     public String getHprofConvLocation() {
         return AdtPlugin.getOsAbsoluteHprofConv();
     }
 
+    @Override
     public String getTraceViewLocation() {
         return AdtPlugin.getOsAbsoluteTraceview();
     }

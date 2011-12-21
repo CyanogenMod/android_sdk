@@ -16,8 +16,8 @@
 
 package com.android.ddms;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
+import com.android.ddmlib.IDevice;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -61,6 +61,7 @@ public class DebugPortProvider implements IDebugPortProvider {
      *
      * @see IDebugPortProvider#getPort(IDevice, String)
      */
+    @Override
     public int getPort(IDevice device, String appName) {
         if (mMap != null) {
             Map<String, Integer> deviceMap = mMap.get(device.getSerialNumber());

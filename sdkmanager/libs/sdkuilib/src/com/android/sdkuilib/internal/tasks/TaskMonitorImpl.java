@@ -62,6 +62,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Sets the description in the current task dialog.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void setDescription(String format, Object... args) {
         final String text = String.format(format, args);
         mUi.setDescription(text);
@@ -71,6 +72,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Logs a "normal" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void log(String format, Object... args) {
         String text = String.format(format, args);
         mUi.log(text);
@@ -80,6 +82,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Logs an "error" information line.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logError(String format, Object... args) {
         String text = String.format(format, args);
         mUi.logError(text);
@@ -90,6 +93,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * not that useful for the end-user and might be hidden until explicitly shown.
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void logVerbose(String format, Object... args) {
         String text = String.format(format, args);
         mUi.logVerbose(text);
@@ -103,6 +107,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * *after* {@link #incProgress(int)}: we don't try to adjust it on the
      * fly.
      */
+    @Override
     public void setProgressMax(int max) {
         assert max > 0;
         // Always set the dialog's progress max to 10k since it only handles
@@ -113,6 +118,7 @@ class TaskMonitorImpl implements ITaskMonitor {
         assert mIncCoef > 0;
     }
 
+    @Override
     public int getProgressMax() {
         return mIncCoef > 0 ? (int) (MAX_COUNT / mIncCoef) : 0;
     }
@@ -122,6 +128,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      *
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public void incProgress(int delta) {
         if (delta > 0 && mIncCoef > 0) {
             internalIncProgress(delta * mIncCoef);
@@ -139,6 +146,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      *
      * This method can be invoked from a non-UI thread.
      */
+    @Override
     public int getProgress() {
         // mIncCoef is 0 if setProgressMax hasn't been used yet.
         return mIncCoef > 0 ? (int)(mUi.getProgress() / mIncCoef) : 0;
@@ -148,6 +156,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Returns true if the "Cancel" button was selected.
      * It is up to the task thread to pool this and exit.
      */
+    @Override
     public boolean isCancelRequested() {
         return mUi.isCancelRequested();
     }
@@ -162,6 +171,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * @param message The error message
      * @return true if YES was clicked.
      */
+    @Override
     public boolean displayPrompt(final String title, final String message) {
         return mUi.displayPrompt(title, message);
     }
@@ -177,6 +187,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      *         element and Password is always the second. If any error occurs a
      *         pair with empty strings is returned.
      */
+    @Override
     public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
         return mUi.displayLoginCredentialsPrompt(title, message);
     }
@@ -185,6 +196,7 @@ class TaskMonitorImpl implements ITaskMonitor {
      * Creates a sub-monitor that will use up to tickCount on the progress bar.
      * tickCount must be 1 or more.
      */
+    @Override
     public ITaskMonitor createSubMonitor(int tickCount) {
         assert mIncCoef > 0;
         assert tickCount > 0;
@@ -193,6 +205,7 @@ class TaskMonitorImpl implements ITaskMonitor {
 
     // ----- ISdkLog interface ----
 
+    @Override
     public void error(Throwable throwable, String errorFormat, Object... arg) {
         if (errorFormat != null) {
             logError("Error: " + errorFormat, arg);
@@ -203,10 +216,12 @@ class TaskMonitorImpl implements ITaskMonitor {
         }
     }
 
+    @Override
     public void warning(String warningFormat, Object... arg) {
         log("Warning: " + warningFormat, arg);
     }
 
+    @Override
     public void printf(String msgFormat, Object... arg) {
         log(msgFormat, arg);
     }
@@ -242,48 +257,58 @@ class TaskMonitorImpl implements ITaskMonitor {
             mSubValue = start;
         }
 
+        @Override
         public boolean isCancelRequested() {
             return mRoot.isCancelRequested();
         }
 
+        @Override
         public void setDescription(String format, Object... args) {
             mRoot.setDescription(format, args);
         }
 
+        @Override
         public void log(String format, Object... args) {
             mRoot.log(format, args);
         }
 
+        @Override
         public void logError(String format, Object... args) {
             mRoot.logError(format, args);
         }
 
+        @Override
         public void logVerbose(String format, Object... args) {
             mRoot.logVerbose(format, args);
         }
 
+        @Override
         public void setProgressMax(int max) {
             assert max > 0;
             mSubCoef = max > 0 ? mSpan / max : 0;
             assert mSubCoef > 0;
         }
 
+        @Override
         public int getProgressMax() {
             return mSubCoef > 0 ? (int) (mSpan / mSubCoef) : 0;
         }
 
+        @Override
         public int getProgress() {
             // subCoef can be 0 if setProgressMax() and incProgress() haven't been called yet
             assert mSubValue == mStart || mSubCoef > 0;
             return mSubCoef > 0 ? (int)((mSubValue - mStart) / mSubCoef) : 0;
         }
 
+        @Override
         public void incProgress(int delta) {
             if (delta > 0 && mSubCoef > 0) {
                 subIncProgress(delta * mSubCoef);
             }
         }
 
+        @Override
         public void subIncProgress(double realDelta) {
             mSubValue += realDelta;
             if (mParent != null) {
@@ -293,14 +318,17 @@ class TaskMonitorImpl implements ITaskMonitor {
             }
         }
 
+        @Override
         public boolean displayPrompt(String title, String message) {
             return mRoot.displayPrompt(title, message);
         }
 
+        @Override
         public UserCredentials displayLoginCredentialsPrompt(String title, String message) {
             return mRoot.displayLoginCredentialsPrompt(title, message);
         }
 
+        @Override
         public ITaskMonitor createSubMonitor(int tickCount) {
             assert mSubCoef > 0;
             assert tickCount > 0;
@@ -312,14 +340,17 @@ class TaskMonitorImpl implements ITaskMonitor {
 
         // ----- ISdkLog interface ----
 
+        @Override
         public void error(Throwable throwable, String errorFormat, Object... arg) {
             mRoot.error(throwable, errorFormat, arg);
         }
 
+        @Override
         public void warning(String warningFormat, Object... arg) {
             mRoot.warning(warningFormat, arg);
         }
 
+        @Override
         public void printf(String msgFormat, Object... arg) {
             mRoot.printf(msgFormat, arg);
         }

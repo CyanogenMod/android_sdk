@@ -88,6 +88,7 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
              * Sent when the text is modified, whether by the user via manual
              * input or programmatic input via setText().
              */
+            @Override
             public void modifyText(ModifyEvent e) {
                 onComboChange();
             }
@@ -103,6 +104,7 @@ public class UiListAttributeNode extends UiAbstractTextAttributeNode {
 
         // Remove self-reference when the widget is disposed
         mCombo.addDisposeListener(new DisposeListener() {
+            @Override
             public void widgetDisposed(DisposeEvent e) {
                 mCombo = null;
             }

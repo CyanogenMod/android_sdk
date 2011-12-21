@@ -27,14 +27,15 @@ import org.eclipse.swt.graphics.Image;
  * Label provider for {@link UiAbstractTextAttributeNode}.
  */
 public class AttributeDescriptorLabelProvider implements ILabelProvider {
-    
+
     private final static AttributeDescriptorLabelProvider sThis =
         new AttributeDescriptorLabelProvider();
-    
+
     public static ILabelProvider getProvider() {
         return sThis;
     }
 
+    @Override
     public Image getImage(Object element) {
         if (element instanceof UiAbstractTextAttributeNode) {
             UiAbstractTextAttributeNode node = (UiAbstractTextAttributeNode) element;
@@ -43,13 +44,14 @@ public class AttributeDescriptorLabelProvider implements ILabelProvider {
                 if (v != null && v.length() > 0) {
                     IconFactory factory = IconFactory.getInstance();
                     return factory.getIcon("warning"); //$NON-NLS-1$
-                }                
+                }
             }
         }
 
         return null;
     }
 
+    @Override
     public String getText(Object element) {
         if (element instanceof UiAbstractTextAttributeNode) {
             return ((UiAbstractTextAttributeNode)element).getCurrentValue();
@@ -58,21 +60,25 @@ public class AttributeDescriptorLabelProvider implements ILabelProvider {
         return null;
     }
 
+    @Override
     public void addListener(ILabelProviderListener listener) {
         // TODO Auto-generated method stub
 
     }
 
+    @Override
     public void dispose() {
         // TODO Auto-generated method stub
 
     }
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         // TODO Auto-generated method stub
         return false;
     }
 
+    @Override
     public void removeListener(ILabelProviderListener listener) {
         // TODO Auto-generated method stub
 

@@ -41,30 +41,37 @@ public class TestAttributeInfo implements IAttributeInfo {
         this.mJavadoc = javadoc;
     }
 
+    @Override
     public String getDeprecatedDoc() {
         return null;
     }
 
+    @Override
     public String[] getEnumValues() {
         return mEnumValues;
     }
 
+    @Override
     public String[] getFlagValues() {
         return mFlagValues;
     }
 
+    @Override
     public Format[] getFormats() {
         return mFormats;
     }
 
+    @Override
     public String getJavaDoc() {
         return mJavadoc;
     }
 
+    @Override
     public String getName() {
         return mName;
     }
 
+    @Override
     public String getDefinedBy() {
         return mDefinedBy;
     }

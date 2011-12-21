@@ -130,6 +130,7 @@ public class UpdaterData implements IUpdaterData {
         mTaskFactory = taskFactory;
     }
 
+    @Override
     public ITaskFactory getTaskFactory() {
         return mTaskFactory;
     }
@@ -142,6 +143,7 @@ public class UpdaterData implements IUpdaterData {
         return mLocalSdkParser;
     }
 
+    @Override
     public ISdkLog getSdkLog() {
         return mSdkLog;
     }
@@ -150,18 +152,22 @@ public class UpdaterData implements IUpdaterData {
         mImageFactory = imageFactory;
     }
 
+    @Override
     public ImageFactory getImageFactory() {
         return mImageFactory;
     }
 
+    @Override
     public SdkManager getSdkManager() {
         return mSdkManager;
     }
 
+    @Override
     public AvdManager getAvdManager() {
         return mAvdManager;
     }
 
+    @Override
     public SettingsController getSettingsController() {
         return mSettingsController;
     }
@@ -182,6 +188,7 @@ public class UpdaterData implements IUpdaterData {
         mWindowShell = windowShell;
     }
 
+    @Override
     public Shell getWindowShell() {
         return mWindowShell;
     }
@@ -366,6 +373,7 @@ public class UpdaterData implements IUpdaterData {
         Collections.sort(archives, new InstallOrderComparator());
 
         mTaskFactory.start("Installing Archives", new ITask() {
+            @Override
             public void run(ITaskMonitor monitor) {
 
                 final int progressPerArchive = 2 * ArchiveInstaller.NUM_MONITOR_INC;
@@ -535,6 +543,7 @@ public class UpdaterData implements IUpdaterData {
 
         private final Map<ArchiveInfo, Integer> mOrders = new HashMap<ArchiveInfo, Integer>();
 
+        @Override
         public int compare(ArchiveInfo o1, ArchiveInfo o2) {
             int n1 = getDependencyOrder(o1);
             int n2 = getDependencyOrder(o2);
@@ -589,6 +598,7 @@ public class UpdaterData implements IUpdaterData {
             final Shell shell = getWindowShell();
             if (shell != null && !shell.isDisposed()) {
                 shell.getDisplay().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (!shell.isDisposed()) {
                             canRestart[0] = MessageDialog.openQuestion(shell,
@@ -630,6 +640,7 @@ public class UpdaterData implements IUpdaterData {
         final Shell shell = getWindowShell();
         if (msg2 != null && shell != null && !shell.isDisposed()) {
             shell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (!shell.isDisposed()) {
                         MessageDialog.openInformation(shell,
@@ -977,6 +988,7 @@ public class UpdaterData implements IUpdaterData {
         final boolean forceHttp = getSettingsController().getForceHttp();
 
         mTaskFactory.start("Refresh Sources", new ITask() {
+            @Override
             public void run(ITaskMonitor monitor) {
 
                 if (mStateFetchRemoteAddonsList <= 0) {
@@ -1008,6 +1020,7 @@ public class UpdaterData implements IUpdaterData {
         }
 
         mTaskFactory.start("Load Add-ons List", monitor, new ITask() {
+            @Override
             public void run(ITaskMonitor subMonitor) {
                 loadRemoteAddonsListInTask(subMonitor);
             }
@@ -1063,6 +1076,7 @@ public class UpdaterData implements IUpdaterData {
     public void broadcastOnSdkLoaded() {
         if (mWindowShell != null && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     for (ISdkChangeListener listener : mListeners) {
                         try {
@@ -1083,6 +1097,7 @@ public class UpdaterData implements IUpdaterData {
     private void broadcastOnSdkReload() {
         if (mWindowShell != null && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     for (ISdkChangeListener listener : mListeners) {
                         try {
@@ -1103,6 +1118,7 @@ public class UpdaterData implements IUpdaterData {
     private void broadcastPreInstallHook() {
         if (mWindowShell != null && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     for (ISdkChangeListener listener : mListeners) {
                         try {
@@ -1123,6 +1139,7 @@ public class UpdaterData implements IUpdaterData {
     private void broadcastPostInstallHook() {
         if (mWindowShell != null && mListeners.size() > 0) {
             mWindowShell.getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     for (ISdkChangeListener listener : mListeners) {
                         try {

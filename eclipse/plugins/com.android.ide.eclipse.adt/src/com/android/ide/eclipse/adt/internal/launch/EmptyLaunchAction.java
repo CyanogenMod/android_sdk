@@ -23,6 +23,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
  */
 public class EmptyLaunchAction implements IAndroidLaunchAction {
 
+    @Override
     public boolean doLaunchAction(DelayedLaunchInfo info, IDevice device) {
         // we're not supposed to do anything, just return;
         String msg = String.format("%1$s installed on device",
@@ -32,6 +33,7 @@ public class EmptyLaunchAction implements IAndroidLaunchAction {
         return false;
     }
 
+    @Override
     public String getLaunchDescription() {
         return "sync";
     }

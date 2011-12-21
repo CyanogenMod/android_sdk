@@ -21,10 +21,11 @@ import org.eclipse.jface.viewers.Viewer;
 
 /**
  * Content provider to display {@link WayPoint} objects in a Table.
- * <p/>The expected type for the input is {@link WayPoint}<code>[]</code>. 
+ * <p/>The expected type for the input is {@link WayPoint}<code>[]</code>.
  */
 public class WayPointContentProvider implements IStructuredContentProvider {
 
+    @Override
     public Object[] getElements(Object inputElement) {
         if (inputElement instanceof WayPoint[]) {
             return (WayPoint[])inputElement;
@@ -33,10 +34,12 @@ public class WayPointContentProvider implements IStructuredContentProvider {
         return new Object[0];
     }
 
+    @Override
     public void dispose() {
         // pass
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         // pass
     }

@@ -203,6 +203,7 @@ public class DeviceExplorer extends Panel {
 
         // setup a listener for selection
         mTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 ISelection sel = event.getSelection();
                 if (sel.isEmpty()) {
@@ -234,6 +235,7 @@ public class DeviceExplorer extends Panel {
 
         // add support for double click
         mTreeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
             public void doubleClick(DoubleClickEvent event) {
                 ISelection sel = event.getSelection();
 
@@ -355,6 +357,7 @@ public class DeviceExplorer extends Panel {
                         Display display = mTree.getDisplay();
                         if (display.isDisposed() == false) {
                             display.asyncExec(new Runnable() {
+                                @Override
                                 public void run() {
                                     if (mTree.isDisposed() == false) {
                                         mTreeViewer.refresh(true);
@@ -599,15 +602,18 @@ public class DeviceExplorer extends Panel {
 
         try {
             mCurrentDevice.executeShellCommand(command, new IShellOutputReceiver() {
+                @Override
                 public void addOutput(byte[] data, int offset, int length) {
                     // pass
                     // TODO get output to display errors if any.
                 }
 
+                @Override
                 public void flush() {
                     mTreeViewer.refresh(parentEntry);
                 }
 
+                @Override
                 public boolean isCancelled() {
                     return false;
                 }
@@ -640,6 +646,7 @@ public class DeviceExplorer extends Panel {
         if (entry.isDirectory()) {
             InputDialog inputDialog = new InputDialog(mTree.getShell(), "New Folder",
                     "Please enter the new folder name", "New Folder", new IInputValidator() {
+                        @Override
                         public String isValid(String newText) {
                             if ((newText != null) && (newText.length() > 0)
                                     && (newText.trim().length() > 0)
@@ -662,14 +669,17 @@ public class DeviceExplorer extends Panel {
                 try {
                     mCurrentDevice.executeShellCommand(command, new IShellOutputReceiver() {
 
+                        @Override
                         public boolean isCancelled() {
                             return false;
                         }
 
+                        @Override
                         public void flush() {
                             mTreeViewer.refresh(entry);
                         }
 
+                        @Override
                         public void addOutput(byte[] data, int offset, int length) {
                             String errorMessage;
                             if (data != null) {
@@ -722,6 +732,7 @@ public class DeviceExplorer extends Panel {
             if (mTree.isDisposed() == false) {
                 Display d = mTree.getDisplay();
                 d.asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (mTree.isDisposed() == false) {
                             // new service
@@ -744,6 +755,7 @@ public class DeviceExplorer extends Panel {
     private void refresh(final FileEntry entry) {
         Display d = mTreeViewer.getTree().getDisplay();
         d.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 mTreeViewer.refresh(entry);
             }
@@ -771,11 +783,13 @@ public class DeviceExplorer extends Panel {
                         new FileEntry[entries.size()]);
 
                 SyncProgressHelper.run(new SyncRunnable() {
+                    @Override
                     public void run(ISyncProgressMonitor monitor)
                             throws SyncException, IOException, TimeoutException {
                         sync.pull(entryArray, localDirectory, monitor);
                     }
 
+                    @Override
                     public void close() {
                         sync.close();
                     }
@@ -802,11 +816,13 @@ public class DeviceExplorer extends Panel {
             final SyncService sync = mCurrentDevice.getSyncService();
             if (sync != null) {
                 SyncProgressHelper.run(new SyncRunnable() {
+                        @Override
                         public void run(ISyncProgressMonitor monitor)
                                 throws SyncException, IOException, TimeoutException {
                             sync.pullFile(remote, local, monitor);
                         }
 
+                        @Override
                         public void close() {
                             sync.close();
                         }
@@ -834,11 +850,13 @@ public class DeviceExplorer extends Panel {
             final SyncService sync = mCurrentDevice.getSyncService();
             if (sync != null) {
                 SyncProgressHelper.run(new SyncRunnable() {
+                        @Override
                         public void run(ISyncProgressMonitor monitor)
                                 throws SyncException, IOException, TimeoutException {
                             sync.push(localFiles, remoteDirectory, monitor);
                         }
 
+                        @Override
                         public void close() {
                             sync.close();
                         }
@@ -871,11 +889,13 @@ public class DeviceExplorer extends Panel {
                         + name;
 
                 SyncProgressHelper.run(new SyncRunnable() {
+                        @Override
                         public void run(ISyncProgressMonitor monitor)
                                 throws SyncException, IOException, TimeoutException {
                             sync.pushFile(local, remoteFile, monitor);
                         }
 
+                        @Override
                         public void close() {
                             sync.close();
                         }

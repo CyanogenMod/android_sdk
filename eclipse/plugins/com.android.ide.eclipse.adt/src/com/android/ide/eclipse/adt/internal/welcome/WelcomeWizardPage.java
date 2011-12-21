@@ -59,6 +59,7 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
      * Create contents of the wizard.
      * @param parent parent widget to add page to
      */
+    @Override
     @SuppressWarnings("unused") // SWT constructors have side effects so "new Label" is not unused
     public void createControl(Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
@@ -160,6 +161,7 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
         return new File(text.getText());
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
 
@@ -198,9 +200,11 @@ public class WelcomeWizardPage extends WizardPage implements ModifyListener, Sel
         validatePage();
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
+    @Override
     public void modifyText(ModifyEvent e) {
         validatePage();
     }

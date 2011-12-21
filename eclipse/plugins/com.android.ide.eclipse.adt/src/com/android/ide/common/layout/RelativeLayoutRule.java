@@ -186,6 +186,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
                 feedback.isCopy || !feedback.sameCanvas);
 
         targetNode.editXml("Dropped", new INodeHandler() {
+            @Override
             public void handle(INode n) {
                 int index = -1;
 
@@ -306,6 +307,7 @@ public class RelativeLayoutRule extends BaseLayoutRule {
         final ResizeHandler state = (ResizeHandler) feedback.userData;
 
         child.editXml("Resize", new INodeHandler() {
+            @Override
             public void handle(INode n) {
                 state.removeCycles();
                 state.applyConstraints(n);
@@ -326,11 +328,13 @@ public class RelativeLayoutRule extends BaseLayoutRule {
         actions.add(createMarginAction(parentNode, children));
 
         IMenuCallback callback = new IMenuCallback() {
+            @Override
             public void action(RuleAction action, List<? extends INode> selectedNodes,
                     final String valueId, final Boolean newValue) {
                 final String id = action.getId();
                 if (id.equals(ACTION_CENTER_VERTICAL)|| id.equals(ACTION_CENTER_HORIZONTAL)) {
                     parentNode.editXml("Center", new INodeHandler() {
+                        @Override
                         public void handle(INode n) {
                             if (id.equals(ACTION_CENTER_VERTICAL)) {
                                 for (INode child : children) {
