@@ -18,7 +18,9 @@ package com.android.sdklib.util;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.StdSdkLog;
-import com.android.sdklib.util.CommandLineParser;
+
+import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -42,11 +44,19 @@ public class CommandLineParserTest extends TestCase {
                   new String[][] {
                     { "verb1", "action1", "Some action" },
                     { "verb1", "action2", "Another action" },
+                    { "verb2", NO_VERB_OBJECT, "Action with string array" },
             });
             define(Mode.STRING, false /*mandatory*/,
                     "verb1", "action1", "1", "first", "non-mandatory flag", null);
             define(Mode.STRING, true /*mandatory*/,
                     "verb1", "action1", "2", "second", "mandatory flag", null);
+
+            define(Mode.STRING, true /*mandatory*/,
+                    "verb2", NO_VERB_OBJECT, "1", "first", "1st mandatory flag", null);
+            define(Mode.STRING_ARRAY, true /*mandatory*/,
+                    "verb2", NO_VERB_OBJECT, "2", "second", "2nd mandatory flag", null);
+            define(Mode.STRING, true /*mandatory*/,
+                    "verb2", NO_VERB_OBJECT, "3", "third", "3rd mandatory flag", null);
         }
 
         @Override
@@ -184,5 +194,53 @@ public class CommandLineParserTest extends TestCase {
         assertTrue(c.getStdErr().indexOf("must be defined") != -1);
         assertEquals(null, c.getValue("verb1", "action1", "first"));
         assertEquals(null, c.getValue("verb1", "action1", "second"));
+    }
+
+    public void testStringArray() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
+
+        c.parseArgs(new String[] { "verb2",
+                                   "-1", "value1",
+                                   "-2", "value2_a", "value2_b", "value2_c", "value2_d",
+                                   "-3", "value3" });
+        assertFalse(c.wasExitCalled());
+        assertFalse(c.wasHelpCalled());
+        assertEquals("", c.getStdErr());
+        assertEquals("value1", c.getValue("verb2", null, "first"));
+        assertTrue(c.getValue("verb2", null, "second") instanceof List<?>);
+        assertEquals("[value2_a, value2_b, value2_c, value2_d]",
+                     Arrays.toString(((List<?>) c.getValue("verb2", null, "second")).toArray()));
+        assertEquals("value3", c.getValue("verb2", null, "third"));
+    }
+
+    public void testStringArray_DashDash() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
+
+        // Use -- to tell argument -2 it can absorb any argument, including dashed ones.
+        // Logically -2 must be the last argument and -1/-3 must be placed before it.
+        c.parseArgs(new String[] { "verb2",
+                                   "-1", "value1",
+                                   "-3", "value3",
+                                   "-2", "value2_a", "--", "-value2_b", "--value2_c", "value2_d" });
+        assertFalse(c.wasExitCalled());
+        assertFalse(c.wasHelpCalled());
+        assertEquals("", c.getStdErr());
+        assertEquals("value1", c.getValue("verb2", null, "first"));
+        assertTrue(c.getValue("verb2", null, "second") instanceof List<?>);
+        assertEquals("[value2_a, --, -value2_b, --value2_c, value2_d]",
+                     Arrays.toString(((List<?>) c.getValue("verb2", null, "second")).toArray()));
+        assertEquals("value3", c.getValue("verb2", null, "third"));
+    }
+
+    public void testStringArray_EmptyStringArray() {
+        MockCommandLineProcessor c = new MockCommandLineProcessor(mLog);
+
+        c.parseArgs(new String[] { "verb2",
+                                   "-1", "value1",
+                                   "-2",
+                                   "-3", "value3" });
+        assertTrue(c.wasExitCalled());
+        assertTrue(c.wasHelpCalled());
+        assertEquals("Invalid usage for flag -2: No values provided.", c.getStdErr().trim());
     }
 }
