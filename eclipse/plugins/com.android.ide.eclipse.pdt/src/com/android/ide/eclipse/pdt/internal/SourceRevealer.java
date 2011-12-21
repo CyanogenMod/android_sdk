@@ -100,4 +100,12 @@ public class SourceRevealer extends DevTreeProjectProvider implements ISourceRev
         return false;
     }
 
+    public boolean revealLine(String fileName, int lineNumber) {
+        return false;
+    }
+
+    public boolean revealMethod(String fqmn) {
+        return false;
+    }
+
 }
