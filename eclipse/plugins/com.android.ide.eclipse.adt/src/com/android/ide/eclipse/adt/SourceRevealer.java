@@ -38,7 +38,7 @@ import org.eclipse.ui.ide.IDE;
 
 /**
  * Implementation of the com.android.ide.ddms.sourceRevealer extension point.
- *
+ * Note that this code is duplicated in the PDT plugin's SourceRevealer as well.
  */
 public class SourceRevealer implements ISourceRevealer {
     public boolean reveal(String applicationName, String className, int line) {
