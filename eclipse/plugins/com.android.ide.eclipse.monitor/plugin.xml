@@ -32,7 +32,7 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="com.android.ide.eclipse.monitor.Application"
-            name="Android Device Monitor">
+            name="monitor">
          <property
                name="appName"
                value="monitor">

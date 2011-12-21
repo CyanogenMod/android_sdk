@@ -55,7 +55,6 @@
 
         <unzip src="${targetSrcDir}/eclipse-3.6.2-delta-pack.zip" dest="${targetDir}/deltapack" />
         <unzip src="${targetSrcDir}/org.eclipse.platform-3.6.2.zip" dest="${targetDir}/repos/platform" />
-        <unzip src="${targetSrcDir}/org.eclipse.jdt-3.6.2.zip" dest="${targetDir}/repos/jdt" />
     </target>
 	
     <!-- Launch pde build -->
