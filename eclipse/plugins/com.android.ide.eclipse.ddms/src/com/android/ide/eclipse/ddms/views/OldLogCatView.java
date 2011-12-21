@@ -16,22 +16,22 @@
 
 package com.android.ide.eclipse.ddms.views;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmuilib.ImageLoader;
+import com.android.ddmuilib.logcat.LogColors;
+import com.android.ddmuilib.logcat.LogFilter;
+import com.android.ddmuilib.logcat.LogPanel;
+import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
+import com.android.ddmuilib.logcat.LogPanel.LogCatViewInterface;
+import com.android.ide.eclipse.ddms.CommonAction;
+import com.android.ide.eclipse.ddms.DdmsPlugin;
+import com.android.ide.eclipse.ddms.i18n.Messages;
+import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
@@ -54,17 +54,7 @@ import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.ide.IDE;
 
-import com.android.ddmlib.Log.LogLevel;
-import com.android.ddmuilib.ImageLoader;
-import com.android.ddmuilib.logcat.LogColors;
-import com.android.ddmuilib.logcat.LogFilter;
-import com.android.ddmuilib.logcat.LogPanel;
-import com.android.ddmuilib.logcat.LogPanel.ILogFilterStorageManager;
-import com.android.ddmuilib.logcat.LogPanel.LogCatViewInterface;
-import com.android.ide.eclipse.ddms.CommonAction;
-import com.android.ide.eclipse.ddms.DdmsPlugin;
-import com.android.ide.eclipse.ddms.i18n.Messages;
-import com.android.ide.eclipse.ddms.preferences.PreferenceInitializer;
+import java.util.ArrayList;
 
 /**
  * The log cat view displays log output from the current device selection.
@@ -102,8 +92,6 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
     private CommonAction mDeleteFilterAction;
     private CommonAction mEditFilterAction;
     private CommonAction mExportAction;
-    private CommonAction mGotoMethodDeclarationAction;
-    private CommonAction mGotoErrorLineAction;
 
     private CommonAction[] mLogLevelActions;
     private String[] mLogLevelIcons = {
@@ -159,59 +147,6 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
 
         public boolean requiresDefaultFilter() {
             return true;
-        }
-    }
-
-    /**
-     * This class defines what to do with the search match returned by a
-     * double-click or by the Go to Problem action.
-     */
-    private class LogCatViewSearchRequestor extends SearchRequestor {
-
-        private boolean mFoundFirstMatch = false;
-        private String mChoice;
-        private int mLineNumber;
-
-        public LogCatViewSearchRequestor(String choice, int lineNumber) {
-            super();
-            mChoice = choice;
-            mLineNumber = lineNumber;
-        }
-
-        IMarker createMarkerFromSearchMatch(IFile file, SearchMatch match) {
-            IMarker marker = null;
-            try {
-                if (CHOICE_METHOD_DECLARATION.equals(mChoice)) {
-                    HashMap<String, Object> map = new HashMap<String, Object>();
-                    map.put(IMarker.CHAR_START, new Integer(match.getOffset()));
-                    map.put(IMarker.CHAR_END, new Integer(match.getOffset()
-                            + match.getLength()));
-                    marker = file.createMarker(IMarker.TEXT);
-                    marker.setAttributes(map);
-                } else if (CHOICE_ERROR_LINE.equals(mChoice)) {
-                    marker = file.createMarker(IMarker.TEXT);
-                    marker.setAttribute(IMarker.LINE_NUMBER, mLineNumber);
-                }
-            } catch (CoreException e) {
-                Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
-                DdmsPlugin.getDefault().getLog().log(s);
-            }
-            return marker;
-        }
-
-        @Override
-        public void acceptSearchMatch(SearchMatch match) throws CoreException {
-            if (match.getResource() instanceof IFile && !mFoundFirstMatch) {
-                mFoundFirstMatch = true;
-                IFile matched_file = (IFile) match.getResource();
-                IMarker marker = createMarkerFromSearchMatch(matched_file, match);
-                // There should only be one exact match,
-                // so we go immediately to that one.
-                if (marker != null) {
-                    switchPerspective();
-                    openFile(matched_file, marker);
-                }
-            }
         }
     }
 
@@ -291,20 +226,6 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
         mExportAction.setToolTipText(Messages.LogCatView_Export_Selection_As_Text_Tooltip);
         mExportAction.setImageDescriptor(loader.loadDescriptor("save.png")); //$NON-NLS-1$
 
-        mGotoMethodDeclarationAction = new CommonAction(Messages.LogCatView_Go_To_Problem_Method) {
-            @Override
-            public void run() {
-                goToErrorLine(CHOICE_METHOD_DECLARATION);
-            }
-        };
-
-        mGotoErrorLineAction = new CommonAction(Messages.LogCatView_Go_To_Problem_Error_Line) {
-            @Override
-            public void run() {
-                goToErrorLine(CHOICE_ERROR_LINE);
-            }
-        };
-
         LogLevel[] levels = LogLevel.values();
         mLogLevelActions = new CommonAction[mLogLevelIcons.length];
         for (int i = 0; i < mLogLevelActions.length; i++) {
@@ -313,13 +234,13 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
                 @Override
                 public void run() {
                     // disable the other actions and record current index
-                    for (int i = 0; i < mLogLevelActions.length; i++) {
-                        Action a = mLogLevelActions[i];
+                    for (int j = 0; j < mLogLevelActions.length; j++) {
+                        Action a = mLogLevelActions[j];
                         if (a == this) {
                             a.setChecked(true);
 
                             // set the log level
-                            mLogPanel.setCurrentFilterLogLevel(i + 2);
+                            mLogPanel.setCurrentFilterLogLevel(j + 2);
                         } else {
                             a.setChecked(false);
                         }
@@ -408,8 +329,6 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
         menuManager.add(mClearAction);
         menuManager.add(new Separator());
         menuManager.add(mExportAction);
-        menuManager.add(mGotoMethodDeclarationAction);
-        menuManager.add(mGotoErrorLineAction);
 
         // and then in the toolbar
         IToolBarManager toolBarManager = actionBars.getToolBarManager();
@@ -457,71 +376,6 @@ public final class OldLogCatView extends SelectionDependentViewPart implements L
         }
     }
 
-    void goToErrorLine() {
-        IPreferenceStore store = DdmsPlugin.getDefault().getPreferenceStore();
-        String value = store.getString(PreferenceInitializer.ATTR_LOGCAT_GOTO_PROBLEM);
-        goToErrorLine(value);
-    }
-
-    void goToErrorLine(String choice) {
-        try {
-            String msg = mLogPanel.getSelectedErrorLineMessage();
-            if (msg != null) {
-                String error_line_matcher_string = "\\s*at\\ (.*)\\((.*)\\.java\\:(\\d+)\\)"; //$NON-NLS-1$
-                Matcher error_line_matcher = Pattern.compile(
-                        error_line_matcher_string).matcher(msg);
-
-                if (error_line_matcher.find()) {
-                    String class_name_method = error_line_matcher.group(1);
-
-                    // TODO: Search currently only matches the class declaration
-                    // (using
-                    // IJavaSearchConstants.DECLARATIONS). We may want to jump
-                    // to the
-                    // "reference" of the class instead
-                    // (IJavaSearchConstants.REFERENCES)
-                    // using the filename and line number to disambiguate the
-                    // search results.
-                    String class_name_line = error_line_matcher.group(2);
-                    int line_number = Integer.parseInt(error_line_matcher.group(3));
-
-                    SearchEngine se = new SearchEngine();
-                    if (CHOICE_ERROR_LINE.equals(choice)) {
-                        se.search(SearchPattern.createPattern(class_name_line,
-                                IJavaSearchConstants.CLASS,
-                                IJavaSearchConstants.DECLARATIONS,
-                                SearchPattern.R_EXACT_MATCH
-                                        | SearchPattern.R_CASE_SENSITIVE),
-                                new SearchParticipant[] {
-                                    SearchEngine
-                                            .getDefaultSearchParticipant()
-                                },
-                                SearchEngine.createWorkspaceScope(),
-                                new LogCatViewSearchRequestor(CHOICE_ERROR_LINE, line_number),
-                                new NullProgressMonitor());
-                    } else if (CHOICE_METHOD_DECLARATION.equals(choice)) {
-                        se.search(SearchPattern.createPattern(class_name_method,
-                                IJavaSearchConstants.METHOD,
-                                IJavaSearchConstants.DECLARATIONS,
-                                SearchPattern.R_EXACT_MATCH
-                                        | SearchPattern.R_CASE_SENSITIVE),
-                                new SearchParticipant[] {
-                                    SearchEngine
-                                            .getDefaultSearchParticipant()
-                                },
-                                SearchEngine.createWorkspaceScope(),
-                                new LogCatViewSearchRequestor(CHOICE_METHOD_DECLARATION, 0),
-                                new NullProgressMonitor());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Status s = new Status(Status.ERROR, DdmsPlugin.PLUGIN_ID, e.getMessage(), e);
-            DdmsPlugin.getDefault().getLog().log(s);
-        }
-    }
-
     public void onDoubleClick() {
-        goToErrorLine();
     }
 }
