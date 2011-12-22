@@ -177,7 +177,8 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
         }
 
         if (property == null || PREFS_BUILD_FORCE_ERROR_ON_NATIVELIB_IN_JAR.equals(property)) {
-            mBuildForceErrorOnNativeLibInJar = mStore.getBoolean(PREFS_BUILD_RES_AUTO_REFRESH);
+            mBuildForceErrorOnNativeLibInJar =
+                    mStore.getBoolean(PREFS_BUILD_FORCE_ERROR_ON_NATIVELIB_IN_JAR);
         }
 
         if (property == null || PREFS_BUILD_SKIP_POST_COMPILE_ON_FILE_SAVE.equals(property)) {
