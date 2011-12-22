@@ -17,8 +17,13 @@
 package com.android.ide.eclipse.adt.internal.ui;
 
 
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_ANDROID_RESOURCE_REF;
+import static com.android.ide.common.resources.ResourceResolver.PREFIX_RESOURCE_REF;
+
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.ResourceResolver;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.assetstudio.OpenCreateAssetSetWizardAction;
@@ -42,6 +47,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -53,6 +60,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.AbstractElementListSelectionDialog;
@@ -68,7 +76,7 @@ import java.util.regex.Pattern;
 /**
  * A dialog to let the user select a resource based on a resource type.
  */
-public class ResourceChooser extends AbstractElementListSelectionDialog {
+public class ResourceChooser extends AbstractElementListSelectionDialog implements ModifyListener {
     /** The return code from the dialog for the user choosing "Clear" */
     public static final int CLEAR_RETURN_CODE = -5;
     /** The dialog button ID for the user choosing "Clear" */
@@ -85,7 +93,38 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
     private String mCurrentResource;
     private final IProject mProject;
     private IInputValidator mInputValidator;
+
+    /** Helper object used to draw previews for drawables and colors. */
     private ResourcePreviewHelper mPreviewHelper;
+
+    /**
+     * Textfield for editing the actual returned value, updated when selection
+     * changes. Only shown if {@link #mShowValueText} is true.
+     */
+    private Text mEditValueText;
+
+    /**
+     * Whether the {@link #mEditValueText} textfield should be shown when the dialog is created.
+     */
+    private boolean mShowValueText;
+
+    /**
+     * Flag indicating whether it's the first time {@link #handleSelectionChanged()} is called.
+     * This is used to filter out the first selection event, always called by the superclass
+     * when the widget is created, to distinguish between "the dialog was created" and
+     * "the user clicked on a selection result", since only the latter should wipe out the
+     * manual user edit shown in the value text.
+     */
+    private boolean mFirstSelect = true;
+
+    /**
+     * Label used to show the resolved value in the resource chooser. Only shown
+     * if the {@link #mResourceResolver} field is set.
+     */
+    private Label mResolvedLabel;
+
+    /** Resource resolver used to show actual values for resources selected. (Optional). */
+    private ResourceResolver mResourceResolver;
 
     /**
      * Creates a Resource Chooser dialog.
@@ -107,18 +146,55 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         mFrameworkResources = frameworkResources;
 
         mProjectResourcePattern = Pattern.compile(
-                "@" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
+                PREFIX_RESOURCE_REF + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$
 
         mSystemResourcePattern = Pattern.compile(
-                "@android:" + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$ //$NON-NLS-2$
+                PREFIX_ANDROID_RESOURCE_REF + mResourceType.getName() + "/(.+)"); //$NON-NLS-1$
 
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",
                 mResourceType.getDisplayName().toLowerCase()));
     }
 
+    /**
+     * Sets whether this dialog should show the value field as a separate text
+     * value (and take the resulting value of the dialog from this text field
+     * rather than from the selection)
+     *
+     * @param showValueText if true, show the value text field
+     */
+    public void setShowValueText(boolean showValueText) {
+        mShowValueText = showValueText;
+    }
+
+    /**
+     * Sets the resource resolver to use to show resolved values for the current
+     * selection
+     *
+     * @param resourceResolver the resource resolver to use
+     */
+    public void setResourceResolver(ResourceResolver resourceResolver) {
+        mResourceResolver = resourceResolver;
+    }
+
+    /**
+     * Sets the {@link ResourcePreviewHelper} to use to preview drawable
+     * resources, if any
+     *
+     * @param previewHelper the helper to use
+     */
     public void setPreviewHelper(ResourcePreviewHelper previewHelper) {
         mPreviewHelper = previewHelper;
+    }
+
+    @Override
+    public void create() {
+        super.create();
+
+        if (mShowValueText) {
+            mEditValueText.selectAll();
+            mEditValueText.setFocus();
+        }
     }
 
     @Override
@@ -140,6 +216,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     public void setCurrentResource(String resource) {
         mCurrentResource = resource;
+
+        if (mShowValueText && mEditValueText != null) {
+            mEditValueText.setText(resource);
+        }
     }
 
     public String getCurrentResource() {
@@ -152,6 +232,18 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     @Override
     protected void computeResult() {
+        if (mShowValueText) {
+            mCurrentResource = mEditValueText.getText();
+            if (mCurrentResource.length() == 0) {
+                mCurrentResource = null;
+            }
+            return;
+        }
+
+        computeResultFromSelection();
+    }
+
+    private void computeResultFromSelection() {
         if (getSelectionIndex() == -1) {
             mCurrentResource = null;
             return;
@@ -182,6 +274,9 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         // create the "New Resource" button
         createNewResButtons(top);
 
+        // Optionally create the value text field, if {@link #mShowValueText} is true
+        createValueField(top);
+
         setupResourceList();
         selectResourceString(mCurrentResource);
 
@@ -200,9 +295,16 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
                 if (mProjectButton.getSelection()) {
+                    // Clear selection before changing the list contents. This works around
+                    // a bug in the superclass where switching to the framework resources,
+                    // choosing one of the last resources, then switching to the project
+                    // resources would cause an exception when calling getSelection() because
+                    // selection state doesn't get cleared when we set new contents on
+                    // the filtered list.
+                    fFilteredList.setSelection(new int[0]);
                     setupResourceList();
                     updateNewButton(false /*isSystem*/);
-                    updatePreview();
+                    updateValue();
                 }
             }
         });
@@ -213,9 +315,10 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
                 if (mSystemButton.getSelection()) {
+                    fFilteredList.setSelection(new int[0]);
                     setupResourceList();
                     updateNewButton(true /*isSystem*/);
-                    updatePreview();
+                    updateValue();
                 }
             }
         });
@@ -287,11 +390,68 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
                     items = newItems;
                     Arrays.sort(items);
                     setListElements(items);
+                    fFilteredList.setEnabled(newItems.length > 0);
                 }
 
                 selectItemName(newName, items);
             }
         });
+    }
+
+    /**
+     * Creates the value text field.
+     *
+     * @param top the parent composite
+     */
+    private void createValueField(Composite top) {
+        if (mShowValueText) {
+            mEditValueText = new Text(top, SWT.BORDER);
+            if (mCurrentResource != null) {
+                mEditValueText.setText(mCurrentResource);
+            }
+            mEditValueText.addModifyListener(this);
+
+            GridData data = new GridData();
+            data.grabExcessVerticalSpace = false;
+            data.grabExcessHorizontalSpace = true;
+            data.horizontalAlignment = GridData.FILL;
+            data.verticalAlignment = GridData.BEGINNING;
+            mEditValueText.setLayoutData(data);
+            mEditValueText.setFont(top.getFont());
+        }
+
+        if (mResourceResolver != null) {
+            mResolvedLabel = new Label(top, SWT.NONE);
+            GridData data = new GridData();
+            data.grabExcessVerticalSpace = false;
+            data.grabExcessHorizontalSpace = true;
+            data.horizontalAlignment = GridData.FILL;
+            data.verticalAlignment = GridData.BEGINNING;
+            mResolvedLabel.setLayoutData(data);
+        }
+    }
+
+    private void updateResolvedLabel() {
+        if (mResourceResolver == null) {
+            return;
+        }
+
+        String v = null;
+        if (mCurrentResource != null) {
+            v = mCurrentResource;
+            if (mCurrentResource.startsWith(PREFIX_RESOURCE_REF)) {
+                ResourceValue value = mResourceResolver.findResValue(mCurrentResource, false);
+                if (value != null) {
+                    v = value.getValue();
+                }
+            }
+        }
+
+        if (v == null) {
+            v = "";
+        }
+
+        mResolvedLabel.setText(String.format("Resolved Value: %1$s", v));
     }
 
     @Override
@@ -313,13 +473,30 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
             }
         }
 
-        updatePreview();
+        updateValue();
     }
 
-    private void updatePreview() {
+    private void updateValue() {
         if (mPreviewHelper != null) {
             computeResult();
             mPreviewHelper.updatePreview(mResourceType, mCurrentResource);
+        }
+
+        if (mShowValueText) {
+            if (mFirstSelect) {
+                mFirstSelect = false;
+                mEditValueText.selectAll();
+            } else {
+                computeResultFromSelection();
+                mEditValueText.setText(mCurrentResource != null ? mCurrentResource : "");
+            }
+        }
+
+        if (mResourceResolver != null) {
+            if (!mShowValueText) {
+                computeResultFromSelection();
+            }
+            updateResolvedLabel();
         }
     }
 
@@ -419,6 +596,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
         Arrays.sort(arrayItems);
 
         setListElements(arrayItems);
+        fFilteredList.setEnabled(arrayItems.length > 0);
 
         return arrayItems;
     }
@@ -481,6 +659,24 @@ public class ResourceChooser extends AbstractElementListSelectionDialog {
 
     private void updateNewButton(boolean isSystem) {
         mNewButton.setEnabled(!isSystem && ResourceHelper.canCreateResourceType(mResourceType));
+    }
+
+    // ---- Implements ModifyListener ----
+
+    @Override
+    public void modifyText(ModifyEvent e) {
+       if (e.getSource() == mEditValueText && mResourceResolver != null) {
+           mCurrentResource = mEditValueText.getText();
+
+           if (mCurrentResource.startsWith(PREFIX_RESOURCE_REF)) {
+               if (mProjectResourcePattern.matcher(mCurrentResource).matches() ||
+                       mSystemResourcePattern.matcher(mCurrentResource).matches()) {
+                   updateResolvedLabel();
+               }
+           } else {
+               updateResolvedLabel();
+           }
+       }
     }
 
     /** Dialog asking for a Name/Value pair */

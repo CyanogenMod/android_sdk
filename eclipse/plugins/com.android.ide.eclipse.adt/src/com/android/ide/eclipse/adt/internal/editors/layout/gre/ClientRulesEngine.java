@@ -263,6 +263,18 @@ class ClientRulesEngine implements IClientRulesEngine {
                     systemRepository, shell);
             dlg.setPreviewHelper(new ResourcePreviewHelper(dlg, graphicalEditor));
 
+            // When editing Strings, allow editing the value text directly. When we
+            // get inline editing support (where values entered directly into the
+            // textual widget are translated automatically into a resource) this can
+            // go away.
+            if (resourceTypeName.equals(ResourceType.STRING.getName())) {
+                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
+                dlg.setShowValueText(true);
+            } else if (resourceTypeName.equals(ResourceType.DIMEN.getName())
+                    || resourceTypeName.equals(ResourceType.INTEGER.getName())) {
+                dlg.setResourceResolver(graphicalEditor.getResourceResolver());
+            }
+
             if (validator != null) {
                 // Ensure wide enough to accommodate validator error message
                 dlg.setSize(85, 10);
@@ -285,15 +297,15 @@ class ClientRulesEngine implements IClientRulesEngine {
     @Override
     public String[] displayMarginInput(String all, String left, String right, String top,
             String bottom) {
-        AndroidXmlEditor editor = mRulesEngine.getEditor().getLayoutEditor();
+        GraphicalEditorPart editor = mRulesEngine.getEditor();
         IProject project = editor.getProject();
         if (project != null) {
             Shell shell = AdtPlugin.getDisplay().getActiveShell();
             if (shell == null) {
                 return null;
             }
-            AndroidTargetData data = editor.getTargetData();
-            MarginChooser dialog = new MarginChooser(shell, project, data, all, left, right,
+            AndroidTargetData data = editor.getLayoutEditor().getTargetData();
+            MarginChooser dialog = new MarginChooser(shell, editor, data, all, left, right,
                     top, bottom);
             if (dialog.open() == Window.OK) {
                 return dialog.getMargins();

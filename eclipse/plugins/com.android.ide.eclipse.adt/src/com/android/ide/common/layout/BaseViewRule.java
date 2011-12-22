@@ -227,7 +227,8 @@ public class BaseViewRule extends AbstractViewRule {
                                         ? ResourceType.STYLE.getName()
                                         : ResourceType.STRING.getName();
                                 String oldValue = selectedNodes.size() == 1
-                                    ? firstNode.getStringAttr(null, ATTR_STYLE)
+                                    ? (isStyle ? firstNode.getStringAttr(ATTR_STYLE, actionId)
+                                            : firstNode.getStringAttr(ANDROID_URI, actionId))
                                     : ""; //$NON-NLS-1$
                                 oldValue = ensureValidString(oldValue);
                                 v = mRulesEngine.displayResourceInput(resourceTypeName, oldValue);
