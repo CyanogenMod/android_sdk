@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.ui;
 
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
@@ -36,8 +37,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SelectionStatusDialog;
 
+/**
+ * Dialog for choosing margins
+ */
 public class MarginChooser extends SelectionStatusDialog implements Listener {
-    private IProject mProject;
+    private GraphicalEditorPart mEditor;
     private AndroidTargetData mTargetData;
     private Text mLeftField;
     private Text mRightField;
@@ -55,11 +59,23 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
     // Client data key for resource buttons pointing to the associated text field
     private final static String PROP_TEXTFIELD = "textField"; //$NON-NLS-1$
 
-    public MarginChooser(Shell parent, IProject project, AndroidTargetData targetData, String all,
+    /**
+     * Constructs a new margin chooser dialog.
+     *
+     * @param parent parent widget
+     * @param editor associated layout editor
+     * @param targetData current SDK target
+     * @param all current value for the all margins attribute
+     * @param left current value for the left margin
+     * @param right current value for the right margin
+     * @param top current value for the top margin
+     * @param bottom current value for the bottom margin
+     */
+    public MarginChooser(Shell parent, GraphicalEditorPart editor, AndroidTargetData targetData, String all,
             String left, String right, String top, String bottom) {
         super(parent);
         setTitle("Edit Margins");
-        mProject = project;
+        mEditor = editor;
         mTargetData = targetData;
         mInitialAll = all;
         mInitialLeft = left;
@@ -68,6 +84,7 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
         mInitialBottom = bottom;
     }
 
+    @SuppressWarnings("unused") // SWT constructors have side effects, "new Label" is not unused.
     @Override
     protected Control createDialogArea(Composite parent) {
         Composite container = new Composite(parent, SWT.NONE);
@@ -166,6 +183,12 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
         };
     }
 
+    /**
+     * Returns the margins in the order all, left, right, top, bottom
+     *
+     * @return the margins in the order all, left, right, top, bottom, never
+     *         null
+     */
     public String[] getMargins() {
         return mMargins;
     }
@@ -198,11 +221,13 @@ public class MarginChooser extends SelectionStatusDialog implements Listener {
                 Button button = (Button) event.widget;
 
                 // Open a resource chooser dialog for specified resource type.
+                IProject project = mEditor.getProject();
                 ProjectResources projectRepository = ResourceManager.getInstance()
-                        .getProjectResources(mProject);
+                        .getProjectResources(project);
                 ResourceRepository frameworkRepository = mTargetData.getFrameworkResources();
-                ResourceChooser dlg = new ResourceChooser(mProject, ResourceType.DIMEN,
+                ResourceChooser dlg = new ResourceChooser(project, ResourceType.DIMEN,
                         projectRepository, frameworkRepository, getShell());
+                dlg.setResourceResolver(mEditor.getResourceResolver());
                 Text text = (Text) button.getData(PROP_TEXTFIELD);
                 dlg.setCurrentResource(text.getText().trim());
                 if (dlg.open() == Window.OK) {
