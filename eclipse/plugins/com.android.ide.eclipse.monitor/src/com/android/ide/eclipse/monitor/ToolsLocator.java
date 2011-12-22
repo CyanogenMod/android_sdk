@@ -31,14 +31,17 @@ public class ToolsLocator implements IToolsLocator {
     public static final String FN_HPROF_CONV = "hprof-conv" + PLATFORM_EXECUTABLE_EXTENSION; //$NON-NLS-1$
     public static final String FN_TRACEVIEW = "traceview" + PLATFORM_SCRIPT_EXTENSION; //$NON-NLS-1$
 
+    @Override
     public String getAdbLocation() {
         return getSdkPlatformToolsFolder() + SdkConstants.FN_ADB;
     }
 
+    @Override
     public String getTraceViewLocation() {
         return getSdkToolsFolder() + FN_TRACEVIEW;
     }
 
+    @Override
     public String getHprofConvLocation() {
         return getSdkToolsFolder() + FN_HPROF_CONV;
     }
