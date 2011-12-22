@@ -16,6 +16,8 @@
 
 package com.android.ide.common.layout;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_EMS;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.REQUEST_FOCUS;
 
 import com.android.ide.common.api.IMenuCallback;
@@ -41,6 +43,10 @@ public class EditTextRule extends BaseViewRule {
             if (focus == null) {
                 // Add <requestFocus>
                 node.appendChild(REQUEST_FOCUS);
+            }
+
+            if (parent.getBounds().w >= 320) {
+                node.setAttribute(ANDROID_URI, ATTR_EMS, "10"); //$NON-NLS-1$
             }
         }
     }
