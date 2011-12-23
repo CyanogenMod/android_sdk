@@ -16,6 +16,9 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 import java.util.List;
 
 
@@ -54,7 +57,7 @@ public interface IViewRule {
      * @return True if this rule can handle the given FQCN. False if the rule can't handle the
      *   given FQCN, in which case the rule engine will find another rule matching a parent class.
      */
-    boolean onInitialize(String fqcn, IClientRulesEngine engine);
+    boolean onInitialize(@NonNull String fqcn, @NonNull IClientRulesEngine engine);
 
     /**
      * This method is called by the rules engine just before the script is unloaded.
@@ -62,15 +65,16 @@ public interface IViewRule {
     void onDispose();
 
     /**
-     * Returns the class name to display when an element is selected in the GLE.
+     * Returns the class name to display when an element is selected in the layout editor.
      * <p/>
-     * If null is returned, the GLE will automatically shorten the class name using its
+     * If null is returned, the layout editor will automatically shorten the class name using its
      * own heuristic, which is to keep the first 2 package components and the class name.
      * The class name is the <code>fqcn</code> argument that was given
      * to {@link #onInitialize(String,IClientRulesEngine)}.
      *
      * @return Null for the default behavior or a shortened string.
      */
+    @Nullable
     String getDisplayName();
 
     /**
@@ -95,7 +99,7 @@ public interface IViewRule {
      *    {@link RuleAction#getSortPriority()} later.
      * @param node the node to add actions for.
      */
-    void addContextMenuActions(List<RuleAction> actions, INode node);
+    void addContextMenuActions(@NonNull List<RuleAction> actions, @NonNull INode node);
 
     /**
      * Invoked by the Rules Engine to ask the parent layout for the set of layout actions
@@ -109,8 +113,10 @@ public interface IViewRule {
      * @param parentNode the parent of the selection, or the selection itself if the root
      * @param targets the targeted/selected nodes, if any
      */
-    void addLayoutActions(List<RuleAction> actions,
-            INode parentNode, List<? extends INode> targets);
+    void addLayoutActions(
+            @NonNull List<RuleAction> actions,
+            @NonNull INode parentNode,
+            @NonNull List<? extends INode> targets);
 
     // ==== Selection ====
 
@@ -126,7 +132,8 @@ public interface IViewRule {
      * @param childNode The child node that was selected. Never null.
      * @return a list of strings to be displayed, or null or empty to display nothing
      */
-    List<String> getSelectionHint(INode parentNode, INode childNode);
+    @Nullable
+    List<String> getSelectionHint(@NonNull INode parentNode, @NonNull INode childNode);
 
     /**
      * Paints any layout-specific selection feedback for the given parent layout.
@@ -136,8 +143,11 @@ public interface IViewRule {
      * @param childNodes the child nodes selected in the parent layout
      * @param view An instance of the view to be painted (may be null)
      */
-    void paintSelectionFeedback(IGraphics graphics, INode parentNode,
-            List<? extends INode> childNodes, Object view);
+    void paintSelectionFeedback(
+            @NonNull IGraphics graphics,
+            @NonNull INode parentNode,
+            @NonNull List<? extends INode> childNodes,
+            @Nullable Object view);
 
     // ==== Drag'n'drop support ====
 
@@ -156,7 +166,9 @@ public interface IViewRule {
      *         supplied to a follow-up {@link #onDropMove} call), or null if the
      *         drop should be ignored
      */
-    DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements);
+    @Nullable
+    DropFeedback onDropEnter(@NonNull INode targetNode, @Nullable Object targetView,
+            @Nullable IDragElement[] elements);
 
     /**
      * Called after onDropEnter. Returns a DropFeedback passed to
@@ -173,10 +185,12 @@ public interface IViewRule {
      * @return a {@link DropFeedback} (which is usually just the same one passed
      *         into this method)
      */
-    DropFeedback onDropMove(INode targetNode,
-            IDragElement[] elements,
-            DropFeedback feedback,
-            Point where);
+    @Nullable
+    DropFeedback onDropMove(
+            @NonNull INode targetNode,
+            @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback,
+            @NonNull Point where);
 
     /**
      * Called when drop leaves the target without actually dropping.
@@ -201,9 +215,10 @@ public interface IViewRule {
      * @param feedback the {@link DropFeedback} object created by
      *            {@link #onDropEnter(INode, Object, IDragElement[])}
      */
-    void onDropLeave(INode targetNode,
-            IDragElement[] elements,
-            DropFeedback feedback);
+    void onDropLeave(
+            @NonNull INode targetNode,
+            @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback);
 
     /**
      * Called when drop is released over the target to perform the actual drop.
@@ -220,10 +235,11 @@ public interface IViewRule {
      *            {@link #onDropEnter(INode, Object, IDragElement[])}
      * @param where the mouse drop position
      */
-    void onDropped(INode targetNode,
-            IDragElement[] elements,
-            DropFeedback feedback,
-            Point where);
+    void onDropped(
+            @NonNull INode targetNode,
+            @NonNull IDragElement[] elements,
+            @Nullable DropFeedback feedback,
+            @NonNull Point where);
 
     /**
      * Called when pasting elements in an existing document on the selected target.
@@ -233,7 +249,8 @@ public interface IViewRule {
      *            null if not known
      * @param pastedElements The elements being pasted.
      */
-    void onPaste(INode targetNode, Object targetView, IDragElement[] pastedElements);
+    void onPaste(@NonNull INode targetNode, @Nullable Object targetView,
+            @NonNull IDragElement[] pastedElements);
 
     // ==== XML Creation ====
 
@@ -254,7 +271,7 @@ public interface IViewRule {
      * @param insertType whether this node was created as part of a newly created view, or
      *            as a copy, or as a move, etc.
      */
-    void onCreate(INode node, INode parent, InsertType insertType);
+    void onCreate(@NonNull INode node, @NonNull INode parent, @NonNull InsertType insertType);
 
     /**
      * Called when a child for this view has been created and is being inserted into the
@@ -269,7 +286,8 @@ public interface IViewRule {
      * @param insertType whether this node was created as part of a newly created view, or
      *            as a copy, or as a move, etc.
      */
-    void onChildInserted(INode child, INode parent, InsertType insertType);
+    void onChildInserted(@NonNull INode child, @NonNull INode parent,
+            @NonNull InsertType insertType);
 
     /**
      * Called when one or more children are about to be deleted by the user. Note that
@@ -284,7 +302,7 @@ public interface IViewRule {
      * @param parent the parent of the deleted children (which still contains the children
      *            since this method is called before the deletion is performed)
      */
-    void onRemovingChildren(List<INode> deleted, INode parent);
+    void onRemovingChildren(@NonNull List<INode> deleted, @NonNull INode parent);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This
@@ -300,10 +318,14 @@ public interface IViewRule {
      * @return a {@link DropFeedback} object which performs an update painter callback
      *         etc.
      */
+    @Nullable
     DropFeedback onResizeBegin(
-            INode child, INode parent,
-            SegmentType horizEdge, SegmentType verticalEdge,
-            Object childView, Object parentView);
+            @NonNull INode child,
+            @NonNull INode parent,
+            @Nullable SegmentType horizEdge,
+            @Nullable SegmentType verticalEdge,
+            @Nullable Object childView,
+            @Nullable Object parentView);
 
     /**
      * Called by the IDE on the parent layout when a child widget is being resized. This
@@ -320,7 +342,11 @@ public interface IViewRule {
      *    of the constants {@link DropFeedback#MODIFIER1}, {@link DropFeedback#MODIFIER2}
      *    and {@link DropFeedback#MODIFIER3}.
      */
-    void onResizeUpdate(DropFeedback feedback, INode child, INode parent, Rect newBounds,
+    void onResizeUpdate(
+            @Nullable DropFeedback feedback,
+            @NonNull INode child,
+            @NonNull INode parent,
+            @NonNull Rect newBounds,
             int modifierMask);
 
     /**
@@ -335,5 +361,9 @@ public interface IViewRule {
      * @param newBounds the new bounds the user has chosen to resize the widget to,
      *    in absolute coordinates
      */
-    void onResizeEnd(DropFeedback feedback, INode child, INode parent, Rect newBounds);
+    void onResizeEnd(
+            @Nullable DropFeedback feedback,
+            @NonNull INode child,
+            @NonNull INode parent,
+            @NonNull Rect newBounds);
 }

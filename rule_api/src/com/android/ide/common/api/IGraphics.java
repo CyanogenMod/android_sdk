@@ -16,6 +16,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public interface IGraphics {
      * Draws a line between 2 points, using the current foreground color and
      * alpha.
      */
-    void drawLine(Point p1, Point p2);
+    void drawLine(@NonNull Point p1, @NonNull Point p2);
 
     /**
      * Draws an arrow from (x1, y1) to (x2, y2).
@@ -76,13 +77,13 @@ public interface IGraphics {
      * Draws a rectangle outline between 2 points, using the current foreground
      * color and alpha.
      */
-    void drawRect(Point p1, Point p2);
+    void drawRect(@NonNull Point p1, @NonNull Point p2);
 
     /**
      * Draws a rectangle outline between 2 points, using the current foreground
      * color and alpha.
      */
-    void drawRect(Rect r);
+    void drawRect(@NonNull Rect r);
 
     /**
      * Fills a rectangle outline between 2 points, using the current background
@@ -94,13 +95,13 @@ public interface IGraphics {
      * Fills a rectangle outline between 2 points, using the current background
      * color and alpha.
      */
-    void fillRect(Point p1, Point p2);
+    void fillRect(@NonNull Point p1, @NonNull Point p2);
 
     /**
      * Fills a rectangle outline between 2 points, using the current background
      * color and alpha.
      */
-    void fillRect(Rect r);
+    void fillRect(@NonNull Rect r);
 
     /**
      * Draws the given string, using the current foreground color. No tab
@@ -110,7 +111,7 @@ public interface IGraphics {
      * @param x the x coordinate of the top left corner of the text.
      * @param y the y coordinate of the top left corner of the text.
      */
-    void drawString(String string, int x, int y);
+    void drawString(@NonNull String string, int x, int y);
 
     /**
      * Draws the given string, using the current foreground color. No tab
@@ -119,7 +120,7 @@ public interface IGraphics {
      * @param string the string to be drawn.
      * @param topLeft the top left corner of the text.
      */
-    void drawString(String string, Point topLeft);
+    void drawString(@NonNull String string, @NonNull Point topLeft);
 
     /**
      * Draw the given strings, using the current stroke color and alpha for the
@@ -134,7 +135,7 @@ public interface IGraphics {
      *            The actual String used is the {@link Object#toString()} value
      *            of each list item.
      */
-    void drawBoxedStrings(int x, int y, List<?> strings);
+    void drawBoxedStrings(int x, int y, @NonNull List<?> strings);
 
     /**
      * Set up the graphics context to use the given style for subsequent drawing
@@ -142,7 +143,7 @@ public interface IGraphics {
      *
      * @param style The drawing style to be used. May not be null.
      */
-    void useStyle(DrawingStyle style);
+    void useStyle(@NonNull DrawingStyle style);
 
     /**
      * Registers a color using 0x00rrggbb where each component is 0..0xFF.
@@ -155,6 +156,7 @@ public interface IGraphics {
      * to ensure that your colors work properly across multiple current and
      * future themes.
      */
+    @NonNull
     IColor registerColor(int rgb);
 
     /**
@@ -166,25 +168,27 @@ public interface IGraphics {
      * Returns the current foreground color.
      * The foreground color is used for drawing operations including when text is drawn.
      */
+    @NonNull
     IColor getForeground();
 
     /**
      * Sets the foreground color. The foreground color is used for drawing
      * operations including when text is drawn.
      */
-    void setForeground(IColor color);
+    void setForeground(@NonNull IColor color);
 
     /**
      * Returns the current background color. The background color is used for
      * fill operations.
      */
+    @NonNull
     IColor getBackground();
 
     /**
      * Sets the background color. The background color is used for fill
      * operations.
      */
-    void setBackground(IColor color);
+    void setBackground(@NonNull IColor color);
 
     /**
      * Returns the current alpha value (varies between 0 for transparent and 255
@@ -226,7 +230,7 @@ public interface IGraphics {
     /**
      * Sets the current line style.
      */
-    void setLineStyle(LineStyle style);
+    void setLineStyle(@NonNull LineStyle style);
 
     /**
      * Sets the width that will be used when drawing lines.

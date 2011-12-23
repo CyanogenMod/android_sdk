@@ -16,6 +16,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -33,6 +34,7 @@ public class DropFeedback {
      * <p/>
      * Filled and owned by the view rule.
      */
+    @Nullable
     public Object userData;
 
     /**
@@ -67,6 +69,7 @@ public class DropFeedback {
      * Filled by the view rule, called by the engine.
      * <p/>
      */
+    @Nullable
     public IFeedbackPainter painter;
 
     /**
@@ -78,6 +81,7 @@ public class DropFeedback {
      * <p/>
      * Filled by the view rule, read by the engine.
      */
+    @Nullable
     public Rect captureArea;
 
     /**
@@ -98,6 +102,7 @@ public class DropFeedback {
      * NOTE: The coordinate units will be in layout/view coordinates. In other words, they
      * are unaffected by the canvas zoom.
      */
+    @Nullable
     public Rect dragBounds;
 
     /**
@@ -126,7 +131,7 @@ public class DropFeedback {
      * @param userData Data stored for later retrieval by the client
      * @param painter A callback invoked to paint the drop feedback
      */
-    public DropFeedback(Object userData, IFeedbackPainter painter) {
+    public DropFeedback(@Nullable Object userData, @Nullable IFeedbackPainter painter) {
         this.userData = userData;
         this.painter = painter;
         this.requestPaint = painter != null;
@@ -136,28 +141,33 @@ public class DropFeedback {
     /**
      * A message to be displayed to the user, if any. Should not contain line separators.
      */
+    @Nullable
     public String message;
 
     /**
      * An error message to be displayed to the user, if any. Should not contain line
      * separators.
      */
+    @Nullable
     public String errorMessage;
 
     /**
      * A message to be displayed in a tooltip to the user, which should be short, but
      * can be multiple lines (use embedded newlines)
      */
+    @Nullable
     public String tooltip;
 
     /**
      * Horizontal alignment for the tooltip, or null if no preference
      */
+    @Nullable
     public SegmentType tooltipX;
 
     /**
      * Vertical alignment for the tooltip, or null if no preference
      */
+    @Nullable
     public SegmentType tooltipY;
 
     /**

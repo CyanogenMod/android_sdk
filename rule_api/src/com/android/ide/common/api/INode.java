@@ -17,6 +17,8 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.IDragElement.IDragAttribute;
 import com.google.common.annotations.Beta;
 
@@ -46,6 +48,7 @@ public interface INode {
     /**
      * Returns the FQCN of the view class represented by this node.
      */
+    @NonNull
     String getFqcn();
 
     /**
@@ -60,6 +63,7 @@ public interface INode {
      *
      * @return A non-null rectangle, in canvas coordinates.
      */
+    @NonNull
     Rect getBounds();
 
     /**
@@ -67,6 +71,7 @@ public interface INode {
      *
      * @return the margins for this node, never null
      */
+    @NonNull
     Margins getMargins();
 
     /**
@@ -86,6 +91,7 @@ public interface INode {
      * This may return null if the {@link INode} was not created using a correct UiNode,
      * which is unlikely.
      */
+    @Nullable
     INode getRoot();
 
     /**
@@ -93,11 +99,13 @@ public interface INode {
      * The returned parent can be null when the node is the root element, or when the node is
      * not yet or no longer attached to the hierarchy.
      */
+    @Nullable
     INode getParent();
 
     /**
      * Returns the list of valid children nodes. The list can be empty but not null.
      */
+    @NonNull
     INode[] getChildren();
 
 
@@ -111,7 +119,7 @@ public interface INode {
      * @param undoName The UI name that will be given to the undo action.
      * @param callback The code to execute.
      */
-    void editXml(String undoName, final INodeHandler callback);
+    void editXml(@NonNull String undoName, @NonNull INodeHandler callback);
 
     // TODO define an exception that methods below will throw if editXml() is not wrapping
     // these calls.
@@ -127,7 +135,8 @@ public interface INode {
      *  depend on whether this is an Android view or a custom project view.
      * @return The node for the newly created element. Can be null if we failed to create it.
      */
-    INode appendChild(String viewFqcn);
+    @NonNull
+    INode appendChild(@NonNull String viewFqcn);
 
     /**
      * Creates a new XML element as a child of this node's XML element and inserts
@@ -143,7 +152,8 @@ public interface INode {
      *  (less than zero or larger that current last child), appends at the end.
      * @return The node for the newly created element. Can be null if we failed to create it.
      */
-    INode insertChildAt(String viewFqcn, int index);
+    @NonNull
+    INode insertChildAt(@NonNull String viewFqcn, int index);
 
     /**
      * Removes the given XML element child from this node's list of children.
@@ -152,7 +162,7 @@ public interface INode {
      *
      * @param node The child to be deleted.
      */
-    void removeChild(INode node);
+    void removeChild(@NonNull INode node);
 
     /**
      * Sets an attribute for the underlying XML element.
@@ -170,7 +180,7 @@ public interface INode {
      * @param value It's value. Cannot be null. An empty value <em>removes</em> the attribute.
      * @return Whether the attribute was actually set or not.
      */
-    boolean setAttribute(String uri, String localName, String value);
+    boolean setAttribute(@Nullable String uri, @NonNull String localName, @NonNull String value);
 
     /**
      * Returns a given XML attribute.
@@ -184,7 +194,8 @@ public interface INode {
      * @param attrName The <em>local</em> name of the attribute.
      * @return the attribute as a {@link String}, if it exists, or <code>null</code>.
      */
-    String getStringAttr(String uri, String attrName);
+    @Nullable
+    String getStringAttr(@Nullable String uri, @NonNull String attrName);
 
     /**
      * Returns the {@link IAttributeInfo} for a given attribute.
@@ -204,7 +215,8 @@ public interface INode {
      * @param attrName The <em>local</em> name of the attribute.
      * @return the {@link IAttributeInfo} if the attribute is known, or <code>null</code>.
      */
-    public IAttributeInfo getAttributeInfo(String uri, String attrName);
+    @Nullable
+    public IAttributeInfo getAttributeInfo(@Nullable String uri, @NonNull String attrName);
 
     /**
      * Returns the list of all attributes declared by this node's descriptor.
@@ -223,6 +235,7 @@ public interface INode {
      *
      * @return A non-null possibly-empty list of {@link IAttributeInfo}.
      */
+    @NonNull
     public IAttributeInfo[] getDeclaredAttributes();
 
     /**
@@ -237,6 +250,7 @@ public interface INode {
      *         which is never null because at least android.view.View will
      *         contribute attributes.
      */
+    @NonNull
     public List<String> getAttributeSources();
 
     /**
@@ -252,6 +266,7 @@ public interface INode {
      *
      * @return A non-null possibly-empty list of {@link IAttribute}.
      */
+    @NonNull
     public IAttribute[] getLiveAttributes();
 
     // -----------

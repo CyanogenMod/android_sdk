@@ -16,6 +16,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 
 /**
@@ -34,5 +35,5 @@ public interface INodeHandler {
      *
      * @param node The node to be operated on
      */
-    void handle(INode node);
+    void handle(@NonNull INode node);
 }

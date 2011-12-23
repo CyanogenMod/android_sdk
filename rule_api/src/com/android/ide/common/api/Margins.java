@@ -17,6 +17,7 @@
 package com.android.ide.common.api;
 
 import com.google.common.annotations.Beta;
+import com.android.annotations.NonNull;
 
 /**
  * Set of margins - distances to outer left, top, right and bottom edges. These objects
@@ -56,6 +57,7 @@ public class Margins {
         this.bottom = bottom;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Margins [left=" + left + ", right=" + right + ", top=" + top + ", bottom=" + bottom
