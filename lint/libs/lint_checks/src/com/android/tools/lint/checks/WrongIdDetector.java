@@ -124,7 +124,7 @@ public class WrongIdDetector extends LayoutDetector {
 
     /** Constructs a duplicate id check */
     public WrongIdDetector() {
-    };
+    }
 
     @Override
     public boolean appliesTo(ResourceFolderType folderType) {

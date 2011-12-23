@@ -86,7 +86,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
     /** Constructs a duplicate id check */
     public DuplicateIdDetector() {
-    };
+    }
 
 
     @Override
