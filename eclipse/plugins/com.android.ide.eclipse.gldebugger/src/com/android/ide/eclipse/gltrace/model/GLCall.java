@@ -101,4 +101,12 @@ public class GLCall {
     public Image getThumbnailImage() {
         return mThumbnailImage;
     }
+
+    public long getStartTime() {
+        return mMessage.getStartTime();
+    }
+
+    public int getDuration() {
+        return mMessage.getDuration();
+    }
 }
