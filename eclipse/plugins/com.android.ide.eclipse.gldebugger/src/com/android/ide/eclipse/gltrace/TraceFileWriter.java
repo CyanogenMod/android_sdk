@@ -17,30 +17,31 @@
 package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 
 /** A class that streams data received from a socket into the trace file. */
-public class GLTraceWriter {
+public class TraceFileWriter {
+    private DataInputStream mInputStream;
     private DataOutputStream mOutputStream;
-    private int mPort;
-    private GLTraceCollectorDialog mDialog;
-    private volatile boolean stopTracing = false;
     private Thread mReceiverThread;
 
     private int mFileSize = 0;
     private int mFrameCount = 0;
 
-    public GLTraceWriter(FileOutputStream fos, int port,
-            GLTraceCollectorDialog glTraceCollectorDialog) {
+    /**
+     * Construct a trace file writer.
+     * @param fos output stream to write trace data to
+     * @param is input stream from which trace data is read
+     */
+    public TraceFileWriter(FileOutputStream fos, DataInputStream is) {
         mOutputStream = new DataOutputStream(fos);
-        mPort = port;
-        mDialog = glTraceCollectorDialog;
+        mInputStream = is;
     }
 
     public void start() {
@@ -48,15 +49,15 @@ public class GLTraceWriter {
         mReceiverThread = new Thread(new GLTraceReceiverTask());
         mReceiverThread.setName("GL Trace Receiver");
         mReceiverThread.start();
-
-        // launch dialog
-        mDialog.setTraceWriter(this);
-        mDialog.open();
     }
 
     public void stopTracing() {
-        // stop thread
-        stopTracing = true;
+        // close socket to stop the receiver thread
+        try {
+            mInputStream.close();
+        } catch (IOException e) {
+            // ignore exception while closing socket
+        }
 
         // wait for receiver to complete
         try {
@@ -73,62 +74,82 @@ public class GLTraceWriter {
         }
     }
 
+    /**
+     * The GLTraceReceiverTask collects trace data from the device and writes it
+     * into a file while collecting some stats on the way.
+     */
     private class GLTraceReceiverTask implements Runnable {
         public void run() {
-            try {
-                Socket socket = new Socket();
-                socket.connect(new java.net.InetSocketAddress("127.0.0.1", mPort));
-                DataInputStream dis = new DataInputStream(socket.getInputStream());
-
-                while (!stopTracing) {
-                    if (dis.available() > 0) {
-                        readMessage(dis);
-                        mDialog.setFrameCount(mFrameCount);
-                        mDialog.setTraceFileSize(mFileSize);
-                    } else {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            // ignore, as this thread is not interrupted by any other thread.
-                        }
-                    }
+            while (true) {
+                byte[] buffer = readTraceData(mInputStream);
+                if (buffer == null) {
+                    break;
                 }
 
-                socket.close();
-            } catch (IOException e) {
+                try {
+                    writeTraceData(buffer, mOutputStream);
+                } catch (IOException e) {
+                    break;
+                }
+
+                updateTraceStats(buffer);
             }
         }
     }
 
-    private void readMessage(DataInputStream dis) throws IOException {
-        int len = dis.readInt();
+    private byte[] readTraceData(DataInputStream dis) {
+        int len;
+        try {
+            len = dis.readInt();
+        } catch (IOException e1) {
+            return null;
+        }
         len = Integer.reverseBytes(len);    // readInt is big endian, we want little endian
 
         byte[] buffer = new byte[len];
         int readLen = 0;
         while (readLen < len) {
-            int read = dis.read(buffer, readLen, len - readLen);
-            if (read < 0) {
-                throw new IOException();
-            } else {
-                readLen += read;
+            try {
+                int read = dis.read(buffer, readLen, len - readLen);
+                if (read < 0) {
+                    return null;
+                } else {
+                    readLen += read;
+                }
+            } catch (IOException e) {
+                return null;
             }
         }
 
+        return buffer;
+    }
+
+
+    private void writeTraceData(byte[] buffer, DataOutputStream stream) throws IOException {
+        stream.writeInt(buffer.length);
+        stream.write(buffer);
+    }
+
+    private void updateTraceStats(byte[] buffer) {
         GLMessage msg = null;
         try {
             msg = GLMessage.parseFrom(buffer);
         } catch (InvalidProtocolBufferException e) {
-            System.out.println("Invalid protocol buffer: " + e.getMessage());
             return;
         }
-        mOutputStream.writeInt(len);
-        mOutputStream.write(buffer);
 
-        mFileSize += readLen;
+        mFileSize += buffer.length;
 
-        if (msg.getFunction() == GLMessage.Function.eglSwapBuffers) {
+        if (msg.getFunction() == Function.eglSwapBuffers) {
             mFrameCount++;
         }
+    }
+
+    public int getCurrentFileSize() {
+        return mFileSize;
+    }
+
+    public int getCurrentFrameCount() {
+        return mFrameCount;
     }
 }

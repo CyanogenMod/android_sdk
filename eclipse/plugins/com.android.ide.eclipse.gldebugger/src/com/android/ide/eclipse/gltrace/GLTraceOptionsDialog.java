@@ -29,6 +29,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -45,13 +46,10 @@ import org.osgi.service.prefs.BackingStoreException;
 import java.util.ArrayList;
 import java.util.List;
 
-// FIXME: Not all elements in this dialog are functional. They are there for UI review,
-// and once we figure out what needs to be there and what not, we'll fix this.
 /** Dialog displaying all the trace options before the user initiates tracing. */
 public class GLTraceOptionsDialog extends TitleAreaDialog {
-    private static final String TITLE = "OpenGL ES 2.0 Trace Options";
-    private static final String DEFAULT_MESSAGE = "Provide the application to be traced. The application needs to have INTERNET permission for tracing.";
-    private static final String DEFAULT_NUM_FRAMES_TEXT = "10";
+    private static final String TITLE = "OpenGL ES Trace Options";
+    private static final String DEFAULT_MESSAGE = "Provide the application and activity to be traced. The application needs to have INTERNET permission for tracing.";
 
     private static final String PREF_APPNAME = "gl.trace.appname";
     private static final String PREF_TRACEFILE = "gl.trace.destfile";
@@ -61,12 +59,16 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     private Button mOkButton;
 
     private Combo mDeviceCombo;
-    private Text mAppToTraceText;
+    private Text mActivityToTraceText;
     private Text mTraceFilePathText;
 
     private String mSelectedDevice = "";
-    private String mAppToTrace = "";
+    private String mActivityToTrace = "";
     private String mTraceFilePath = "";
+
+    private boolean mCollectFbOnEglSwap = true;
+    private boolean mCollectFbOnGlDraw = false;
+    private boolean mCollectTextureData = false;
 
     public GLTraceOptionsDialog(Shell parentShell) {
         super(parentShell);
@@ -89,11 +91,8 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         createLabel(c, "Activity:");
         createAppToTraceText(c, "e.g. com.example.android.apis");
 
-        createLabel(c, "Capture Mode:");
-        createCaptureModeOptions(c);
-
-        createLabel(c, "Capture Framebuffer:");
-        createCaptureFBOptions(c);
+        createLabel(c, "Capture Image:");
+        createCaptureImageOptions(c);
 
         createSeparator(c);
 
@@ -166,60 +165,51 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     /** Options controlling when the FB should be captured. */
-    private void createCaptureFBOptions(Composite parent) {
+    private void createCaptureImageOptions(Composite parent) {
         Composite c = new Composite(parent, SWT.NONE);
         c.setLayout(new GridLayout(1, false));
         c.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        Button b1 = new Button(c, SWT.CHECK);
-        b1.setText("On eglSwap()");
-        b1.setSelection(true);
+        final Button readFbOnEglSwapCheckBox = new Button(c, SWT.CHECK);
+        readFbOnEglSwapCheckBox.setText("Read back framebuffer 0 on eglSwapBuffers()");
+        readFbOnEglSwapCheckBox.setSelection(mCollectFbOnEglSwap);
 
-        Button b2 = new Button(c, SWT.CHECK);
-        b2.setText("On glDrawElements() and glDrawArrays()");
-        b2.setSelection(false);
-    }
+        final Button readFbOnGlDrawCheckBox = new Button(c, SWT.CHECK);
+        readFbOnGlDrawCheckBox.setText("Read back currently bound framebuffer On glDraw*()");
+        readFbOnGlDrawCheckBox.setSelection(mCollectFbOnGlDraw);
 
-    private void createCaptureModeOptions(Composite parent) {
-        Composite c = new Composite(parent, SWT.NONE);
-        c.setLayout(new GridLayout(2, false));
-        c.setLayoutData(new GridData(GridData.FILL_BOTH));
+        final Button readTextureDataCheckBox = new Button(c, SWT.CHECK);
+        readTextureDataCheckBox.setText("Collect texture data submitted using glTexImage*()");
+        readTextureDataCheckBox.setSelection(mCollectTextureData);
 
-        Button b1 = new Button(c, SWT.RADIO);
-        b1.setText("Infinite Buffer");
-        GridData gd = new GridData();
-        gd.horizontalSpan = 2;
-        b1.setLayoutData(gd);
+        SelectionListener l = new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mCollectFbOnEglSwap = readFbOnEglSwapCheckBox.getSelection();
+                mCollectFbOnGlDraw = readFbOnGlDrawCheckBox.getSelection();
+                mCollectTextureData = readTextureDataCheckBox.getSelection();
+            }
+        };
 
-        Button b2 = new Button(c, SWT.RADIO);
-        b2.setText("Last N frames");
-        b2.setEnabled(false);
-
-        b1.setSelection(true);
-
-        Text t = new Text(c, SWT.BORDER);
-        t.setMessage(DEFAULT_NUM_FRAMES_TEXT);
-        gd = new GridData();
-        gd.widthHint = 30;
-        t.setLayoutData(gd);
-        t.setEditable(false);
-        t.setEnabled(false);
+        readFbOnEglSwapCheckBox.addSelectionListener(l);
+        readFbOnGlDrawCheckBox.addSelectionListener(l);
+        readTextureDataCheckBox.addSelectionListener(l);
     }
 
     private Text createAppToTraceText(Composite parent, String defaultMessage) {
-        mAppToTraceText = new Text(parent, SWT.BORDER);
-        mAppToTraceText.setMessage(defaultMessage);
-        mAppToTraceText.setText(mAppToTrace);
+        mActivityToTraceText = new Text(parent, SWT.BORDER);
+        mActivityToTraceText.setMessage(defaultMessage);
+        mActivityToTraceText.setText(mActivityToTrace);
 
-        mAppToTraceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        mActivityToTraceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        mAppToTraceText.addModifyListener(new ModifyListener() {
+        mActivityToTraceText.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 validateAndSetMessage();
             }
         });
 
-        return mAppToTraceText;
+        return mActivityToTraceText;
     }
 
     private void validateAndSetMessage() {
@@ -269,7 +259,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
     }
 
     private DialogStatus validateDialog() {
-        if (mAppToTraceText.getText().trim().length() == 0) {
+        if (mActivityToTraceText.getText().trim().length() == 0) {
             return new DialogStatus(false, "Provide an application name");
         }
 
@@ -282,7 +272,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     @Override
     protected void okPressed() {
-        mAppToTrace = mAppToTraceText.getText();
+        mActivityToTrace = mActivityToTraceText.getText();
         mTraceFilePath = mTraceFilePathText.getText();
         mSelectedDevice = mDeviceCombo.getText();
 
@@ -293,7 +283,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     private void savePreferences() {
         IEclipsePreferences prefs = new InstanceScope().getNode(Activator.PLUGIN_ID);
-        prefs.put(PREF_APPNAME, mAppToTrace);
+        prefs.put(PREF_APPNAME, mActivityToTrace);
         prefs.put(PREF_TRACEFILE, mTraceFilePath);
         try {
             prefs.flush();
@@ -304,19 +294,12 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
 
     private void loadPreferences() {
         IEclipsePreferences prefs = new InstanceScope().getNode(Activator.PLUGIN_ID);
-        mAppToTrace = prefs.get(PREF_APPNAME, "");
+        mActivityToTrace = prefs.get(PREF_APPNAME, "");
         mTraceFilePath = prefs.get(PREF_TRACEFILE, "");
     }
 
-    public String getDevice() {
-        return mSelectedDevice;
-    }
-
-    public String getApplicationToTrace() {
-        return mAppToTrace.trim();
-    }
-
-    public String getTraceDestination() {
-        return mTraceFilePath;
+    public TraceOptions getTraceOptions() {
+        return new TraceOptions(mSelectedDevice, mActivityToTrace.trim(), mTraceFilePath,
+                mCollectFbOnEglSwap, mCollectFbOnGlDraw, mCollectTextureData);
     }
 }

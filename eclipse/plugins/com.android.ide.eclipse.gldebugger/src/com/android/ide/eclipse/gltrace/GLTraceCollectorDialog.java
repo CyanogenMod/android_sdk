@@ -16,29 +16,45 @@
 
 package com.android.ide.eclipse.gltrace;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+
+import java.io.IOException;
 
 /** Dialog displayed while the trace is being streamed from device to host. */
-public class GLTraceCollectorDialog extends Dialog {
-    private Text mFramesCollectedText;
-    private Text mTraceFileSizeText;
-    private GLTraceWriter mWriter;
-    private int mFramesCollected;
-    private int mTraceFileSize;
+public class GLTraceCollectorDialog extends TitleAreaDialog {
+    private static final String TITLE = "OpenGL ES Trace";
+    private static final String DEFAULT_MESSAGE = "Trace collection in progress.";
 
-    protected GLTraceCollectorDialog(Shell parentShell) {
+    private TraceOptions mTraceOptions;
+    private final TraceFileWriter mTraceFileWriter;
+    private final TraceCommandWriter mTraceCommandWriter;
+
+    private Label mFramesCollectedLabel;
+    private Label mTraceFileSizeLabel;
+    private StatusRefreshTask mRefreshTask;
+
+    protected GLTraceCollectorDialog(Shell parentShell, TraceFileWriter traceFileWriter,
+            TraceCommandWriter traceCommandWriter, TraceOptions traceOptions) {
         super(parentShell);
+        mTraceFileWriter = traceFileWriter;
+        mTraceCommandWriter = traceCommandWriter;
+        mTraceOptions = traceOptions;
     }
 
     @Override
@@ -55,84 +71,154 @@ public class GLTraceCollectorDialog extends Dialog {
 
     @Override
     protected Control createDialogArea(Composite parent) {
-        Composite c = new Composite(parent, SWT.NONE);
-        c.setLayout(new GridLayout(2, false));
-        c.setLayoutData(new GridData(GridData.FILL_BOTH));
+        parent.setLayout(new GridLayout());
 
-        createLabel(c, "Frames Collected:");
-        mFramesCollectedText = createText(c);
+        setTitle(TITLE);
+        setMessage(DEFAULT_MESSAGE);
 
-        createLabel(c, "Trace File Size:");
-        mTraceFileSizeText = createText(c);
+        Group controlGroup = new Group(parent, SWT.BORDER);
+        controlGroup.setLayout(new GridLayout(2, false));
+        controlGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        controlGroup.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLUE));
+        controlGroup.setText("Trace Options");
 
-        ProgressBar pb = new ProgressBar(c, SWT.INDETERMINATE);
+        createLabel(controlGroup, "Collect Framebuffer contents on eglSwapBuffers()");
+        final Button eglSwapCheckBox = createButton(controlGroup,
+                mTraceOptions.collectFbOnEglSwap);
+
+        createLabel(controlGroup, "Collect Framebuffer contents on glDraw*()");
+        final Button glDrawCheckBox = createButton(controlGroup, mTraceOptions.collectFbOnGlDraw);
+
+        createLabel(controlGroup, "Collect texture data for glTexImage*()");
+        final Button glTexImageCheckBox = createButton(controlGroup,
+                mTraceOptions.collectTextureData);
+
+        SelectionListener l = new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent event) {
+                boolean eglSwap = eglSwapCheckBox.getSelection();
+                boolean glDraw = glDrawCheckBox.getSelection();
+                boolean glTexImage = glTexImageCheckBox.getSelection();
+
+                try {
+                    mTraceCommandWriter.setTraceOptions(eglSwap, glDraw, glTexImage);
+                } catch (IOException e) {
+                    eglSwapCheckBox.setEnabled(false);
+                    glDrawCheckBox.setEnabled(false);
+                    glTexImageCheckBox.setEnabled(false);
+
+                    MessageDialog.openError(Display.getDefault().getActiveShell(),
+                            "OpenGL ES Trace",
+                            "Error while setting trace options: " + e.getMessage());
+                }
+
+                // update the text on the button
+                if (!(event.getSource() instanceof Button)) {
+                    return;
+                }
+                Button sourceButton = (Button) event.getSource();
+                sourceButton.setText(getToggleActionText(sourceButton.getSelection()));
+                sourceButton.pack();
+            }
+        };
+
+        eglSwapCheckBox.addSelectionListener(l);
+        glDrawCheckBox.addSelectionListener(l);
+        glTexImageCheckBox.addSelectionListener(l);
+
+        Group statusGroup = new Group(parent, SWT.NONE);
+        statusGroup.setLayout(new GridLayout(2, false));
+        statusGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        statusGroup.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLUE));
+        statusGroup.setText("Trace Status");
+
+        createLabel(statusGroup, "Frames Collected:");
+        mFramesCollectedLabel = createLabel(statusGroup, "");
+
+        createLabel(statusGroup, "Trace File Size:");
+        mTraceFileSizeLabel = createLabel(statusGroup, "");
+
+        ProgressBar pb = new ProgressBar(statusGroup, SWT.INDETERMINATE);
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = 2;
         pb.setLayoutData(gd);
 
+        mRefreshTask = new StatusRefreshTask();
+        new Thread(mRefreshTask, "Trace Status Refresh Thread").start();
+
         return super.createDialogArea(parent);
     }
 
-    private Text createText(Composite c) {
-        Text t = new Text(c, SWT.BORDER);
-
-        GridData gd = new GridData();
-        gd.widthHint = 100;
-        t.setLayoutData(gd);
-
-        return t;
+    private Button createButton(Composite controlComposite, boolean selection) {
+        Button b = new Button(controlComposite, SWT.TOGGLE);
+        b.setText(getToggleActionText(selection));
+        b.setSelection(selection);
+        return b;
     }
 
-    private void createLabel(Composite parent, String text) {
+    /** Get text to show on toggle box given its current selection. */
+    private String getToggleActionText(boolean en) {
+        return en ? "Disable" : "Enable";
+    }
+
+    private Label createLabel(Composite parent, String text) {
         Label l = new Label(parent, SWT.NONE);
         l.setText(text);
-        GridData gd = new GridData();
-        gd.horizontalAlignment = SWT.RIGHT;
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        gd.horizontalAlignment = SWT.LEFT;
         gd.verticalAlignment = SWT.CENTER;
         l.setLayoutData(gd);
+
+        return l;
     }
 
     @Override
     protected void okPressed() {
-        if (mWriter != null) {
-            mWriter.stopTracing();
-        }
-
+        mRefreshTask.cancel();
         super.okPressed();
     }
 
-    public void setFrameCount(final int n) {
-        mFramesCollected = n;
-        scheduleDisplayUpdate();
-    }
+    /** Periodically refresh the trace status. */
+    private class StatusRefreshTask implements Runnable {
+        private static final int REFRESH_INTERVAL = 1000;
+        private volatile boolean mIsCancelled = false;
 
-    public void setTraceFileSize(final int n) {
-        mTraceFileSize = n;
-        scheduleDisplayUpdate();
-    }
+        public void run() {
+            if (mTraceFileWriter == null) {
+                return;
+            }
 
-    private Runnable mRefreshTask = null;
+            while (!mIsCancelled) {
+                final String frameCount = Integer.toString(mTraceFileWriter.getCurrentFrameCount());
 
-    /** Schedule a refresh UI task if one is not already pending. */
-    private void scheduleDisplayUpdate() {
-        if (mRefreshTask == null) {
-            mRefreshTask = new Runnable() {
-                public void run() {
-                    mRefreshTask = null;
+                double fileSize = (double) mTraceFileWriter.getCurrentFileSize();
+                fileSize /= (1024 * 1024); // convert to size in MB
+                final String frameSize = String.format("%.2g MB", fileSize); //$NON-NLS-1$
 
-                    if (mFramesCollectedText.isDisposed()) {
-                        return;
+                Display.getDefault().syncExec(new Runnable() {
+                    public void run() {
+                        if (mFramesCollectedLabel.isDisposed()) {
+                            return;
+                        }
+
+                        mFramesCollectedLabel.setText(frameCount);
+                        mTraceFileSizeLabel.setText(frameSize);
+
+                        mFramesCollectedLabel.pack();
+                        mTraceFileSizeLabel.pack();
                     }
+                });
 
-                    mFramesCollectedText.setText(Integer.toString(mFramesCollected));
-                    mTraceFileSizeText.setText(Integer.toString(mTraceFileSize) + " bytes");
+                try {
+                    Thread.sleep(REFRESH_INTERVAL);
+                } catch (InterruptedException e) {
+                    return;
                 }
-            };
-            Display.getDefault().asyncExec(mRefreshTask);
+            }
         }
-    }
 
-    public void setTraceWriter(GLTraceWriter writer) {
-        mWriter = writer;
+        public void cancel() {
+            mIsCancelled = true;
+        }
     }
 }

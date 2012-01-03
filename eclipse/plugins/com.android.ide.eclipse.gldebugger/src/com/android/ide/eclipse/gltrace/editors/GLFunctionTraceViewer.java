@@ -260,7 +260,21 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         tvc.setLabelProvider(labelProvider);
         TableColumn column = tvc.getColumn();
         column.setText("Context");
-        column.setWidth(50);
+        column.setWidth(150);
+
+        // column showing the GL function called
+        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        tvc.setLabelProvider(labelProvider);
+        column = tvc.getColumn();
+        column.setText("Start");
+        column.setWidth(150);
+
+        // column showing the GL function called
+        tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
+        tvc.setLabelProvider(labelProvider);
+        column = tvc.getColumn();
+        column.setText("Duration");
+        column.setWidth(150);
 
         // column showing the GL function called
         tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
@@ -359,6 +373,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
             switch (columnIndex) {
             case 0:
                 return Integer.toString(c.getContextId());
+            case 1:
+                return Long.toString(c.getStartTime());
+            case 2:
+                return Integer.toString(c.getDuration());
             default:
                 try {
                     return sGLCallFormatter.formatGLCall(c);
