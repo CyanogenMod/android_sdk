@@ -204,6 +204,7 @@ public class GLTraceOptionsDialog extends TitleAreaDialog {
         mActivityToTraceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         mActivityToTraceText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 validateAndSetMessage();
             }

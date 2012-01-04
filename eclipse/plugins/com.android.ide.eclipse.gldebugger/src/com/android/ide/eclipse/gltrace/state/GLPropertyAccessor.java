@@ -77,6 +77,7 @@ public class GLPropertyAccessor {
             mType = type;
         }
 
+        @Override
         public IGLProperty getProperty(IGLProperty p) {
             if (p instanceof GLCompositeProperty) {
                 return ((GLCompositeProperty) p).getProperty(mType);
@@ -93,6 +94,7 @@ public class GLPropertyAccessor {
             mIndex = index;
         }
 
+        @Override
         public IGLProperty getProperty(IGLProperty p) {
             if (p instanceof GLListProperty) {
                 return ((GLListProperty) p).get(mIndex);

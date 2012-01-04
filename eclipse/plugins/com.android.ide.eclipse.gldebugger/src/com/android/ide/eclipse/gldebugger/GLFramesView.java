@@ -108,6 +108,7 @@ public class GLFramesView extends ViewPart implements Runnable {
     private static class ViewContentProvider extends LabelProvider implements IStructuredContentProvider {
         private Frame mFrame = null;
 
+        @Override
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
             mFrame = (Frame) newInput;
         }
@@ -116,6 +117,7 @@ public class GLFramesView extends ViewPart implements Runnable {
         public void dispose() {
         }
 
+        @Override
         public Object[] getElements(Object parent) {
             return mFrame.get().toArray();
         }
@@ -258,6 +260,7 @@ public class GLFramesView extends ViewPart implements Runnable {
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -271,6 +274,7 @@ public class GLFramesView extends ViewPart implements Runnable {
         });
         final ScrollBar vBar = canvas.getVerticalBar();
         vBar.addListener(SWT.Selection, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -283,6 +287,7 @@ public class GLFramesView extends ViewPart implements Runnable {
             }
         });
         canvas.addListener(SWT.Resize, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -311,6 +316,7 @@ public class GLFramesView extends ViewPart implements Runnable {
             }
         });
         canvas.addListener(SWT.Paint, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 if (null == canvas.getBackgroundImage())
                     return;
@@ -343,6 +349,7 @@ public class GLFramesView extends ViewPart implements Runnable {
         MenuManager menuMgr = new MenuManager("#PopupMenu");
         menuMgr.setRemoveAllWhenShown(true);
         menuMgr.addMenuListener(new IMenuListener() {
+            @Override
             public void menuAboutToShow(IMenuManager manager) {
                 GLFramesView.this.fillContextMenu(manager);
             }
@@ -573,6 +580,7 @@ public class GLFramesView extends ViewPart implements Runnable {
             mActionConnect.setText("Connect");
         }
         this.getSite().getShell().getDisplay().syncExec(new Runnable() {
+            @Override
             public void run() {
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
@@ -617,6 +625,7 @@ public class GLFramesView extends ViewPart implements Runnable {
 
     private void hookSelectionChanged() {
         mViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 StructuredSelection selection = (StructuredSelection) event
                         .getSelection();
@@ -630,6 +639,7 @@ public class GLFramesView extends ViewPart implements Runnable {
 
     public void showError(final Exception e) {
         mViewer.getControl().getDisplay().syncExec(new Runnable() {
+            @Override
             public void run() {
                 MessageDialog.openError(mViewer.getControl().getShell(),
                         "GL ES 2.0 Debugger Client", e.getMessage());
@@ -645,6 +655,7 @@ public class GLFramesView extends ViewPart implements Runnable {
         mViewer.getControl().setFocus();
     }
 
+    @Override
     public void run() {
         int newMessages = 0;
 
@@ -657,6 +668,7 @@ public class GLFramesView extends ViewPart implements Runnable {
                 newMessages = 0;
                 if (current != null && current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             if (mFrameScale.getSelection() == current.frameCount() - 1 ||
                                     mFrameScale.getSelection() == current.frameCount() - 2)
@@ -673,6 +685,7 @@ public class GLFramesView extends ViewPart implements Runnable {
 
                 if (shaderEditorUpdate)
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             mShaderEditor.updateUI();
                         }
@@ -716,6 +729,7 @@ public class GLFramesView extends ViewPart implements Runnable {
     /** can be called from non-UI thread */
     void changeContext(final DebugContext newContext) {
         getSite().getShell().getDisplay().syncExec(new Runnable() {
+            @Override
             public void run() {
                 current = newContext;
                 if (current != null) {

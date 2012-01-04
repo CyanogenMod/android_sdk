@@ -52,16 +52,21 @@ public class GLTrace {
     /** List of state transforms to be applied for each GLCall */
     private final List<List<GLStateTransform>> mStateTransformsPerCall;
 
+    /** List of context ids used by the application. */
+    private List<Integer> mContextIds;
+
     /** OpenGL State as of call {@link #mCurrentStateIndex}. */
     private IGLProperty mState;
     private int mCurrentStateIndex;
 
     public GLTrace(TraceFileInfo traceFileInfo, List<GLFrame> glFrames, List<GLCall> glCalls,
-            List<List<GLStateTransform>> stateTransformsPerCall) {
+            List<List<GLStateTransform>> stateTransformsPerCall,
+            List<Integer> contextIds) {
         mTraceFileInfo = traceFileInfo;
         mGLFrames = glFrames;
         mGLCalls = glCalls;
         mStateTransformsPerCall = stateTransformsPerCall;
+        mContextIds = contextIds;
 
         mState = GLState.createDefaultState();
         mCurrentStateIndex = -1;
@@ -69,6 +74,10 @@ public class GLTrace {
 
     public List<GLFrame> getFrames() {
         return mGLFrames;
+    }
+
+    public List<GLCall> getGLCalls() {
+        return mGLCalls;
     }
 
     public List<GLCall> getGLCallsForFrame(int frameIndex) {
@@ -191,5 +200,9 @@ public class GLTrace {
         File f = new File(mTraceFileInfo.getPath());
         return f.length() != mTraceFileInfo.getSize()
                 || f.lastModified() != mTraceFileInfo.getLastModificationTime();
+    }
+
+    public List<Integer> getContexts() {
+        return mContextIds;
     }
 }

@@ -79,6 +79,7 @@ public class TraceFileWriter {
      * into a file while collecting some stats on the way.
      */
     private class GLTraceReceiverTask implements Runnable {
+        @Override
         public void run() {
             while (true) {
                 byte[] buffer = readTraceData(mInputStream);

@@ -228,6 +228,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     }
 
     // this is called from network thread
+    @Override
     public boolean processMessage(final MessageQueue queue, final Message msg)
             throws IOException {
         GLShader shader = null;
@@ -270,6 +271,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                     shader.name, Integer.toHexString(shader.context.context.contextId));
             final String message = rcv.getData().toStringUtf8();
             mGLFramesView.getSite().getShell().getDisplay().syncExec(new Runnable() {
+                @Override
                 public void run()
                 {
                     MessageDialog.openWarning(getShell(), title, message);
@@ -291,6 +293,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                         program.name, Integer.toHexString(program.context.context.contextId));
                 final String message = rcv.getData().toStringUtf8();
                 mGLFramesView.getSite().getShell().getDisplay().syncExec(new Runnable() {
+                    @Override
                     public void run()
                     {
                         MessageDialog.openWarning(getShell(), title, message);
@@ -313,6 +316,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         return true;
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         if (e.getSource() == uploadShader && null != current) {
             uploadShader();
@@ -346,10 +350,12 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         styledText.setText(current.source);
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         widgetSelected(e);
     }
 
+    @Override
     public void modifyText(ExtendedModifyEvent event) {
         final String[] keywords = {
                 "gl_Position", "gl_FragColor"

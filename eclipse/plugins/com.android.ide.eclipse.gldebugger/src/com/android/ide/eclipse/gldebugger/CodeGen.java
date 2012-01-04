@@ -1130,6 +1130,7 @@ public class CodeGen implements IRunnableWithProgress {
     private int count;
     private IProgressMonitor progress;
 
+    @Override
     public void run(IProgressMonitor monitor) {
         progress.beginTask("CodeGenFrames", count + 2);
         Context ctx = dbgCtx.getFrame(0).startContext.clone();

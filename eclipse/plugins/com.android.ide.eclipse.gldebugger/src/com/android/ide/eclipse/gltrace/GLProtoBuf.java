@@ -37,6 +37,7 @@ public final class GLProtoBuf {
       return defaultInstance;
     }
 
+    @Override
     public GLMessage getDefaultInstanceForType() {
       return defaultInstance;
     }
@@ -470,7 +471,8 @@ public final class GLProtoBuf {
       ;
 
 
-      public final int getNumber() { return value; }
+    @Override
+    public final int getNumber() { return value; }
 
       public static Function valueOf(int value) {
         switch (value) {
@@ -909,7 +911,8 @@ public final class GLProtoBuf {
       private static com.google.protobuf.Internal.EnumLiteMap<Function>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<Function>() {
-              public Function findValueByNumber(int number) {
+            @Override
+            public Function findValueByNumber(int number) {
                 return Function.valueOf(number)
       ;        }
             };
@@ -937,6 +940,7 @@ public final class GLProtoBuf {
         return defaultInstance;
       }
 
+      @Override
       public DataType getDefaultInstanceForType() {
         return defaultInstance;
       }
@@ -953,6 +957,7 @@ public final class GLProtoBuf {
         ;
 
 
+        @Override
         public final int getNumber() { return value; }
 
         public static Type valueOf(int value) {
@@ -975,6 +980,7 @@ public final class GLProtoBuf {
         private static com.google.protobuf.Internal.EnumLiteMap<Type>
             internalValueMap =
               new com.google.protobuf.Internal.EnumLiteMap<Type>() {
+                @Override
                 public Type findValueByNumber(int number) {
                   return Type.valueOf(number)
         ;        }
@@ -1067,13 +1073,15 @@ public final class GLProtoBuf {
       private void initFields() {
         type_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type.VOID;
       }
-      public final boolean isInitialized() {
+      @Override
+    public final boolean isInitialized() {
         if (!hasType) return false;
         if (!hasIsArray) return false;
         return true;
       }
 
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
+      @Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
         getSerializedSize();
         if (hasType()) {
@@ -1100,7 +1108,8 @@ public final class GLProtoBuf {
       }
 
       private int memoizedSerializedSize = -1;
-      public int getSerializedSize() {
+      @Override
+    public int getSerializedSize() {
         int size = memoizedSerializedSize;
         if (size != -1) return size;
 
@@ -1224,11 +1233,13 @@ public final class GLProtoBuf {
       }
 
       public static Builder newBuilder() { return Builder.create(); }
-      public Builder newBuilderForType() { return newBuilder(); }
+      @Override
+    public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType prototype) {
         return newBuilder().mergeFrom(prototype);
       }
-      public Builder toBuilder() { return newBuilder(this); }
+      @Override
+    public Builder toBuilder() { return newBuilder(this); }
 
       public static final class Builder extends
           com.google.protobuf.GeneratedMessageLite.Builder<
@@ -1249,6 +1260,7 @@ public final class GLProtoBuf {
           return result;
         }
 
+        @Override
         public Builder clear() {
           if (result == null) {
             throw new IllegalStateException(
@@ -1268,9 +1280,11 @@ public final class GLProtoBuf {
           return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
         }
 
+        @Override
         public boolean isInitialized() {
           return result.isInitialized();
         }
+        @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType build() {
           if (result != null && !isInitialized()) {
             throw newUninitializedMessageException(result);
@@ -1287,6 +1301,7 @@ public final class GLProtoBuf {
           return buildPartial();
         }
 
+        @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType buildPartial() {
           if (result == null) {
             throw new IllegalStateException(
@@ -1685,6 +1700,7 @@ public final class GLProtoBuf {
         return defaultInstance;
       }
 
+      @Override
       public FrameBuffer getDefaultInstanceForType() {
         return defaultInstance;
       }
@@ -1717,13 +1733,15 @@ public final class GLProtoBuf {
 
       private void initFields() {
       }
-      public final boolean isInitialized() {
+      @Override
+    public final boolean isInitialized() {
         if (!hasWidth) return false;
         if (!hasHeight) return false;
         return true;
       }
 
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
+      @Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
         getSerializedSize();
         if (hasWidth()) {
@@ -1738,7 +1756,8 @@ public final class GLProtoBuf {
       }
 
       private int memoizedSerializedSize = -1;
-      public int getSerializedSize() {
+      @Override
+    public int getSerializedSize() {
         int size = memoizedSerializedSize;
         if (size != -1) return size;
 
@@ -1832,11 +1851,13 @@ public final class GLProtoBuf {
       }
 
       public static Builder newBuilder() { return Builder.create(); }
-      public Builder newBuilderForType() { return newBuilder(); }
+      @Override
+    public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer prototype) {
         return newBuilder().mergeFrom(prototype);
       }
-      public Builder toBuilder() { return newBuilder(this); }
+      @Override
+    public Builder toBuilder() { return newBuilder(this); }
 
       public static final class Builder extends
           com.google.protobuf.GeneratedMessageLite.Builder<
@@ -1857,6 +1878,7 @@ public final class GLProtoBuf {
           return result;
         }
 
+        @Override
         public Builder clear() {
           if (result == null) {
             throw new IllegalStateException(
@@ -1876,9 +1898,11 @@ public final class GLProtoBuf {
           return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance();
         }
 
+        @Override
         public boolean isInitialized() {
           return result.isInitialized();
         }
+        @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer build() {
           if (result != null && !isInitialized()) {
             throw newUninitializedMessageException(result);
@@ -1895,6 +1919,7 @@ public final class GLProtoBuf {
           return buildPartial();
         }
 
+        @Override
         public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer buildPartial() {
           if (result == null) {
             throw new IllegalStateException(
@@ -2107,6 +2132,7 @@ public final class GLProtoBuf {
       returnValue_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.getDefaultInstance();
       fb_ = com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.FrameBuffer.getDefaultInstance();
     }
+    @Override
     public final boolean isInitialized() {
       if (!hasContextId) return false;
       if (!hasStartTime) return false;
@@ -2124,6 +2150,7 @@ public final class GLProtoBuf {
       return true;
     }
 
+    @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -2151,6 +2178,7 @@ public final class GLProtoBuf {
     }
 
     private int memoizedSerializedSize = -1;
+    @Override
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
@@ -2256,10 +2284,12 @@ public final class GLProtoBuf {
     }
 
     public static Builder newBuilder() { return Builder.create(); }
+    @Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder(com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage prototype) {
       return newBuilder().mergeFrom(prototype);
     }
+    @Override
     public Builder toBuilder() { return newBuilder(this); }
 
     public static final class Builder extends
@@ -2281,7 +2311,8 @@ public final class GLProtoBuf {
         return result;
       }
 
-      public Builder clear() {
+      @Override
+    public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
             "Cannot call clear() after build().");
@@ -2300,10 +2331,12 @@ public final class GLProtoBuf {
         return com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.getDefaultInstance();
       }
 
-      public boolean isInitialized() {
+      @Override
+    public boolean isInitialized() {
         return result.isInitialized();
       }
-      public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage build() {
+      @Override
+    public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage build() {
         if (result != null && !isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -2319,7 +2352,8 @@ public final class GLProtoBuf {
         return buildPartial();
       }
 
-      public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage buildPartial() {
+      @Override
+    public com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");

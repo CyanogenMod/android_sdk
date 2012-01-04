@@ -27,6 +27,7 @@ public class GLTracePerspective implements IPerspectiveFactory {
     private static final String STATE_FOLDER_ID = "right";      //$NON-NLS-1$
     private static final String FB_FOLDER_ID = "rightBottom";   //$NON-NLS-1$
 
+    @Override
     public void createInitialLayout(IPageLayout layout) {
         // Add the OpenGL state view to the right of the editor
         IFolderLayout right = layout.createFolder(STATE_FOLDER_ID, IPageLayout.RIGHT, 0.7f,

@@ -183,6 +183,7 @@ public class GLTraceCollectorDialog extends TitleAreaDialog {
         private static final int REFRESH_INTERVAL = 1000;
         private volatile boolean mIsCancelled = false;
 
+        @Override
         public void run() {
             if (mTraceFileWriter == null) {
                 return;
@@ -191,11 +192,12 @@ public class GLTraceCollectorDialog extends TitleAreaDialog {
             while (!mIsCancelled) {
                 final String frameCount = Integer.toString(mTraceFileWriter.getCurrentFrameCount());
 
-                double fileSize = (double) mTraceFileWriter.getCurrentFileSize();
+                double fileSize = mTraceFileWriter.getCurrentFileSize();
                 fileSize /= (1024 * 1024); // convert to size in MB
                 final String frameSize = String.format("%.2g MB", fileSize); //$NON-NLS-1$
 
                 Display.getDefault().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         if (mFramesCollectedLabel.isDisposed()) {
                             return;

@@ -21,6 +21,7 @@ public final class DebuggerMessage {
       return defaultInstance;
     }
 
+    @Override
     public Message getDefaultInstanceForType() {
       return defaultInstance;
     }
@@ -221,7 +222,8 @@ public final class DebuggerMessage {
       ;
 
 
-      public final int getNumber() { return value; }
+    @Override
+    public final int getNumber() { return value; }
 
       public static Function valueOf(int value) {
         switch (value) {
@@ -427,7 +429,8 @@ public final class DebuggerMessage {
       private static com.google.protobuf.Internal.EnumLiteMap<Function>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<Function>() {
-              public Function findValueByNumber(int number) {
+              @Override
+            public Function findValueByNumber(int number) {
                 return Function.valueOf(number)
       ;        }
             };
@@ -452,7 +455,8 @@ public final class DebuggerMessage {
       ;
 
 
-      public final int getNumber() { return value; }
+    @Override
+    public final int getNumber() { return value; }
 
       public static Type valueOf(int value) {
         switch (value) {
@@ -472,7 +476,8 @@ public final class DebuggerMessage {
       private static com.google.protobuf.Internal.EnumLiteMap<Type>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<Type>() {
-              public Type findValueByNumber(int number) {
+              @Override
+            public Type findValueByNumber(int number) {
                 return Type.valueOf(number)
       ;        }
             };
@@ -494,7 +499,8 @@ public final class DebuggerMessage {
       ;
 
 
-      public final int getNumber() { return value; }
+    @Override
+    public final int getNumber() { return value; }
 
       public static DataType valueOf(int value) {
         switch (value) {
@@ -511,7 +517,8 @@ public final class DebuggerMessage {
       private static com.google.protobuf.Internal.EnumLiteMap<DataType>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<DataType>() {
-              public DataType findValueByNumber(int number) {
+              @Override
+            public DataType findValueByNumber(int number) {
                 return DataType.valueOf(number)
       ;        }
             };
@@ -536,7 +543,8 @@ public final class DebuggerMessage {
       ;
 
 
-      public final int getNumber() { return value; }
+    @Override
+    public final int getNumber() { return value; }
 
       public static Prop valueOf(int value) {
         switch (value) {
@@ -556,7 +564,8 @@ public final class DebuggerMessage {
       private static com.google.protobuf.Internal.EnumLiteMap<Prop>
           internalValueMap =
             new com.google.protobuf.Internal.EnumLiteMap<Prop>() {
-              public Prop findValueByNumber(int number) {
+              @Override
+            public Prop findValueByNumber(int number) {
                 return Prop.valueOf(number)
       ;        }
             };
@@ -738,6 +747,7 @@ public final class DebuggerMessage {
       dataType_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.DataType.ReferencedImage;
       prop_ = com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.Prop.CaptureDraw;
     }
+    @Override
     public final boolean isInitialized() {
       if (!hasContextId) return false;
       if (!hasFunction) return false;
@@ -746,6 +756,7 @@ public final class DebuggerMessage {
       return true;
     }
 
+    @Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
@@ -821,6 +832,7 @@ public final class DebuggerMessage {
     }
 
     private int memoizedSerializedSize = -1;
+    @Override
     public int getSerializedSize() {
       int size = memoizedSerializedSize;
       if (size != -1) return size;
@@ -990,10 +1002,12 @@ public final class DebuggerMessage {
     }
 
     public static Builder newBuilder() { return Builder.create(); }
+    @Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder(com.android.ide.eclipse.gldebugger.DebuggerMessage.Message prototype) {
       return newBuilder().mergeFrom(prototype);
     }
+    @Override
     public Builder toBuilder() { return newBuilder(this); }
 
     public static final class Builder extends
@@ -1015,7 +1029,8 @@ public final class DebuggerMessage {
         return result;
       }
 
-      public Builder clear() {
+      @Override
+    public Builder clear() {
         if (result == null) {
           throw new IllegalStateException(
             "Cannot call clear() after build().");
@@ -1034,10 +1049,12 @@ public final class DebuggerMessage {
         return com.android.ide.eclipse.gldebugger.DebuggerMessage.Message.getDefaultInstance();
       }
 
-      public boolean isInitialized() {
+      @Override
+    public boolean isInitialized() {
         return result.isInitialized();
       }
-      public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message build() {
+      @Override
+    public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message build() {
         if (result != null && !isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -1053,7 +1070,8 @@ public final class DebuggerMessage {
         return buildPartial();
       }
 
-      public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message buildPartial() {
+      @Override
+    public com.android.ide.eclipse.gldebugger.DebuggerMessage.Message buildPartial() {
         if (result == null) {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");

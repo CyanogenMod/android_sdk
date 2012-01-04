@@ -370,6 +370,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         }
     }
 
+    @Override
     public void selectionChanged(SelectionChangedEvent event) {
         StructuredSelection selection = (StructuredSelection) event
                 .getSelection();
@@ -386,6 +387,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         sampleView.canvas.redraw();
     }
 
+    @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         context = (Context) newInput;
     }
@@ -401,12 +403,14 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         }
     }
 
+    @Override
     public Object[] getElements(Object inputElement) {
         if (inputElement != context)
             return null;
         return getChildren(new Entry("Context", inputElement));
     }
 
+    @Override
     public Object[] getChildren(Object parentElement) {
         if (!(parentElement instanceof Entry))
             return null;
@@ -474,10 +478,12 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         return children.toArray();
     }
 
+    @Override
     public Object getParent(Object element) {
         return null;
     }
 
+    @Override
     public boolean hasChildren(Object element) {
         if (element == null)
             return false;

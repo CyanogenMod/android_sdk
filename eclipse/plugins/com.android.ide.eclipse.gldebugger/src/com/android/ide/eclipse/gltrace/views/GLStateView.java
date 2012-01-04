@@ -102,6 +102,7 @@ public class GLStateView extends ViewPart implements ISelectionListener {
     public void setFocus() {
     }
 
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (!(part instanceof GLFunctionTraceViewer)) {
             return;
@@ -146,6 +147,7 @@ public class GLStateView extends ViewPart implements ISelectionListener {
 
     private void refreshUI() {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (mTreeViewer == null) {
                     return;

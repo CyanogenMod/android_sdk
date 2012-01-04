@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
+import com.android.ide.eclipse.gltrace.editors.TimeLineSurface.IFrameSelectionListener;
 import com.android.ide.eclipse.gltrace.format.GLAPISpec;
 import com.android.ide.eclipse.gltrace.format.GLCallFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
@@ -93,6 +94,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Text mFilterText;
     private GLCallFilter mGLCallFilter;
 
+    private TimeLineSurface mTimeLineSurface;
+
     public GLFunctionTraceViewer() {
     }
 
@@ -133,12 +136,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         GridData gd = new GridData(GridData.FILL_BOTH);
         c.setLayoutData(gd);
 
-        createFrameSelectionControls(c);
-        createFilterBar(c);
-        createFrameTraceView(c);
-
-        getSite().setSelectionProvider(mFrameTableViewer);
-
         ProgressMonitorDialog dlg = new ProgressMonitorDialog(parent.getShell());
         TraceFileParserTask parser = new TraceFileParserTask(mFilePath, parent.getDisplay(),
                 THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
@@ -156,16 +153,24 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
 
         mTrace = parser.getTrace();
+        if (mTrace == null) {
+            return;
+        }
+
+        createFrameSelectionControls(c);
+        createFilterBar(c);
+        createFrameTraceView(c);
+        createGraphicalFrameSelectionControl(c);
+
+        getSite().setSelectionProvider(mFrameTableViewer);
+
         refreshUI();
     }
 
     private void refreshUI() {
         int nFrames = 0;
 
-        if (mTrace != null) {
-            nFrames = mTrace.getFrames().size();
-        }
-
+        nFrames = mTrace.getFrames().size();
         setFrameCount(nFrames);
         selectFrame(1);
     }
@@ -231,10 +236,11 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         Label l = new Label(c, SWT.NONE);
         l.setText("Filter:");
 
-        mFilterText = new Text(c, SWT.BORDER);
+        mFilterText = new Text(c, SWT.BORDER | SWT.ICON_SEARCH | SWT.SEARCH | SWT.ICON_CANCEL);
         mFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         mFilterText.setMessage(DEFAULT_FILTER_MESSAGE);
         mFilterText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(ModifyEvent e) {
                 updateAppliedFilters();
             }
@@ -303,6 +309,20 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         mFrameTableViewer.addFilter(mGLCallFilter);
     }
 
+    private void createGraphicalFrameSelectionControl(Composite c) {
+        mTimeLineSurface = new TimeLineSurface(c, mTrace);
+
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        gd.minimumHeight = gd.heightHint = mTimeLineSurface.getMinimumHeight();
+        mTimeLineSurface.setLayoutData(gd);
+        mTimeLineSurface.addFrameSelectionListener(new IFrameSelectionListener() {
+            @Override
+            public void frameSelected(int[] selectedFrames) {
+                selectFrame(selectedFrames[0] + 1);
+            }
+        });
+    }
+
     private void displayFB(GLCall glCall) {
         IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (window == null) {
@@ -342,12 +362,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     private static class GLFrameContentProvider implements IStructuredContentProvider {
+        @Override
         public void dispose() {
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         }
 
+        @Override
         public Object[] getElements(Object model) {
             if (model instanceof List<?>) {
                 return ((List<?>) model).toArray();
@@ -424,12 +447,14 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
     }
 
+    @Override
     public void addSelectionChangedListener(ISelectionChangedListener listener) {
         if (mFrameTableViewer != null) {
             mFrameTableViewer.addSelectionChangedListener(listener);
         }
     }
 
+    @Override
     public ISelection getSelection() {
         if (mFrameTableViewer != null) {
             return mFrameTableViewer.getSelection();
@@ -438,12 +463,14 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         }
     }
 
+    @Override
     public void removeSelectionChangedListener(ISelectionChangedListener listener) {
         if (mFrameTableViewer != null) {
             mFrameTableViewer.removeSelectionChangedListener(listener);
         }
     }
 
+    @Override
     public void setSelection(ISelection selection) {
         if (mFrameTableViewer != null) {
             mFrameTableViewer.setSelection(selection);

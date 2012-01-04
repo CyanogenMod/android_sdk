@@ -136,6 +136,7 @@ public class GLFramebufferView extends ViewPart implements ISelectionListener {
         mVerticalScrollBar.addSelectionListener(scrollBarSelectionListener);
 
         mCanvas.addListener(SWT.Resize,  new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 setScrollBarPageIncrements(mCanvas.getClientArea());
                 updateScrollBars();
@@ -143,6 +144,7 @@ public class GLFramebufferView extends ViewPart implements ISelectionListener {
         });
 
         mCanvas.addListener(SWT.Paint, new Listener() {
+            @Override
             public void handleEvent(Event e) {
                 paintCanvas(e.gc);
             }
@@ -254,6 +256,7 @@ public class GLFramebufferView extends ViewPart implements ISelectionListener {
 
     public void displayFB(final Image image) {
         Display.getDefault().asyncExec(new Runnable() {
+            @Override
             public void run() {
                 if (mImage != null) {
                     mImage.dispose();
@@ -267,6 +270,7 @@ public class GLFramebufferView extends ViewPart implements ISelectionListener {
         });
     }
 
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (!(part instanceof GLFunctionTraceViewer)) {
             return;

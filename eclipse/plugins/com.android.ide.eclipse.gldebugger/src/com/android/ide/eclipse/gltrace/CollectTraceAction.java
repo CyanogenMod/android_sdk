@@ -41,16 +41,20 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
+    @Override
     public void run(IAction action) {
         connectToDevice();
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
     }
 
@@ -213,12 +217,15 @@ public class CollectTraceAction implements IWorkbenchWindowActionDelegate {
     }
 
     private static class IgnoreOutputReceiver implements IShellOutputReceiver {
+        @Override
         public void addOutput(byte[] arg0, int arg1, int arg2) {
         }
 
+        @Override
         public void flush() {
         }
 
+        @Override
         public boolean isCancelled() {
             return false;
         }

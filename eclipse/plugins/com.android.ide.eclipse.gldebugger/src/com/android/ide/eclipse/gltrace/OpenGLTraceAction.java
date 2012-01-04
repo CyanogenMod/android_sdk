@@ -38,16 +38,20 @@ import java.io.File;
 public class OpenGLTraceAction implements IWorkbenchWindowActionDelegate {
     private static String sLoadFromFolder = System.getProperty("user.home");
 
+    @Override
     public void run(IAction action) {
         openTrace();
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
     }
 
+    @Override
     public void dispose() {
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
     }
 

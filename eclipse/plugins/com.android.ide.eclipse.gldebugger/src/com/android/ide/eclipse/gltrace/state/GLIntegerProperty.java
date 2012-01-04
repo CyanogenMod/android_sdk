@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.gltrace.state;
 
 /** Properties that hold an integer value. */
-public class GLIntegerProperty extends GLAbstractAtomicProperty implements IGLProperty {
+public class GLIntegerProperty extends GLAbstractAtomicProperty {
     private final Integer mDefaultValue;
     private Integer mCurrentValue;
 
@@ -27,6 +27,7 @@ public class GLIntegerProperty extends GLAbstractAtomicProperty implements IGLPr
         mDefaultValue = mCurrentValue = defaultValue;
     }
 
+    @Override
     public boolean isDefault() {
         return mCurrentValue == mDefaultValue;
     }
@@ -35,6 +36,7 @@ public class GLIntegerProperty extends GLAbstractAtomicProperty implements IGLPr
         mCurrentValue = newValue;
     }
 
+    @Override
     public String getStringValue() {
         return mCurrentValue.toString();
     }
@@ -44,6 +46,7 @@ public class GLIntegerProperty extends GLAbstractAtomicProperty implements IGLPr
         return getType() + "=" + getStringValue(); //$NON-NLS-1$
     }
 
+    @Override
     public void setValue(Object value) {
         if (value instanceof Integer) {
             mCurrentValue = (Integer) value;
@@ -53,6 +56,7 @@ public class GLIntegerProperty extends GLAbstractAtomicProperty implements IGLPr
         }
     }
 
+    @Override
     public Object getValue() {
         return mCurrentValue;
     }

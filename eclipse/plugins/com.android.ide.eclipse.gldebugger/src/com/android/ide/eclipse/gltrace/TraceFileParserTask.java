@@ -34,7 +34,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class TraceFileParserTask implements IRunnableWithProgress {
     private static final TraceFileReader sReader = new TraceFileReader();
@@ -49,6 +53,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     private List<GLCall> mGLCalls;
     private List<List<GLStateTransform>> mStateTransformsPerCall;
     private List<GLFrame> mGLFrames;
+    private Set<Integer> mGLContextIds;
 
     private int mFrameCount;
     private int mCurrentFrameStartIndex, mCurrentFrameEndIndex;
@@ -80,19 +85,22 @@ public class TraceFileParserTask implements IRunnableWithProgress {
         mCurrentFrameStartIndex = 0;
         mCurrentFrameEndIndex = 0;
         mGLFrames = new ArrayList<GLFrame>();
+        mGLContextIds = new TreeSet<Integer>();
     }
 
-    private void addMessage(int index, long traceFileOffset, GLMessage msg) {
+    private void addMessage(int index, long traceFileOffset, GLMessage msg, long startTime) {
         Image previewImage = null;
         if (mDisplay != null) {
             previewImage = ProtoBufUtils.getScaledImage(mDisplay, msg, mThumbWidth, mThumbHeight);
         }
 
-        GLCall c = new GLCall(index, traceFileOffset, msg, previewImage);
+        GLCall c = new GLCall(index, startTime, traceFileOffset, msg, previewImage);
 
         mGLCalls.add(c);
         mStateTransformsPerCall.add(GLStateTransform.getTransformsFor(c));
         mCurrentFrameEndIndex++;
+
+        mGLContextIds.add(Integer.valueOf(c.getContextId()));
 
         if (c.getFunction() == Function.eglSwapBuffers) {
             mGLFrames.add(new GLFrame(mFrameCount,
@@ -108,6 +116,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
      * Parse the entire file and create a {@link GLTrace} object that can be retrieved
      * using {@link #getTrace()}.
      */
+    @Override
     public void run(IProgressMonitor monitor) throws InvocationTargetException,
             InterruptedException {
         monitor.beginTask("Parsing OpenGL Trace File", IProgressMonitor.UNKNOWN);
@@ -117,8 +126,20 @@ public class TraceFileParserTask implements IRunnableWithProgress {
             int msgCount = 0;
             long filePointer = mFile.getFilePointer();
 
+            // counters that maintain some statistics about the trace messages
+            long minTraceStartTime = Long.MAX_VALUE;
+            int maxContextId = -1;
+
             while ((msg = sReader.getMessageAtOffset(mFile, 0)) != null) {
-                addMessage(msgCount, filePointer, msg);
+                if (minTraceStartTime > msg.getStartTime()) {
+                    minTraceStartTime = msg.getStartTime();
+                }
+
+                if (maxContextId < msg.getContextId()) {
+                    maxContextId = msg.getContextId();
+                }
+
+                addMessage(msgCount, filePointer, msg, msg.getStartTime() - minTraceStartTime);
 
                 filePointer = mFile.getFilePointer();
                 msgCount++;
@@ -126,6 +147,29 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                 if (monitor.isCanceled()) {
                     throw new InterruptedException();
                 }
+            }
+
+            if (maxContextId > 0) {
+                // if there are multiple contexts, then the calls may arrive at the
+                // host out of order. So we perform a sort based on the invocation time.
+                Collections.sort(mGLCalls, new Comparator<GLCall>() {
+                    @Override
+                    public int compare(GLCall c1, GLCall c2) {
+                        long diff = (c1.getStartTime() - c2.getStartTime());
+
+                        // We could return diff casted to an int. But in Java, casting
+                        // from a long to an int truncates the bits and will not preserve
+                        // the sign. So we resort to comparing the diff to 0 and returning
+                        // the sign.
+                        if (diff == 0) {
+                            return 0;
+                        } else if (diff > 0) {
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    }
+                });
             }
         } catch (Exception e) {
             throw new InvocationTargetException(e);
@@ -140,7 +184,8 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         File f = new File(mTraceFilePath);
         TraceFileInfo fileInfo = new TraceFileInfo(mTraceFilePath, f.length(), f.lastModified());
-        mTrace = new GLTrace(fileInfo, mGLFrames, mGLCalls, mStateTransformsPerCall);
+        mTrace = new GLTrace(fileInfo, mGLFrames, mGLCalls, mStateTransformsPerCall,
+                                new ArrayList<Integer>(mGLContextIds));
     }
 
     /**

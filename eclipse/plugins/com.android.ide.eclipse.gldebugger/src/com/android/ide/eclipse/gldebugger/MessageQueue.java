@@ -95,6 +95,7 @@ public class MessageQueue implements Runnable {
     private DataOutputStream dos = null;
     private SparseArray<ArrayList<Message>> incoming = new SparseArray<ArrayList<Message>>();
 
+    @Override
     public void run() {
         Socket socket = null;
         if (file == null)

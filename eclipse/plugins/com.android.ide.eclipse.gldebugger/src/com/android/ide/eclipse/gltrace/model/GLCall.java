@@ -38,6 +38,9 @@ public class GLCall {
     /** Index of this call in the trace. */
     private final int mIndex;
 
+    /** Time on device when this call was invoked. */
+    private final long mStartTime;
+
     /** Offset of the protobuf message corresponding to this call in the trace file. */
     private final long mTraceFileOffset;
 
@@ -50,8 +53,10 @@ public class GLCall {
     /** Thumbnail image of the framebuffer if available. */
     private final Image mThumbnailImage;
 
-    public GLCall(int index, long traceFileOffset, GLMessage msg, Image thumbnailImage) {
+    public GLCall(int index, long startTime, long traceFileOffset, GLMessage msg,
+            Image thumbnailImage) {
         mIndex = index;
+        mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
 
         if (msg.hasFb()) {
@@ -103,7 +108,7 @@ public class GLCall {
     }
 
     public long getStartTime() {
-        return mMessage.getStartTime();
+        return mStartTime;
     }
 
     public int getDuration() {

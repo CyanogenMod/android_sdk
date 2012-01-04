@@ -90,6 +90,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         breakpoints[function.getNumber()] = enabled;
     }
 
+    @Override
     public void widgetSelected(SelectionEvent e) {
         Button btn = (Button) e.widget;
         Group group = (Group) btn.getParent();
@@ -99,11 +100,13 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         setBreakpoint(contextId, Function.valueOf(group.getText()), btn.getSelection());
     }
 
+    @Override
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
     private Function lastFunction = Function.NEG;
 
+    @Override
     public boolean processMessage(final MessageQueue queue, final Message msg) throws IOException {
         if (!breakpoints[msg.getFunction().getNumber()])
             return false;
@@ -119,6 +122,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         final Shell shell = mGLFramesView.getViewSite().getShell();
         final boolean send[] = new boolean[1];
         shell.getDisplay().syncExec(new Runnable() {
+            @Override
             public void run() {
                 String call = MessageFormatter.format(msg, false);
                 call = call.substring(0, call.indexOf("(")) + ' ' +

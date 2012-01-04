@@ -177,6 +177,6 @@ public class GLCallFormatterTest {
             builder.addArgs(arg);
         }
 
-        return new GLCall(0, 0, builder.build(), null);
+        return new GLCall(0, 0, 0, builder.build(), null);
     }
 }

@@ -73,6 +73,7 @@ public class GLCompositeProperty implements IGLProperty {
         return sb.toString();
     }
 
+    @Override
     public String getStringValue() {
         // This method is called for displaying objects in the UI.
         // We do not display any values for composites in the UI as they are only intermediate
@@ -80,14 +81,17 @@ public class GLCompositeProperty implements IGLProperty {
         return "";
     }
 
+    @Override
     public GLStateType getType() {
         return mType;
     }
 
+    @Override
     public boolean isComposite() {
         return true;
     }
 
+    @Override
     public boolean isDefault() {
         for (IGLProperty p : mPropertiesMap.values()) {
             if (!p.isDefault()) {
@@ -98,19 +102,23 @@ public class GLCompositeProperty implements IGLProperty {
         return true;
     }
 
+    @Override
     public IGLProperty getParent() {
         return mParent;
     }
 
+    @Override
     public void setParent(IGLProperty parent) {
         mParent = parent;
     }
 
+    @Override
     public void setValue(Object value) {
         throw new UnsupportedOperationException(
                 "Values cannot be set for composite properties."); //$NON-NLS-1$
     }
 
+    @Override
     public Object getValue() {
         throw new UnsupportedOperationException(
                 "Values cannot be obtained for composite properties."); //$NON-NLS-1$

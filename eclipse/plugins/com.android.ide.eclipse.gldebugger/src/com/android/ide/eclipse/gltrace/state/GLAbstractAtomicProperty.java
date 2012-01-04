@@ -28,18 +28,22 @@ public abstract class GLAbstractAtomicProperty implements IGLProperty {
         mType = type;
     }
 
+    @Override
     public GLStateType getType() {
         return mType;
     }
 
+    @Override
     public IGLProperty getParent() {
         return mParent;
     }
 
+    @Override
     public void setParent(IGLProperty parent) {
         mParent = parent;
     }
 
+    @Override
     public boolean isComposite() {
         return false;
     }

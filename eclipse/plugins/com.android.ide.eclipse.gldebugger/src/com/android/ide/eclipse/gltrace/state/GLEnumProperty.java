@@ -19,7 +19,7 @@ package com.android.ide.eclipse.gltrace.state;
 import com.android.ide.eclipse.gldebugger.GLEnum;
 
 /** Properties that hold a {@link GLEnum}. */
-public final class GLEnumProperty extends GLAbstractAtomicProperty implements IGLProperty {
+public final class GLEnumProperty extends GLAbstractAtomicProperty {
     private GLEnum mCurrentValue;
     private final GLEnum mDefaultValue;
 
@@ -29,6 +29,7 @@ public final class GLEnumProperty extends GLAbstractAtomicProperty implements IG
         mCurrentValue = mDefaultValue = defaultValue;
     }
 
+    @Override
     public boolean isDefault() {
         return mDefaultValue == mCurrentValue;
     }
@@ -37,6 +38,7 @@ public final class GLEnumProperty extends GLAbstractAtomicProperty implements IG
         mCurrentValue = newValue;
     }
 
+    @Override
     public String getStringValue() {
         return mCurrentValue.toString();
     }
@@ -46,6 +48,7 @@ public final class GLEnumProperty extends GLAbstractAtomicProperty implements IG
         return getType() + "=" + getStringValue(); //$NON-NLS-1$
     }
 
+    @Override
     public void setValue(Object value) {
         if (value instanceof GLEnum) {
             mCurrentValue = (GLEnum) value;
@@ -54,6 +57,7 @@ public final class GLEnumProperty extends GLAbstractAtomicProperty implements IG
         }
     }
 
+    @Override
     public Object getValue() {
         return mCurrentValue;
     }
