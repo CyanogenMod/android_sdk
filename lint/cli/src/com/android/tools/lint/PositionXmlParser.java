@@ -28,6 +28,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.Text;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
@@ -139,18 +140,94 @@ public class PositionXmlParser implements IDomParser {
                         if (t == '\n') {
                             line++;
                             column = 0;
+                        } else {
+                            column++;
                         }
-                        column++;
                     }
 
                     OffsetPosition attributePosition = new OffsetPosition(line, column, index);
-                    // Also set end range for retrieval in getEndPosition
+                    // Also set end range for retrieval in getLocation
                     attributePosition.next = new OffsetPosition(line, column, matcher.end());
                     return attributePosition;
                 } else {
                     // No regexp match either: just fall back to element position
                     return pos;
                 }
+            }
+        } else if (node instanceof Text) {
+            // Position of parent element, if any
+            OffsetPosition pos = null;
+            if (node.getPreviousSibling() != null) {
+                pos = (OffsetPosition) node.getPreviousSibling().getUserData(POS_KEY);
+            }
+            if (pos == null) {
+                pos = (OffsetPosition) node.getParentNode().getUserData(POS_KEY);
+            }
+            if (pos != null) {
+                // Attempt to point forward to the actual text node
+                int startOffset = pos.getOffset();
+                int endOffset = pos.next.getOffset();
+                int line = pos.getLine();
+                int column = pos.getColumn();
+
+                // Find attribute in the text
+                String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
+                if (contents == null || contents.length() < endOffset) {
+                    return null;
+                }
+
+                boolean inAttribute = false;
+                for (int offset = startOffset; offset <= endOffset; offset++) {
+                    char c = contents.charAt(offset);
+                    if (c == '>' && !inAttribute) {
+                        // Found the end of the element open tag: this is where the
+                        // text begins.
+
+                        // Skip >
+                        offset++;
+
+                        // Skip text whitespace prefix, if the text node contains non-whitespace
+                        // characters
+                        String text = node.getNodeValue();
+                        int textIndex = 0;
+                        int textLength = text.length();
+                        int newLine = line;
+                        int newColumn = column;
+                        for (; textIndex < text.length(); textIndex++) {
+                            char t = text.charAt(textIndex);
+                            if (t == '\n') {
+                                newLine++;
+                                newColumn = 0;
+                            } else {
+                                newColumn++;
+                            }
+                            if (!Character.isWhitespace(t)) {
+                                break;
+                            }
+                        }
+                        if (textIndex == textLength) {
+                            textIndex = 0; // Whitespace node
+                        } else {
+                            line = newLine;
+                            column = newColumn;
+                        }
+
+                        OffsetPosition attributePosition = new OffsetPosition(line, column,
+                                offset);
+                        // Also set end range for retrieval in getLocation
+                        attributePosition.next = new OffsetPosition(line, column,
+                                offset + textLength);
+                        return attributePosition;
+                    } else if (c == '"') {
+                        inAttribute = !inAttribute;
+                    } else if (c == '\n') {
+                        line++;
+                        column = -1; // pre-subtract column added below
+                    }
+                    column++;
+                }
+
+                return pos;
             }
         }
 
