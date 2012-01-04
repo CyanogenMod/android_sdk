@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.api;
 
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class AbstractViewRule implements IViewRule {
     }
 
     @Override
+    @Nullable
     public String getDisplayName() {
         // Default is to not override the selection display name.
         return null;
@@ -47,6 +49,7 @@ public class AbstractViewRule implements IViewRule {
     // ==== Selection ====
 
     @Override
+    @Nullable
     public List<String> getSelectionHint(INode parentNode, INode childNode) {
         return null;
     }
@@ -69,11 +72,13 @@ public class AbstractViewRule implements IViewRule {
 
     // By default Views do not accept drag'n'drop.
     @Override
+    @Nullable
     public DropFeedback onDropEnter(INode targetNode, Object targetView, IDragElement[] elements) {
         return null;
     }
 
     @Override
+    @Nullable
     public DropFeedback onDropMove(INode targetNode, IDragElement[] elements,
             DropFeedback feedback, Point p) {
         return null;
@@ -115,6 +120,7 @@ public class AbstractViewRule implements IViewRule {
     // ==== Resizing ====
 
     @Override
+    @Nullable
     public DropFeedback onResizeBegin(INode child, INode parent, SegmentType horizontalEdge,
             SegmentType verticalEdge, Object childView, Object parentView) {
         return null;

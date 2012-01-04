@@ -17,6 +17,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
@@ -39,6 +40,7 @@ public interface IClientRulesEngine {
      *
      * @return the fully qualified name of the rule
      */
+    @NonNull
     String getFqcn();
 
     /**
@@ -47,7 +49,7 @@ public interface IClientRulesEngine {
      * @param msg A String format message.
      * @param params Optional parameters for the message.
      */
-    void debugPrintf(String msg, Object...params);
+    void debugPrintf(@NonNull String msg, Object...params);
 
     /**
      * Loads and returns an {@link IViewRule} for the given FQCN.
@@ -57,22 +59,28 @@ public interface IClientRulesEngine {
      *   inheritance chain. Rules are cached and requesting the same FQCN twice
      *   is fast and will return the same rule instance.
      */
-    IViewRule loadRule(String fqcn);
+    @Nullable
+    IViewRule loadRule(@NonNull String fqcn);
 
     /**
-     * Returns the metadata associated with the given fully qualified class name.
+     * Returns the metadata associated with the given fully qualified class name. Note that
+     * this will always return an {@link IViewMetadata} instance, even when the class name
+     * is unknown to the layout editor, such as for custom views. In that case, some
+     * heuristics will be applied to return metadata information such as guesses for
+     * what the most common attribute is, and so on.
      *
      * @param fqcn a fully qualified class name for an Android view class
      * @return the metadata associated with the given fully qualified class name.
      */
-    IViewMetadata getMetadata(String fqcn);
+    @NonNull
+    IViewMetadata getMetadata(@NonNull String fqcn);
 
     /**
      * Displays the given message string in an alert dialog with an "OK" button.
      *
      * @param message the message to be shown
      */
-    void displayAlert(String message);
+    void displayAlert(@NonNull String message);
 
     /**
      * Displays a simple input alert dialog with an OK and Cancel buttons.
@@ -83,10 +91,10 @@ public interface IClientRulesEngine {
      *            a validator which always returns true) if you do not want
      *            input validation.
      * @return Null if canceled by the user. Otherwise the possibly-empty input string.
-     * @null Return value is null if dialog was canceled by the user.
      */
     @Nullable
-    String displayInput(String message, @Nullable String value, @Nullable IValidator filter);
+    String displayInput(@NonNull String message, @Nullable String value,
+            @Nullable IValidator filter);
 
     /**
      * Returns the minimum API level that the current Android project is targeting.
@@ -101,6 +109,7 @@ public interface IClientRulesEngine {
      * @return an {@link IValidator} for validating new resource name in the current
      *         project
      */
+    @NonNull
     IValidator getResourceValidator();
 
     /**
@@ -109,6 +118,7 @@ public interface IClientRulesEngine {
      * @param currentValue the current reference to select
      * @return the reference selected by the user, or null
      */
+    @Nullable
     String displayReferenceInput(String currentValue);
 
     /**
@@ -121,7 +131,8 @@ public interface IClientRulesEngine {
      * @return the margins selected by the user in the same order as the input arguments,
      *         or null
      */
-    String displayResourceInput(String resourceTypeName, String currentValue);
+    @Nullable
+    String displayResourceInput(@NonNull String resourceTypeName, @Nullable String currentValue);
 
     /**
      * Displays an input dialog tailored for editing margin properties.
@@ -133,9 +144,15 @@ public interface IClientRulesEngine {
      * @param top The current, initial value to display for the "top" margin
      * @param bottom The current, initial value to display for the "bottom" margin
      * @return an array of length 5 containing the user entered values for the all, left,
-     *         right, top and bottom margins respectively
+     *         right, top and bottom margins respectively, or null if canceled
      */
-    String[] displayMarginInput(String all, String left, String right, String top, String bottom);
+    @Nullable
+    String[] displayMarginInput(
+            @Nullable String all,
+            @Nullable String left,
+            @Nullable String right,
+            @Nullable String top,
+            @Nullable String bottom);
 
     /**
      * Displays an input dialog tailored for inputing the source of an {@code <include>}
@@ -143,16 +160,18 @@ public interface IClientRulesEngine {
      * "layout", but should also attempt to filter out layout resources that cannot be
      * included from the current context (because it would result in a cyclic dependency).
      *
-     * @return the layout resource to include
+     * @return the layout resource to include, or null if canceled
      */
+    @Nullable
     String displayIncludeSourceInput();
 
     /**
      * Displays an input dialog tailored for inputing the source of a {@code <fragment>}
      * layout tag.
      *
-     * @return the fully qualified class name of the fragment activity
+     * @return the fully qualified class name of the fragment activity, or null if canceled
      */
+    @Nullable
     String displayFragmentSourceInput();
 
     /**
@@ -160,7 +179,7 @@ public interface IClientRulesEngine {
      *
      * @param nodes the nodes to be selected, never null
      */
-    void select(Collection<INode> nodes);
+    void select(@NonNull Collection<INode> nodes);
 
     /**
      * Triggers a redraw
@@ -206,9 +225,10 @@ public interface IClientRulesEngine {
      * @param filter a filter to change attributes in the process of measuring, for
      *            example forcing the layout_width to wrap_content or the layout_weight to
      *            unset
-     * @return the corresponding bounds of the nodes
+     * @return the corresponding bounds of the nodes, or null if a rendering error occurs
      */
-    Map<INode, Rect> measureChildren(INode parent, AttributeFilter filter);
+    @Nullable
+    Map<INode, Rect> measureChildren(@NonNull INode parent, @Nullable AttributeFilter filter);
 
     /**
      * The {@link AttributeFilter} allows a client of
@@ -222,14 +242,18 @@ public interface IClientRulesEngine {
          * allows a client to adjust the attribute values that a node presents to the
          * layout library.
          * <p>
-         * Return "" to unset an attribute. Return null to return the unfiltered value.
+         * Returns "" to unset an attribute. Returns null to return the unfiltered value.
          *
          * @param node the node for which the attribute value should be returned
          * @param namespace the attribute namespace
          * @param localName the attribute local name
          * @return an override value, or null to return the unfiltered value
          */
-        String getAttribute(INode node, String namespace, String localName);
+        @Nullable
+        String getAttribute(
+                @NonNull INode node,
+                @Nullable String namespace,
+                @NonNull String localName);
     }
 
     /**
@@ -242,7 +266,8 @@ public interface IClientRulesEngine {
      * @return A suitable generated id in the attribute form needed by the XML id tag
      *         (e.g. "@+id/something")
      */
-    public String getUniqueId(String fqcn);
+    @NonNull
+    public String getUniqueId(@NonNull String fqcn);
 
     /**
      * Returns the namespace URI for attributes declared and used inside the
@@ -250,6 +275,7 @@ public interface IClientRulesEngine {
      *
      * @return the namespace URI
      */
+    @NonNull
     public String getAppNameSpace();
 }
 

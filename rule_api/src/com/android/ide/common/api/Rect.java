@@ -17,7 +17,8 @@
 package com.android.ide.common.api;
 
 import com.google.common.annotations.Beta;
-
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 
 /**
@@ -46,11 +47,12 @@ public class Rect {
     }
 
     /** Initialize rectangle to the given values. They can be invalid. */
-    public Rect(Rect r) {
+    public Rect(@NonNull Rect r) {
         set(r);
     }
 
     /** Initialize rectangle to the given values. They can be invalid. */
+    @NonNull
     public Rect set(int x, int y, int w, int h) {
         this.x = x;
         this.y = y;
@@ -60,12 +62,14 @@ public class Rect {
     }
 
     /** Initialize rectangle to match the given one. */
-    public Rect set(Rect r) {
+    @NonNull
+    public Rect set(@NonNull Rect r) {
         set(r.x, r.y, r.w, r.h);
         return this;
     }
 
     /** Returns a new instance of a rectangle with the same values. */
+    @NonNull
     public Rect copy() {
         return new Rect(x, y, w, h);
     }
@@ -85,7 +89,7 @@ public class Rect {
     }
 
     /** Returns true if the rectangle contains the x,y coordinates, borders included. */
-    public boolean contains(Point p) {
+    public boolean contains(@Nullable Point p) {
         return p != null && contains(p.x, p.y);
     }
 
@@ -93,6 +97,7 @@ public class Rect {
      * Moves this rectangle by setting it's x,y coordinates to the new values.
      * @return Returns self, for chaining.
      */
+    @NonNull
     public Rect moveTo(int x, int y) {
         this.x = x;
         this.y = y;
@@ -103,31 +108,37 @@ public class Rect {
      * Offsets this rectangle by adding the given x,y deltas to the x,y coordinates.
      * @return Returns self, for chaining.
      */
+    @NonNull
     public Rect offsetBy(int x, int y) {
         this.x += x;
         this.y += y;
         return this;
     }
 
+    @NonNull
     public Point getCenter() {
         return new Point(x + (w > 0 ? w / 2 : 0),
                          y + (h > 0 ? h / 2 : 0));
     }
 
+    @NonNull
     public Point getTopLeft() {
         return new Point(x, y);
     }
 
+    @NonNull
     public Point getBottomLeft() {
         return new Point(x,
                          y + (h > 0 ? h : 0));
     }
 
+    @NonNull
     public Point getTopRight() {
         return new Point(x + (w > 0 ? w : 0),
                          y);
     }
 
+    @NonNull
     public Point getBottomRight() {
         return new Point(x + (w > 0 ? w : 0),
                          y + (h > 0 ? h : 0));
@@ -207,6 +218,7 @@ public class Rect {
      *
      * @return the center point in the rectangle
      */
+    @NonNull
     public Point center() {
         return new Point(x + w / 2, y + h / 2);
     }

@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.util.Pair;
 import com.google.common.annotations.Beta;
 
@@ -99,6 +101,7 @@ public class RuleAction implements Comparable<RuleAction> {
      * @param sortPriority a priority used for sorting this action
      * @return a new separator
      */
+    @NonNull
     public static Separator createSeparator(int sortPriority) {
         return new Separator(sortPriority, true /* supportsMultipleNodes*/);
     }
@@ -116,8 +119,14 @@ public class RuleAction implements Comparable<RuleAction> {
      *            see {@link #supportsMultipleNodes()} for details
      * @return the new {@link RuleAction}
      */
-    public static RuleAction createAction(String id, String title,
-            IMenuCallback callback, URL iconUrl, int sortPriority, boolean supportsMultipleNodes) {
+    @NonNull
+    public static RuleAction createAction(
+            @NonNull String id,
+            @NonNull String title,
+            @NonNull IMenuCallback callback,
+            @Nullable URL iconUrl,
+            int sortPriority,
+            boolean supportsMultipleNodes) {
         RuleAction action = new RuleAction(id, title, callback, sortPriority,
                 supportsMultipleNodes);
         action.setIconUrl(iconUrl);
@@ -139,8 +148,14 @@ public class RuleAction implements Comparable<RuleAction> {
      *            see {@link #supportsMultipleNodes()} for details
      * @return the new {@link Toggle}
      */
-    public static Toggle createToggle(String id, String title, boolean isChecked,
-            IMenuCallback callback, URL iconUrl, int sortPriority,
+    @NonNull
+    public static Toggle createToggle(
+            @NonNull String id,
+            @NonNull String title,
+            boolean isChecked,
+            @NonNull IMenuCallback callback,
+            @Nullable URL iconUrl,
+            int sortPriority,
             boolean supportsMultipleNodes) {
         Toggle toggle = new Toggle(id, title, isChecked, callback, sortPriority,
                 supportsMultipleNodes);
@@ -165,9 +180,15 @@ public class RuleAction implements Comparable<RuleAction> {
      *            see {@link #supportsMultipleNodes()} for details
      * @return the new {@link NestedAction}
      */
-    public static NestedAction createChoices(String id, String title,
-            IMenuCallback callback, URL iconUrl,
-            int sortPriority, boolean supportsMultipleNodes, ActionProvider provider) {
+    @NonNull
+    public static NestedAction createChoices(
+            @NonNull String id,
+            @NonNull String title,
+            @NonNull IMenuCallback callback,
+            @Nullable URL iconUrl,
+            int sortPriority,
+            boolean supportsMultipleNodes,
+            @NonNull ActionProvider provider) {
         NestedAction choices = new NestedAction(id, title, provider, callback,
                 sortPriority, supportsMultipleNodes);
         choices.setIconUrl(iconUrl);
@@ -196,9 +217,18 @@ public class RuleAction implements Comparable<RuleAction> {
      *            see {@link #supportsMultipleNodes()} for details
      * @return the new {@link Choices}
      */
-    public static Choices createChoices(String id, String title,
-            IMenuCallback callback, List<String> titles, List<URL> iconUrls, List<String> ids,
-            String current, URL iconUrl, int sortPriority, boolean supportsMultipleNodes) {
+    @NonNull
+    public static Choices createChoices(
+            @NonNull String id,
+            @NonNull String title,
+            @NonNull IMenuCallback callback,
+            @NonNull List<String> titles,
+            @Nullable List<URL> iconUrls,
+            @NonNull List<String> ids,
+            @Nullable String current,
+            @Nullable URL iconUrl,
+            int sortPriority,
+            boolean supportsMultipleNodes) {
         Choices choices = new Choices(id, title, callback, titles, iconUrls,
                 ids, current, sortPriority, supportsMultipleNodes);
         choices.setIconUrl(iconUrl);
@@ -228,10 +258,17 @@ public class RuleAction implements Comparable<RuleAction> {
      *            menu items
      * @return the new {@link Choices}
      */
-    public static Choices createChoices(String id, String title,
-            IMenuCallback callback, List<URL> iconUrls,
-            String current, URL iconUrl, int sortPriority,
-            boolean supportsMultipleNodes, List<Pair<String, String>> idsAndTitles) {
+    @NonNull
+    public static Choices createChoices(
+            @NonNull String id,
+            @NonNull String title,
+            @NonNull IMenuCallback callback,
+            @Nullable List<URL> iconUrls,
+            @Nullable String current,
+            @Nullable URL iconUrl,
+            int sortPriority,
+            boolean supportsMultipleNodes,
+            @NonNull List<Pair<String, String>> idsAndTitles) {
         int itemCount = idsAndTitles.size();
         List<String> titles = new ArrayList<String>(itemCount);
         List<String> ids = new ArrayList<String>(itemCount);
@@ -264,9 +301,16 @@ public class RuleAction implements Comparable<RuleAction> {
      *            see {@link #supportsMultipleNodes()} for details
      * @return the new {@link Choices}
      */
-    public static Choices createChoices(String id, String title,
-            IMenuCallback callback, ChoiceProvider provider,
-            String current, URL iconUrl, int sortPriority, boolean supportsMultipleNodes) {
+    @NonNull
+    public static Choices createChoices(
+            @NonNull String id,
+            @NonNull String title,
+            IMenuCallback callback,
+            @NonNull ChoiceProvider provider,
+            @Nullable String current,
+            @Nullable URL iconUrl,
+            int sortPriority,
+            boolean supportsMultipleNodes) {
         Choices choices = new DelayedChoices(id, title, callback,
                 current, provider, sortPriority, supportsMultipleNodes);
         choices.setIconUrl(iconUrl);
@@ -286,7 +330,11 @@ public class RuleAction implements Comparable<RuleAction> {
      * @param supportsMultipleNodes the new return value for
      *            {@link #supportsMultipleNodes()}
      */
-    private RuleAction(String id, String title, IMenuCallback callback, int sortPriority,
+    private RuleAction(
+            @NonNull String id,
+            @NonNull String title,
+            @NonNull IMenuCallback callback,
+            int sortPriority,
             boolean supportsMultipleNodes) {
         mId = id;
         mTitle = title;
@@ -302,6 +350,7 @@ public class RuleAction implements Comparable<RuleAction> {
      *
      * @return the unique id of the action, never null
      */
+    @NonNull
     public String getId() {
         return mId;
     }
@@ -312,6 +361,7 @@ public class RuleAction implements Comparable<RuleAction> {
      *
      * @return the user name of the action, never null
      */
+    @NonNull
     public String getTitle() {
         return mTitle;
     }
@@ -371,6 +421,7 @@ public class RuleAction implements Comparable<RuleAction> {
      * @param iconUrl a URL pointing to an icon to use for this action, or null
      * @return this action, to allow setter chaining
      */
+    @NonNull
     public RuleAction setIconUrl(URL iconUrl) {
         mIconUrl = iconUrl;
 
@@ -392,13 +443,14 @@ public class RuleAction implements Comparable<RuleAction> {
      *
      * @return the callback, never null
      */
+    @NonNull
     public IMenuCallback getCallback() {
         return mCallback;
     }
 
     // Implements Comparable<MenuAciton>
     @Override
-    public int compareTo(RuleAction other) {
+    public int compareTo(@NonNull RuleAction other) {
         if (mSortPriority != other.mSortPriority) {
             return mSortPriority - other.mSortPriority;
         }
@@ -406,6 +458,7 @@ public class RuleAction implements Comparable<RuleAction> {
         return mTitle.compareTo(other.mTitle);
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RuleAction [id=" + mId + ", title=" + mTitle + ", priority=" + mSortPriority + "]";
@@ -442,8 +495,13 @@ public class RuleAction implements Comparable<RuleAction> {
          * @param callback A callback to execute when the context menu item is
          *            selected.
          */
-        private Toggle(String id, String title, boolean isChecked,
-                IMenuCallback callback, int sortPriority, boolean supportsMultipleNodes) {
+        private Toggle(
+                @NonNull String id,
+                @NonNull String title,
+                boolean isChecked,
+                @NonNull IMenuCallback callback,
+                int sortPriority,
+                boolean supportsMultipleNodes) {
             super(id, title, callback, sortPriority, supportsMultipleNodes);
             mIsChecked = isChecked;
         }
@@ -491,9 +549,16 @@ public class RuleAction implements Comparable<RuleAction> {
          */
         protected final String mCurrent;
 
-        private Choices(String id, String title, IMenuCallback callback,
-                List<String> titles, List<URL> iconUrls, List<String> ids, String current,
-                int sortPriority, boolean supportsMultipleNodes) {
+        private Choices(
+                @NonNull String id,
+                @NonNull String title,
+                @NonNull IMenuCallback callback,
+                @NonNull List<String> titles,
+                @Nullable List<URL> iconUrls,
+                @NonNull List<String> ids,
+                @Nullable String current,
+                int sortPriority,
+                boolean supportsMultipleNodes) {
             super(id, title, callback, sortPriority, supportsMultipleNodes);
             mTitles = titles;
             mIconUrls = iconUrls;
@@ -506,6 +571,7 @@ public class RuleAction implements Comparable<RuleAction> {
          *
          * @return the list of urls to icons to display for each choice, or null
          */
+        @Nullable
         public List<URL> getIconUrls() {
             return mIconUrls;
         }
@@ -515,6 +581,7 @@ public class RuleAction implements Comparable<RuleAction> {
          *
          * @return the list of ids for the menu choices, never null
          */
+        @NonNull
         public List<String> getIds() {
             return mIds;
         }
@@ -524,6 +591,7 @@ public class RuleAction implements Comparable<RuleAction> {
          *
          * @return the titles to be displayed for the menu choices, never null
          */
+        @NonNull
         public List<String> getTitles() {
             return mTitles;
         }
@@ -533,6 +601,7 @@ public class RuleAction implements Comparable<RuleAction> {
          *
          * @return the current value of the choice, possibly null
          */
+        @Nullable
         public String getCurrent() {
             return mCurrent;
         }
@@ -566,8 +635,12 @@ public class RuleAction implements Comparable<RuleAction> {
         /** The provider to produce the list of nested actions when needed */
         private final ActionProvider mProvider;
 
-        private NestedAction(String id, String title, ActionProvider provider,
-                IMenuCallback callback, int sortPriority,
+        private NestedAction(
+                @NonNull String id,
+                @NonNull String title,
+                @NonNull ActionProvider provider,
+                @NonNull IMenuCallback callback,
+                int sortPriority,
                 boolean supportsMultipleNodes) {
             super(id, title, callback, sortPriority, supportsMultipleNodes);
             mProvider = provider;
@@ -579,7 +652,8 @@ public class RuleAction implements Comparable<RuleAction> {
          * @param node the node to look up nested actions for
          * @return a list of nested actions
          */
-        public List<RuleAction> getNestedActions(INode node) {
+        @NonNull
+        public List<RuleAction> getNestedActions(@NonNull INode node) {
             return mProvider.getNestedActions(node);
         }
     }
@@ -587,21 +661,23 @@ public class RuleAction implements Comparable<RuleAction> {
     /** Like {@link Choices}, but the set of choices is computed lazily */
     private static class DelayedChoices extends Choices {
         private final ChoiceProvider mProvider;
+        private boolean mInitialized;
 
-        private DelayedChoices(String id, String title,
-                IMenuCallback callback, String current, ChoiceProvider provider,
+        private DelayedChoices(
+                @NonNull String id,
+                @NonNull String title,
+                @NonNull IMenuCallback callback,
+                @Nullable String current,
+                @NonNull ChoiceProvider provider,
                 int sortPriority, boolean supportsMultipleNodes) {
-            super(id, title, callback, null, null, null, current, sortPriority,
-                    supportsMultipleNodes);
+            super(id, title, callback, new ArrayList<String>(), new ArrayList<URL>(),
+                    new ArrayList<String>(), current, sortPriority, supportsMultipleNodes);
             mProvider = provider;
         }
 
         private void ensureInitialized() {
-            if (mTitles == null) {
-                mTitles = new ArrayList<String>();
-                mIconUrls = new ArrayList<URL>();
-                mIds = new ArrayList<String>();
-
+            if (!mInitialized) {
+                mInitialized = true;
                 mProvider.addChoices(mTitles, mIconUrls, mIds);
             }
         }
@@ -637,7 +713,8 @@ public class RuleAction implements Comparable<RuleAction> {
          * @param node the node to look up nested actions for
          * @return a list of nested actions
          */
-        public List<RuleAction> getNestedActions(INode node);
+        @NonNull
+        public List<RuleAction> getNestedActions(@NonNull INode node);
     }
 
     /**
@@ -654,6 +731,9 @@ public class RuleAction implements Comparable<RuleAction> {
          * @param iconUrls a list of icon URLs that the provider should append to
          * @param ids a list of ids that the provider should append to
          */
-        public void addChoices(List<String> titles, List<URL> iconUrls, List<String> ids);
+        public void addChoices(
+                @NonNull List<String> titles,
+                @NonNull List<URL> iconUrls,
+                @NonNull List<String> ids);
     }
 }

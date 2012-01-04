@@ -16,6 +16,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public interface IViewMetadata {
      *
      * @return the user visible name of views of this type (never null)
      */
+    @NonNull
     public String getDisplayName();
 
     /**
@@ -47,13 +49,16 @@ public interface IViewMetadata {
      *
      * @return the insets for this view
      */
+    @NonNull
     public Margins getInsets();
 
     /**
      * Returns the {@link FillPreference} of this view
      *
-     * @return the {@link FillPreference} of this view
+     * @return the {@link FillPreference} of this view, never null but may be
+     *     {@link FillPreference#NONE}
      */
+    @NonNull
     public FillPreference getFillPreference();
 
     /**
@@ -62,6 +67,7 @@ public interface IViewMetadata {
      * @return a list of attribute names (not including a namespace prefix) that
      *         are commonly set for this type of view, never null
      */
+    @NonNull
     public List<String> getTopAttributes();
 
     /**
@@ -114,5 +120,4 @@ public interface IViewMetadata {
                     (!verticalContext && (this == OPPOSITE || this == HEIGHT_IN_HORIZONTAL)));
         }
     }
-
 }

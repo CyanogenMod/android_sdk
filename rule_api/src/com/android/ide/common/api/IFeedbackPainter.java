@@ -16,6 +16,7 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 
 /**
@@ -34,5 +35,5 @@ public interface IFeedbackPainter {
      * @param targetNode The node being dragged
      * @param feedback The feedback data
      */
-    void paint(IGraphics gc, INode targetNode, DropFeedback feedback);
+    void paint(@NonNull IGraphics gc, @NonNull INode targetNode, @NonNull DropFeedback feedback);
 }

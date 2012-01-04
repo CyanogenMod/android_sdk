@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -51,7 +53,7 @@ public interface IAttributeInfo {
          * @return True if and only if the given array (if any) contains this
          *         format.
          */
-        public boolean in(Format[] formats) {
+        public boolean in(@Nullable Format[] formats) {
             if (formats == null) {
                 return false;
             }
@@ -66,24 +68,31 @@ public interface IAttributeInfo {
     }
 
     /** Returns the XML Name of the attribute */
+    @NonNull
     public String getName();
 
     /** Returns the formats of the attribute. Cannot be null.
      *  Should have at least one format. */
+    @NonNull
     public Format[] getFormats();
 
     /** Returns the values for enums. null for other types. */
+    @Nullable
     public String[] getEnumValues();
 
     /** Returns the values for flags. null for other types. */
+    @Nullable
     public String[] getFlagValues();
 
     /** Returns a short javadoc, .i.e. the first sentence. */
+    @NonNull
     public String getJavaDoc();
 
     /** Returns the documentation for deprecated attributes. Null if not deprecated. */
+    @Nullable
     public String getDeprecatedDoc();
 
     /** Returns the fully qualified class name of the view defining this attribute */
+    @NonNull
     public String getDefinedBy();
 }

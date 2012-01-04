@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -38,25 +40,29 @@ public class Segment {
     public final int to;
 
     /** Whether the edge is a top edge, a baseline edge, a left edge, etc */
+    @NonNull
     public final SegmentType edgeType;
 
     /**
      * Whether the edge is offset from the node by a margin or not, or whether it has no
      * margin
      */
+    @NonNull
     public final MarginType marginType;
 
     /** The node that contains this edge */
+    @NonNull
     public final INode node;
 
     /**
      * The id of the node. May be null (in which case id should be generated when
      * move/resize is completed
      */
+    @Nullable
     public final String id;
 
-    public Segment(int at, int from, int to, INode node, String id, SegmentType edgeType,
-            MarginType marginType) {
+    public Segment(int at, int from, int to, @NonNull INode node, @Nullable String id,
+            @NonNull SegmentType edgeType, @NonNull MarginType marginType) {
         this.at = at;
         this.from = from;
         this.to = to;
@@ -66,6 +72,7 @@ public class Segment {
         this.marginType = marginType;
     }
 
+    @NonNull
     @Override
     public String toString() {
         String nodeStr = node == null ? "null" : node.getFqcn().substring(

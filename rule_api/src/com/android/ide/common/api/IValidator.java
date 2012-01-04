@@ -16,6 +16,8 @@
 
 package com.android.ide.common.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -37,5 +39,6 @@ public interface IValidator {
      * @return Null if the text is valid, and otherwise a description (possibly
      *         empty) for why the text is not valid.
      */
-    String validate(String text);
+    @Nullable
+    String validate(@NonNull String text);
 }
