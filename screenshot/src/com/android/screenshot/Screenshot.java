@@ -85,6 +85,17 @@ public class Screenshot {
             }
         } while (index < args.length);
 
+        /*
+         * If no command-line switches and no serial number was passed on the
+         * command-line, try to read a serial number from the shell environment.
+         */
+        if (!device && !emulator && serial == null) {
+            String envSerial = System.getenv("ANDROID_SERIAL");
+            if (envSerial != null) {
+                serial = envSerial;
+            }
+        }
+
         if (filepath == null) {
             printUsageAndQuit();
         }
