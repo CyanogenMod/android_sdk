@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint;
+package com.android.util;
 
-import com.android.tools.lint.client.api.IDomParser;
-import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Location.Handle;
-import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.XmlContext;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -35,8 +30,11 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.io.File;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -52,56 +50,242 @@ import javax.xml.parsers.SAXParserFactory;
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
  * (and line and column numbers) for element nodes as well as attribute nodes.
  */
-public class PositionXmlParser implements IDomParser {
-    private static final String CONTENT_KEY = "contents";     //$NON-NLS-1$
-    private final static String POS_KEY = "offsets";          //$NON-NLS-1$
+public class PositionXmlParser {
+    private static final String UTF_8 = "UTF-8";                 //$NON-NLS-1$
+    private static final String UTF_16 = "UTF_16";               //$NON-NLS-1$
+    private static final String UTF_16LE = "UTF_16LE";           //$NON-NLS-1$
+    private static final String CONTENT_KEY = "contents";        //$NON-NLS-1$
+    private final static String POS_KEY = "offsets";             //$NON-NLS-1$
     private static final String NAMESPACE_PREFIX_FEATURE =
-            "http://xml.org/sax/features/namespace-prefixes"; //$NON-NLS-1$
+            "http://xml.org/sax/features/namespace-prefixes";    //$NON-NLS-1$
     private static final String NAMESPACE_FEATURE =
-            "http://xml.org/sax/features/namespaces";         //$NON-NLS-1$
+            "http://xml.org/sax/features/namespaces";            //$NON-NLS-1$
+    /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
+    private static final Pattern ENCODING_PATTERN =
+            Pattern.compile("encoding=['\"](\\S*)['\"]");//$NON-NLS-1$
 
-    // ---- Implements IDomParser ----
-
-    @Override
-    public Document parseXml(XmlContext context) {
-        return parse(context, context.getContents(), true);
+    /**
+     * Parses the XML content from the given input stream.
+     *
+     * @param input the input stream containing the XML to be parsed
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws SAXException if the document contains a parsing error
+     * @throws IOException if something is seriously wrong. This should not
+     *             happen since the input source is known to be constructed from
+     *             a string.
+     */
+    @Nullable
+    public Document parse(@NonNull InputStream input)
+            throws ParserConfigurationException, SAXException, IOException {
+        // Read in all the data
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        while (true) {
+          int r = input.read(buf);
+          if (r == -1) {
+            break;
+          }
+          out.write(buf, 0, r);
+        }
+        input.close();
+        return parse(out.toByteArray());
     }
 
-    private Document parse(Context context, String xml, boolean checkBom) {
+    /**
+     * Parses the XML content from the given byte array
+     *
+     * @param data the raw XML data (with unknown encoding)
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws SAXException if the document contains a parsing error
+     * @throws IOException if something is seriously wrong. This should not
+     *             happen since the input source is known to be constructed from
+     *             a string.
+     */
+    @Nullable
+    public Document parse(@NonNull byte[] data)
+            throws ParserConfigurationException, SAXException, IOException {
+        String xml = getXmlString(data);
+        return parse(xml, new InputSource(new StringReader(xml)), true);
+    }
+
+    /**
+     * Parses the given XML content.
+     *
+     * @param xml the XML string to be parsed. This must be in the correct
+     *     encoding already.
+     * @return the corresponding document
+     * @throws ParserConfigurationException if a SAX parser is not available
+     * @throws SAXException if the document contains a parsing error
+     * @throws IOException if something is seriously wrong. This should not
+     *             happen since the input source is known to be constructed from
+     *             a string.
+     */
+    @Nullable
+    public Document parse(@NonNull String xml)
+            throws ParserConfigurationException, SAXException, IOException {
+        return parse(xml, new InputSource(new StringReader(xml)), true);
+    }
+
+    @NonNull
+    private Document parse(@NonNull String xml, @NonNull InputSource input, boolean checkBom)
+            throws ParserConfigurationException, SAXException, IOException {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setFeature(NAMESPACE_FEATURE, true);
             factory.setFeature(NAMESPACE_PREFIX_FEATURE, true);
             SAXParser parser = factory.newSAXParser();
-
-            InputSource input = new InputSource(new StringReader(xml));
             DomBuilder handler = new DomBuilder(xml);
             parser.parse(input, handler);
             return handler.getDocument();
-        } catch (ParserConfigurationException e) {
-            context.log(e, null);
         } catch (SAXException e) {
             if (checkBom && e.getMessage().contains("Content is not allowed in prolog")) {
                 // Byte order mark in the string? Skip it. There are many markers
                 // (see http://en.wikipedia.org/wiki/Byte_order_mark) so here we'll
                 // just skip those up to the XML prolog beginning character, <
                 xml = xml.replaceFirst("^([\\W]+)<","<");  //$NON-NLS-1$ //$NON-NLS-2$
-                return parse(context, xml, false);
+                return parse(xml, null, false);
             }
-            context.report(
-                    // Must provide an issue since API guarantees that the issue parameter
-                    // is valid
-                    IssueRegistry.PARSER_ERROR, Location.create(context.file),
-                    e.getCause() != null ? e.getCause().getLocalizedMessage() :
-                        e.getLocalizedMessage(),
-                    null);
-        } catch (Throwable t) {
-            context.log(t, null);
+            throw e;
         }
-        return null;
     }
 
-    static Position getPositions(Node node) {
+    /**
+     * Returns the String corresponding to the given byte array of XML data
+     * (with unknown encoding). This method attempts to guess the encoding based
+     * on the XML prologue.
+     * @param data the XML data to be decoded into a string
+     * @return a string corresponding to the XML data
+     */
+    public static String getXmlString(byte[] data) {
+        int offset = 0;
+
+        String defaultCharset = UTF_8;
+        String charset = null;
+        // Look for the byte order mark, to see if we need to remove bytes from
+        // the input stream (and to determine whether files are big endian or little endian) etc
+        // for files which do not specify the encoding.
+        // See http://unicode.org/faq/utf_bom.html#BOM for more.
+        if (data.length > 4) {
+            if (data[0] == (byte)0xef && data[1] == (byte)0xbb && data[2] == (byte)0xbf) {
+                // UTF-8
+                defaultCharset = charset = UTF_8;
+                offset += 3;
+            } else if (data[0] == (byte)0xfe && data[1] == (byte)0xff) {
+                //  UTF-16, big-endian
+                defaultCharset = charset = UTF_16;
+                offset += 2;
+            } else if (data[0] == (byte)0x0 && data[1] == (byte)0x0
+                    && data[2] == (byte)0xfe && data[3] == (byte)0xff) {
+                // UTF-32, big-endian
+                defaultCharset = charset = "UTF_32";    //$NON-NLS-1$
+                offset += 4;
+            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe
+                    && data[2] == (byte)0x0 && data[3] == (byte)0x0) {
+                // UTF-32, little-endian. We must check for this *before* looking for
+                // UTF_16LE since UTF_32LE has the same prefix!
+                defaultCharset = charset = "UTF_32LE";  //$NON-NLS-1$
+                offset += 4;
+            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe) {
+                //  UTF-16, little-endian
+                defaultCharset = charset = UTF_16LE;
+                offset += 2;
+            }
+        }
+        int length = data.length - offset;
+
+        // Guess encoding by searching for an encoding= entry in the first line.
+        // The prologue, and the encoding names, will always be in ASCII - which means
+        // we don't need to worry about strange character encodings for the prologue characters.
+        // However, one wrinkle is that the whole file may be encoded in something like UTF-16
+        // where there are two bytes per character, so we can't just look for
+        //  ['e','n','c','o','d','i','n','g'] etc in the byte array since there could be
+        // multiple bytes for each character. However, since again the prologue is in ASCII,
+        // we can just drop the zeroes.
+        boolean seenOddZero = false;
+        boolean seenEvenZero = false;
+        int prologueStart = -1;
+        for (int lineEnd = offset; lineEnd < data.length; lineEnd++) {
+            if (data[lineEnd] == 0) {
+                if ((lineEnd - offset) % 1 == 0) {
+                    seenEvenZero = true;
+                } else {
+                    seenOddZero = true;
+                }
+            } else if (data[lineEnd] == '\n') {
+                break;
+            } else if (data[lineEnd] == '<') {
+                prologueStart = lineEnd;
+            } else if (data[lineEnd] == '>') {
+                // End of prologue. Quick check to see if this is a utf-8 file since that's
+                // common
+                for (int i = lineEnd - 4; i >= 0; i--) {
+                    if ((data[i] == 'u' || data[i] == 'U')
+                            && (data[i + 1] == 't' || data[i + 1] == 'T')
+                            && (data[i + 2] == 'f' || data[i + 2] == 'F')
+                            && (data[i + 3] == '-' || data[i + 3] == '_')
+                            && (data[i + 4] == '8')
+                            ) {
+                        charset = UTF_8;
+                        break;
+                    }
+                }
+
+                if (charset == null) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = prologueStart; i <= lineEnd; i++) {
+                        if (data[i] != 0) {
+                            sb.append((char) data[i]);
+                        }
+                    }
+                    String prologue = sb.toString();
+                    int encodingIndex = prologue.indexOf("encoding"); //$NON-NLS-1$
+                    if (encodingIndex != -1) {
+                        Matcher matcher = ENCODING_PATTERN.matcher(prologue);
+                        if (matcher.find(encodingIndex)) {
+                            charset = matcher.group(1);
+                        }
+                    }
+                }
+
+                break;
+            }
+        }
+
+        // No prologue on the first line, and no byte order mark: Assume UTF-8/16
+        if (charset == null) {
+            charset = seenOddZero ? UTF_16 : seenEvenZero ? UTF_16LE : UTF_8;
+        }
+
+        String xml = null;
+        try {
+            xml = new String(data, offset, length, charset);
+        } catch (UnsupportedEncodingException e) {
+            try {
+                if (charset != defaultCharset) {
+                    xml = new String(data, offset, length, defaultCharset);
+                }
+            } catch (UnsupportedEncodingException u) {
+                // Just use the default encoding below
+            }
+        }
+        if (xml == null) {
+            xml = new String(data, offset, length);
+        }
+        return xml;
+    }
+
+    /**
+     * Returns the position for the given node. This is the start position. The
+     * end position can be obtained via {@link Position#getEnd()}.
+     *
+     * @param node the node to look up position for
+     * @return the position, or null if the node type is not supported for
+     *         position info
+     */
+    @Nullable
+    public Position getPosition(@NonNull Node node) {
         // Look up the position information stored while parsing for the given node.
         // Note however that we only store position information for elements (because
         // there is no SAX callback for individual attributes).
@@ -113,10 +297,10 @@ public class PositionXmlParser implements IDomParser {
         //     and if found uses that as the exact node offsets instead.
         if (node instanceof Attr) {
             Attr attr = (Attr) node;
-            OffsetPosition pos = (OffsetPosition) attr.getOwnerElement().getUserData(POS_KEY);
+            Position pos = (Position) attr.getOwnerElement().getUserData(POS_KEY);
             if (pos != null) {
                 int startOffset = pos.getOffset();
-                int endOffset = pos.next.getOffset();
+                int endOffset = pos.getEnd().getOffset();
 
                 // Find attribute in the text
                 String contents = (String) node.getOwnerDocument().getUserData(CONTENT_KEY);
@@ -145,9 +329,9 @@ public class PositionXmlParser implements IDomParser {
                         }
                     }
 
-                    OffsetPosition attributePosition = new OffsetPosition(line, column, index);
+                    Position attributePosition = createPosition(line, column, index);
                     // Also set end range for retrieval in getLocation
-                    attributePosition.next = new OffsetPosition(line, column, matcher.end());
+                    attributePosition.setEnd(createPosition(line, column, matcher.end()));
                     return attributePosition;
                 } else {
                     // No regexp match either: just fall back to element position
@@ -156,17 +340,17 @@ public class PositionXmlParser implements IDomParser {
             }
         } else if (node instanceof Text) {
             // Position of parent element, if any
-            OffsetPosition pos = null;
+            Position pos = null;
             if (node.getPreviousSibling() != null) {
-                pos = (OffsetPosition) node.getPreviousSibling().getUserData(POS_KEY);
+                pos = (Position) node.getPreviousSibling().getUserData(POS_KEY);
             }
             if (pos == null) {
-                pos = (OffsetPosition) node.getParentNode().getUserData(POS_KEY);
+                pos = (Position) node.getParentNode().getUserData(POS_KEY);
             }
             if (pos != null) {
                 // Attempt to point forward to the actual text node
                 int startOffset = pos.getOffset();
-                int endOffset = pos.next.getOffset();
+                int endOffset = pos.getEnd().getOffset();
                 int line = pos.getLine();
                 int column = pos.getColumn();
 
@@ -212,11 +396,11 @@ public class PositionXmlParser implements IDomParser {
                             column = newColumn;
                         }
 
-                        OffsetPosition attributePosition = new OffsetPosition(line, column,
+                        Position attributePosition = createPosition(line, column,
                                 offset);
                         // Also set end range for retrieval in getLocation
-                        attributePosition.next = new OffsetPosition(line, column,
-                                offset + textLength);
+                        attributePosition.setEnd(createPosition(line, column,
+                                offset + textLength));
                         return attributePosition;
                     } else if (c == '"') {
                         inAttribute = !inAttribute;
@@ -231,22 +415,7 @@ public class PositionXmlParser implements IDomParser {
             }
         }
 
-        return (OffsetPosition) node.getUserData(POS_KEY);
-    }
-
-    @Override
-    public Location getLocation(XmlContext context, Node node) {
-        OffsetPosition pos = (OffsetPosition) getPositions(node);
-        if (pos != null) {
-            return Location.create(context.file, pos, pos.next);
-        }
-
-        return null;
-    }
-
-    @Override
-    public Handle createLocationHandle(XmlContext context, Node node) {
-        return new LocationHandle(context.file, node);
+        return (Position) node.getUserData(POS_KEY);
     }
 
     /**
@@ -255,7 +424,7 @@ public class PositionXmlParser implements IDomParser {
      * information is attached to the DOM nodes by setting user data with the
      * {@link POS_KEY} key.
      */
-    private static final class DomBuilder extends DefaultHandler {
+    private final class DomBuilder extends DefaultHandler {
         private final String mXml;
         private final Document mDocument;
         private Locator mLocator;
@@ -306,7 +475,7 @@ public class PositionXmlParser implements IDomParser {
                 }
             }
 
-            OffsetPosition pos = getCurrentPosition();
+            Position pos = getCurrentPosition();
 
             // The starting position reported to us by SAX is really the END of the
             // open tag in an element, when all the attributes have been processed.
@@ -339,7 +508,7 @@ public class PositionXmlParser implements IDomParser {
                         }
                     }
 
-                    pos = new OffsetPosition(line, column, offset);
+                    pos = createPosition(line, column, offset);
                     break;
                 }
             }
@@ -353,9 +522,9 @@ public class PositionXmlParser implements IDomParser {
             flushText();
             Element element = mStack.remove(mStack.size() - 1);
 
-            OffsetPosition pos = (OffsetPosition) element.getUserData(POS_KEY);
+            Position pos = (Position) element.getUserData(POS_KEY);
             assert pos != null;
-            pos.next = getCurrentPosition();
+            pos.setEnd(getCurrentPosition());
 
             if (mStack.isEmpty()) {
                 mDocument.appendChild(element);
@@ -372,7 +541,7 @@ public class PositionXmlParser implements IDomParser {
          * number and column position of the XML parser, counting characters as
          * it goes along.
          */
-        private OffsetPosition getCurrentPosition() {
+        private Position getCurrentPosition() {
             int line = mLocator.getLineNumber() - 1;
             int column = mLocator.getColumnNumber() - 1;
 
@@ -397,7 +566,7 @@ public class PositionXmlParser implements IDomParser {
             mCurrentOffset += column - mCurrentColumn;
             mCurrentColumn = column;
 
-            return new OffsetPosition(mCurrentLine, mCurrentColumn, mCurrentOffset);
+            return createPosition(mCurrentLine, mCurrentColumn, mCurrentOffset);
         }
 
         @Override
@@ -415,24 +584,55 @@ public class PositionXmlParser implements IDomParser {
         }
     }
 
-    private static class OffsetPosition extends Position {
+    /**
+     * Creates a position while constructing the DOM document. This method
+     * allows a subclass to create a custom implementation of the position
+     * class.
+     *
+     * @param line the line number for the position
+     * @param column the column number for the position
+     * @param offset the character offset
+     * @return a new position
+     */
+    @NonNull
+    protected Position createPosition(int line, int column, int offset) {
+        return new DefaultPosition(line, column, offset);
+    }
+
+    protected interface Position {
+        /**
+         * Linked position: for a begin position this will point to the
+         * corresponding end position. For an end position this will be null.
+         *
+         * @return the end position, or null
+         */
+        @Nullable
+        public Position getEnd();
+
+        /**
+         * Linked position: for a begin position this will point to the
+         * corresponding end position. For an end position this will be null.
+         *
+         * @param end the end position
+         */
+        public void setEnd(@NonNull Position end);
+
+        /** @return the line number, 0-based */
+        public int getLine();
+
+        /** @return the offset number, 0-based */
+        public int getOffset();
+
+        /** @return the column number, 0-based, and -1 if the column number if not known */
+        public int getColumn();
+    }
+
+    protected static class DefaultPosition implements Position {
         /** The line number (0-based where the first line is line 0) */
         private final int mLine;
-
-        /**
-         * The column number (where the first character on the line is 0), or -1 if
-         * unknown
-         */
         private final int mColumn;
-
-        /** The character offset */
         private final int mOffset;
-
-        /**
-         * Linked position: for a begin offset this will point to the end
-         * offset, and for an end offset this will be null
-         */
-        public OffsetPosition next;
+        private Position mEnd;
 
         /**
          * Creates a new {@link Position}
@@ -441,7 +641,7 @@ public class PositionXmlParser implements IDomParser {
          * @param column the 0-based column number, or -1 if unknown
          * @param offset the offset, or -1 if unknown
          */
-        public OffsetPosition(int line, int column, int offset) {
+        public DefaultPosition(int line, int column, int offset) {
             this.mLine = line;
             this.mColumn = column;
             this.mOffset = offset;
@@ -461,30 +661,15 @@ public class PositionXmlParser implements IDomParser {
         public int getColumn() {
             return mColumn;
         }
-    }
 
-    @Override
-    public void dispose(XmlContext context, Document document) {
-    }
-
-    /* Handle for creating DOM positions cheaply and returning full fledged locations later */
-    private class LocationHandle implements Handle {
-        private File mFile;
-        private Node mNode;
-
-        public LocationHandle(File file, Node node) {
-            mFile = file;
-            mNode = node;
+        @Override
+        public Position getEnd() {
+            return mEnd;
         }
 
         @Override
-        public Location resolve() {
-            OffsetPosition pos = (OffsetPosition) getPositions(mNode);
-            if (pos != null) {
-                return Location.create(mFile, pos, pos.next);
-            }
-
-            return null;
+        public void setEnd(Position end) {
+            mEnd = end;
         }
     }
 }

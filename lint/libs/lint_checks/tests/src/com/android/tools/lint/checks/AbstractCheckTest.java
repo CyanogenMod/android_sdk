@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.tools.lint.PositionXmlParser;
+import com.android.tools.lint.LintCliXmlParser;
+import com.android.tools.lint.Main;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.Lint;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Severity;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -253,7 +252,7 @@ abstract class AbstractCheckTest extends TestCase {
         return false;
     }
 
-    private class TestLintClient extends LintClient {
+    private class TestLintClient extends Main {
         private List<String> mErrors = new ArrayList<String>();
 
         public List<String> getErrors() {
@@ -344,17 +343,7 @@ abstract class AbstractCheckTest extends TestCase {
 
         @Override
         public IDomParser getDomParser() {
-            return new PositionXmlParser();
-        }
-
-        @Override
-        public String readFile(File file) {
-            try {
-                return AbstractCheckTest.readFile(new FileReader(file));
-            } catch (Throwable e) {
-                fail(e.toString());
-            }
-            return null;
+            return new LintCliXmlParser();
         }
 
         @Override

@@ -38,6 +38,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.util.Pair;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -64,9 +66,7 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 /**
@@ -502,33 +502,12 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return readPlainFile(f);
     }
 
-    private String readPlainFile(File f) {
-        // TODO: Connect to document and read live contents
-        BufferedReader reader = null;
+    private String readPlainFile(File file) {
         try {
-            reader = new BufferedReader(new FileReader(f));
-            StringBuilder sb = new StringBuilder((int) f.length());
-            while (true) {
-                int c = reader.read();
-                if (c == -1) {
-                    return sb.toString();
-                } else {
-                    sb.append((char)c);
-                }
-            }
+            return Files.toString(file, Charsets.UTF_8);
         } catch (IOException e) {
-            // pass -- ignore files we can't read
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (IOException e) {
-                log(e, null);
-            }
+            return ""; //$NON-NLS-1$
         }
-
-        return ""; //$NON-NLS-1$
     }
 
     @Override

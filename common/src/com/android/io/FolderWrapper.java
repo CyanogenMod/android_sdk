@@ -81,6 +81,7 @@ public class FolderWrapper extends File implements IAbstractFolder {
         super(file.getAbsolutePath());
     }
 
+    @Override
     public IAbstractResource[] listMembers() {
         File[] files = listFiles();
         final int count = files == null ? 0 : files.length;
@@ -100,8 +101,10 @@ public class FolderWrapper extends File implements IAbstractFolder {
         return afiles;
     }
 
+    @Override
     public boolean hasFile(final String name) {
         String[] match = list(new FilenameFilter() {
+            @Override
             public boolean accept(IAbstractFolder dir, String filename) {
                 return name.equals(filename);
             }
@@ -110,14 +113,17 @@ public class FolderWrapper extends File implements IAbstractFolder {
         return match.length > 0;
     }
 
+    @Override
     public IAbstractFile getFile(String name) {
         return new FileWrapper(this, name);
     }
 
+    @Override
     public IAbstractFolder getFolder(String name) {
         return new FolderWrapper(this, name);
     }
 
+    @Override
     public IAbstractFolder getParentFolder() {
         String p = this.getParent();
         if (p == null) {
@@ -126,6 +132,7 @@ public class FolderWrapper extends File implements IAbstractFolder {
         return new FolderWrapper(p);
     }
 
+    @Override
     public String getOsLocation() {
         return getAbsolutePath();
     }
@@ -135,6 +142,7 @@ public class FolderWrapper extends File implements IAbstractFolder {
         return isDirectory();
     }
 
+    @Override
     public String[] list(FilenameFilter filter) {
         File[] files = listFiles();
         if (files != null && files.length > 0) {

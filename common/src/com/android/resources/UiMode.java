@@ -49,14 +49,17 @@ public enum UiMode implements ResourceEnum {
         return null;
     }
 
+    @Override
     public String getResourceValue() {
         return mValue;
     }
 
+    @Override
     public String getShortDisplayValue() {
         return mDisplayValue;
     }
 
+    @Override
     public String getLongDisplayValue() {
         return mDisplayValue;
     }
@@ -85,10 +88,12 @@ public enum UiMode implements ResourceEnum {
         return null;
     }
 
+    @Override
     public boolean isFakeValue() {
         return this == NORMAL; // NORMAL is not a real enum. it's used for internal state only.
     }
 
+    @Override
     public boolean isValidValueForDevice() {
         return this != NORMAL;
     }

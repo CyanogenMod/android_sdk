@@ -50,14 +50,17 @@ public enum ScreenOrientation implements ResourceEnum {
         return null;
     }
 
+    @Override
     public String getResourceValue() {
         return mValue;
     }
 
+    @Override
     public String getShortDisplayValue() {
         return mShortDisplayValue;
     }
 
+    @Override
     public String getLongDisplayValue() {
         return mLongDisplayValue;
     }
@@ -87,10 +90,12 @@ public enum ScreenOrientation implements ResourceEnum {
         return null;
     }
 
+    @Override
     public boolean isFakeValue() {
         return false;
     }
 
+    @Override
     public boolean isValidValueForDevice() {
         return true;
     }
