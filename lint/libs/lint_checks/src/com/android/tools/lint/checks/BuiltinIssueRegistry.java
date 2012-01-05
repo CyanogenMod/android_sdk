@@ -51,7 +51,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
     static {
-        List<Issue> issues = new ArrayList<Issue>();
+        List<Issue> issues = new ArrayList<Issue>(60);
 
         issues.add(AccessibilityDetector.ISSUE);
         issues.add(MathDetector.ISSUE);
@@ -86,6 +86,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TextFieldDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE_IDS);
+        issues.add(ExtraTextDetector.ISSUE);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(ManifestOrderDetector.ISSUE);
         issues.add(SecurityDetector.EXPORTED_SERVICE);

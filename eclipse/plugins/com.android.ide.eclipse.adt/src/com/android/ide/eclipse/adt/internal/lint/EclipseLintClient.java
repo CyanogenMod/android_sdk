@@ -587,6 +587,22 @@ public class EclipseLintClient extends LintClient implements IDomParser {
                 int column = -1;
                 int offset = mRegion.getStartOffset();
 
+                if (mRegion instanceof org.w3c.dom.Text && mDocument != null) {
+                    // For text nodes, skip whitespace prefix, if any
+                    for (int i = offset;
+                            i < mRegion.getEndOffset() && i < mDocument.getLength(); i++) {
+                        try {
+                            char c = mDocument.getChar(i);
+                            if (!Character.isWhitespace(c)) {
+                                offset = i;
+                                break;
+                            }
+                        } catch (BadLocationException e) {
+                            break;
+                        }
+                    }
+                }
+
                 if (mDocument != null && offset < mDocument.getLength()) {
                     line = mDocument.getLineOfOffset(offset);
                     column = -1;
