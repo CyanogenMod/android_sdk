@@ -34,10 +34,11 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.util.PositionXmlParser;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -661,7 +662,7 @@ public class Main extends LintClient {
 
     @Override
     public IDomParser getDomParser() {
-        return new PositionXmlParser();
+        return new LintCliXmlParser();
     }
 
     @Override
@@ -790,31 +791,17 @@ public class Main extends LintClient {
 
     @Override
     public String readFile(File file) {
-        BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader(file));
-            StringBuilder sb = new StringBuilder((int) file.length());
-            while (true) {
-                int c = reader.read();
-                if (c == -1) {
-                    return sb.toString();
-                } else {
-                    sb.append((char)c);
-                }
+            // For XML files, apply special logic to pick up encoding information within the file
+            if (endsWith(file.getName(), DOT_XML)) {
+                byte[] data = Files.toByteArray(file);
+                return PositionXmlParser.getXmlString(data);
             }
-        } catch (IOException e) {
-            // pass -- ignore files we can't read
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (IOException e) {
-                log(e, null);
-            }
-        }
 
-        return ""; //$NON-NLS-1$
+            return Files.toString(file, Charsets.UTF_8);
+        } catch (IOException e) {
+            return ""; //$NON-NLS-1$
+        }
     }
 
     /**

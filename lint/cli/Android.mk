@@ -10,6 +10,7 @@ LOCAL_JAR_MANIFEST := etc/manifest.txt
 
 # If the dependency list is changed, etc/manifest.txt
 LOCAL_JAVA_LIBRARIES := \
+	common \
 	lint_api \
 	lint_checks
 LOCAL_STATIC_JAVA_LIBRARIES := \

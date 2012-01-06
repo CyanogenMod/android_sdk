@@ -16,6 +16,9 @@
 
 package com.android.tools.lint;
 
+import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
@@ -37,7 +40,7 @@ import java.util.EnumSet;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
-public class PositionXmlParserTest extends TestCase {
+public class LintCliXmlParserTest extends TestCase {
     public void test() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -59,13 +62,15 @@ public class PositionXmlParserTest extends TestCase {
                 "        android:text=\"Button\" />\n" +
                 "\n" +
                 "</LinearLayout>\n";
-        PositionXmlParser parser = new PositionXmlParser();
+        LintCliXmlParser parser = new LintCliXmlParser();
         File file = File.createTempFile("parsertest", ".xml");
         Writer fw = new BufferedWriter(new FileWriter(file));
         fw.write(xml);
         fw.close();
-        Project project = new Project(null, file.getParentFile(), file.getParentFile());
-        XmlContext context = new XmlContext(new Main(), project, file,
+        LintClient client = new TestClient();
+        Project project = new Project(client, file.getParentFile(), file.getParentFile());
+        project.setConfiguration(client.getConfiguration(project));
+        XmlContext context = new XmlContext(client, project, file,
                 EnumSet.of(Scope.RESOURCE_FILE));
         Document document = parser.parseXml(context);
         assertNotNull(document);
@@ -132,17 +137,27 @@ public class PositionXmlParserTest extends TestCase {
                 "\r" +
                 "<LinearLayout></LinearLayout>\r\n" +
                 "</LinearLayout>\r\n";
-        PositionXmlParser parser = new PositionXmlParser();
+        LintCliXmlParser parser = new LintCliXmlParser();
         File file = File.createTempFile("parsertest2", ".xml");
         Writer fw = new BufferedWriter(new FileWriter(file));
         fw.write(xml);
         fw.close();
-        Project project = new Project(null, file.getParentFile(), file.getParentFile());
-        XmlContext context = new XmlContext(new Main(), project, file,
+        LintClient client = new TestClient();
+        Project project = new Project(client, file.getParentFile(), file.getParentFile());
+        project.setConfiguration(client.getConfiguration(project));
+        XmlContext context = new XmlContext(client, project, file,
                 EnumSet.of(Scope.RESOURCE_FILE));
         Document document = parser.parseXml(context);
         assertNotNull(document);
 
         file.delete();
+    }
+
+    private static class TestClient extends Main {
+        @Override
+        public void report(Context context, Issue issue, Location location, String message,
+                Object data) {
+            System.out.println(location + ":" + message);
+        }
     }
 }

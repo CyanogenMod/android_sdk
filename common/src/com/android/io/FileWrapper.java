@@ -85,6 +85,7 @@ public class FileWrapper extends File implements IAbstractFile {
         super(uri);
     }
 
+    @Override
     public InputStream getContents() throws StreamException {
         try {
             return new FileInputStream(this);
@@ -93,6 +94,7 @@ public class FileWrapper extends File implements IAbstractFile {
         }
     }
 
+    @Override
     public void setContents(InputStream source) throws StreamException {
         FileOutputStream fos = null;
         try {
@@ -116,6 +118,7 @@ public class FileWrapper extends File implements IAbstractFile {
         }
     }
 
+    @Override
     public OutputStream getOutputStream() throws StreamException {
         try {
             return new FileOutputStream(this);
@@ -124,10 +127,12 @@ public class FileWrapper extends File implements IAbstractFile {
         }
     }
 
+    @Override
     public PreferredWriteMode getPreferredWriteMode() {
         return PreferredWriteMode.OUTPUTSTREAM;
     }
 
+    @Override
     public String getOsLocation() {
         return getAbsolutePath();
     }
@@ -137,10 +142,12 @@ public class FileWrapper extends File implements IAbstractFile {
         return isFile();
     }
 
+    @Override
     public long getModificationStamp() {
         return lastModified();
     }
 
+    @Override
     public IAbstractFolder getParentFolder() {
         String p = this.getParent();
         if (p == null) {

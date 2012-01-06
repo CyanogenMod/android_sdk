@@ -72,6 +72,7 @@ public enum Density implements ResourceEnum {
         return null;
     }
 
+    @Override
     public String getResourceValue() {
         return mValue;
     }
@@ -88,10 +89,12 @@ public enum Density implements ResourceEnum {
         return "";
     }
 
+    @Override
     public String getShortDisplayValue() {
         return mDisplayValue;
     }
 
+    @Override
     public String getLongDisplayValue() {
         return mDisplayValue;
     }
@@ -120,10 +123,12 @@ public enum Density implements ResourceEnum {
         return null;
     }
 
+    @Override
     public boolean isFakeValue() {
         return false;
     }
 
+    @Override
     public boolean isValidValueForDevice() {
         return this != NODPI; // nodpi is not a valid config for devices.
     }
