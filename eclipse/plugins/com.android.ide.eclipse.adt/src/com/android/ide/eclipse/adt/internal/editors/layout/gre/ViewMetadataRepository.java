@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -208,7 +209,7 @@ public class ViewMetadataRepository {
                 Document document = builder.parse(is);
                 Map<String, FillPreference> fillTypes = new HashMap<String, FillPreference>();
                 for (FillPreference pref : FillPreference.values()) {
-                    fillTypes.put(pref.toString().toLowerCase(), pref);
+                    fillTypes.put(pref.toString().toLowerCase(Locale.US), pref);
                 }
 
                 NodeList categoryNodes = document.getDocumentElement().getChildNodes();

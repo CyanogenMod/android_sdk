@@ -61,6 +61,7 @@ import org.eclipse.swt.widgets.Text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Base class for our information panels.
@@ -643,12 +644,13 @@ public class AllocationPanel extends TablePanel {
     private AllocationInfo[] getFilteredAllocations(AllocationInfo[] allocations,
             String filterText) {
         ArrayList<AllocationInfo> results = new ArrayList<AllocationInfo>();
-
-        filterText = filterText.toLowerCase();
+        // Using default locale here such that the locale-specific c
+        Locale locale = Locale.getDefault();
+        filterText = filterText.toLowerCase(locale);
         boolean fullTrace = mTraceFilterCheck.getSelection();
 
         for (AllocationInfo info : allocations) {
-            if (info.filter(filterText, fullTrace)) {
+            if (info.filter(filterText, fullTrace, locale)) {
                 results.add(info);
             }
         }

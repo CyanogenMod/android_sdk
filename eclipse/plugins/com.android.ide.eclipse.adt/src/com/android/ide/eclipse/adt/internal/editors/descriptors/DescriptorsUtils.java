@@ -52,6 +52,7 @@ import org.eclipse.swt.graphics.Image;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -182,7 +183,7 @@ public final class DescriptorsUtils {
                 Format f = formats_list[i];
                 formats_set.add(f);
 
-                sb.append(f.toString().toLowerCase());
+                sb.append(f.toString().toLowerCase(Locale.US));
                 if (i < flen - 1) {
                     sb.append(", "); //$NON-NLS-1$
                 }
@@ -862,10 +863,13 @@ public final class DescriptorsUtils {
                 prefix = Character.toLowerCase(prefix.charAt(0)) + prefix.substring(1);
             }
 
+            // Note that we perform locale-independent lowercase checks; in "Image" we
+            // want the lowercase version to be "image", not "?mage" where ? is
+            // the char LATIN SMALL LETTER DOTLESS I.
             do {
                 num++;
                 generated = String.format("%1$s%2$d", prefix, num);   //$NON-NLS-1$
-            } while (map.contains(generated.toLowerCase()));
+            } while (map.contains(generated.toLowerCase(Locale.US)));
 
             params[0] = prefix;
             params[1] = num;
@@ -876,12 +880,13 @@ public final class DescriptorsUtils {
         if (id != null) {
             id = id.replace(NEW_ID_PREFIX, "");                            //$NON-NLS-1$
             id = id.replace(ID_PREFIX, "");                                //$NON-NLS-1$
-            if (map.add(id.toLowerCase()) && map.contains(generated.toLowerCase())) {
+            if (map.add(id.toLowerCase(Locale.US))
+                    && map.contains(generated.toLowerCase(Locale.US))) {
 
                 do {
                     num++;
                     generated = String.format("%1$s%2$d", prefix, num);   //$NON-NLS-1$
-                } while (map.contains(generated.toLowerCase()));
+                } while (map.contains(generated.toLowerCase(Locale.US)));
 
                 params[1] = num;
                 params[2] = generated;

@@ -18,6 +18,7 @@ package com.android.ddmlib.log;
 
 import com.android.ddmlib.log.LogReceiver.LogEntry;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +26,7 @@ import java.util.regex.Pattern;
  * Represents an event and its data.
  */
 public class EventContainer {
-    
+
     /**
      * Comparison method for {@link EventContainer#testValue(int, Object, com.android.ddmlib.log.EventContainer.CompareMethod)}
      *
@@ -37,7 +38,7 @@ public class EventContainer {
         GREATER_THAN("greater than or equals to", ">="),
         GREATER_THAN_STRICT("greater than", ">"),
         BIT_CHECK("bit check", "&");
-        
+
         private final String mName;
         private final String mTestString;
 
@@ -62,7 +63,7 @@ public class EventContainer {
         }
     }
 
-    
+
     /**
      * Type for event data.
      */
@@ -73,11 +74,11 @@ public class EventContainer {
         STRING(3),
         LIST(4),
         TREE(5);
-        
+
         private final static Pattern STORAGE_PATTERN = Pattern.compile("^(\\d+)@(.*)$"); //$NON-NLS-1$
-        
+
         private int mValue;
-        
+
         /**
          * Returns a {@link EventValueType} from an integer value, or <code>null</code> if no match
          * was found.
@@ -89,7 +90,7 @@ public class EventContainer {
                     return type;
                 }
             }
-            
+
             return null;
         }
 
@@ -106,16 +107,16 @@ public class EventContainer {
          */
         public static String getStorageString(Object object) {
             if (object instanceof String) {
-                return STRING.mValue + "@" + (String)object; //$NON-NLS-1$ 
+                return STRING.mValue + "@" + (String)object; //$NON-NLS-1$
             } else if (object instanceof Integer) {
-                return INT.mValue + "@" + object.toString(); //$NON-NLS-1$ 
+                return INT.mValue + "@" + object.toString(); //$NON-NLS-1$
             } else if (object instanceof Long) {
-                return LONG.mValue + "@" + object.toString(); //$NON-NLS-1$ 
+                return LONG.mValue + "@" + object.toString(); //$NON-NLS-1$
             }
-            
+
             return null;
         }
-        
+
         /**
          * Creates an {@link Object} from a storage string created with
          * {@link #getStorageString(Object)}.
@@ -131,7 +132,7 @@ public class EventContainer {
                     if (type == null) {
                         return null;
                     }
-                    
+
                     switch (type) {
                         case STRING:
                             return m.group(2);
@@ -144,11 +145,11 @@ public class EventContainer {
                     return null;
                 }
             }
-            
+
             return null;
         }
-        
-        
+
+
         /**
          * Returns the integer value of the enum.
          */
@@ -158,7 +159,7 @@ public class EventContainer {
 
         @Override
         public String toString() {
-            return super.toString().toLowerCase();
+            return super.toString().toLowerCase(Locale.US);
         }
 
         private EventValueType(int value) {
@@ -172,7 +173,7 @@ public class EventContainer {
     public int sec;    /* seconds since Epoch */
     public int nsec;   /* nanoseconds */
 
-    private Object mData; 
+    private Object mData;
 
     /**
      * Creates an {@link EventContainer} from a {@link LogEntry}.
@@ -190,7 +191,7 @@ public class EventContainer {
         sec = entry.sec;
         nsec = entry.nsec;
     }
-    
+
     /**
      * Creates an {@link EventContainer} with raw data
      */
@@ -198,7 +199,7 @@ public class EventContainer {
         getType(data);
         mTag = tag;
         mData = data;
-        
+
         this.pid = pid;
         this.tid = tid;
         this.sec = sec;
@@ -217,10 +218,10 @@ public class EventContainer {
 
         throw new InvalidTypeException();
     }
-    
+
     /**
      * Returns the data as a long.
-     * @throws InvalidTypeException if the data type is not {@link EventValueType#LONG}. 
+     * @throws InvalidTypeException if the data type is not {@link EventValueType#LONG}.
      * @see #getType()
      */
     public final Long getLong() throws InvalidTypeException {
@@ -243,7 +244,7 @@ public class EventContainer {
 
         throw new InvalidTypeException();
     }
-    
+
     /**
      * Returns a value by index. The return type is defined by its type.
      * @param valueIndex the index of the value. If the data is not a list, this is ignored.
@@ -277,7 +278,7 @@ public class EventContainer {
     public String getValueAsString(int valueIndex) throws InvalidTypeException {
         return getValueAsString(mData, valueIndex, true);
     }
-    
+
     /**
      * Returns the type of the data.
      */
@@ -309,7 +310,7 @@ public class EventContainer {
 
         return EventValueType.UNKNOWN;
     }
-    
+
     /**
      * Checks that the <code>index</code>-th value of this event against a provided value.
      * @param index the index of the value to test
@@ -326,7 +327,7 @@ public class EventContainer {
         if (index > 0 && type != EventValueType.LIST) {
             throw new InvalidTypeException();
         }
-        
+
         Object data = mData;
         if (type == EventValueType.LIST) {
             data = ((Object[])mData)[index];
@@ -388,10 +389,10 @@ public class EventContainer {
                 throw new InvalidTypeException();
         }
     }
-    
+
     private final Object getValue(Object data, int valueIndex, boolean recursive) {
         EventValueType type = getType(data);
-        
+
         switch (type) {
             case INT:
             case LONG:
@@ -405,14 +406,14 @@ public class EventContainer {
                     }
                 }
         }
-        
+
         return null;
     }
 
     private final double getValueAsDouble(Object data, int valueIndex, boolean recursive)
             throws InvalidTypeException {
         EventValueType type = getType(data);
-        
+
         switch (type) {
             case INT:
                 return ((Integer)data).doubleValue();
@@ -428,14 +429,14 @@ public class EventContainer {
                     }
                 }
         }
-        
+
         throw new InvalidTypeException();
     }
 
     private final String getValueAsString(Object data, int valueIndex, boolean recursive)
             throws InvalidTypeException {
         EventValueType type = getType(data);
-        
+
         switch (type) {
             case INT:
                 return ((Integer)data).toString();

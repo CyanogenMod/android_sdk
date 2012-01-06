@@ -31,6 +31,7 @@ import com.android.sdklib.repository.SdkRepoConstants;
 import org.w3c.dom.Node;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -294,7 +295,7 @@ public class SystemImagePackage extends Package
 
         // Computes a folder directory using the sanitized abi string.
         String abi = mAbi;
-        abi = abi.toLowerCase();
+        abi = abi.toLowerCase(Locale.US);
         abi = abi.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         abi = abi.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
 

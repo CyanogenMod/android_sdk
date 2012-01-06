@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -279,7 +280,8 @@ public class DefaultConfiguration extends Configuration {
                     writeAttribute(writer, ATTR_ID, id);
                     Severity severity = mSeverity.get(id);
                     if (severity != null) {
-                        writeAttribute(writer, ATTR_SEVERITY, severity.name().toLowerCase());
+                        writeAttribute(writer, ATTR_SEVERITY,
+                                severity.name().toLowerCase(Locale.US));
                     }
 
                     List<String> paths = mSuppressed.get(id);

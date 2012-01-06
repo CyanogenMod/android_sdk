@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Display;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -101,7 +102,7 @@ public class ImageFactory {
         if (clz.endsWith(Package.class.getSimpleName())) {
             String name = clz.replaceFirst(Package.class.getSimpleName(), "")   //$NON-NLS-1$
                              .replace("SystemImage", "sysimg")    //$NON-NLS-1$ //$NON-NLS-2$
-                             .toLowerCase();
+                             .toLowerCase(Locale.US);
             name += "_pkg_16.png";                                              //$NON-NLS-1$
             return getImageByName(name);
         }

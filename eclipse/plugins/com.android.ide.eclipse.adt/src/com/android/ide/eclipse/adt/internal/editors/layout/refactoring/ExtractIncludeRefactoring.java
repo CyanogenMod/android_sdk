@@ -89,6 +89,7 @@ import org.w3c.dom.Node;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -423,8 +424,9 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
             // id null check for https://bugs.eclipse.org/bugs/show_bug.cgi?id=272378
             if (id != null && (id.startsWith(ID_PREFIX) || id.startsWith(NEW_ID_PREFIX))) {
                 // Use everything following the id/, and make it lowercase since that is
-                // the convention for layouts
-                defaultName = id.substring(id.indexOf('/') + 1).toLowerCase();
+                // the convention for layouts (and use Locale.US to ensure that "Image" becomes
+                // "image" etc)
+                defaultName = id.substring(id.indexOf('/') + 1).toLowerCase(Locale.US);
 
                 IInputValidator validator = ResourceNameValidator.create(true, mProject, LAYOUT);
 

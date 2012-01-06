@@ -41,6 +41,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -393,7 +394,7 @@ public class AndroidManifestParser {
                 String exportedStr = getAttributeValue(attributes,
                         AndroidManifest.ATTRIBUTE_EXPORTED, true);
                 boolean exported = exportedStr == null ||
-                        exportedStr.toLowerCase().equals("true"); //$NON-NLS-1$
+                        exportedStr.toLowerCase(Locale.US).equals("true"); //$NON-NLS-1$
                 mCurrentActivity = new Activity(activityName, exported);
                 mManifestData.mActivities.add(mCurrentActivity);
 

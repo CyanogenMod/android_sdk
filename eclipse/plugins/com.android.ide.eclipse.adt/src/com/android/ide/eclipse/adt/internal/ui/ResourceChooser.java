@@ -70,6 +70,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,7 +154,7 @@ public class ResourceChooser extends AbstractElementListSelectionDialog implemen
 
         setTitle("Resource Chooser");
         setMessage(String.format("Choose a %1$s resource",
-                mResourceType.getDisplayName().toLowerCase()));
+                mResourceType.getDisplayName().toLowerCase(Locale.US)));
     }
 
     /**
