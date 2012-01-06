@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
@@ -475,7 +476,7 @@ public final class AttrsXmlParser {
         if (attrFormat != null) {
             for (String f : attrFormat.getNodeValue().split("\\|")) { //$NON-NLS-1$
                 try {
-                    Format format = AttributeInfo.Format.valueOf(f.toUpperCase());
+                    Format format = AttributeInfo.Format.valueOf(f.toUpperCase(Locale.US));
                     // enum and flags are handled differently right below
                     if (format != null &&
                             format != AttributeInfo.Format.ENUM &&

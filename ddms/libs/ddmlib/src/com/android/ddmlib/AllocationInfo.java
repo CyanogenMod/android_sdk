@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * Holds an Allocation information.
@@ -185,8 +186,12 @@ public class AllocationInfo implements IStackTraceInfo {
         return null;
     }
 
-    public boolean filter(String filter, boolean fullTrace) {
-        if (mAllocatedClass.toLowerCase().contains(filter)) {
+    /**
+     * Returns true if the given filter matches case insensitively (according to
+     * the given locale) this allocation info.
+     */
+    public boolean filter(String filter, boolean fullTrace, Locale locale) {
+        if (mAllocatedClass.toLowerCase(locale).contains(filter)) {
             return true;
         }
 
@@ -195,11 +200,11 @@ public class AllocationInfo implements IStackTraceInfo {
             final int length = fullTrace ? mStackTrace.length : 1;
 
             for (int i = 0 ; i < length ; i++) {
-                if (mStackTrace[i].getClassName().toLowerCase().contains(filter)) {
+                if (mStackTrace[i].getClassName().toLowerCase(locale).contains(filter)) {
                     return true;
                 }
 
-                if (mStackTrace[i].getMethodName().toLowerCase().contains(filter)) {
+                if (mStackTrace[i].getMethodName().toLowerCase(locale).contains(filter)) {
                     return true;
                 }
             }

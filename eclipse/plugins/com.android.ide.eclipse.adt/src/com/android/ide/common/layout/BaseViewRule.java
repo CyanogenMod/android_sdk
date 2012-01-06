@@ -28,8 +28,10 @@ import static com.android.ide.common.layout.LayoutConstants.ATTR_TEXT;
 import static com.android.ide.common.layout.LayoutConstants.DOT_LAYOUT_PARAMS;
 import static com.android.ide.common.layout.LayoutConstants.ID_PREFIX;
 import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_FALSE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_FILL_PARENT;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_MATCH_PARENT;
+import static com.android.ide.common.layout.LayoutConstants.VALUE_TRUE;
 import static com.android.ide.common.layout.LayoutConstants.VALUE_WRAP_CONTENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 
@@ -59,6 +61,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -644,11 +647,12 @@ public class BaseViewRule extends AbstractViewRule {
             // Toggles are handled as a multiple-choice between true, false
             // and nothing (clear)
             String value = selectedNode.getStringAttr(ANDROID_URI, id);
-            if (value != null)
-                value = value.toLowerCase();
-            if ("true".equals(value)) {         //$NON-NLS-1$
+            if (value != null) {
+                value = value.toLowerCase(Locale.US);
+            }
+            if (VALUE_TRUE.equals(value)) {
                 value = TRUE_ID;
-            } else if ("false".equals(value)) { //$NON-NLS-1$
+            } else if (VALUE_FALSE.equals(value)) {
                 value = FALSE_ID;
             } else {
                 value = CLEAR_ID;

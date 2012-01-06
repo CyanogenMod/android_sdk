@@ -23,6 +23,7 @@ import com.android.sdklib.io.FileOp;
 import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.Properties;
 
 
@@ -88,7 +89,7 @@ public class Archive implements IDescription, Comparable<Archive> {
 
         /** Returns the XML name of the OS. */
         public String getXmlName() {
-            return toString().toLowerCase();
+            return toString().toLowerCase(Locale.US);
         }
 
         /**
@@ -140,7 +141,7 @@ public class Archive implements IDescription, Comparable<Archive> {
 
         /** Returns the XML name of the architecture. */
         public String getXmlName() {
-            return toString().toLowerCase();
+            return toString().toLowerCase(Locale.US);
         }
 
         /**

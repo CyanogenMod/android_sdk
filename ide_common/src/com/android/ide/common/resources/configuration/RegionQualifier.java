@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources.configuration;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +55,8 @@ public final class RegionQualifier extends ResourceQualifier {
      */
     public static String getFolderSegment(String value) {
         if (value != null) {
-            String segment = "r" + value.toUpperCase(); //$NON-NLS-1$
+            // See http://developer.android.com/reference/java/util/Locale.html#default_locale
+            String segment = "r" + value.toUpperCase(Locale.US); //$NON-NLS-1$
             if (sRegionPattern.matcher(segment).matches()) {
                 return segment;
             }

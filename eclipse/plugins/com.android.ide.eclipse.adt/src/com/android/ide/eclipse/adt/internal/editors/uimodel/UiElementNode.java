@@ -64,6 +64,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -310,7 +311,7 @@ public class UiElementNode implements IPropertySource {
         if (attr != null) {
             // Don't append the two when it's a repeat, e.g. Button01 (Button),
             // only when the ui name is not part of the attribute
-            if (attr.toLowerCase().indexOf(uiName.toLowerCase()) == -1) {
+            if (attr.toLowerCase(Locale.US).indexOf(uiName.toLowerCase(Locale.US)) == -1) {
                 styledString.append(attr);
                 styledString.append(String.format(" (%1$s)", uiName),
                         StyledString.DECORATIONS_STYLER);

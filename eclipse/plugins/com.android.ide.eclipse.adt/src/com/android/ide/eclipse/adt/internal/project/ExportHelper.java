@@ -18,6 +18,7 @@ package com.android.ide.eclipse.adt.internal.project;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.AndroidPrintStream;
 import com.android.ide.eclipse.adt.internal.build.BuildHelper;
 import com.android.ide.eclipse.adt.internal.build.DexException;
@@ -336,7 +337,7 @@ public final class ExportHelper {
         } else if (file.isFile()) {
             // check the extension
             String name = file.getName();
-            if (name.toLowerCase().endsWith(AdtConstants.DOT_CLASS) == false) {
+            if (!AdtUtils.endsWith(name, AdtConstants.DOT_CLASS)) {
                 return;
             }
 

@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -467,11 +468,12 @@ public class DomUtilities {
         if (root.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             String id = root.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (id.startsWith(NEW_ID_PREFIX)) {
-                seen.add(id.substring(NEW_ID_PREFIX.length()).toLowerCase());
+                // See getFreeWidgetId for details on locale
+                seen.add(id.substring(NEW_ID_PREFIX.length()).toLowerCase(Locale.US));
             } else if (id.startsWith(ID_PREFIX)) {
-                seen.add(id.substring(ID_PREFIX.length()).toLowerCase());
+                seen.add(id.substring(ID_PREFIX.length()).toLowerCase(Locale.US));
             } else {
-                seen.add(id.toLowerCase());
+                seen.add(id.toLowerCase(Locale.US));
             }
         }
     }
@@ -492,7 +494,11 @@ public class DomUtilities {
         Set<String> ids = new HashSet<String>();
         if (reserved != null) {
             for (String id : reserved) {
-                ids.add(id.toLowerCase());
+                // Note that we perform locale-independent lowercase checks; in "Image" we
+                // want the lowercase version to be "image", not "?mage" where ? is
+                // the char LATIN SMALL LETTER DOTLESS I.
+
+                ids.add(id.toLowerCase(Locale.US));
             }
         }
         addLowercaseIds(element.getOwnerDocument().getDocumentElement(), ids);
@@ -504,7 +510,7 @@ public class DomUtilities {
         int num = 1;
         do {
             generated = String.format("%1$s%2$d", prefix, num++);   //$NON-NLS-1$
-        } while (ids.contains(generated.toLowerCase()));
+        } while (ids.contains(generated.toLowerCase(Locale.US)));
 
         return generated;
     }

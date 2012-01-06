@@ -95,6 +95,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -853,7 +854,7 @@ public abstract class VisualRefactoring extends Refactoring {
         String oldTypeBase = oldType.substring(oldType.lastIndexOf('.') + 1);
         String id = getId(element);
         if (id == null || id.length() == 0
-                || id.toLowerCase().contains(oldTypeBase.toLowerCase())) {
+                || id.toLowerCase(Locale.US).contains(oldTypeBase.toLowerCase(Locale.US))) {
             String newTypeBase = newType.substring(newType.lastIndexOf('.') + 1);
             return ensureHasId(rootEdit, element, newTypeBase);
         }

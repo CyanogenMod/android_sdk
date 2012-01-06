@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -294,7 +295,7 @@ class ExtractStringInputPage extends UserInputWizardPage {
         }
 
         // make lower case
-        text = text.toLowerCase();
+        text = text.toLowerCase(Locale.US);
 
         // everything not alphanumeric becomes an underscore
         text = text.replaceAll("[^a-zA-Z0-9]+", "_");  //$NON-NLS-1$ //$NON-NLS-2$

@@ -40,6 +40,7 @@ import org.eclipse.ui.part.FileEditorInput;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -300,7 +301,7 @@ public class NewItemSelectionDialog extends AbstractElementListSelectionDialog {
             String name = mInitialXmlName;
             boolean partial = name.startsWith("*");   //$NON-NLS-1$
             if (partial) {
-                name = name.substring(1).toLowerCase();
+                name = name.substring(1).toLowerCase(Locale.US);
             }
 
             for (ElementDescriptor desc : getAllowedDescriptors(rootNode)) {
@@ -308,7 +309,7 @@ public class NewItemSelectionDialog extends AbstractElementListSelectionDialog {
                     initialElement = desc;
                     break;
                 } else if (partial) {
-                    String name2 = desc.getXmlLocalName().toLowerCase();
+                    String name2 = desc.getXmlLocalName().toLowerCase(Locale.US);
                     if (name.startsWith(name2) || name2.startsWith(name)) {
                         initialElement = desc;
                         break;

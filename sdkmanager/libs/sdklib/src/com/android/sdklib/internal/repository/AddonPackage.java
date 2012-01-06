@@ -34,6 +34,7 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -421,7 +422,7 @@ public class AddonPackage extends Package
     private String encodeAddonName() {
         String name = String.format("addon-%s-%s-%s",     //$NON-NLS-1$
                                     getName(), getVendor(), mVersion.getApiString());
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.US);
         name = name.replaceAll("[^a-z0-9_-]+", "_");      //$NON-NLS-1$ //$NON-NLS-2$
         name = name.replaceAll("_+", "_");                //$NON-NLS-1$ //$NON-NLS-2$
         return name;

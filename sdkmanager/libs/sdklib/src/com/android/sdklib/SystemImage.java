@@ -19,6 +19,7 @@ package com.android.sdklib;
 import com.android.sdklib.io.FileOp;
 
 import java.io.File;
+import java.util.Locale;
 
 
 /**
@@ -158,7 +159,7 @@ public class SystemImage implements ISystemImage {
     public String toString() {
         return String.format("SystemImage ABI=%s, location %s='%s'",           //$NON-NLS-1$
                 mAbiType,
-                mLocationtype.toString().replace('_', ' ').toLowerCase(),
+                mLocationtype.toString().replace('_', ' ').toLowerCase(Locale.US),
                 mLocation
                 );
     }

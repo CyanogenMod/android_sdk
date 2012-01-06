@@ -18,6 +18,8 @@ package com.android.ddmlib.log;
 
 import com.android.ddmlib.log.EventContainer.EventValueType;
 
+import java.util.Locale;
+
 
 /**
  * Describes an {@link EventContainer} value.
@@ -28,13 +30,13 @@ import com.android.ddmlib.log.EventContainer.EventValueType;
  * The index of the value is not contained within this class, and is instead dependent on the
  * index of this particular object in the array of {@link EventValueDescription} returned by
  * {@link EventLogParser#getEventInfoMap()} when queried for a particular event tag.
- * 
+ *
  */
 public final class EventValueDescription {
-    
+
     /**
      * Represents the type of a numerical value. This is used to display values of vastly different
-     * type/range in graphs. 
+     * type/range in graphs.
      */
     public static enum ValueType {
         NOT_APPLICABLE(0),
@@ -80,21 +82,21 @@ public final class EventValueDescription {
         public int getValue() {
             return mValue;
         }
-        
+
         @Override
         public String toString() {
-            return super.toString().toLowerCase();
+            return super.toString().toLowerCase(Locale.US);
         }
-        
+
         private ValueType(int value) {
             mValue = value;
         }
     }
-    
+
     private String mName;
     private EventValueType mEventValueType;
     private ValueType mValueType;
-    
+
     /**
      * Builds a {@link EventValueDescription} with a name and a type.
      * <p/>
@@ -121,7 +123,7 @@ public final class EventValueDescription {
      * @param type
      * @param valueType
      * @throws InvalidValueTypeException if type and valuetype are not compatible.
-     * 
+     *
      */
     EventValueDescription(String name, EventValueType type, ValueType valueType)
             throws InvalidValueTypeException {
@@ -130,7 +132,7 @@ public final class EventValueDescription {
         mValueType = valueType;
         mValueType.checkType(mEventValueType);
     }
-    
+
     /**
      * @return the Name.
      */
@@ -151,14 +153,14 @@ public final class EventValueDescription {
     public ValueType getValueType() {
         return mValueType;
     }
-    
+
     @Override
     public String toString() {
         if (mValueType != ValueType.NOT_APPLICABLE) {
             return String.format("%1$s (%2$s, %3$s)", mName, mEventValueType.toString(),
                     mValueType.toString());
         }
-        
+
         return String.format("%1$s (%2$s)", mName, mEventValueType.toString());
     }
 
@@ -178,10 +180,10 @@ public final class EventValueDescription {
             case LIST:
                 return value instanceof Object[];
         }
-        
+
         return false;
     }
-    
+
     /**
      * Returns an object of a valid type (based on the value returned by
      * {@link #getEventValueType()}) from a String value.
@@ -208,7 +210,7 @@ public final class EventValueDescription {
             case STRING:
                 return value;
         }
-        
+
         return null;
     }
 }

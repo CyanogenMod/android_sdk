@@ -419,7 +419,7 @@ public final class EmulatorConsole {
                         String value = m.group(1);
 
                         // get the index from the list
-                        status.voice = GsmMode.getEnum(value.toLowerCase());
+                        status.voice = GsmMode.getEnum(value.toLowerCase(Locale.US));
 
                         // move on to next line.
                         continue;
@@ -431,7 +431,7 @@ public final class EmulatorConsole {
                         String value = m.group(1);
 
                         // get the index from the list
-                        status.data = GsmMode.getEnum(value.toLowerCase());
+                        status.data = GsmMode.getEnum(value.toLowerCase(Locale.US));
 
                         // move on to next line.
                         continue;
