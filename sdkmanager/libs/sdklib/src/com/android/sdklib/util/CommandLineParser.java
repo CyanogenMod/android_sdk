@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager;
+package com.android.sdklib.util;
 
 import com.android.sdklib.ISdkLog;
-import com.android.sdklib.util.LineUtil;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -35,7 +34,7 @@ import java.util.Map.Entry;
  * To use, call {@link #parseArgs(String[])} and then
  * call {@link #getValue(String, String, String)}.
  */
-class CommandLineProcessor {
+public class CommandLineParser {
 
     /*
      * Steps needed to add a new action:
@@ -105,7 +104,7 @@ class CommandLineProcessor {
      *
      * @see #mActions
      */
-    public CommandLineProcessor(ISdkLog logger, String[][] actions) {
+    public CommandLineParser(ISdkLog logger, String[][] actions) {
         mLog = logger;
         mActions = actions;
 
@@ -616,7 +615,7 @@ class CommandLineProcessor {
      * The mode of an argument specifies the type of variable it represents,
      * whether an extra parameter is required after the flag and how to parse it.
      */
-    static enum Mode {
+    public static enum Mode {
         /** Argument value is a Boolean. Default value is a Boolean. */
         BOOLEAN {
             @Override

@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.sdkmanager;
+package com.android.sdklib.util;
 
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.StdSdkLog;
+import com.android.sdklib.util.CommandLineParser;
 
 import junit.framework.TestCase;
 
 
-public class CommandLineProcessorTest extends TestCase {
+public class CommandLineParserTest extends TestCase {
 
     private StdSdkLog mLog;
 
     /**
-     * A mock version of the {@link CommandLineProcessor} class that does not
+     * A mock version of the {@link CommandLineParser} class that does not
      * exits and captures its stdout/stderr output.
      */
-    public static class MockCommandLineProcessor extends CommandLineProcessor {
+    public static class MockCommandLineProcessor extends CommandLineParser {
         private boolean mExitCalled;
         private boolean mHelpCalled;
         private String mStdOut = "";

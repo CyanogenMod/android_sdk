@@ -19,6 +19,7 @@ package com.android.sdkmanager;
 import com.android.sdklib.ISdkLog;
 import com.android.sdklib.SdkManager;
 import com.android.sdklib.repository.SdkRepoConstants;
+import com.android.sdklib.util.CommandLineParser;
 
 import java.util.Arrays;
 
@@ -26,7 +27,7 @@ import java.util.Arrays;
 /**
  * Specific command-line flags for the {@link SdkManager}.
  */
-class SdkCommandLine extends CommandLineProcessor {
+class SdkCommandLine extends CommandLineParser {
 
     /*
      * Steps needed to add a new action:
