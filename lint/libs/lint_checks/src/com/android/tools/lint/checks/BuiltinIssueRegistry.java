@@ -81,6 +81,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
         issues.add(HardcodedValuesDetector.ISSUE);
+        issues.add(Utf8Detector.ISSUE);
         issues.add(ProguardDetector.ISSUE);
         issues.add(PxUsageDetector.ISSUE);
         issues.add(TextFieldDetector.ISSUE);
