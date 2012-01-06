@@ -15,6 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
@@ -38,12 +39,17 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -55,6 +61,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -71,11 +78,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** Preference page for configuring Lint preferences */
 public class LintPreferencePage extends PropertyPage implements IWorkbenchPreferencePage,
-        SelectionListener, ControlListener {
+        SelectionListener, ControlListener, ModifyListener {
     private static final String ID =
             "com.android.ide.eclipse.common.preferences.LintPreferencePage"; //$NON-NLS-1$
     private static final int ID_COLUMN_WIDTH = 150;
@@ -99,6 +107,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     private Combo mSeverityCombo;
     private Button mIncludeAll;
     private Button mIgnoreAll;
+    private Text mSearch;
 
     /**
      * Create the preference page.
@@ -157,6 +166,33 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             project = mClient.getProject(dir, dir);
         }
         mConfiguration = mClient.getConfiguration(project);
+
+        mSearch = new Text(container, SWT.SEARCH | SWT.ICON_CANCEL | SWT.ICON_SEARCH);
+        mSearch.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+        mSearch.addSelectionListener(this);
+        mSearch.addModifyListener(this);
+        // Grab the Enter key such that pressing return in the search box filters (instead
+        // of closing the options dialog)
+        mSearch.setMessage("type filter text (use ~ to filter by severity, e.g. ~ignore)");
+        mSearch.addTraverseListener(new TraverseListener() {
+            @Override
+            public void keyTraversed(TraverseEvent e) {
+                if (e.keyCode == SWT.CR) {
+                    updateFilter();
+                    e.doit = false;
+                } else if (e.keyCode == SWT.ARROW_DOWN) {
+                    // Allow moving from the search into the table
+                    if (mTree.getItemCount() > 0) {
+                        TreeItem firstCategory = mTree.getItem(0);
+                        if (firstCategory.getItemCount() > 0) {
+                            TreeItem first = firstCategory.getItem(0);
+                            mTree.setFocus();
+                            mTree.select(first);
+                        }
+                    }
+                }
+            }
+        });
 
         mTreeViewer = new TreeViewer(container, SWT.BORDER | SWT.FULL_SELECTION);
         mTree = mTreeViewer.getTree();
@@ -250,6 +286,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     @Override
     public void dispose() {
         super.dispose();
+        cancelPendingSearch();
     }
 
     @Override
@@ -346,6 +383,52 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         }
     }
 
+    private void updateFilter() {
+        cancelPendingSearch();
+        if (!mSearch.isDisposed()) {
+            // Clear selection before refiltering since otherwise it might be showing
+            // items no longer available in the list.
+            mTree.setSelection(new TreeItem[0]);
+            mDetailsText.setText("");
+            try {
+                mIgnoreEvent = true;
+                mSeverityCombo.setText("");
+                mSeverityCombo.setEnabled(false);
+            } finally {
+                mIgnoreEvent = false;
+            }
+
+            mTreeViewer.getContentProvider().inputChanged(mTreeViewer, null, mRegistry);
+            mTreeViewer.refresh();
+            mTreeViewer.expandAll();
+        }
+    }
+
+    private void cancelPendingSearch() {
+        if (mPendingUpdate != null) {
+            Shell shell = getShell();
+            if (!shell.isDisposed()) {
+                getShell().getDisplay().timerExec(-1, mPendingUpdate);
+            }
+            mPendingUpdate = null;
+        }
+    }
+
+    private Runnable mPendingUpdate;
+
+    private void scheduleSearch() {
+        if (mPendingUpdate == null) {
+            mPendingUpdate = new Runnable() {
+                @Override
+                public void run() {
+                    mPendingUpdate = null;
+                    updateFilter();
+                }
+            };
+        }
+        getShell().getDisplay().timerExec(250 /*ms*/, mPendingUpdate);
+    }
+
     // ---- Implements SelectionListener ----
 
     @Override
@@ -419,6 +502,8 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 mSeverities.put(issue, Severity.IGNORE);
             }
             mTreeViewer.refresh();
+        } else if (source == mSearch) {
+            updateFilter();
         }
     }
 
@@ -433,8 +518,23 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
     @Override
     public void widgetDefaultSelected(SelectionEvent e) {
-        if (e.getSource() == mTree) {
+        Object source = e.getSource();
+        if (source == mTree) {
             widgetSelected(e);
+        } else if (source == mSearch) {
+            if (e.detail == SWT.CANCEL) {
+                // Cancel the search
+                mSearch.setText("");
+            }
+            updateFilter();
+        }
+    }
+
+    // ---- Implements ModifyListener ----
+    @Override
+    public void modifyText(ModifyEvent e) {
+        if (e.getSource() == mSearch) {
+            scheduleSearch();
         }
     }
 
@@ -456,12 +556,23 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         mNameColumn.setWidth(availableWidth);
     }
 
+    private boolean filterMatches(@NonNull String filter, @NonNull Issue issue) {
+        return (filter.startsWith("~") //$NON-NLS-1$
+                        && mConfiguration.getSeverity(issue).getDescription()
+                            .toLowerCase(Locale.US).startsWith(filter.substring(1)))
+                || issue.getCategory().getName().toLowerCase(Locale.US).startsWith(filter)
+                || issue.getCategory().getFullName().toLowerCase(Locale.US).startsWith(filter)
+                || issue.getId().toLowerCase(Locale.US).contains(filter)
+                || issue.getDescription().toLowerCase(Locale.US).contains(filter);
+    }
+
     private class ContentProvider extends TreeNodeContentProvider {
         private Map<Category, List<Issue>> mCategoryToIssues;
+        private Object[] mElements;
 
         @Override
         public Object[] getElements(Object inputElement) {
-            return mRegistry.getCategories().toArray();
+            return mElements;
         }
 
         @Override
@@ -471,10 +582,36 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
 
         @Override
         public Object[] getChildren(Object parentElement) {
-            if (mCategoryToIssues == null) {
-                mCategoryToIssues = new HashMap<Category, List<Issue>>();
-                List<Issue> issues = mRegistry.getIssues();
-                for (Issue issue : issues) {
+            assert mCategoryToIssues != null;
+            List<Issue> list = mCategoryToIssues.get(parentElement);
+            if (list == null) {
+                return new Object[0];
+            }  else {
+                return list.toArray();
+            }
+        }
+
+        @Override
+        public Object getParent(Object element) {
+            return null;
+        }
+
+        @Override
+        public void inputChanged(final Viewer viewer, final Object oldInput,
+                final Object newInput) {
+            mCategoryToIssues = null;
+
+            String filter = mSearch.isDisposed() ? "" : mSearch.getText().trim();
+            if (filter.length() == 0) {
+                filter = null;
+            } else {
+                filter = filter.toLowerCase(Locale.US);
+            }
+
+            mCategoryToIssues = new HashMap<Category, List<Issue>>();
+            List<Issue> issues = mRegistry.getIssues();
+            for (Issue issue : issues) {
+                if (filter == null || filterMatches(filter, issue)) {
                     List<Issue> list = mCategoryToIssues.get(issue.getCategory());
                     if (list == null) {
                         list = new ArrayList<Issue>();
@@ -484,12 +621,26 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 }
             }
 
-            return mCategoryToIssues.get(parentElement).toArray();
-        }
+            if (filter == null) {
+                // Not filtering: show all categories
+                mElements = mRegistry.getCategories().toArray();
+            } else {
+                // Filtering: only include categories that contain matches
+                if (mCategoryToIssues == null) {
+                    getChildren(null);
+                }
 
-        @Override
-        public Object getParent(Object element) {
-            return super.getParent(element);
+                // Preserve the current category order, so instead of
+                // just creating a list of the mCategoryToIssues keyset, add them
+                // in the order they appear in in the registry
+                List<Category> categories = new ArrayList<Category>(mCategoryToIssues.size());
+                for (Category category : mRegistry.getCategories()) {
+                    if (mCategoryToIssues.containsKey(category)) {
+                        categories.add(category);
+                    }
+                }
+                mElements = categories.toArray();
+            }
         }
     }
 
@@ -544,7 +695,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         public String getColumnText(Object element, int columnIndex) {
             if (element instanceof Category) {
                 if (columnIndex == 0) {
-                    return ((Category) element).getName();
+                    return ((Category) element).getFullName();
                 } else {
                     return ((Category) element).getExplanation();
                 }
