@@ -213,7 +213,7 @@ public class PositionXmlParser {
                 } else {
                     seenOddZero = true;
                 }
-            } else if (data[lineEnd] == '\n') {
+            } else if (data[lineEnd] == '\n' || data[lineEnd] == '\r') {
                 break;
             } else if (data[lineEnd] == '<') {
                 prologueStart = lineEnd;

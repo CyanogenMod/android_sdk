@@ -126,7 +126,8 @@ public class PositionXmlParserTest extends TestCase {
         file.delete();
     }
 
-    private static void checkEncoding(String encoding, boolean writeBom, boolean writeEncoding)
+    private static void checkEncoding(String encoding, boolean writeBom, boolean writeEncoding,
+            String lineEnding)
             throws Exception {
         String value = "¾¿Œ";
         StringBuilder sb = new StringBuilder();
@@ -137,19 +138,21 @@ public class PositionXmlParserTest extends TestCase {
             sb.append(encoding);
             sb.append("\"");
         }
-        sb.append("?>\n" +
-                "<!-- This is a \n" +
-                "     multiline comment\n" +
-                "-->\n" +
+        sb.append("?>");
+        sb.append(lineEnding);
+        sb.append(
+                "<!-- This is a " + lineEnding +
+                "     multiline comment" + lineEnding +
+                "-->" + lineEnding +
                 "<foo ");
         int startAttrOffset = sb.length();
         sb.append("attr=\"");
         sb.append(value);
         sb.append("\"");
-        sb.append(">\n" +
-                "\n" +
-                "<bar></bar>\n" +
-                "</foo>\n");
+        sb.append(">" + lineEnding +
+                lineEnding +
+                "<bar></bar>" + lineEnding +
+                "</foo>" + lineEnding);
         PositionXmlParser parser = new PositionXmlParser();
         File file = File.createTempFile("parsertest" + encoding + writeBom + writeEncoding,
                 ".xml");
@@ -203,41 +206,60 @@ public class PositionXmlParserTest extends TestCase {
     }
 
     public void testEncoding() throws Exception {
-        checkEncoding("utf-8", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF-8", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_16", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF-16", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_16LE", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_32", false /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_32LE", false /*bom*/, true /*encoding*/);
-        checkEncoding("windows-1252", false /*bom*/, true /*encoding*/);
-        checkEncoding("MacRoman", false /*bom*/, true /*encoding*/);
-        checkEncoding("ISO-8859-1", false /*bom*/, true /*encoding*/);
-        checkEncoding("iso-8859-1", false /*bom*/, true /*encoding*/);
+        checkEncoding("utf-8", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF-8", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_16", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF-16", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_16LE", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_32", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_32LE", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("windows-1252", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("MacRoman", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("ISO-8859-1", false /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("iso-8859-1", false /*bom*/, true /*encoding*/, "\n");
 
         // Try BOM's (with no encoding specified)
-        checkEncoding("utf-8", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF-8", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_16", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF-16", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_16LE", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_32", true /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_32LE", true /*bom*/, false /*encoding*/);
+        checkEncoding("utf-8", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF-8", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_16", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF-16", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_16LE", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_32", true /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_32LE", true /*bom*/, false /*encoding*/, "\n");
 
         // Try default encodings (only defined for utf-8 and utf-16)
-        checkEncoding("utf-8", false /*bom*/, false /*encoding*/);
-        checkEncoding("UTF-8", false /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_16", false /*bom*/, false /*encoding*/);
-        checkEncoding("UTF-16", false /*bom*/, false /*encoding*/);
-        checkEncoding("UTF_16LE", false /*bom*/, false /*encoding*/);
+        checkEncoding("utf-8", false /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF-8", false /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_16", false /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF-16", false /*bom*/, false /*encoding*/, "\n");
+        checkEncoding("UTF_16LE", false /*bom*/, false /*encoding*/, "\n");
 
         // Try BOM's (with explicit encoding specified)
-        checkEncoding("utf-8", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF-8", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_16", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF-16", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_16LE", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_32", true /*bom*/, true /*encoding*/);
-        checkEncoding("UTF_32LE", true /*bom*/, true /*encoding*/);
+        checkEncoding("utf-8", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF-8", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_16", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF-16", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_16LE", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_32", true /*bom*/, true /*encoding*/, "\n");
+        checkEncoding("UTF_32LE", true /*bom*/, true /*encoding*/, "\n");
+
+        // Make sure this works for \r and \r\n as well
+        checkEncoding("UTF-16", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("UTF_16LE", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("UTF_32", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("UTF_32LE", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("windows-1252", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("MacRoman", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("ISO-8859-1", false /*bom*/, true /*encoding*/, "\r");
+        checkEncoding("iso-8859-1", false /*bom*/, true /*encoding*/, "\r");
+
+        checkEncoding("UTF-16", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("UTF_16LE", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("UTF_32", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("UTF_32LE", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("windows-1252", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("MacRoman", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("ISO-8859-1", false /*bom*/, true /*encoding*/, "\r\n");
+        checkEncoding("iso-8859-1", false /*bom*/, true /*encoding*/, "\r\n");
     }
 }
