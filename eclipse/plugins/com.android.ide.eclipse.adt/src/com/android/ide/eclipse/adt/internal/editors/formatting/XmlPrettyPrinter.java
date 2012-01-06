@@ -305,9 +305,6 @@ public class XmlPrettyPrinter {
                 }
             }
             if (lastPrefixNewline != -1 || firstSuffixNewline != -1) {
-                if (lastPrefixNewline == -1) {
-                    lastPrefixNewline = 0;
-                }
                 if (firstSuffixNewline == -1) {
                     firstSuffixNewline = text.length();
                 }
