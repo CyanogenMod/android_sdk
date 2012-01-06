@@ -18,7 +18,9 @@ package com.android.sdklib.util;
 
 import com.android.sdklib.ISdkLog;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -326,28 +328,46 @@ public class CommandLineParser {
                     arg.setInCommandLine(true);
 
                     // Process keyword
-                    String error = null;
+                    Object error = null;
                     if (arg.getMode().needsExtra()) {
-                        if (++i >= n) {
+                        if (i+1 >= n) {
                             errorMsg = String.format("Missing argument for flag %1$s.", a);
                             return;
                         }
-                        String b = args[i];
 
-                        Arg dummyArg = null;
-                        if (b.startsWith("--")) {                                   //$NON-NLS-1$
-                            dummyArg = findLongArg(verb, directObject, b.substring(2));
-                        } else if (b.startsWith("-")) {                             //$NON-NLS-1$
-                            dummyArg = findShortArg(verb, directObject, b.substring(1));
-                        }
-                        if (dummyArg != null) {
-                            errorMsg = String.format(
-                                    "Oops, it looks like you didn't provide an argument for '%1$s'.\n'%2$s' was found instead.",
-                                    a, b);
-                            return;
-                        }
+                        while (i+1 < n) {
+                            String b = args[i+1];
 
-                        error = arg.getMode().process(arg, b);
+                            if (arg.getMode() != Mode.STRING_ARRAY) {
+                                // We never accept something that looks like a valid argument
+                                // unless we see -- first
+                                Arg dummyArg = null;
+                                if (b.startsWith("--")) {                              //$NON-NLS-1$
+                                    dummyArg = findLongArg(verb, directObject, b.substring(2));
+                                } else if (b.startsWith("-")) {                        //$NON-NLS-1$
+                                    dummyArg = findShortArg(verb, directObject, b.substring(1));
+                                }
+                                if (dummyArg != null) {
+                                    errorMsg = String.format(
+                                            "Oops, it looks like you didn't provide an argument for '%1$s'.\n'%2$s' was found instead.",
+                                            a, b);
+                                    return;
+                                }
+                            }
+
+                            error = arg.getMode().process(arg, b);
+                            if (error == Accept.CONTINUE) {
+                                i++;
+                            } else if (error == Accept.ACCEPT_AND_STOP) {
+                                i++;
+                                break;
+                            } else if (error == Accept.REJECT_AND_STOP) {
+                                break;
+                            } else if (error instanceof String) {
+                                // We stop because of an error
+                                break;
+                            }
+                        }
                     } else {
                         error = arg.getMode().process(arg, null);
 
@@ -361,7 +381,7 @@ public class CommandLineParser {
                         }
                     }
 
-                    if (error != null) {
+                    if (error instanceof String) {
                         errorMsg = String.format("Invalid usage for flag %1$s: %2$s.", a, error);
                         return;
                     }
@@ -610,6 +630,11 @@ public class CommandLineParser {
 
     //----
 
+    private static enum Accept {
+        CONTINUE,
+        ACCEPT_AND_STOP,
+        REJECT_AND_STOP,
+    }
 
     /**
      * The mode of an argument specifies the type of variable it represents,
@@ -623,10 +648,10 @@ public class CommandLineParser {
                 return false;
             }
             @Override
-            public String process(Arg arg, String extra) {
+            public Object process(Arg arg, String extra) {
                 // Toggle the current value
                 arg.setCurrentValue(! ((Boolean) arg.getCurrentValue()).booleanValue());
-                return null;
+                return Accept.ACCEPT_AND_STOP;
             }
         },
 
@@ -637,7 +662,7 @@ public class CommandLineParser {
                 return true;
             }
             @Override
-            public String process(Arg arg, String extra) {
+            public Object process(Arg arg, String extra) {
                 try {
                     arg.setCurrentValue(Integer.parseInt(extra));
                     return null;
@@ -655,13 +680,13 @@ public class CommandLineParser {
                 return true;
             }
             @Override
-            public String process(Arg arg, String extra) {
+            public Object process(Arg arg, String extra) {
                 StringBuilder desc = new StringBuilder();
                 String[] values = (String[]) arg.getDefaultValue();
                 for (String value : values) {
                     if (value.equals(extra)) {
                         arg.setCurrentValue(extra);
-                        return null;
+                        return Accept.ACCEPT_AND_STOP;
                     }
 
                     if (desc.length() != 0) {
@@ -681,9 +706,43 @@ public class CommandLineParser {
                 return true;
             }
             @Override
-            public String process(Arg arg, String extra) {
+            public Object process(Arg arg, String extra) {
                 arg.setCurrentValue(extra);
-                return null;
+                return Accept.ACCEPT_AND_STOP;
+            }
+        },
+
+        /** Argument value is a String Array. Default value is a null. */
+        STRING_ARRAY {
+            @Override
+            public boolean needsExtra() {
+                return true;
+            }
+            @Override
+            public Object process(Arg arg, String extra) {
+                // For simplification, a string array doesn't accept something that
+                // starts with a dash unless a pure -- was seen before.
+                if (extra != null) {
+                    Object v = arg.getCurrentValue();
+                    if (v == null) {
+                        ArrayList<String> a = new ArrayList<String>();
+                        arg.setCurrentValue(a);
+                        v = a;
+                    }
+                    if (v instanceof List<?>) {
+                        @SuppressWarnings("unchecked") List<String> a = (List<String>) v;
+
+                        if (extra.equals("--") ||
+                                !extra.startsWith("-") ||
+                                (extra.startsWith("-") && a.contains("--"))) {
+                            a.add(extra);
+                            return Accept.CONTINUE;
+                        } else if (a.isEmpty()) {
+                            return "No values provided";
+                        }
+                    }
+                }
+                return Accept.REJECT_AND_STOP;
             }
         };
 
@@ -697,9 +756,15 @@ public class CommandLineParser {
          *
          * @param arg The argument being processed.
          * @param extra The extra parameter. Null if {@link #needsExtra()} returned false.
-         * @return An error string or null if there's no error.
+         * @return {@link Accept#CONTINUE} if this argument can use multiple values and
+         *   wishes to receive more.
+         *   Or {@link Accept#ACCEPT_AND_STOP} if this was the last value accepted by the argument.
+         *   Or {@link Accept#REJECT_AND_STOP} if this was value was reject and the argument
+         *   stops accepting new values with no error.
+         *   Or a string in case of error.
+         *   Never returns null.
          */
-        public abstract String process(Arg arg, String extra);
+        public abstract Object process(Arg arg, String extra);
     }
 
     /**
