@@ -97,7 +97,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
         if (page.getActivePart() != null) {
             site = page.getActivePart().getSite();
         }
-        mList = new LintList(site, container);
+        mList = new LintList(site, container, null /*memento*/, true /*singleFile*/);
         mList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 5));
 
         mShowButton = new Button(container, SWT.NONE);
@@ -175,7 +175,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
     @Override
     public void widgetSelected(SelectionEvent e) {
         Object source = e.getSource();
-        if (source == mList.getTableViewer().getControl()) {
+        if (source == mList.getTreeViewer().getControl()) {
             // Enable/disable buttons
             updateSelectionState();
         } else if (source == mShowButton) {
@@ -240,7 +240,7 @@ class LintListDialog extends TitleAreaDialog implements SelectionListener {
     @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object source = e.getSource();
-        if (source == mList.getTableViewer().getControl()) {
+        if (source == mList.getTreeViewer().getControl()) {
             // Jump to editor
             List<IMarker> selection = mList.getSelectedMarkers();
             if (selection.size() > 0) {

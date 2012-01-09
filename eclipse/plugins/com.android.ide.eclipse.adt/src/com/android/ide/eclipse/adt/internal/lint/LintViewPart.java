@@ -17,10 +17,13 @@ package com.android.ide.eclipse.adt.internal.lint;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.preferences.LintPreferencePage;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -29,7 +32,13 @@ import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.IPreferenceNode;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -43,9 +52,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -57,7 +69,9 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Eclipse View which shows lint warnings for the current project
@@ -65,19 +79,35 @@ import java.util.List;
 public class LintViewPart extends ViewPart implements SelectionListener, IJobChangeListener {
     /** The view id for this view part */
     public static final String ID = "com.android.ide.eclipse.adt.internal.lint.LintViewPart"; //$NON-NLS-1$
-    private static final String QUICKFIX_DISABLED_ICON = "quickfix-disabled"; //$NON-NLS-1$
-    private static final String QUICKFIX_ICON = "quickfix";                   //$NON-NLS-1$
-    private static final String REFRESH_ICON = "refresh";                     //$NON-NLS-1$
-
+    private static final String QUICKFIX_DISABLED_ICON = "quickfix-disabled";         //$NON-NLS-1$
+    private static final String QUICKFIX_ICON = "quickfix";                           //$NON-NLS-1$
+    private static final String REFRESH_ICON = "refresh";                             //$NON-NLS-1$
+    private static final String EXPAND_DISABLED_ICON = "expandall-disabled";          //$NON-NLS-1$
+    private static final String EXPAND_ICON = "expandall";                            //$NON-NLS-1$
+    private static final String COLUMNS_ICON = "columns";                             //$NON-NLS-1$
+    private static final String OPTIONS_ICON = "options";                             //$NON-NLS-1$
+    private static final String IGNORE_THIS_ICON = "ignore-file";                     //$NON-NLS-1$
+    private static final String IGNORE_THIS_DISABLED_ICON = "ignore-file-disabled";   //$NON-NLS-1$
+    private static final String IGNORE_PRJ_ICON = "ignore-project";                   //$NON-NLS-1$
+    private static final String IGNORE_PRJ_DISABLED_ICON = "ignore-project-disabled"; //$NON-NLS-1$
+    private static final String IGNORE_ALL_ICON = "ignore-all";                   //$NON-NLS-1$
+    private static final String IGNORE_ALL_DISABLED_ICON = "ignore-all-disabled"; //$NON-NLS-1$
+    private IMemento mMemento;
     private LintList mLintView;
     private Text mDetailsText;
     private Label mErrorLabel;
-
+    private SashForm mSashForm;
     private Action mFixAction;
     private Action mRemoveAction;
     private Action mIgnoreAction;
+    private Action mIgnoreFileAction;
+    private Action mIgnoreProjectAction;
     private Action mRemoveAllAction;
     private Action mRefreshAction;
+    private Action mExpandAll;
+    private Action mCollapseAll;
+    private Action mConfigureColumns;
+    private Action mOptions;
 
     /**
      * Initial projects to show: this field is only briefly not null during the
@@ -92,8 +122,24 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     }
 
     @Override
+    public void init(IViewSite site, IMemento memento) throws PartInitException {
+        super.init(site, memento);
+        mMemento = memento;
+    }
+
+    @Override
+    public void saveState(IMemento memento) {
+        super.saveState(memento);
+
+        mLintView.saveState(memento);
+    }
+
+    @Override
     public void dispose() {
-        mLintView.dispose();
+        if (mLintView != null) {
+            mLintView.dispose();
+            mLintView = null;
+        }
         super.dispose();
     }
 
@@ -108,18 +154,18 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         mErrorLabel = new Label(parent, SWT.NONE);
         mErrorLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 
-        sashForm = new SashForm(parent, SWT.NONE);
-        sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-        mLintView = new LintList(getSite(), sashForm);
+        mSashForm = new SashForm(parent, SWT.NONE);
+        mSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        mLintView = new LintList(getSite(), mSashForm, mMemento, false /*singleFile*/);
 
-        mDetailsText = new Text(sashForm,
+        mDetailsText = new Text(mSashForm,
                 SWT.BORDER | SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
         Display display = parent.getDisplay();
         mDetailsText.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
         mDetailsText.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
 
         mLintView.addSelectionListener(this);
-        sashForm.setWeights(new int[] {8, 2});
+        mSashForm.setWeights(new int[] {8, 2});
 
         createActions();
         initializeToolBar();
@@ -155,9 +201,17 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         mFixAction = new LintViewAction("Fix", ACTION_FIX,
                 iconFactory.getImageDescriptor(QUICKFIX_ICON),
                 iconFactory.getImageDescriptor(QUICKFIX_DISABLED_ICON));
-        mIgnoreAction = new LintViewAction("Ignore Type", ACTION_IGNORE,
-                sharedImages.getImageDescriptor(ISharedImages.IMG_ETOOL_CLEAR),
-                sharedImages.getImageDescriptor(ISharedImages.IMG_ETOOL_CLEAR_DISABLED));
+
+        mIgnoreFileAction = new LintViewAction("Ignore in this file", ACTION_IGNORE_THIS,
+                iconFactory.getImageDescriptor(IGNORE_THIS_ICON),
+                iconFactory.getImageDescriptor(IGNORE_THIS_DISABLED_ICON));
+        mIgnoreProjectAction = new LintViewAction("Ignore in this project", ACTION_IGNORE_TYPE,
+                iconFactory.getImageDescriptor(IGNORE_PRJ_ICON),
+                iconFactory.getImageDescriptor(IGNORE_PRJ_DISABLED_ICON));
+        mIgnoreAction = new LintViewAction("Always Ignore", ACTION_IGNORE_ALL,
+                iconFactory.getImageDescriptor(IGNORE_ALL_ICON),
+                iconFactory.getImageDescriptor(IGNORE_ALL_DISABLED_ICON));
+
         mRemoveAction = new LintViewAction("Remove", ACTION_REMOVE,
                 sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVE),
                 sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_REMOVE_DISABLED));
@@ -167,6 +221,22 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         mRefreshAction = new LintViewAction("Refresh", ACTION_REFRESH,
                 iconFactory.getImageDescriptor(REFRESH_ICON), null);
         mRemoveAllAction.setEnabled(true);
+        mCollapseAll = new LintViewAction("Collapse All", ACTION_COLLAPSE,
+                sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_COLLAPSEALL),
+                sharedImages.getImageDescriptor(ISharedImages.IMG_ELCL_COLLAPSEALL_DISABLED));
+        mCollapseAll.setEnabled(true);
+        mExpandAll = new LintViewAction("Expand All", ACTION_EXPAND,
+                iconFactory.getImageDescriptor(EXPAND_ICON),
+                iconFactory.getImageDescriptor(EXPAND_DISABLED_ICON));
+        mExpandAll.setEnabled(true);
+
+        mConfigureColumns = new LintViewAction("Configure Columns...", ACTION_COLUMNS,
+                iconFactory.getImageDescriptor(COLUMNS_ICON),
+                null);
+
+        mOptions = new LintViewAction("Options...", ACTION_OPTIONS,
+                iconFactory.getImageDescriptor(OPTIONS_ICON),
+                null);
 
         enableActions(Collections.<IMarker>emptyList(), false /*updateWidgets*/);
     }
@@ -178,9 +248,17 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         IToolBarManager toolbarManager = getViewSite().getActionBars().getToolBarManager();
         toolbarManager.add(mRefreshAction);
         toolbarManager.add(mFixAction);
+        toolbarManager.add(mIgnoreFileAction);
+        toolbarManager.add(mIgnoreProjectAction);
         toolbarManager.add(mIgnoreAction);
+        toolbarManager.add(new Separator());
         toolbarManager.add(mRemoveAction);
         toolbarManager.add(mRemoveAllAction);
+        toolbarManager.add(new Separator());
+        toolbarManager.add(mExpandAll);
+        toolbarManager.add(mCollapseAll);
+        toolbarManager.add(mConfigureColumns);
+        toolbarManager.add(mOptions);
     }
 
     @Override
@@ -226,6 +304,10 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         } else {
             mDetailsText.setText(EclipseLintClient.describe(markers.get(0)));
         }
+
+        IStatusLineManager status = getViewSite().getActionBars().getStatusLineManager();
+        status.setMessage(mDetailsText.getText());
+
         updateIssueCount();
 
         enableActions(markers, true /* updateWidgets */);
@@ -251,7 +333,18 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
             }
         }
 
+        boolean haveFile = false;
+        for (IMarker marker : markers) {
+            IResource resource = marker.getResource();
+            if (resource instanceof IFile || resource instanceof IFolder) {
+                haveFile = true;
+                break;
+            }
+        }
+
         mFixAction.setEnabled(canFix);
+        mIgnoreFileAction.setEnabled(hasSelection && haveFile);
+        mIgnoreProjectAction.setEnabled(hasSelection);
         mIgnoreAction.setEnabled(hasSelection);
         mRemoveAction.setEnabled(hasSelection);
 
@@ -263,7 +356,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     @Override
     public void widgetDefaultSelected(SelectionEvent e) {
         Object source = e.getSource();
-        if (source == mLintView.getTableViewer().getControl()) {
+        if (source == mLintView.getTreeViewer().getControl()) {
             // Jump to editor
             List<IMarker> selection = mLintView.getSelectedMarkers();
             if (selection.size() > 0) {
@@ -321,10 +414,15 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
 
     private static final int ACTION_REFRESH = 1;
     private static final int ACTION_FIX = 2;
-    private static final int ACTION_IGNORE = 3;
-    private static final int ACTION_REMOVE = 4;
-    private static final int ACTION_REMOVE_ALL = 5;
-    private SashForm sashForm;
+    private static final int ACTION_IGNORE_THIS = 3;
+    private static final int ACTION_IGNORE_TYPE = 4;
+    private static final int ACTION_IGNORE_ALL = 5;
+    private static final int ACTION_REMOVE = 6;
+    private static final int ACTION_REMOVE_ALL = 7;
+    private static final int ACTION_COLLAPSE = 8;
+    private static final int ACTION_EXPAND = 9;
+    private static final int ACTION_COLUMNS = 10;
+    private static final int ACTION_OPTIONS = 11;
 
     private class LintViewAction extends Action {
 
@@ -412,7 +510,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     }
                     break;
                 }
-                case ACTION_REMOVE_ALL:
+                case ACTION_REMOVE_ALL: {
                     List<? extends IResource> resources = mLintView.getResources();
                     if (resources != null) {
                         for (IResource resource : resources) {
@@ -420,14 +518,69 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                         }
                     }
                     break;
-                case ACTION_IGNORE: {
+                }
+                case ACTION_IGNORE_ALL:
+                    assert false;
+                    break;
+                case ACTION_IGNORE_TYPE:
+                case ACTION_IGNORE_THIS: {
+                    boolean ignoreInFile = mAction == ACTION_IGNORE_THIS;
                     for (IMarker marker : mLintView.getSelectedMarkers()) {
                         String id = EclipseLintClient.getId(marker);
                         if (id != null) {
-                            // TODO: Add "ignore in all" button!
-                            LintFixGenerator.suppressDetector(id, true, null, true/*all*/);
+                            IResource resource = marker.getResource();
+                            LintFixGenerator.suppressDetector(id, true,
+                                    ignoreInFile ? resource : resource.getProject(),
+                                    ignoreInFile);
                         }
                     }
+                    break;
+                }
+                case ACTION_COLLAPSE: {
+                    mLintView.collapseAll();
+                    break;
+                }
+                case ACTION_EXPAND: {
+                    mLintView.expandAll();
+                    break;
+                }
+                case ACTION_COLUMNS: {
+                    mLintView.configureColumns();
+                    break;
+                }
+                case ACTION_OPTIONS: {
+                    PreferenceManager manager = new PreferenceManager();
+
+                    LintPreferencePage page = new LintPreferencePage();
+                    String title = "Default/Global Settings";
+                    page.setTitle(title);
+                    IPreferenceNode node = new PreferenceNode(title, page);
+                    manager.addToRoot(node);
+
+
+                    List<? extends IResource> resources = mLintView.getResources();
+                    if (resources != null) {
+                        Set<IProject> projects = new HashSet<IProject>();
+                        for (IResource resource : resources) {
+                            projects.add(resource.getProject());
+                        }
+                        if (projects.size() > 0) {
+                            for (IProject project : projects) {
+                                page = new LintPreferencePage();
+                                page.setTitle(String.format("Settings for %1$s",
+                                        project.getName()));
+                                page.setElement(project);
+                                node = new PreferenceNode(project.getName(), page);
+                                manager.addToRoot(node);
+                            }
+                        }
+                    }
+
+                    Shell shell = LintViewPart.this.getSite().getShell();
+                    PreferenceDialog dialog = new PreferenceDialog(shell, manager);
+                    dialog.create();
+                    dialog.setSelectedNode(title);
+                    dialog.open();
                     break;
                 }
                 default:
