@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -122,7 +123,7 @@ public class Lint {
                         } else if (name.endsWith(".xml")) {
                             mScope.add(Scope.RESOURCE_FILE);
                         } else if (name.equals(PROGUARD_CFG)) {
-                            mScope.add(Scope.PROGUARD);
+                            mScope.add(Scope.PROGUARD_FILE);
                         } else if (name.equals(RES_FOLDER_NAME)
                                 || file.getParent().equals(RES_FOLDER_NAME)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
@@ -212,12 +213,7 @@ public class Lint {
 
     private void registerProjectFile(Map<File, Project> fileToProject, File file,
             File projectDir, File rootDir) {
-        Project project = fileToProject.get(projectDir);
-        if (project == null) {
-            project = new Project(mClient, projectDir, rootDir);
-            project.setConfiguration(mClient.getConfiguration(project));
-        }
-        fileToProject.put(file, project);
+        fileToProject.put(file, mClient.getProject(projectDir, rootDir));
     }
 
     private Collection<Project> computeProjects(List<File> files) {
@@ -281,7 +277,36 @@ public class Lint {
             }
         }
 
-        return fileToProject.values();
+        // Partition the projects up such that we only return projects that aren't
+        // included by other projects (e.g. because they are library projects)
+
+        Collection<Project> allProjects = fileToProject.values();
+        Set<Project> roots = new HashSet<Project>(allProjects);
+        for (Project project : allProjects) {
+            roots.removeAll(project.getAllLibraries());
+        }
+
+        if (LintUtils.assertionsEnabled()) {
+            // Make sure that all the project directories are unique. This ensures
+            // that we didn't accidentally end up with different project instances
+            // for a library project discovered as a directory as well as one
+            // initialized from the library project dependency list
+            IdentityHashMap<Project, Project> projects =
+                    new IdentityHashMap<Project, Project>();
+            for (Project project : roots) {
+                projects.put(project, project);
+                for (Project library : project.getAllLibraries()) {
+                    projects.put(library, library);
+                }
+            }
+            Set<File> dirs = new HashSet<File>();
+            for (Project project : projects.keySet()) {
+                assert !dirs.contains(project.getDir());
+                dirs.add(project.getDir());
+            }
+        }
+
+        return roots;
     }
 
     private void addProjects(File dir, Map<File, Project> fileToProject, File rootDir) {
@@ -311,7 +336,7 @@ public class Lint {
 
         File projectDir = project.getDir();
 
-        Context projectContext = new Context(mClient, project, projectDir, mScope);
+        Context projectContext = new Context(mClient, project, null, projectDir, mScope);
         fireEvent(EventType.SCANNING_PROJECT, projectContext);
 
         for (Detector check : mApplicableDetectors) {
@@ -321,7 +346,35 @@ public class Lint {
             }
         }
 
-        runFileDetectors(project, projectDir);
+
+        runFileDetectors(project, project);
+
+        if (!Scope.checkSingleFile(mScope)) {
+            List<Project> libraries = project.getDirectLibraries();
+            for (Project library : libraries) {
+                Context libraryContext = new Context(mClient, library, project, projectDir, mScope);
+                fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext);
+
+                for (Detector check : mApplicableDetectors) {
+                    check.beforeCheckLibraryProject(libraryContext);
+                    if (mCanceled) {
+                        return;
+                    }
+                }
+
+                runFileDetectors(library, project);
+                if (mCanceled) {
+                    return;
+                }
+
+                for (Detector check : mApplicableDetectors) {
+                    check.afterCheckLibraryProject(libraryContext);
+                    if (mCanceled) {
+                        return;
+                    }
+                }
+            }
+        }
 
         for (Detector check : mApplicableDetectors) {
             check.afterCheckProject(projectContext);
@@ -342,11 +395,12 @@ public class Lint {
         }
     }
 
-    private void runFileDetectors(Project project, File projectDir) {
-        // Look up manifest information
+    private void runFileDetectors(Project project, Project main) {
+
+        // Look up manifest information (but not for library projects)
         File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
-        if (manifestFile.exists()) {
-            XmlContext context = new XmlContext(mClient, project, manifestFile, mScope);
+        if (!project.isLibrary() && manifestFile.exists()) {
+            XmlContext context = new XmlContext(mClient, project, main, manifestFile, mScope);
             IDomParser parser = mClient.getDomParser();
             context.document = parser.parseXml(context);
             if (context.document != null) {
@@ -378,11 +432,12 @@ public class Lint {
                 }
                 if (xmlDetectors.size() > 0) {
                     if (project.getSubset() != null) {
-                        checkIndividualResources(project, xmlDetectors, project.getSubset());
+                        checkIndividualResources(project, main, xmlDetectors,
+                                project.getSubset());
                     } else {
-                        File res = new File(projectDir, RES_FOLDER_NAME);
+                        File res = new File(project.getDir(), RES_FOLDER_NAME);
                         if (res.exists() && xmlDetectors.size() > 0) {
-                            checkResFolder(project, res, xmlDetectors);
+                            checkResFolder(project, main, res, xmlDetectors);
                         }
                     }
                 }
@@ -398,7 +453,7 @@ public class Lint {
                     mScopeDetectors.get(Scope.ALL_JAVA_FILES));
             if (checks.size() > 0) {
                 List<File> sourceFolders = project.getJavaSourceFolders();
-                checkJava(project, sourceFolders, checks);
+                checkJava(project, main, sourceFolders, checks);
             }
         }
 
@@ -410,7 +465,7 @@ public class Lint {
             List<Detector> detectors = mScopeDetectors.get(Scope.CLASS_FILE);
             if (detectors != null && detectors.size() > 0) {
                 List<File> binFolders = project.getJavaClassFolders();
-                checkClasses(project, binFolders, detectors);
+                checkClasses(project, main, binFolders, detectors);
             }
         }
 
@@ -418,12 +473,12 @@ public class Lint {
             return;
         }
 
-        if (mScope.contains(Scope.PROGUARD)) {
-            List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD);
+        if (project == main && mScope.contains(Scope.PROGUARD_FILE)) {
+            List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD_FILE);
             if (detectors != null) {
                 File file = new File(project.getDir(), PROGUARD_CFG);
                 if (file.exists()) {
-                    Context context = new Context(mClient, project, file, mScope);
+                    Context context = new Context(mClient, project, main, file, mScope);
                     fireEvent(EventType.SCANNING_FILE, context);
                     for (Detector detector : detectors) {
                         if (detector.appliesTo(context, file)) {
@@ -453,7 +508,8 @@ public class Lint {
         return new ArrayList<Detector>(set);
     }
 
-    private void checkClasses(Project project, List<File> binFolders, List<Detector> checks) {
+    private void checkClasses(Project project, Project main,
+            List<File> binFolders, List<Detector> checks) {
         if (binFolders.size() == 0) {
             //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
             //        "output folders found. Does the project need to be built first?");
@@ -470,8 +526,8 @@ public class Lint {
                         ClassReader reader = new ClassReader(bytes);
                         ClassNode classNode = new ClassNode();
                         reader.accept(classNode, 0 /*flags*/);
-                        ClassContext context = new ClassContext(mClient, project, file, mScope,
-                                binDir, bytes, classNode);
+                        ClassContext context = new ClassContext(mClient, project, main, file,
+                                mScope, binDir, bytes, classNode);
 
                         for (Detector detector : checks) {
                             if (detector.appliesTo(context, file)) {
@@ -515,8 +571,9 @@ public class Lint {
         }
     }
 
-    private void checkJava(Project project, List<File> sourceFolders, List<Detector> checks) {
-        Context context = new Context(mClient, project, project.getDir(), mScope);
+    private void checkJava(Project project, Project main,
+            List<File> sourceFolders, List<Detector> checks) {
+        Context context = new Context(mClient, project, main, project.getDir(), mScope);
         fireEvent(EventType.SCANNING_FILE, context);
 
         for (Detector detector : checks) {
@@ -561,7 +618,8 @@ public class Lint {
         return mCurrentVisitor;
     }
 
-    private void checkResFolder(Project project, File res, List<ResourceXmlDetector> checks) {
+    private void checkResFolder(Project project, Project main, File res,
+            List<ResourceXmlDetector> checks) {
         assert res.isDirectory();
         File[] resourceDirs = res.listFiles();
         if (resourceDirs == null) {
@@ -576,7 +634,7 @@ public class Lint {
         for (File dir : resourceDirs) {
             type = ResourceFolderType.getFolderType(dir.getName());
             if (type != null) {
-                checkResourceFolder(project, dir, type, checks);
+                checkResourceFolder(project, main, dir, type, checks);
             }
 
             if (mCanceled) {
@@ -585,8 +643,8 @@ public class Lint {
         }
     }
 
-    private void checkResourceFolder(Project project, File dir, ResourceFolderType type,
-            List<ResourceXmlDetector> checks) {
+    private void checkResourceFolder(Project project, Project main, File dir,
+            ResourceFolderType type, List<ResourceXmlDetector> checks) {
         // Process the resource folder
         File[] xmlFiles = dir.listFiles();
         if (xmlFiles != null && xmlFiles.length > 0) {
@@ -594,7 +652,8 @@ public class Lint {
             if (visitor != null) { // if not, there are no applicable rules in this folder
                 for (File file : xmlFiles) {
                     if (LintUtils.isXmlFile(file)) {
-                        XmlContext context = new XmlContext(mClient, project, file, mScope);
+                        XmlContext context = new XmlContext(mClient, project, main,
+                                file, mScope);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                         if (mCanceled) {
@@ -607,7 +666,7 @@ public class Lint {
     }
 
     /** Checks individual resources */
-    private void checkIndividualResources(Project project,
+    private void checkIndividualResources(Project project, Project main,
             List<ResourceXmlDetector> xmlDetectors, List<File> files) {
         for (File file : files) {
             if (file.isDirectory()) {
@@ -615,10 +674,10 @@ public class Lint {
                 ResourceFolderType type = ResourceFolderType.getFolderType(file.getName());
                 if (type != null && new File(file.getParentFile(), RES_FOLDER_NAME).exists()) {
                     // Yes.
-                    checkResourceFolder(project, file, type, xmlDetectors);
+                    checkResourceFolder(project, main, file, type, xmlDetectors);
                 } else if (file.getName().equals(RES_FOLDER_NAME)) { // Is it the res folder?
                     // Yes
-                    checkResFolder(project, file, xmlDetectors);
+                    checkResFolder(project, main, file, xmlDetectors);
                 } else {
                     mClient.log(null, "Unexpected folder %1$s; should be project, " +
                             "\"res\" folder or resource folder", file.getPath());
@@ -631,7 +690,8 @@ public class Lint {
                 if (type != null) {
                     XmlVisitor visitor = getVisitor(type, xmlDetectors);
                     if (visitor != null) {
-                        XmlContext context = new XmlContext(mClient, project, file, mScope);
+                        XmlContext context = new XmlContext(mClient, project, main, file,
+                                mScope);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitFile(context, file);
                     }
@@ -744,6 +804,21 @@ public class Lint {
         @Override
         public IDomParser getDomParser() {
             return mDelegate.getDomParser();
+        }
+
+        @Override
+        public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+            return mDelegate.replaceDetector(detectorClass);
+        }
+
+        @Override
+        public SdkInfo getSdkInfo(Project project) {
+            return mDelegate.getSdkInfo(project);
+        }
+
+        @Override
+        public Project getProject(File dir, File referenceDir) {
+            return mDelegate.getProject(dir, referenceDir);
         }
     }
 }

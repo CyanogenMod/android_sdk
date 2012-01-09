@@ -21,7 +21,6 @@ import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -81,10 +80,10 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
     private Action mRefreshAction;
 
     /**
-     * Initial project to show: this field is only briefly not null during the
-     * construction initiated by {@link #show(IProject)}
+     * Initial projects to show: this field is only briefly not null during the
+     * construction initiated by {@link #show(List)}
      */
-    private static IProject sInitialProject;
+    private static List<? extends IResource> sInitialResources;
 
     /**
      * Constructs a new {@link LintViewPart}
@@ -129,9 +128,9 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
         // button state
         refreshStopIcon();
 
-        if (sInitialProject != null) {
-            mLintView.setResources(Collections.<IResource>singletonList(sInitialProject));
-            sInitialProject = null;
+        if (sInitialResources != null) {
+            mLintView.setResources(sInitialResources);
+            sInitialResources = null;
         } else {
             // No supplied context: show lint warnings for all projects
             IJavaProject[] androidProjects = BaseProjectHelper.getAndroidProjects(null);
@@ -194,7 +193,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
      *
      * @param resources the associated resources
      */
-    public void setResources(List<IResource> resources) {
+    public void setResources(List<? extends IResource> resources) {
         mLintView.setResources(resources);
 
         // Refresh the stop/refresh icon status
@@ -349,19 +348,18 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     if (jobs.length > 0) {
                         LintRunner.cancelCurrentJobs(false);
                     } else {
-                        List<IResource> resources = mLintView.getResources();
+                        List<? extends IResource> resources = mLintView.getResources();
                         if (resources == null) {
                             return;
                         }
-                        for (IResource resource : resources) {
-                            Job job = LintRunner.startLint(resource, null, false);
-                            if (job != null) {
-                                job.addJobChangeListener(LintViewPart.this);
-                                IWorkbench workbench = PlatformUI.getWorkbench();
-                                ISharedImages sharedImages = workbench.getSharedImages();
-                                setImageDescriptor(sharedImages.getImageDescriptor(
-                                        ISharedImages.IMG_ELCL_STOP));
-                            }
+                        Job job = LintRunner.startLint(resources, null,
+                                false /*fatalOnly*/, false /*show*/);
+                        if (job != null) {
+                            job.addJobChangeListener(LintViewPart.this);
+                            IWorkbench workbench = PlatformUI.getWorkbench();
+                            ISharedImages sharedImages = workbench.getSharedImages();
+                            setImageDescriptor(sharedImages.getImageDescriptor(
+                                    ISharedImages.IMG_ELCL_STOP));
                         }
                     }
                     break;
@@ -415,7 +413,7 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
                     break;
                 }
                 case ACTION_REMOVE_ALL:
-                    List<IResource> resources = mLintView.getResources();
+                    List<? extends IResource> resources = mLintView.getResources();
                     if (resources != null) {
                         for (IResource resource : resources) {
                             EclipseLintClient.clearMarkers(resource);
@@ -443,28 +441,28 @@ public class LintViewPart extends ViewPart implements SelectionListener, IJobCha
      * Shows or reconfigures the LintView to show the lint warnings for the
      * given project
      *
-     * @param project the project to show lint warnings for
+     * @param projects the projects to show lint warnings for
      */
-    public static void show(IProject project) {
+    public static void show(List<? extends IResource> projects) {
         IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (window != null) {
             IWorkbenchPage page = window.getActivePage();
             if (page != null) {
                 try {
                     // Pass initial project context via static field read by constructor
-                    sInitialProject = project;
+                    sInitialResources = projects;
                     IViewPart view = page.showView(LintViewPart.ID, null,
                             IWorkbenchPage.VIEW_ACTIVATE);
-                    if (sInitialProject != null && view instanceof LintViewPart) {
+                    if (sInitialResources != null && view instanceof LintViewPart) {
                         // The view must be showing already since the constructor was not
                         // run, so reconfigure the view instead
                         LintViewPart lintView = (LintViewPart) view;
-                        lintView.setResources(Collections.<IResource>singletonList(project));
+                        lintView.setResources(projects);
                     }
                 } catch (PartInitException e) {
                     AdtPlugin.log(e, "Cannot open Lint View");
                 } finally {
-                    sInitialProject = null;
+                    sInitialResources = null;
                 }
             }
         }

@@ -68,6 +68,8 @@ import org.w3c.dom.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Eclipse implementation for running lint on workspace files and projects.
@@ -76,7 +78,7 @@ import java.io.IOException;
 public class EclipseLintClient extends LintClient implements IDomParser {
     static final String MARKER_CHECKID_PROPERTY = "checkid";    //$NON-NLS-1$
     private static final String DOCUMENT_PROPERTY = "document"; //$NON-NLS-1$
-    private final IResource mResource;
+    private final List<? extends IResource> mResources;
     private final IDocument mDocument;
     private boolean mWasFatal;
     private boolean mFatalOnly;
@@ -86,14 +88,14 @@ public class EclipseLintClient extends LintClient implements IDomParser {
      * Creates a new {@link EclipseLintClient}.
      *
      * @param registry the associated detector registry
-     * @param resource the associated resource (project, file or null)
+     * @param resources the associated resources (project, file or null)
      * @param document the associated document, or null if the {@code resource}
      *            param is not a file
      * @param fatalOnly whether only fatal issues should be reported (and therefore checked)
      */
-    public EclipseLintClient(IssueRegistry registry, IResource resource, IDocument document,
-            boolean fatalOnly) {
-        mResource = resource;
+    public EclipseLintClient(IssueRegistry registry, List<? extends IResource> resources,
+            IDocument document, boolean fatalOnly) {
+        mResources = resources;
         mDocument = document;
         mFatalOnly = fatalOnly;
     }
@@ -149,15 +151,34 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         return null;
     }
 
+    private IProject getProject(Project project) {
+        if (mResources != null) {
+            if (mResources.size() == 1) {
+                return mResources.get(0).getProject();
+            }
+
+            for (IResource resource : mResources) {
+                IProject p = resource.getProject();
+                if (project.getDir().equals(AdtUtils.getAbsolutePath(p))) {
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public Configuration getConfiguration(Project project) {
         if (mConfiguration == null) {
-            if (mResource != null) {
-                IProject eclipseProject = mResource.getProject();
-                mConfiguration = ProjectLintConfiguration.get(this, eclipseProject, mFatalOnly);
-            } else {
-                mConfiguration = GlobalLintConfiguration.get();
+            if (project != null) {
+                IProject eclipseProject = getProject(project);
+                if (eclipseProject != null) {
+                    mConfiguration = ProjectLintConfiguration.get(this, eclipseProject, mFatalOnly);
+                    return mConfiguration;
+                }
             }
+
+            mConfiguration = GlobalLintConfiguration.get();
         }
         return mConfiguration;
     }
@@ -197,7 +218,7 @@ public class EclipseLintClient extends LintClient implements IDomParser {
         }
 
         if (marker == null) {
-            marker = BaseProjectHelper.markResource(mResource, MARKER_LINT,
+            marker = BaseProjectHelper.markResource(mResources.get(0), MARKER_LINT,
                         message, 0, severity);
         }
 
@@ -217,10 +238,19 @@ public class EclipseLintClient extends LintClient implements IDomParser {
 
     /** Clears any lint markers from the given resource (project, folder or file) */
     static void clearMarkers(IResource resource) {
-        try {
-            resource.deleteMarkers(MARKER_LINT, false, IResource.DEPTH_INFINITE);
-        } catch (CoreException e) {
-            AdtPlugin.log(e, null);
+        clearMarkers(Collections.singletonList(resource));
+    }
+
+    /** Clears any lint markers from the given list of resource (project, folder or file) */
+    static void clearMarkers(List<? extends IResource> resources) {
+        for (IResource resource : resources) {
+            try {
+                if (resource.isAccessible()) {
+                    resource.deleteMarkers(MARKER_LINT, false, IResource.DEPTH_INFINITE);
+                }
+            } catch (CoreException e) {
+                AdtPlugin.log(e, null);
+            }
         }
 
         IEditorPart active = AdtUtils.getActiveEditor();

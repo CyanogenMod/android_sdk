@@ -174,6 +174,25 @@ public abstract class Detector {
     }
 
     /**
+     * Analysis is about to begin for the given library project, perform any setup steps.
+     *
+     * @param context the context for the check referencing the project, lint
+     *            client, etc
+     */
+    public void beforeCheckLibraryProject(Context context) {
+    }
+
+    /**
+     * Analysis has just been finished for the given library project, perform any
+     * cleanup or report issues that require library-project-wide analysis.
+     *
+     * @param context the context for the check referencing the project, lint
+     *            client, etc
+     */
+    public void afterCheckLibraryProject(Context context) {
+    }
+
+    /**
      * Analysis is about to be performed on a specific file, perform any setup
      * steps.
      *

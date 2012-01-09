@@ -68,9 +68,8 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        Project project = new Project(client, file.getParentFile(), file.getParentFile());
-        project.setConfiguration(client.getConfiguration(project));
-        XmlContext context = new XmlContext(client, project, file,
+        Project project = Project.create(client, file.getParentFile(), file.getParentFile());
+        XmlContext context = new XmlContext(client, project, null, file,
                 EnumSet.of(Scope.RESOURCE_FILE));
         Document document = parser.parseXml(context);
         assertNotNull(document);
@@ -143,9 +142,8 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        Project project = new Project(client, file.getParentFile(), file.getParentFile());
-        project.setConfiguration(client.getConfiguration(project));
-        XmlContext context = new XmlContext(client, project, file,
+        Project project = Project.create(client, file.getParentFile(), file.getParentFile());
+        XmlContext context = new XmlContext(client, project, null, file,
                 EnumSet.of(Scope.RESOURCE_FILE));
         Document document = parser.parseXml(context);
         assertNotNull(document);

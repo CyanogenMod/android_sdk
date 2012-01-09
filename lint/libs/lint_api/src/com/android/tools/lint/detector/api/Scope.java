@@ -73,12 +73,28 @@ public enum Scope {
     MANIFEST,
 
     /** The analysis considers the Proguard configuration file */
-    PROGUARD,
+    PROGUARD_FILE,
 
     /**
      * The analysis considers classes in the libraries for this project.
      */
     JAVA_LIBRARIES;
+
+    /**
+     * Returns true if the given scope set corresponds to scanning a single file
+     * rather than a whole project
+     *
+     * @param scopes the scope set to check
+     * @return true if the scope set references a single file
+     */
+    public static boolean checkSingleFile(EnumSet<Scope> scopes) {
+        return scopes.size() == 1 &&
+                (scopes.contains(JAVA_FILE)
+                        || scopes.contains(CLASS_FILE)
+                        || scopes.contains(RESOURCE_FILE)
+                        || scopes.contains(PROGUARD_FILE)
+                        || scopes.contains(MANIFEST));
+    }
 
     /** All scopes: running lint on a project will check these scopes */
     public static final EnumSet<Scope> ALL = EnumSet.allOf(Scope.class);

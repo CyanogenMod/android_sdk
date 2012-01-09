@@ -201,6 +201,7 @@ programmatically
 proguard
 proxies
 proxy
+pulldown
 px
 quickfix
 recompilation

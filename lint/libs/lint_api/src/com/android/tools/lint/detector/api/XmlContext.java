@@ -44,12 +44,16 @@ public class XmlContext extends Context {
      *
      * @param client the client requesting a lint check
      * @param project the project containing the file being checked
+     * @param main the main project if this project is a library project, or
+     *            null if this is not a library project. The main project is
+     *            the root project of all library projects, not necessarily the
+     *            directly including project.
      * @param file the file being checked
      * @param scope the scope for the lint job
      */
-    public XmlContext(LintClient client, Project project, File file,
+    public XmlContext(LintClient client, Project project, Project main, File file,
             EnumSet<Scope> scope) {
-        super(client, project, file, scope);
+        super(client, project, main, file, scope);
     }
 
     /**

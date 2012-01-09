@@ -100,4 +100,25 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 "unusedR.java.txt=>gen/my/pkg/R.java",
                 "AndroidManifest.xml"));
     }
+
+    public void testMultiProject() throws Exception {
+        assertEquals(
+           // string1 is defined and used in the library project
+           // string2 is defined in the library project and used in the master project
+           // string3 is defined in the library project and not used anywhere
+           "strings.xml:7: Warning: The resource R.string.string3 appears to be unused",
+
+            lintProject(
+                // Master project
+                "multiproject/main-manifest.xml=>AndroidManifest.xml",
+                "multiproject/main.properties=>project.properties",
+                "multiproject/MainCode.java.txt=>src/foo/main/MainCode.java",
+
+                // Library project
+                "multiproject/library-manifest.xml=>../LibraryProject/AndroidManifest.xml",
+                "multiproject/library.properties=>../LibraryProject/project.properties",
+                "multiproject/LibraryCode.java.txt=>../LibraryProject/src/foo/library/LibraryCode.java",
+                "multiproject/strings.xml=>../LibraryProject/res/values/strings.xml"
+            ));
+    }
 }

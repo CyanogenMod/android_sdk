@@ -227,7 +227,7 @@ public class OverdrawDetector extends LayoutDetector implements Detector.JavaSca
             return mManifestTheme;
         }
 
-        Project project = context.getProject();
+        Project project = context.getMainProject();
         int apiLevel = project.getTargetSdk();
         if (apiLevel == -1) {
             apiLevel = project.getMinSdk();

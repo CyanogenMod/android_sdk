@@ -268,9 +268,17 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
     }
 
     @Override
+    public void afterCheckLibraryProject(Context context) {
+        checkResourceFolder(context, context.getProject().getDir());
+    }
+
+    @Override
     public void afterCheckProject(Context context) {
-        // Make sure no
-        File res = new File(context.getProject().getDir(), RES_FOLDER);
+        checkResourceFolder(context, context.getProject().getDir());
+    }
+
+    private void checkResourceFolder(Context context, File dir) {
+        File res = new File(dir, RES_FOLDER);
         if (res.isDirectory()) {
             File[] folders = res.listFiles();
             if (folders != null) {
@@ -1058,7 +1066,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
      * manifest is at least 11.
      */
     private boolean isAndroid30(Context context, int folderVersion) {
-        return folderVersion >= 11 || context.getProject().getMinSdk() >= 11;
+        return folderVersion >= 11 || context.getMainProject().getMinSdk() >= 11;
     }
 
     /**
@@ -1075,7 +1083,7 @@ public class IconDetector extends Detector implements Detector.XmlScanner {
             return true;
         }
 
-        int minSdk = context.getProject().getMinSdk();
+        int minSdk = context.getMainProject().getMinSdk();
 
         return minSdk == 9 || minSdk == 10;
     }

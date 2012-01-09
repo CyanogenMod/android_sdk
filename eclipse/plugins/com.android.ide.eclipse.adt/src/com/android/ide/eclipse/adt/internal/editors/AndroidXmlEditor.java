@@ -89,6 +89,7 @@ import org.w3c.dom.Node;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 
 /**
  * Multi-page form editor for Android XML files.
@@ -566,7 +567,8 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     protected Job runLint() {
         // Check for errors, if enabled
         if (AdtPrefs.getPrefs().isLintOnSave()) {
-            return LintRunner.startLint(getInputFile(), getStructuredDocument(), false);
+            return LintRunner.startLint(Collections.singletonList(getInputFile()),
+                    getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
         }
 
         return null;

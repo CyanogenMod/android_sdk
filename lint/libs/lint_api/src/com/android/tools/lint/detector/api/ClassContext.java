@@ -53,15 +53,19 @@ public class ClassContext extends Context {
      *
      * @param client the client requesting a lint check
      * @param project the project containing the file being checked
+     * @param main the main project if this project is a library project, or
+     *            null if this is not a library project. The main project is
+     *            the root project of all library projects, not necessarily the
+     *            directly including project.
      * @param file the file being checked
      * @param scope the scope for the lint job
      * @param binDir the root binary directory containing this .class file.
      * @param bytes the bytecode raw data
      * @param classNode the bytecode object model
      */
-    public ClassContext(LintClient client, Project project, File file,
+    public ClassContext(LintClient client, Project project, Project main, File file,
             EnumSet<Scope> scope, File binDir, byte[] bytes, ClassNode classNode) {
-        super(client, project, file, scope);
+        super(client, project, main, file, scope);
         mBinDir = binDir;
         mBytes = bytes;
         mClassNode = classNode;

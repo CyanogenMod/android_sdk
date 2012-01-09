@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 
 import com.android.prefs.AndroidLocation;
@@ -115,9 +116,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         sIssues = Collections.unmodifiableList(issues);
 
         // Check that ids are unique
-        boolean assertionsEnabled = false;
-        assert assertionsEnabled = true; // Intentional side-effect
-        if (assertionsEnabled) {
+        if (assertionsEnabled()) {
             Set<String> ids = new HashSet<String>();
             for (Issue issue : sIssues) {
                 String id = issue.getId();

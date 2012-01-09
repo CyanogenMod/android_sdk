@@ -19,7 +19,6 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.lint.EclipseLintClient;
 import com.android.ide.eclipse.adt.internal.lint.LintRunner;
-import com.android.ide.eclipse.adt.internal.lint.LintViewPart;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -69,6 +68,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +85,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     private Configuration mConfiguration;
     private IProject mProject;
     private Map<Issue, Severity> mSeverities = new HashMap<Issue, Severity>();
+    private Map<Issue, Severity> mInitialSeverities = Collections.<Issue, Severity>emptyMap();
     private boolean mIgnoreEvent;
 
     private Tree mTree;
@@ -96,6 +97,8 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     private TreeColumn mNameColumn;
     private TreeColumn mIdColumn;
     private Combo mSeverityCombo;
+    private Button mIncludeAll;
+    private Button mIgnoreAll;
 
     /**
      * Create the preference page.
@@ -114,11 +117,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         Composite container = new Composite(parent, SWT.NULL);
         container.setLayout(new GridLayout(2, false));
 
-        Project project = null;
         if (mProject != null) {
-            File dir = AdtUtils.getAbsolutePath(mProject).toFile();
-            project = new Project(mClient, dir, dir);
-
             Label projectLabel = new Label(container, SWT.CHECK);
             projectLabel.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 1,
                     1));
@@ -150,7 +149,13 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         }
 
         mRegistry = EclipseLintClient.getRegistry();
-        mClient = new EclipseLintClient(mRegistry, mProject, null, false);
+        mClient = new EclipseLintClient(mRegistry,
+                mProject != null ? Collections.singletonList(mProject) : null, null, false);
+        Project project = null;
+        if (mProject != null) {
+            File dir = AdtUtils.getAbsolutePath(mProject).toFile();
+            project = mClient.getProject(dir, dir);
+        }
         mConfiguration = mClient.getConfiguration(project);
 
         mTreeViewer = new TreeViewer(container, SWT.BORDER | SWT.FULL_SELECTION);
@@ -199,6 +204,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
             Severity severity = mConfiguration.getSeverity(issue);
             mSeverities.put(issue, severity);
         }
+        mInitialSeverities = new HashMap<Issue, Severity>(mSeverities);
 
         mTreeViewer.setInput(mRegistry);
 
@@ -219,6 +225,26 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
     @Override
     public void init(IWorkbench workbench) {
         // Initialize the preference page
+    }
+
+    @Override
+    protected void contributeButtons(Composite parent) {
+        super.contributeButtons(parent);
+
+        // Add "Include All" button for quickly enabling all the detectors, including
+        // those disabled by default
+        mIncludeAll = new Button(parent, SWT.PUSH);
+        mIncludeAll.setText("Include All");
+        mIncludeAll.addSelectionListener(this);
+
+        // Add "Ignore All" button for quickly disabling all the detectors
+        mIgnoreAll = new Button(parent, SWT.PUSH);
+        mIgnoreAll.setText("Ignore All");
+        mIgnoreAll.addSelectionListener(this);
+
+        // As per the contributeButton javadoc: increase parent's column count for each
+        // added button
+        ((GridLayout) parent.getLayout()).numColumns += 2;
     }
 
     @Override
@@ -276,25 +302,23 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         }
 
         mConfiguration.startBulkEditing();
-        boolean changed = false;
         try {
             // Severities
             for (Map.Entry<Issue, Severity> entry : mSeverities.entrySet()) {
                 Issue issue = entry.getKey();
                 Severity severity = entry.getValue();
                 if (mConfiguration.getSeverity(issue) != severity) {
-                    if (severity == issue.getDefaultSeverity()) {
+                    if ((severity == issue.getDefaultSeverity()) && issue.isEnabledByDefault()) {
                         severity = null;
                     }
                     mConfiguration.setSeverity(issue, severity);
-                    changed = true;
                 }
             }
         } finally {
             mConfiguration.finishBulkEditing();
         }
 
-        if (changed) {
+        if (!mInitialSeverities.equals(mSeverities)) {
             // Ask user whether we should re-run the rules.
             MessageDialog dialog = new MessageDialog(
                     null, "Lint Settings Have Changed", null,
@@ -310,13 +334,14 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 // Run lint on all the open Android projects
                 IWorkspace workspace = ResourcesPlugin.getWorkspace();
                 IProject[] projects = workspace.getRoot().getProjects();
+                List<IProject> androidProjects = new ArrayList<IProject>(projects.length);
                 for (IProject project : projects) {
                     if (project.isOpen() && BaseProjectHelper.isAndroidProject(project)) {
-                        LintRunner.startLint(project, null, false);
-                        // Show lint view where the results are listed
-                        LintViewPart.show(project);
+                        androidProjects.add(project);
                     }
                 }
+
+                LintRunner.startLint(androidProjects, null, false /*fatalOnly*/, true /*show*/);
             }
         }
     }
@@ -332,7 +357,7 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
         Object source = e.getSource();
         if (source == mTree) {
             TreeItem item = (TreeItem) e.item;
-            Object data = item.getData();
+            Object data = item != null ? item.getData() : null;
             if (data instanceof Issue) {
                 Issue issue = (Issue) data;
                 String summary = issue.getDescription();
@@ -379,6 +404,20 @@ public class LintPreferencePage extends PropertyPage implements IWorkbenchPrefer
                 severity = Severity.values()[index - 1];
             }
             mSeverities.put(issue, severity);
+            mTreeViewer.refresh();
+        } else if (source == mIncludeAll) {
+            List<Issue> issues = mRegistry.getIssues();
+            for (Issue issue : issues) {
+                // The default severity is never ignore; for disabled-by-default
+                // issues the {@link Issue#isEnabledByDefault()} method is false instead
+                mSeverities.put(issue, issue.getDefaultSeverity());
+            }
+            mTreeViewer.refresh();
+        } else if (source == mIgnoreAll) {
+            List<Issue> issues = mRegistry.getIssues();
+            for (Issue issue : issues) {
+                mSeverities.put(issue, Severity.IGNORE);
+            }
             mTreeViewer.refresh();
         }
     }
