@@ -36,9 +36,11 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.util.PositionXmlParser;
 import com.google.common.base.Charsets;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -49,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -77,6 +80,7 @@ public class Main extends LintClient {
     private static final String ARG_XML        = "--xml";          //$NON-NLS-1$
     private static final String ARG_CONFIG     = "--config";       //$NON-NLS-1$
     private static final String ARG_URL        = "--url";          //$NON-NLS-1$
+    private static final String ARG_VERSION    = "--version";      //$NON-NLS-1$
 
     private static final String ARG_NOWARN2    = "--nowarn";       //$NON-NLS-1$
     // GCC style flag names for options
@@ -208,6 +212,9 @@ public class Main extends LintClient {
                 mQuiet = true;
             } else if (arg.equals(ARG_NOLINES)) {
                 mShowLines = false;
+            } else if (arg.equals(ARG_VERSION)) {
+                printVersion();
+                System.exit(0);
             } else if (arg.equals(ARG_URL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing URL mapping string");
@@ -439,6 +446,33 @@ public class Main extends LintClient {
         System.exit(mFatal ? ERRNO_ERRORS : 0);
     }
 
+    private void printVersion() {
+        String binDir = System.getProperty("com.android.tools.lint.bindir"); //$NON-NLS-1$
+        if (binDir != null && binDir.length() > 0) {
+            File file = new File(binDir, "source.properties"); //$NON-NLS-1$
+            if (file.exists()) {
+                FileInputStream input = null;
+                try {
+                    input = new FileInputStream(file);
+                    Properties properties = new Properties();
+                    properties.load(input);
+
+                    String revision = properties.getProperty("Pkg.Revision"); //$NON-NLS-1$
+                    if (revision != null && revision.length() > 0) {
+                        System.out.println(String.format("lint: version %1$s", revision));
+                        return;
+                    }
+                } catch (IOException e) {
+                    // Couldn't find or read the version info: just print out unknown below
+                } finally {
+                    Closeables.closeQuietly(input);
+                }
+            }
+        }
+
+        System.out.println("lint: unknown version");
+    }
+
     private void displayValidIds(IssueRegistry registry, PrintStream out) {
         List<Category> categories = registry.getCategories();
         out.println("Valid issue categories:");
@@ -584,6 +618,7 @@ public class Main extends LintClient {
         printUsage(out, new String[] {
             ARG_HELP, "This message.",
             ARG_LISTIDS, "List the available issue id's and exit.",
+            ARG_VERSION, "Output version information and exit.",
             ARG_SHOW, "List available issues along with full explanations.",
             ARG_SHOW + " <ids>", "Show full explanations for the given list of issue id's.",
             "", "\nEnabled Checks:",
