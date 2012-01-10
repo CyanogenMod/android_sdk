@@ -95,7 +95,7 @@ public class LayoutEditor extends AndroidXmlEditor implements IShowEditorInput, 
      * Creates the form editor for resources XML files.
      */
     public LayoutEditor() {
-        super(false /* addTargetListener */);
+        super();
     }
 
     /**

@@ -16,18 +16,23 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu;
 
+import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
@@ -40,18 +45,54 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for /res/menu XML files.
  */
-public class MenuEditor extends AndroidXmlEditor {
+public class MenuEditorDelegator extends XmlEditorDelegate {
 
-    public static final String ID = AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
+    public static class Creator implements IXmlEditorCreator {
+        @Override
+        @SuppressWarnings("unchecked")
+        public MenuEditorDelegator createForFile(
+                AndroidXmlCommonEditor delegator,
+                IFileEditorInput input) {
+            // get the IFile object and check it's the desired sub-resource folder
+            IFile iFile = input.getFile();
+            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+            if (ResourceFolderType.MENU.equals(type)) {
+                return new MenuEditorDelegator(delegator);
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Old standalone-editor ID.
+     * @deprecated Use {@link AndroidXmlCommonEditor#ID} instead.
+     */
+    @Deprecated
+    public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
     private UiElementNode mUiRootNode;
 
+    private final AndroidXmlCommonEditor mDelegator;
+
     /**
      * Creates the form editor for resources XML files.
      */
-    public MenuEditor() {
+    public MenuEditorDelegator(AndroidXmlCommonEditor delegator) {
         super();
+        mDelegator = delegator;
+    }
+
+    @Override
+    public AndroidXmlCommonEditor getEditor() {
+        return mDelegator;
+    }
+
+    @Override
+    public void dispose() {
+        // pass
     }
 
     /**
@@ -82,9 +123,9 @@ public class MenuEditor extends AndroidXmlEditor {
      * Create the various form pages.
      */
     @Override
-    protected void createFormPages() {
+    public void createFormPages() {
         try {
-            addPage(new MenuTreePage(this));
+            getEditor().addPage(new MenuTreePage(getEditor()));
         } catch (PartInitException e) {
             AdtPlugin.log(e, "Error creating nested page"); //$NON-NLS-1$
         }
@@ -95,12 +136,11 @@ public class MenuEditor extends AndroidXmlEditor {
      * Change the tab/title name to include the project name.
      */
     @Override
-    protected void setInput(IEditorInput input) {
-        super.setInput(input);
+    public void setInput(IEditorInput input) {
         if (input instanceof FileEditorInput) {
             FileEditorInput fileInput = (FileEditorInput) input;
             IFile file = fileInput.getFile();
-            setPartName(String.format("%1$s", file.getName()));
+            getEditor().setPartName(String.format("%1$s", file.getName()));
         }
     }
 
@@ -112,7 +152,7 @@ public class MenuEditor extends AndroidXmlEditor {
      * @param xml_doc The XML document, if available, or null if none exists.
      */
     @Override
-    protected void xmlModelChanged(Document xml_doc) {
+    public void xmlModelChanged(Document xml_doc) {
         if (mUpdatingModel) {
             return;
         }
@@ -146,7 +186,6 @@ public class MenuEditor extends AndroidXmlEditor {
                 }
             }
 
-            super.xmlModelChanged(xml_doc);
         } finally {
             mUpdatingModel = false;
         }
@@ -157,7 +196,7 @@ public class MenuEditor extends AndroidXmlEditor {
      * @param force if true, a new UiRootNode is recreated even if it already exists.
      */
     @Override
-    protected void initUiRootNode(boolean force) {
+    public void initUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
         if (mUiRootNode == null || force) {
             Document doc = null;
@@ -166,7 +205,7 @@ public class MenuEditor extends AndroidXmlEditor {
             }
 
             // get the target data from the opened file (and its project)
-            AndroidTargetData data = getTargetData();
+            AndroidTargetData data = getEditor().getTargetData();
 
             ElementDescriptor desc;
             if (data == null) {
@@ -176,7 +215,7 @@ public class MenuEditor extends AndroidXmlEditor {
             }
 
             mUiRootNode = desc.createUiNode();
-            mUiRootNode.setEditor(this);
+            mUiRootNode.setEditor(getEditor());
 
             onDescriptorsChanged(doc);
         }

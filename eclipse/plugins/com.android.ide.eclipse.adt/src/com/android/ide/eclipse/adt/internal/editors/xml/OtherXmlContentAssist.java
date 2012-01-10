@@ -22,12 +22,12 @@ import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 /**
  * Content Assist Processor for /res/xml XML files
  */
-class XmlContentAssist extends AndroidContentAssist {
+class OtherXmlContentAssist extends AndroidContentAssist {
 
     /**
      * Constructor for LayoutContentAssist 
      */
-    public XmlContentAssist() {
-        super(AndroidTargetData.DESCRIPTOR_XML);
+    public OtherXmlContentAssist() {
+        super(AndroidTargetData.DESCRIPTOR_OTHER_XML);
     }
 }

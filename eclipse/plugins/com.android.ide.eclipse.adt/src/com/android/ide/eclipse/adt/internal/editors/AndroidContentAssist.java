@@ -113,7 +113,7 @@ public abstract class AndroidContentAssist implements IContentAssistProcessor {
      *      The Id can be one of {@link AndroidTargetData#DESCRIPTOR_MANIFEST},
      *      {@link AndroidTargetData#DESCRIPTOR_LAYOUT},
      *      {@link AndroidTargetData#DESCRIPTOR_MENU},
-     *      or {@link AndroidTargetData#DESCRIPTOR_XML}.
+     *      or {@link AndroidTargetData#DESCRIPTOR_OTHER_XML}.
      *      All other values will throw an {@link IllegalArgumentException} later at runtime.
      */
     public AndroidContentAssist(int descriptorId) {

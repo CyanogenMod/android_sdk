@@ -33,14 +33,14 @@ import javax.xml.parsers.SAXParserFactory;
  * Quickly parses a (potential) XML file to extract its first element (i.e. the root element)
  * and namespace, if any.
  * <p/>
- * This is used to determine if a file is an XML document that the XmlEditor can process.
+ * This is used to determine if a file is an XML document that the XmlEditorDelegate can process.
  * <p/>
  * TODO use this to remove the hardcoded "android" namespace prefix limitation.
  */
 public final class FirstElementParser {
-    
+
     private static SAXParserFactory sSaxfactory;
-    
+
     /**
      * Result from the XML parsing. <br/>
      * Contains the name of the root XML element. <br/>
@@ -50,39 +50,40 @@ public final class FirstElementParser {
         private String mElement;
         private String mXmlnsPrefix;
         private String mXmlnsUri;
-        
+
         public String getElement() {
             return mElement;
         }
-        
+
         public String getXmlnsPrefix() {
             return mXmlnsPrefix;
         }
-        
+
         public String getXmlnsUri() {
             return mXmlnsUri;
         }
-        
+
         void setElement(String element) {
             mElement = element;
         }
-        
+
         void setXmlnsPrefix(String xmlnsPrefix) {
             mXmlnsPrefix = xmlnsPrefix;
         }
-        
+
         void setXmlnsUri(String xmlnsUri) {
             mXmlnsUri = xmlnsUri;
         }
     }
-    
+
+    @SuppressWarnings("serial")
     private static class ResultFoundException extends SAXException { }
-    
+
     /**
      * Parses the given filename.
-     * 
+     *
      * @param osFilename The file to parse.
-     * @param xmlnsUri An optional URL of which we want to know the prefix. 
+     * @param xmlnsUri An optional URL of which we want to know the prefix.
      * @return The element details found or null if not found.
      */
     public static Result parse(String osFilename, String xmlnsUri) {
@@ -121,7 +122,7 @@ public final class FirstElementParser {
     private FirstElementParser() {
         // pass
     }
-    
+
     /**
      * A specialized SAX handler that captures the arguments of the very first element
      * (i.e. the root element)
@@ -132,7 +133,7 @@ public final class FirstElementParser {
         public XmlHandler(Result result) {
             mResult = result;
         }
-        
+
         /**
          * Processes a namespace prefix mapping.
          * I.e. for xmlns:android="some-uri", this received prefix="android" and uri="some-uri".

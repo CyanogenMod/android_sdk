@@ -18,13 +18,18 @@ package com.android.ide.eclipse.adt.internal.editors.color;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
+import com.android.ide.common.resources.ResourceFolder;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
+import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.w3c.dom.Document;
@@ -35,14 +40,51 @@ import org.w3c.dom.Node;
  * Editor for /res/color XML files.
  */
 @SuppressWarnings("restriction")
-public class ColorEditor extends AndroidXmlEditor {
-    public static final String ID = EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
+public class ColorEditorDelegate extends XmlEditorDelegate {
+
+    public static class Creator implements IXmlEditorCreator {
+        @Override
+        @SuppressWarnings("unchecked")
+        public ColorEditorDelegate createForFile(
+                AndroidXmlCommonEditor delegator,
+                IFileEditorInput input) {
+            // get the IFile object and check it's the desired sub-resource folder
+            IFile iFile = input.getFile();
+            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+            if (ResourceFolderType.COLOR.equals(type)) {
+                return new ColorEditorDelegate(delegator);
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Old standalone-editor ID.
+     * @deprecated Use {@link AndroidXmlCommonEditor#ID} instead.
+     */
+    @Deprecated
+    public static final String OLD_STANDALONE_EDITOR_ID = EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
     private UiElementNode mUiRootNode;
 
-    public ColorEditor() {
+    private final AndroidXmlCommonEditor mDelegator;
+
+    public ColorEditorDelegate(AndroidXmlCommonEditor delegator) {
         super();
+        mDelegator = delegator;
+    }
+
+    @Override
+    public AndroidXmlCommonEditor getEditor() {
+        return mDelegator;
+    }
+
+    @Override
+    public void dispose() {
+        // pass
     }
 
     @Override
@@ -56,7 +98,7 @@ public class ColorEditor extends AndroidXmlEditor {
     }
 
     @Override
-    protected void createFormPages() {
+    public void createFormPages() {
         /* Disabled for now; doesn't work quite right
         try {
             addPage(new ColorTreePage(this));
@@ -71,49 +113,46 @@ public class ColorEditor extends AndroidXmlEditor {
      * Change the tab/title name to include the project name.
      */
     @Override
-    protected void setInput(IEditorInput input) {
-        super.setInput(input);
+    public void setInput(IEditorInput input) {
         if (input instanceof FileEditorInput) {
             FileEditorInput fileInput = (FileEditorInput) input;
             IFile file = fileInput.getFile();
-            setPartName(String.format("%1$s",
+            getEditor().setPartName(String.format("%1$s",
                     file.getName()));
         }
     }
 
     @Override
-    protected void xmlModelChanged(Document xmlDoc) {
+    public void xmlModelChanged(Document xmlDoc) {
         // create the ui root node on demand.
         initUiRootNode(false /*force*/);
 
         Element rootElement = xmlDoc.getDocumentElement();
         mUiRootNode.loadFromXmlNode(rootElement);
-
-        super.xmlModelChanged(xmlDoc);
     }
 
     @Override
-    protected void initUiRootNode(boolean force) {
+    public void initUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
         if (mUiRootNode == null || force) {
             ElementDescriptor descriptor;
-            AndroidTargetData data = getTargetData();
+            AndroidTargetData data = getEditor().getTargetData();
             if (data == null) {
                 descriptor = new ColorDescriptors().getDescriptor();
             } else {
                 descriptor = data.getColorDescriptors().getDescriptor();
             }
             mUiRootNode = descriptor.createUiNode();
-            mUiRootNode.setEditor(this);
+            mUiRootNode.setEditor(getEditor());
             onDescriptorsChanged();
         }
     }
 
     private void onDescriptorsChanged() {
-        IStructuredModel model = getModelForRead();
+        IStructuredModel model = getEditor().getModelForRead();
         if (model != null) {
             try {
-                Node node = getXmlDocument(model).getDocumentElement();
+                Node node = getEditor().getXmlDocument(model).getDocumentElement();
                 mUiRootNode.reloadFromXmlNode(node);
             } finally {
                 model.releaseFromRead();

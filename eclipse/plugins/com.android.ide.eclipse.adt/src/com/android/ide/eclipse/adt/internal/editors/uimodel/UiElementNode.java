@@ -41,7 +41,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDes
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.UiUpdateState;
-import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
@@ -257,7 +257,7 @@ public class UiElementNode implements IPropertySource {
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,
                                 SdkConstants.NS_RESOURCES,
-                                XmlDescriptors.PREF_KEY_ATTR);
+                                OtherXmlDescriptors.PREF_KEY_ATTR);
             }
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,

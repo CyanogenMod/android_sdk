@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
@@ -30,14 +31,14 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 /**
  * Page for the xml form editor.
  */
-public final class XmlTreePage extends FormPage implements IPageImageProvider {
+public final class OtherXmlTreePage extends FormPage implements IPageImageProvider {
     /** Page id used for switching tabs programmatically */
     public final static String PAGE_ID = "xml_tree_page"; //$NON-NLS-1$
 
     /** Container editor */
-    XmlEditor mEditor;
+    AndroidXmlCommonEditor mEditor;
 
-    public XmlTreePage(XmlEditor editor) {
+    public OtherXmlTreePage(AndroidXmlCommonEditor editor) {
         super(editor, PAGE_ID, "Structure");  // tab's label, keep it short
         mEditor = editor;
     }
