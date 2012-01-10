@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 
 /**
@@ -50,7 +51,7 @@ public enum Severity {
 
     private String mDisplay;
 
-    private Severity(String display) {
+    private Severity(@NonNull String display) {
         mDisplay = display;
     }
 
@@ -59,6 +60,7 @@ public enum Severity {
      *
      * @return a description of the severity
      */
+    @NonNull
     public String getDescription() {
         return mDisplay;
     }

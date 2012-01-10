@@ -19,6 +19,8 @@ package com.android.tools.lint.client.api;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.Category;
@@ -80,8 +82,7 @@ public class Lint {
      * @param registry The registry containing issues to be checked
      * @param client the tool wrapping the analyzer, such as an IDE or a CLI
      */
-    public Lint(IssueRegistry registry, LintClient client) {
-        assert client != null;
+    public Lint(@NonNull IssueRegistry registry, @NonNull LintClient client) {
         mRegistry = registry;
         mClient = new LintClientWrapper(client);
     }
@@ -99,7 +100,7 @@ public class Lint {
      * @param scope the scope of the analysis; detectors with a wider scope will
      *            not be run. If null, the scope will be inferred from the files.
      */
-    public void analyze(List<File> files, EnumSet<Scope> scope) {
+    public void analyze(@NonNull List<File> files, @Nullable EnumSet<Scope> scope) {
         mCanceled = false;
         mScope = scope;
 
@@ -158,7 +159,7 @@ public class Lint {
         fireEvent(mCanceled ? EventType.CANCELED : EventType.COMPLETED, null);
     }
 
-    private void computeDetectors(Project project) {
+    private void computeDetectors(@NonNull Project project) {
         // Ensure that the current visitor is recomputed
         mCurrentFolderType = null;
         mCurrentVisitor = null;
@@ -212,12 +213,15 @@ public class Lint {
         }
     }
 
-    private void registerProjectFile(Map<File, Project> fileToProject, File file,
-            File projectDir, File rootDir) {
+    private void registerProjectFile(
+            @NonNull Map<File, Project> fileToProject,
+            @NonNull File file,
+            @NonNull File projectDir,
+            @NonNull File rootDir) {
         fileToProject.put(file, mClient.getProject(projectDir, rootDir));
     }
 
-    private Collection<Project> computeProjects(List<File> files) {
+    private Collection<Project> computeProjects(@NonNull List<File> files) {
         // Compute list of projects
         Map<File, Project> fileToProject = new HashMap<File, Project>();
 
@@ -310,7 +314,10 @@ public class Lint {
         return roots;
     }
 
-    private void addProjects(File dir, Map<File, Project> fileToProject, File rootDir) {
+    private void addProjects(
+            @NonNull File dir,
+            @NonNull Map<File, Project> fileToProject,
+            @NonNull File rootDir) {
         if (mCanceled) {
             return;
         }
@@ -329,12 +336,11 @@ public class Lint {
         }
     }
 
-    private boolean isProjectDir(File dir) {
+    private boolean isProjectDir(@NonNull File dir) {
         return new File(dir, ANDROID_MANIFEST_XML).exists();
     }
 
-    private void checkProject(Project project) {
-
+    private void checkProject(@NonNull Project project) {
         File projectDir = project.getDir();
 
         Context projectContext = new Context(mClient, project, null, projectDir, mScope);
@@ -396,8 +402,7 @@ public class Lint {
         }
     }
 
-    private void runFileDetectors(Project project, Project main) {
-
+    private void runFileDetectors(@NonNull Project project, @Nullable Project main) {
         // Look up manifest information (but not for library projects)
         File manifestFile = new File(project.getDir(), ANDROID_MANIFEST_XML);
         if (!project.isLibrary() && manifestFile.exists()) {
@@ -423,7 +428,7 @@ public class Lint {
         if (mScope.contains(Scope.ALL_RESOURCE_FILES) || mScope.contains(Scope.RESOURCE_FILE)) {
             List<Detector> checks = union(mScopeDetectors.get(Scope.RESOURCE_FILE),
                     mScopeDetectors.get(Scope.ALL_RESOURCE_FILES));
-            if (checks.size() > 0) {
+            if (checks != null && checks.size() > 0) {
                 List<ResourceXmlDetector> xmlDetectors =
                         new ArrayList<ResourceXmlDetector>(checks.size());
                 for (Detector detector : checks) {
@@ -452,7 +457,7 @@ public class Lint {
         if (mScope.contains(Scope.JAVA_FILE) || mScope.contains(Scope.ALL_JAVA_FILES)) {
             List<Detector> checks = union(mScopeDetectors.get(Scope.JAVA_FILE),
                     mScopeDetectors.get(Scope.ALL_JAVA_FILES));
-            if (checks.size() > 0) {
+            if (checks != null && checks.size() > 0) {
                 List<File> sourceFolders = project.getJavaSourceFolders();
                 checkJava(project, main, sourceFolders, checks);
             }
@@ -493,24 +498,35 @@ public class Lint {
         }
     }
 
-    private static List<Detector> union(List<Detector> list1, List<Detector> list2) {
-        int size = (list1 != null ? list1.size() : 0) + (list2 != null ? list2.size() : 0);
-        // Use set to pick out unique detectors, since it's possible for there to be overlap,
-        // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
-        // single-file issue, so it shows up on both scope lists:
-        Set<Detector> set = new HashSet<Detector>(size);
-        if (list1 != null) {
-            set.addAll(list1);
-        }
-        if (list2 != null) {
-            set.addAll(list2);
-        }
+    @Nullable
+    private static List<Detector> union(
+            @Nullable List<Detector> list1,
+            @Nullable List<Detector> list2) {
+        if (list1 == null) {
+            return list2;
+        } else if (list2 == null) {
+            return list1;
+        } else {
+            // Use set to pick out unique detectors, since it's possible for there to be overlap,
+            // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
+            // single-file issue, so it shows up on both scope lists:
+            Set<Detector> set = new HashSet<Detector>(list1.size() + list2.size());
+            if (list1 != null) {
+                set.addAll(list1);
+            }
+            if (list2 != null) {
+                set.addAll(list2);
+            }
 
-        return new ArrayList<Detector>(set);
+            return new ArrayList<Detector>(set);
+        }
     }
 
-    private void checkClasses(Project project, Project main,
-            List<File> binFolders, List<Detector> checks) {
+    private void checkClasses(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull List<File> binFolders,
+            @NonNull List<Detector> checks) {
         if (binFolders.size() == 0) {
             //mClient.log(null, "Warning: Class-file checks are enabled, but no " +
             //        "output folders found. Does the project need to be built first?");
@@ -557,7 +573,7 @@ public class Lint {
         }
     }
 
-    private void addClassFiles(File dir, List<File> classFiles) {
+    private void addClassFiles(@NonNull File dir, @NonNull List<File> classFiles) {
         // Process the resource folder
         File[] files = dir.listFiles();
         if (files != null && files.length > 0) {
@@ -572,8 +588,11 @@ public class Lint {
         }
     }
 
-    private void checkJava(Project project, Project main,
-            List<File> sourceFolders, List<Detector> checks) {
+    private void checkJava(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull List<File> sourceFolders,
+            @NonNull List<Detector> checks) {
         IJavaParser javaParser = mClient.getJavaParser();
         if (javaParser == null) {
             mClient.log(null, "No java parser provided to lint: not running Java checks");
@@ -600,7 +619,7 @@ public class Lint {
         }
     }
 
-    private void gatherJavaFiles(File dir, List<File> result) {
+    private void gatherJavaFiles(@NonNull File dir, @NonNull List<File> result) {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -617,7 +636,10 @@ public class Lint {
     private List<ResourceXmlDetector> mCurrentXmlDetectors;
     private XmlVisitor mCurrentVisitor;
 
-    private XmlVisitor getVisitor(ResourceFolderType type, List<ResourceXmlDetector> checks) {
+    @Nullable
+    private XmlVisitor getVisitor(
+            @NonNull ResourceFolderType type,
+            @NonNull List<ResourceXmlDetector> checks) {
         if (type != mCurrentFolderType) {
             mCurrentFolderType = type;
 
@@ -646,8 +668,11 @@ public class Lint {
         return mCurrentVisitor;
     }
 
-    private void checkResFolder(Project project, Project main, File res,
-            List<ResourceXmlDetector> checks) {
+    private void checkResFolder(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File res,
+            @NonNull List<ResourceXmlDetector> checks) {
         assert res.isDirectory();
         File[] resourceDirs = res.listFiles();
         if (resourceDirs == null) {
@@ -671,8 +696,12 @@ public class Lint {
         }
     }
 
-    private void checkResourceFolder(Project project, Project main, File dir,
-            ResourceFolderType type, List<ResourceXmlDetector> checks) {
+    private void checkResourceFolder(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File dir,
+            @NonNull ResourceFolderType type,
+            @NonNull List<ResourceXmlDetector> checks) {
         // Process the resource folder
         File[] xmlFiles = dir.listFiles();
         if (xmlFiles != null && xmlFiles.length > 0) {
@@ -694,8 +723,11 @@ public class Lint {
     }
 
     /** Checks individual resources */
-    private void checkIndividualResources(Project project, Project main,
-            List<ResourceXmlDetector> xmlDetectors, List<File> files) {
+    private void checkIndividualResources(
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull List<ResourceXmlDetector> xmlDetectors,
+            @NonNull List<File> files) {
         for (File file : files) {
             if (file.isDirectory()) {
                 // Is it a resource folder?
@@ -733,7 +765,7 @@ public class Lint {
      *
      * @param listener the listener to be added
      */
-    public void addLintListener(LintListener listener) {
+    public void addLintListener(@NonNull LintListener listener) {
         if (mListeners == null) {
             mListeners = new ArrayList<LintListener>(1);
         }
@@ -745,7 +777,7 @@ public class Lint {
      *
      * @param listener the listener to be removed
      */
-    public void removeLintListener(LintListener listener) {
+    public void removeLintListener(@NonNull LintListener listener) {
         mListeners.remove(listener);
         if (mListeners.size() == 0) {
             mListeners = null;
@@ -753,7 +785,7 @@ public class Lint {
     }
 
     /** Notifies listeners, if any, that the given event has occurred */
-    private void fireEvent(LintListener.EventType type, Context context) {
+    private void fireEvent(@NonNull LintListener.EventType type, @NonNull Context context) {
         if (mListeners != null) {
             for (int i = 0, n = mListeners.size(); i < n; i++) {
                 LintListener listener = mListeners.get(i);
@@ -771,15 +803,20 @@ public class Lint {
      * filtered out warnings.
      */
     private static class LintClientWrapper extends LintClient {
-        private LintClient mDelegate;
+        @NonNull
+        private final LintClient mDelegate;
 
-        public LintClientWrapper(LintClient delegate) {
+        public LintClientWrapper(@NonNull LintClient delegate) {
             mDelegate = delegate;
         }
 
         @Override
-        public void report(Context context, Issue issue, Location location, String message,
-                Object data) {
+        public void report(
+                @NonNull Context context,
+                @NonNull Issue issue,
+                @Nullable Location location,
+                @NonNull String message,
+                @Nullable Object data) {
             Configuration configuration = context.getConfiguration();
             if (!configuration.isEnabled(issue)) {
                 if (issue != IssueRegistry.PARSER_ERROR) {
@@ -804,52 +841,62 @@ public class Lint {
         // Everything else just delegates to the embedding lint client
 
         @Override
-        public Configuration getConfiguration(Project project) {
+        @NonNull
+        public Configuration getConfiguration(@NonNull Project project) {
             return mDelegate.getConfiguration(project);
         }
 
 
         @Override
-        public void log(Throwable exception, String format, Object... args) {
+        public void log(@Nullable Throwable exception, @Nullable String format,
+                @Nullable Object... args) {
             mDelegate.log(exception, format, args);
         }
 
         @Override
-        public String readFile(File file) {
+        @NonNull
+        public String readFile(@NonNull File file) {
             return mDelegate.readFile(file);
         }
 
         @Override
-        public List<File> getJavaSourceFolders(Project project) {
+        @NonNull
+        public List<File> getJavaSourceFolders(@NonNull Project project) {
             return mDelegate.getJavaSourceFolders(project);
         }
 
         @Override
-        public List<File> getJavaClassFolders(Project project) {
+        @NonNull
+        public List<File> getJavaClassFolders(@NonNull Project project) {
             return mDelegate.getJavaClassFolders(project);
         }
 
         @Override
+        @Nullable
         public IDomParser getDomParser() {
             return mDelegate.getDomParser();
         }
 
         @Override
+        @NonNull
         public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
             return mDelegate.replaceDetector(detectorClass);
         }
 
         @Override
+        @NonNull
         public SdkInfo getSdkInfo(Project project) {
             return mDelegate.getSdkInfo(project);
         }
 
         @Override
-        public Project getProject(File dir, File referenceDir) {
+        @NonNull
+        public Project getProject(@NonNull File dir, @NonNull File referenceDir) {
             return mDelegate.getProject(dir, referenceDir);
         }
 
         @Override
+        @Nullable
         public IJavaParser getJavaParser() {
             return mDelegate.getJavaParser();
         }

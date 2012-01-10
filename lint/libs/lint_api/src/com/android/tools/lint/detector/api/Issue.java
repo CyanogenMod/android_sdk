@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
 import com.google.common.annotations.Beta;
 
@@ -48,9 +50,15 @@ public final class Issue implements Comparable<Issue> {
     private final Class<? extends Detector> mClass;
 
     // Use factory methods
-    private Issue(String id, String description, String explanation, Category category,
-            int priority, Severity severity, Class<? extends Detector> detectorClass,
-            EnumSet<Scope> scope) {
+    private Issue(
+            @NonNull String id,
+            @NonNull String description,
+            @NonNull String explanation,
+            @NonNull Category category,
+            int priority,
+            @NonNull Severity severity,
+            @NonNull Class<? extends Detector> detectorClass,
+            @NonNull EnumSet<Scope> scope) {
         super();
         mId = id;
         mDescription = description;
@@ -77,9 +85,16 @@ public final class Issue implements Comparable<Issue> {
      * @param scope the scope of files required to analyze this issue
      * @return a new {@link Issue}
      */
-    public static Issue create(String id, String description, String explanation,
-            Category category, int priority, Severity severity,
-            Class<? extends Detector> detectorClass, EnumSet<Scope> scope) {
+    @NonNull
+    public static Issue create(
+            @NonNull String id,
+            @NonNull String description,
+            @NonNull String explanation,
+            @NonNull Category category,
+            int priority,
+            @NonNull Severity severity,
+            @NonNull Class<? extends Detector> detectorClass,
+            @NonNull EnumSet<Scope> scope) {
         return new Issue(id, description, explanation, category, priority, severity,
                 detectorClass, scope);
     }
@@ -91,6 +106,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the associated fixed id, never null and always unique
      */
+    @NonNull
     public String getId() {
         return mId;
     }
@@ -100,6 +116,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return a quick summary of the issue, never null
      */
+    @NonNull
     public String getDescription() {
         return mDescription;
     }
@@ -112,15 +129,17 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return an explanation of the issue, never null.
      */
+    @NonNull
     public String getExplanation() {
         return mExplanation;
     }
 
     /**
-     * The category, or null if no category has been assigned
+     * The primary category of the issue
      *
-     * @return the category, or null if no category has been assigned
+     * @return the primary category of the issue, never null
      */
+    @NonNull
     public Category getCategory() {
         return mCategory;
     }
@@ -150,6 +169,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the severity of the issues found by this detector
      */
+    @NonNull
     public Severity getDefaultSeverity() {
         return mSeverity;
     }
@@ -159,6 +179,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return a link to more information, or null
      */
+    @Nullable
     public String getMoreInfo() {
         return mMoreInfoUrl;
     }
@@ -179,6 +200,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the required scope
      */
+    @NonNull
     public EnumSet<Scope> getScope() {
         return mScope;
     }
@@ -193,7 +215,7 @@ public final class Issue implements Comparable<Issue> {
      * @param other the {@link Issue} to compare this issue to
      */
     @Override
-    public int compareTo(Issue other) {
+    public int compareTo(@NonNull Issue other) {
         return getId().compareTo(other.getId());
     }
 
@@ -203,7 +225,8 @@ public final class Issue implements Comparable<Issue> {
      * @param moreInfoUrl url string
      * @return this, for constructor chaining
      */
-    public Issue setMoreInfo(String moreInfoUrl) {
+    @NonNull
+    public Issue setMoreInfo(@NonNull String moreInfoUrl) {
         mMoreInfoUrl = moreInfoUrl;
         return this;
     }
@@ -214,6 +237,7 @@ public final class Issue implements Comparable<Issue> {
      * @param enabledByDefault whether the issue should be enabled by default
      * @return this, for constructor chaining
      */
+    @NonNull
     public Issue setEnabledByDefault(boolean enabledByDefault) {
         mEnabledByDefault = enabledByDefault;
         return this;
@@ -224,6 +248,7 @@ public final class Issue implements Comparable<Issue> {
      *
      * @return the class of the detector to use to find this issue
      */
+    @NonNull
     public Class<? extends Detector> getDetectorClass() {
         return mClass;
     }

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IJavaParser;
 import com.android.tools.lint.client.api.LintClient;
 
@@ -50,8 +52,12 @@ public class JavaContext extends Context {
      * @param file the file to be analyzed
      * @param scope the scope used for analysis
      */
-    public JavaContext(LintClient client, Project project, Project main, File file,
-            EnumSet<Scope> scope) {
+    public JavaContext(
+            @NonNull LintClient client,
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File file,
+            @NonNull EnumSet<Scope> scope) {
         super(client, project, main, file, scope);
     }
 
@@ -61,7 +67,8 @@ public class JavaContext extends Context {
      * @param node the AST node to get a location for
      * @return a location for the given node
      */
-    public Location getLocation(Node node) {
+    @NonNull
+    public Location getLocation(@NonNull Node node) {
         if (parser != null) {
             return parser.getLocation(this, node);
         }

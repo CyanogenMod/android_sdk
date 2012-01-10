@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -42,7 +44,8 @@ public interface IDomParser {
      *            editor buffer in the surrounding tool, etc)
      * @return the parsed DOM document, or null if parsing fails
      */
-    Document parseXml(XmlContext context);
+    @Nullable
+    Document parseXml(@NonNull XmlContext context);
 
     /**
      * Returns a {@link Location} for the given DOM node
@@ -51,7 +54,8 @@ public interface IDomParser {
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    Location getLocation(XmlContext context, Node node);
+    @NonNull
+    Location getLocation(@NonNull XmlContext context, @NonNull Node node);
 
     /**
      * Creates a light-weight handle to a location for the given node. It can be
@@ -63,12 +67,13 @@ public interface IDomParser {
      *            for
      * @return a location handle
      */
-    Location.Handle createLocationHandle(XmlContext context, Node node);
+    @NonNull
+    Location.Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node);
 
     /**
      * Dispose any data structures held for the given context.
      * @param context information about the file previously parsed
      * @param document the document that was parsed and is now being disposed
      */
-    void dispose(XmlContext context, Document document);
+    void dispose(@NonNull XmlContext context, @NonNull Document document);
 }

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.SdkInfo;
@@ -48,6 +50,7 @@ public class Context {
     private final LintClient mClient;
 
     /** The project containing the file being checked */
+    @NonNull
     private final Project mProject;
 
     /**
@@ -80,6 +83,7 @@ public class Context {
      * Slow-running detectors should check this flag via
      * {@link AtomicBoolean#get()} and abort if canceled
      */
+    @NonNull
     public final AtomicBoolean canceled = new AtomicBoolean();
 
     /** Map of properties to share results between detectors */
@@ -97,8 +101,12 @@ public class Context {
      * @param file the file being checked
      * @param scope the scope for the lint job
      */
-    public Context(LintClient client, Project project, Project main, File file,
-            EnumSet<Scope> scope) {
+    public Context(
+            @NonNull LintClient client,
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File file,
+            @NonNull EnumSet<Scope> scope) {
         this.file = file;
 
         mClient = client;
@@ -113,6 +121,7 @@ public class Context {
      *
      * @return the scope, never null
      */
+    @NonNull
     public EnumSet<Scope> getScope() {
         return mScope;
     }
@@ -122,6 +131,7 @@ public class Context {
      *
      * @return the configuration, never null
      */
+    @NonNull
     public Configuration getConfiguration() {
         return mConfiguration;
     }
@@ -131,6 +141,7 @@ public class Context {
      *
      * @return the project, never null
      */
+    @NonNull
     public Project getProject() {
         return mProject;
     }
@@ -142,6 +153,7 @@ public class Context {
      *
      * @return the main project, never null
      */
+    @NonNull
     public Project getMainProject() {
         return mMainProject != null ? mMainProject : mProject;
     }
@@ -151,6 +163,7 @@ public class Context {
      *
      * @return the client, never null
      */
+    @NonNull
     public LintClient getClient() {
         return mClient;
     }
@@ -163,6 +176,7 @@ public class Context {
      *
      * @return the contents of the given file, or null if an error occurs.
      */
+    @Nullable
     public String getContents() {
         if (mContents == null) {
             mContents = mClient.readFile(file);
@@ -177,6 +191,7 @@ public class Context {
      * @param name the name of the property
      * @return the corresponding value, or null
      */
+    @Nullable
     public Object getProperty(String name) {
         if (mProperties == null) {
             return null;
@@ -191,12 +206,17 @@ public class Context {
      * @param name the name of the property
      * @param value the corresponding value
      */
-    public void setProperty(String name, Object value) {
-        if (mProperties == null) {
-            mProperties = new HashMap<String, Object>();
+    public void setProperty(@NonNull String name, @Nullable Object value) {
+        if (value == null) {
+            if (mProperties != null) {
+                mProperties.remove(name);
+            }
+        } else {
+            if (mProperties == null) {
+                mProperties = new HashMap<String, Object>();
+            }
+            mProperties.put(name, value);
         }
-
-        mProperties.put(name, value);
     }
 
     /**
@@ -204,6 +224,7 @@ public class Context {
      *
      * @return the SDK info for the current project, never null
      */
+    @NonNull
     public SdkInfo getSdkInfo() {
         if (mSdkInfo == null) {
             mSdkInfo = mClient.getSdkInfo(mProject);
@@ -221,7 +242,7 @@ public class Context {
      * @param issue the issue to check
      * @return false if the issue has been disabled
      */
-    public boolean isEnabled(Issue issue) {
+    public boolean isEnabled(@NonNull Issue issue) {
         return mConfiguration.isEnabled(issue);
     }
 
@@ -233,7 +254,11 @@ public class Context {
      * @param message the message for this warning
      * @param data any associated data, or null
      */
-    public void report(Issue issue, Location location, String message, Object data) {
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
         mClient.report(this, issue, location, message, data);
     }
 
@@ -241,10 +266,13 @@ public class Context {
      * Send an exception to the log. Convenience wrapper around {@link LintClient#log}.
      *
      * @param exception the exception, possibly null
-     * @param format the error message using {@link String#format} syntax
+     * @param format the error message using {@link String#format} syntax, possibly null
      * @param args any arguments for the format string
      */
-    public void log(Throwable exception, String format, Object... args) {
+    public void log(
+            @Nullable Throwable exception,
+            @Nullable String format,
+            @Nullable Object... args) {
         mClient.log(exception, format, args);
     }
 

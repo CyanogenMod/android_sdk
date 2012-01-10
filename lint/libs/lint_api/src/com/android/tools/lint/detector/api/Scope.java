@@ -17,6 +17,7 @@
 package com.android.tools.lint.detector.api;
 
 import com.google.common.annotations.Beta;
+import com.android.annotations.NonNull;
 
 import java.util.EnumSet;
 
@@ -87,7 +88,7 @@ public enum Scope {
      * @param scopes the scope set to check
      * @return true if the scope set references a single file
      */
-    public static boolean checkSingleFile(EnumSet<Scope> scopes) {
+    public static boolean checkSingleFile(@NonNull EnumSet<Scope> scopes) {
         return scopes.size() == 1 &&
                 (scopes.contains(JAVA_FILE)
                         || scopes.contains(CLASS_FILE)

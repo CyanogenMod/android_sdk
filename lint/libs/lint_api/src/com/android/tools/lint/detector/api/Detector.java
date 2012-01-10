@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -74,7 +76,8 @@ public abstract class Detector {
          * @param context the {@link Context} for the file being analyzed
          * @return a visitor, or null.
          */
-        AstVisitor createJavaVisitor(JavaContext context);
+        @Nullable
+        AstVisitor createJavaVisitor(@NonNull JavaContext context);
 
         /**
          * Return the types of AST nodes that the visitor returned from
@@ -94,6 +97,7 @@ public abstract class Detector {
          *
          * @return the list of applicable node types (AST node classes), or null
          */
+        @Nullable
         List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes();
 
         /**
@@ -115,6 +119,7 @@ public abstract class Detector {
          *
          * @return a set of applicable method names, or null.
          */
+        @Nullable
         List<String> getApplicableMethodNames();
 
         /**
@@ -131,7 +136,10 @@ public abstract class Detector {
          *            {@link #createJavaVisitor(JavaContext)}, or null
          * @param node the {@link MethodInvocation} node for the invoked method
          */
-        void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node);
+        void visitMethod(
+                @NonNull JavaContext context,
+                @Nullable AstVisitor visitor,
+                @NonNull MethodInvocation node);
 
         /**
          * Returns whether this detector cares about Android resource references
@@ -160,8 +168,12 @@ public abstract class Detector {
          * @param name the resource name, such as "main" from
          *            {@code R.layout.main}
          */
-        void visitResourceReference(JavaContext context, AstVisitor visitor,
-                VariableReference node, String type, String name);
+        void visitResourceReference(
+                @NonNull JavaContext context,
+                @Nullable AstVisitor visitor,
+                @NonNull VariableReference node,
+                @NonNull String type,
+                @NonNull String name);
     }
 
     /** Specialized interface for detectors that scan Java class files */
@@ -173,7 +185,7 @@ public abstract class Detector {
          *            the file
          * @param classNode the root class node
          */
-        void checkClass(ClassContext context, ClassNode classNode);
+        void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode);
     }
 
     /** Specialized interface for detectors that scan XML files */
@@ -184,28 +196,28 @@ public abstract class Detector {
          * @param context information about the document being analyzed
          * @param document the document to examine
          */
-        void visitDocument(XmlContext context, Document document);
+        void visitDocument(@NonNull XmlContext context, @NonNull Document document);
 
         /**
          * Visit the given element.
          * @param context information about the document being analyzed
          * @param element the element to examine
          */
-        void visitElement(XmlContext context, Element element);
+        void visitElement(@NonNull XmlContext context, @NonNull Element element);
 
         /**
          * Visit the given element after its children have been analyzed.
          * @param context information about the document being analyzed
          * @param element the element to examine
          */
-        void visitElementAfter(XmlContext context, Element element);
+        void visitElementAfter(@NonNull XmlContext context, @NonNull Element element);
 
         /**
          * Visit the given attribute.
          * @param context information about the document being analyzed
          * @param attribute the attribute node to examine
          */
-        void visitAttribute(XmlContext context, Attr attribute);
+        void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute);
 
         /**
          * Returns the list of elements that this detector wants to analyze. If non
@@ -219,6 +231,7 @@ public abstract class Detector {
          *         {@link XmlScanner#ALL} marker to indicate that every single
          *         element should be analyzed.
          */
+        @Nullable
         Collection<String> getApplicableElements();
 
         /**
@@ -233,6 +246,7 @@ public abstract class Detector {
          *         {@link XmlScanner#ALL} marker to indicate that every single
          *         attribute should be analyzed.
          */
+        @Nullable
         Collection<String> getApplicableAttributes();
 
         /**
@@ -240,7 +254,9 @@ public abstract class Detector {
          * {@link #getApplicableAttributes()} to indicate that the check should be
          * invoked on all elements or all attributes
          */
-        public static final List<String> ALL = new ArrayList<String>(0);
+        @NonNull
+        public static final List<String> ALL = new ArrayList<String>(0); // NOT Collections.EMPTY!
+        // We want to distinguish this from just an *empty* list returned by the caller!
     }
 
     /**
@@ -251,7 +267,7 @@ public abstract class Detector {
      *
      * @param context the context describing the work to be done
      */
-    public void run(Context context) {
+    public void run(@NonNull Context context) {
     }
 
     /**
@@ -261,7 +277,7 @@ public abstract class Detector {
      * @param file the file in the context to check
      * @return true if this detector applies to the given context and file
      */
-    public boolean appliesTo(Context context, File file) {
+    public boolean appliesTo(@NonNull Context context, @NonNull File file) {
         return false;
     }
 
@@ -271,7 +287,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the project, lint
      *            client, etc
      */
-    public void beforeCheckProject(Context context) {
+    public void beforeCheckProject(@NonNull Context context) {
     }
 
     /**
@@ -281,7 +297,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the project, lint
      *            client, etc
      */
-    public void afterCheckProject(Context context) {
+    public void afterCheckProject(@NonNull Context context) {
     }
 
     /**
@@ -290,7 +306,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the project, lint
      *            client, etc
      */
-    public void beforeCheckLibraryProject(Context context) {
+    public void beforeCheckLibraryProject(@NonNull Context context) {
     }
 
     /**
@@ -300,7 +316,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the project, lint
      *            client, etc
      */
-    public void afterCheckLibraryProject(Context context) {
+    public void afterCheckLibraryProject(@NonNull Context context) {
     }
 
     /**
@@ -310,7 +326,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the file to be
      *            checked, the project, etc.
      */
-    public void beforeCheckFile(Context context) {
+    public void beforeCheckFile(@NonNull Context context) {
     }
 
     /**
@@ -320,7 +336,7 @@ public abstract class Detector {
      * @param context the context for the check referencing the file to be
      *            checked, the project, etc.
      */
-    public void afterCheckFile(Context context) {
+    public void afterCheckFile(@NonNull Context context) {
     }
 
     /**
@@ -328,12 +344,13 @@ public abstract class Detector {
      *
      * @return the expected speed of this detector
      */
+    @NonNull
     public abstract Speed getSpeed();
 
     // ---- Dummy implementations to make implementing XmlScanner easier: ----
 
     @SuppressWarnings("javadoc")
-    public void visitDocument(XmlContext context, Document document) {
+    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         // This method must be overridden if your detector does
         // not return something from getApplicableElements or
         // getApplicableATtributes
@@ -341,28 +358,30 @@ public abstract class Detector {
     }
 
     @SuppressWarnings("javadoc")
-    public void visitElement(XmlContext context, Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         // This method must be overridden if your detector returns
         // tag names from getApplicableElements
         assert false;
     }
 
     @SuppressWarnings("javadoc")
-    public void visitElementAfter(XmlContext context, Element element) {
+    public void visitElementAfter(@NonNull XmlContext context, @NonNull Element element) {
     }
 
     @SuppressWarnings("javadoc")
-    public void visitAttribute(XmlContext context, Attr attribute) {
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         // This method must be overridden if your detector returns
         // attribute names from getApplicableAttributes
         assert false;
     }
 
     @SuppressWarnings("javadoc")
+    @Nullable
     public Collection<String> getApplicableElements() {
         return null;
     }
 
+    @Nullable
     @SuppressWarnings("javadoc")
     public Collection<String> getApplicableAttributes() {
         return null;
@@ -370,23 +389,24 @@ public abstract class Detector {
 
     // ---- Dummy implementations to make implementing JavaScanner easier: ----
 
-    @SuppressWarnings("javadoc")
+    @Nullable @SuppressWarnings("javadoc")
     public List<String> getApplicableMethodNames() {
         return null;
     }
 
-    @SuppressWarnings("javadoc")
-    public AstVisitor createJavaVisitor(JavaContext context) {
+    @Nullable @SuppressWarnings("javadoc")
+    public AstVisitor createJavaVisitor(@NonNull JavaContext context) {
         return null;
     }
 
-    @SuppressWarnings("javadoc")
+    @Nullable @SuppressWarnings("javadoc")
     public List<Class<? extends lombok.ast.Node>> getApplicableNodeTypes() {
         return null;
     }
 
     @SuppressWarnings("javadoc")
-    public void visitMethod(JavaContext context, AstVisitor visitor, MethodInvocation node) {
+    public void visitMethod(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
     }
 
     @SuppressWarnings("javadoc")
@@ -395,14 +415,13 @@ public abstract class Detector {
     }
 
     @SuppressWarnings("javadoc")
-    public void visitResourceReference(JavaContext context, AstVisitor visitor,
-            VariableReference node, String type, String name) {
+    public void visitResourceReference(@NonNull JavaContext context, @Nullable AstVisitor visitor,
+            @NonNull VariableReference node, @NonNull String type, @NonNull String name) {
     }
 
     // ---- Dummy implementations to make implementing a ClassScanner easier: ----
 
     @SuppressWarnings("javadoc")
-    public void checkClass(ClassContext context, ClassNode classNode) {
-
+    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
     }
 }

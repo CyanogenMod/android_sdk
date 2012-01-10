@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.JavaScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
@@ -136,7 +137,7 @@ public class JavaVisitor {
             new HashMap<Class<? extends Node>, List<VisitingDetector>>();
     private final IJavaParser mParser;
 
-    JavaVisitor(IJavaParser parser, List<Detector> detectors) {
+    JavaVisitor(@NonNull IJavaParser parser, @NonNull List<Detector> detectors) {
         mParser = parser;
         mAllDetectors = new ArrayList<VisitingDetector>(detectors.size());
         mFullTreeDetectors = new ArrayList<VisitingDetector>(detectors.size());
@@ -182,7 +183,7 @@ public class JavaVisitor {
         }
     }
 
-    void visitFile(JavaContext context, File file) {
+    void visitFile(@NonNull JavaContext context, @NonNull File file) {
         context.parser = mParser;
 
         Node compilationUnit = null;
@@ -233,20 +234,22 @@ public class JavaVisitor {
         public final Detector mDetector;
         public final JavaScanner mJavaScanner;
 
-        public VisitingDetector(Detector detector, JavaScanner javaScanner) {
+        public VisitingDetector(@NonNull Detector detector, @NonNull JavaScanner javaScanner) {
             mDetector = detector;
             mJavaScanner = javaScanner;
         }
 
+        @NonNull
         public Detector getDetector() {
             return mDetector;
         }
 
+        @NonNull
         public JavaScanner getJavaScanner() {
             return mJavaScanner;
         }
 
-        public void setContext(JavaContext context) {
+        public void setContext(@NonNull JavaContext context) {
             mContext = context;
 
             // The visitors are one-per-context, so clear them out here and construct
@@ -254,6 +257,7 @@ public class JavaVisitor {
             mVisitor = null;
         }
 
+        @NonNull
         AstVisitor getVisitor() {
             if (mVisitor == null) {
                 mVisitor = mDetector.createJavaVisitor(mContext);
@@ -1106,7 +1110,7 @@ public class JavaVisitor {
         }
 
         @Override
-        public boolean visitVariableReference(VariableReference node) {
+        public boolean visitVariableReference(@NonNull VariableReference node) {
             if (mVisitResources) {
                 if (node.astIdentifier().getDescription().equals("R") && //$NON-NLS-1$
                         node.getParent() instanceof Select &&
@@ -1128,7 +1132,7 @@ public class JavaVisitor {
         }
 
         @Override
-        public boolean visitMethodInvocation(MethodInvocation node) {
+        public boolean visitMethodInvocation(@NonNull MethodInvocation node) {
             if (mVisitMethods) {
                 String methodName = node.astName().getDescription();
                 List<VisitingDetector> list = mMethodDetectors.get(methodName);

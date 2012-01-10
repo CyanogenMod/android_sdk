@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -62,10 +64,15 @@ public class DefaultConfiguration extends Configuration {
     private static final String CONFIG_FILE_NAME = "lint.xml"; //$NON-NLS-1$
 
     // Lint XML File
+    @NonNull
     private static final String TAG_ISSUE = "issue"; //$NON-NLS-1$
+    @NonNull
     private static final String ATTR_ID = "id"; //$NON-NLS-1$
+    @NonNull
     private static final String ATTR_SEVERITY = "severity"; //$NON-NLS-1$
+    @NonNull
     private static final String ATTR_PATH = "path"; //$NON-NLS-1$
+    @NonNull
     private static final String TAG_IGNORE = "ignore"; //$NON-NLS-1$
 
     private final Configuration mParent;
@@ -81,15 +88,21 @@ public class DefaultConfiguration extends Configuration {
      */
     private Map<String, Severity> mSeverity;
 
-    protected DefaultConfiguration(LintClient client, Project project, Configuration parent,
-            File configFile) {
+    protected DefaultConfiguration(
+            @NonNull LintClient client,
+            @Nullable Project project,
+            @Nullable Configuration parent,
+            @NonNull File configFile) {
         mClient = client;
         mProject = project;
         mParent = parent;
         mConfigFile = configFile;
     }
 
-    protected DefaultConfiguration(LintClient client, Project project, Configuration parent) {
+    protected DefaultConfiguration(
+            @NonNull LintClient client,
+            @Nullable Project project,
+            @Nullable Configuration parent) {
         this(client, project, parent, new File(project.getDir(), CONFIG_FILE_NAME));
     }
 
@@ -101,8 +114,11 @@ public class DefaultConfiguration extends Configuration {
      * @param parent the parent/fallback configuration or null
      * @return a new configuration
      */
-    public static DefaultConfiguration create(LintClient client, Project project,
-            Configuration parent) {
+    @NonNull
+    public static DefaultConfiguration create(
+            @NonNull LintClient client,
+            @NonNull Project project,
+            @Nullable Configuration parent) {
         return new DefaultConfiguration(client, project, parent);
     }
 
@@ -115,13 +131,18 @@ public class DefaultConfiguration extends Configuration {
      * @param lintFile the lint file containing the configuration
      * @return a new configuration
      */
-    public static DefaultConfiguration create(LintClient client, File lintFile) {
+    @NonNull
+    public static DefaultConfiguration create(@NonNull LintClient client, @NonNull File lintFile) {
         return new DefaultConfiguration(client, null /*project*/, null /*parent*/, lintFile);
     }
 
     @Override
-    public boolean isIgnored(Context context, Issue issue, Location location, String message,
-            Object data) {
+    public boolean isIgnored(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
         ensureInitialized();
 
         String id = issue.getId();
@@ -143,7 +164,8 @@ public class DefaultConfiguration extends Configuration {
         return false;
     }
 
-    protected Severity getDefaultSeverity(Issue issue) {
+    @NonNull
+    protected Severity getDefaultSeverity(@NonNull Issue issue) {
         if (!issue.isEnabledByDefault()) {
             return Severity.IGNORE;
         }
@@ -152,7 +174,8 @@ public class DefaultConfiguration extends Configuration {
     }
 
     @Override
-    public Severity getSeverity(Issue issue) {
+    @NonNull
+    public Severity getSeverity(@NonNull Issue issue) {
         ensureInitialized();
 
         Severity severity = mSeverity.get(issue.getId());
@@ -328,7 +351,8 @@ public class DefaultConfiguration extends Configuration {
         }
     }
 
-    private static void writeAttribute(Writer writer, String name, String value)
+    private static void writeAttribute(
+            @NonNull Writer writer, @NonNull String name, @NonNull String value)
             throws IOException {
         writer.write(' ');
         writer.write(name);
@@ -339,8 +363,12 @@ public class DefaultConfiguration extends Configuration {
     }
 
     @Override
-    public void ignore(Context context, Issue issue, Location location, String message,
-            Object data) {
+    public void ignore(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data) {
         // This configuration only supports suppressing warnings on a per-file basis
         if (location != null) {
             ignore(issue, location.getFile());
@@ -353,7 +381,7 @@ public class DefaultConfiguration extends Configuration {
      * @param issue the issue to be ignored in the given file
      * @param file the file to ignore the issue in
      */
-    public void ignore(Issue issue, File file) {
+    public void ignore(@NonNull Issue issue, @NonNull File file) {
         ensureInitialized();
 
         String path = mProject != null ? mProject.getRelativePath(file) : file.getPath();
@@ -374,7 +402,7 @@ public class DefaultConfiguration extends Configuration {
     }
 
     @Override
-    public void setSeverity(Issue issue, Severity severity) {
+    public void setSeverity(@NonNull Issue issue, @Nullable Severity severity) {
         ensureInitialized();
 
         String id = issue.getId();

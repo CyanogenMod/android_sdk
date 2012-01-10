@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -58,7 +60,7 @@ public abstract class LintClient {
      * @param project the project to obtain a configuration for
      * @return a configuration, never null.
      */
-    public Configuration getConfiguration(Project project) {
+    public Configuration getConfiguration(@NonNull Project project) {
         return DefaultConfiguration.create(this, project, null);
     }
 
@@ -80,30 +82,42 @@ public abstract class LintClient {
      *            error message text. See each detector for details on which
      *            data if any is supplied for a given issue.
      */
-    public abstract void report(Context context, Issue issue, Location location, String message,
-            Object data);
+    public abstract void report(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @Nullable Location location,
+            @NonNull String message,
+            @Nullable Object data);
 
     /**
      * Send an exception to the log
      *
      * @param exception the exception, possibly null
-     * @param format the error message using {@link String#format} syntax
+     * @param format the error message using {@link String#format} syntax, possibly null
+     *    (though in that case the exception should not be null)
      * @param args any arguments for the format string
      */
-    public abstract void log(Throwable exception, String format, Object... args);
+    public abstract void log(
+            @Nullable Throwable exception,
+            @Nullable String format,
+            @Nullable Object... args);
 
     /**
      * Returns a {@link IDomParser} to use to parse XML
      *
-     * @return a new {@link IDomParser}
+     * @return a new {@link IDomParser}, or null if this client does not support
+     *         XML analysis
      */
+    @Nullable
     public abstract IDomParser getDomParser();
 
     /**
      * Returns a {@link IJavaParser} to use to parse Java
      *
-     * @return a new {@link IJavaParser}
+     * @return a new {@link IJavaParser}, or null if this client does not
+     *         support Java analysis
      */
+    @Nullable
     public abstract IJavaParser getJavaParser();
 
     /**
@@ -114,7 +128,9 @@ public abstract class LintClient {
      * @param detectorClass the class of the detector to be replaced
      * @return the new detector class, or just the original detector (not null)
      */
-    public Class<? extends Detector> replaceDetector(Class<? extends Detector> detectorClass) {
+    @NonNull
+    public Class<? extends Detector> replaceDetector(
+            @NonNull Class<? extends Detector> detectorClass) {
         return detectorClass;
     }
 
@@ -125,7 +141,8 @@ public abstract class LintClient {
      * @return the string to return, never null (will be empty if there is an
      *         I/O error)
      */
-    public abstract String readFile(File file);
+    @NonNull
+    public abstract String readFile(@NonNull File file);
 
     /**
      * Returns the list of source folders for Java source files
@@ -133,7 +150,8 @@ public abstract class LintClient {
      * @param project the project to look up Java source file locations for
      * @return a list of source folders to search for .java files
      */
-    public List<File> getJavaSourceFolders(Project project) {
+    @NonNull
+    public List<File> getJavaSourceFolders(@NonNull Project project) {
         return getEclipseClasspath(project, "src", "src", "gen"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -142,7 +160,8 @@ public abstract class LintClient {
      * @param project the project to look up class file locations for
      * @return a list of output folders to search for .class files
      */
-    public List<File> getJavaClassFolders(Project project) {
+    @NonNull
+    public List<File> getJavaClassFolders(@NonNull Project project) {
         return getEclipseClasspath(project, "output", "bin"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -152,7 +171,8 @@ public abstract class LintClient {
      * @param project the project to look up an {@link SdkInfo} for
      * @return an {@link SdkInfo} for the project
      */
-    public SdkInfo getSdkInfo(Project project) {
+    @NonNull
+    public SdkInfo getSdkInfo(@NonNull Project project) {
         // By default no per-platform SDK info
         return new DefaultSdkInfo();
     }
@@ -161,8 +181,9 @@ public abstract class LintClient {
      * Considers the given directory as an Eclipse project and returns either
      * its source or its output folders depending on the {@code attribute} parameter.
      */
-    private List<File> getEclipseClasspath(Project project, String attribute,
-            String... fallbackPaths) {
+    @NonNull
+    private List<File> getEclipseClasspath(@NonNull Project project, @NonNull String attribute,
+            @NonNull String... fallbackPaths) {
         List<File> folders = new ArrayList<File>();
         File projectDir = project.getDir();
         File classpathFile = new File(projectDir, ".classpath"); //$NON-NLS-1$
@@ -220,7 +241,8 @@ public abstract class LintClient {
      * @param referenceDir See {@link Project#getReferenceDir()}.
      * @return a project, never null
      */
-    public Project getProject(File dir, File referenceDir) {
+    @NonNull
+    public Project getProject(@NonNull File dir, @NonNull File referenceDir) {
         if (mDirToProject == null) {
             mDirToProject = new HashMap<File, Project>();
         }

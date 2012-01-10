@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -39,7 +41,11 @@ public final class Category implements Comparable<Category> {
      * @param explanation an optional explanation of the category
      * @param priority a sorting priority, with higher being more important
      */
-    private Category(Category parent, String name, String explanation, int priority) {
+    private Category(
+            @Nullable Category parent,
+            @NonNull String name,
+            @Nullable String explanation,
+            int priority) {
         mParent = parent;
         mName = name;
         mExplanation = explanation;
@@ -53,7 +59,8 @@ public final class Category implements Comparable<Category> {
      * @param priority a sorting priority, with higher being more important
      * @return a new category
      */
-    public static Category create(String name, int priority) {
+    @NonNull
+    public static Category create(@NonNull String name, int priority) {
         return new Category(null, name, null, priority);
     }
 
@@ -66,7 +73,12 @@ public final class Category implements Comparable<Category> {
      * @param priority a sorting priority, with higher being more important
      * @return a new category
      */
-    public static Category create(Category parent, String name, String explanation, int priority) {
+    @NonNull
+    public static Category create(
+            @Nullable Category parent,
+            @NonNull String name,
+            @Nullable String explanation,
+            int priority) {
         return new Category(parent, name, null, priority);
     }
 
@@ -113,7 +125,7 @@ public final class Category implements Comparable<Category> {
     }
 
     @Override
-    public int compareTo(Category other) {
+    public int compareTo(@NonNull Category other) {
         if (other.mPriority == mPriority) {
             if (mParent == other) {
                 return 1;
@@ -126,22 +138,30 @@ public final class Category implements Comparable<Category> {
 
     /** Issues related to correctness */
     public static final Category CORRECTNESS = Category.create("Correctness", 10);
+
     /** Issues related to security */
     public static final Category SECURITY = Category.create("Security", 9);
+
     /** Issues related to performance */
     public static final Category PERFORMANCE = Category.create("Performance", 8);
+
     /** Issues related to usability */
     public static final Category USABILITY = Category.create("Usability", 7);
+
     /** Issues related to accessibility */
     public static final Category A11Y = Category.create("Accessibility", 6);
+
     /** Issues related to internationalization */
     public static final Category I18N = Category.create("Internationalization", 5);
 
     // Sub categories
+
     /** Issues related to icons */
     public static final Category ICONS = Category.create(USABILITY, "Icons", null, 7);
+
     /** Issues related to typography */
     public static final Category TYPOGRAPHY = Category.create(USABILITY, "Typography", null, 8);
+
     /** Issues related to messages/strings */
     public static final Category MESSAGES = Category.create(CORRECTNESS, "Messages", null, 10);
 }
