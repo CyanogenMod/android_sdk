@@ -31,6 +31,11 @@ class PkgCategorySource extends PkgCategory {
         new SdkRepoSource("http://no.source", "Local Packages");
     private final SdkSource mSource;
 
+    /**
+     * Creates a new {@link PkgCategorySource}.
+     * This uses {@link SdkSource#toString()} to get the source's description.
+     * Note that if the name of the source isn't known, the description will use its URL.
+     */
     public PkgCategorySource(SdkSource source, UpdaterData updaterData) {
         super(
             source, // the source is the key and it can be null
@@ -52,4 +57,12 @@ class PkgCategorySource extends PkgCategory {
     public SdkSource getSource() {
         return mSource;
     }
+
+    /** Sets the label to match the source's UI name if the label wasn't already set. */
+    public void adjustLabel(SdkSource source) {
+        if (getLabel() == null || getLabel().startsWith("http")) {  //$NON-NLS-1$
+            setLabel(source == UNKNOWN_SOURCE ? "Local Packages" : source.toString());
+        }
+    }
+
 }
