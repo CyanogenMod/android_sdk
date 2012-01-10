@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 import java.io.File;
@@ -46,10 +48,10 @@ public class Location {
      * @param file the associated file (but see the documentation for
      *            {@link #getFile()} for more information on what the file
      *            represents)
-     * @param start the starting position, never null
+     * @param start the starting position, or null
      * @param end the ending position, or null
      */
-    protected Location(File file, Position start, Position end) {
+    protected Location(@NonNull File file, @Nullable Position start, @Nullable Position end) {
         super();
         this.mFile = file;
         this.mStart = start;
@@ -66,6 +68,7 @@ public class Location {
      *
      * @return the file handle for the location
      */
+    @NonNull
     public File getFile() {
         return mFile;
     }
@@ -73,8 +76,9 @@ public class Location {
     /**
      * The start position of the range
      *
-     * @return the start position of the range, never null
+     * @return the start position of the range, or null
      */
+    @Nullable
     public Position getStart() {
         return mStart;
     }
@@ -84,6 +88,7 @@ public class Location {
      *
      * @return the start position of the range, may be null for an empty range
      */
+    @Nullable
     public Position getEnd() {
         return mEnd;
     }
@@ -94,6 +99,7 @@ public class Location {
      *
      * @return a secondary location or null
      */
+    @Nullable
     public Location getSecondary() {
         return mSecondary;
     }
@@ -103,7 +109,7 @@ public class Location {
      *
      * @param secondary a secondary location associated with this location
      */
-    public void setSecondary(Location secondary) {
+    public void setSecondary(@NonNull Location secondary) {
         this.mSecondary = secondary;
     }
 
@@ -117,7 +123,7 @@ public class Location {
      *
      * @param message the message to apply to this location
      */
-    public void setMessage(String message) {
+    public void setMessage(@NonNull String message) {
         mMessage = message;
     }
 
@@ -132,6 +138,7 @@ public class Location {
      *
      * @return the custom message for this location, or null
      */
+    @Nullable
     public String getMessage() {
         return mMessage;
     }
@@ -142,7 +149,8 @@ public class Location {
      * @param file the file to create a location for
      * @return a new location
      */
-    public static Location create(File file) {
+    @NonNull
+    public static Location create(@NonNull File file) {
         return new Location(file, null /*start*/, null /*end*/);
     }
 
@@ -155,7 +163,11 @@ public class Location {
      * @param end the ending position
      * @return a new location
      */
-    public static Location create(File file, Position start, Position end) {
+    @NonNull
+    public static Location create(
+            @NonNull File file,
+            @NonNull Position start,
+            @NonNull Position end) {
         return new Location(file, start, end);
     }
 
@@ -169,7 +181,12 @@ public class Location {
      * @param endOffset the ending offset
      * @return a new location
      */
-    public static Location create(File file, String contents, int startOffset, int endOffset) {
+    @NonNull
+    public static Location create(
+            @NonNull File file,
+            @Nullable String contents,
+            int startOffset,
+            int endOffset) {
         if (startOffset < 0 || endOffset < startOffset) {
             throw new IllegalArgumentException("Invalid offsets");
         }
@@ -212,7 +229,8 @@ public class Location {
      * @param line the line number (0-based) for the position
      * @return a new location
      */
-    public static Location create(File file, String contents, int line) {
+    @NonNull
+    public static Location create(@NonNull File file, @NonNull String contents, int line) {
         return create(file, contents, line, null, null);
     }
 
@@ -231,8 +249,9 @@ public class Location {
      *            the pattern
      * @return a new location
      */
-    public static Location create(File file, String contents, int line,
-            String patternStart, String patternEnd) {
+    @NonNull
+    public static Location create(@NonNull File file, @NonNull String contents, int line,
+            @Nullable String patternStart, @Nullable String patternEnd) {
         int currentLine = 0;
         int offset = 0;
         while (currentLine < line) {
@@ -284,6 +303,7 @@ public class Location {
          *
          * @return create a location for this handle
          */
+        @NonNull
         Location resolve();
     }
 
@@ -301,7 +321,7 @@ public class Location {
          * @param startOffset the start offset within the file
          * @param endOffset the end offset within the file
          */
-        public DefaultLocationHandle(Context context, int startOffset, int endOffset) {
+        public DefaultLocationHandle(@NonNull Context context, int startOffset, int endOffset) {
             mFile = context.file;
             mContents = context.getContents();
             mStartOffset = startOffset;
@@ -309,6 +329,7 @@ public class Location {
         }
 
         @Override
+        @NonNull
         public Location resolve() {
             return Location.create(mFile, mContents, mStartOffset, mEndOffset);
         }

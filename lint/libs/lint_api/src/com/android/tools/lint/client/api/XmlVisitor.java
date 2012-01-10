@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -73,7 +74,7 @@ class XmlVisitor {
     //<T extends List<Detector> & Detector.XmlScanner> XmlVisitor(IDomParser parser,
     //    T xmlDetectors) {
     // but it makes client code tricky and ugly.
-    XmlVisitor(IDomParser parser, List<? extends Detector> xmlDetectors) {
+    XmlVisitor(@NonNull IDomParser parser, @NonNull List<? extends Detector> xmlDetectors) {
         mParser = parser;
         mAllDetectors = xmlDetectors;
 
@@ -117,7 +118,7 @@ class XmlVisitor {
         }
     }
 
-    void visitFile(XmlContext context, File file) {
+    void visitFile(@NonNull XmlContext context,@NonNull  File file) {
         assert LintUtils.isXmlFile(file);
         context.parser = mParser;
 
@@ -160,7 +161,7 @@ class XmlVisitor {
         }
     }
 
-    private void visitElement(XmlContext context, Element element) {
+    private void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         List<Detector.XmlScanner> elementChecks = mElementToCheck.get(element.getTagName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;

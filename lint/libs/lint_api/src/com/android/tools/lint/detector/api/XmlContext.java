@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IDomParser;
 import com.android.tools.lint.client.api.LintClient;
 import com.google.common.annotations.Beta;
@@ -51,8 +53,12 @@ public class XmlContext extends Context {
      * @param file the file being checked
      * @param scope the scope for the lint job
      */
-    public XmlContext(LintClient client, Project project, Project main, File file,
-            EnumSet<Scope> scope) {
+    public XmlContext(
+            @NonNull LintClient client,
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File file,
+            @NonNull EnumSet<Scope> scope) {
         super(client, project, main, file, scope);
     }
 
@@ -62,7 +68,8 @@ public class XmlContext extends Context {
      * @param node the node to look up the location for
      * @return the location for the node
      */
-    public Location getLocation(Node node) {
+    @NonNull
+    public Location getLocation(@NonNull Node node) {
         if (parser != null) {
             return parser.getLocation(this, node);
         }

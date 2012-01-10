@@ -26,6 +26,8 @@ import static com.android.tools.lint.detector.api.LintConstants.PROJECT_PROPERTI
 import static com.android.tools.lint.detector.api.LintConstants.TAG_USES_SDK;
 import static com.android.tools.lint.detector.api.LintConstants.VALUE_TRUE;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
 import com.google.common.annotations.Beta;
@@ -81,12 +83,19 @@ public class Project {
      * @param referenceDir See {@link #getReferenceDir()}.
      * @return a new {@link Project}
      */
-    public static Project create(LintClient client, File dir, File referenceDir) {
+    @NonNull
+    public static Project create(
+            @NonNull LintClient client,
+            @NonNull  File dir,
+            @NonNull File referenceDir) {
         return new Project(client, dir, referenceDir);
     }
 
     /** Creates a new Project. Use one of the factory methods to create. */
-    private Project(LintClient client, File dir, File referenceDir) {
+    private Project(
+            @NonNull LintClient client,
+            @NonNull File dir,
+            @NonNull File referenceDir) {
         mClient = client;
         mDir = dir;
         mReferenceDir = referenceDir;
@@ -161,7 +170,7 @@ public class Project {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj)
             return true;
         if (obj == null)
@@ -183,7 +192,7 @@ public class Project {
      *
      * @param file the file to be checked
      */
-    public void addFile(File file) {
+    public void addFile(@NonNull File file) {
         if (mFiles == null) {
             mFiles = new ArrayList<File>();
         }
@@ -196,6 +205,7 @@ public class Project {
      *
      * @return the subset of files to be checked, or null for the whole project
      */
+    @Nullable
     public List<File> getSubset() {
         return mFiles;
     }
@@ -205,6 +215,7 @@ public class Project {
      *
      * @return a list of source folders to search for .java files
      */
+    @NonNull
     public List<File> getJavaSourceFolders() {
         if (mJavaSourceFolders == null) {
             mJavaSourceFolders = mClient.getJavaSourceFolders(this);
@@ -217,6 +228,7 @@ public class Project {
      * Returns the list of output folders for class files
      * @return a list of output folders to search for .class files
      */
+    @NonNull
     public List<File> getJavaClassFolders() {
         if (mJavaClassFolders == null) {
             mJavaClassFolders = mClient.getJavaClassFolders(this);
@@ -232,7 +244,8 @@ public class Project {
      * @param file the file under this project to check
      * @return the path relative to the reference directory (often the project directory)
      */
-    public String getDisplayPath(File file) {
+    @NonNull
+    public String getDisplayPath(@NonNull File file) {
        String path = file.getPath();
        String referencePath = mReferenceDir.getPath();
        if (path.startsWith(referencePath)) {
@@ -253,7 +266,8 @@ public class Project {
      * @param file the file under this project to check
      * @return the path relative to the project
      */
-    public String getRelativePath(File file) {
+    @NonNull
+    public String getRelativePath(@NonNull File file) {
        String path = file.getPath();
        String referencePath = mDir.getPath();
        if (path.startsWith(referencePath)) {
@@ -273,6 +287,7 @@ public class Project {
      *
      * @return the dir
      */
+    @NonNull
     public File getDir() {
         return mDir;
     }
@@ -286,6 +301,7 @@ public class Project {
      *
      * @return the reference directory, never null
      */
+    @NonNull
     public File getReferenceDir() {
         return mReferenceDir;
     }
@@ -295,6 +311,7 @@ public class Project {
      *
      * @return the configuration associated with this project
      */
+    @NonNull
     public Configuration getConfiguration() {
         if (mConfiguration == null) {
             mConfiguration = mClient.getConfiguration(this);
@@ -307,6 +324,7 @@ public class Project {
      *
      * @return the application package, or null if unknown
      */
+    @Nullable
     public String getPackage() {
         //assert !mLibrary; // Should call getPackage on the master project, not the library
         // Assertion disabled because you might be running lint on a standalone library project.
@@ -345,7 +363,7 @@ public class Project {
      *
      * @param document the DOM document for the manifest XML document
      */
-    public void readManifest(Document document) {
+    public void readManifest(@NonNull Document document) {
         assert !mLibrary; // Should call readManifest on the master project, not the library
         Element root = document.getDocumentElement();
         if (root == null) {
@@ -403,6 +421,7 @@ public class Project {
      * @return the list of library projects referenced by this project, never
      *         null
      */
+    @NonNull
     public List<Project> getDirectLibraries() {
         return mDirectLibraries;
     }
@@ -412,6 +431,7 @@ public class Project {
      *
      * @return the transitive closure of the library projects for this project
      */
+    @NonNull
     public List<Project> getAllLibraries() {
         if (mAllLibraries == null) {
             if (mDirectLibraries.size() == 0) {
@@ -432,7 +452,7 @@ public class Project {
      *
      * @param collection the collection to add the projects into
      */
-    private void addLibraryProjects(Collection<Project> collection) {
+    private void addLibraryProjects(@NonNull Collection<Project> collection) {
         for (Project library : mDirectLibraries) {
             collection.add(library);
             // Recurse

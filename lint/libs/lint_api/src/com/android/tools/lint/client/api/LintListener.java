@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Context;
 import com.google.common.annotations.Beta;
 
@@ -59,5 +60,5 @@ public interface LintListener {
      * @param type the type of event that occurred
      * @param context the context providing additional information
      */
-    public void update(EventType type, Context context);
+    public void update(@NonNull EventType type, @NonNull Context context);
 }

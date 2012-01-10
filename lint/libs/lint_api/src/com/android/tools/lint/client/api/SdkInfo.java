@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 /**
@@ -35,7 +37,7 @@ public abstract class SdkInfo {
      * @return true if the child view is a sub view of (or the same class as)
      *         the parent view
      */
-    public boolean isSubViewOf(String parentViewFqcn, String childViewFqcn) {
+    public boolean isSubViewOf(@NonNull String parentViewFqcn, @NonNull String childViewFqcn) {
         while (!childViewFqcn.equals("android.view.View")) { //$NON-NLS-1$
             if (parentViewFqcn.equals(childViewFqcn)) {
                 return true;
@@ -58,7 +60,8 @@ public abstract class SdkInfo {
      * @param fqcn the fully qualified class name of the view
      * @return the fully qualified class name of the parent view, or null
      */
-    public abstract String getParentViewClass(String fqcn);
+    @Nullable
+    public abstract String getParentViewClass(@NonNull String fqcn);
 
     /**
      * Returns the class name of the parent view, or null if the view is the
@@ -69,7 +72,8 @@ public abstract class SdkInfo {
      *            package)
      * @return the view name of the parent
      */
-    public abstract String getParentViewName(String name);
+    @Nullable
+    public abstract String getParentViewName(@NonNull String name);
 
     // TODO: Add access to resource resolution here.
 }

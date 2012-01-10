@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
@@ -40,7 +42,8 @@ public interface IJavaParser {
      *            editor buffer in the surrounding tool, etc)
      * @return the compilation unit node for the file
      */
-    Node parseJava(JavaContext context);
+    @Nullable
+    Node parseJava(@NonNull JavaContext context);
 
     /**
      * Returns a {@link Location} for the given node
@@ -49,7 +52,8 @@ public interface IJavaParser {
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    Location getLocation(JavaContext context, Node node);
+    @NonNull
+    Location getLocation(@NonNull JavaContext context, @NonNull Node node);
 
     /**
      * Creates a light-weight handle to a location for the given node. It can be
@@ -61,12 +65,13 @@ public interface IJavaParser {
      *            for
      * @return a location handle
      */
-    Location.Handle createLocationHandle(XmlContext context, Node node);
+    @NonNull
+    Location.Handle createLocationHandle(@NonNull XmlContext context, @NonNull Node node);
 
     /**
      * Dispose any data structures held for the given context.
      * @param context information about the file previously parsed
      * @param compilationUnit the compilation unit being disposed
      */
-    void dispose(JavaContext context, Node compilationUnit);
+    void dispose(@NonNull JavaContext context, @NonNull Node compilationUnit);
 }

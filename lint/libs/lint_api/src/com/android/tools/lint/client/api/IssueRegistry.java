@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.client.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -46,6 +48,7 @@ public abstract class IssueRegistry {
      * Issue reported by lint (not a specific detector) when it cannot even
      * parse an XML file prior to analysis
      */
+    @NonNull
     public static final Issue PARSER_ERROR = Issue.create(
             "ParserError", //$NON-NLS-1$
             "Finds files that contain fatal parser errors",
@@ -63,6 +66,7 @@ public abstract class IssueRegistry {
      * @return the list of issues to be checked (including those that may be
      *         disabled!)
      */
+    @NonNull
     public abstract List<Issue> getIssues();
 
     /**
@@ -79,11 +83,12 @@ public abstract class IssueRegistry {
      *            the applicable detectors for that scope
      * @return a list of new detector instances
      */
+    @NonNull
     final List<? extends Detector> createDetectors(
-            LintClient client,
-            Configuration configuration,
-            EnumSet<Scope> scope,
-            Map<Scope, List<Detector>> scopeToDetectors) {
+            @NonNull LintClient client,
+            @NonNull Configuration configuration,
+            @NonNull EnumSet<Scope> scope,
+            @Nullable Map<Scope, List<Detector>> scopeToDetectors) {
         List<Issue> issues = getIssues();
         Set<Class<? extends Detector>> detectorClasses = new HashSet<Class<? extends Detector>>();
         Map<Class<? extends Detector>, EnumSet<Scope>> detectorToScope =
@@ -152,7 +157,7 @@ public abstract class IssueRegistry {
      * @param id the id to be checked
      * @return true if the given id is valid
      */
-    public final boolean isIssueId(String id) {
+    public final boolean isIssueId(@NonNull String id) {
         return getIssue(id) != null;
     }
 
@@ -162,7 +167,7 @@ public abstract class IssueRegistry {
      * @param name the category name to be checked
      * @return true if the given string is a valid category
      */
-    public final boolean isCategoryName(String name) {
+    public final boolean isCategoryName(@NonNull String name) {
         for (Category c : getCategories()) {
             if (c.getName().equals(name) || c.getFullName().equals(name)) {
                 return true;
@@ -177,6 +182,7 @@ public abstract class IssueRegistry {
      *
      * @return an iterator for all the categories, never null
      */
+    @NonNull
     public List<Category> getCategories() {
         if (sCategories == null) {
             final Set<Category> categories = new HashSet<Category>();
@@ -197,7 +203,8 @@ public abstract class IssueRegistry {
      * @param id the id to be checked
      * @return the corresponding issue, or null
      */
-    public final Issue getIssue(String id) {
+    @Nullable
+    public final Issue getIssue(@NonNull String id) {
         if (sIdToIssue == null) {
             List<Issue> issues = getIssues();
             sIdToIssue = new HashMap<String, Issue>(issues.size());

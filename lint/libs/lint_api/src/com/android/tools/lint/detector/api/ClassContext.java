@@ -19,6 +19,8 @@ package com.android.tools.lint.detector.api;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintClient;
 import com.google.common.annotations.Beta;
 
@@ -63,8 +65,15 @@ public class ClassContext extends Context {
      * @param bytes the bytecode raw data
      * @param classNode the bytecode object model
      */
-    public ClassContext(LintClient client, Project project, Project main, File file,
-            EnumSet<Scope> scope, File binDir, byte[] bytes, ClassNode classNode) {
+    public ClassContext(
+            @NonNull LintClient client,
+            @NonNull Project project,
+            @Nullable Project main,
+            @NonNull File file,
+            @NonNull EnumSet<Scope> scope,
+            @NonNull File binDir,
+            @NonNull byte[] bytes,
+            @NonNull ClassNode classNode) {
         super(client, project, main, file, scope);
         mBinDir = binDir;
         mBytes = bytes;
@@ -74,8 +83,9 @@ public class ClassContext extends Context {
     /**
      * Returns the raw bytecode data for this class file
      *
-     * @return the byte array containing the bytecode data, or null
+     * @return the byte array containing the bytecode data
      */
+    @NonNull
     public byte[] getBytecode() {
         return mBytes;
     }
@@ -85,6 +95,7 @@ public class ClassContext extends Context {
      *
      * @return the bytecode object model, never null
      */
+    @NonNull
     public ClassNode getClassNode() {
         return mClassNode;
     }
@@ -94,6 +105,7 @@ public class ClassContext extends Context {
      *
      * @return the source file, or null
      */
+    @Nullable
     public File getSourceFile() {
         if (mSourceFile == null && !mSearchedForSource) {
             mSearchedForSource = true;
@@ -135,6 +147,7 @@ public class ClassContext extends Context {
      *
      * @return the source contents, or ""
      */
+    @NonNull
     public String getSourceContents() {
         if (mSourceContents == null) {
             File sourceFile = getSourceFile();
@@ -150,8 +163,6 @@ public class ClassContext extends Context {
         return mSourceContents;
     }
 
-
-
     /**
      * Returns a location for the given source line number in this class file's
      * source file, if available.
@@ -163,6 +174,7 @@ public class ClassContext extends Context {
      *            end
      * @return a location, never null
      */
+    @NonNull
     public Location getLocationForLine(int line, String patternStart, String patternEnd) {
         File sourceFile = getSourceFile();
         if (sourceFile != null) {

@@ -56,6 +56,8 @@ import static com.android.tools.lint.detector.api.LintConstants.VIEW_STUB;
 import static com.android.tools.lint.detector.api.LintConstants.VIEW_SWITCHER;
 import static com.android.tools.lint.detector.api.LintConstants.WIDGET_PKG_PREFIX;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.annotations.Beta;
 
 import java.util.HashMap;
@@ -70,12 +72,14 @@ import java.util.Map;
 @Beta
 class DefaultSdkInfo extends SdkInfo {
     @Override
-    public String getParentViewName(String name) {
+    @Nullable
+    public String getParentViewName(@NonNull String name) {
         return PARENTS.get(name);
     }
 
     @Override
-    public String getParentViewClass(String fqcn) {
+    @Nullable
+    public String getParentViewClass(@NonNull String fqcn) {
         int index = fqcn.lastIndexOf('.');
         if (index != -1) {
             fqcn = fqcn.substring(index + 1);
@@ -94,7 +98,7 @@ class DefaultSdkInfo extends SdkInfo {
     }
 
     @Override
-    public boolean isSubViewOf(String parent, String child) {
+    public boolean isSubViewOf(@NonNull String parent, @NonNull String child) {
         // Do analysis just on non-fqcn paths
         if (parent.indexOf('.') != -1) {
             parent = parent.substring(parent.lastIndexOf('.') + 1);
@@ -117,7 +121,10 @@ class DefaultSdkInfo extends SdkInfo {
     }
 
     private static final int CLASS_COUNT = 56;
+
+    @NonNull
     private static final Map<String, String> PARENTS = new HashMap<String, String>(CLASS_COUNT);
+
     static {
         PARENTS.put(COMPOUND_BUTTON, VIEW);
         PARENTS.put(ABS_SPINNER, ADAPTER_VIEW);

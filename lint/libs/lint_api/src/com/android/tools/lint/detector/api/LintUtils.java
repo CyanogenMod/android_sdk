@@ -20,6 +20,8 @@ import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.ID_RESOURCE_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.NEW_ID_RESOURCE_PREFIX;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -50,7 +52,8 @@ public class LintUtils {
      * @param maxItems the maximum number of items to print
      * @return a comma separated list
      */
-    public static String formatList(List<String> strings, int maxItems) {
+    @NonNull
+    public static String formatList(@NonNull List<String> strings, int maxItems) {
         StringBuilder sb = new StringBuilder(20 * strings.size());
 
         for (int i = 0, n = strings.size(); i < n; i++) {
@@ -75,7 +78,7 @@ public class LintUtils {
      * @param type the resource type to check
      * @return true if the given type corresponds to a file-type resource
      */
-    public static boolean isFileBasedResourceType(ResourceType type) {
+    public static boolean isFileBasedResourceType(@NonNull ResourceType type) {
         List<ResourceFolderType> folderTypes = FolderTypeRelationship.getRelatedFolders(type);
         for (ResourceFolderType folderType : folderTypes) {
             if (folderType != ResourceFolderType.VALUES) {
@@ -94,7 +97,7 @@ public class LintUtils {
      * @param file the file to be checked
      * @return true if the given file is an xml file
      */
-    public static boolean isXmlFile(File file) {
+    public static boolean isXmlFile(@NonNull File file) {
         String string = file.getName();
         return string.regionMatches(true, string.length() - DOT_XML.length(),
                 DOT_XML, 0, DOT_XML.length());
@@ -109,7 +112,7 @@ public class LintUtils {
      * @return true if {@code string} ends with {@code suffix},
      *         case-insensitively.
      */
-    public static boolean endsWith(String string, String suffix) {
+    public static boolean endsWith(@NonNull String string, @NonNull String suffix) {
         return string.regionMatches(true /* ignoreCase */, string.length() - suffix.length(),
                 suffix, 0, suffix.length());
     }
@@ -120,7 +123,7 @@ public class LintUtils {
      * @param fileName the file name to extract the basename from
      * @return the basename (the filename without the file extension)
      */
-    public static String getBaseName(String fileName) {
+    public static String getBaseName(@NonNull String fileName) {
         int extension = fileName.indexOf('.');
         if (extension > 0) {
             return fileName.substring(0, extension);
@@ -135,7 +138,8 @@ public class LintUtils {
      * @param node the parent node
      * @return a list of element children, never null
      */
-    public static List<Element> getChildren(Node node) {
+    @NonNull
+    public static List<Element> getChildren(@NonNull Node node) {
         NodeList childNodes = node.getChildNodes();
         List<Element> children = new ArrayList<Element>(childNodes.getLength());
         for (int i = 0, n = childNodes.getLength(); i < n; i++) {
@@ -154,7 +158,7 @@ public class LintUtils {
      * @param node the parent node
      * @return the count of element children
      */
-    public static int getChildCount(Node node) {
+    public static int getChildCount(@NonNull Node node) {
         NodeList childNodes = node.getChildNodes();
         int childCount = 0;
         for (int i = 0, n = childNodes.getLength(); i < n; i++) {
@@ -173,7 +177,8 @@ public class LintUtils {
      * @param id the id to strip
      * @return the stripped id, never null
      */
-    public static String stripIdPrefix(String id) {
+    @NonNull
+    public static String stripIdPrefix(@Nullable String id) {
         if (id == null) {
             return "";
         } else if (id.startsWith(NEW_ID_RESOURCE_PREFIX)) {
@@ -196,7 +201,7 @@ public class LintUtils {
      * @param t the second string to compare
      * @return the edit distance between the two strings
      */
-    public static int editDistance(String s, String t) {
+    public static int editDistance(@NonNull String s, @NonNull String t) {
         int m = s.length();
         int n = t.length();
         int[][] d = new int[m + 1][n + 1];
