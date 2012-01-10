@@ -528,7 +528,7 @@ public class RulesEngine {
 
     // ---- Deletion ----
 
-    public void callOnRemovingChildren(AndroidXmlEditor editor, NodeProxy parentNode,
+    public void callOnRemovingChildren(NodeProxy parentNode,
             List<INode> children) {
         if (parentNode != null) {
             UiViewElementNode parentUiNode = parentNode.getNode();

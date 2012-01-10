@@ -22,7 +22,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.EXT_XML;
 
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 
 import org.eclipse.core.resources.IFile;
@@ -64,13 +64,16 @@ public class UnwrapRefactoring extends VisualRefactoring {
         super(arguments);
     }
 
-    public UnwrapRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
+    public UnwrapRefactoring(
+            IFile file,
+            LayoutEditorDelegate delegate,
+            ITextSelection selection,
             ITreeSelection treeSelection) {
-        super(file, editor, selection, treeSelection);
+        super(file, delegate, selection, treeSelection);
     }
 
     @VisibleForTesting
-    UnwrapRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+    UnwrapRefactoring(List<Element> selectedElements, LayoutEditorDelegate editor) {
         super(selectedElements, editor);
     }
 
@@ -170,7 +173,7 @@ public class UnwrapRefactoring extends VisualRefactoring {
         // (3) Transfer layout attributes?
         // (4) Check for Java R.file usages?
 
-        IFile file = mEditor.getInputFile();
+        IFile file = mDelegate.getEditor().getInputFile();
         List<Change> changes = new ArrayList<Change>();
         MultiTextEdit rootEdit = new MultiTextEdit();
 
@@ -221,7 +224,7 @@ public class UnwrapRefactoring extends VisualRefactoring {
 
     @Override
     public VisualRefactoringWizard createWizard() {
-        return new UnwrapWizard(this, mEditor);
+        return new UnwrapWizard(this, mDelegate);
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {

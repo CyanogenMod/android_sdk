@@ -15,7 +15,7 @@
  */
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -26,21 +26,21 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
 public abstract class VisualRefactoringWizard extends RefactoringWizard {
-    protected final LayoutEditor mEditor;
+    protected final LayoutEditorDelegate mDelegate;
 
-    public VisualRefactoringWizard(Refactoring refactoring, LayoutEditor editor) {
+    public VisualRefactoringWizard(Refactoring refactoring, LayoutEditorDelegate editor) {
         super(refactoring, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
-        mEditor = editor;
+        mDelegate = editor;
     }
 
     @Override
     public boolean performFinish() {
-        mEditor.setIgnoreXmlUpdate(true);
+        mDelegate.getEditor().setIgnoreXmlUpdate(true);
         try {
             return super.performFinish();
         } finally {
-            mEditor.setIgnoreXmlUpdate(false);
-            mEditor.refreshXmlModel();
+            mDelegate.getEditor().setIgnoreXmlUpdate(false);
+            mDelegate.refreshXmlModel();
         }
     }
 

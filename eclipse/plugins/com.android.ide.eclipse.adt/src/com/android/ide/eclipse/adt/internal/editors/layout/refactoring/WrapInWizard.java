@@ -23,7 +23,7 @@ import static com.android.ide.common.layout.LayoutConstants.GESTURE_OVERLAY_VIEW
 import static com.android.ide.common.layout.LayoutConstants.RADIO_GROUP;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CustomViewFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
@@ -53,7 +53,7 @@ public class WrapInWizard extends VisualRefactoringWizard {
     private static final String SEPARATOR_LABEL =
         "----------------------------------------"; //$NON-NLS-1$
 
-    public WrapInWizard(WrapInRefactoring ref, LayoutEditor editor) {
+    public WrapInWizard(WrapInRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle("Wrap in Container");
     }
@@ -62,7 +62,7 @@ public class WrapInWizard extends VisualRefactoringWizard {
     protected void addUserInputPages() {
         WrapInRefactoring ref = (WrapInRefactoring) getRefactoring();
         String oldType = ref.getOldType();
-        addPage(new InputPage(mEditor.getProject(), oldType));
+        addPage(new InputPage(mDelegate.getEditor().getProject(), oldType));
     }
 
     /** Wizard page which inputs parameters for the {@link WrapInRefactoring} operation */

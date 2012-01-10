@@ -22,7 +22,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutMet
 
 import com.android.ide.common.rendering.api.Capability;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.resources.CyclicDependencyValidator;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
@@ -70,7 +70,7 @@ public class ListViewTypeMenu extends SubmenuAction {
 
     @Override
     protected void addMenuItems(Menu menu) {
-        GraphicalEditorPart graphicalEditor = mCanvas.getLayoutEditor().getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = mCanvas.getEditorDelegate().getGraphicalEditor();
         if (graphicalEditor.renderingSupports(Capability.ADAPTER_BINDING)) {
             IAction action = new PickLayoutAction("Choose Layout...", KEY_LV_ITEM);
             new ActionContributionItem(action).fill(menu, -1);
@@ -166,21 +166,22 @@ public class ListViewTypeMenu extends SubmenuAction {
 
         @Override
         public void run() {
-            LayoutEditor editor = mCanvas.getLayoutEditor();
-            IProject project = editor.getProject();
+            LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
+            IProject project = delegate.getEditor().getProject();
             // get the resource repository for this project and the system resources.
             ResourceRepository projectRepository = ResourceManager.getInstance()
                     .getProjectResources(project);
             Shell shell = mCanvas.getShell();
 
-            AndroidTargetData data = editor.getTargetData();
+            AndroidTargetData data = delegate.getEditor().getTargetData();
             ResourceRepository systemRepository = data.getFrameworkResources();
 
             ResourceChooser dlg = new ResourceChooser(project,
                     ResourceType.LAYOUT, projectRepository,
                     systemRepository, shell);
 
-            IInputValidator validator = CyclicDependencyValidator.create(editor.getInputFile());
+            IInputValidator validator =
+                CyclicDependencyValidator.create(delegate.getEditor().getInputFile());
 
             if (validator != null) {
                 // Ensure wide enough to accommodate validator error message
@@ -205,14 +206,14 @@ public class ListViewTypeMenu extends SubmenuAction {
 
     private String getSelectedLayout() {
         String layout = null;
-        LayoutEditor editor = mCanvas.getLayoutEditor();
+        LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
         LayoutMetadata metadata = LayoutMetadata.get();
         SelectionManager selectionManager = mCanvas.getSelectionManager();
         for (SelectionItem item : selectionManager.getSelections()) {
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
 
             Node xmlNode = node.getXmlNode();
-            layout = metadata.getProperty(editor, xmlNode, KEY_LV_ITEM);
+            layout = metadata.getProperty(delegate.getEditor(), xmlNode, KEY_LV_ITEM);
             if (layout != null) {
                 return layout;
             }
@@ -221,15 +222,15 @@ public class ListViewTypeMenu extends SubmenuAction {
     }
 
     public void setNewType(String type, String layout) {
-        LayoutEditor editor = mCanvas.getLayoutEditor();
-        GraphicalEditorPart graphicalEditor = editor.getGraphicalEditor();
+        LayoutEditorDelegate delegate = mCanvas.getEditorDelegate();
+        GraphicalEditorPart graphicalEditor = delegate.getGraphicalEditor();
         LayoutMetadata metadata = LayoutMetadata.get();
         SelectionManager selectionManager = mCanvas.getSelectionManager();
 
         for (SelectionItem item : selectionManager.getSelections()) {
             UiViewElementNode node = item.getViewInfo().getUiViewNode();
             Node xmlNode = node.getXmlNode();
-            metadata.setProperty(editor, xmlNode, type, layout);
+            metadata.setProperty(delegate.getEditor(), xmlNode, type, layout);
         }
 
         // Refresh

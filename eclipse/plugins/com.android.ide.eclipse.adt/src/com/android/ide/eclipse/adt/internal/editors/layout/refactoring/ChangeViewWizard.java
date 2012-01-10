@@ -20,7 +20,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_FRAGMENT;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CustomViewFinder;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
@@ -44,7 +44,7 @@ class ChangeViewWizard extends VisualRefactoringWizard {
     private static final String SEPARATOR_LABEL =
         "----------------------------------------"; //$NON-NLS-1$
 
-    public ChangeViewWizard(ChangeViewRefactoring ref, LayoutEditor editor) {
+    public ChangeViewWizard(ChangeViewRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle("Change Widget Type");
     }
@@ -63,7 +63,7 @@ class ChangeViewWizard extends VisualRefactoringWizard {
                 break;
             }
         }
-        addPage(new InputPage(mEditor.getProject(), oldType));
+        addPage(new InputPage(mDelegate.getEditor().getProject(), oldType));
     }
 
     /** Wizard page which inputs parameters for the {@link ChangeViewRefactoring} operation */

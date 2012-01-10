@@ -24,7 +24,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.La
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_INCLUDE;
 import static com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors.VIEW_MERGE;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.PaletteMetadataDescriptor;
 import com.android.util.Pair;
@@ -46,7 +46,7 @@ import java.util.Set;
 
 class ChangeLayoutWizard extends VisualRefactoringWizard {
 
-    public ChangeLayoutWizard(ChangeLayoutRefactoring ref, LayoutEditor editor) {
+    public ChangeLayoutWizard(ChangeLayoutRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle("Change Layout");
     }
@@ -55,7 +55,7 @@ class ChangeLayoutWizard extends VisualRefactoringWizard {
     protected void addUserInputPages() {
         ChangeLayoutRefactoring ref = (ChangeLayoutRefactoring) getRefactoring();
         String oldType = ref.getOldType();
-        addPage(new InputPage(mEditor.getProject(), oldType));
+        addPage(new InputPage(mDelegate.getEditor().getProject(), oldType));
     }
 
     /** Wizard page which inputs parameters for the {@link ChangeLayoutRefactoring} operation */

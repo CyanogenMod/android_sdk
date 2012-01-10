@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.refactoring;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.resources.ResourceNameValidator;
 import com.android.resources.ResourceType;
 
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 class ExtractIncludeWizard extends VisualRefactoringWizard {
-    public ExtractIncludeWizard(ExtractIncludeRefactoring ref, LayoutEditor editor) {
+    public ExtractIncludeWizard(ExtractIncludeRefactoring ref, LayoutEditorDelegate editor) {
         super(ref, editor);
         setDefaultPageTitle(ref.getName());
     }
@@ -41,7 +41,7 @@ class ExtractIncludeWizard extends VisualRefactoringWizard {
         ExtractIncludeRefactoring ref = (ExtractIncludeRefactoring) getRefactoring();
         String initialName = ref.getInitialName();
         IFile sourceFile = ref.getSourceFile();
-        addPage(new InputPage(mEditor.getProject(), sourceFile, initialName));
+        addPage(new InputPage(mDelegate.getEditor().getProject(), sourceFile, initialName));
     }
 
     /** Wizard page which inputs parameters for the {@link ExtractIncludeRefactoring} operation */

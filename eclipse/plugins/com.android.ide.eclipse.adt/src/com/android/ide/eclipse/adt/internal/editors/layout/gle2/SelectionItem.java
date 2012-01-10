@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.api.ResizePolicy;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.ViewMetadataRepository;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
@@ -129,12 +129,12 @@ class SelectionItem {
     static String getAsText(LayoutCanvas canvas, List<SelectionItem> selection) {
         StringBuilder sb = new StringBuilder();
 
-        LayoutEditor layoutEditor = canvas.getLayoutEditor();
+        LayoutEditorDelegate layoutEditorDelegate = canvas.getEditorDelegate();
         for (SelectionItem cs : selection) {
             CanvasViewInfo vi = cs.getViewInfo();
             UiViewElementNode key = vi.getUiViewNode();
             Node node = key.getXmlNode();
-            String t = layoutEditor.getXmlText(node);
+            String t = layoutEditorDelegate.getEditor().getXmlText(node);
             if (t != null) {
                 if (sb.length() > 0) {
                     sb.append('\n');

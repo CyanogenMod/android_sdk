@@ -18,7 +18,7 @@ package com.android.ide.eclipse.adt.internal.lint;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
 import com.android.tools.lint.client.api.Configuration;
@@ -69,7 +69,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
@@ -461,12 +460,11 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
             mTreeViewer.setInput(null);
             List<IMarker> markerList = getMarkers();
             if (markerList.size() == 0) {
-                IEditorPart active = AdtUtils.getActiveEditor();
-                if (active instanceof LayoutEditor) {
-                    LayoutEditor editor = (LayoutEditor) active;
-                    GraphicalEditorPart g =
-                            editor.getGraphicalEditor();
-                    LayoutActionBar bar = g.getLayoutActionBar();
+                LayoutEditorDelegate delegate =
+                    LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+                if (delegate != null) {
+                    GraphicalEditorPart g = delegate.getGraphicalEditor();
+                    LayoutActionBar bar = g == null ? null : g.getLayoutActionBar();
                     bar.updateErrorIndicator();
                 }
             }

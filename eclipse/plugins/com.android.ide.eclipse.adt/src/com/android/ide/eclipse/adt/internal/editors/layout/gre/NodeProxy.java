@@ -27,7 +27,7 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.SimpleAttribute;
@@ -206,13 +206,14 @@ public class NodeProxy implements INode {
 
     // ---- XML Editing ---
 
+    @SuppressWarnings("cast")
     @Override
     public void editXml(String undoName, final INodeHandler c) {
         final AndroidXmlEditor editor = mNode.getEditor();
 
-        if (editor instanceof LayoutEditor) {
+        if (editor instanceof AndroidXmlEditor) {
             // Create an undo edit XML wrapper, which takes a runnable
-            ((LayoutEditor) editor).wrapUndoEditXmlModel(
+            ((AndroidXmlEditor) editor).wrapUndoEditXmlModel(
                     undoName,
                     new Runnable() {
                         @Override
@@ -278,8 +279,9 @@ public class NodeProxy implements INode {
 
         RulesEngine engine = null;
         AndroidXmlEditor editor = mNode.getEditor();
-        if (editor instanceof LayoutEditor) {
-            engine = ((LayoutEditor)editor).getRulesEngine();
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(editor);
+        if (delegate != null) {
+            engine = delegate.getRulesEngine();
         }
 
         // Set default attributes -- but only for new widgets (not when moving or copying)
@@ -456,9 +458,9 @@ public class NodeProxy implements INode {
      * isn't reloading, or we wouldn't be here editing XML for a layout rule.)
      */
     private ViewElementDescriptor getFqcnViewDescriptor(String fqcn) {
-        AndroidXmlEditor editor = mNode.getEditor();
-        if (editor instanceof LayoutEditor) {
-            return ((LayoutEditor) editor).getFqcnViewDescriptor(fqcn);
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(mNode.getEditor());
+        if (delegate != null) {
+            return delegate.getFqcnViewDescriptor(fqcn);
         }
 
         return null;

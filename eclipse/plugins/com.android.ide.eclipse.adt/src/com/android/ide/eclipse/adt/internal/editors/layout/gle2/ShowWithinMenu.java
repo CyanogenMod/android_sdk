@@ -2,7 +2,7 @@
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
 import com.android.ide.common.rendering.api.Capability;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 
 import org.eclipse.core.resources.IFile;
@@ -19,16 +19,16 @@ import java.util.List;
  * Action which creates a submenu for the "Show Included In" action
  */
 class ShowWithinMenu extends SubmenuAction {
-    private LayoutEditor mLayoutEditor;
+    private LayoutEditorDelegate mEditorDelegate;
 
-    ShowWithinMenu(LayoutEditor layoutEditor) {
+    ShowWithinMenu(LayoutEditorDelegate editorDelegate) {
         super("Show Included In");
-        mLayoutEditor = layoutEditor;
+        mEditorDelegate = editorDelegate;
     }
 
     @Override
     protected void addMenuItems(Menu menu) {
-        GraphicalEditorPart graphicalEditor = mLayoutEditor.getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = mEditorDelegate.getGraphicalEditor();
         IFile file = graphicalEditor.getEditedFile();
         if (graphicalEditor.renderingSupports(Capability.EMBEDDED_LAYOUT)) {
             IProject project = file.getProject();
@@ -64,7 +64,7 @@ class ShowWithinMenu extends SubmenuAction {
 
         @Override
         public boolean isChecked() {
-            Reference within = mLayoutEditor.getGraphicalEditor().getIncludedWithin();
+            Reference within = mEditorDelegate.getGraphicalEditor().getIncludedWithin();
             if (within == null) {
                 return mReference == null;
             } else {
@@ -75,7 +75,7 @@ class ShowWithinMenu extends SubmenuAction {
         @Override
         public void run() {
             if (!isChecked()) {
-                mLayoutEditor.getGraphicalEditor().showIn(mReference);
+                mEditorDelegate.getGraphicalEditor().showIn(mReference);
             }
         }
     }

@@ -40,7 +40,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.CanvasViewInfo;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
@@ -115,13 +115,16 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         mReplaceOccurrences  = Boolean.parseBoolean(arguments.get(KEY_OCCURRENCES));
     }
 
-    public ExtractIncludeRefactoring(IFile file, LayoutEditor editor, ITextSelection selection,
+    public ExtractIncludeRefactoring(
+            IFile file,
+            LayoutEditorDelegate delegate,
+            ITextSelection selection,
             ITreeSelection treeSelection) {
-        super(file, editor, selection, treeSelection);
+        super(file, delegate, selection, treeSelection);
     }
 
     @VisibleForTesting
-    ExtractIncludeRefactoring(List<Element> selectedElements, LayoutEditor editor) {
+    ExtractIncludeRefactoring(List<Element> selectedElements, LayoutEditorDelegate editor) {
         super(selectedElements, editor);
     }
 
@@ -233,8 +236,8 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
         List<Change> changes = new ArrayList<Change>();
 
         String newFileName = mLayoutName + DOT_XML;
-        IProject project = mEditor.getProject();
-        IFile sourceFile = mEditor.getInputFile();
+        IProject project = mDelegate.getEditor().getProject();
+        IFile sourceFile = mDelegate.getEditor().getInputFile();
 
         // Replace extracted elements by <include> tag
         handleIncludingFile(changes, sourceFile, mSelectionStart, mSelectionEnd,
@@ -452,14 +455,14 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
                     @Override
                     public void run() {
                         openFile(file);
-                        mEditor.getGraphicalEditor().refreshProjectResources();
+                        mDelegate.getGraphicalEditor().refreshProjectResources();
                         // Save file to trigger include finder scanning (as well as making
                         // the
                         // actual show-include feature work since it relies on reading
                         // files from
                         // disk, not a live buffer)
-                        IWorkbenchPage page = mEditor.getEditorSite().getPage();
-                        page.saveEditor(mEditor, false);
+                        IWorkbenchPage page = mDelegate.getEditor().getEditorSite().getPage();
+                        page.saveEditor(mDelegate.getEditor(), false);
                     }
                 });
 
@@ -645,7 +648,7 @@ public class ExtractIncludeRefactoring extends VisualRefactoring {
 
     @Override
     VisualRefactoringWizard createWizard() {
-        return new ExtractIncludeWizard(this, mEditor);
+        return new ExtractIncludeWizard(this, mDelegate);
     }
 
     public static class Descriptor extends VisualRefactoringDescriptor {

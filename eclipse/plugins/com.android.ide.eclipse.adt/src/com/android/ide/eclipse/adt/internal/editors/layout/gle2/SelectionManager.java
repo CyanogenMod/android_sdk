@@ -22,7 +22,7 @@ import static com.android.ide.eclipse.adt.internal.editors.layout.gle2.Selection
 import com.android.ide.common.api.INode;
 import com.android.ide.common.layout.GridLayoutRule;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
 import com.android.ide.eclipse.adt.internal.editors.layout.uimodel.UiViewElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
@@ -254,7 +254,7 @@ public class SelectionManager implements ISelectionProvider {
                 }
 
                 if (redoLayout) {
-                    mCanvas.getLayoutEditor().recomputeLayout();
+                    mCanvas.getEditorDelegate().recomputeLayout();
                 }
                 if (changed) {
                     redraw();
@@ -357,7 +357,7 @@ public class SelectionManager implements ISelectionProvider {
                 // toggle this selection on-off: remove it if already selected
                 if (deselect(vi)) {
                     if (vi.isExploded()) {
-                        mCanvas.getLayoutEditor().recomputeLayout();
+                        mCanvas.getEditorDelegate().recomputeLayout();
                     }
 
                     redraw();
@@ -450,7 +450,7 @@ public class SelectionManager implements ISelectionProvider {
         fireSelectionChanged();
 
         if (redoLayout) {
-            mCanvas.getLayoutEditor().recomputeLayout();
+            mCanvas.getEditorDelegate().recomputeLayout();
         }
 
         redraw();
@@ -494,7 +494,7 @@ public class SelectionManager implements ISelectionProvider {
         fireSelectionChanged();
 
         if (redoLayout) {
-            mCanvas.getLayoutEditor().recomputeLayout();
+            mCanvas.getEditorDelegate().recomputeLayout();
         }
 
         redraw();
@@ -755,7 +755,7 @@ public class SelectionManager implements ISelectionProvider {
      * actions that depend on the selection
      */
     private void updateActionsFromSelection() {
-        LayoutEditor editor = mCanvas.getLayoutEditor();
+        LayoutEditorDelegate editor = mCanvas.getEditorDelegate();
         if (editor != null) {
             // Update menu actions that depend on the selection
             mCanvas.updateMenuActionState();

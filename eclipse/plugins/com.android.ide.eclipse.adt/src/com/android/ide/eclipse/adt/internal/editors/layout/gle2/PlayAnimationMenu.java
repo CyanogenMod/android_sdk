@@ -24,7 +24,7 @@ import com.android.ide.common.rendering.api.IAnimationListener;
 import com.android.ide.common.rendering.api.RenderSession;
 import com.android.ide.common.rendering.api.Result;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.wizards.newxmlfile.NewXmlFileWizard;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
@@ -93,7 +93,7 @@ public class PlayAnimationMenu extends SubmenuAction {
             return;
         }
 
-        GraphicalEditorPart graphicalEditor = mCanvas.getLayoutEditor().getGraphicalEditor();
+        GraphicalEditorPart graphicalEditor = mCanvas.getEditorDelegate().getGraphicalEditor();
         if (graphicalEditor.renderingSupports(Capability.PLAY_ANIMATION)) {
             // List of animations
             Collection<String> animationNames = graphicalEditor.getResourceNames(mFramework,
@@ -202,7 +202,7 @@ public class PlayAnimationMenu extends SubmenuAction {
                                     @Override
                                     public void run() {
                                         GraphicalEditorPart graphicalEditor = mCanvas
-                                                .getLayoutEditor().getGraphicalEditor();
+                                                .getEditorDelegate().getGraphicalEditor();
                                         graphicalEditor.recomputeLayout();
                                     }
                                 });
@@ -231,11 +231,12 @@ public class PlayAnimationMenu extends SubmenuAction {
         public void run() {
             Shell parent = mCanvas.getShell();
             NewXmlFileWizard wizard = new NewXmlFileWizard();
-            LayoutEditor editor = mCanvas.getLayoutEditor();
-            IWorkbenchWindow workbenchWindow = editor.getEditorSite().getWorkbenchWindow();
+            LayoutEditorDelegate editor = mCanvas.getEditorDelegate();
+            IWorkbenchWindow workbenchWindow =
+                editor.getEditor().getEditorSite().getWorkbenchWindow();
             IWorkbench workbench = workbenchWindow.getWorkbench();
             String animationDir = FD_RESOURCES + WS_SEP + FD_RES_ANIMATOR;
-            Pair<IProject, String> pair = Pair.of(editor.getProject(), animationDir);
+            Pair<IProject, String> pair = Pair.of(editor.getEditor().getProject(), animationDir);
             IStructuredSelection selection = new StructuredSelection(pair);
             wizard.init(workbench, selection);
             WizardDialog dialog = new WizardDialog(parent, wizard);

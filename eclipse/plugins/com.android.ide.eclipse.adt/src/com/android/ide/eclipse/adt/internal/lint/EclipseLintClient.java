@@ -20,7 +20,7 @@ import static com.android.ide.eclipse.adt.AdtConstants.MARKER_LINT;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
@@ -280,10 +280,9 @@ public class EclipseLintClient extends LintClient implements IDomParser {
             }
         }
 
-        IEditorPart active = AdtUtils.getActiveEditor();
-        if (active instanceof LayoutEditor) {
-            LayoutEditor editor = (LayoutEditor) active;
-            editor.getGraphicalEditor().getLayoutActionBar().updateErrorIndicator();
+        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
+        if (delegate != null) {
+            delegate.getGraphicalEditor().getLayoutActionBar().updateErrorIndicator();
         }
     }
 

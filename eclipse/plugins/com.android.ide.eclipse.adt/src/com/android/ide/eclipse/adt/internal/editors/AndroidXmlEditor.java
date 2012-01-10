@@ -558,17 +558,33 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         // The actual "save" operation is done by the Structured XML Editor
         getEditor(mTextPageIndex).doSave(monitor);
 
-        runLint();
+        // Check for errors on save, if enabled
+        if (AdtPrefs.getPrefs().isLintOnSave()) {
+            runLint();
+        }
     }
 
+    /**
+     * Tells the editor to start a Lint check.
+     * It's up to the caller to check whether this should be done depending on preferences.
+     * <p/>
+     * The default implementation is to call {@link #startLintJob()}.
+     *
+     * @return The Job started by {@link LintRunner} or null if no job was started.
+     */
     protected Job runLint() {
-        // Check for errors, if enabled
-        if (AdtPrefs.getPrefs().isLintOnSave()) {
-            return LintRunner.startLint(Collections.singletonList(getInputFile()),
-                    getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
-        }
+        return startLintJob();
+    }
 
-        return null;
+    /**
+     * Utility method that creates a Job to run Lint on the current document.
+     * Does not wait for the job to finish - just returns immediately.
+     *
+     * @see LintRunner#startLint(java.util.List, IDocument, boolean, boolean)
+     */
+    public Job startLintJob() {
+        return LintRunner.startLint(Collections.singletonList(getInputFile()),
+                getStructuredDocument(), false /*fatalOnly*/, false /*show*/);
     }
 
     /* (non-Javadoc)
@@ -912,7 +928,10 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     protected void runEditHooks() {
         if (!mIgnoreXmlUpdate) {
-            runLint();
+            // Check for errors, if enabled
+            if (AdtPrefs.getPrefs().isLintOnSave()) {
+                runLint();
+            }
         }
     }
 

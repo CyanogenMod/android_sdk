@@ -353,7 +353,7 @@ public class GestureManager {
      *            message if previously set
      */
     void updateMessage(DropFeedback feedback) {
-        IEditorSite editorSite = mCanvas.getLayoutEditor().getEditorSite();
+        IEditorSite editorSite = mCanvas.getEditorDelegate().getEditor().getEditorSite();
         IStatusLineManager status = editorSite.getActionBars().getStatusLineManager();
         if (feedback == null) {
             if (mDisplayingMessage != null) {

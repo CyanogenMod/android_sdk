@@ -13,33 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.eclipse.adt.internal.editors.layout;
+package com.android.ide.eclipse.adt.internal.editors;
 
-import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorActionContributor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 
-import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.part.EditorActionBarContributor;
 
 /**
- * Action contributor responsible for updating the global action registrations in the
- * shared action bar for the editor instances
+ * Action contributor for the editors.
+ * This delegates to editor-specific action contributors.
  */
-public class LayoutEditorActionContributor extends EditorActionBarContributor {
+public class CommonActionContributor extends EditorActionBarContributor {
 
-    public LayoutEditorActionContributor() {
+    public CommonActionContributor() {
         super();
     }
 
     @Override
     public void setActiveEditor(IEditorPart part) {
-        IActionBars bars = getActionBars();
-        LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor(part);
-        if (delegate != null) {
-            LayoutCanvas canvas = delegate.getGraphicalEditor().getCanvasControl();
-            if (canvas != null) {
-                canvas.updateGlobalActions(bars);
-            }
+        LayoutEditorDelegate isLayoutEditor = LayoutEditorDelegate.fromEditor(part);
+        if (isLayoutEditor != null) {
+            LayoutEditorActionContributor a = new LayoutEditorActionContributor();
+            a.setActiveEditor(part);
         }
     }
 }

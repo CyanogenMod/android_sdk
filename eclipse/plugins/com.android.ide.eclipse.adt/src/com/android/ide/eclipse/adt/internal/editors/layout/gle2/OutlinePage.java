@@ -39,7 +39,7 @@ import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DescriptorsUtils;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder.Reference;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.NodeProxy;
@@ -82,6 +82,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.INullSelectionListener;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.ISelectionListener;
@@ -101,7 +102,7 @@ import java.util.Set;
 /**
  * An outline page for the layout canvas view.
  * <p/>
- * The page is created by {@link LayoutEditor#getAdapter(Class)}. This means
+ * The page is created by {@link LayoutEditorDelegate#getAdapter(Class)}. This means
  * we have *one* instance of the outline page per open canvas editor.
  * <p/>
  * It sets itself as a listener on the site's selection service in order to be
@@ -357,13 +358,16 @@ public class OutlinePage extends ContentOutlinePage
 
     /**
      * Listens to a workbench selection.
-     * Only listen on selection coming from {@link LayoutEditor}, which avoid
+     * Only listen on selection coming from {@link LayoutEditorDelegate}, which avoid
      * picking up our own selections.
      */
     @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-        if (part instanceof LayoutEditor) {
-            setSelection(selection);
+        if (part instanceof IEditorPart) {
+            LayoutEditorDelegate delegate = LayoutEditorDelegate.fromEditor((IEditorPart) part);
+            if (delegate != null) {
+                setSelection(selection);
+            }
         }
     }
 
@@ -685,7 +689,7 @@ public class OutlinePage extends ContentOutlinePage
         });
 
         new DynamicContextMenu(
-                mGraphicalEditorPart.getLayoutEditor(),
+                mGraphicalEditorPart.getEditorDelegate(),
                 mGraphicalEditorPart.getCanvasControl(),
                 mMenuManager);
 
@@ -844,7 +848,7 @@ public class OutlinePage extends ContentOutlinePage
 
                     String label = MoveGesture.computeUndoLabel(targetNode,
                             elements, DND.DROP_MOVE);
-                    canvas.getLayoutEditor().wrapUndoEditXmlModel(label, new Runnable() {
+                    canvas.getEditorDelegate().getEditor().wrapUndoEditXmlModel(label, new Runnable() {
                         @Override
                         public void run() {
                             InsertType insertType = InsertType.MOVE_INTO;

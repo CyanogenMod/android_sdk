@@ -24,7 +24,6 @@ import com.android.ide.eclipse.adt.internal.VersionCheck;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
 import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
@@ -1672,21 +1671,14 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
      */
     public static void assignEditor(IFile file, ResourceFolderType type) {
         // set the default editor based on the type.
-        if (type == ResourceFolderType.LAYOUT) {
-            if (DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(IStatus.INFO, "   set default editor id to layout");
-            }
-            IDE.setDefaultEditor(file, LayoutEditor.ID);
-
-        } else if (type == ResourceFolderType.VALUES
+        if (type == ResourceFolderType.VALUES
                 || type == ResourceFolderType.ANIMATOR
                 || type == ResourceFolderType.ANIM
                 || type == ResourceFolderType.COLOR
                 || type == ResourceFolderType.DRAWABLE
                 || type == ResourceFolderType.MENU
                 || type == ResourceFolderType.XML
-                /* TODO next CL || type == ResourceFolderType.LAYOUT */
-                ) {
+                || type == ResourceFolderType.LAYOUT) {
             if (DEBUG_XML_FILE_INIT) {
                 AdtPlugin.log(IStatus.INFO, "   set default editor id to new-style XmlEditDelegator.ID");
             }

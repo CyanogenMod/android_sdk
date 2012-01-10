@@ -192,7 +192,7 @@ public class ViewHierarchy {
 
                 if (mLastValidViewInfoRoot.getUiViewNode() == null &&
                         mLastValidViewInfoRoot.getChildren().isEmpty()) {
-                    GraphicalEditorPart editor = mCanvas.getLayoutEditor().getGraphicalEditor();
+                    GraphicalEditorPart editor = mCanvas.getEditorDelegate().getGraphicalEditor();
                     if (editor.getIncludedWithin() != null) {
                         // Somehow, this view was supposed to be rendered within another
                         // view, yet this view was rendered as part of the other view.
@@ -232,7 +232,7 @@ public class ViewHierarchy {
                 mCanvas.getHorizontalTransform().getMargin() + image.getWidth(),
                 mCanvas.getVerticalTransform().getMargin() + image.getHeight());
         LayoutPoint layoutSize = imageSize.toLayout();
-        UiDocumentNode model = mCanvas.getLayoutEditor().getUiRootNode();
+        UiDocumentNode model = mCanvas.getEditorDelegate().getUiRootNode();
         List<UiElementNode> children = model.getUiChildren();
         return new ViewInfo(VIEW_MERGE, children.get(0), 0, 0, layoutSize.x, layoutSize.y);
     }
@@ -244,7 +244,7 @@ public class ViewHierarchy {
      * @return true if there is a {@code <merge>} at the root of this editor's document
      */
     private boolean hasMergeRoot() {
-        UiDocumentNode model = mCanvas.getLayoutEditor().getUiRootNode();
+        UiDocumentNode model = mCanvas.getEditorDelegate().getUiRootNode();
         if (model != null) {
             List<UiElementNode> children = model.getUiChildren();
             if (children != null && children.size() > 0

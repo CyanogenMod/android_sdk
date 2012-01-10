@@ -24,6 +24,7 @@ import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditorDele
 import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
@@ -62,7 +63,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
      */
     private static final IXmlEditorCreator[] DELEGATES = {
             /* TODO next CL: new ManifestEditorDelegate.Creator(), */
-            /* TODO next CL: new LayoutEditorDelegate.Creator(), */
+            new LayoutEditorDelegate.Creator(),
             new ResourcesEditorDelegate.Creator(),
             new AnimationEditorDelegate.Creator(),
             new ColorEditorDelegate.Creator(),
@@ -83,8 +84,6 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
     @Override
     public void init(IEditorSite site, IEditorInput editorInput)
             throws PartInitException {
-        super.init(site, editorInput);
-
         if (editorInput instanceof IFileEditorInput) {
 
             IFileEditorInput fileInput = (IFileEditorInput) editorInput;
@@ -106,24 +105,30 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
             for (IXmlEditorCreator creator : DELEGATES) {
                 mDelegate = creator.createForFile(this, fileInput, type);
                 if (mDelegate != null) {
-                    return;
+                    break;
                 }
             }
 
-            // We didn't find any editor.
-            // We'll use the OtherXmlEditorDelegate as a catch-all editor.
-            AdtPlugin.log(IStatus.INFO,
-                    "No valid Android XML Editor Delegate found for file %1$s",
-                    file.getFullPath());
-            mDelegate = new OtherXmlEditorDelegate(this);
-            return;
+            if (mDelegate == null) {
+                // We didn't find any editor.
+                // We'll use the OtherXmlEditorDelegate as a catch-all editor.
+                AdtPlugin.log(IStatus.INFO,
+                        "No valid Android XML Editor Delegate found for file %1$s",
+                        file.getFullPath());
+                mDelegate = new OtherXmlEditorDelegate(this);
+            }
         }
 
-        // We can't do anything if we don't have a valid file.
-        AdtPlugin.log(IStatus.INFO,
-                "Android XML Editor cannot process non-file input %1$s" +
-                (editorInput == null ? "null" : editorInput.toString()));
-        throw new PartInitException("Android XML Editor cannot process this input.");
+        if (mDelegate == null) {
+            // We can't do anything if we don't have a valid file.
+            AdtPlugin.log(IStatus.INFO,
+                    "Android XML Editor cannot process non-file input %1$s" +
+                    (editorInput == null ? "null" : editorInput.toString()));
+            throw new PartInitException("Android XML Editor cannot process this input.");
+        } else {
+            // Invoke the editor's init after setting up the delegate. This will call setInput().
+            super.init(site, editorInput);
+        }
     }
 
     /**
@@ -205,8 +210,17 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
     @Override
     protected void setInput(IEditorInput input) {
         super.setInput(input);
+        assert mDelegate != null;
         if (mDelegate != null) {
             mDelegate.setInput(input);
+        }
+    }
+
+    @Override
+    protected void setInputWithNotify(IEditorInput input) {
+        super.setInputWithNotify(input);
+        if (mDelegate instanceof LayoutEditorDelegate) {
+            ((LayoutEditorDelegate) mDelegate).setInputWithNotify(input);
         }
     }
 
@@ -224,12 +238,11 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
     }
 
     @Override
-    public Job runLint() {
-        Job job = super.runLint();
-        if (mDelegate instanceof XmlLayoutEditDelegate) {
-            ((XmlLayoutEditDelegate) mDelegate).postRunLintJob(job);
+    protected Job runLint() {
+        if (mDelegate != null) {
+            return mDelegate.runLint();
         }
-        return job;
+        return null;
     }
 
     /**
@@ -270,8 +283,8 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
 
     @Override
     public void showEditorInput(IEditorInput editorInput) {
-        if (mDelegate instanceof XmlLayoutEditDelegate) {
-            ((XmlLayoutEditDelegate) mDelegate).showEditorInput(editorInput);
+        if (mDelegate instanceof LayoutEditorDelegate) {
+            ((LayoutEditorDelegate) mDelegate).showEditorInput(editorInput);
         }
     }
 
