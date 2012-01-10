@@ -52,11 +52,8 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
     private List<GLCall> mGLCalls;
     private List<List<GLStateTransform>> mStateTransformsPerCall;
-    private List<GLFrame> mGLFrames;
     private Set<Integer> mGLContextIds;
 
-    private int mFrameCount;
-    private int mCurrentFrameStartIndex, mCurrentFrameEndIndex;
     private GLTrace mTrace;
 
     /**
@@ -81,10 +78,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
         mTraceFilePath = path;
         mGLCalls = new ArrayList<GLCall>();
         mStateTransformsPerCall = new ArrayList<List<GLStateTransform>>();
-        mFrameCount = 0;
-        mCurrentFrameStartIndex = 0;
-        mCurrentFrameEndIndex = 0;
-        mGLFrames = new ArrayList<GLFrame>();
         mGLContextIds = new TreeSet<Integer>();
     }
 
@@ -98,18 +91,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         mGLCalls.add(c);
         mStateTransformsPerCall.add(GLStateTransform.getTransformsFor(c));
-        mCurrentFrameEndIndex++;
-
         mGLContextIds.add(Integer.valueOf(c.getContextId()));
-
-        if (c.getFunction() == Function.eglSwapBuffers) {
-            mGLFrames.add(new GLFrame(mFrameCount,
-                    mCurrentFrameStartIndex,
-                    mCurrentFrameEndIndex));
-
-            mFrameCount++;
-            mCurrentFrameStartIndex = mCurrentFrameEndIndex;
-        }
     }
 
     /**
@@ -120,6 +102,8 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     public void run(IProgressMonitor monitor) throws InvocationTargetException,
             InterruptedException {
         monitor.beginTask("Parsing OpenGL Trace File", IProgressMonitor.UNKNOWN);
+
+        List<GLFrame> glFrames = null;
 
         try {
             GLMessage msg = null;
@@ -171,6 +155,8 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                     }
                 });
             }
+
+            glFrames = createFrames(mGLCalls);
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         } finally {
@@ -184,8 +170,31 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         File f = new File(mTraceFilePath);
         TraceFileInfo fileInfo = new TraceFileInfo(mTraceFilePath, f.length(), f.lastModified());
-        mTrace = new GLTrace(fileInfo, mGLFrames, mGLCalls, mStateTransformsPerCall,
+        mTrace = new GLTrace(fileInfo, glFrames, mGLCalls, mStateTransformsPerCall,
                                 new ArrayList<Integer>(mGLContextIds));
+    }
+
+    /** Assign GL calls to GL Frames. */
+    private List<GLFrame> createFrames(List<GLCall> calls) {
+        List<GLFrame> glFrames = new ArrayList<GLFrame>();
+        int startCallIndex = 0;
+        int frameIndex = 0;
+
+        for (int i = 0; i < calls.size(); i++) {
+            GLCall c = calls.get(i);
+            if (c.getFunction() == Function.eglSwapBuffers) {
+                glFrames.add(new GLFrame(frameIndex, startCallIndex, i));
+                startCallIndex = i + 1;
+                frameIndex++;
+            }
+        }
+
+        // assign left over calls at the end to the last frame
+        if (startCallIndex != mGLCalls.size()) {
+            glFrames.add(new GLFrame(frameIndex, startCallIndex, mGLCalls.size() - 1));
+        }
+
+        return glFrames;
     }
 
     /**
