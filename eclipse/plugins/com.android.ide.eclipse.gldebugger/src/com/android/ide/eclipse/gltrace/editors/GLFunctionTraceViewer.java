@@ -17,10 +17,11 @@
 package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
-import com.android.ide.eclipse.gltrace.editors.TimeLineSurface.IFrameSelectionListener;
+import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
 import com.android.ide.eclipse.gltrace.format.GLAPISpec;
 import com.android.ide.eclipse.gltrace.format.GLCallFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
+import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
 
@@ -46,8 +47,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -94,7 +97,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     private Text mFilterText;
     private GLCallFilter mGLCallFilter;
 
-    private TimeLineSurface mTimeLineSurface;
+    // Currently displayed frame's start and end call indices.
+    private int mCallStartIndex;
+    private int mCallEndIndex;
+
+    private DurationMinimap mDurationMinimap;
+    private ScrollBar mVerticalScrollBar;
 
     public GLFunctionTraceViewer() {
     }
@@ -160,11 +168,15 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         createFrameSelectionControls(c);
         createFilterBar(c);
         createFrameTraceView(c);
-        createGraphicalFrameSelectionControl(c);
 
         getSite().setSelectionProvider(mFrameTableViewer);
 
-        refreshUI();
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                refreshUI();
+            }
+        });
     }
 
     private void refreshUI() {
@@ -201,6 +213,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         });
 
         mFrameSelectionSpinner = new Spinner(c, SWT.BORDER);
+        gd = new GridData();
+        gd.widthHint = 35;
+        mFrameSelectionSpinner.setLayoutData(gd);
+
         mFrameSelectionSpinner.setMinimum(1);
         mFrameSelectionSpinner.setMaximum(1);
         mFrameSelectionSpinner.setSelection(0);
@@ -225,6 +241,12 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         List<GLCall> glcalls = mTrace.getGLCallsForFrame(selectedFrame - 1);
         mFrameTableViewer.setInput(glcalls);
+        mFrameTableViewer.refresh();
+
+        GLFrame f = mTrace.getFrames().get(selectedFrame - 1);
+        mCallStartIndex = f.getStartIndex();
+        mCallEndIndex = f.getEndIndex();
+        mDurationMinimap.setCallRangeForCurrentFrame(mCallStartIndex, mCallEndIndex);
     }
 
     private void createFilterBar(Composite parent) {
@@ -253,8 +275,13 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     }
 
     private void createFrameTraceView(Composite parent) {
-        final Table table = new Table(parent, SWT.BORDER);
+        Composite c = new Composite(parent, SWT.NONE);
+        c.setLayout(new GridLayout(2, false));
         GridData gd = new GridData(GridData.FILL_BOTH);
+        c.setLayoutData(gd);
+
+        final Table table = new Table(c, SWT.BORDER);
+        gd = new GridData(GridData.FILL_BOTH);
         table.setLayoutData(gd);
         table.setLinesVisible(true);
 
@@ -307,20 +334,47 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         mGLCallFilter = new GLCallFilter();
         mFrameTableViewer.addFilter(mGLCallFilter);
-    }
 
-    private void createGraphicalFrameSelectionControl(Composite c) {
-        mTimeLineSurface = new TimeLineSurface(c, mTrace);
-
-        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-        gd.minimumHeight = gd.heightHint = mTimeLineSurface.getMinimumHeight();
-        mTimeLineSurface.setLayoutData(gd);
-        mTimeLineSurface.addFrameSelectionListener(new IFrameSelectionListener() {
+        mDurationMinimap = new DurationMinimap(c, mTrace);
+        gd = new GridData(GridData.FILL_VERTICAL);
+        gd.widthHint = gd.minimumWidth = mDurationMinimap.getMinimumWidth();
+        mDurationMinimap.setLayoutData(gd);
+        mDurationMinimap.addCallSelectionListener(new ICallSelectionListener() {
             @Override
-            public void frameSelected(int[] selectedFrames) {
-                selectFrame(selectedFrames[0] + 1);
+            public void callSelected(int selectedCallIndex) {
+                table.select(selectedCallIndex);
             }
         });
+
+        mVerticalScrollBar = table.getVerticalBar();
+        mVerticalScrollBar.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                updateVisibleRange();
+            }
+        });
+    }
+
+    private void updateVisibleRange() {
+        int visibleCallTopIndex = mCallStartIndex;
+        int visibleCallBottomIndex = mCallEndIndex;
+
+        if (mVerticalScrollBar.isEnabled()) {
+            int selection = mVerticalScrollBar.getSelection();
+            int thumb = mVerticalScrollBar.getThumb();
+            int max = mVerticalScrollBar.getMaximum();
+
+            // from the scrollbar values, compute the visible fraction
+            double top = (double) selection / max;
+            double bottom = (double) (selection + thumb) / max;
+
+            // map the fraction to the call indices
+            int range = mCallEndIndex - mCallStartIndex;
+            visibleCallTopIndex = mCallStartIndex + (int) Math.floor(range * top);
+            visibleCallBottomIndex = mCallStartIndex + (int) Math.ceil(range * bottom);
+        }
+
+        mDurationMinimap.setVisibleCallRange(visibleCallTopIndex, visibleCallBottomIndex);
     }
 
     private void displayFB(GLCall glCall) {
