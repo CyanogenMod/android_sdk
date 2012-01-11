@@ -17,54 +17,54 @@
 package com.android.ide.eclipse.gltrace.format;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type;
-import com.android.ide.eclipse.gltrace.model.GLCall;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * GLCallFormatter is used to format and create a string representation for a {@link GLCall}.
- * It is provided with a specification for all GL Functions. Using this information, each GLCall is
- * parsed and formatted appropriately for display.
+ * GLMessageFormatter is used to format and create a string representation for a {@link GLMessage}.
+ * It is provided with a specification for all GL Functions. Using this information, each
+ * GLMessage is parsed and formatted appropriately for display.
  */
-public class GLCallFormatter {
+public class GLMessageFormatter {
     private static final String GL_NO_ERROR = "GL_NO_ERROR";
     private Map<String, GLAPISpec> mAPISpecs;
     private enum DataTypeContext { CONTEXT_ARGUMENT, CONTEXT_RETURNVALUE };
 
-    public GLCallFormatter(Map<String, GLAPISpec> specs) {
+    public GLMessageFormatter(Map<String, GLAPISpec> specs) {
         mAPISpecs = specs;
     }
 
-    public String formatGLCall(GLCall glCall) {
-        GLAPISpec apiSpec = mAPISpecs.get(glCall.getFunction().toString());
+    public String formatGLMessage(GLMessage glMessage) {
+        GLAPISpec apiSpec = mAPISpecs.get(glMessage.getFunction().toString());
         if (apiSpec == null) {
-            return glCall.getFunction().toString();
+            return glMessage.getFunction().toString();
         }
 
-        return formatCall(apiSpec, glCall) + formatReturnValue(apiSpec, glCall);
+        return formatCall(apiSpec, glMessage) + formatReturnValue(apiSpec, glMessage);
     }
 
-    private String formatReturnValue(GLAPISpec apiSpec, GLCall glCall) {
+    private String formatReturnValue(GLAPISpec apiSpec, GLMessage glMessage) {
         if (apiSpec.getReturnValue().getDataType() == Type.VOID) {
             return "";
         }
 
         GLDataTypeSpec returnSpec = apiSpec.getReturnValue();
         return String.format(" = (%s) %s", returnSpec.getCType(),   //$NON-NLS-1$
-                formatDataValue(glCall.getReturnValue(),
+                formatDataValue(glMessage.getReturnValue(),
                         returnSpec,
                         DataTypeContext.CONTEXT_RETURNVALUE));
     }
 
-    private String formatCall(GLAPISpec apiSpec, GLCall glCall) {
+    private String formatCall(GLAPISpec apiSpec, GLMessage glMessage) {
         return String.format("%s(%s)", apiSpec.getFunction(),       //$NON-NLS-1$
-                formatArgs(glCall, apiSpec.getArgs()));
+                formatArgs(glMessage, apiSpec.getArgs()));
     }
 
-    private String formatArgs(GLCall glCall, List<GLDataTypeSpec> argSpecs) {
+    private String formatArgs(GLMessage glMessage, List<GLDataTypeSpec> argSpecs) {
         int sizeEstimate = 10 + argSpecs.size() * 5;
         StringBuilder sb = new StringBuilder(sizeEstimate);
 
@@ -76,7 +76,7 @@ public class GLCallFormatter {
             } else {
                 sb.append(argSpec.getArgName());
                 sb.append(" = ");                                   //$NON-NLS-1$
-                sb.append(formatDataValue(glCall.getArg(i),
+                sb.append(formatDataValue(glMessage.getArgs(i),
                                 argSpec,
                                 DataTypeContext.CONTEXT_ARGUMENT));
             }

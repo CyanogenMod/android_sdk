@@ -24,7 +24,6 @@ import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Builder;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType.Type;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
-import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.google.protobuf.ByteString;
 
 import org.junit.Test;
@@ -34,14 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GLCallFormatterTest {
+public class GLMessageFormatterTest {
     private static final List<String> API_SPECS = Arrays.asList(
             "void, glBindBuffer, GLenum target, GLuint buffer",
             "const GLchar*, glGetString, GLenum name",
             "void, glMultMatrixf, const GLfloat* m",
             "GLenum, eglBindAPI, GLEnum arg",
             "void, glTexImage2D, GLint level, GLsizei width, const GLvoid* pixels");
-    private static GLCallFormatter sGLCallFormatter;
+    private static GLMessageFormatter sGLMessageFormatter;
 
     static {
         Map<String, GLAPISpec> specs = new HashMap<String, GLAPISpec>(API_SPECS.size());
@@ -51,7 +50,7 @@ public class GLCallFormatterTest {
             specs.put(spec.getFunction(), spec);
         }
 
-        sGLCallFormatter = new GLCallFormatter(specs);
+        sGLMessageFormatter = new GLMessageFormatter(specs);
     }
 
     @Test
@@ -59,14 +58,14 @@ public class GLCallFormatterTest {
         GLEnum arg1 = GLEnum.GL_ELEMENT_ARRAY_BUFFER;
         int arg2 = 10;
 
-        GLCall call = constructGLCall(null, Function.glBindBuffer,
+        GLMessage msg = constructGLMessage(null, Function.glBindBuffer,
                 createEnumDataType(arg1.value),
                 createIntegerDataType(arg2));
 
         String expected = String.format("glBindBuffer(target = %s, buffer = %s)",
                 arg1.toString(),
                 Integer.toString(arg2));
-        String actual = sGLCallFormatter.formatGLCall(call);
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
     }
@@ -76,13 +75,13 @@ public class GLCallFormatterTest {
         String retValue = "testString";
         GLEnum arg1 = GLEnum.GL_RENDERER;
 
-        GLCall call = constructGLCall(
+        GLMessage msg = constructGLMessage(
                 createStringDataType(retValue),
                 Function.glGetString,
                 createEnumDataType(arg1.value));
         String expected = String.format("%s(name = %s) = (const GLchar*) %s", Function.glGetString,
                 arg1.toString(), retValue);
-        String actual = sGLCallFormatter.formatGLCall(call);
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
     }
@@ -91,25 +90,25 @@ public class GLCallFormatterTest {
     public void testGLEnum0() {
         // an enum of value 0 should equal GL_POINTS if it is an argument,
         // and GL_NO_ERROR if it is a return value
-        GLCall call = constructGLCall(
+        GLMessage msg = constructGLMessage(
                 createEnumDataType(0),
                 Function.eglBindAPI,
                 createEnumDataType(0));
         String expected = "eglBindAPI(arg = GL_POINTS) = (GLenum) GL_NO_ERROR";
-        String actual = sGLCallFormatter.formatGLCall(call);
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
     }
 
     @Test
     public void testMessageWithPointer() {
-        GLCall call = constructGLCall(null,
+        GLMessage msg = constructGLMessage(null,
                 Function.glTexImage2D,
                 createIntegerDataType(1),
                 createIntegerDataType(2),
                 createIntegerPointerDataType(0xbadc0ffe));
         String expected = "glTexImage2D(level = 1, width = 2, pixels = 0xbadc0ffe)";
-        String actual = sGLCallFormatter.formatGLCall(call);
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
     }
@@ -117,12 +116,12 @@ public class GLCallFormatterTest {
     @Test
     public void testMessageWithMismatchedPointer() {
         // "void, glMultMatrixf, const GLfloat* m",
-        GLCall call = constructGLCall(null,
+        GLMessage msg = constructGLMessage(null,
                 Function.glMultMatrixf,
                 createIntegerDataType(0xbadc0ffe));
 
         String expected = "glMultMatrixf(m = 0xbadc0ffe)";
-        String actual = sGLCallFormatter.formatGLCall(call);
+        String actual = sGLMessageFormatter.formatGLMessage(msg);
 
         assertEquals(expected, actual);
     }
@@ -159,7 +158,7 @@ public class GLCallFormatterTest {
                 .build();
     }
 
-    private GLCall constructGLCall(DataType retValue, Function func, DataType...args) {
+    private GLMessage constructGLMessage(DataType retValue, Function func, DataType...args) {
         Builder builder = GLMessage.newBuilder();
         builder.setFunction(func);
 
@@ -177,6 +176,6 @@ public class GLCallFormatterTest {
             builder.addArgs(arg);
         }
 
-        return new GLCall(0, 0, 0, builder.build(), null);
+        return builder.build();
     }
 }

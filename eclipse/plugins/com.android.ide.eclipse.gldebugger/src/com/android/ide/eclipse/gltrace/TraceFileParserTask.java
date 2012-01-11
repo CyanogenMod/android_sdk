@@ -18,6 +18,8 @@ package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
+import com.android.ide.eclipse.gltrace.format.GLAPISpec;
+import com.android.ide.eclipse.gltrace.format.GLMessageFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
@@ -42,6 +44,9 @@ import java.util.TreeSet;
 
 public class TraceFileParserTask implements IRunnableWithProgress {
     private static final TraceFileReader sReader = new TraceFileReader();
+
+    private static final GLMessageFormatter sGLMessageFormatter =
+            new GLMessageFormatter(GLAPISpec.getSpecs());
 
     private final Display mDisplay;
     private final int mThumbHeight;
@@ -87,10 +92,25 @@ public class TraceFileParserTask implements IRunnableWithProgress {
             previewImage = ProtoBufUtils.getScaledImage(mDisplay, msg, mThumbWidth, mThumbHeight);
         }
 
-        GLCall c = new GLCall(index, startTime, traceFileOffset, msg, previewImage);
+        String formattedMsg;
+        try {
+            formattedMsg = sGLMessageFormatter.formatGLMessage(msg);
+        } catch (Exception e) {
+            formattedMsg = String.format("%s()", msg.getFunction().toString()); //$NON-NLS-1$
+        }
+
+        GLCall c = new GLCall(index,
+                                startTime,
+                                traceFileOffset,
+                                formattedMsg,
+                                previewImage,
+                                msg.getFunction(),
+                                msg.hasFb(),
+                                msg.getContextId(),
+                                msg.getDuration());
 
         mGLCalls.add(c);
-        mStateTransformsPerCall.add(GLStateTransform.getTransformsFor(c));
+        mStateTransformsPerCall.add(GLStateTransform.getTransformsFor(msg));
         mGLContextIds.add(Integer.valueOf(c.getContextId()));
     }
 

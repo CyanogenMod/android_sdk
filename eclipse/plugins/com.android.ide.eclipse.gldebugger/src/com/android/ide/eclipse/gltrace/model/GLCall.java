@@ -17,13 +17,9 @@
 package com.android.ide.eclipse.gltrace.model;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
-import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
-import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.DataType;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
 
 import org.eclipse.swt.graphics.Image;
-
-import java.util.List;
 
 /**
  * A GLCall is the in memory representation of a single {@link GLProtoBuf.GLMessage}.
@@ -44,31 +40,35 @@ public class GLCall {
     /** Offset of the protobuf message corresponding to this call in the trace file. */
     private final long mTraceFileOffset;
 
-    /** Corresponding protobuf message with its image data stripped. */
-    private final GLMessage mMessage;
-
     /** Flag indicating whether the original protobuf message included FB data. */
     private final boolean mHasFb;
 
     /** Thumbnail image of the framebuffer if available. */
     private final Image mThumbnailImage;
 
-    public GLCall(int index, long startTime, long traceFileOffset, GLMessage msg,
-            Image thumbnailImage) {
+    /** Full string representation of this call. */
+    private final String mDisplayString;
+
+    /** The actual GL Function called. */
+    private final Function mFunction;
+
+    /** GL Context identifier corresponding to the context of this call. */
+    private final int mContextId;
+
+    /** Duration of this call. */
+    private final int mDuration;
+
+    public GLCall(int index, long startTime, long traceFileOffset, String displayString,
+            Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration) {
         mIndex = index;
         mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
-
-        if (msg.hasFb()) {
-            // strip off the FB contents
-            msg = msg.toBuilder().clearFb().build();
-            mHasFb = true;
-        } else {
-            mHasFb = false;
-        }
-
-        mMessage = msg;
         mThumbnailImage = thumbnailImage;
+        mDisplayString = displayString;
+        mFunction = function;
+        mHasFb = hasFb;
+        mContextId = contextId;
+        mDuration = duration;
     }
 
     public int getIndex() {
@@ -80,23 +80,11 @@ public class GLCall {
     }
 
     public Function getFunction() {
-        return mMessage.getFunction();
-    }
-
-    public DataType getReturnValue() {
-        return mMessage.getReturnValue();
+        return mFunction;
     }
 
     public int getContextId() {
-        return mMessage.getContextId();
-    }
-
-    public List<DataType> getArgsList() {
-        return mMessage.getArgsList();
-    }
-
-    public DataType getArg(int index) {
-        return mMessage.getArgs(index);
+        return mContextId;
     }
 
     public boolean hasFb() {
@@ -112,6 +100,11 @@ public class GLCall {
     }
 
     public int getDuration() {
-        return mMessage.getDuration();
+        return mDuration;
+    }
+
+    @Override
+    public String toString() {
+        return mDisplayString;
     }
 }

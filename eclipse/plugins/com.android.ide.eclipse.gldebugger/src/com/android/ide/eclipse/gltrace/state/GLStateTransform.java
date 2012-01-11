@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.gltrace.state;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
-import com.android.ide.eclipse.gltrace.model.GLCall;
+import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,27 +71,27 @@ public class GLStateTransform {
     }
 
     /** Construct a list of transformations to be applied for the provided OpenGL call. */
-    public static List<GLStateTransform> getTransformsFor(GLCall call) {
+    public static List<GLStateTransform> getTransformsFor(GLMessage msg) {
         // TODO: currently we only modify state for glVertexAttribPointer() call.
         // Obviously, this will grow to be a long list.
-        switch (call.getFunction()) {
+        switch (msg.getFunction()) {
             case glVertexAttribPointer:
-                return transformsForGlVertexAttribPointer(call);
+                return transformsForGlVertexAttribPointer(msg);
             case glBindFramebuffer:
-                return transformsForGlBindFramebuffer(call);
+                return transformsForGlBindFramebuffer(msg);
             default:
                 return new ArrayList<GLStateTransform>();
         }
     }
 
-    private static List<GLStateTransform> transformsForGlVertexAttribPointer(GLCall call) {
-        int index = call.getArg(0).getIntValue(0);
+    private static List<GLStateTransform> transformsForGlVertexAttribPointer(GLMessage msg) {
+        int index = msg.getArgs(0).getIntValue(0);
 
-        int size = call.getArg(1).getIntValue(0);
-        int type = call.getArg(2).getIntValue(0);
-        boolean normalized = call.getArg(3).getBoolValue(0);
-        int stride = call.getArg(4).getIntValue(0);
-        int pointer = call.getArg(5).getIntValue(0);
+        int size = msg.getArgs(1).getIntValue(0);
+        int type = msg.getArgs(2).getIntValue(0);
+        boolean normalized = msg.getArgs(3).getBoolValue(0);
+        int stride = msg.getArgs(4).getIntValue(0);
+        int pointer = msg.getArgs(5).getIntValue(0);
 
         List<GLStateTransform> transforms = new ArrayList<GLStateTransform>();
         transforms.add(new GLStateTransform(
@@ -127,9 +127,9 @@ public class GLStateTransform {
         return transforms;
     }
 
-    private static List<GLStateTransform> transformsForGlBindFramebuffer(GLCall call) {
+    private static List<GLStateTransform> transformsForGlBindFramebuffer(GLMessage msg) {
         // void glBindFramebuffer(GLenum target, GLuint framebuffer);
-        int fb = call.getArg(1).getIntValue(0);
+        int fb = msg.getArgs(1).getIntValue(0);
         return Collections.singletonList(new GLStateTransform(
                 GLPropertyAccessor.makeAccessor(GLStateType.FRAMEBUFFER_STATE,
                                                 GLStateType.FRAMEBUFFER_BINDING),

@@ -18,8 +18,6 @@ package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
 import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
-import com.android.ide.eclipse.gltrace.format.GLAPISpec;
-import com.android.ide.eclipse.gltrace.format.GLCallFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
@@ -65,6 +63,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,9 +83,6 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
     /** Height of thumbnail images of the framebuffer. */
     private static final int THUMBNAIL_HEIGHT = 50;
-
-    private static final GLCallFormatter sGLCallFormatter =
-            new GLCallFormatter(GLAPISpec.getSpecs());
 
     private String mFilePath;
     private Scale mFrameSelectionScale;
@@ -125,6 +121,10 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         setSite(site);
         setInput(input);
         mFilePath = ((IURIEditorInput) input).getURI().getPath();
+
+        // set the editor part name to be the name of the file.
+        File f = new File(mFilePath);
+        setPartName(f.getName());
     }
 
     @Override
@@ -456,7 +456,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
                 return Integer.toString(c.getDuration());
             default:
                 try {
-                    return sGLCallFormatter.formatGLCall(c);
+                    return c.toString();
                 } catch (Exception e) {
                     // in case of any formatting errors, just return the function name.
                     return c.getFunction().toString();
