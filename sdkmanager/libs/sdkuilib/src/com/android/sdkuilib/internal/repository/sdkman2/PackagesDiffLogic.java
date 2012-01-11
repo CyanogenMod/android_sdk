@@ -268,6 +268,8 @@ class PackagesDiffLogic {
 
         /** Creates the category for the given key and returns it. */
         public abstract PkgCategory createCategory(Object catKey);
+        /** Adjust attributes of an existing category. */
+        public abstract void adjustCategory(PkgCategory cat, Object catKey);
 
         /** Sorts the category list (but not the items within the categories.) */
         public abstract void sortCategoryList();
@@ -565,6 +567,9 @@ class PackagesDiffLogic {
                 cats.add(cat);
             }
             op.sortCategoryList();
+        } else {
+            // Not a new category. Give op a chance to adjust the category attributes
+            op.adjustCategory(cat, catKey);
         }
 
         PkgItem item = new PkgItem(pkg, state);
@@ -677,6 +682,11 @@ class PackagesDiffLogic {
         }
 
         @Override
+        public void adjustCategory(PkgCategory cat, Object catKey) {
+            // Pass. Nothing to do for API-sorted categories
+        }
+
+        @Override
         public void sortCategoryList() {
             // Sort the categories list.
             // We always want categories in order tools..platforms..extras.
@@ -767,12 +777,35 @@ class PackagesDiffLogic {
             }
         }
 
+        /**
+         * Create a new source category.
+         * <p/>
+         * One issue is that local archives are processed first and we don't have the
+         * full source information on them (e.g. we know the referral URL but not
+         * the referral name of the site).
+         * In this case this will just create {@link PkgCategorySource} where the label isn't
+         * known yet.
+         */
         @Override
         public PkgCategory createCategory(Object catKey) {
             assert catKey instanceof SdkSource;
             PkgCategory cat = new PkgCategorySource((SdkSource) catKey, mUpdaterData);
             return cat;
+        }
 
+        /**
+         * Checks whether the category needs to be adjust.
+         * As mentioned in {@link #createCategory(Object)}, local archives are processed
+         * first and result in a {@link PkgCategorySource} where the label isn't known.
+         * Once we process the external source with the actual name, we'll update it.
+         */
+        @Override
+        public void adjustCategory(PkgCategory cat, Object catKey) {
+            assert cat instanceof PkgCategorySource;
+            assert catKey instanceof SdkSource;
+            if (cat instanceof PkgCategorySource) {
+                ((PkgCategorySource) cat).adjustLabel((SdkSource) catKey);
+            }
         }
 
         @Override
