@@ -56,7 +56,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
     private RandomAccessFile mFile;
 
     private List<GLCall> mGLCalls;
-    private List<List<GLStateTransform>> mStateTransformsPerCall;
     private Set<Integer> mGLContextIds;
 
     private GLTrace mTrace;
@@ -82,7 +81,6 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         mTraceFilePath = path;
         mGLCalls = new ArrayList<GLCall>();
-        mStateTransformsPerCall = new ArrayList<List<GLStateTransform>>();
         mGLContextIds = new TreeSet<Integer>();
     }
 
@@ -107,10 +105,10 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 msg.getFunction(),
                                 msg.hasFb(),
                                 msg.getContextId(),
-                                msg.getDuration());
+                                msg.getDuration(),
+                                GLStateTransform.getTransformsFor(msg));
 
         mGLCalls.add(c);
-        mStateTransformsPerCall.add(GLStateTransform.getTransformsFor(msg));
         mGLContextIds.add(Integer.valueOf(c.getContextId()));
     }
 
@@ -190,8 +188,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
 
         File f = new File(mTraceFilePath);
         TraceFileInfo fileInfo = new TraceFileInfo(mTraceFilePath, f.length(), f.lastModified());
-        mTrace = new GLTrace(fileInfo, glFrames, mGLCalls, mStateTransformsPerCall,
-                                new ArrayList<Integer>(mGLContextIds));
+        mTrace = new GLTrace(fileInfo, glFrames, mGLCalls, new ArrayList<Integer>(mGLContextIds));
     }
 
     /** Assign GL calls to GL Frames. */

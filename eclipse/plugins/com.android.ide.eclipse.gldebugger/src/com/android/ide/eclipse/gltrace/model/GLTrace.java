@@ -49,9 +49,6 @@ public class GLTrace {
     /** List of GL Calls comprising the trace. */
     private final List<GLCall> mGLCalls;
 
-    /** List of state transforms to be applied for each GLCall */
-    private final List<List<GLStateTransform>> mStateTransformsPerCall;
-
     /** List of context ids used by the application. */
     private List<Integer> mContextIds;
 
@@ -60,12 +57,10 @@ public class GLTrace {
     private int mCurrentStateIndex;
 
     public GLTrace(TraceFileInfo traceFileInfo, List<GLFrame> glFrames, List<GLCall> glCalls,
-            List<List<GLStateTransform>> stateTransformsPerCall,
             List<Integer> contextIds) {
         mTraceFileInfo = traceFileInfo;
         mGLFrames = glFrames;
         mGLCalls = glCalls;
-        mStateTransformsPerCall = stateTransformsPerCall;
         mContextIds = contextIds;
 
         mState = GLState.createDefaultState();
@@ -109,7 +104,7 @@ public class GLTrace {
             // if the state is needed for a future GLCall, then apply the transformations
             // for all the GLCall's upto and including the required GLCall
             for (int i = mCurrentStateIndex + 1; i <= callIndex; i++) {
-                for (GLStateTransform f : mStateTransformsPerCall.get(i)) {
+                for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
                     f.apply(mState);
                 }
             }
@@ -121,7 +116,7 @@ public class GLTrace {
         // if the state is needed for a call that is before the current index,
         // then revert the transformations until we reach the required call
         for (int i = mCurrentStateIndex; i > callIndex; i--) {
-            for (GLStateTransform f : mStateTransformsPerCall.get(i)) {
+            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
                 f.revert(mState);
             }
         }
@@ -146,7 +141,7 @@ public class GLTrace {
         Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
 
         for (int i = Math.min(fromIndex, toIndex); i <= Math.max(fromIndex, toIndex); i++) {
-            for (GLStateTransform f : mStateTransformsPerCall.get(i)) {
+            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
                 IGLProperty changedProperty = f.getChangedProperty(state);
                 if (changedProperty == null) {
                     continue;

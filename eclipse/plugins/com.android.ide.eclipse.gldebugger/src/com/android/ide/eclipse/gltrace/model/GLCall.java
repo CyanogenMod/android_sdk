@@ -18,8 +18,11 @@ package com.android.ide.eclipse.gltrace.model;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
+import com.android.ide.eclipse.gltrace.state.GLStateTransform;
 
 import org.eclipse.swt.graphics.Image;
+
+import java.util.List;
 
 /**
  * A GLCall is the in memory representation of a single {@link GLProtoBuf.GLMessage}.
@@ -58,8 +61,12 @@ public class GLCall {
     /** Duration of this call. */
     private final int mDuration;
 
+    /** List of state transformations performed by this call. */
+    private final List<GLStateTransform> mStateTransforms;
+
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
-            Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration) {
+            Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration,
+            List<GLStateTransform> stateTransforms) {
         mIndex = index;
         mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
@@ -69,6 +76,7 @@ public class GLCall {
         mHasFb = hasFb;
         mContextId = contextId;
         mDuration = duration;
+        mStateTransforms = stateTransforms;
     }
 
     public int getIndex() {
@@ -101,6 +109,10 @@ public class GLCall {
 
     public int getDuration() {
         return mDuration;
+    }
+
+    public List<GLStateTransform> getStateTransformations() {
+        return mStateTransforms;
     }
 
     @Override
