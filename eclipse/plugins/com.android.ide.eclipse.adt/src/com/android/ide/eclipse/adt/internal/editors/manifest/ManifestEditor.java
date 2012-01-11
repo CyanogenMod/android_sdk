@@ -16,6 +16,11 @@
 
 package com.android.ide.eclipse.adt.internal.editors.manifest;
 
+import static com.android.ide.common.layout.LayoutConstants.ANDROID_URI;
+import static com.android.ide.common.layout.LayoutConstants.ATTR_NAME;
+import static com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors.USES_PERMISSION;
+
+import com.android.annotations.NonNull;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -38,13 +43,18 @@ import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.sse.core.internal.provisional.IndexedRegion;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.xpath.XPath;
@@ -388,5 +398,106 @@ public final class ManifestEditor extends AndroidXmlEditor {
             mUiManifestNode = desc.createUiNode();
             mUiManifestNode.setEditor(this);
         }
+    }
+
+    /**
+     * Adds the given set of permissions into the manifest file in the suitable
+     * location
+     *
+     * @param permissions permission fqcn's to be added
+     * @param show if true, show one or more of the newly added permissions
+     */
+    public void addPermissions(@NonNull final List<String> permissions, final boolean show) {
+        wrapUndoEditXmlModel("Add permissions", new Runnable() {
+            @Override
+            public void run() {
+                // Ensure that the model is current:
+                initUiRootNode(true /*force*/);
+                UiElementNode root = getUiRootNode();
+
+                ElementDescriptor descriptor = getManifestDescriptors().getUsesPermissionElement();
+                boolean shown = false;
+                for (String permission : permissions) {
+                    // Find the first permission which sorts alphabetically laster than
+                    // this permission (or the last permission, if none are after in the alphabet)
+                    // and insert it there
+                    int lastPermissionIndex = -1;
+                    int nextPermissionIndex = -1;
+                    int index = 0;
+                    for (UiElementNode sibling : root.getUiChildren()) {
+                        Node node = sibling.getXmlNode();
+                        if (node.getNodeName().equals(USES_PERMISSION)) {
+                            lastPermissionIndex = index;
+                            String name = ((Element) node).getAttributeNS(ANDROID_URI, ATTR_NAME);
+                            if (permission.compareTo(name) < 0) {
+                                nextPermissionIndex = index;
+                                break;
+                            }
+                        } else if (node.getNodeName().equals("application")) { //$NON-NLS-1$
+                            // permissions should come before the application element
+                            nextPermissionIndex = index;
+                            break;
+                        }
+                        index++;
+                    }
+
+                    if (nextPermissionIndex != -1) {
+                        index = nextPermissionIndex;
+                    } else if (lastPermissionIndex != -1) {
+                        index = lastPermissionIndex + 1;
+                    } else {
+                        index = root.getUiChildren().size();
+                    }
+                    UiElementNode usesPermission = root.insertNewUiChild(index, descriptor);
+                    usesPermission.setAttributeValue(ATTR_NAME, ANDROID_URI, permission,
+                            true /*override*/);
+                    Node node = usesPermission.createXmlNode();
+                    if (show && !shown) {
+                        shown = true;
+                        if (node instanceof IndexedRegion) {
+                            IndexedRegion indexedRegion = (IndexedRegion) node;
+                            IRegion region = new Region(indexedRegion.getStartOffset(),
+                                    indexedRegion.getEndOffset() - indexedRegion.getStartOffset());
+                            try {
+                                AdtPlugin.openFile(getInputFile(), region, true /*show*/);
+                            } catch (PartInitException e) {
+                                AdtPlugin.log(e, null);
+                            }
+                        } else {
+                            show(node);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Removes the permissions from the manifest editor
+     *
+     * @param permissions the permission fqcn's to be removed
+     */
+    public void removePermissions(@NonNull final Collection<String> permissions) {
+        wrapUndoEditXmlModel("Remove permissions", new Runnable() {
+            @Override
+            public void run() {
+                // Ensure that the model is current:
+                initUiRootNode(true /*force*/);
+                UiElementNode root = getUiRootNode();
+
+                for (String permission : permissions) {
+                    for (UiElementNode sibling : root.getUiChildren()) {
+                        Node node = sibling.getXmlNode();
+                        if (node.getNodeName().equals(USES_PERMISSION)) {
+                            String name = ((Element) node).getAttributeNS(ANDROID_URI, ATTR_NAME);
+                            if (name.equals(permission)) {
+                                sibling.deleteXmlNode();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 }

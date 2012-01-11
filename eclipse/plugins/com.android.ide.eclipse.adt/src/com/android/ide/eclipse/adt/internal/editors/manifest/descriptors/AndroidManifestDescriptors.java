@@ -55,7 +55,8 @@ import java.util.TreeSet;
  * loaded the first time.
  */
 public final class AndroidManifestDescriptors implements IDescriptorProvider {
-
+    /** Name of the {@code <uses-permission>} */
+    public static final String USES_PERMISSION = "uses-permission";             //$NON-NLS-1$
     private static final String MANIFEST_NODE_NAME = "manifest";                //$NON-NLS-1$
     private static final String ANDROID_MANIFEST_STYLEABLE =
         AttrsXmlParser.ANDROID_MANIFEST_STYLEABLE;
@@ -93,7 +94,7 @@ public final class AndroidManifestDescriptors implements IDescriptorProvider {
         INTRUMENTATION_ELEMENT = createElement("instrumentation"); //$NON-NLS-1$
 
         PERMISSION_ELEMENT = createElement("permission"); //$NON-NLS-1$
-        USES_PERMISSION_ELEMENT = createElement("uses-permission"); //$NON-NLS-1$
+        USES_PERMISSION_ELEMENT = createElement(USES_PERMISSION);
         USES_SDK_ELEMENT = createElement("uses-sdk", null, Mandatory.MANDATORY); //$NON-NLS-1$ + no child & mandatory
 
         PERMISSION_GROUP_ELEMENT = createElement("permission-group"); //$NON-NLS-1$
