@@ -151,10 +151,13 @@ sdk/apps/SdkController       tools/apps/SdkController
 # Tests Component
 ##############################################################################
 
-sdk/testapps            tests/testapps
-framework/ddmlib-tests.jar tests/libtests/ddmlib-tests.jar
-framework/ninepatch-tests.jar tests/libtests/ninepatch-tests.jar
-framework/common-tests.jar tests/libtests/common-tests.jar
-framework/sdklib-tests.jar tests/libtests/sdklib-tests.jar
-framework/sdkuilib-tests.jar tests/libtests/sdkuilib-tests.jar
-framework/layoutlib_api.jar tests/libtests/layoutlib_api.jar
+sdk/testapps                      tests/testapps
+framework/ddmlib-tests.jar        tests/libtests/ddmlib-tests.jar
+framework/ninepatch-tests.jar     tests/libtests/ninepatch-tests.jar
+framework/common-tests.jar        tests/libtests/common-tests.jar
+framework/sdklib-tests.jar        tests/libtests/sdklib-tests.jar
+framework/sdkuilib-tests.jar      tests/libtests/sdkuilib-tests.jar
+framework/layoutlib_api.jar       tests/libtests/layoutlib_api.jar
+framework/manifmerger.jar         tests/libtests/manifmerger.jar
+framework/manifmerger-tests.jar   tests/libtests/manifmerger-tests.jar
+
