@@ -712,7 +712,7 @@ public class CommandLineParser {
             }
         },
 
-        /** Argument value is a String Array. Default value is a null. */
+        /** Argument value is a {@link List}&lt;String&gt;. Default value is an empty list. */
         STRING_ARRAY {
             @Override
             public boolean needsExtra() {
