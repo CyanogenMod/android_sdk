@@ -23,7 +23,7 @@ import com.android.ide.eclipse.gltrace.format.GLMessageFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
-import com.android.ide.eclipse.gltrace.state.GLStateTransform;
+import com.android.ide.eclipse.gltrace.state.StateTransformFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -106,7 +106,7 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                                 msg.hasFb(),
                                 msg.getContextId(),
                                 msg.getDuration(),
-                                GLStateTransform.getTransformsFor(msg));
+                                StateTransformFactory.getTransformsFor(msg));
 
         mGLCalls.add(c);
         mGLContextIds.add(Integer.valueOf(c.getContextId()));
@@ -172,6 +172,11 @@ public class TraceFileParserTask implements IRunnableWithProgress {
                         }
                     }
                 });
+
+                // reassign indices after sorting
+                for (int i = 0; i < mGLCalls.size(); i++) {
+                    mGLCalls.get(i).setIndex(i);
+                }
             }
 
             glFrames = createFrames(mGLCalls);
