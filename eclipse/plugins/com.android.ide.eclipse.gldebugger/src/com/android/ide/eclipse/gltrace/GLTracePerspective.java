@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.gltrace;
 
 import com.android.ide.eclipse.gltrace.views.GLFramebufferView;
-import com.android.ide.eclipse.gltrace.views.GLStateView;
+import com.android.ide.eclipse.gltrace.views.StateView;
 
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
@@ -32,7 +32,7 @@ public class GLTracePerspective implements IPerspectiveFactory {
         // Add the OpenGL state view to the right of the editor
         IFolderLayout right = layout.createFolder(STATE_FOLDER_ID, IPageLayout.RIGHT, 0.7f,
                 layout.getEditorArea());
-        right.addView(GLStateView.ID);
+        right.addView(StateView.ID);
 
         // Add the OpenGL Framebuffer view below the state view
         IFolderLayout rightBottom = layout.createFolder(FB_FOLDER_ID, IPageLayout.BOTTOM, 0.6f,

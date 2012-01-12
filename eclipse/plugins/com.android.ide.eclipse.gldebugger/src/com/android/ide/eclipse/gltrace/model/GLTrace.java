@@ -20,9 +20,6 @@ import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
 import com.android.ide.eclipse.gltrace.ProtoBufUtils;
 import com.android.ide.eclipse.gltrace.TraceFileInfo;
 import com.android.ide.eclipse.gltrace.TraceFileReader;
-import com.android.ide.eclipse.gltrace.state.GLState;
-import com.android.ide.eclipse.gltrace.state.GLStateTransform;
-import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -32,9 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /** GLTrace is the in memory model of a OpenGL trace file. */
 public class GLTrace {
@@ -52,19 +47,12 @@ public class GLTrace {
     /** List of context ids used by the application. */
     private List<Integer> mContextIds;
 
-    /** OpenGL State as of call {@link #mCurrentStateIndex}. */
-    private IGLProperty mState;
-    private int mCurrentStateIndex;
-
     public GLTrace(TraceFileInfo traceFileInfo, List<GLFrame> glFrames, List<GLCall> glCalls,
             List<Integer> contextIds) {
         mTraceFileInfo = traceFileInfo;
         mGLFrames = glFrames;
         mGLCalls = glCalls;
         mContextIds = contextIds;
-
-        mState = GLState.createDefaultState();
-        mCurrentStateIndex = -1;
     }
 
     public List<GLFrame> getFrames() {
@@ -88,78 +76,6 @@ public class GLTrace {
         int end = frame.getEndIndex() + 1;
 
         return mGLCalls.subList(start, end);
-    }
-
-    public IGLProperty getStateAt(GLCall call) {
-        if (call == null) {
-            return null;
-        }
-
-        int callIndex = call.getIndex();
-        if (callIndex == mCurrentStateIndex) {
-            return mState;
-        }
-
-        if (callIndex > mCurrentStateIndex) {
-            // if the state is needed for a future GLCall, then apply the transformations
-            // for all the GLCall's upto and including the required GLCall
-            for (int i = mCurrentStateIndex + 1; i <= callIndex; i++) {
-                for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
-                    f.apply(mState);
-                }
-            }
-
-            mCurrentStateIndex = callIndex;
-            return mState;
-        }
-
-        // if the state is needed for a call that is before the current index,
-        // then revert the transformations until we reach the required call
-        for (int i = mCurrentStateIndex; i > callIndex; i--) {
-            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
-                f.revert(mState);
-            }
-        }
-
-        mCurrentStateIndex = callIndex;
-        return mState;
-    }
-
-    /**
-     * Gets the set of properties in the provided OpenGL state that are affected by
-     * changing state from one GL call to another.
-     */
-    public Set<IGLProperty> getChangedProperties(GLCall from, GLCall to, IGLProperty state) {
-        int fromIndex = from == null ? 0 : from.getIndex();
-        int toIndex = to == null ? 0 : to.getIndex();
-
-        if (fromIndex == -1 || toIndex == -1) {
-            return null;
-        }
-
-        int setSizeHint = 3 * Math.abs(fromIndex - toIndex) + 10;
-        Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
-
-        for (int i = Math.min(fromIndex, toIndex); i <= Math.max(fromIndex, toIndex); i++) {
-            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
-                IGLProperty changedProperty = f.getChangedProperty(state);
-                if (changedProperty == null) {
-                    continue;
-                }
-
-                // add the property that is affected
-                changedProperties.add(changedProperty);
-
-                // also add its entire parent chain until we reach the root
-                IGLProperty parent = changedProperty.getParent();
-                while (parent != null) {
-                    changedProperties.add(parent);
-                    parent = parent.getParent();
-                }
-            }
-        }
-
-        return changedProperties;
     }
 
     public Image getImage(GLCall c) {

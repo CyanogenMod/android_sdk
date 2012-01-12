@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.state.GLListProperty;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-public class GLStateLabelProvider extends LabelProvider implements ITableLabelProvider {
+public class StateLabelProvider extends LabelProvider implements ITableLabelProvider {
     @Override
     public Image getColumnImage(Object element, int columnIndex) {
         return null;

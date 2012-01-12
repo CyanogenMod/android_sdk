@@ -26,6 +26,7 @@ public class GLListProperty implements IGLProperty {
     private final List<IGLProperty> mList;
     private final GLStateType mType;
     private IGLProperty mParent;
+    private IGLProperty mTemplate;
 
     /**
      * Construct a list of properties of given size from the provided template.
@@ -34,6 +35,7 @@ public class GLListProperty implements IGLProperty {
      */
     public GLListProperty(GLStateType type, IGLProperty template, int size) {
         mType = type;
+        mTemplate = template;
 
         mList = new ArrayList<IGLProperty>(size);
         for (int i = 0; i < size; i++) {
@@ -62,8 +64,15 @@ public class GLListProperty implements IGLProperty {
     }
 
     public void set(int index, IGLProperty property) {
+        ensureCapacity(index + 1);
         mList.set(index, property);
         property.setParent(this);
+    }
+
+    private void ensureCapacity(int capactiy) {
+        for (int i = mList.size(); i < capactiy; i++) {
+            mList.add(mTemplate);
+        }
     }
 
     @Override

@@ -25,9 +25,9 @@
       </view>
       <view
             category="com.android.ide.eclipse.gltrace"
-            class="com.android.ide.eclipse.gltrace.views.GLStateView"
+            class="com.android.ide.eclipse.gltrace.views.StateView"
             icon="icons/opengl.png"
-            id="com.android.ide.eclipse.gltrace.views.GLState"
+            id="com.android.ide.eclipse.gltrace.views.State"
             name="GL State"
             restorable="true">
       </view>

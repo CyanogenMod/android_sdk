@@ -21,6 +21,8 @@ public enum GLStateType {
     // Note: the indentation reflects the state hierarchy.
 
     GL_STATE("OpenGL State Variables"),
+        GL_STATE_ES1("OpenGL ES 1.1 State"),
+        GL_STATE_ES2("OpenGL ES 2.0 State"),
 
     VERTEX_ARRAY_DATA("Vertex Array Data"),
         VERTEX_ATTRIB_ARRAY("Vertex Attrib Array Properties"),

@@ -83,12 +83,18 @@ public class GLState {
         return framebufferState;
     }
 
-    /** Construct the default OpenGL State hierarchy. */
-    public static IGLProperty createDefaultState() {
+    public static IGLProperty createDefaultES2State() {
         // TODO: Currently, this only models a tiny subset of the OpenGL state.
-        GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE,
+        GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE_ES2,
                 sGLState.createVertexArrayData(),
                 sGLState.createFramebufferState());
         return glState;
+    }
+
+    /** Construct the default OpenGL State hierarchy. */
+    public static IGLProperty createDefaultState(int numContexts) {
+        return new GLListProperty(GLStateType.GL_STATE,
+                createDefaultES2State(),
+                numContexts);
     }
 }

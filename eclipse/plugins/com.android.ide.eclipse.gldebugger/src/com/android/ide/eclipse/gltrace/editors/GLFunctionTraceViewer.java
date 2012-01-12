@@ -534,4 +534,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
     public GLTrace getTrace() {
         return mTrace;
     }
+
+    public StateViewPage getStateViewPage() {
+        return new StateViewPage(mTrace);
+    }
 }

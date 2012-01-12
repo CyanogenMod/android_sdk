@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.views;
+package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLListProperty;
@@ -23,7 +23,7 @@ import com.android.ide.eclipse.gltrace.state.IGLProperty;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-public class GLStateContentProvider implements ITreeContentProvider {
+public class StateContentProvider implements ITreeContentProvider {
     @Override
     public void dispose() {
     }

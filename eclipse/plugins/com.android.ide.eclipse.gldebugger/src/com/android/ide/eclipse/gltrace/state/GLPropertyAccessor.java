@@ -24,13 +24,17 @@ import java.util.List;
  * OpenGL State hierarchy.
  */
 public class GLPropertyAccessor {
-    private List<GLPropertyExtractor> mExtractors;
+    private final int mContextId;
+    private final List<GLPropertyExtractor> mExtractors;
 
-    private GLPropertyAccessor(List<GLPropertyExtractor> extractors) {
+    private GLPropertyAccessor(int contextId, List<GLPropertyExtractor> extractors) {
+        mContextId = contextId;
         mExtractors = extractors;
     }
 
-    public IGLProperty getProperty(IGLProperty root) {
+    public IGLProperty getProperty(IGLProperty state) {
+        IGLProperty root = ((GLListProperty) state).get(mContextId);
+
         for (GLPropertyExtractor e : mExtractors) {
             IGLProperty successor = e.getProperty(root);
             if (successor == null) {
@@ -44,12 +48,13 @@ public class GLPropertyAccessor {
 
     /**
      * Factory method used to construct a {@link GLPropertyAccessor}.
+     * @param contextId id of affected context
      * @param accessors list of accessor's to be used to navigate the property hierarchy. The
      *                  accessors are either Integers or {@link GLStateType} objects. Integers
      *                  are assumed to be indexes in a {@link GLListProperty}, and the
      *                  GLStateType enum objects are used to query {@link GLCompositeProperty}'s.
      */
-    public static GLPropertyAccessor makeAccessor(Object...accessors) {
+    public static GLPropertyAccessor makeAccessor(int contextId, Object...accessors) {
         List<GLPropertyExtractor> extractors = new ArrayList<GLPropertyExtractor>();
 
         for (Object accessor : accessors) {
@@ -63,7 +68,7 @@ public class GLPropertyAccessor {
             }
         }
 
-        return new GLPropertyAccessor(extractors);
+        return new GLPropertyAccessor(contextId, extractors);
     }
 
     private interface GLPropertyExtractor {

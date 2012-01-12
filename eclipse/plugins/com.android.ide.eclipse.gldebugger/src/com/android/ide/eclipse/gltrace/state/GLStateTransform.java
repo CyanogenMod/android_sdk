@@ -95,31 +95,36 @@ public class GLStateTransform {
 
         List<GLStateTransform> transforms = new ArrayList<GLStateTransform>();
         transforms.add(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.VERTEX_ARRAY_DATA,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_SIZE),
                 Integer.valueOf(size)));
         transforms.add(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.VERTEX_ARRAY_DATA,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_TYPE),
                 GLEnum.valueOf(type)));
         transforms.add(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.VERTEX_ARRAY_DATA,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_NORMALIZED),
                 Boolean.valueOf(normalized)));
         transforms.add(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.VERTEX_ARRAY_DATA,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_STRIDE),
                 Integer.valueOf(stride)));
         transforms.add(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.VERTEX_ARRAY_DATA,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.VERTEX_ARRAY_DATA,
                                                 GLStateType.VERTEX_ATTRIB_ARRAY,
                                                 Integer.valueOf(index),
                                                 GLStateType.VERTEX_ATTRIB_ARRAY_POINTER),
@@ -131,7 +136,8 @@ public class GLStateTransform {
         // void glBindFramebuffer(GLenum target, GLuint framebuffer);
         int fb = msg.getArgs(1).getIntValue(0);
         return Collections.singletonList(new GLStateTransform(
-                GLPropertyAccessor.makeAccessor(GLStateType.FRAMEBUFFER_STATE,
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.FRAMEBUFFER_STATE,
                                                 GLStateType.FRAMEBUFFER_BINDING),
                 fb));
     }
