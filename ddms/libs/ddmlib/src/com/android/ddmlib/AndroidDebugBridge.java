@@ -19,6 +19,7 @@ package com.android.ddmlib;
 import com.android.ddmlib.Log.LogLevel;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.Thread.State;
@@ -577,7 +578,7 @@ public final class AndroidDebugBridge {
                     builder.append('\n');
                     builder.append(error);
                 }
-                Log.logAndDisplay(LogLevel.ERROR, "adb", builder.toString());
+                Log.logAndDisplay(LogLevel.ERROR, ADB, builder.toString());
             }
 
             // check both stdout and stderr
@@ -599,13 +600,25 @@ public final class AndroidDebugBridge {
 
             if (!versionFound) {
                 // if we get here, we failed to parse the output.
-                Log.logAndDisplay(LogLevel.ERROR, ADB,
-                        "Failed to parse the output of 'adb version'"); //$NON-NLS-1$
+                StringBuilder builder = new StringBuilder(
+                        "Failed to parse the output of 'adb version':\n"); //$NON-NLS-1$
+                builder.append("Standard Output was:\n"); //$NON-NLS-1$
+                for (String line : stdOutput) {
+                    builder.append(line);
+                    builder.append('\n');
+                }
+                builder.append("\nError Output was:\n"); //$NON-NLS-1$
+                for (String line : errorOutput) {
+                    builder.append(line);
+                    builder.append('\n');
+                }
+                Log.logAndDisplay(LogLevel.ERROR, ADB, builder.toString());
             }
-
         } catch (IOException e) {
             Log.logAndDisplay(LogLevel.ERROR, ADB,
-                    "Failed to get the adb version: " + e.getMessage()); //$NON-NLS-1$
+                    "Failed to get the adb version: " + e.getMessage()   //$NON-NLS-1$
+                    + " from '" + mAdbOsLocation + "' - exists="         //$NON-NLS-1$
+                            + (new File(mAdbOsLocation).exists()));
         } catch (InterruptedException e) {
         } finally {
 
