@@ -109,6 +109,7 @@ public class LintConstants {
     public static final String ATTR_PATH = "path";                     //$NON-NLS-1$
     public static final String ATTR_PATH_PREFIX = "pathPrefix";        //$NON-NLS-1$
     public static final String ATTR_PATH_PATTERN = "pathPattern";      //$NON-NLS-1$
+    public final static String ATTR_DEBUGGABLE = "debuggable";         //$NON-NLS-1$
 
     // Attributes: Resources
     public static final String ATTR_NAME = "name";                     //$NON-NLS-1$
