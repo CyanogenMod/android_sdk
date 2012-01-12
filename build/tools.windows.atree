@@ -72,9 +72,9 @@ rm tools/monkeyrunner
 sdk/monkeyrunner/etc/monkeyrunner.bat             tools/monkeyrunner.bat
 
 rm tools/proguard/bin
-sdk/files/proguard/bin/proguard.bat               tools/proguard/bin/proguard.bat
-sdk/files/proguard/bin/proguardgui.bat            tools/proguard/bin/proguardgui.bat
-sdk/files/proguard/bin/retrace.bat                tools/proguard/bin/retrace.bat
+prebuilts/tools/common/proguard/proguard4.7/bin/proguard.bat    tools/proguard/bin/proguard.bat
+prebuilts/tools/common/proguard/proguard4.7/bin/retrace.bat     tools/proguard/bin/retrace.bat
+prebuilts/tools/common/proguard/proguard4.7/bin/proguardgui.bat tools/proguard/bin/proguardgui.bat
 
 rm tools/sqlite3
 bin/sqlite3.exe                             strip tools/sqlite3.exe

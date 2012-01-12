@@ -132,17 +132,17 @@ prebuilts/tools/common/guava-tools/guava-10.0.1.jar           tools/lib/guava-10
 prebuilts/tools/common/lombok-ast/lombok-ast-0.2.jar          tools/lib/lombok_ast-0.2.jar
 
 # Proguard
-external/proguard/docs/license.html                           tools/proguard/license.html
-external/proguard/docs/GPL.html                               tools/proguard/GPL.html
-external/proguard/docs/GPL_exception.html                     tools/proguard/GPL_exception.html
-external/proguard/lib/proguard.jar                            tools/proguard/lib/proguard.jar
-external/proguard/lib/proguardgui.jar                         tools/proguard/lib/proguardgui.jar
-external/proguard/lib/retrace.jar                             tools/proguard/lib/retrace.jar
-external/proguard/bin/proguard.sh                             tools/proguard/bin/proguard.sh
-external/proguard/bin/proguardgui.sh                          tools/proguard/bin/proguardgui.sh
-external/proguard/bin/retrace.sh                              tools/proguard/bin/retrace.sh
-external/proguard/src/proguard/ant/task.properties            tools/proguard/ant/task.properties
-
+# We're skipping the build and src/ trees (except for src/proguard/ant/task.properties)
+# and copying in a license.html file
+prebuilts/tools/common/proguard/license.html                   tools/proguard/license.html
+prebuilts/tools/common/proguard/proguard4.7/README             tools/proguard/README
+prebuilts/tools/common/proguard/proguard4.7/docs               tools/proguard/docs
+prebuilts/tools/common/proguard/proguard4.7/examples           tools/proguard/examples
+prebuilts/tools/common/proguard/proguard4.7/lib                tools/proguard/lib
+prebuilts/tools/common/proguard/proguard4.7/bin/proguard.sh    tools/proguard/bin/proguard.sh
+prebuilts/tools/common/proguard/proguard4.7/bin/proguardgui.sh tools/proguard/bin/proguardgui.sh
+prebuilts/tools/common/proguard/proguard4.7/bin/retrace.sh     tools/proguard/bin/retrace.sh
+prebuilts/tools/common/proguard/proguard4.7/src/proguard/ant/task.properties  tools/proguard/ant/task.properties
 
 # SDK Controller
 sdk/apps/SdkController       tools/apps/SdkController
