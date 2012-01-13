@@ -1,3 +1,47 @@
+17.0.0:
+* ADT 17 requires Java 6 and Eclipse 3.6.2.
+* Improved Lint UI.
+   * Many new lint checks: See the tools changes.txt for details.
+   * New "Run Lint" toolbar action with a dropdown menu for selecting
+     specific (or all) projects, clearing results, etc.
+   * The results window is now organized as a tree rather than a flat
+     list. Each issue type has a single top level item, which makes it
+     easier to quickly scan through the reported issues and narrow
+     down to issues you are most interested in.
+   * The results window contains many new toolbar actions, including
+     expand/collapse, ignore in file, ignore in project, ignore
+     everywhere, show options, and configure columns.
+   * There are new columns available, such as category, priority,
+     project, file and line. The column selection (as well as the
+     column sizes) are persisted. You can click on columns to sort by
+     that column.
+   * The Lint Options dialog has Enable All and Disable All buttons,
+     and a search filter textbox to filter by issue id, summary and
+     severity.
+* New Quick Outline for XML editors (Ctrl-O, Command-O). This shows
+  the structure of the current file including icons and ids, and lets
+  you filter and quickly jump to specific ids.
+* The resource chooser now shows the resolved value for resources
+  (e.g. when selecting @string/hello it displays that the resolved value
+  is "Hello World"). It also allows editing the chosen value directly.
+* The layout editor no longer assigns default ids to layouts, includes
+  and merge tags. This tended to pollute the namespace with a lot of
+  unused resources since layouts aren't usually manipulated via code,
+  or referenced from XML. (The RelativeLayout editor automatically
+  assigns ids to views without ids when pointing to them.)
+* Layout editor fix for SlidingDrawer which on some platforms could
+  not be dragged into the layout. Also fix preview rendering for
+  SlidingDrawer and TabHost (issue 23022).
+* New default application icons, including an xhdpi version.
+* Important bug fixes:
+  * Fix bug in resource chooser which made some types of framework
+    resources impossible to select (issue 20589)
+  * Fix a bug in the formatter where a certain whitespace pattern
+    could result in a non-space character getting deleted (issue
+    23940)
+  * Fix locale bug affecting Turkish locales in particular (issue
+    23747)
+
 16.0.0:
 * New "lint" feature which scans the Android projects for potential
   problems such as missing translations, duplicate ids between layouts
