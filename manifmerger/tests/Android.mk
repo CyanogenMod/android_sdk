@@ -23,6 +23,6 @@ LOCAL_JAVA_RESOURCE_DIRS := src
 LOCAL_MODULE := manifmerger-tests
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_JAVA_LIBRARIES := manifmerger junit
+LOCAL_JAVA_LIBRARIES := manifmerger sdklib-tests junit
 
 include $(BUILD_HOST_JAVA_LIBRARY)
