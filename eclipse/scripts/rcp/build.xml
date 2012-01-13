@@ -3,10 +3,10 @@
     <property name="ANDROID_SRC" location="../../../../" />
 
     <!-- Host Eclipse used for building the RCP -->
-    <property name="basebuilder" value="${ANDROID_SRC}/prebuilts/tools/build/basebuilder/org.eclipse.releng.basebuilder/" />
+    <property name="basebuilder" value="${ANDROID_SRC}/vendor/eclipse/basebuilder-3.6.2/org.eclipse.releng.basebuilder/" />
 
     <!-- Source for target prebuilts -->
-    <property name="targetSrcDir" value="${ANDROID_SRC}/prebuilts/tools/build/target-platform/" />
+    <property name="targetSrcDir" value="${ANDROID_SRC}/prebuilts/eclipse/" />
 
     <!-- Location where build happens and resulting binaries are generated -->
     <property name="outDir" value="${ANDROID_SRC}/out/host/eclipse/rcp/" />
@@ -53,8 +53,8 @@
 		<mkdir dir="${targetDir}/deltapack" />
 		<mkdir dir="${targetDir}/repos" />
 
-        <unzip src="${targetSrcDir}/eclipse-3.6.2-delta-pack.zip" dest="${targetDir}/deltapack" />
-        <unzip src="${targetSrcDir}/org.eclipse.platform-3.6.2.zip" dest="${targetDir}/repos/platform" />
+        <unzip src="${targetSrcDir}/deltapack/eclipse-3.6.2-delta-pack.zip" dest="${targetDir}/deltapack" />
+        <unzip src="${targetSrcDir}/platform/org.eclipse.platform.source-3.6.2.zip" dest="${targetDir}/repos/platform" />
     </target>
 	
     <!-- Launch pde build -->
