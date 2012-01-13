@@ -1,7 +1,58 @@
 Change log for Android SDK Tools.
 
 Revision 17:
-* New lint rules which analyze Java source and class files.
+* Bug fixes.
+* ProGuard updated to version 4.7. In addition to many new features,
+  this will fix the "Conversion to Dalvik format failed with error 1"
+  error some users have experienced.
+* The default proguard.cfg file has been updated with better
+  flags.
+* Lint now checks Java code, and checks which previously performed
+  pattern based searches in the Java code (such as the unused resource
+  check) have been rewritten to use the more accurate Java parse
+  trees.
+* Lint supports library projects, so for example the unused resource
+  check will properly handle resources declared in a library project
+  and referenced in a downstream project.
+* New lint checks:
+  * Find hardcoded android:debuggable attributes on <application>
+    elements. This can lead to accidentally leaving debug information
+    in published applications.
+  * Find errors in format strings. This includes inconsistencies
+    between translated versions, as well as incompatible types
+    declared in XML and supplied in the String.format call in Java.
+  * Find incorrect casts in Java code where the cast is incompatible
+    with the view type declared in XML layouts.
+  * Find hardcoded references to "/sdcard" in Java code; these should
+    be using Environment.getExternalStorageDirectory().getPath()
+    instead
+  * Find "import android.R" statements in Java code, which can lead to
+    confusing compilation error messages
+  * Find Java code which creates world-writeable files (which can lead
+    to security problems)
+  * Find references to private resources (which can lead to runtime
+    errors on devices that do not provide the resource, since private
+    resources may disappear any time, and may not be present on all
+    platforms.)
+  * Find invalid @id references (where for example a RelativeLayout
+    references an id that does not exist anywhere). If no match is
+    found, it looks for spelling mistakes and suggests other similar
+    ids in the error message.
+  * Finds method calls to java.lang.Math where a float variable is
+    cast to a double and/or the return value is cast to a float, and
+    suggests replacing it with the equivalent android.util.FloatMath
+    method.
+  * Finds calls to a getter on the same class where a field could be
+    accessed instead.
+  * Find XML files using a different encoding format than UTF-8, since
+    this can lead to subtle bugs (and lint was fixed to properly use
+    the specified encoding)
+  * Find XML resource files that contain text which should not be
+    there (such as in layouts). This can identify accidentally
+    malformed documents which happen to be valid XML, such as a
+    missing "<" tag opening character.
+  * Find style references which lead to cycles, such as extending
+    self.
 
 Revision 16:
 * New "lint" tool which scans Android project trees for potential
