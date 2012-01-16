@@ -69,7 +69,7 @@ public class StateLabelProvider extends ColumnLabelProvider {
             }
         }
 
-        return element.getType().toString();
+        return element.getType().getDescription();
     }
 
     @Override
