@@ -542,7 +542,7 @@ public class AdtProjectTest extends SdkTestCase {
             fail("Did not find golden file (" + expectedName + "): Wrote contents as "
                     + expectedPath);
         } else {
-            if (!expected.equals(actual)) {
+            if (!expected.replaceAll("\r\n", "\n").equals(actual.replaceAll("\r\n", "\n"))) {
                 File expectedPath = new File(getTempDir(), expectedName);
                 File actualPath = new File(getTempDir(),
                         expectedName.replace("expected", "actual"));
