@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.state;
+package com.android.ide.eclipse.gltrace.state.transforms;
 
 import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage;
+import com.android.ide.eclipse.gltrace.state.GLState;
+import com.android.ide.eclipse.gltrace.state.GLStateType;
+import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +70,20 @@ public class StateTransformFactory {
                 return transformsForGlBlendFuncSeparate(msg);
             case glPixelStorei:
                 return transformsForGlPixelStorei(msg);
+            case glGenTextures:
+                return transformsForGlGenTextures(msg);
+            case glDeleteTextures:
+                return transformsForGlDeleteTextures(msg);
+            case glActiveTexture:
+                return transformsForGlActiveTexture(msg);
+            case glBindTexture:
+                return transformsForGlBindTexture(msg);
+            case glTexImage2D:
+                return transformsForGlTexImage2D(msg);
+            case glTexSubImage2D:
+                return transformsForGlTexSubImage2D(msg);
+            case glTexParameteri:
+                return transformsForGlTexParameter(msg);
             default:
                 return Collections.emptyList();
         }
@@ -562,6 +579,150 @@ public class StateTransformFactory {
                                                 GLStateType.DEPTH_RANGE_FAR),
                 Float.valueOf(far)));
         return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlGenTextures(GLMessage msg) {
+        // void glGenTextures(GLsizei n, GLuint *textures);
+        int n = msg.getArgs(0).getIntValue(0);
+
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>();
+        for (int i = 0; i < n; i++) {
+            int texture = msg.getArgs(1).getIntValue(i);
+            transforms.add(new SparseArrayElementAddTransform(
+                    GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                    GLStateType.TEXTURE_STATE,
+                                                    GLStateType.TEXTURES),
+                    texture));
+        }
+
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlDeleteTextures(GLMessage msg) {
+        // void glDeleteTextures(GLsizei n, const GLuint * textures);
+        int n = msg.getArgs(0).getIntValue(0);
+
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>(n);
+        for (int i = 0; i < n; i++) {
+            int texture = msg.getArgs(1).getIntValue(i);
+            transforms.add(new SparseArrayElementRemoveTransform(
+                    GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                    GLStateType.TEXTURE_STATE,
+                                                    GLStateType.TEXTURES),
+                    texture));
+        }
+
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlActiveTexture(GLMessage msg) {
+        // void glActiveTexture(GLenum texture);
+        GLEnum texture = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        Integer textureIndex = Integer.valueOf(texture.value - GLEnum.GL_TEXTURE0.value);
+        IStateTransform transform = new PropertyChangeTransform(
+                GLPropertyAccessor.makeAccessor(msg.getContextId(),
+                                                GLStateType.TEXTURE_STATE,
+                                                GLStateType.ACTIVE_TEXTURE_UNIT),
+                textureIndex);
+        return Collections.singletonList(transform);
+    }
+
+    private static GLStateType getTextureUnitTargetName(GLEnum target) {
+        if (target == GLEnum.GL_TEXTURE_BINDING_CUBE_MAP) {
+            return GLStateType.TEXTURE_BINDING_CUBE_MAP;
+        } else {
+            return GLStateType.TEXTURE_BINDING_2D;
+        }
+    }
+
+    private static GLStateType getTextureTargetName(GLEnum pname) {
+        switch (pname) {
+            case GL_TEXTURE_MIN_FILTER:
+                return GLStateType.TEXTURE_MIN_FILTER;
+            case GL_TEXTURE_MAG_FILTER:
+                return GLStateType.TEXTURE_MAG_FILTER;
+            case GL_TEXTURE_WRAP_S:
+                return GLStateType.TEXTURE_WRAP_S;
+            case GL_TEXTURE_WRAP_T:
+                return GLStateType.TEXTURE_WRAP_T;
+        }
+
+        assert false : "glTexParameter's pname argument does not support provided value.";
+        return GLStateType.TEXTURE_MIN_FILTER;
+    }
+
+    private static List<IStateTransform> transformsForGlBindTexture(GLMessage msg) {
+        // void glBindTexture(GLenum target, GLuint texture);
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        Integer texture = Integer.valueOf(msg.getArgs(1).getIntValue(0));
+
+        IStateTransform transform = new PropertyChangeTransform(
+                new TextureUnitPropertyAccessor(msg.getContextId(),
+                                                getTextureUnitTargetName(target)),
+                texture);
+        return Collections.singletonList(transform);
+    }
+
+    /**
+     * Utility function used by both {@link #transformsForGlTexImage2D(GLMessage) and
+     * {@link #transformsForGlTexSubImage2D(GLMessage)}.
+     */
+    private static List<IStateTransform> transformsForGlTexImage(GLMessage msg, int widthArgIndex,
+            int heightArgIndex) {
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        Integer width = Integer.valueOf(msg.getArgs(widthArgIndex).getIntValue(0));
+        Integer height = Integer.valueOf(msg.getArgs(heightArgIndex).getIntValue(0));
+        GLEnum format = GLEnum.valueOf(msg.getArgs(6).getIntValue(0));
+        GLEnum type = GLEnum.valueOf(msg.getArgs(7).getIntValue(0));
+
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>();
+        transforms.add(new PropertyChangeTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                                            getTextureUnitTargetName(target),
+                                            GLStateType.TEXTURE_WIDTH),
+                width));
+        transforms.add(new PropertyChangeTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                                            getTextureUnitTargetName(target),
+                                            GLStateType.TEXTURE_HEIGHT),
+                height));
+        transforms.add(new PropertyChangeTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                                            getTextureUnitTargetName(target),
+                                            GLStateType.TEXTURE_FORMAT),
+                format));
+        transforms.add(new PropertyChangeTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                                            getTextureUnitTargetName(target),
+                                            GLStateType.TEXTURE_IMAGE_TYPE),
+                type));
+        return transforms;
+    }
+
+    private static List<IStateTransform> transformsForGlTexImage2D(GLMessage msg) {
+        // void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width,
+        //          GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * data);
+        return transformsForGlTexImage(msg, 3, 4);
+    }
+
+    private static List<IStateTransform> transformsForGlTexSubImage2D(GLMessage msg) {
+        // void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+        //          GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * data);
+        return transformsForGlTexImage(msg, 4, 5);
+    }
+
+    private static List<IStateTransform> transformsForGlTexParameter(GLMessage msg) {
+        // void glTexParameteri(GLenum target, GLenum pname, GLint param);
+        GLEnum target = GLEnum.valueOf(msg.getArgs(0).getIntValue(0));
+        GLEnum pname = GLEnum.valueOf(msg.getArgs(1).getIntValue(0));
+        GLEnum pvalue = GLEnum.valueOf(msg.getArgs(2).getIntValue(0));
+
+        IStateTransform transform = new PropertyChangeTransform(
+                new TexturePropertyAccessor(msg.getContextId(),
+                                            getTextureUnitTargetName(target),
+                                            getTextureTargetName(pname)),
+                pvalue);
+        return Collections.singletonList(transform);
     }
 
     private static List<IStateTransform> transformsForEglCreateContext(GLMessage msg) {

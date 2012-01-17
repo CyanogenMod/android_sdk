@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.state;
+package com.android.ide.eclipse.gltrace.state.transforms;
+
+import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
+import com.android.ide.eclipse.gltrace.state.GLListProperty;
+import com.android.ide.eclipse.gltrace.state.GLSparseArrayProperty;
+import com.android.ide.eclipse.gltrace.state.GLStateType;
+import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +29,7 @@ import java.util.List;
  * GLPropertyAccessor's can be used to extract a certain property from the provided
  * OpenGL State hierarchy.
  */
-public class GLPropertyAccessor {
+public class GLPropertyAccessor implements IGLPropertyAccessor {
     private final int mContextId;
     private final List<GLPropertyExtractor> mExtractors;
 
@@ -32,6 +38,7 @@ public class GLPropertyAccessor {
         mExtractors = extractors;
     }
 
+    @Override
     public IGLProperty getProperty(IGLProperty state) {
         IGLProperty root = ((GLListProperty) state).get(mContextId);
 
@@ -51,17 +58,18 @@ public class GLPropertyAccessor {
      * @param contextId id of affected context
      * @param accessors list of accessor's to be used to navigate the property hierarchy. The
      *                  accessors are either Integers or {@link GLStateType} objects. Integers
-     *                  are assumed to be indexes in a {@link GLListProperty}, and the
-     *                  GLStateType enum objects are used to query {@link GLCompositeProperty}'s.
+     *                  are assumed to be indexes in a {@link GLListProperty} or
+     *                  {@link GLSparseArrayProperty}, and the GLStateType enum objects are
+     *                  used to query {@link GLCompositeProperty}'s.
      */
-    public static GLPropertyAccessor makeAccessor(int contextId, Object...accessors) {
+    public static IGLPropertyAccessor makeAccessor(int contextId, Object...accessors) {
         List<GLPropertyExtractor> extractors = new ArrayList<GLPropertyExtractor>();
 
         for (Object accessor : accessors) {
             if (accessor instanceof GLStateType) {
-                extractors.add(new GLCompositePropertyExtractor((GLStateType) accessor));
+                extractors.add(new GLNamePropertyExtractor((GLStateType) accessor));
             } else if (accessor instanceof Integer) {
-                extractors.add(new GLListPropertyExtractor((Integer) accessor));
+                extractors.add(new GLIndexPropertyExtractor((Integer) accessor));
             } else {
                 throw new IllegalArgumentException("Unknown property (" + accessor
                         + ") used to access members of IGLProperty");
@@ -75,10 +83,11 @@ public class GLPropertyAccessor {
         IGLProperty getProperty(IGLProperty p);
     }
 
-    private static class GLCompositePropertyExtractor implements GLPropertyExtractor {
+    /** Extract properties by name. */
+    private static class GLNamePropertyExtractor implements GLPropertyExtractor {
         private final GLStateType mType;
 
-        public GLCompositePropertyExtractor(GLStateType type) {
+        public GLNamePropertyExtractor(GLStateType type) {
             mType = type;
         }
 
@@ -92,10 +101,11 @@ public class GLPropertyAccessor {
         }
     }
 
-    private static class GLListPropertyExtractor implements GLPropertyExtractor {
+    /** Extract properties by index. */
+    private static class GLIndexPropertyExtractor implements GLPropertyExtractor {
         private final int mIndex;
 
-        public GLListPropertyExtractor(int index) {
+        public GLIndexPropertyExtractor(int index) {
             mIndex = index;
         }
 
@@ -103,6 +113,9 @@ public class GLPropertyAccessor {
         public IGLProperty getProperty(IGLProperty p) {
             if (p instanceof GLListProperty) {
                 return ((GLListProperty) p).get(mIndex);
+            }
+            if (p instanceof GLSparseArrayProperty) {
+                return ((GLSparseArrayProperty) p).getProperty(mIndex);
             }
             return null;
         }

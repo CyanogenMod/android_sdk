@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.state;
+package com.android.ide.eclipse.gltrace.state.transforms;
+
+import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 /**
  * A PropertyChangeTransform object provides the ability to alter the value of a
  * single GL State variable.
  */
 public class PropertyChangeTransform implements IStateTransform {
-    private final GLPropertyAccessor mAccessor;
+    private final IGLPropertyAccessor mAccessor;
     private final Object mNewValue;
     private Object mOldValue;
 
@@ -29,7 +31,7 @@ public class PropertyChangeTransform implements IStateTransform {
      * Construct a state transform that will extract the property using the accessor,
      * and modify its value to the provided value.
      */
-    PropertyChangeTransform(GLPropertyAccessor accessor, Object newValue) {
+    PropertyChangeTransform(IGLPropertyAccessor accessor, Object newValue) {
         mAccessor = accessor;
         mNewValue = newValue;
         mOldValue = null;

@@ -23,7 +23,7 @@ import com.android.ide.eclipse.gltrace.format.GLMessageFormatter;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLFrame;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
-import com.android.ide.eclipse.gltrace.state.StateTransformFactory;
+import com.android.ide.eclipse.gltrace.state.transforms.StateTransformFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;

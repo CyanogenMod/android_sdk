@@ -20,7 +20,7 @@ import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.GLState;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
-import com.android.ide.eclipse.gltrace.state.IStateTransform;
+import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;

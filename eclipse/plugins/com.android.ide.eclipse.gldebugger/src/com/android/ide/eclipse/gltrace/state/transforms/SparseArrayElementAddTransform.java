@@ -14,51 +14,54 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.gltrace.state;
+package com.android.ide.eclipse.gltrace.state.transforms;
+
+import com.android.ide.eclipse.gltrace.state.GLSparseArrayProperty;
+import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 /**
- * A {@link ListElementAddTransform} provides the ability to add a new property to a list of
- * properties in the GL State.
+ * A {@link SparseArrayElementAddTransform} changes given state by adding an
+ * element to a sparse array.
  */
-public class ListElementAddTransform implements IStateTransform {
-    private final GLPropertyAccessor mAccessor;
-    private final IGLProperty mElement;
+public class SparseArrayElementAddTransform implements IStateTransform {
+    private IGLPropertyAccessor mAccessor;
+    private int mKey;
 
-    public ListElementAddTransform(GLPropertyAccessor accessor, IGLProperty element) {
+    public SparseArrayElementAddTransform(IGLPropertyAccessor accessor, int key) {
         mAccessor = accessor;
-        mElement = element;
+        mKey = key;
     }
 
     @Override
     public void apply(IGLProperty currentState) {
-        GLListProperty list = getList(currentState);
-        if (list != null) {
-            list.add(mElement);
+        GLSparseArrayProperty propertyArray = getArray(currentState);
+        if (propertyArray != null) {
+            propertyArray.add(mKey);
         }
     }
 
     @Override
     public void revert(IGLProperty currentState) {
-        GLListProperty list = getList(currentState);
-        if (list != null) {
-            list.remove(mElement);
+        GLSparseArrayProperty propertyArray = getArray(currentState);
+        if (propertyArray != null) {
+            propertyArray.delete(mKey);
         }
     }
 
     @Override
     public IGLProperty getChangedProperty(IGLProperty currentState) {
-        return getList(currentState);
+        return getArray(currentState);
     }
 
-    private GLListProperty getList(IGLProperty state) {
+    private GLSparseArrayProperty getArray(IGLProperty state) {
         IGLProperty p = state;
 
         if (mAccessor != null) {
             p = mAccessor.getProperty(p);
         }
 
-        if (p instanceof GLListProperty) {
-            return (GLListProperty) p;
+        if (p instanceof GLSparseArrayProperty) {
+            return (GLSparseArrayProperty) p;
         } else {
             return null;
         }

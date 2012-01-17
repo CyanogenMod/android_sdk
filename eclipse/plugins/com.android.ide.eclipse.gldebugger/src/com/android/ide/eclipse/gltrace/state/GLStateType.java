@@ -96,13 +96,29 @@ public enum GLStateType {
         PACK_ALIGNMENT("Pack Alignment"),
         UNPACK_ALIGNMENT("Unpack Alignment"),
 
+    TEXTURE_STATE("Texture State"),
+        ACTIVE_TEXTURE_UNIT("Active Texture Unit"),
+        TEXTURE_UNITS("Texture Units"),
+        PER_TEXTURE_UNIT_STATE("Texture Unit Properties"),
+            TEXTURE_BINDING_2D("TEXTURE_2D Binding"),
+            TEXTURE_BINDING_CUBE_MAP("TEXTURE_CUBE_MAP Binding"),
+        TEXTURES("Textures"),
+            PER_TEXTURE_STATE("Per Texture State"),
+                TEXTURE_MIN_FILTER("Minification Function"),
+                TEXTURE_MAG_FILTER("Magnification Function"),
+                TEXTURE_WRAP_S("Texcoord s Wrap Mode"),
+                TEXTURE_WRAP_T("Texcoord t Wrap Mode"),
+                TEXTURE_FORMAT("Format"),
+                TEXTURE_WIDTH("Width"),
+                TEXTURE_HEIGHT("Height"),
+                TEXTURE_IMAGE_TYPE("Image Type"),
+
     FRAMEBUFFER_STATE("Framebuffer State"),
         FRAMEBUFFER_BINDING("Framebuffer Binding"),
         FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE("Framebuffer object type"),
         FRAMEBUFFER_ATTACHMENT_OBJECT_NAME("Framebuffer object name"),
         FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL("Framebuffer texture level"),
         FRAMEBUFFER_ATTACHEMENT_TEXTURE_CUBE_MAP_FACE("Framebuffer texture cubemap face");
-
 
     private final String mDescription;
 
