@@ -21,7 +21,8 @@ import static com.android.tools.lint.detector.api.LintConstants.ATTR_IGNORE;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_CLASS;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAR;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
-import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_CFG;
+import static com.android.tools.lint.detector.api.LintConstants.OLD_PROGUARD_FILE;
+import static com.android.tools.lint.detector.api.LintConstants.PROGUARD_FILE;
 import static com.android.tools.lint.detector.api.LintConstants.RES_FOLDER;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_ALL;
 import static com.android.tools.lint.detector.api.LintConstants.SUPPRESS_LINT;
@@ -46,6 +47,8 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.annotations.Beta;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
@@ -215,8 +218,6 @@ public class LintDriver {
                             mScope.add(Scope.MANIFEST);
                         } else if (name.endsWith(".xml")) {
                             mScope.add(Scope.RESOURCE_FILE);
-                        } else if (name.equals(PROGUARD_CFG)) {
-                            mScope.add(Scope.PROGUARD_FILE);
                         } else if (name.equals(RES_FOLDER)
                                 || file.getParent().equals(RES_FOLDER)) {
                             mScope.add(Scope.ALL_RESOURCE_FILES);
@@ -225,6 +226,8 @@ public class LintDriver {
                             mScope.add(Scope.JAVA_FILE);
                         } else if (name.endsWith(DOT_CLASS)) {
                             mScope.add(Scope.CLASS_FILE);
+                        } else if (name.equals(OLD_PROGUARD_FILE) || name.equals(PROGUARD_FILE)) {
+                            mScope.add(Scope.PROGUARD_FILE);
                         }
                     }
                 } else {
@@ -740,18 +743,50 @@ public class LintDriver {
         }
 
         if (project == main && mScope.contains(Scope.PROGUARD_FILE)) {
-            List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD_FILE);
-            if (detectors != null) {
-                File file = new File(project.getDir(), PROGUARD_CFG);
+            checkProGuard(project, main);
+        }
+    }
+
+    private void checkProGuard(Project project, Project main) {
+        List<Detector> detectors = mScopeDetectors.get(Scope.PROGUARD_FILE);
+        if (detectors != null) {
+            Project p = main != null ? main : project;
+            List<File> files = new ArrayList<File>();
+            String paths = p.getProguardPath();
+            if (paths != null) {
+                Splitter splitter = Splitter.on(CharMatcher.anyOf(":;")); //$NON-NLS-1$
+                for (String path : splitter.split(paths)) {
+                    if (path.contains("${")) { //$NON-NLS-1$
+                        // Don't analyze the global/user proguard files
+                        continue;
+                    }
+                    File file = new File(path);
+                    if (!file.isAbsolute()) {
+                        file = new File(project.getDir(), path);
+                    }
+                    if (file.exists()) {
+                        files.add(file);
+                    }
+                }
+            }
+            if (files.isEmpty()) {
+                File file = new File(project.getDir(), OLD_PROGUARD_FILE);
                 if (file.exists()) {
-                    Context context = new Context(this, project, main, file);
-                    fireEvent(EventType.SCANNING_FILE, context);
-                    for (Detector detector : detectors) {
-                        if (detector.appliesTo(context, file)) {
-                            detector.beforeCheckFile(context);
-                            detector.run(context);
-                            detector.afterCheckFile(context);
-                        }
+                    files.add(file);
+                }
+                file = new File(project.getDir(), PROGUARD_FILE);
+                if (file.exists()) {
+                    files.add(file);
+                }
+            }
+            for (File file : files) {
+                Context context = new Context(this, project, main, file);
+                fireEvent(EventType.SCANNING_FILE, context);
+                for (Detector detector : detectors) {
+                    if (detector.appliesTo(context, file)) {
+                        detector.beforeCheckFile(context);
+                        detector.run(context);
+                        detector.afterCheckFile(context);
                     }
                 }
             }

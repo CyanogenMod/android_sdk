@@ -18,8 +18,11 @@ package com.android.ide.eclipse.adt.internal.wizards.newproject;
 import static com.android.ide.eclipse.adt.AdtUtils.capitalize;
 import static com.android.ide.eclipse.adt.AdtUtils.stripWhitespace;
 import static com.android.ide.eclipse.adt.internal.wizards.newproject.ApplicationInfoPage.ACTIVITY_NAME_SUFFIX;
+import static com.android.sdklib.SdkConstants.FN_PROJECT_PROGUARD_FILE;
+import static com.android.sdklib.SdkConstants.OS_SDK_TOOLS_LIB_FOLDER;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.VersionCheck;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.ide.eclipse.adt.internal.wizards.newproject.NewProjectWizardState.Mode;
 import com.android.sdklib.SdkConstants;
@@ -85,6 +88,15 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
     private Button mBrowseButton;
     private Label mLocationLabel;
     private WorkingSetGroup mWorkingSetGroup;
+    /**
+     * Whether we've made sure the Tools are up to date (enough that all the
+     * resources required by the New Project wizard are present -- we don't
+     * necessarily check for newer versions than that here; that's done by
+     * {@link VersionCheck}, though that check doesn't <b>enforce</b> an update
+     * since it needs to allow the user to proceed to access the SDK manager
+     * etc.)
+     */
+    private boolean mCheckedSdkUptodate;
 
     /**
      * Create the wizard.
@@ -443,6 +455,20 @@ class ProjectNamePage extends WizardPage implements SelectionListener, ModifyLis
             IStatus validLocation = validateLocation();
             if (validLocation != null) {
                 status = validLocation;
+            }
+        }
+
+        if (!mCheckedSdkUptodate) {
+            // Ensure that we have a recent enough version of the Tools that the right templates
+            // are available
+            File file = new File(AdtPlugin.getOsSdkFolder(), OS_SDK_TOOLS_LIB_FOLDER
+                    + File.separator + FN_PROJECT_PROGUARD_FILE);
+            if (!file.exists()) {
+                status = new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                        String.format("You do not have the latest version of the "
+                        + "SDK Tools installed: Please update. (Missing %1$s)", file.getPath()));
+            } else {
+                mCheckedSdkUptodate = true;
             }
         }
 

@@ -766,13 +766,24 @@
                     </firstmatchmapper>
                 </pathconvert>
 
+                <!-- Turn the path property ${proguard.config} from an A:B:C property
+                     into a series of includes: -include A -include B -include C
+                     suitable for processing by the ProGuard task. Note - this does
+                     not include the leading '-include "' or the closing '"'; those
+                     are added under the <proguard> call below.
+                -->
+                <path id="proguard.configpath">
+                    <pathelement path="${proguard.config}"/>
+                </path>
+                <pathconvert pathsep='" -include "' property="proguard.configcmd" refid="proguard.configpath"/>
+
                 <mkdir   dir="${obfuscate.absolute.dir}" />
                 <delete file="${preobfuscate.jar.file}"/>
                 <delete file="${obfuscated.jar.file}"/>
                 <jar basedir="${out.classes.absolute.dir}"
                     destfile="${preobfuscate.jar.file}" />
                 <proguard>
-                    @${proguard.config}
+                    -include      "${proguard.configcmd}"
                     -injars       ${project.jars}
                     -outjars      "${obfuscated.jar.file}"
                     -libraryjars  ${android.libraryjars}

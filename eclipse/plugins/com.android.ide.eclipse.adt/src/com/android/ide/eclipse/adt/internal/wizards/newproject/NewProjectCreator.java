@@ -606,7 +606,10 @@ public class NewProjectCreator  {
             File libFolder = new File((String) parameters.get(PARAM_SDK_TOOLS_DIR),
                     SdkConstants.FD_LIB);
             addLocalFile(project,
-                    new File(libFolder, SdkConstants.FN_PROGUARD_CFG),
+                    new File(libFolder, SdkConstants.FN_PROJECT_PROGUARD_FILE),
+                    // Write ProGuard config files with the extension .pro which
+                    // is what is used in the ProGuard documentation and samples
+                    SdkConstants.FN_PROJECT_PROGUARD_FILE,
                     monitor);
 
             // Set output location
@@ -1080,13 +1083,14 @@ public class NewProjectCreator  {
     /**
      * Adds a file to the root of the project
      * @param project the project to add the file to.
+     * @param destName the name to write the file as
      * @param source the file to add. It'll keep the same filename once copied into the project.
      * @throws FileNotFoundException
      * @throws CoreException
      */
-    private void addLocalFile(IProject project, File source, IProgressMonitor monitor)
-            throws FileNotFoundException, CoreException {
-        IFile dest = project.getFile(source.getName());
+    private void addLocalFile(IProject project, File source, String destName,
+            IProgressMonitor monitor) throws FileNotFoundException, CoreException {
+        IFile dest = project.getFile(destName);
         if (dest.exists() == false) {
             FileInputStream stream = new FileInputStream(source);
             dest.create(stream, false /* force */, new SubProgressMonitor(monitor, 10));

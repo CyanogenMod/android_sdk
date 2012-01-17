@@ -31,4 +31,20 @@ public class ProguardDetectorTest extends AbstractCheckTest {
                     "instead of -keepclasseswithmembernames",
                 lintFiles("proguard.cfg"));
     }
+
+    public void testProguardNewPath() throws Exception {
+        assertEquals(
+                "proguard-project.txt:21: Error: Obsolete proguard file; use " +
+                        "-keepclasseswithmembers instead of -keepclasseswithmembernames",
+                lintFiles("proguard.cfg=>proguard-project.txt"));
+    }
+
+    public void testProguardRandomName() throws Exception {
+        assertEquals(
+                "myfile.txt:21: Error: Obsolete proguard file; use " +
+                        "-keepclasseswithmembers instead of -keepclasseswithmembernames",
+                lintProject(
+                        "proguard.cfg=>myfile.txt",
+                        "proguard.properties=>project.properties"));
+    }
 }

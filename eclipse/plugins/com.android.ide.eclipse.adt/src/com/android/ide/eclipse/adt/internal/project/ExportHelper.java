@@ -16,6 +16,8 @@
 
 package com.android.ide.eclipse.adt.internal.project;
 
+import static com.android.sdklib.internal.project.ProjectProperties.PROPERTY_SDK;
+
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
@@ -25,6 +27,7 @@ import com.android.ide.eclipse.adt.internal.build.DexException;
 import com.android.ide.eclipse.adt.internal.build.NativeLibInJarException;
 import com.android.ide.eclipse.adt.internal.build.ProguardExecException;
 import com.android.ide.eclipse.adt.internal.build.ProguardResultException;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.io.IFileWrapper;
@@ -58,6 +61,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -66,8 +70,10 @@ import java.util.jar.JarOutputStream;
  * Export helper to export release version of APKs.
  */
 public final class ExportHelper {
-
-    private final static String TEMP_PREFIX = "android_";  //$NON-NLS-1$
+    private static final String HOME_PROPERTY = "user.home";                    //$NON-NLS-1$
+    private static final String HOME_PROPERTY_REF = "${" + HOME_PROPERTY + '}'; //$NON-NLS-1$
+    private static final String SDK_PROPERTY_REF = "${" + PROPERTY_SDK + '}';   //$NON-NLS-1$
+    private final static String TEMP_PREFIX = "android_";                       //$NON-NLS-1$
 
     /**
      * Exports a release version of the application created by the given project.
@@ -75,7 +81,8 @@ public final class ExportHelper {
      * @param outputFile the file to write
      * @param key the key to used for signing. Can be null.
      * @param certificate the certificate used for signing. Can be null.
-     * @param monitor
+     * @param monitor progress monitor
+     * @throws CoreException if an error occurs
      */
     public static void exportReleaseApk(IProject project, File outputFile, PrivateKey key,
             X509Certificate certificate, IProgressMonitor monitor) throws CoreException {
@@ -151,13 +158,46 @@ public final class ExportHelper {
                     ProjectProperties.PROPERTY_PROGUARD_CONFIG);
 
             boolean runProguard = false;
-            File proguardConfigFile = null;
+            List<File> proguardConfigFiles = null;
             if (proguardConfig != null && proguardConfig.length() > 0) {
-                proguardConfigFile = new File(proguardConfig);
-                if (proguardConfigFile.isAbsolute() == false) {
-                    proguardConfigFile = new File(project.getLocation().toFile(), proguardConfig);
+                // Be tolerant with respect to file and path separators just like
+                // Ant is. Allow "/" in the property file to mean whatever the file
+                // separator character is:
+                if (File.separatorChar != '/' && proguardConfig.indexOf('/') != -1) {
+                    proguardConfig = proguardConfig.replace('/', File.separatorChar);
                 }
-                runProguard = proguardConfigFile.isFile();
+                // Also split path: no need to convert to File.pathSeparator because we'll
+                // be splitting the path ourselves right here, so just ensure that both
+                // ':' and ';' work:
+                if (proguardConfig.indexOf(';') != -1) {
+                    proguardConfig = proguardConfig.replace(';', ':');
+                }
+                String[] paths = proguardConfig.split(":"); //$NON-NLS-1$
+
+                for (String path : paths) {
+                    if (path.startsWith(SDK_PROPERTY_REF)) {
+                        path = AdtPrefs.getPrefs().getOsSdkFolder() +
+                                path.substring(SDK_PROPERTY_REF.length());
+                    } else if (path.startsWith(HOME_PROPERTY_REF)) {
+                        path = System.getProperty(HOME_PROPERTY) +
+                                path.substring(HOME_PROPERTY_REF.length());
+                    }
+                    File proguardConfigFile = new File(path);
+                    if (proguardConfigFile.isAbsolute() == false) {
+                        proguardConfigFile = new File(project.getLocation().toFile(), path);
+                    }
+                    if (proguardConfigFile.isFile()) {
+                        if (proguardConfigFiles == null) {
+                            proguardConfigFiles = new ArrayList<File>();
+                        }
+                        proguardConfigFiles.add(proguardConfigFile);
+                        runProguard = true;
+                    } else {
+                        throw new CoreException(new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                                "Invalid proguard configuration file path " + proguardConfigFile
+                                + " does not exist or is not a regular file", null));
+                    }
+                }
             }
 
             String[] dxInput;
@@ -188,7 +228,7 @@ public final class ExportHelper {
                 obfuscatedJar.deleteOnExit();
 
                 // run proguard
-                helper.runProguard(proguardConfigFile, inputJar, jarFiles, obfuscatedJar,
+                helper.runProguard(proguardConfigFiles, inputJar, jarFiles, obfuscatedJar,
                         new File(project.getLocation().toFile(), SdkConstants.FD_PROGUARD));
 
                 // dx input is proguard's output
