@@ -19,8 +19,8 @@ package com.android.ide.eclipse.gltrace.editors;
 import com.android.ide.eclipse.gltrace.model.GLCall;
 import com.android.ide.eclipse.gltrace.model.GLTrace;
 import com.android.ide.eclipse.gltrace.state.GLState;
-import com.android.ide.eclipse.gltrace.state.GLStateTransform;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
+import com.android.ide.eclipse.gltrace.state.IStateTransform;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -49,8 +49,8 @@ import java.util.Set;
  */
 public class StateViewPage extends Page implements ISelectionListener {
     public static final String ID = "com.android.ide.eclipse.gltrace.views.GLState"; //$NON-NLS-1$
-    private TreeViewer mTreeViewer;
 
+    private final GLTrace mTrace;
     private final List<GLCall> mGLCalls;
 
     /** OpenGL State as of call {@link #mCurrentStateIndex}. */
@@ -58,12 +58,15 @@ public class StateViewPage extends Page implements ISelectionListener {
     private int mCurrentStateIndex;
 
     private String[] TREE_PROPERTIES = { "Name", "Value" };
+    private TreeViewer mTreeViewer;
+    private StateLabelProvider mLabelProvider;
 
     public StateViewPage(GLTrace trace) {
+        mTrace = trace;
         mGLCalls = trace.getGLCalls();
 
-        mState = GLState.createDefaultState(trace.getContexts().size());
-        mCurrentStateIndex = 0;
+        mState = GLState.createDefaultState();
+        mCurrentStateIndex = -1;
     }
 
     @Override
@@ -83,7 +86,8 @@ public class StateViewPage extends Page implements ISelectionListener {
 
         mTreeViewer = new TreeViewer(tree);
         mTreeViewer.setContentProvider(new StateContentProvider());
-        mTreeViewer.setLabelProvider(new StateLabelProvider());
+        mLabelProvider = new StateLabelProvider();
+        mTreeViewer.setLabelProvider(mLabelProvider);
         mTreeViewer.setInput(mState);
         mTreeViewer.refresh();
     }
@@ -97,6 +101,10 @@ public class StateViewPage extends Page implements ISelectionListener {
     @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (!(part instanceof GLFunctionTraceViewer)) {
+            return;
+        }
+
+        if (((GLFunctionTraceViewer) part).getTrace() != mTrace) {
             return;
         }
 
@@ -123,10 +131,13 @@ public class StateViewPage extends Page implements ISelectionListener {
                     selectedCall.getIndex());
             mCurrentStateIndex = selectedCall.getIndex();
 
+            mLabelProvider.setChangedProperties(changedProperties);
             Display.getDefault().syncExec(new Runnable() {
                 @Override
                 public void run() {
-                    mTreeViewer.update(changedProperties.toArray(), TREE_PROPERTIES);
+                    if (!mTreeViewer.getTree().isDisposed()) {
+                        mTreeViewer.refresh();
+                    }
                 }
             });
         }
@@ -154,7 +165,7 @@ public class StateViewPage extends Page implements ISelectionListener {
      * @return GL state properties that changed as a result of this update.
      */
     private Set<IGLProperty> updateState(int fromIndex, int toIndex) {
-        assert fromIndex >= 0 && fromIndex < mGLCalls.size();
+        assert fromIndex >= -1 && fromIndex < mGLCalls.size();
         assert toIndex >= 0 && toIndex < mGLCalls.size();
 
         if (fromIndex < toIndex) {
@@ -171,7 +182,7 @@ public class StateViewPage extends Page implements ISelectionListener {
         Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
 
         for (int i = fromIndex + 1; i <= toIndex; i++) {
-            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
+            for (IStateTransform f : mGLCalls.get(i).getStateTransformations()) {
                 f.apply(mState);
 
                 IGLProperty changedProperty = f.getChangedProperty(mState);
@@ -189,7 +200,7 @@ public class StateViewPage extends Page implements ISelectionListener {
         Set<IGLProperty> changedProperties = new HashSet<IGLProperty>(setSizeHint);
 
         for (int i = fromIndex; i > toIndex; i--) {
-            for (GLStateTransform f : mGLCalls.get(i).getStateTransformations()) {
+            for (IStateTransform f : mGLCalls.get(i).getStateTransformations()) {
                 f.revert(mState);
 
                 IGLProperty changedProperty = f.getChangedProperty(mState);

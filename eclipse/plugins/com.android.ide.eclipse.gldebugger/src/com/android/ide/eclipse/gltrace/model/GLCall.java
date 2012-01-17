@@ -18,7 +18,7 @@ package com.android.ide.eclipse.gltrace.model;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
-import com.android.ide.eclipse.gltrace.state.GLStateTransform;
+import com.android.ide.eclipse.gltrace.state.IStateTransform;
 
 import org.eclipse.swt.graphics.Image;
 
@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class GLCall {
     /** Index of this call in the trace. */
-    private final int mIndex;
+    private int mIndex;
 
     /** Time on device when this call was invoked. */
     private final long mStartTime;
@@ -62,11 +62,11 @@ public class GLCall {
     private final int mDuration;
 
     /** List of state transformations performed by this call. */
-    private final List<GLStateTransform> mStateTransforms;
+    private final List<IStateTransform> mStateTransforms;
 
     public GLCall(int index, long startTime, long traceFileOffset, String displayString,
             Image thumbnailImage, Function function, boolean hasFb, int contextId, int duration,
-            List<GLStateTransform> stateTransforms) {
+            List<IStateTransform> stateTransforms) {
         mIndex = index;
         mStartTime = startTime;
         mTraceFileOffset = traceFileOffset;
@@ -81,6 +81,10 @@ public class GLCall {
 
     public int getIndex() {
         return mIndex;
+    }
+
+    public void setIndex(int i) {
+        mIndex = i;
     }
 
     public long getOffsetInTraceFile() {
@@ -111,7 +115,7 @@ public class GLCall {
         return mDuration;
     }
 
-    public List<GLStateTransform> getStateTransformations() {
+    public List<IStateTransform> getStateTransformations() {
         return mStateTransforms;
     }
 

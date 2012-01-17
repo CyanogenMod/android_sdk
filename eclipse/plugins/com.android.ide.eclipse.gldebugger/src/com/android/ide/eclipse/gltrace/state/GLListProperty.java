@@ -63,6 +63,15 @@ public class GLListProperty implements IGLProperty {
         return mList.get(index);
     }
 
+    public boolean add(IGLProperty property) {
+        property.setParent(this);
+        return mList.add(property);
+    }
+
+    public boolean remove(IGLProperty property) {
+        return mList.remove(property);
+    }
+
     public void set(int index, IGLProperty property) {
         ensureCapacity(index + 1);
         mList.set(index, property);
@@ -152,5 +161,9 @@ public class GLListProperty implements IGLProperty {
     public Object getValue() {
         throw new UnsupportedOperationException(
                 "Values cannot be obtained for composite properties."); //$NON-NLS-1$
+    }
+
+    public int size() {
+        return mList.size();
     }
 }
