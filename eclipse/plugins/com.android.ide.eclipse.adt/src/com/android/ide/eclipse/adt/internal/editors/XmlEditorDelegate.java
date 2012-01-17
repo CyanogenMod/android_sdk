@@ -19,11 +19,13 @@ package com.android.ide.eclipse.adt.internal.editors;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.resources.ResourceFolderType;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 
 /**
@@ -33,6 +35,12 @@ import org.w3c.dom.Document;
  * registered in the {@code DELEGATES[]} array of {@link AndroidXmlCommonEditor}.
  */
 public abstract class XmlEditorDelegate {
+
+    /** The editor that created the delegate. Never null. */
+    private final AndroidXmlCommonEditor mEditor;
+
+    /** Root node of the UI element hierarchy. Can be null. */
+    private UiElementNode mUiRootNode;
 
     /**
      * Static creator for {@link XmlEditorDelegate}s. Delegates implement a method
@@ -45,11 +53,21 @@ public abstract class XmlEditorDelegate {
          *
          * @param delegator The non-null instance of {@link AndroidXmlCommonEditor}.
          * @param input A non-null input file.
+         * @param type The {@link ResourceFolderType} of the folder containing the file,
+         *   if it can be determined. Null otherwise.
          * @return A new delegate that can handle that file or null.
          */
         public @Nullable <T extends XmlEditorDelegate> T createForFile(
                             @NonNull AndroidXmlCommonEditor delegator,
-                            @NonNull IFileEditorInput input);
+                            @NonNull IFileEditorInput input,
+                            @Nullable ResourceFolderType type);
+    }
+
+    public XmlEditorDelegate(AndroidXmlCommonEditor editor) {
+        mEditor = editor;
+    }
+
+    public void dispose() {
     }
 
     /**
@@ -57,29 +75,30 @@ public abstract class XmlEditorDelegate {
      *
      * @return the editor that created this delegate. Never null.
      */
-    public abstract @NonNull AndroidXmlCommonEditor getEditor();
-
-
-    // ---- Common Methods, used by all XML editors
-
-    public abstract void dispose();
+    public @NonNull AndroidXmlCommonEditor getEditor() {
+        return mEditor;
+    }
 
     /**
      * @return The root node of the UI element hierarchy
      */
-    public abstract UiElementNode getUiRootNode();
+    public UiElementNode getUiRootNode() {
+        return mUiRootNode;
+    }
 
+    protected void setUiRootNode(UiElementNode uiRootNode) {
+        mUiRootNode = uiRootNode;
+    }
+
+    /** Called to compute the initial {@code UiRootNode}. */
     public abstract void initUiRootNode(boolean force);
 
     /**
-     * Returns whether the "save as" operation is supported by this editor.
-     * <p/>
-     * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file.
-     *
-     * @see IEditorPart
+     * Returns true, indicating the "save as" operation is supported by this editor.
      */
-    public abstract boolean isSaveAsAllowed();
+    public boolean isSaveAsAllowed() {
+        return true;
+    }
 
     /**
      * Create the various form pages.
@@ -90,7 +109,16 @@ public abstract class XmlEditorDelegate {
         // pass
     }
 
-    public abstract void setInput(IEditorInput input);
+    /**
+     * Changes the tab/title name to include the project name.
+     */
+    public void setInput(IEditorInput input) {
+        if (input instanceof FileEditorInput) {
+            FileEditorInput fileInput = (FileEditorInput) input;
+            IFile file = fileInput.getFile();
+            getEditor().setPartName(String.format("%1$s", file.getName()));
+        }
+    }
 
     /**
      * Processes the new XML Model, which XML root node is given.

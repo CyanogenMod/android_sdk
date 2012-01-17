@@ -16,16 +16,19 @@
 
 package com.android.ide.eclipse.adt.internal.editors;
 
+import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate.IXmlEditorCreator;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegator;
+import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
+import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -64,7 +67,7 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
             new AnimationEditorDelegate.Creator(),
             new ColorEditorDelegate.Creator(),
             new DrawableEditorDelegate.Creator(),
-            new MenuEditorDelegator.Creator(),
+            new MenuEditorDelegate.Creator(),
             new OtherXmlEditorDelegate.Creator(),
     };
 
@@ -97,8 +100,11 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
                 }
             }
 
+            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
+            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+
             for (IXmlEditorCreator creator : DELEGATES) {
-                mDelegate = creator.createForFile(this, fileInput);
+                mDelegate = creator.createForFile(this, fileInput, type);
                 if (mDelegate != null) {
                     return;
                 }

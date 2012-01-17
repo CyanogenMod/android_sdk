@@ -16,25 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.menu;
 
-import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor.Mandatory;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -45,20 +38,17 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for /res/menu XML files.
  */
-public class MenuEditorDelegator extends XmlEditorDelegate {
+public class MenuEditorDelegate extends XmlEditorDelegate {
 
     public static class Creator implements IXmlEditorCreator {
         @Override
         @SuppressWarnings("unchecked")
-        public MenuEditorDelegator createForFile(
+        public MenuEditorDelegate createForFile(
                 AndroidXmlCommonEditor delegator,
-                IFileEditorInput input) {
-            // get the IFile object and check it's the desired sub-resource folder
-            IFile iFile = input.getFile();
-            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
-            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+                IFileEditorInput input,
+                ResourceFolderType type) {
             if (ResourceFolderType.MENU.equals(type)) {
-                return new MenuEditorDelegator(delegator);
+                return new MenuEditorDelegate(delegator);
             }
 
             return null;
@@ -67,56 +57,16 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * @deprecated Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
     @Deprecated
     public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
 
-    /** Root node of the UI element hierarchy */
-    private UiElementNode mUiRootNode;
-
-    private final AndroidXmlCommonEditor mDelegator;
-
     /**
      * Creates the form editor for resources XML files.
      */
-    public MenuEditorDelegator(AndroidXmlCommonEditor delegator) {
-        super();
-        mDelegator = delegator;
-    }
-
-    @Override
-    public AndroidXmlCommonEditor getEditor() {
-        return mDelegator;
-    }
-
-    @Override
-    public void dispose() {
-        // pass
-    }
-
-    /**
-     * Returns the root node of the UI element hierarchy, which here is
-     * the "menu" node.
-     */
-    @Override
-    public UiElementNode getUiRootNode() {
-        return mUiRootNode;
-    }
-
-    // ---- Base Class Overrides ----
-
-    /**
-     * Returns whether the "save as" operation is supported by this editor.
-     * <p/>
-     * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file.
-     *
-     * @see IEditorPart
-     */
-    @Override
-    public boolean isSaveAsAllowed() {
-        return true;
+    public MenuEditorDelegate(AndroidXmlCommonEditor editor) {
+        super(editor);
     }
 
     /**
@@ -131,18 +81,6 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
         }
 
      }
-
-    /* (non-java doc)
-     * Change the tab/title name to include the project name.
-     */
-    @Override
-    public void setInput(IEditorInput input) {
-        if (input instanceof FileEditorInput) {
-            FileEditorInput fileInput = (FileEditorInput) input;
-            IFile file = fileInput.getFile();
-            getEditor().setPartName(String.format("%1$s", file.getName()));
-        }
-    }
 
     private boolean mUpdatingModel;
 
@@ -163,9 +101,9 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
             // init the ui root on demand
             initUiRootNode(false /*force*/);
 
-            mUiRootNode.setXmlDocument(xml_doc);
+            getUiRootNode().setXmlDocument(xml_doc);
             if (xml_doc != null) {
-                ElementDescriptor root_desc = mUiRootNode.getDescriptor();
+                ElementDescriptor root_desc = getUiRootNode().getDescriptor();
                 try {
                     XPath xpath = AndroidXPathFactory.newXPath();
                     Node node = (Node) xpath.evaluate("/" + root_desc.getXmlName(),  //$NON-NLS-1$
@@ -173,11 +111,11 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
                             XPathConstants.NODE);
                     if (node == null && root_desc.getMandatory() != Mandatory.NOT_MANDATORY) {
                         // Create the root element if it doesn't exist yet (for empty new documents)
-                        node = mUiRootNode.createXmlNode();
+                        node = getUiRootNode().createXmlNode();
                     }
 
                     // Refresh the manifest UI node and all its descendants
-                    mUiRootNode.loadFromXmlNode(node);
+                    getUiRootNode().loadFromXmlNode(node);
 
                     // TODO ? startMonitoringMarkers();
                 } catch (XPathExpressionException e) {
@@ -198,10 +136,10 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
     @Override
     public void initUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
-        if (mUiRootNode == null || force) {
+        if (getUiRootNode() == null || force) {
             Document doc = null;
-            if (mUiRootNode != null) {
-                doc = mUiRootNode.getXmlDocument();
+            if (getUiRootNode() != null) {
+                doc = getUiRootNode().getXmlDocument();
             }
 
             // get the target data from the opened file (and its project)
@@ -214,8 +152,8 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
                 desc = data.getMenuDescriptors().getDescriptor();
             }
 
-            mUiRootNode = desc.createUiNode();
-            mUiRootNode.setEditor(getEditor());
+            setUiRootNode(desc.createUiNode());
+            getUiRootNode().setEditor(getEditor());
 
             onDescriptorsChanged(doc);
         }
@@ -228,9 +166,9 @@ public class MenuEditorDelegator extends XmlEditorDelegate {
      */
     private void onDescriptorsChanged(Document document) {
         if (document != null) {
-            mUiRootNode.loadFromXmlNode(document);
+            getUiRootNode().loadFromXmlNode(document);
         } else {
-            mUiRootNode.reloadFromXmlNode(mUiRootNode.getXmlNode());
+            getUiRootNode().reloadFromXmlNode(getUiRootNode().getXmlNode());
         }
     }
 }
