@@ -284,6 +284,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         gd = new GridData(GridData.FILL_BOTH);
         table.setLayoutData(gd);
         table.setLinesVisible(true);
+        table.setHeaderVisible(true);
 
         mFrameTableViewer = new TableViewer(table);
         CellLabelProvider labelProvider = new GLFrameLabelProvider();
@@ -293,16 +294,16 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         tvc.setLabelProvider(labelProvider);
         TableColumn column = tvc.getColumn();
         column.setText("Context");
-        column.setWidth(150);
+        column.setWidth(30);
 
-        // column showing the GL function called
+        // column showing the GL function start time
         tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
         tvc.setLabelProvider(labelProvider);
         column = tvc.getColumn();
         column.setText("Start");
         column.setWidth(150);
 
-        // column showing the GL function called
+        // column showing the GL function duration
         tvc = new TableViewerColumn(mFrameTableViewer, SWT.NONE);
         tvc.setLabelProvider(labelProvider);
         column = tvc.getColumn();
@@ -314,7 +315,7 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
         tvc.setLabelProvider(labelProvider);
         column = tvc.getColumn();
         column.setText("Function");
-        column.setWidth(400);
+        column.setWidth(500);
 
         mFrameTableViewer.setContentProvider(new GLFrameContentProvider());
 
