@@ -31,4 +31,12 @@ public class StyleCycleDetectorTest extends AbstractCheckTest {
 
             lintProject("res/values/styles.xml"));
     }
+
+    public void test2() throws Exception {
+        assertEquals(
+            "stylecycle.xml:3: Error: Potential cycle: PropertyToggle is the implied parent " +
+            "of PropertyToggle.Base and this defines the opposite",
+
+            lintProject("res/values/stylecycle.xml"));
+    }
 }

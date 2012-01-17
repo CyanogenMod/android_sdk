@@ -86,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1589,7 +1590,7 @@ public class ConfigurationComposite extends Composite {
                         // collect the themes out of all the styles, ie styles that extend,
                         // directly or indirectly a platform theme.
                         for (ResourceValue value : styleMap.values()) {
-                            if (isTheme(value, styleMap)) {
+                            if (isTheme(value, styleMap, null)) {
                                 themes.add(value.getName());
                             }
                         }
@@ -2282,9 +2283,12 @@ public class ConfigurationComposite extends Composite {
      * This is done by making sure the parent is a theme.
      * @param value the style to check
      * @param styleMap the map of styles for the current project. Key is the style name.
+     * @param seen the map of styles we have already processed (or null if not yet
+     *          initialized). Only the keys are significant (since there is no IdentityHashSet).
      * @return True if the given <var>style</var> is a theme.
      */
-    private boolean isTheme(ResourceValue value, Map<String, ResourceValue> styleMap) {
+    private boolean isTheme(ResourceValue value, Map<String, ResourceValue> styleMap,
+            IdentityHashMap<ResourceValue, Boolean> seen) {
         if (value instanceof StyleResourceValue) {
             StyleResourceValue style = (StyleResourceValue)value;
 
@@ -2325,10 +2329,17 @@ public class ConfigurationComposite extends Composite {
                     // if it's a project style, we check this is a theme.
                     ResourceValue parentValue = styleMap.get(parentStyle);
 
-                    // also prevent stackoverflow in case the dev mistakenly declared
-                    // the parent of the style as the style itfself.
+                    // also prevent stack overflow in case the dev mistakenly declared
+                    // the parent of the style as the style itself.
                     if (parentValue != null && parentValue.equals(value) == false) {
-                        return isTheme(parentValue, styleMap);
+                        if (seen == null) {
+                            seen = new IdentityHashMap<ResourceValue, Boolean>();
+                            seen.put(value, Boolean.TRUE);
+                        } else if (seen.containsKey(parentValue)) {
+                            return false;
+                        }
+                        seen.put(parentValue, Boolean.TRUE);
+                        return isTheme(parentValue, styleMap, seen);
                     }
                 }
             }

@@ -50,7 +50,8 @@ public class StyleCycleDetector extends ResourceXmlDetector {
             8,
             Severity.ERROR,
             StyleCycleDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            "http://developer.android.com/guide/topics/ui/themes.html#Inheritance"); //$NON-NLS-1$
 
     /** Constructs a new {@link StyleCycleDetector} */
     public StyleCycleDetector() {
@@ -81,6 +82,13 @@ public class StyleCycleDetector extends ResourceXmlDetector {
                     parent.equals(STYLE_RESOURCE_PREFIX + name)) {
                 context.report(ISSUE, context.getLocation(parentNode),
                         String.format("Style %1$s should not extend itself", name), null);
+            } else if (parent.startsWith(STYLE_RESOURCE_PREFIX)
+                    && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length())
+                    && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length() + name.length())) {
+                context.report(ISSUE, context.getLocation(parentNode),
+                        String.format("Potential cycle: %1$s is the implied parent of %2$s and " +
+                                "this defines the opposite", name,
+                                parent.substring(STYLE_RESOURCE_PREFIX.length())), null);
             }
         }
     }
