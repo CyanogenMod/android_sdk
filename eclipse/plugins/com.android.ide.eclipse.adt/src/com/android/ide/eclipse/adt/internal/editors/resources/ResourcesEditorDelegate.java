@@ -59,8 +59,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    @Deprecated
-    public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
 
 
     /**

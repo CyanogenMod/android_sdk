@@ -23,8 +23,8 @@ import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate.IXmlEditor
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorDelegate;
+import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
@@ -72,6 +72,19 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
             new OtherXmlEditorDelegate.Creator(),
     };
 
+    /**
+     * IDs of legacy editors replaced by the {@link AndroidXmlCommonEditor}.
+     */
+    public static final String[] LEGACY_EDITOR_IDS = {
+        LayoutEditorDelegate.LEGACY_EDITOR_ID,
+        ResourcesEditorDelegate.LEGACY_EDITOR_ID,
+        AnimationEditorDelegate.LEGACY_EDITOR_ID,
+        ColorEditorDelegate.LEGACY_EDITOR_ID,
+        DrawableEditorDelegate.LEGACY_EDITOR_ID,
+        MenuEditorDelegate.LEGACY_EDITOR_ID,
+        OtherXmlEditorDelegate.LEGACY_EDITOR_ID,
+    };
+
     private XmlEditorDelegate mDelegate = null;
 
     /**
@@ -82,22 +95,39 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
     }
 
     @Override
-    public void init(IEditorSite site, IEditorInput editorInput)
+    public void init(IEditorSite site, final IEditorInput editorInput)
             throws PartInitException {
         if (editorInput instanceof IFileEditorInput) {
 
             IFileEditorInput fileInput = (IFileEditorInput) editorInput;
             IFile file = fileInput.getFile();
 
-            IEditorDescriptor desc = IDE.getDefaultEditor(file);
-            if (desc != null) {
-                String id = desc.getId();
-                if (id != null && !id.equals(ID) && id.startsWith(AdtConstants.EDITORS_NAMESPACE)) {
-                    // It starts by our editor namespace but it's not the right ID.
-                    // This is an old Android XML ID. Change it to our new ID.
-                    IDE.setDefaultEditor(file, ID);
-                }
+            // Adjust the default file editor ID
+
+            IEditorDescriptor file_desc = IDE.getDefaultEditor(file);
+            String id = file_desc == null ? null : file_desc.getId();
+            boolean mustChange = id != null &&
+                                 !id.equals(ID) &&
+                                 id.startsWith(AdtConstants.EDITORS_NAMESPACE);
+            if (!mustChange) {
+                // Maybe this was opened by a manual Open With with a legacy ID?
+                id = site.getId();
+                mustChange = id != null &&
+                             !id.equals(ID) &&
+                             id.startsWith(AdtConstants.EDITORS_NAMESPACE);
             }
+
+            if (mustChange) {
+                // It starts by our editor namespace but it's not the right ID.
+                // This is an old Android XML ID. Change it to our new ID.
+                IDE.setDefaultEditor(file, ID);
+                AdtPlugin.log(IStatus.INFO,
+                        "Changed legacy editor ID %s for %s",   //$NON-NLS-1$
+                        id,
+                        file.getFullPath());
+            }
+
+            // Now find the delegate for the file.
 
             ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(file);
             ResourceFolderType type = resFolder == null ? null : resFolder.getType();
@@ -122,8 +152,8 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
         if (mDelegate == null) {
             // We can't do anything if we don't have a valid file.
             AdtPlugin.log(IStatus.INFO,
-                    "Android XML Editor cannot process non-file input %1$s" +
-                    (editorInput == null ? "null" : editorInput.toString()));
+                    "Android XML Editor cannot process non-file input %1$s" +   //$NON-NLS-1$
+                    (editorInput == null ? "null" : editorInput.toString()));   //$NON-NLS-1$
             throw new PartInitException("Android XML Editor cannot process this input.");
         } else {
             // Invoke the editor's init after setting up the delegate. This will call setInput().

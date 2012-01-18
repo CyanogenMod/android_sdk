@@ -773,34 +773,34 @@ public class AndroidContentAssistTest extends AdtProjectTest {
 
     private void checkLayoutCompletion(String name, String caretLocation) throws Exception {
         IFile file = getLayoutFile(getProject(), name);
-        IDE.setDefaultEditor(file, LayoutEditorDelegate.OLD_STANDALONE_EDITOR_ID);
+        IDE.setDefaultEditor(file, LayoutEditorDelegate.LEGACY_EDITOR_ID);
         checkCompletion(name, file, caretLocation,
                 new LayoutContentAssist());
     }
 
     private void checkColorCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_COLOR + "/" + name);
-        IDE.setDefaultEditor(file, ColorEditorDelegate.OLD_STANDALONE_EDITOR_ID);
+        IDE.setDefaultEditor(file, ColorEditorDelegate.LEGACY_EDITOR_ID);
         checkCompletion(name, file, caretLocation, new ColorContentAssist());
     }
 
     private void checkAnimCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIM + "/" + name);
-        IDE.setDefaultEditor(file, AnimationEditorDelegate.OLD_STANDALONE_EDITOR_ID);
+        IDE.setDefaultEditor(file, AnimationEditorDelegate.LEGACY_EDITOR_ID);
         checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
     private void checkAnimatorCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIMATOR + "/"
                 + name);
-        IDE.setDefaultEditor(file, AnimationEditorDelegate.OLD_STANDALONE_EDITOR_ID);
+        IDE.setDefaultEditor(file, AnimationEditorDelegate.LEGACY_EDITOR_ID);
         checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
     private void checkDrawableCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_DRAWABLE + "/"
                 + name);
-        IDE.setDefaultEditor(file, DrawableEditorDelegate.OLD_STANDALONE_EDITOR_ID);
+        IDE.setDefaultEditor(file, DrawableEditorDelegate.LEGACY_EDITOR_ID);
         checkCompletion(name, file, caretLocation, new DrawableContentAssist());
     }
 

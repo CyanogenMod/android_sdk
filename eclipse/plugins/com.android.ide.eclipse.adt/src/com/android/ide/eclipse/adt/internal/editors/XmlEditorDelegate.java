@@ -18,15 +18,17 @@ package com.android.ide.eclipse.adt.internal.editors;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate.IXmlEditorCreator;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.resources.ResourceFolderType;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.part.EditorActionBarContributor;
 import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 
@@ -63,6 +65,12 @@ public abstract class XmlEditorDelegate {
                             @NonNull AndroidXmlCommonEditor delegator,
                             @NonNull IFileEditorInput input,
                             @Nullable ResourceFolderType type);
+    }
+
+    /** Implemented by delegates that need to support {@link EditorActionBarContributor} */
+    public interface IActionContributorDelegate {
+        /** Called from {@link EditorActionBarContributor#setActiveEditor(IEditorPart)}. */
+        public void setActiveEditor(IEditorPart part, IActionBars bars);
     }
 
     public XmlEditorDelegate(AndroidXmlCommonEditor editor) {

@@ -1169,7 +1169,7 @@ public class LayoutCanvas extends Canvas {
      */
     public void updateGlobalActions(IActionBars bars) {
         updateMenuActionState();
-
+        assert bars != null;
         bars.setGlobalActionHandler(ActionFactory.CUT.getId(), mCutAction);
         bars.setGlobalActionHandler(ActionFactory.COPY.getId(), mCopyAction);
         bars.setGlobalActionHandler(ActionFactory.PASTE.getId(), mPasteAction);
