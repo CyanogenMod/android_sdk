@@ -17,6 +17,7 @@
 package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.state.GLListProperty;
+import com.android.ide.eclipse.gltrace.state.GLSparseArrayProperty;
 import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
@@ -67,6 +68,11 @@ public class StateLabelProvider extends ColumnLabelProvider {
             } else {
                 return Integer.toString(index);
             }
+        } else if (parent instanceof GLSparseArrayProperty) {
+            // For members of sparse array, use the key as the name as opposed to
+            // the property type
+            int index = ((GLSparseArrayProperty) parent).keyFor(element);
+            return Integer.toString(index);
         }
 
         return element.getType().getDescription();

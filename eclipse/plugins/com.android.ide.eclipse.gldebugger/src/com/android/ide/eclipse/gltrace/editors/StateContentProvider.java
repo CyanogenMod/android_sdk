@@ -18,6 +18,7 @@ package com.android.ide.eclipse.gltrace.editors;
 
 import com.android.ide.eclipse.gltrace.state.GLCompositeProperty;
 import com.android.ide.eclipse.gltrace.state.GLListProperty;
+import com.android.ide.eclipse.gltrace.state.GLSparseArrayProperty;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -45,6 +46,10 @@ public class StateContentProvider implements ITreeContentProvider {
 
         if (parentElement instanceof GLCompositeProperty) {
             return ((GLCompositeProperty) parentElement).getProperties().toArray();
+        }
+
+        if (parentElement instanceof GLSparseArrayProperty) {
+            return ((GLSparseArrayProperty) parentElement).getValues().toArray();
         }
 
         return null;

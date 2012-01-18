@@ -18,7 +18,7 @@ package com.android.ide.eclipse.gltrace.model;
 
 import com.android.ide.eclipse.gltrace.GLProtoBuf;
 import com.android.ide.eclipse.gltrace.GLProtoBuf.GLMessage.Function;
-import com.android.ide.eclipse.gltrace.state.IStateTransform;
+import com.android.ide.eclipse.gltrace.state.transforms.IStateTransform;
 
 import org.eclipse.swt.graphics.Image;
 

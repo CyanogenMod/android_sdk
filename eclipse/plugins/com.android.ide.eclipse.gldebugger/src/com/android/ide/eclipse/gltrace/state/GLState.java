@@ -201,24 +201,64 @@ public class GLState {
         return framebufferState;
     }
 
-    static IGLProperty createDefaultES2State() {
+    private IGLProperty createTextureState() {
+        IGLProperty activeTexture = new GLIntegerProperty(GLStateType.ACTIVE_TEXTURE_UNIT,
+                Integer.valueOf(0));
+
+        IGLProperty binding2D = new GLIntegerProperty(GLStateType.TEXTURE_BINDING_2D,
+                Integer.valueOf(0));
+        IGLProperty bindingCubeMap = new GLIntegerProperty(GLStateType.TEXTURE_BINDING_CUBE_MAP,
+                Integer.valueOf(0));
+        IGLProperty perTextureUnitState = new GLCompositeProperty(
+                GLStateType.PER_TEXTURE_UNIT_STATE, binding2D, bindingCubeMap);
+        IGLProperty textureUnitState = new GLListProperty(GLStateType.TEXTURE_UNITS,
+                perTextureUnitState, 8);
+
+        IGLProperty minFilter = new GLEnumProperty(GLStateType.TEXTURE_MIN_FILTER,
+                GLEnum.GL_NEAREST);
+        IGLProperty magFilter = new GLEnumProperty(GLStateType.TEXTURE_MAG_FILTER,
+                GLEnum.GL_NEAREST);
+        IGLProperty wrapS = new GLEnumProperty(GLStateType.TEXTURE_WRAP_S, GLEnum.GL_REPEAT);
+        IGLProperty wrapT = new GLEnumProperty(GLStateType.TEXTURE_WRAP_T, GLEnum.GL_REPEAT);
+        IGLProperty width = new GLIntegerProperty(GLStateType.TEXTURE_WIDTH, Integer.valueOf(-1));
+        IGLProperty height = new GLIntegerProperty(GLStateType.TEXTURE_HEIGHT,
+                Integer.valueOf(-1));
+        IGLProperty format = new GLEnumProperty(GLStateType.TEXTURE_FORMAT,
+                GLEnum.GL_INVALID_VALUE);
+        IGLProperty imageType = new GLEnumProperty(GLStateType.TEXTURE_IMAGE_TYPE,
+                GLEnum.GL_UNSIGNED_BYTE);
+        IGLProperty textureDefaultState = new GLCompositeProperty(GLStateType.PER_TEXTURE_STATE,
+                minFilter, magFilter, wrapS, wrapT, format, width, height, imageType);
+        GLSparseArrayProperty textures = new GLSparseArrayProperty(GLStateType.TEXTURES,
+                textureDefaultState);
+        textures.add(0);
+
+        return new GLCompositeProperty(GLStateType.TEXTURE_STATE,
+                activeTexture,
+                textureUnitState,
+                textures);
+    }
+
+    public static IGLProperty createDefaultES2State() {
         GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE_ES2,
                 sGLState.createVertexArrayData(),
                 sGLState.createFramebufferState(),
                 sGLState.createTransformationState(),
                 sGLState.createRasterizationState(),
                 sGLState.createPixelOperationsState(),
-                sGLState.createPixelPackState());
+                sGLState.createPixelPackState(),
+                sGLState.createTextureState());
         return glState;
     }
 
-    static IGLProperty createDefaultES1State() {
+    public static IGLProperty createDefaultES1State() {
         GLCompositeProperty glState = new GLCompositeProperty(GLStateType.GL_STATE_ES1,
                 sGLState.createFramebufferState(),
                 sGLState.createTransformationState(),
                 sGLState.createRasterizationState(),
                 sGLState.createPixelOperationsState(),
-                sGLState.createPixelPackState());
+                sGLState.createPixelPackState(),
+                sGLState.createTextureState());
         return glState;
     }
 
