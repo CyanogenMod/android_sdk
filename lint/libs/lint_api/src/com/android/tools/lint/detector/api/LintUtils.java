@@ -172,6 +172,16 @@ public class LintUtils {
     }
 
     /**
+     * Returns true if the given element is the root element of its document
+     *
+     * @param element the element to test
+     * @return true if the element is the root element
+     */
+    public static boolean isRootElement(Element element) {
+        return element == element.getOwnerDocument().getDocumentElement();
+    }
+
+    /**
      * Returns the given id without an {@code @id/} or {@code @+id} prefix
      *
      * @param id the id to strip
@@ -237,5 +247,21 @@ public class LintUtils {
         boolean assertionsEnabled = false;
         assert assertionsEnabled = true; // Intentional side-effect
         return assertionsEnabled;
+    }
+
+    /**
+     * Returns the layout resource name for the given layout file
+     *
+     * @param layoutFile the file pointing to the layout
+     * @return the layout resource name, not including the {@code @layout}
+     *         prefix
+     */
+    public static String getLayoutName(File layoutFile) {
+        String name = layoutFile.getName();
+        int dotIndex = name.indexOf('.');
+        if (dotIndex != -1) {
+            name = name.substring(0, dotIndex);
+        }
+        return name;
     }
 }

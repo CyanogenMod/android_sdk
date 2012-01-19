@@ -18,13 +18,16 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_NAME;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_REF_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_PNG;
 import static com.android.tools.lint.detector.api.LintConstants.DOT_XML;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLR_STYLEABLE;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ARRAY;
-import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ATTR;
 import static com.android.tools.lint.detector.api.LintConstants.RESOURCE_CLZ_ID;
+import static com.android.tools.lint.detector.api.LintConstants.R_ATTR_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.R_ID_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.R_PREFIX;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ARRAY;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_ITEM;
 import static com.android.tools.lint.detector.api.LintConstants.TAG_RESOURCES;
@@ -82,9 +85,6 @@ import lombok.ast.VariableReference;
  * use it.
  */
 public class UnusedResourceDetector extends ResourceXmlDetector implements Detector.JavaScanner {
-    private static final String ATTR_REF_PREFIX = "?attr/";           //$NON-NLS-1$
-    private static final String R_PREFIX = "R.";                      //$NON-NLS-1$
-    private static final String R_ID_PREFIX = "R.id.";                //$NON-NLS-1$
 
     /** Unused resources (other than ids). */
     public static final Issue ISSUE = Issue.create("UnusedResources", //$NON-NLS-1$
@@ -317,7 +317,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
                 int index = text.indexOf(ATTR_REF_PREFIX);
                 if (index != -1) {
                     String name = text.substring(index + ATTR_REF_PREFIX.length()).trim();
-                    mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + name);
+                    mReferences.add(R_ATTR_PREFIX + name);
                 } else {
                     index = text.indexOf('@');
                     if (index != -1 && text.indexOf('/', index) != -1
@@ -351,13 +351,12 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
             String r = R_PREFIX + value.substring(1).replace('/', '.');
             mReferences.add(r);
         } else if (value.startsWith(ATTR_REF_PREFIX)) {
-            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.'
-                    + value.substring(ATTR_REF_PREFIX.length()));
+            mReferences.add(R_ATTR_PREFIX + value.substring(ATTR_REF_PREFIX.length()));
         }
 
         if (attribute.getNamespaceURI() != null
                 && !ANDROID_URI.equals(attribute.getNamespaceURI())) {
-            mReferences.add(R_PREFIX + RESOURCE_CLZ_ATTR + '.' + attribute.getLocalName());
+            mReferences.add(R_ATTR_PREFIX + attribute.getLocalName());
         }
     }
 
@@ -377,8 +376,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements Detec
     }
 
     @Override
-    public void visitResourceReference(JavaContext context, AstVisitor visitor, VariableReference node,
-            String type, String name) {
+    public void visitResourceReference(JavaContext context, AstVisitor visitor,
+            VariableReference node, String type, String name) {
         String reference = R_PREFIX + type + '.' + name;
         mReferences.add(reference);
     }

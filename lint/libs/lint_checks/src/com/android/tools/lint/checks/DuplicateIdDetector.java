@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -185,7 +186,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
         for (Entry<File, List<String>> entry : mIncludes.entrySet()) {
             File file = entry.getKey();
-            String from = getLayoutName(file);
+            String from = LintUtils.getLayoutName(file);
 
             // Merge include lists
             List<String> layouts = entry.getValue();
@@ -200,7 +201,7 @@ public class DuplicateIdDetector extends LayoutDetector {
         // Merge id maps
         for (Entry<File, Set<String>> entry : mFileToIds.entrySet()) {
             File file = entry.getKey();
-            String from = getLayoutName(file);
+            String from = LintUtils.getLayoutName(file);
             Set<String> ids = entry.getValue();
             if (ids != null) {
                 Set<String> set = resourceToIds.get(from);
@@ -233,15 +234,6 @@ public class DuplicateIdDetector extends LayoutDetector {
             visiting.clear();
             getMergedIds(context, from, visiting, resourceToLayouts, resourceToIds, mergedIds);
         }
-    }
-
-    private String getLayoutName(File file) {
-        String name = file.getName();
-        int dotIndex = name.indexOf('.');
-        if (dotIndex != -1) {
-            name = name.substring(0, dotIndex);
-        }
-        return name;
     }
 
     /**
@@ -282,7 +274,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                                 File second = null;
                                 for (Map.Entry<File, Set<String>> entry : mFileToIds.entrySet()) {
                                     File file = entry.getKey();
-                                    String name = getLayoutName(file);
+                                    String name = LintUtils.getLayoutName(file);
                                     if (name.equals(from)) {
                                         Set<String> fileIds = entry.getValue();
                                         if (fileIds.contains(id)) {
@@ -300,7 +292,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                                     for (Map.Entry<File, List<String>> entry
                                             : mIncludes.entrySet()) {
                                         File file = entry.getKey();
-                                        String name = getLayoutName(file);
+                                        String name = LintUtils.getLayoutName(file);
                                         if (name.equals(from)) {
                                             first = file;
                                         }
