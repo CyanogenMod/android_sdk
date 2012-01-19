@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.gltrace.editors;
 
+import com.android.ide.eclipse.gltrace.SwtUtils;
 import com.android.ide.eclipse.gltrace.TraceFileParserTask;
 import com.android.ide.eclipse.gltrace.editors.DurationMinimap.ICallSelectionListener;
 import com.android.ide.eclipse.gltrace.model.GLCall;
@@ -214,7 +215,8 @@ public class GLFunctionTraceViewer extends EditorPart implements ISelectionProvi
 
         mFrameSelectionSpinner = new Spinner(c, SWT.BORDER);
         gd = new GridData();
-        gd.widthHint = 35;
+        // width to hold atleast 6 digits
+        gd.widthHint = SwtUtils.getFontWidth(mFrameSelectionSpinner) * 6;
         mFrameSelectionSpinner.setLayoutData(gd);
 
         mFrameSelectionSpinner.setMinimum(1);

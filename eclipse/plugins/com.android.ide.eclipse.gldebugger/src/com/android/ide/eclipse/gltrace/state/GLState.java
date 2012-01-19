@@ -20,6 +20,9 @@ import com.android.ide.eclipse.gldebugger.GLEnum;
 import com.android.ide.eclipse.gltrace.state.GLIntegerProperty.DisplayRadix;
 
 public class GLState {
+    /** # of texture units modelled in the GL State. */
+    public static final int TEXTURE_UNIT_COUNT = 8;
+
     private static GLState sGLState = new GLState();
 
     private IGLProperty createBufferBindings() {
@@ -212,7 +215,7 @@ public class GLState {
         IGLProperty perTextureUnitState = new GLCompositeProperty(
                 GLStateType.PER_TEXTURE_UNIT_STATE, binding2D, bindingCubeMap);
         IGLProperty textureUnitState = new GLListProperty(GLStateType.TEXTURE_UNITS,
-                perTextureUnitState, 8);
+                perTextureUnitState, TEXTURE_UNIT_COUNT);
 
         IGLProperty minFilter = new GLEnumProperty(GLStateType.TEXTURE_MIN_FILTER,
                 GLEnum.GL_NEAREST);

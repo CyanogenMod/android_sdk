@@ -20,11 +20,13 @@ import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 /**
  * A PropertyChangeTransform object provides the ability to alter the value of a
- * single GL State variable.
+ * single GL State variable. An optional predicate provides the ability to perform
+ * the change only if the predicate succeeds.
  */
 public class PropertyChangeTransform implements IStateTransform {
     private final IGLPropertyAccessor mAccessor;
     private final Object mNewValue;
+    private final IPredicate mPredicate;
     private Object mOldValue;
 
     /**
@@ -32,8 +34,19 @@ public class PropertyChangeTransform implements IStateTransform {
      * and modify its value to the provided value.
      */
     PropertyChangeTransform(IGLPropertyAccessor accessor, Object newValue) {
+        this(accessor, newValue, null);
+    }
+
+    /**
+     * Construct a state transform that will extract the property using the accessor,
+     * check if the predicate function accepts the current value, and if so modify its
+     * value to the provided value.
+     */
+    public PropertyChangeTransform(IGLPropertyAccessor accessor, Object newValue,
+            IPredicate predicate) {
         mAccessor = accessor;
         mNewValue = newValue;
+        mPredicate = predicate;
         mOldValue = null;
     }
 
@@ -43,6 +56,14 @@ public class PropertyChangeTransform implements IStateTransform {
         IGLProperty property = mAccessor.getProperty(state);
 
         assert mOldValue == null : "Transform cannot be applied multiple times";
+        if (mPredicate != null) {
+            // if predicate is not null, then first check if the current value
+            // passes the predicate function.
+            if (!mPredicate.apply(property.getValue())) {
+                return;
+            }
+        }
+
         mOldValue = property.getValue();
         property.setValue(mNewValue);
     }
@@ -64,6 +85,15 @@ public class PropertyChangeTransform implements IStateTransform {
     /** Gets the property that will be affected by applying this transformation. */
     @Override
     public IGLProperty getChangedProperty(IGLProperty state) {
+        if (mPredicate != null) {
+            Object value = mOldValue == null ? mNewValue : mOldValue;
+            if (!mPredicate.apply(value)) {
+                // if the value doesn't match the predicate, then this property
+                // is not altered.
+                return null;
+            }
+        }
+
         return mAccessor.getProperty(state);
     }
 }
