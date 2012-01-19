@@ -99,6 +99,12 @@ public class StateViewPage extends Page implements ISelectionListener {
     }
 
     @Override
+    public void dispose() {
+        getSite().getPage().removeSelectionListener(this);
+        super.dispose();
+    }
+
+    @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         if (!(part instanceof GLFunctionTraceViewer)) {
             return;
