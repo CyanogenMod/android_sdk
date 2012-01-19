@@ -23,6 +23,7 @@ import com.android.ide.eclipse.gltrace.state.GLStateType;
 import com.android.ide.eclipse.gltrace.state.IGLProperty;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -598,6 +599,30 @@ public class StateTransformFactory {
         return transforms;
     }
 
+    /**
+     * Obtain a list of transforms that will reset any existing texture units
+     * that are bound to provided texture.
+     * @param contextId context to operate on
+     * @param texture texture that should be unbound
+     */
+    private static List<IStateTransform> transformsToResetBoundTextureUnits(int contextId,
+            int texture) {
+        List<IStateTransform> transforms = new ArrayList<IStateTransform>(
+                GLState.TEXTURE_UNIT_COUNT);
+
+        for (int i = 0; i < GLState.TEXTURE_UNIT_COUNT; i++) {
+            transforms.add(new PropertyChangeTransform(
+                    GLPropertyAccessor.makeAccessor(contextId,
+                                                    GLStateType.TEXTURE_STATE,
+                                                    GLStateType.TEXTURE_UNITS,
+                                                    Integer.valueOf(i),
+                                                    GLStateType.TEXTURE_BINDING_2D),
+                    Integer.valueOf(0), /* reset binding to texture 0 */
+                    Predicates.matchesInteger(texture) /* only if currently bound to @texture */ ));
+        }
+        return transforms;
+    }
+
     private static List<IStateTransform> transformsForGlDeleteTextures(GLMessage msg) {
         // void glDeleteTextures(GLsizei n, const GLuint * textures);
         int n = msg.getArgs(0).getIntValue(0);
@@ -610,6 +635,7 @@ public class StateTransformFactory {
                                                     GLStateType.TEXTURE_STATE,
                                                     GLStateType.TEXTURES),
                     texture));
+            transforms.addAll(transformsToResetBoundTextureUnits(msg.getContextId(), texture));
         }
 
         return transforms;
