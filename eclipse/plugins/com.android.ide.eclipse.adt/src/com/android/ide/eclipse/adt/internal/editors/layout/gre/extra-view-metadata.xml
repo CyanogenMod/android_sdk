@@ -51,7 +51,13 @@
         <view
             class="android.widget.Button"
             topAttrs="text,style"
-            relatedTo="ImageButton" />
+            name="Button"
+            init=""
+            relatedTo="ImageButton">
+            <view
+                name="Small Button"
+                init="style=?android:attr/buttonStyleSmall,android:text=Button" />
+        </view>
         <view
             class="android.widget.ToggleButton"
             topAttrs="textOff,textOn,style,background"

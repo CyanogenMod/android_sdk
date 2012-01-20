@@ -514,7 +514,7 @@ public class PreviewIconFactory {
             if (themeName.startsWith(themeNamePrefix)) {
                 themeName = themeName.substring(themeNamePrefix.length());
             }
-            String dirName = String.format("palette-preview-r16-%s-%s-%s", cleanup(targetName),
+            String dirName = String.format("palette-preview-r16b-%s-%s-%s", cleanup(targetName),
                     cleanup(themeName), cleanup(mPalette.getCurrentDevice()));
             IPath dirPath = pluginState.append(dirName);
 
