@@ -243,4 +243,11 @@ public class LintConstants {
     public static final String ANDROID_LIBRARY = "android.library";     //$NON-NLS-1$
     public static final String ANDROID_LIBRARY_REFERENCE_FORMAT = "android.library.reference.%1$d";//$NON-NLS-1$
     public static final String PROJECT_PROPERTIES = "project.properties";//$NON-NLS-1$
+
+    // Java References
+    public static final String ATTR_REF_PREFIX = "?attr/";               //$NON-NLS-1$
+    public static final String R_PREFIX = "R.";                          //$NON-NLS-1$
+    public static final String R_ID_PREFIX = "R.id.";                    //$NON-NLS-1$
+    public static final String R_LAYOUT_PREFIX = "R.layout.";            //$NON-NLS-1$
+    public static final String R_ATTR_PREFIX = "R.attr.";                //$NON-NLS-1$
 }

@@ -19,24 +19,68 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.LintConstants.ANDROID_URI;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_BACKGROUND;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_FOREGROUND;
+import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT;
 import static com.android.tools.lint.detector.api.LintConstants.ATTR_LAYOUT_GRAVITY;
+import static com.android.tools.lint.detector.api.LintConstants.DOT_JAVA;
 import static com.android.tools.lint.detector.api.LintConstants.FRAME_LAYOUT;
+import static com.android.tools.lint.detector.api.LintConstants.INCLUDE;
+import static com.android.tools.lint.detector.api.LintConstants.LAYOUT_RESOURCE_PREFIX;
+import static com.android.tools.lint.detector.api.LintConstants.R_LAYOUT_PREFIX;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.Speed;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.util.Pair;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import lombok.ast.AstVisitor;
+import lombok.ast.Expression;
+import lombok.ast.MethodInvocation;
+import lombok.ast.Select;
+import lombok.ast.StrictListAccessor;
 
 /**
  * Checks whether a root FrameLayout can be replaced with a {@code <merge>} tag.
  */
-public class MergeRootFrameLayoutDetector extends LayoutDetector {
+public class MergeRootFrameLayoutDetector extends LayoutDetector implements Detector.JavaScanner {
+    /**
+     * Set of layouts that we want to enable the warning for. We only warn for
+     * {@code <FrameLayout>}'s that are the root of a layout included from
+     * another layout, or directly referenced via a {@code setContentView} call.
+     */
+    private Set<String> mWhitelistedLayouts;
+
+    /**
+     * Set of pending [layout, location] pairs where the given layout is a
+     * FrameLayout that perhaps should be replaced by a {@code <merge>} tag (if
+     * the layout is included or set as the content view. This must be processed
+     * after the whole project has been scanned since the set of includes etc
+     * can be encountered after the included layout.
+     */
+    private List<Pair<String, Location.Handle>> mPending;
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -50,7 +94,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
             4,
             Severity.WARNING,
             MergeRootFrameLayoutDetector.class,
-            Scope.RESOURCE_FILE_SCOPE).setMoreInfo(
+            EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.JAVA_FILE)).setMoreInfo(
             "http://android-developers.blogspot.com/2009/03/android-layout-tricks-3-optimize-by.html"); //$NON-NLS-1$
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
@@ -63,16 +107,90 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitDocument(XmlContext context, Document document) {
-        Element root = document.getDocumentElement();
-        if (root.getTagName().equals(FRAME_LAYOUT) &&
-            ((isWidthFillParent(root) && isHeightFillParent(root)) ||
-                    !root.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY))
-                && !root.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
-                && !root.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
-                && !hasPadding(root)) {
-            context.report(ISSUE, context.getLocation(root),
-                    "This <FrameLayout> can be replaced with a <merge> tag", null);
+    public boolean appliesTo(Context context, File file) {
+        return LintUtils.isXmlFile(file) || LintUtils.endsWith(file.getName(), DOT_JAVA);
+    }
+
+    @Override
+    public void afterCheckProject(Context context) {
+        if (mPending != null && mWhitelistedLayouts != null) {
+            // Process all the root FrameLayouts that are eligible, and generate
+            // suggestions for <merge> replacements for any layouts that are included
+            // from other layouts
+            for (Pair<String, Handle> pair : mPending) {
+                String layout = pair.getFirst();
+                if (mWhitelistedLayouts.contains(layout)) {
+                    Handle handle = pair.getSecond();
+                    Location location = handle.resolve();
+                    context.report(ISSUE, location,
+                            "This <FrameLayout> can be replaced with a <merge> tag", null);
+                }
+            }
+        }
+    }
+
+    // Implements XmlScanner
+
+    @Override
+    public Collection<String> getApplicableElements() {
+        return Arrays.asList(INCLUDE, FRAME_LAYOUT);
+    }
+
+    @Override
+    public void visitElement(XmlContext context, Element element) {
+        String tag = element.getTagName();
+        if (tag.equals(INCLUDE)) {
+            String layout = element.getAttribute(ATTR_LAYOUT); // NOTE: Not in android: namespace
+            if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) { // Ignore @android:layout/ layouts
+                layout = layout.substring(LAYOUT_RESOURCE_PREFIX.length());
+                whiteListLayout(layout);
+            }
+        } else {
+            assert tag.equals(FRAME_LAYOUT);
+            if (LintUtils.isRootElement(element) &&
+                ((isWidthFillParent(element) && isHeightFillParent(element)) ||
+                        !element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY))
+                    && !element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
+                    && !element.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
+                    && !hasPadding(element)) {
+                String layout = LintUtils.getLayoutName(context.file);
+                Handle handle = context.parser.createLocationHandle(context, element);
+                if (mPending == null) {
+                    mPending = new ArrayList<Pair<String,Handle>>();
+                }
+                mPending.add(Pair.of(layout, handle));
+            }
+        }
+    }
+
+    private void whiteListLayout(String layout) {
+        if (mWhitelistedLayouts == null) {
+            mWhitelistedLayouts = new HashSet<String>();
+        }
+        mWhitelistedLayouts.add(layout);
+    }
+
+    // Implements JavaScanner
+
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Collections.singletonList("setContentView"); //$NON-NLS-1$
+    }
+
+    @Override
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @Nullable AstVisitor visitor,
+            @NonNull MethodInvocation node) {
+        StrictListAccessor<Expression, MethodInvocation> argumentList = node.astArguments();
+        if (argumentList != null && argumentList.size() == 1) {
+            Expression argument = argumentList.first();
+            if (argument instanceof Select) {
+                String expression = argument.toString();
+                if (expression.startsWith(R_LAYOUT_PREFIX)) {
+                    whiteListLayout(expression.substring(R_LAYOUT_PREFIX.length()));
+                }
+            }
         }
     }
 }
