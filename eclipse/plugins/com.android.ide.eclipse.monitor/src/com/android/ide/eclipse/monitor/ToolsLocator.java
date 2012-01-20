@@ -17,45 +17,26 @@
 package com.android.ide.eclipse.monitor;
 
 import com.android.ide.eclipse.ddms.IToolsLocator;
-import com.android.sdklib.SdkConstants;
 
 public class ToolsLocator implements IToolsLocator {
-    public static final String PLATFORM_EXECUTABLE_EXTENSION =
-            (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
-                    ".exe" : ""; //$NON-NLS-1$
+    private SdkToolsLocator mLocator;
 
-    public static final String PLATFORM_SCRIPT_EXTENSION =
-            (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) ?
-                    ".bat" : ""; //$NON-NLS-1$
-
-    public static final String FN_HPROF_CONV = "hprof-conv" + PLATFORM_EXECUTABLE_EXTENSION; //$NON-NLS-1$
-    public static final String FN_TRACEVIEW = "traceview" + PLATFORM_SCRIPT_EXTENSION; //$NON-NLS-1$
+    public ToolsLocator() {
+        mLocator = new SdkToolsLocator(MonitorPlugin.getDefault().getSdkPath());
+    }
 
     @Override
     public String getAdbLocation() {
-        return getSdkPlatformToolsFolder() + SdkConstants.FN_ADB;
+        return mLocator.getAdbLocation();
     }
 
     @Override
     public String getTraceViewLocation() {
-        return getSdkToolsFolder() + FN_TRACEVIEW;
+        return mLocator.getTraceViewLocation();
     }
 
     @Override
     public String getHprofConvLocation() {
-        return getSdkToolsFolder() + FN_HPROF_CONV;
-    }
-
-    private String getSdkToolsFolder() {
-        return getSdkFolder() + "/tools/"; //$NON-NLS-1$
-    }
-
-    private String getSdkPlatformToolsFolder() {
-        return getSdkFolder() + "/platform-tools/"; //$NON-NLS-1$
-    }
-
-    private String getSdkFolder() {
-        // FIXME!
-        return MonitorPlugin.getDdmsPreferenceStore().getLastSdkPath();
+        return mLocator.getHprofConvLocation();
     }
 }

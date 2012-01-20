@@ -26,10 +26,12 @@ public class MonitorPlugin extends AbstractUIPlugin {
     public static final String PLUGIN_ID = "com.android.ide.eclipse.monitor"; //$NON-NLS-1$
     private static MonitorPlugin sPlugin;
     private static final DdmsPreferenceStore sDdmsPreferenceStore = new DdmsPreferenceStore();
+    private String mSdkPath;
 
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
+
         sPlugin = this;
     }
 
@@ -49,5 +51,13 @@ public class MonitorPlugin extends AbstractUIPlugin {
 
     public static DdmsPreferenceStore getDdmsPreferenceStore() {
         return sDdmsPreferenceStore;
+    }
+
+    public void setSdkPath(String sdkPath) {
+        mSdkPath = sdkPath;
+    }
+
+    public String getSdkPath() {
+        return mSdkPath;
     }
 }

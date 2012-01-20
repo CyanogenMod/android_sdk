@@ -16,16 +16,34 @@
 
 package com.android.ide.eclipse.monitor;
 
+import com.android.ide.eclipse.monitor.SdkToolsLocator.SdkInstallStatus;
+
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.jface.window.Window;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
+import java.io.File;
+
 public class MonitorApplication implements IApplication {
+    private static final String SDK_PATH_ENVVAR = "com.android.sdk.path";
+
     @Override
     public Object start(IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
+
+        String sdkPath = findSdkPath(display);
+        if (!isValidSdkLocation(sdkPath)) {
+            // exit with return code -1
+            return Integer.valueOf(-1);
+        }
+        MonitorPlugin.getDefault().setSdkPath(sdkPath);
+
         try {
             int returnCode = PlatformUI.createAndRunWorkbench(display,
                     new MonitorWorkbenchAdvisor());
@@ -51,5 +69,69 @@ public class MonitorApplication implements IApplication {
                     workbench.close();
             }
         });
+    }
+
+    private String findSdkPath(Display display) {
+        // see if there is a system property set (passed in via a command line arg)
+        String sdkLocation = System.getProperty(SDK_PATH_ENVVAR);
+        if (isValidSdkLocation(sdkLocation)) {
+            return sdkLocation;
+        }
+
+        // see if there is an environment variable set
+        sdkLocation = System.getenv(SDK_PATH_ENVVAR);
+        if (isValidSdkLocation(sdkLocation)) {
+            return sdkLocation;
+        }
+
+        // check for the last used SDK
+        sdkLocation = MonitorPlugin.getDdmsPreferenceStore().getLastSdkPath();
+        if (isValidSdkLocation(sdkLocation)) {
+            return sdkLocation;
+        }
+
+        // The monitor app should be located in "<sdk>/tools/monitor/"
+        // So see if the folder one level up from the install location is a valid SDK.
+        Location install = Platform.getInstallLocation();
+        if (install != null && install.getURL() != null) {
+            String toolsFolder = new File(install.getURL().getFile()).getParent();
+            if (toolsFolder != null) {
+                sdkLocation = new File(toolsFolder).getParent();
+                if (isValidSdkLocation(sdkLocation)) {
+                    MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
+                    return sdkLocation;
+                }
+            }
+        }
+
+        // if nothing else works, prompt the user
+        sdkLocation = getSdkLocationFromUser(new Shell(display));
+        if (isValidSdkLocation(sdkLocation)) {
+            MonitorPlugin.getDdmsPreferenceStore().setLastSdkPath(sdkLocation);
+        }
+
+        return sdkLocation;
+    }
+
+    private boolean isValidSdkLocation(String sdkLocation) {
+        if (sdkLocation == null) {
+            return false;
+        }
+
+        if (sdkLocation.trim().length() == 0) {
+            return false;
+        }
+
+        SdkToolsLocator locator = new SdkToolsLocator(sdkLocation);
+        return locator.isValidInstallation() == SdkInstallStatus.VALID;
+    }
+
+    private String getSdkLocationFromUser(Shell shell) {
+        SdkLocationChooserDialog dlg = new SdkLocationChooserDialog(shell);
+        if (dlg.open() == Window.OK) {
+            return dlg.getPath();
+        } else {
+            return null;
+        }
     }
 }
