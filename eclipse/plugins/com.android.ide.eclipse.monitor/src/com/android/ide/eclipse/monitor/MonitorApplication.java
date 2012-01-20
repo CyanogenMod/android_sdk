@@ -22,13 +22,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
-public class Application implements IApplication {
+public class MonitorApplication implements IApplication {
     @Override
     public Object start(IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
         try {
             int returnCode = PlatformUI.createAndRunWorkbench(display,
-                    new ApplicationWorkbenchAdvisor());
+                    new MonitorWorkbenchAdvisor());
             if (returnCode == PlatformUI.RETURN_RESTART) {
                 return IApplication.EXIT_RESTART;
             }

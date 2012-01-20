@@ -9,7 +9,7 @@
             thread="main"
             visible="true">
          <run
-               class="com.android.ide.eclipse.monitor.Application">
+               class="com.android.ide.eclipse.monitor.MonitorApplication">
          </run>
       </application>
    </extension>
@@ -19,6 +19,27 @@
       <product
             application="com.android.ide.eclipse.monitor.Application"
             name="Android Device Monitor">
+         <property
+               name="appName"
+               value="androidMonitor">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+         <property
+               name="windowImages"
+               value="images/ddms-16.png,images/ddms-32.png">
+         </property>
+         <property
+               name="aboutImage"
+               value="images/ddms-128.png">
+         </property>
+         <property
+               name="aboutText"
+               value="Android Device Monitor, Copyright 2012, The Android Open Source Project">
+         </property>
+
       </product>
    </extension>
    <extension
@@ -27,21 +48,4 @@
             class="com.android.ide.eclipse.monitor.ToolsLocator">
       </locator>
    </extension>
-   <extension
-         id="product"
-         point="org.eclipse.core.runtime.products">
-      <product
-            application="com.android.ide.eclipse.monitor.Application"
-            name="monitor">
-         <property
-               name="appName"
-               value="monitor">
-         </property>
-         <property
-               name="preferenceCustomization"
-               value="plugin_customization.ini">
-         </property>
-      </product>
-   </extension>
-
 </plugin>

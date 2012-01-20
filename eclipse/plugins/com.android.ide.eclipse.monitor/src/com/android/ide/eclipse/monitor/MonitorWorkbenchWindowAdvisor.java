@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,26 @@
 
 package com.android.ide.eclipse.monitor;
 
-import com.android.ide.eclipse.ddms.Perspective;
-
+import org.eclipse.ui.application.ActionBarAdvisor;
+import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
-import org.eclipse.ui.application.WorkbenchAdvisor;
+import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
-public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
-    @Override
-    public String getInitialWindowPerspectiveId() {
-        return Perspective.ID;
+public class MonitorWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
+    public MonitorWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
+        super(configurer);
     }
 
     @Override
-    public void preWindowOpen(IWorkbenchWindowConfigurer configurer) {
+    public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer) {
+        return new MonitorActionBarAdvisor(configurer);
+    };
+
+    @Override
+    public void preWindowOpen() {
+        IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
         configurer.setShowStatusLine(true);
         configurer.setShowPerspectiveBar(true);
+        configurer.setTitle("Android Debug Monitor");
     }
 }
