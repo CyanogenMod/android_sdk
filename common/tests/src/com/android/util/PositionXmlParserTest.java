@@ -129,7 +129,8 @@ public class PositionXmlParserTest extends TestCase {
     private static void checkEncoding(String encoding, boolean writeBom, boolean writeEncoding,
             String lineEnding)
             throws Exception {
-        String value = "¾¿Œ";
+        // Norwegian extra vowel characters such as "latin small letter a with ring above"
+        String value = "\u00e6\u00d8\u00e5";
         StringBuilder sb = new StringBuilder();
 
         sb.append("<?xml version=\"1.0\"");
