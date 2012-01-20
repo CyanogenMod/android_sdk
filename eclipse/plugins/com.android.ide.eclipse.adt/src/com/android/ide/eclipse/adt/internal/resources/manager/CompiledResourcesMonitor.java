@@ -187,6 +187,12 @@ public final class CompiledResourcesMonitor implements IFileListener, IProjectLi
         }
     }
 
+    @Override
+    public void allProjectsOpenedWithWorkspace() {
+        // nothing to do.
+    }
+
+
     private void loadAndParseRClass(IProject project, String className) {
         try {
             // first check there's a ProjectResources to store the content

@@ -65,6 +65,7 @@ public final class AdtPrefs extends AbstractPreferenceInitializer {
     public final static String PREFS_LINT_ON_EXPORT = AdtPlugin.PLUGIN_ID + ".lintOnExport"; //$NON-NLS-1$
     public final static String PREFS_ATTRIBUTE_SORT = AdtPlugin.PLUGIN_ID + ".attrSort"; //$NON-NLS-1$
     public final static String PREFS_LINT_SEVERITIES = AdtPlugin.PLUGIN_ID + ".lintSeverities"; //$NON-NLS-1$
+    public final static String PREFS_FIX_LEGACY_EDITORS = AdtPlugin.PLUGIN_ID + ".fixLegacyEditors"; //$NON-NLS-1$
 
     /** singleton instance */
     private final static AdtPrefs sThis = new AdtPrefs();

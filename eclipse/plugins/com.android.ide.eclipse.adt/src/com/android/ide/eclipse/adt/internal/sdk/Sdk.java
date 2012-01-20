@@ -24,8 +24,10 @@ import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer;
@@ -63,11 +65,13 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -906,6 +910,12 @@ public final class Sdk  {
             onProjectOpened(project);
         }
 
+        @Override
+        public void allProjectsOpenedWithWorkspace() {
+            // Correct currently open editors
+            fixOpenLegacyEditors();
+        }
+
         private void onProjectOpened(final IProject openedProject) {
             try {
                 if (openedProject.hasNature(AdtConstants.NATURE_DEFAULT) == false) {
@@ -1214,7 +1224,7 @@ public final class Sdk  {
             // The target version we're comparing to. This must be incremented each time
             // we change the processing here so that a new version of the plugin would
             // try to fix existing user projects.
-            int targetVersion = 2;
+            final int targetVersion = 2;
 
             if (currentVersion >= targetVersion) {
                 return;
@@ -1223,16 +1233,6 @@ public final class Sdk  {
             // Set to specific version such that we can rev the version in the future
             // to trigger further scanning
             project.setPersistentProperty(KEY, Integer.toString(targetVersion));
-
-            // First deal with any potentially open legacy editors.
-            // This isn't particularly project-specific, it's just convenient to have it here.
-            // We need to make sure it's done in the UI thread, which this isn't invoked from.
-            PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    fixOpenLegacyEditors();
-                }
-            });
 
             // Now update the actual editor associations.
             Job job = new Job("Update Android editor bindings") { //$NON-NLS-1$
@@ -1282,7 +1282,7 @@ public final class Sdk  {
     }
 
     /**
-     * Tries to fix an currently open legacy editor.
+     * Tries to fix all currently open Android legacy editors.
      * <p/>
      * If an editor is found to match one of the legacy ids, we'll try to close it.
      * If that succeeds, we try to reopen it using the new common editor ID.
@@ -1291,54 +1291,87 @@ public final class Sdk  {
      */
     private void fixOpenLegacyEditors() {
 
-        HashSet<String> legacyIds =
-            new HashSet<String>(Arrays.asList(AndroidXmlCommonEditor.LEGACY_EDITOR_IDS));
+        AdtPlugin adt = AdtPlugin.getDefault();
+        if (adt == null) {
+            return;
+        }
 
-        for (IWorkbenchWindow win : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-            for (IWorkbenchPage page : win.getPages()) {
-                for (IEditorReference ref : page.getEditorReferences()) {
-                    try {
-                        IEditorInput editorInput = ref.getEditorInput();
-                        if (editorInput instanceof IFileEditorInput) {
-                            IFile editorFile = ((IFileEditorInput)editorInput).getFile();
-                            IEditorPart part = ref.getEditor(true /*restore*/);
-                            if (part != null) {
-                                IWorkbenchPartSite site = part.getSite();
-                                if (site != null) {
-                                    String id = site.getId();
-                                    if (legacyIds.contains(id)) {
-                                        // This editor matches one of legacy editor IDs.
+        final IPreferenceStore store = adt.getPreferenceStore();
+        int currentValue = store.getInt(AdtPrefs.PREFS_FIX_LEGACY_EDITORS);
+        // The target version we're comparing to. This must be incremented each time
+        // we change the processing here so that a new version of the plugin would
+        // try to fix existing editors.
+        final int targetValue = 1;
 
-                                        IDE.setDefaultEditor(editorFile, AndroidXmlCommonEditor.ID);
+        if (currentValue >= targetValue) {
+            return;
+        }
 
-                                        boolean ok = page.closeEditor(part, true /*save*/);
+        // To be able to close and open editors we need to make sure this is done
+        // in the UI thread, which this isn't invoked from.
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                HashSet<String> legacyIds =
+                    new HashSet<String>(Arrays.asList(AndroidXmlCommonEditor.LEGACY_EDITOR_IDS));
 
-                                        AdtPlugin.log(IStatus.INFO,
-                                            "Closed legacy editor ID %s for %s: %s", //$NON-NLS-1$
-                                            id,
-                                            editorFile.getFullPath(),
-                                            ok ? "Success" : "Failed");//$NON-NLS-1$ //$NON-NLS-2$
-
-                                        if (ok) {
-                                            // Try to reopen it with the new ID
-                                            try {
-                                                page.openEditor(editorInput,
-                                                                AndroidXmlCommonEditor.ID);
-                                            } catch (PartInitException e) {
-                                                AdtPlugin.log(e,
-                                                    "Failed to reopen %s",          //$NON-NLS-1$
-                                                    editorFile.getFullPath());
+                for (IWorkbenchWindow win : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+                    for (IWorkbenchPage page : win.getPages()) {
+                        for (IEditorReference ref : page.getEditorReferences()) {
+                            try {
+                                IEditorInput input = ref.getEditorInput();
+                                if (input instanceof IFileEditorInput) {
+                                    IFile file = ((IFileEditorInput)input).getFile();
+                                    IEditorPart part = ref.getEditor(true /*restore*/);
+                                    if (part != null) {
+                                        IWorkbenchPartSite site = part.getSite();
+                                        if (site != null) {
+                                            String id = site.getId();
+                                            if (legacyIds.contains(id)) {
+                                                // This editor matches one of legacy editor IDs.
+                                                fixEditor(page, part, input, file, id);
                                             }
                                         }
                                     }
                                 }
+                            } catch (Exception e) {
+                                // ignore
                             }
                         }
-                    } catch (Exception e) {
-                        // ignore
+                    }
+                }
+
+                // Remember that we managed to do fix all editors
+                store.setValue(AdtPrefs.PREFS_FIX_LEGACY_EDITORS, targetValue);
+            }
+
+            private void fixEditor(
+                    IWorkbenchPage page,
+                    IEditorPart part,
+                    IEditorInput input,
+                    IFile file,
+                    String id) {
+                IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
+
+                boolean ok = page.closeEditor(part, true /*save*/);
+
+                AdtPlugin.log(IStatus.INFO,
+                    "Closed legacy editor ID %s for %s: %s", //$NON-NLS-1$
+                    id,
+                    file.getFullPath(),
+                    ok ? "Success" : "Failed");//$NON-NLS-1$ //$NON-NLS-2$
+
+                if (ok) {
+                    // Try to reopen it with the new ID
+                    try {
+                        page.openEditor(input, AndroidXmlCommonEditor.ID);
+                    } catch (PartInitException e) {
+                        AdtPlugin.log(e,
+                            "Failed to reopen %s",          //$NON-NLS-1$
+                            file.getFullPath());
                     }
                 }
             }
-        }
+        });
     }
 }

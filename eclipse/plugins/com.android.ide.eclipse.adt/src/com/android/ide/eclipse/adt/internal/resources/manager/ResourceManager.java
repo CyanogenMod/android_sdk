@@ -364,6 +364,11 @@ public final class ResourceManager {
         }
 
         @Override
+        public void allProjectsOpenedWithWorkspace() {
+            // nothing to do.
+        }
+
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // renamed project get a delete/open event too, so this can be ignored.
         }

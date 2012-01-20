@@ -119,6 +119,11 @@ public class DebuggerConnector implements IDebuggerConnector {
             // don't do anything as the cache is lazily initialized
         }
 
+        @Override
+        public void allProjectsOpenedWithWorkspace() {
+            // don't do anything as the cache is lazily initialized
+        }
+
         /** {@inheritDoc} */
         @Override
         public void projectOpened(IProject project) {
