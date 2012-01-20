@@ -17,6 +17,8 @@
 package com.android.ide.eclipse.adt.internal.editors.layout;
 
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
@@ -82,7 +84,7 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
-            if (ResourceFolderType.LAYOUT.equals(type)) {
+            if (ResourceFolderType.LAYOUT == type) {
                 return new LayoutEditorDelegate(delegator);
             }
 
@@ -137,8 +139,11 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
     /**
      * Creates the form editor for resources XML files.
      */
-    public LayoutEditorDelegate(AndroidXmlCommonEditor editor) {
+    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    protected LayoutEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        // Note that LayoutEditor has its own listeners and does not
+        // need to call editor.addDefaultTargetListener().
     }
 
     /**

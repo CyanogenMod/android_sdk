@@ -47,7 +47,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
-            if (ResourceFolderType.VALUES.equals(type)) {
+            if (ResourceFolderType.VALUES == type) {
                 return new ResourcesEditorDelegate(delegator);
             }
 
@@ -59,14 +59,16 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String LEGACY_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID =
+        AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
 
 
     /**
      * Creates the form editor for resources XML files.
      */
-    public ResourcesEditorDelegate(AndroidXmlCommonEditor editor) {
+    private ResourcesEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        editor.addDefaultTargetListener();
     }
 
     // ---- Base Class Overrides ----

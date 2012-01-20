@@ -464,8 +464,12 @@ class LintList extends Composite implements IResourceChangeListener, ControlList
                     LayoutEditorDelegate.fromEditor(AdtUtils.getActiveEditor());
                 if (delegate != null) {
                     GraphicalEditorPart g = delegate.getGraphicalEditor();
+                    assert g != null;
                     LayoutActionBar bar = g == null ? null : g.getLayoutActionBar();
-                    bar.updateErrorIndicator();
+                    assert bar != null;
+                    if (bar != null) {
+                        bar.updateErrorIndicator();
+                    }
                 }
             }
             // Trigger selection update

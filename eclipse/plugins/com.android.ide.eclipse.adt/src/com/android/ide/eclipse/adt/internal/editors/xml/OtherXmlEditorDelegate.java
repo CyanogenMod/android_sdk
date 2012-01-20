@@ -60,6 +60,7 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
      */
     public OtherXmlEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        editor.addDefaultTargetListener();
     }
 
     // ---- Base Class Overrides ----

@@ -62,7 +62,6 @@ public class AndroidXmlCommonEditor extends AndroidXmlEditor implements IShowEdi
      * are defined and the first one to return a non-null delegate is used.
      */
     private static final IXmlEditorCreator[] DELEGATES = {
-            /* TODO next CL: new ManifestEditorDelegate.Creator(), */
             new LayoutEditorDelegate.Creator(),
             new ResourcesEditorDelegate.Creator(),
             new AnimationEditorDelegate.Creator(),
