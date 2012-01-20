@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.layout.gle2;
 
+import com.android.annotations.Nullable;
 import com.android.ide.common.api.Rect;
 import com.android.ide.common.rendering.api.IImageFactory;
 import com.android.sdklib.SdkConstants;
@@ -147,6 +148,16 @@ public class ImageOverlay extends Overlay implements IImageFactory {
      */
     public Image getImage() {
         return mImage;
+    }
+
+    /**
+     * Returns the currently rendered image, or null if none has been set
+     *
+     * @return the currently rendered image or null
+     */
+    @Nullable
+    BufferedImage getAwtImage() {
+        return mAwtImage;
     }
 
     @Override

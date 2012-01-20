@@ -1269,6 +1269,7 @@ public class LayoutCanvas extends Canvas {
         manager.add(mDeleteAction);
         manager.add(new Separator());
         manager.add(new PlayAnimationMenu(this));
+        manager.add(new ExportScreenshotAction(this));
         manager.add(new Separator());
 
         // Group "Show Included In" and "Show In" together
