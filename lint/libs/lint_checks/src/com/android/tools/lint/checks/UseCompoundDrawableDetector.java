@@ -48,7 +48,9 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
             "Checks whether the current node can be replaced by a TextView using compound drawables.",
             // TODO: OFFER MORE HELP!
             "A LinearLayout which contains an ImageView and a TextView can be more efficiently " +
-            "handled as a compound drawable",
+            "handled as a compound drawable.\n" +
+            "\n" +
+            "There's a lint quickfix to perform this conversion in the Eclipse plugin.",
             Category.PERFORMANCE,
             6,
             Severity.WARNING,

@@ -190,8 +190,9 @@ public class NodeProxy implements INode {
     @Override
     public INode[] getChildren() {
         if (mNode != null) {
-            ArrayList<INode> nodes = new ArrayList<INode>();
-            for (UiElementNode uiChild : mNode.getUiChildren()) {
+            List<UiElementNode> uiChildren = mNode.getUiChildren();
+            List<INode> nodes = new ArrayList<INode>(uiChildren.size());
+            for (UiElementNode uiChild : uiChildren) {
                 if (uiChild instanceof UiViewElementNode) {
                     nodes.add(mFactory.create((UiViewElementNode) uiChild));
                 }

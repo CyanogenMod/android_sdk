@@ -1,7 +1,7 @@
 Quick assistant in sample1a.xml for <Bu^tton android:text:
-Wrap in Container : Initiates the given refactoring operation
-Remove Container : Initiates the given refactoring operation
-Change Widget Type : Initiates the given refactoring operation
-Change Layout : Initiates the given refactoring operation
-Extract as Include : Initiates the given refactoring operation
-Extract Style : Initiates the given refactoring operation
+Wrap in Container : Initiates the "Wrap in Container" refactoring
+Remove Container : Initiates the "Remove Container" refactoring
+Change Widget Type : Initiates the "Change Widget Type" refactoring
+Change Layout : Initiates the "Change Layout" refactoring
+Extract as Include : Initiates the "Extract as Include" refactoring
+Extract Style : Initiates the "Extract Style" refactoring

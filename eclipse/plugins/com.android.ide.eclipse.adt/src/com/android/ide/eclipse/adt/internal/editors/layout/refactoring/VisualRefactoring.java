@@ -27,6 +27,7 @@ import static com.android.ide.common.layout.LayoutConstants.NEW_ID_PREFIX;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS_COLON;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
@@ -232,6 +233,7 @@ public abstract class VisualRefactoring extends Refactoring {
         mElements = initElements();
     }
 
+    @NonNull
     protected abstract List<Change> computeChanges(IProgressMonitor monitor);
 
     @Override
@@ -878,6 +880,11 @@ public abstract class VisualRefactoring extends Refactoring {
     }
 
     protected String ensureHasId(MultiTextEdit rootEdit, Element element, String prefix) {
+        return ensureHasId(rootEdit, element, prefix, true);
+    }
+
+    protected String ensureHasId(MultiTextEdit rootEdit, Element element, String prefix,
+            boolean apply) {
         String id = mGeneratedIdMap.get(element);
         if (id != null) {
             return NEW_ID_PREFIX + id;
@@ -890,8 +897,10 @@ public abstract class VisualRefactoring extends Refactoring {
             mGeneratedIds.add(id);
             mGeneratedIdMap.put(element, id);
             id = NEW_ID_PREFIX + id;
-            setAttribute(rootEdit, element,
-                    ANDROID_URI, getAndroidNamespacePrefix(), ATTR_ID, id);
+            if (apply) {
+                setAttribute(rootEdit, element,
+                        ANDROID_URI, getAndroidNamespacePrefix(), ATTR_ID, id);
+            }
             return id;
         }
 
