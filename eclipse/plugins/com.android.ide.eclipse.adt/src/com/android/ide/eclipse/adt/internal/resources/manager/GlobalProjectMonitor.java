@@ -82,16 +82,28 @@ public final class GlobalProjectMonitor {
          * @param project the opened project.
          */
         public void projectOpenedWithWorkspace(IProject project);
+
+        /**
+         * Sent once after all Android projects have been opened,
+         * at the time the listener is put in place.
+         * <p/>
+         * This is called after {@link #projectOpenedWithWorkspace(IProject)} has
+         * been called on all known Android projects.
+         */
+        public void allProjectsOpenedWithWorkspace();
+
         /**
          * Sent when a project is opened.
          * @param project the project being opened.
          */
         public void projectOpened(IProject project);
+
         /**
          * Sent when a project is closed.
          * @param project the project being closed.
          */
         public void projectClosed(IProject project);
+
         /**
          * Sent when a project is deleted.
          * @param project the project about to be deleted.
@@ -384,6 +396,8 @@ public final class GlobalProjectMonitor {
         for (IJavaProject androidProject : androidProjects) {
             listener.projectOpenedWithWorkspace(androidProject.getProject());
         }
+
+        listener.allProjectsOpenedWithWorkspace();
 
         notifyResourceEventEnd();
     }

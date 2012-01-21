@@ -264,6 +264,11 @@ public final class ApkInstallManager {
         }
 
         @Override
+        public void allProjectsOpenedWithWorkspace() {
+            // nothing to do.
+        }
+
+        @Override
         public void projectRenamed(IProject project, IPath from) {
             // project renaming also triggers delete/open events so
             // there's nothing to do here (since delete will remove
