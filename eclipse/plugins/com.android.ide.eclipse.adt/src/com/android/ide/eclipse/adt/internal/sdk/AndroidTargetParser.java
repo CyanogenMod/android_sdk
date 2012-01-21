@@ -29,7 +29,7 @@ import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableDescriptors
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.XmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
@@ -215,8 +215,8 @@ public final class AndroidTargetParser {
                 return Status.CANCEL_STATUS;
             }
 
-            XmlDescriptors xmlDescriptors = new XmlDescriptors();
-            xmlDescriptors.updateDescriptors(
+            OtherXmlDescriptors otherXmlDescriptors = new OtherXmlDescriptors();
+            otherXmlDescriptors.updateDescriptors(
                     xmlSearchableMap,
                     xmlAppWidgetMap,
                     preferencesInfo,
@@ -274,7 +274,7 @@ public final class AndroidTargetParser {
                     manifestDescriptors,
                     layoutDescriptors,
                     menuDescriptors,
-                    xmlDescriptors,
+                    otherXmlDescriptors,
                     drawableDescriptors,
                     animatorDescriptors,
                     animDescriptors,

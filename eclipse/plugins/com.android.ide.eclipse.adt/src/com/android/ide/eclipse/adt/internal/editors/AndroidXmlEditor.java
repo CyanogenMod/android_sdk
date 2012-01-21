@@ -159,25 +159,22 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
 
     /**
      * Creates a form editor.
-     * <p/>The editor will setup a {@link ITargetChangeListener} and call
-     * {@link #initUiRootNode(boolean)}, when the SDK or the target changes.
-     *
-     * @see #AndroidXmlEditor(boolean)
+     * <p/>
+     * Some derived classes will want to use {@link #addDefaultTargetListener()}
+     * to setup the default listener to monitor SDK target changes. This
+     * is no longer the default.
      */
     public AndroidXmlEditor() {
-        this(true);
+        super();
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
     }
 
     /**
-     * Creates a form editor.
-     * @param addTargetListener whether to create an {@link ITargetChangeListener}.
+     * Setups a default {@link ITargetChangeListener} that will call
+     * {@link #initUiRootNode(boolean)} when the SDK or the target changes..
      */
-    public AndroidXmlEditor(boolean addTargetListener) {
-        super();
-
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
-
-        if (addTargetListener) {
+    public void addDefaultTargetListener() {
+        if (mTargetListener == null) {
             mTargetListener = new TargetChangeListener() {
                 @Override
                 public IProject getProject() {
@@ -251,7 +248,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     // ---- Base Class Overrides, Interfaces Implemented ----
 
     @Override
-    public Object getAdapter(Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
         Object result = super.getAdapter(adapter);
 
         if (result != null && adapter.equals(IGotoMarker.class) ) {
@@ -291,7 +288,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     /**
      * Creates the page for the Android Editors
      */
-    protected void createAndroidPages() {
+    public void createAndroidPages() {
         mIsCreatingPage = true;
         createFormPages();
         createTextEditor();
@@ -360,7 +357,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      * @param defaultPageId the id of the page to show. If <code>null</code> the editor attempts to
      * find the default page in the properties of the {@link IResource} object being edited.
      */
-    protected void selectDefaultPage(String defaultPageId) {
+    public void selectDefaultPage(String defaultPageId) {
         if (defaultPageId == null) {
             IFile file = getInputFile();
             if (file != null) {
@@ -640,6 +637,15 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
         return false;
     }
 
+    /**
+     * Returns the page index of the text editor (always the last page)
+
+     * @return the page index of the text editor (always the last page)
+     */
+    public int getTextPageIndex() {
+        return mTextPageIndex;
+    }
+
     // ---- Local methods ----
 
 
@@ -785,7 +791,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
      */
     public final ISourceViewer getStructuredSourceViewer() {
         if (mTextEditor != null) {
-            // We can't access mEditor.getSourceViewer() because it is protected,
+            // We can't access mDelegate.getSourceViewer() because it is protected,
             // however getTextViewer simply returns the SourceViewer casted, so we
             // can use it instead.
             return mTextEditor.getTextViewer();
@@ -1118,7 +1124,7 @@ public abstract class AndroidXmlEditor extends FormEditor implements IResourceCh
     /**
      * Returns the XML {@link Document} or null if we can't get it
      */
-    protected final Document getXmlDocument(IStructuredModel model) {
+    public final Document getXmlDocument(IStructuredModel model) {
         if (model == null) {
             AdtPlugin.log(IStatus.WARNING, "Android Editor: No XML model for root node."); //$NON-NLS-1$
             return null;

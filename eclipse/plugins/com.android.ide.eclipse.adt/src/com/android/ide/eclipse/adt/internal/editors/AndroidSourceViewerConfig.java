@@ -44,7 +44,7 @@ import java.util.Map;
 /**
  * Base Source Viewer Configuration for Android resources.
  */
-@SuppressWarnings("restriction") // XMLContentAssistProcessor etc
+@SuppressWarnings({"restriction", "deprecation"}) // XMLContentAssistProcessor etc
 public class AndroidSourceViewerConfig extends StructuredTextViewerConfigurationXML {
 
     /** Content Assist Processor to use for all handled partitions. */
@@ -70,7 +70,6 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
      *        processors are applicable
      * @return IContentAssistProcessors or null if should not be supported
      */
-    @SuppressWarnings("deprecation") // XMLContentAssistProcessor
     @Override
     protected IContentAssistProcessor[] getContentAssistProcessors(
             ISourceViewer sourceViewer, String partitionType) {
@@ -114,7 +113,6 @@ public class AndroidSourceViewerConfig extends StructuredTextViewerConfiguration
         return super.getTextHover(sourceViewer, contentType);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public IAutoEditStrategy[] getAutoEditStrategies(
             ISourceViewer sourceViewer, String contentType) {

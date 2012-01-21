@@ -490,14 +490,6 @@
     </extension>
     <extension point="org.eclipse.ui.editors">
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
-            default="true"
-            filenames="AndroidManifest.xml"
-            icon="icons/android_file.png"
-            id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
-            name="Android Manifest Editor">
-        </editor>
-        <editor
             class="com.android.ide.eclipse.adt.internal.editors.export.ExportEditor"
             default="true"
             filenames="export.properties"
@@ -505,14 +497,24 @@
             id="com.android.ide.eclipse.editors.export.ExportEditor"
             name="Android Export Editor">
         </editor>
+
+        <!--
+        This is the new generic multi-purpose single XML editor used by ADT.
+        It is designed to replace all the other XML editors (layout, manifest, drawable,
+        animation, color, values, xml) and does so by using a single common Editor class
+        that defers to multiple delegate handlers.
+        -->
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor"
-            default="false"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            default="true"
             extensions="xml"
             icon="icons/android_file.png"
-            id="com.android.ide.eclipse.editors.resources.ResourcesEditor"
-            name="Android Resource Editor">
+            id="com.android.ide.eclipse.editors.XmlCommonEditor"
+            name="Android Common XML Editor">
         </editor>
+
+        <!-- TODO change in next CL to use common editor. We'll need to add a default
+        actionContributor and matchingStrategy to the base class. -->
         <editor
             class="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor"
             contributorClass="com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditorActionContributor"
@@ -521,48 +523,68 @@
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.layout.LayoutEditor"
             matchingStrategy="com.android.ide.eclipse.adt.internal.editors.layout.MatchingStrategy"
-            name="Android Layout Editor">
+            name="Android Layout Editor [TODO]">
+        </editor>
+
+        <!-- TODO change in next CL to use common editor. -->
+        <editor
+            class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
+            default="true"
+            filenames="AndroidManifest.xml"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.manifest.ManifestEditor"
+            name="Android Manifest Editor [TODO]">
+        </editor>
+
+        <!--
+        For compatibilit with existing ADT installs, we still need to keep the editor
+        IDs of the previously defined editors. E.g. for the color editor note that the
+        id remains the same but class name changes to the new class. This will make
+        Eclipse not complain upon startup of an existing workspace.
+        -->
+       <editor
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
+            default="false"
+            icon="icons/android_file.png"
+            id="com.android.ide.eclipse.editors.resources.ResourcesEditor"
+            name="Android Resource Editor [Obsolete]">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
             default="false"
-            extensions="xml"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.menu.MenuEditor"
-            name="Android Menu Editor">
+            name="Android Menu Editor [Obsolete]">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
             default="false"
-            extensions="xml"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.xml.XmlEditor"
-            name="Android Xml Resources Editor">
+            name="Android Xml Resources Editor [Obsolete]">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
             default="false"
-            extensions="xml"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.animator.AnimationEditor"
-            name="Android Animation Editor">
+            name="Android Animation Editor [Obsolete]">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
             default="false"
-            extensions="xml"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.drawable.DrawableEditor"
-            name="Android Drawable Editor">
+            name="Android Drawable Editor [Obsolete]">
         </editor>
         <editor
-            class="com.android.ide.eclipse.adt.internal.editors.color.ColorEditor"
+            class="com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor"
             default="false"
-            extensions="xml"
             icon="icons/android_file.png"
             id="com.android.ide.eclipse.editors.color.ColorEditor"
-            name="Android Color Editor">
+            name="Android Color Editor [Obsolete]">
         </editor>
+
         <editor
             class="com.android.ide.eclipse.adt.internal.editors.binaryxml.BinaryXMLMultiPageEditorPart"
             contributorClass="org.eclipse.wst.xml.ui.internal.tabletree.XMLMultiPageEditorActionBarContributor"
@@ -592,6 +614,7 @@
         </view>
     </extension>
     <extension point="org.eclipse.wst.sse.ui.editorConfiguration">
+        <!-- TODO delegate from AndroidCommonXmlEditor -->
         <sourceViewerConfiguration
             class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestSourceViewerConfig"
             target="com.android.ide.eclipse.editors.manifest.ManifestEditor">

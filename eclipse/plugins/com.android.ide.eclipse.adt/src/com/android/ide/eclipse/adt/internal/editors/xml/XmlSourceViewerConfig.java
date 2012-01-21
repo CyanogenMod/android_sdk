@@ -20,11 +20,11 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
 
 /**
- * Source Viewer Configuration that calls in XmlContentAssist.
+ * Source Viewer Configuration that calls in OtherXmlContentAssist.
  */
 public class XmlSourceViewerConfig extends AndroidSourceViewerConfig {
 
     public XmlSourceViewerConfig() {
-        super(new XmlContentAssist());
+        super(new OtherXmlContentAssist());
     }
 }

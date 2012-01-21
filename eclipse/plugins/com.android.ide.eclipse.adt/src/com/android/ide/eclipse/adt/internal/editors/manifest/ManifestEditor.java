@@ -90,6 +90,7 @@ public final class ManifestEditor extends AndroidXmlEditor {
      */
     public ManifestEditor() {
         super();
+        addDefaultTargetListener();
     }
 
     @Override

@@ -19,6 +19,7 @@ package com.android.ide.eclipse.adt.internal.editors.menu;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 
@@ -35,9 +36,9 @@ public final class MenuTreePage extends FormPage implements IPageImageProvider {
     public final static String PAGE_ID = "layout_tree_page"; //$NON-NLS-1$
 
     /** Container editor */
-    MenuEditor mEditor;
+    AndroidXmlCommonEditor mEditor;
 
-    public MenuTreePage(MenuEditor editor) {
+    public MenuTreePage(AndroidXmlCommonEditor editor) {
         super(editor, PAGE_ID, "Layout");  // tab's label, keep it short
         mEditor = editor;
     }

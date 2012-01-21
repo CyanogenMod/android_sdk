@@ -39,7 +39,7 @@ import java.util.Map;
  * Description of the /res/xml structure.
  * Currently supports the <searchable> and <preferences> root nodes.
  */
-public final class XmlDescriptors implements IDescriptorProvider {
+public final class OtherXmlDescriptors implements IDescriptorProvider {
 
     // Public attributes names, attributes descriptors and elements descriptors referenced
     // elsewhere.

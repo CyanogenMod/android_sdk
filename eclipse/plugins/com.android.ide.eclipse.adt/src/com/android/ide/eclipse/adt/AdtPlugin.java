@@ -21,16 +21,12 @@ import com.android.ide.common.log.ILogger;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.internal.VersionCheck;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
-import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor;
-import com.android.ide.eclipse.adt.internal.editors.color.ColorEditor;
-import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
-import com.android.ide.eclipse.adt.internal.editors.menu.MenuEditor;
-import com.android.ide.eclipse.adt.internal.editors.resources.ResourcesEditor;
-import com.android.ide.eclipse.adt.internal.editors.xml.XmlEditor;
+import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
@@ -1459,12 +1455,12 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 }
                 if (type == ResourceFolderType.XML) {
                     IEditorDescriptor ed = IDE.getDefaultEditor(file);
-                    if (ed == null || !ed.getId().equals(XmlEditor.ID)) {
+                    if (ed == null || !ed.getId().equals(AndroidXmlCommonEditor.ID)) {
                         QualifiedName qname = new QualifiedName(
                                 AdtPlugin.PLUGIN_ID,
                                 UNKNOWN_EDITOR);
                         String prop = getFileProperty(file, qname);
-                        if (prop != null && XmlEditor.canHandleFile(file)) {
+                        if (prop != null && OtherXmlEditorDelegate.canHandleFile(file)) {
                             try {
                                 // remove the property & set editor
                                 setFileProperty(file, qname, null);
@@ -1483,10 +1479,10 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                                         AdtPlugin.displayPrompt("Android XML Editor",
                                             String.format("The file you just saved as been recognized as a file that could be better handled using the Android XML Editor. Do you want to edit '%1$s' using the Android XML editor instead?",
                                                     file.getFullPath()))) {
-                                    IDE.setDefaultEditor(file, XmlEditor.ID);
+                                    IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
                                     IEditorPart newEditor = page.openEditor(
                                             new FileEditorInput(file),
-                                            XmlEditor.ID,
+                                            AndroidXmlCommonEditor.ID,
                                             true, /* activate */
                                             IWorkbenchPage.MATCH_NONE);
 
@@ -1681,33 +1677,20 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 AdtPlugin.log(IStatus.INFO, "   set default editor id to layout");
             }
             IDE.setDefaultEditor(file, LayoutEditor.ID);
-        } else if (type == ResourceFolderType.VALUES) {
-            IDE.setDefaultEditor(file, ResourcesEditor.ID);
-        } else if (type == ResourceFolderType.MENU) {
-            IDE.setDefaultEditor(file, MenuEditor.ID);
-        } else if (type == ResourceFolderType.COLOR) {
-            IDE.setDefaultEditor(file, ColorEditor.ID);
-        } else if (type == ResourceFolderType.DRAWABLE) {
-            IDE.setDefaultEditor(file, DrawableEditor.ID);
-        } else if (type == ResourceFolderType.ANIMATOR
-                || type == ResourceFolderType.ANIM) {
-            IDE.setDefaultEditor(file, AnimationEditor.ID);
-        } else if (type == ResourceFolderType.XML) {
-            if (XmlEditor.canHandleFile(file)) {
-                if (DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.INFO, "   set default editor id to XmlEditor.id");
-                }
-                IDE.setDefaultEditor(file, XmlEditor.ID);
-            } else {
-                if (DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.INFO, "   set default editor id unknown");
-                }
-                // set a property to determine later if the XML can be handled
-                QualifiedName qname = new QualifiedName(
-                        AdtPlugin.PLUGIN_ID,
-                        UNKNOWN_EDITOR);
-                setFileProperty(file, qname, "1"); //$NON-NLS-1$
+
+        } else if (type == ResourceFolderType.VALUES
+                || type == ResourceFolderType.ANIMATOR
+                || type == ResourceFolderType.ANIM
+                || type == ResourceFolderType.COLOR
+                || type == ResourceFolderType.DRAWABLE
+                || type == ResourceFolderType.MENU
+                || type == ResourceFolderType.XML
+                /* TODO next CL || type == ResourceFolderType.LAYOUT */
+                ) {
+            if (DEBUG_XML_FILE_INIT) {
+                AdtPlugin.log(IStatus.INFO, "   set default editor id to new-style XmlEditDelegator.ID");
             }
+            IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
         }
     }
 

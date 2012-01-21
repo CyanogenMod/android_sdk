@@ -25,11 +25,8 @@ import static com.android.sdklib.SdkConstants.FD_RES;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.animator.AnimationContentAssist;
-import com.android.ide.eclipse.adt.internal.editors.animator.AnimationEditor;
 import com.android.ide.eclipse.adt.internal.editors.color.ColorContentAssist;
-import com.android.ide.eclipse.adt.internal.editors.color.ColorEditor;
 import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableContentAssist;
-import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutContentAssist;
 import com.android.ide.eclipse.adt.internal.editors.layout.LayoutEditor;
 import com.android.ide.eclipse.adt.internal.editors.layout.refactoring.AdtProjectTest;
@@ -780,27 +777,27 @@ public class AndroidContentAssistTest extends AdtProjectTest {
 
     private void checkColorCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_COLOR + "/" + name);
-        IDE.setDefaultEditor(file, ColorEditor.ID);
+        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
         checkCompletion(name, file, caretLocation, new ColorContentAssist());
     }
 
     private void checkAnimCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIM + "/" + name);
-        IDE.setDefaultEditor(file, AnimationEditor.ID);
+        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
         checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
     private void checkAnimatorCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_ANIMATOR + "/"
                 + name);
-        IDE.setDefaultEditor(file, AnimationEditor.ID);
+        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
         checkCompletion(name, file, caretLocation, new AnimationContentAssist());
     }
 
     private void checkDrawableCompletion(String name, String caretLocation) throws Exception {
         IFile file = getTestDataFile(getProject(), name, FD_RES + "/" + FD_RES_DRAWABLE + "/"
                 + name);
-        IDE.setDefaultEditor(file, DrawableEditor.ID);
+        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
         checkCompletion(name, file, caretLocation, new DrawableContentAssist());
     }
 
