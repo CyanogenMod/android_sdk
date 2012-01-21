@@ -30,6 +30,7 @@ import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.ViewEleme
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.GraphicalEditorPart;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutActionBar;
+import com.android.ide.eclipse.adt.internal.editors.layout.gle2.LayoutCanvas;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.OutlinePage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.PropertySheetPage;
 import com.android.ide.eclipse.adt.internal.editors.layout.gre.RulesEngine;
@@ -48,6 +49,7 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -71,7 +73,7 @@ import java.util.Set;
  * Multi-page form editor for /res/layout XML files.
  */
 public class LayoutEditorDelegate extends XmlEditorDelegate
-                                  implements IShowEditorInput, IPartListener {
+         implements IShowEditorInput, IPartListener, XmlEditorDelegate.IActionContributorDelegate {
 
     public static class Creator implements IXmlEditorCreator {
         @Override
@@ -92,7 +94,7 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String OLD_STANDALONE_EDITOR_ID =
+    public static final String LEGACY_EDITOR_ID =
         AdtConstants.EDITORS_NAMESPACE + ".layout.LayoutEditor"; //$NON-NLS-1$
 
     /** Root node of the UI element hierarchy */
@@ -429,6 +431,19 @@ public class LayoutEditorDelegate extends XmlEditorDelegate
             }
         }
     }
+
+    // ----- IActionContributorDelegate methods ----
+
+    @Override
+    public void setActiveEditor(IEditorPart part, IActionBars bars) {
+        if (mGraphicalEditor != null) {
+            LayoutCanvas canvas = mGraphicalEditor.getCanvasControl();
+            if (canvas != null) {
+                canvas.updateGlobalActions(bars);
+            }
+        }
+    }
+
 
     // ----- IPartListener Methods ----
 

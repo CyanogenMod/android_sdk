@@ -56,7 +56,7 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String OLD_STANDALONE_EDITOR_ID = EDITORS_NAMESPACE + ".drawable.DrawableEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID = EDITORS_NAMESPACE + ".drawable.DrawableEditor"; //$NON-NLS-1$
 
     /** The tag used at the root */
     private String mRootTag;

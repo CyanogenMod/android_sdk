@@ -55,7 +55,7 @@ public class ColorEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String OLD_STANDALONE_EDITOR_ID = EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID = EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
 
 
     public ColorEditorDelegate(AndroidXmlCommonEditor editor) {

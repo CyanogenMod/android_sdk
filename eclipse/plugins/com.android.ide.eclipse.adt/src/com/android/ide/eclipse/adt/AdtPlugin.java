@@ -25,7 +25,6 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.IncludeFinder;
-import com.android.ide.eclipse.adt.internal.editors.xml.OtherXmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs.BuildVerbosity;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
@@ -85,7 +84,6 @@ import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 import org.osgi.framework.Bundle;
@@ -1358,8 +1356,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
         return mResourceMonitor;
     }
 
-    private static final String UNKNOWN_EDITOR = "unknown-editor"; //$NON-NLS-1$
-
     /**
      * Sets up the editor to register default editors for resource files when needed.
      *
@@ -1405,9 +1401,9 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
 
                             if (type != null) {
                                 if (kind == IResourceDelta.ADDED) {
-                                    resourceAdded(file, type);
+                                    resourceXmlAdded(file, type);
                                 } else if (kind == IResourceDelta.CHANGED) {
-                                    resourceChanged(file, type);
+                                    resourceXmlChanged(file, type);
                                 }
                             } else {
                                 if (DEBUG_XML_FILE_INIT) {
@@ -1439,62 +1435,38 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
                 }
             }
 
-            private void resourceAdded(IFile file, ResourceFolderType type) {
+            /**
+             * A new file {@code /res/type-config/some.xml} was added.
+             *
+             * @param file The file added to the workspace. Guaranteed to be a *.xml file.
+             * @param type The resource type.
+             */
+            private void resourceXmlAdded(IFile file, ResourceFolderType type) {
                 if (DEBUG_XML_FILE_INIT) {
                     AdtPlugin.log(IStatus.INFO, "resourceAdded %1$s - type=%1$s",
                         file.getFullPath().toOSString(), type);
                 }
-                assignEditor(file, type);
+                // All the /res XML files are handled by the same common editor now.
+                IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
             }
 
-            private void resourceChanged(IFile file, ResourceFolderType type) {
-                if (DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.INFO, "resourceChanged %1$s - type=%1$s",
-                        file.getFullPath().toOSString(), type);
-                }
-                if (type == ResourceFolderType.XML) {
-                    IEditorDescriptor ed = IDE.getDefaultEditor(file);
-                    if (ed == null || !ed.getId().equals(AndroidXmlCommonEditor.ID)) {
-                        QualifiedName qname = new QualifiedName(
-                                AdtPlugin.PLUGIN_ID,
-                                UNKNOWN_EDITOR);
-                        String prop = getFileProperty(file, qname);
-                        if (prop != null && OtherXmlEditorDelegate.canHandleFile(file)) {
-                            try {
-                                // remove the property & set editor
-                                setFileProperty(file, qname, null);
+            /**
+             * An existing file {@code /res/type-config/some.xml} was changed.
+             *
+             * @param file The file added to the workspace. Guaranteed to be a *.xml file.
+             * @param type The resource type.
+             */
+            private void resourceXmlChanged(IFile file, ResourceFolderType type) {
+                // Nothing to do here anymore.
+                // This used to be useful to detect that a /res/xml/something.xml
+                // changed from an empty XML to one with a root now that OtherXmlEditor
+                // could handle. Since OtherXmlEditor is now a default, it will always
+                // handle such files and we don't need this anymore.
 
-                                // the window can be null sometimes
-                                IWorkbench wb = PlatformUI.getWorkbench();
-                                IWorkbenchWindow win = wb == null ? null :
-                                                       wb.getActiveWorkbenchWindow();
-                                IWorkbenchPage page = win == null ? null :
-                                                      win.getActivePage();
-
-                                IEditorPart oldEditor = page == null ? null :
-                                                        page.findEditor(new FileEditorInput(file));
-                                if (page != null &&
-                                        oldEditor != null &&
-                                        AdtPlugin.displayPrompt("Android XML Editor",
-                                            String.format("The file you just saved as been recognized as a file that could be better handled using the Android XML Editor. Do you want to edit '%1$s' using the Android XML editor instead?",
-                                                    file.getFullPath()))) {
-                                    IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
-                                    IEditorPart newEditor = page.openEditor(
-                                            new FileEditorInput(file),
-                                            AndroidXmlCommonEditor.ID,
-                                            true, /* activate */
-                                            IWorkbenchPage.MATCH_NONE);
-
-                                    if (newEditor != null) {
-                                        page.closeEditor(oldEditor, true /* save */);
-                                    }
-                                }
-                            } catch (CoreException e) {
-                                // page.openEditor may have failed
-                            }
-                        }
-                    }
-                }
+                //if (DEBUG_XML_FILE_INIT) {
+                //    AdtPlugin.log(IStatus.INFO, "resourceChanged %1$s - type=%1$s",
+                //        file.getFullPath().toOSString(), type);
+                //}
             }
 
         }, IResourceDelta.ADDED | IResourceDelta.CHANGED);
@@ -1661,29 +1633,6 @@ public class AdtPlugin extends AbstractUIPlugin implements ILogger {
     @Override
     public void warning(String format, Object... args) {
         log(IStatus.WARNING, format, args);
-    }
-
-    /**
-     * Assign an editor for the given {@link IFile}.
-     *
-     * @param file the file to assign
-     * @param type resource type for the file
-     */
-    public static void assignEditor(IFile file, ResourceFolderType type) {
-        // set the default editor based on the type.
-        if (type == ResourceFolderType.VALUES
-                || type == ResourceFolderType.ANIMATOR
-                || type == ResourceFolderType.ANIM
-                || type == ResourceFolderType.COLOR
-                || type == ResourceFolderType.DRAWABLE
-                || type == ResourceFolderType.MENU
-                || type == ResourceFolderType.XML
-                || type == ResourceFolderType.LAYOUT) {
-            if (DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(IStatus.INFO, "   set default editor id to new-style XmlEditDelegator.ID");
-            }
-            IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
-        }
     }
 
     /**

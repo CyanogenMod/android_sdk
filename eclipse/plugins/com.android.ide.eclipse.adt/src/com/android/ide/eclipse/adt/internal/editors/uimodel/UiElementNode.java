@@ -336,7 +336,7 @@ public class UiElementNode implements IPropertySource {
      * <p/>
      * Note: This is a wrapper around {@link Element#getAttributeNS(String, String)}.
      * In some versions of webtools, the getAttributeNS implementation crashes with an NPE.
-     * This wrapper will return null instead.
+     * This wrapper will return an empty string instead.
      *
      * @see Element#getAttributeNS(String, String)
      * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=318108">https://bugs.eclipse.org/bugs/show_bug.cgi?id=318108</a>

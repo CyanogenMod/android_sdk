@@ -19,19 +19,11 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
-import com.android.ide.eclipse.adt.internal.editors.FirstElementParser;
 import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
-import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.resources.ResourceFolderType;
-import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkConstants;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.w3c.dom.Document;
@@ -48,9 +40,7 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
-            // get the IFile object and check it's the desired sub-resource folder
-            IFile iFile = input.getFile();
-            if (canHandleFile(iFile)) {
+            if (ResourceFolderType.XML == type) {
                 return new OtherXmlEditorDelegate(delegator);
             }
 
@@ -62,74 +52,14 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    @Deprecated
-    public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID =
+        AdtConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
 
     /**
      * Creates the form editor for resources XML files.
      */
     public OtherXmlEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
-    }
-
-
-    // ---- Static ----
-
-    /**
-     * Indicates if this is a file that this {@link OtherXmlEditorDelegate} can handle.
-     * <p/>
-     * The {@link OtherXmlEditorDelegate} can handle XML files that have a <searchable> or
-     * <Preferences> root XML element with the adequate xmlns:android attribute.
-     *
-     * @return True if the {@link OtherXmlEditorDelegate} can handle that file.
-     */
-    public static boolean canHandleFile(IFile file) {
-        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-            AdtPlugin.log(IStatus.INFO, "canHandleFile(%1$s)", file.getFullPath().toOSString());
-        }
-        // we need the target of the file's project to access the descriptors.
-        IProject project = file.getProject();
-        Sdk sdk = Sdk.getCurrent();
-        IAndroidTarget target = sdk == null ? null : sdk.getTarget(project);
-        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-            AdtPlugin.log(IStatus.INFO, "   target=%1$s", target);
-        }
-        if (target != null) {
-            // Note: the target data can be null when an SDK is not finished loading yet.
-            // We can potentially arrive here when Eclipse is started with a file previously
-            // open and the resource gets refreshed -- at that point we may not have the SDK yet.
-            AndroidTargetData data = Sdk.getCurrent().getTargetData(target);
-
-            FirstElementParser.Result result = FirstElementParser.parse(
-                    file.getLocation().toOSString(),
-                    SdkConstants.NS_RESOURCES);
-            if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                AdtPlugin.log(IStatus.INFO, "   data=%1$s, result=%2$s", data, result);
-            }
-
-            if (result != null && data != null) {
-                String name = result.getElement();
-                if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-                    AdtPlugin.log(IStatus.INFO, "   name=%1$s, xmlnsprefix=%2$s", name,
-                        result.getXmlnsPrefix());
-                }
-                if (name != null && result.getXmlnsPrefix() != null) {
-                    DocumentDescriptor desc = data.getXmlDescriptors().getDescriptor();
-                    for (ElementDescriptor elem : desc.getChildren()) {
-                        if (elem.getXmlName().equals(name)) {
-                            // This is an element that this document can handle
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (AdtPlugin.DEBUG_XML_FILE_INIT) {
-            AdtPlugin.log(IStatus.INFO, "   File cannot be handled");
-        }
-
-        return false;
     }
 
     // ---- Base Class Overrides ----

@@ -17,16 +17,15 @@
 package com.android.ide.eclipse.adt.internal.sdk;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
-import static com.android.ide.eclipse.adt.AdtUtils.endsWith;
 import static com.android.sdklib.SdkConstants.FD_RES;
 
-import com.android.AndroidConstants;
 import com.android.ddmlib.IDevice;
 import com.android.ide.common.rendering.LayoutLibrary;
 import com.android.ide.common.sdk.LoadStatus;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.build.DexWrapper;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.project.AndroidClasspathContainerInitializer;
 import com.android.ide.eclipse.adt.internal.project.BaseProjectHelper;
 import com.android.ide.eclipse.adt.internal.project.LibraryClasspathContainerInitializer;
@@ -38,7 +37,6 @@ import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryDifference;
 import com.android.ide.eclipse.adt.internal.sdk.ProjectState.LibraryState;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISdkLog;
@@ -65,6 +63,16 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.ui.IEditorDescriptor;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
 import java.io.File;
@@ -72,6 +80,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1133,7 +1142,6 @@ public final class Sdk  {
      * Updates all existing projects with a given list of new/updated libraries.
      * This loops through all opened projects and check if they depend on any of the given
      * library project, and if they do, they are linked together.
-     * @param libraries the list of new/updated library projects.
      */
     private void updateParentProjects() {
         if (mModifiedChildProjects.size() == 0) {
@@ -1164,13 +1172,14 @@ public final class Sdk  {
         updateParentProjects();
     }
 
-    /** Fix editor associations for the given project, if not already done.
-     * <p>
+    /**
+     * Fix editor associations for the given project, if not already done.
+     * <p/>
      * Eclipse has a per-file setting for which editor should be used for each file
      * (see {@link IDE#setDefaultEditor(IFile, String)}).
      * We're using this flag to pick between the various XML editors (layout, drawable, etc)
      * since they all have the same file name extension.
-     * <p>
+     * <p/>
      * Unfortunately, the file setting can be "wrong" for two reasons:
      * <ol>
      *   <li> The editor type was added <b>after</b> a file had been seen by the IDE.
@@ -1182,7 +1191,7 @@ public final class Sdk  {
      *        is fixed in ADT 16, the fix only affects new files, it cannot retroactively
      *        fix editor associations that were set incorrectly by ADT 14 or 15.
      * </ol>
-     * <p>
+     * <p/>
      * This method attempts to fix the editor bindings retroactively by scanning all the
      * resource XML files and resetting the editor associations.
      * Since this is a potentially slow operation, this is only done "once"; we use a
@@ -1194,15 +1203,38 @@ public final class Sdk  {
 
         try {
             String value = project.getPersistentProperty(KEY);
-
+            int currentVersion = 0;
             if (value != null) {
+                try {
+                    currentVersion = Integer.parseInt(value);
+                } catch (Exception ingore) {
+                }
+            }
+
+            // The target version we're comparing to. This must be incremented each time
+            // we change the processing here so that a new version of the plugin would
+            // try to fix existing user projects.
+            int targetVersion = 2;
+
+            if (currentVersion >= targetVersion) {
                 return;
             }
 
             // Set to specific version such that we can rev the version in the future
             // to trigger further scanning
-            project.setPersistentProperty(KEY, "1"); //$NON-NLS-1$
+            project.setPersistentProperty(KEY, Integer.toString(targetVersion));
 
+            // First deal with any potentially open legacy editors.
+            // This isn't particularly project-specific, it's just convenient to have it here.
+            // We need to make sure it's done in the UI thread, which this isn't invoked from.
+            PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    fixOpenLegacyEditors();
+                }
+            });
+
+            // Now update the actual editor associations.
             Job job = new Job("Update Android editor bindings") { //$NON-NLS-1$
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
@@ -1211,36 +1243,102 @@ public final class Sdk  {
                             if (folderResource instanceof IFolder) {
                                 IFolder folder = (IFolder) folderResource;
 
-                                String[] folderSegments = folder.getName().split(
-                                        AndroidConstants.RES_QUALIFIER_SEP);
-
-                                ResourceFolderType type = ResourceFolderType.getTypeByName(
-                                        folderSegments[0]);
-
-                                if (type == null) {
-                                    continue;
-                                }
-
                                 for (IResource resource : folder.members()) {
-                                    if (endsWith(resource.getName(), DOT_XML)
-                                            && resource instanceof IFile) {
-                                        IFile file = (IFile) resource;
-                                        AdtPlugin.assignEditor(file, type);
+                                    if (resource instanceof IFile &&
+                                            resource.getName().endsWith(DOT_XML)) {
+                                        fixXmlFile((IFile) resource);
                                     }
                                 }
                             }
                         }
+
+                        // TODO change AndroidManifest.xml ID too
+
                     } catch (CoreException e) {
                         AdtPlugin.log(e, null);
                     }
 
                     return Status.OK_STATUS;
                 }
+
+                /**
+                 * Attempt to fix the editor ID for the given /res XML file.
+                 */
+                private void fixXmlFile(final IFile file) {
+                    // Fix the default editor ID for this resource.
+                    // This has no effect on currently open editors.
+                    IEditorDescriptor desc = IDE.getDefaultEditor(file);
+
+                    if (desc == null || !AndroidXmlCommonEditor.ID.equals(desc.getId())) {
+                        IDE.setDefaultEditor(file, AndroidXmlCommonEditor.ID);
+                    }
+                }
             };
             job.setPriority(Job.BUILD);
             job.schedule();
         } catch (CoreException e) {
             AdtPlugin.log(e, null);
+        }
+    }
+
+    /**
+     * Tries to fix an currently open legacy editor.
+     * <p/>
+     * If an editor is found to match one of the legacy ids, we'll try to close it.
+     * If that succeeds, we try to reopen it using the new common editor ID.
+     * <p/>
+     * This method must be run from the UI thread.
+     */
+    private void fixOpenLegacyEditors() {
+
+        HashSet<String> legacyIds =
+            new HashSet<String>(Arrays.asList(AndroidXmlCommonEditor.LEGACY_EDITOR_IDS));
+
+        for (IWorkbenchWindow win : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+            for (IWorkbenchPage page : win.getPages()) {
+                for (IEditorReference ref : page.getEditorReferences()) {
+                    try {
+                        IEditorInput editorInput = ref.getEditorInput();
+                        if (editorInput instanceof IFileEditorInput) {
+                            IFile editorFile = ((IFileEditorInput)editorInput).getFile();
+                            IEditorPart part = ref.getEditor(true /*restore*/);
+                            if (part != null) {
+                                IWorkbenchPartSite site = part.getSite();
+                                if (site != null) {
+                                    String id = site.getId();
+                                    if (legacyIds.contains(id)) {
+                                        // This editor matches one of legacy editor IDs.
+
+                                        IDE.setDefaultEditor(editorFile, AndroidXmlCommonEditor.ID);
+
+                                        boolean ok = page.closeEditor(part, true /*save*/);
+
+                                        AdtPlugin.log(IStatus.INFO,
+                                            "Closed legacy editor ID %s for %s: %s", //$NON-NLS-1$
+                                            id,
+                                            editorFile.getFullPath(),
+                                            ok ? "Success" : "Failed");//$NON-NLS-1$ //$NON-NLS-2$
+
+                                        if (ok) {
+                                            // Try to reopen it with the new ID
+                                            try {
+                                                page.openEditor(editorInput,
+                                                                AndroidXmlCommonEditor.ID);
+                                            } catch (PartInitException e) {
+                                                AdtPlugin.log(e,
+                                                    "Failed to reopen %s",          //$NON-NLS-1$
+                                                    editorFile.getFullPath());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+            }
         }
     }
 }
