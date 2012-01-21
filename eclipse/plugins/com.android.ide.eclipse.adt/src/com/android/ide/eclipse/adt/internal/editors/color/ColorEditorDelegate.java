@@ -43,7 +43,7 @@ public class ColorEditorDelegate extends XmlEditorDelegate {
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
-            if (ResourceFolderType.COLOR.equals(type)) {
+            if (ResourceFolderType.COLOR == type) {
                 return new ColorEditorDelegate(delegator);
             }
 
@@ -55,11 +55,13 @@ public class ColorEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String LEGACY_EDITOR_ID = EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID =
+        EDITORS_NAMESPACE + ".color.ColorEditor"; //$NON-NLS-1$
 
 
-    public ColorEditorDelegate(AndroidXmlCommonEditor editor) {
+    private ColorEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        editor.addDefaultTargetListener();
     }
 
     @Override

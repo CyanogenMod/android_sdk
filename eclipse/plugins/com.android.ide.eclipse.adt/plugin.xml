@@ -514,6 +514,7 @@
               matchingStrategy="com.android.ide.eclipse.adt.internal.editors.CommonMatchingStrategy"
               name="Android Common XML Editor">
         </editor>
+
         <editor
             class="com.android.ide.eclipse.adt.internal.editors.manifest.ManifestEditor"
             default="true"
@@ -532,8 +533,6 @@
             matchingStrategy="com.android.ide.eclipse.adt.internal.editors.CommonMatchingStrategy"
             name="Legacy Android Layout Editor">
         </editor>
-
-        <!-- TODO change in next CL to use common editor. -->
 
         <!--
         For compatibilit with existing ADT installs, we still need to keep the editor

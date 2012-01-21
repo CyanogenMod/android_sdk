@@ -57,13 +57,15 @@ public class AnimationEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String LEGACY_EDITOR_ID = EDITORS_NAMESPACE + ".animator.AnimationEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID =
+        EDITORS_NAMESPACE + ".animator.AnimationEditor"; //$NON-NLS-1$
 
     /** The tag used at the root */
     private String mRootTag;
 
-    public AnimationEditorDelegate(AndroidXmlCommonEditor editor) {
+    private AnimationEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        editor.addDefaultTargetListener();
     }
 
     @Override

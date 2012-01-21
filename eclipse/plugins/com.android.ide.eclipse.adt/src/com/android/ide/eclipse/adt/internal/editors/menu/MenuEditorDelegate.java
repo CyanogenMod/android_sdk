@@ -47,7 +47,7 @@ public class MenuEditorDelegate extends XmlEditorDelegate {
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
-            if (ResourceFolderType.MENU.equals(type)) {
+            if (ResourceFolderType.MENU == type) {
                 return new MenuEditorDelegate(delegator);
             }
 
@@ -59,13 +59,15 @@ public class MenuEditorDelegate extends XmlEditorDelegate {
      * Old standalone-editor ID.
      * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    public static final String LEGACY_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
+    public static final String LEGACY_EDITOR_ID =
+        AdtConstants.EDITORS_NAMESPACE + ".menu.MenuEditor"; //$NON-NLS-1$
 
     /**
      * Creates the form editor for resources XML files.
      */
-    public MenuEditorDelegate(AndroidXmlCommonEditor editor) {
+    private MenuEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
+        editor.addDefaultTargetListener();
     }
 
     /**

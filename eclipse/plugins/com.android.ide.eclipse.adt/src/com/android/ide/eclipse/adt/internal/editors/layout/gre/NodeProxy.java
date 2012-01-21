@@ -206,14 +206,13 @@ public class NodeProxy implements INode {
 
     // ---- XML Editing ---
 
-    @SuppressWarnings("cast")
     @Override
     public void editXml(String undoName, final INodeHandler c) {
         final AndroidXmlEditor editor = mNode.getEditor();
 
-        if (editor instanceof AndroidXmlEditor) {
+        if (editor != null) {
             // Create an undo edit XML wrapper, which takes a runnable
-            ((AndroidXmlEditor) editor).wrapUndoEditXmlModel(
+            editor.wrapUndoEditXmlModel(
                     undoName,
                     new Runnable() {
                         @Override

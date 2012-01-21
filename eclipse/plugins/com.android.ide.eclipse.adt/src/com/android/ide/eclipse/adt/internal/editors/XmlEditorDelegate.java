@@ -73,7 +73,7 @@ public abstract class XmlEditorDelegate {
         public void setActiveEditor(IEditorPart part, IActionBars bars);
     }
 
-    public XmlEditorDelegate(AndroidXmlCommonEditor editor) {
+    protected XmlEditorDelegate(AndroidXmlCommonEditor editor) {
         mEditor = editor;
     }
 
