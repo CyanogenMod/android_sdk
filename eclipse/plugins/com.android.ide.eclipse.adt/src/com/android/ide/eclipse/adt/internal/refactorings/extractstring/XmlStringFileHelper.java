@@ -17,7 +17,7 @@
 package com.android.ide.eclipse.adt.internal.refactorings.extractstring;
 
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
@@ -124,15 +124,15 @@ class XmlStringFileHelper {
                     //    <string name="ID">something</string>
                     // </resources>
 
-                    Node root = findChild(doc, null, ResourcesDescriptors.ROOT_ELEMENT);
+                    Node root = findChild(doc, null, ValuesDescriptors.ROOT_ELEMENT);
                     if (root != null) {
                         for (Node strNode = findChild(root, null,
-                                                      ResourcesDescriptors.STRING_ELEMENT);
+                                                      ValuesDescriptors.STRING_ELEMENT);
                              strNode != null;
                              strNode = findChild(null, strNode,
-                                                 ResourcesDescriptors.STRING_ELEMENT)) {
+                                                 ValuesDescriptors.STRING_ELEMENT)) {
                             NamedNodeMap attrs = strNode.getAttributes();
-                            Node nameAttr = attrs.getNamedItem(ResourcesDescriptors.NAME_ATTR);
+                            Node nameAttr = attrs.getNamedItem(ValuesDescriptors.NAME_ATTR);
                             if (nameAttr != null) {
                                 String id = nameAttr.getNodeValue();
 

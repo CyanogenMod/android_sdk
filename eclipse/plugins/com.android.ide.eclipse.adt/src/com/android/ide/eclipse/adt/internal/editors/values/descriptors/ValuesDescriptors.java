@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources.descriptors;
+package com.android.ide.eclipse.adt.internal.editors.values.descriptors;
 
 import com.android.ide.common.api.IAttributeInfo.Format;
 import com.android.ide.common.resources.platform.AttributeInfo;
@@ -31,7 +31,7 @@ import com.android.resources.ResourceType;
 /**
  * Complete description of the structure for resources XML files (under res/values/)
  */
-public final class ResourcesDescriptors implements IDescriptorProvider {
+public final class ValuesDescriptors implements IDescriptorProvider {
 
     // Public attributes names, attributes descriptors and elements descriptors
 
@@ -49,12 +49,12 @@ public final class ResourcesDescriptors implements IDescriptorProvider {
     public static final String TYPE_ATTR = "type"; //$NON-NLS-1$
     public static final String PARENT_ATTR = "parent"; //$NON-NLS-1$
 
-    private static final ResourcesDescriptors sThis = new ResourcesDescriptors();
+    private static final ValuesDescriptors sThis = new ValuesDescriptors();
 
     /** The {@link ElementDescriptor} for the root Resources element. */
     public final ElementDescriptor mResourcesElement;
 
-    public static ResourcesDescriptors getInstance() {
+    public static ValuesDescriptors getInstance() {
         return sThis;
     }
 
@@ -75,7 +75,7 @@ public final class ResourcesDescriptors implements IDescriptorProvider {
         return mResourcesElement;
     }
 
-    private ResourcesDescriptors() {
+    private ValuesDescriptors() {
 
         // Common attributes used in many placed
 

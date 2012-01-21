@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources;
+package com.android.ide.eclipse.adt.internal.editors.values;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
@@ -38,17 +38,17 @@ import javax.xml.xpath.XPathExpressionException;
 /**
  * Multi-page form editor for /res/values XML files.
  */
-public class ResourcesEditorDelegate extends XmlEditorDelegate {
+public class ValuesEditorDelegate extends XmlEditorDelegate {
 
     public static class Creator implements IXmlEditorCreator {
         @Override
         @SuppressWarnings("unchecked")
-        public ResourcesEditorDelegate createForFile(
+        public ValuesEditorDelegate createForFile(
                 AndroidXmlCommonEditor delegator,
                 IFileEditorInput input,
                 ResourceFolderType type) {
             if (ResourceFolderType.VALUES == type) {
-                return new ResourcesEditorDelegate(delegator);
+                return new ValuesEditorDelegate(delegator);
             }
 
             return null;
@@ -66,7 +66,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
     /**
      * Creates the form editor for resources XML files.
      */
-    private ResourcesEditorDelegate(AndroidXmlCommonEditor editor) {
+    private ValuesEditorDelegate(AndroidXmlCommonEditor editor) {
         super(editor);
         editor.addDefaultTargetListener();
     }
@@ -79,7 +79,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
     @Override
     public void createFormPages() {
         try {
-            getEditor().addPage(new ResourcesTreePage(getEditor()));
+            getEditor().addPage(new ValuesTreePage(getEditor()));
         } catch (PartInitException e) {
             AdtPlugin.log(IStatus.ERROR, "Error creating nested page"); //$NON-NLS-1$
             AdtPlugin.getDefault().getLog().log(e.getStatus());
@@ -99,7 +99,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
         getUiRootNode().setXmlDocument(xml_doc);
         if (xml_doc != null) {
             ElementDescriptor resources_desc =
-                    ResourcesDescriptors.getInstance().getElementDescriptor();
+                    ValuesDescriptors.getInstance().getElementDescriptor();
             try {
                 XPath xpath = AndroidXPathFactory.newXPath();
                 Node node = (Node) xpath.evaluate("/" + resources_desc.getXmlName(),  //$NON-NLS-1$
@@ -126,7 +126,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
         // The manifest UI node is always created, even if there's no corresponding XML node.
         if (getUiRootNode() == null || force) {
             ElementDescriptor resources_desc =
-                    ResourcesDescriptors.getInstance().getElementDescriptor();
+                    ValuesDescriptors.getInstance().getElementDescriptor();
             setUiRootNode(resources_desc.createUiNode());
             getUiRootNode().setEditor(getEditor());
 

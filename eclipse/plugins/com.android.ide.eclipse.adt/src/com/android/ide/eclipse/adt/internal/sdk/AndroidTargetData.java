@@ -29,8 +29,8 @@ import com.android.ide.eclipse.adt.internal.editors.drawable.DrawableDescriptors
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.menu.descriptors.MenuDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.OtherXmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.resources.manager.ProjectResources;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.IAndroidTarget.IOptionalLibrary;
@@ -153,7 +153,7 @@ public class AndroidTargetData {
                 return mOtherXmlDescriptors;
             case DESCRIPTOR_RESOURCES:
                 // FIXME: since it's hard-coded the Resources Descriptors are not platform dependent.
-                return ResourcesDescriptors.getInstance();
+                return ValuesDescriptors.getInstance();
             case DESCRIPTOR_PREFERENCES:
                 return mOtherXmlDescriptors.getPreferencesProvider();
             case DESCRIPTOR_APPWIDGET_PROVIDER:

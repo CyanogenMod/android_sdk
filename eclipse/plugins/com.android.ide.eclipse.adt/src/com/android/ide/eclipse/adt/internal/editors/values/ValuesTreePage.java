@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2007 The Android Open Source Project
  *
  * Licensed under the Eclipse Public License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,37 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.xml;
+package com.android.ide.eclipse.adt.internal.editors.values;
 
+import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.editors.IPageImageProvider;
 import com.android.ide.eclipse.adt.internal.editors.IconFactory;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.ui.tree.UiTreeBlock;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
+import org.eclipse.ui.part.FileEditorInput;
 
 /**
- * Page for the xml form editor.
+ * Page for instrumentation settings, part of the AndroidManifest form editor.
  */
-public final class OtherXmlTreePage extends FormPage implements IPageImageProvider {
+public final class ValuesTreePage extends FormPage implements IPageImageProvider {
     /** Page id used for switching tabs programmatically */
-    public final static String PAGE_ID = "xml_tree_page"; //$NON-NLS-1$
+    public final static String PAGE_ID = "res_tree_page"; //$NON-NLS-1$
 
     /** Container editor */
     AndroidXmlCommonEditor mEditor;
 
-    public OtherXmlTreePage(AndroidXmlCommonEditor editor) {
-        super(editor, PAGE_ID, "Structure");  // tab's label, keep it short
+    public ValuesTreePage(AndroidXmlCommonEditor editor) {
+        super(editor, PAGE_ID, "Resources");  // tab's label, keep it short
         mEditor = editor;
     }
 
@@ -57,15 +62,33 @@ public final class OtherXmlTreePage extends FormPage implements IPageImageProvid
     protected void createFormContent(IManagedForm managedForm) {
         super.createFormContent(managedForm);
         ScrolledForm form = managedForm.getForm();
-        form.setText("Android Xml");
+
+        String configText = null;
+        IEditorInput input = mEditor.getEditorInput();
+        if (input instanceof FileEditorInput) {
+            FileEditorInput fileInput = (FileEditorInput)input;
+            IFile iFile = fileInput.getFile();
+
+            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
+            if (resFolder != null) {
+                configText = resFolder.getConfiguration().toDisplayString();
+            }
+        }
+
+        if (configText != null) {
+            form.setText(String.format("Android Resources (%1$s)", configText));
+        } else {
+            form.setText("Android Resources");
+        }
+
         form.setImage(AdtPlugin.getAndroidLogo());
 
-        UiElementNode rootNode = mEditor.getUiRootNode();
-        UiTreeBlock block = new UiTreeBlock(mEditor, rootNode,
+        UiElementNode resources = mEditor.getUiRootNode();
+        UiTreeBlock block = new UiTreeBlock(mEditor, resources,
                 true /* autoCreateRoot */,
                 null /* no element filters */,
-                "Xml Elements",
-                "List of all xml elements in this XML file.");
+                "Resources Elements",
+                "List of all resources elements in this XML file.");
         block.createContent(managedForm);
     }
 }

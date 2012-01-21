@@ -22,9 +22,9 @@ import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.AttributeDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ReferenceAttributeDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.project.AndroidManifestHelper;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -1183,7 +1183,7 @@ public class ExtractStringRefactoring extends Refactoring {
 
         IModelManager modelMan = StructuredModelManager.getModelManager();
 
-        final String NODE_RESOURCES = ResourcesDescriptors.ROOT_ELEMENT;
+        final String NODE_RESOURCES = ValuesDescriptors.ROOT_ELEMENT;
         final String NODE_STRING = "string";    //$NON-NLS-1$ //TODO find or create constant
         final String ATTR_NAME = "name";        //$NON-NLS-1$ //TODO find or create constant
 

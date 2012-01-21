@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources.descriptors;
+package com.android.ide.eclipse.adt.internal.editors.values.descriptors;
 
 import com.android.ide.eclipse.adt.internal.editors.descriptors.TextValueDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.resources.uimodel.UiColorValueNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiAttributeNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.UiResourceAttributeNode;
+import com.android.ide.eclipse.adt.internal.editors.values.uimodel.UiColorValueNode;
 
 /**
  * Describes a Color XML element value displayed by an {@link UiColorValueNode}.

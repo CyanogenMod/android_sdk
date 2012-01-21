@@ -16,7 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.editors.descriptors;
 
-import com.android.ide.eclipse.adt.internal.editors.resources.uimodel.UiItemElementNode;
+import com.android.ide.eclipse.adt.internal.editors.values.uimodel.UiItemElementNode;
 
 /**
  * {@link UiItemElementNode} is the main class that creates the UI Model hierarchy based

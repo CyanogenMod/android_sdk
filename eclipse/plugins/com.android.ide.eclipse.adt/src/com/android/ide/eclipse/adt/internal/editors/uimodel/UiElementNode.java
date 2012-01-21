@@ -39,9 +39,9 @@ import com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDe
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.CustomViewDescriptorService;
 import com.android.ide.eclipse.adt.internal.editors.layout.descriptors.LayoutDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.manifest.descriptors.AndroidManifestDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.otherxml.descriptors.OtherXmlDescriptors;
 import com.android.ide.eclipse.adt.internal.editors.uimodel.IUiUpdateListener.UiUpdateState;
-import com.android.ide.eclipse.adt.internal.editors.xml.descriptors.OtherXmlDescriptors;
+import com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors;
 import com.android.ide.eclipse.adt.internal.preferences.AdtPrefs;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.sdklib.SdkConstants;
@@ -262,7 +262,7 @@ public class UiElementNode implements IPropertySource {
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,
                                 null, // no namespace
-                                ResourcesDescriptors.NAME_ATTR);
+                                ValuesDescriptors.NAME_ATTR);
             }
             if (attr == null || attr.length() == 0) {
                 attr = _Element_getAttributeNS(elem,

@@ -16,11 +16,11 @@
 package com.android.ide.eclipse.adt.internal.editors.formatting;
 
 import static com.android.ide.eclipse.adt.internal.editors.descriptors.XmlnsAttributeDescriptor.XMLNS;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.COLOR_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.DIMEN_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.ITEM_TAG;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STRING_ELEMENT;
-import static com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors.STYLE_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.COLOR_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.DIMEN_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.ITEM_TAG;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STRING_ELEMENT;
+import static com.android.ide.eclipse.adt.internal.editors.values.descriptors.ValuesDescriptors.STYLE_ELEMENT;
 
 import com.android.ide.eclipse.adt.AdtUtils;
 import com.android.ide.eclipse.adt.internal.editors.layout.gle2.DomUtilities;

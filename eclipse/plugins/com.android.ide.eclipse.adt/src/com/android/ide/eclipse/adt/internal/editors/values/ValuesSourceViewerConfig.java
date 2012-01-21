@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.eclipse.adt.internal.editors.resources;
+package com.android.ide.eclipse.adt.internal.editors.values;
 
 
 import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
@@ -22,9 +22,9 @@ import com.android.ide.eclipse.adt.internal.editors.AndroidSourceViewerConfig;
 /**
  * Source Viewer Configuration that calls in ResourcesContentAssist.
  */
-public class ResourcesSourceViewerConfig extends AndroidSourceViewerConfig {
+public class ValuesSourceViewerConfig extends AndroidSourceViewerConfig {
 
-    public ResourcesSourceViewerConfig() {
-        super(new ResourcesContentAssist());
+    public ValuesSourceViewerConfig() {
+        super(new ValuesContentAssist());
     }
 }
