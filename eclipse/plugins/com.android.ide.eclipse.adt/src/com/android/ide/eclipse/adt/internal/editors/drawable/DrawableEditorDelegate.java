@@ -18,20 +18,14 @@ package com.android.ide.eclipse.adt.internal.editors.drawable;
 
 import static com.android.ide.eclipse.adt.AdtConstants.EDITORS_NAMESPACE;
 
-import com.android.ide.common.resources.ResourceFolder;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.resources.ResourceFolderType;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
-import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -48,11 +42,8 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
         @SuppressWarnings("unchecked")
         public DrawableEditorDelegate createForFile(
                 AndroidXmlCommonEditor delegator,
-                IFileEditorInput input) {
-            // get the IFile object and check it's the desired sub-resource folder
-            IFile iFile = input.getFile();
-            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
-            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+                IFileEditorInput input,
+                ResourceFolderType type) {
             if (ResourceFolderType.DRAWABLE.equals(type)) {
                 return new DrawableEditorDelegate(delegator);
             }
@@ -63,44 +54,18 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * @deprecated Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
-    @Deprecated
     public static final String OLD_STANDALONE_EDITOR_ID = EDITORS_NAMESPACE + ".drawable.DrawableEditor"; //$NON-NLS-1$
 
-    /** Root node of the UI element hierarchy */
-    private UiElementNode mUiRootNode;
     /** The tag used at the root */
     private String mRootTag;
-
-    private final AndroidXmlCommonEditor mDelegator;
 
     /**
      * Creates the form editor for resources XML files.
      */
-    public DrawableEditorDelegate(AndroidXmlCommonEditor delegator) {
-        super();
-        mDelegator = delegator;
-    }
-
-    @Override
-    public AndroidXmlCommonEditor getEditor() {
-        return mDelegator;
-    }
-
-    @Override
-    public void dispose() {
-        // pass
-    }
-
-    @Override
-    public UiElementNode getUiRootNode() {
-        return mUiRootNode;
-    }
-
-    @Override
-    public boolean isSaveAsAllowed() {
-        return true;
+    public DrawableEditorDelegate(AndroidXmlCommonEditor editor) {
+        super(editor);
     }
 
     @Override
@@ -116,15 +81,6 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
      }
 
     @Override
-    public void setInput(IEditorInput input) {
-        if (input instanceof FileEditorInput) {
-            FileEditorInput fileInput = (FileEditorInput) input;
-            IFile file = fileInput.getFile();
-            getEditor().setPartName(String.format("%1$s", file.getName()));
-        }
-    }
-
-    @Override
     public void xmlModelChanged(Document xmlDoc) {
         Element rootElement = xmlDoc.getDocumentElement();
         if (rootElement != null) {
@@ -134,7 +90,7 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
         initUiRootNode(false /*force*/);
 
         if (mRootTag != null
-                && !mRootTag.equals(mUiRootNode.getDescriptor().getXmlLocalName())) {
+                && !mRootTag.equals(getUiRootNode().getDescriptor().getXmlLocalName())) {
             AndroidTargetData data = getEditor().getTargetData();
             if (data != null) {
                 ElementDescriptor descriptor =
@@ -142,27 +98,27 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
                 // Replace top level node now that we know the actual type
 
                 // Disconnect from old
-                mUiRootNode.setEditor(null);
-                mUiRootNode.setXmlDocument(null);
+                getUiRootNode().setEditor(null);
+                getUiRootNode().setXmlDocument(null);
 
                 // Create new
-                mUiRootNode = descriptor.createUiNode();
-                mUiRootNode.setXmlDocument(xmlDoc);
-                mUiRootNode.setEditor(getEditor());
+                setUiRootNode(descriptor.createUiNode());
+                getUiRootNode().setXmlDocument(xmlDoc);
+                getUiRootNode().setEditor(getEditor());
             }
         }
 
-        if (mUiRootNode.getDescriptor() instanceof DocumentDescriptor) {
-            mUiRootNode.loadFromXmlNode(xmlDoc);
+        if (getUiRootNode().getDescriptor() instanceof DocumentDescriptor) {
+            getUiRootNode().loadFromXmlNode(xmlDoc);
         } else {
-            mUiRootNode.loadFromXmlNode(rootElement);
+            getUiRootNode().loadFromXmlNode(rootElement);
         }
     }
 
     @Override
     public void initUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
-        if (mUiRootNode == null || force) {
+        if (getUiRootNode() == null || force) {
             ElementDescriptor descriptor;
             boolean reload = false;
             AndroidTargetData data = getEditor().getTargetData();
@@ -172,8 +128,8 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
                 descriptor = data.getDrawableDescriptors().getElementDescriptor(mRootTag);
                 reload = true;
             }
-            mUiRootNode = descriptor.createUiNode();
-            mUiRootNode.setEditor(getEditor());
+            setUiRootNode(descriptor.createUiNode());
+            getUiRootNode().setEditor(getEditor());
 
             if (reload) {
                 onDescriptorsChanged();
@@ -186,7 +142,7 @@ public class DrawableEditorDelegate extends XmlEditorDelegate {
         if (model != null) {
             try {
                 Node node = getEditor().getXmlDocument(model).getDocumentElement();
-                mUiRootNode.reloadFromXmlNode(node);
+                getUiRootNode().reloadFromXmlNode(node);
             } finally {
                 model.releaseFromRead();
             }

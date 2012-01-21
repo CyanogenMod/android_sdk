@@ -16,25 +16,18 @@
 
 package com.android.ide.eclipse.adt.internal.editors.resources;
 
-import com.android.ide.common.resources.ResourceFolder;
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
-import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
+import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.resources.descriptors.ResourcesDescriptors;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiElementNode;
-import com.android.ide.eclipse.adt.internal.resources.manager.ResourceManager;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.xml.AndroidXPathFactory;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -52,11 +45,8 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
         @SuppressWarnings("unchecked")
         public ResourcesEditorDelegate createForFile(
                 AndroidXmlCommonEditor delegator,
-                IFileEditorInput input) {
-            // get the IFile object and check it's the desired sub-resource folder
-            IFile iFile = input.getFile();
-            ResourceFolder resFolder = ResourceManager.getInstance().getResourceFolder(iFile);
-            ResourceFolderType type = resFolder == null ? null : resFolder.getType();
+                IFileEditorInput input,
+                ResourceFolderType type) {
             if (ResourceFolderType.VALUES.equals(type)) {
                 return new ResourcesEditorDelegate(delegator);
             }
@@ -67,58 +57,20 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
 
     /**
      * Old standalone-editor ID.
-     * @deprecated Use {@link AndroidXmlCommonEditor#ID} instead.
+     * Use {@link AndroidXmlCommonEditor#ID} instead.
      */
     @Deprecated
     public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".resources.ResourcesEditor"; //$NON-NLS-1$
-
-    /** Root node of the UI element hierarchy */
-    private UiElementNode mUiResourcesNode;
-
-    private final AndroidXmlCommonEditor mDelegator;
 
 
     /**
      * Creates the form editor for resources XML files.
      */
-    public ResourcesEditorDelegate(AndroidXmlCommonEditor delegator) {
-        super();
-        mDelegator = delegator;
-    }
-
-    @Override
-    public AndroidXmlCommonEditor getEditor() {
-        return mDelegator;
-    }
-
-    @Override
-    public void dispose() {
-        // pass
-    }
-
-    /**
-     * Returns the root node of the UI element hierarchy, which
-     * here is the "resources" node.
-     */
-    @Override
-    public UiElementNode getUiRootNode() {
-        return mUiResourcesNode;
+    public ResourcesEditorDelegate(AndroidXmlCommonEditor editor) {
+        super(editor);
     }
 
     // ---- Base Class Overrides ----
-
-    /**
-     * Returns whether the "save as" operation is supported by this editor.
-     * <p/>
-     * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file.
-     *
-     * @see IEditorPart
-     */
-    @Override
-    public boolean isSaveAsAllowed() {
-        return true;
-    }
 
     /**
      * Create the various form pages.
@@ -133,18 +85,6 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
         }
      }
 
-    /* (non-java doc)
-     * Change the tab/title name to include the project name.
-     */
-    @Override
-    public void setInput(IEditorInput input) {
-        if (input instanceof FileEditorInput) {
-            FileEditorInput fileInput = (FileEditorInput) input;
-            IFile file = fileInput.getFile();
-            getEditor().setPartName(String.format("%1$s", file.getName()));
-        }
-    }
-
     /**
      * Processes the new XML Model, which XML root node is given.
      *
@@ -155,7 +95,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
         // init the ui root on demand
         initUiRootNode(false /*force*/);
 
-        mUiResourcesNode.setXmlDocument(xml_doc);
+        getUiRootNode().setXmlDocument(xml_doc);
         if (xml_doc != null) {
             ElementDescriptor resources_desc =
                     ResourcesDescriptors.getInstance().getElementDescriptor();
@@ -168,7 +108,7 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
                 assert node == null || node.getNodeName().equals(resources_desc.getXmlName());
 
                 // Refresh the manifest UI node and all its descendants
-                mUiResourcesNode.loadFromXmlNode(node);
+                getUiRootNode().loadFromXmlNode(node);
             } catch (XPathExpressionException e) {
                 AdtPlugin.log(e, "XPath error when trying to find '%s' element in XML.", //$NON-NLS-1$
                         resources_desc.getXmlName());
@@ -183,11 +123,11 @@ public class ResourcesEditorDelegate extends XmlEditorDelegate {
     @Override
     public void initUiRootNode(boolean force) {
         // The manifest UI node is always created, even if there's no corresponding XML node.
-        if (mUiResourcesNode == null || force) {
+        if (getUiRootNode() == null || force) {
             ElementDescriptor resources_desc =
                     ResourcesDescriptors.getInstance().getElementDescriptor();
-            mUiResourcesNode = resources_desc.createUiNode();
-            mUiResourcesNode.setEditor(getEditor());
+            setUiRootNode(resources_desc.createUiNode());
+            getUiRootNode().setEditor(getEditor());
 
             onDescriptorsChanged();
         }

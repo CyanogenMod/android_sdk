@@ -18,25 +18,22 @@ package com.android.ide.eclipse.adt.internal.editors.xml;
 
 import com.android.ide.eclipse.adt.AdtConstants;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.FirstElementParser;
 import com.android.ide.eclipse.adt.internal.editors.XmlEditorDelegate;
-import com.android.ide.eclipse.adt.internal.editors.AndroidXmlCommonEditor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.DocumentDescriptor;
 import com.android.ide.eclipse.adt.internal.editors.descriptors.ElementDescriptor;
-import com.android.ide.eclipse.adt.internal.editors.uimodel.UiDocumentNode;
 import com.android.ide.eclipse.adt.internal.sdk.AndroidTargetData;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
+import com.android.resources.ResourceFolderType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.part.FileEditorInput;
 import org.w3c.dom.Document;
 
 /**
@@ -49,7 +46,8 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
         @SuppressWarnings("unchecked")
         public OtherXmlEditorDelegate createForFile(
                 AndroidXmlCommonEditor delegator,
-                IFileEditorInput input) {
+                IFileEditorInput input,
+                ResourceFolderType type) {
             // get the IFile object and check it's the desired sub-resource folder
             IFile iFile = input.getFile();
             if (canHandleFile(iFile)) {
@@ -67,37 +65,13 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
     @Deprecated
     public static final String OLD_STANDALONE_EDITOR_ID = AdtConstants.EDITORS_NAMESPACE + ".xml.XmlEditor"; //$NON-NLS-1$
 
-    /** Root node of the UI element hierarchy */
-    private UiDocumentNode mUiRootNode;
-
-    private final AndroidXmlCommonEditor mDelegator;
-
     /**
      * Creates the form editor for resources XML files.
      */
-    public OtherXmlEditorDelegate(AndroidXmlCommonEditor delegator) {
-        super();
-        mDelegator = delegator;
+    public OtherXmlEditorDelegate(AndroidXmlCommonEditor editor) {
+        super(editor);
     }
 
-    @Override
-    public AndroidXmlCommonEditor getEditor() {
-        return mDelegator;
-    }
-
-    @Override
-    public void dispose() {
-        // pass
-    }
-
-    /**
-     * Returns the root node of the UI element hierarchy, which here
-     * is the document node.
-     */
-    @Override
-    public UiDocumentNode getUiRootNode() {
-        return mUiRootNode;
-    }
 
     // ---- Static ----
 
@@ -161,19 +135,6 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
     // ---- Base Class Overrides ----
 
     /**
-     * Returns whether the "save as" operation is supported by this editor.
-     * <p/>
-     * Save-As is a valid operation for the ManifestEditor since it acts on a
-     * single source file.
-     *
-     * @see IEditorPart
-     */
-    @Override
-    public boolean isSaveAsAllowed() {
-        return true;
-    }
-
-    /**
      * Create the various form pages.
      */
     @Override
@@ -185,19 +146,6 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
         }
 
     }
-
-    /* (non-java doc)
-     * Change the tab/title name to include the project name.
-     */
-    @Override
-    public void setInput(IEditorInput input) {
-        if (input instanceof FileEditorInput) {
-            FileEditorInput fileInput = (FileEditorInput) input;
-            IFile file = fileInput.getFile();
-            getEditor().setPartName(String.format("%1$s", file.getName()));
-        }
-    }
-
     /**
      * Processes the new XML Model, which XML root node is given.
      *
@@ -208,7 +156,7 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
         // init the ui root on demand
         initUiRootNode(false /*force*/);
 
-        mUiRootNode.loadFromXmlNode(xml_doc);
+        getUiRootNode().loadFromXmlNode(xml_doc);
     }
 
     /**
@@ -218,10 +166,10 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
     @Override
     public void initUiRootNode(boolean force) {
         // The root UI node is always created, even if there's no corresponding XML node.
-        if (mUiRootNode == null || force) {
+        if (getUiRootNode() == null || force) {
             Document doc = null;
-            if (mUiRootNode != null) {
-                doc = mUiRootNode.getXmlDocument();
+            if (getUiRootNode() != null) {
+                doc = getUiRootNode().getXmlDocument();
             }
 
             // get the target data from the opened file (and its project)
@@ -234,8 +182,8 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
                 desc = data.getXmlDescriptors().getDescriptor();
             }
 
-            mUiRootNode = (UiDocumentNode) desc.createUiNode();
-            mUiRootNode.setEditor(getEditor());
+            setUiRootNode(desc.createUiNode());
+            getUiRootNode().setEditor(getEditor());
 
             onDescriptorsChanged(doc);
         }
@@ -248,9 +196,9 @@ public class OtherXmlEditorDelegate extends XmlEditorDelegate {
      */
     private void onDescriptorsChanged(Document document) {
         if (document != null) {
-            mUiRootNode.loadFromXmlNode(document);
+            getUiRootNode().loadFromXmlNode(document);
         } else {
-            mUiRootNode.reloadFromXmlNode(mUiRootNode.getXmlNode());
+            getUiRootNode().reloadFromXmlNode(getUiRootNode().getXmlNode());
         }
     }
 }

@@ -32,6 +32,10 @@ import org.eclipse.ui.IEditorInput;
  */
 public abstract class XmlLayoutEditDelegate extends XmlEditorDelegate {
 
+    public XmlLayoutEditDelegate(AndroidXmlCommonEditor editor) {
+        super(editor);
+    }
+
     public abstract void setInputWithNotify(IEditorInput input);
 
     /**
